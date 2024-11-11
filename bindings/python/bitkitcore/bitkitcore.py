@@ -2120,39 +2120,6 @@ class _UniffiConverterTypeScanner(_UniffiConverterRustBuffer):
 
 
 
-
-
-class Unit(enum.Enum):
-    BITCOIN = 1
-    SATOSHI = 2
-    MILLI_SATOSHI = 3
-    
-
-
-class _UniffiConverterTypeUnit(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        variant = buf.read_i32()
-        if variant == 1:
-            return Unit.BITCOIN
-        if variant == 2:
-            return Unit.SATOSHI
-        if variant == 3:
-            return Unit.MILLI_SATOSHI
-        raise InternalError("Raw enum value doesn't match any cases")
-
-    def write(value, buf):
-        if value == Unit.BITCOIN:
-            buf.write_i32(1)
-        if value == Unit.SATOSHI:
-            buf.write_i32(2)
-        if value == Unit.MILLI_SATOSHI:
-            buf.write_i32(3)
-
-
-
-
-
 class _UniffiConverterOptionalUInt32(_UniffiConverterRustBuffer):
     @classmethod
     def write(cls, value, buf):
@@ -2329,7 +2296,6 @@ __all__ = [
     "LnurlError",
     "NetworkType",
     "Scanner",
-    "Unit",
     "LightningInvoice",
     "LnurlAddressData",
     "LnurlAuthData",

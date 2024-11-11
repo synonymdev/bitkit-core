@@ -45,13 +45,6 @@ impl From<NetworkType> for Network {
     }
 }
 
-#[derive(uniffi::Enum, Serialize, Debug, Clone)]
-pub enum Unit {
-    Bitcoin,
-    Satoshi,
-    MilliSatoshi,
-}
-
 #[derive(uniffi::Record, Debug, Clone)]
 pub struct LnurlChannelData {
     pub uri: String,

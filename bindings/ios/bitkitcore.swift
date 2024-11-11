@@ -1643,65 +1643,6 @@ extension Scanner: Equatable, Hashable {}
 
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-public enum Unit {
-    
-    case bitcoin
-    case satoshi
-    case milliSatoshi
-}
-
-public struct FfiConverterTypeUnit: FfiConverterRustBuffer {
-    typealias SwiftType = Unit
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Unit {
-        let variant: Int32 = try readInt(&buf)
-        switch variant {
-        
-        case 1: return .bitcoin
-        
-        case 2: return .satoshi
-        
-        case 3: return .milliSatoshi
-        
-        default: throw UniffiInternalError.unexpectedEnumCase
-        }
-    }
-
-    public static func write(_ value: Unit, into buf: inout [UInt8]) {
-        switch value {
-        
-        
-        case .bitcoin:
-            writeInt(&buf, Int32(1))
-        
-        
-        case .satoshi:
-            writeInt(&buf, Int32(2))
-        
-        
-        case .milliSatoshi:
-            writeInt(&buf, Int32(3))
-        
-        }
-    }
-}
-
-
-public func FfiConverterTypeUnit_lift(_ buf: RustBuffer) throws -> Unit {
-    return try FfiConverterTypeUnit.lift(buf)
-}
-
-public func FfiConverterTypeUnit_lower(_ value: Unit) -> RustBuffer {
-    return FfiConverterTypeUnit.lower(value)
-}
-
-
-extension Unit: Equatable, Hashable {}
-
-
-
 fileprivate struct FfiConverterOptionUInt32: FfiConverterRustBuffer {
     typealias SwiftType = UInt32?
 

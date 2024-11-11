@@ -1831,30 +1831,6 @@ public object FfiConverterTypeScanner : FfiConverterRustBuffer<Scanner>{
 
 
 
-enum class Unit {
-    BITCOIN,SATOSHI,MILLI_SATOSHI;
-    companion object
-}
-
-public object FfiConverterTypeUnit: FfiConverterRustBuffer<Unit> {
-    override fun read(buf: ByteBuffer) = try {
-        Unit.values()[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
-    }
-
-    override fun allocationSize(value: Unit) = 4
-
-    override fun write(value: Unit, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
-    }
-}
-
-
-
-
-
-
 public object FfiConverterOptionalUInt: FfiConverterRustBuffer<UInt?> {
     override fun read(buf: ByteBuffer): UInt? {
         if (buf.get().toInt() == 0) {
