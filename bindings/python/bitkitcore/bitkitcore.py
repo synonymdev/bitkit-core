@@ -1351,13 +1351,33 @@ class _UniffiConverterTypeValidationResult(_UniffiConverterRustBuffer):
         _UniffiConverterTypeAddressType.write(value.address_type, buf)
 
 
+# AddressError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class AddressError(Exception):
+    pass
 
+_UniffiTempAddressError = AddressError
 
+class AddressError:  # type: ignore
+    class InvalidAddress(_UniffiTempAddressError):
+        def __init__(self):
+            pass
+        def __repr__(self):
+            return "AddressError.InvalidAddress({})".format(str(self))
+    _UniffiTempAddressError.InvalidAddress = InvalidAddress # type: ignore
+    class InvalidNetwork(_UniffiTempAddressError):
+        def __init__(self):
+            pass
+        def __repr__(self):
+            return "AddressError.InvalidNetwork({})".format(str(self))
+    _UniffiTempAddressError.InvalidNetwork = InvalidNetwork # type: ignore
 
-class AddressError(enum.Enum):
-    INVALID_ADDRESS = 1
-    INVALID_NETWORK = 2
-    
+AddressError = _UniffiTempAddressError # type: ignore
+del _UniffiTempAddressError
 
 
 class _UniffiConverterTypeAddressError(_UniffiConverterRustBuffer):
@@ -1365,18 +1385,19 @@ class _UniffiConverterTypeAddressError(_UniffiConverterRustBuffer):
     def read(buf):
         variant = buf.read_i32()
         if variant == 1:
-            return AddressError.INVALID_ADDRESS
+            return AddressError.InvalidAddress(
+            )
         if variant == 2:
-            return AddressError.INVALID_NETWORK
+            return AddressError.InvalidNetwork(
+            )
         raise InternalError("Raw enum value doesn't match any cases")
 
+    @staticmethod
     def write(value, buf):
-        if value == AddressError.INVALID_ADDRESS:
+        if isinstance(value, AddressError.InvalidAddress):
             buf.write_i32(1)
-        if value == AddressError.INVALID_NETWORK:
+        if isinstance(value, AddressError.InvalidNetwork):
             buf.write_i32(2)
-
-
 
 
 
@@ -1427,263 +1448,103 @@ class _UniffiConverterTypeAddressType(_UniffiConverterRustBuffer):
 
 
 
+# DecodingError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class DecodingError(Exception):
+    pass
 
+_UniffiTempDecodingError = DecodingError
 
-
-class DecodingError:
-    def __init__(self):
-        raise RuntimeError("DecodingError cannot be instantiated directly")
-
-    # Each enum variant is a nested class of the enum itself.
-    class INVALID_FORMAT:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+class DecodingError:  # type: ignore
+    class InvalidFormat(_UniffiTempDecodingError):
+        def __init__(self):
             pass
-            
-
-        def __str__(self):
-            return "DecodingError.INVALID_FORMAT()".format()
-
-        def __eq__(self, other):
-            if not other.is_invalid_format():
-                return False
-            return True
-    class INVALID_NETWORK:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+        def __repr__(self):
+            return "DecodingError.InvalidFormat({})".format(str(self))
+    _UniffiTempDecodingError.InvalidFormat = InvalidFormat # type: ignore
+    class InvalidNetwork(_UniffiTempDecodingError):
+        def __init__(self):
             pass
-            
-
-        def __str__(self):
-            return "DecodingError.INVALID_NETWORK()".format()
-
-        def __eq__(self, other):
-            if not other.is_invalid_network():
-                return False
-            return True
-    class INVALID_AMOUNT:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+        def __repr__(self):
+            return "DecodingError.InvalidNetwork({})".format(str(self))
+    _UniffiTempDecodingError.InvalidNetwork = InvalidNetwork # type: ignore
+    class InvalidAmount(_UniffiTempDecodingError):
+        def __init__(self):
             pass
-            
-
-        def __str__(self):
-            return "DecodingError.INVALID_AMOUNT()".format()
-
-        def __eq__(self, other):
-            if not other.is_invalid_amount():
-                return False
-            return True
-    class INVALID_LNURL_PAY_AMOUNT:
-        amount_satoshis: "int";min: "int";max: "int";
-
-        @typing.no_type_check
-        def __init__(self,amount_satoshis: "int", min: "int", max: "int"):
-            
+        def __repr__(self):
+            return "DecodingError.InvalidAmount({})".format(str(self))
+    _UniffiTempDecodingError.InvalidAmount = InvalidAmount # type: ignore
+    class InvalidLnurlPayAmount(_UniffiTempDecodingError):
+        def __init__(self, amount_satoshis, min, max):
+            super().__init__(", ".join([
+                "amount_satoshis={!r}".format(amount_satoshis),
+                "min={!r}".format(min),
+                "max={!r}".format(max),
+            ]))
             self.amount_satoshis = amount_satoshis
             self.min = min
             self.max = max
-            
-
-        def __str__(self):
-            return "DecodingError.INVALID_LNURL_PAY_AMOUNT(amount_satoshis={}, min={}, max={})".format(self.amount_satoshis, self.min, self.max)
-
-        def __eq__(self, other):
-            if not other.is_invalid_lnurl_pay_amount():
-                return False
-            if self.amount_satoshis != other.amount_satoshis:
-                return False
-            if self.min != other.min:
-                return False
-            if self.max != other.max:
-                return False
-            return True
-    class INVALID_TIMESTAMP:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+        def __repr__(self):
+            return "DecodingError.InvalidLnurlPayAmount({})".format(str(self))
+    _UniffiTempDecodingError.InvalidLnurlPayAmount = InvalidLnurlPayAmount # type: ignore
+    class InvalidTimestamp(_UniffiTempDecodingError):
+        def __init__(self):
             pass
-            
-
-        def __str__(self):
-            return "DecodingError.INVALID_TIMESTAMP()".format()
-
-        def __eq__(self, other):
-            if not other.is_invalid_timestamp():
-                return False
-            return True
-    class INVALID_CHECKSUM:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+        def __repr__(self):
+            return "DecodingError.InvalidTimestamp({})".format(str(self))
+    _UniffiTempDecodingError.InvalidTimestamp = InvalidTimestamp # type: ignore
+    class InvalidChecksum(_UniffiTempDecodingError):
+        def __init__(self):
             pass
-            
-
-        def __str__(self):
-            return "DecodingError.INVALID_CHECKSUM()".format()
-
-        def __eq__(self, other):
-            if not other.is_invalid_checksum():
-                return False
-            return True
-    class INVALID_RESPONSE:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+        def __repr__(self):
+            return "DecodingError.InvalidChecksum({})".format(str(self))
+    _UniffiTempDecodingError.InvalidChecksum = InvalidChecksum # type: ignore
+    class InvalidResponse(_UniffiTempDecodingError):
+        def __init__(self):
             pass
-            
-
-        def __str__(self):
-            return "DecodingError.INVALID_RESPONSE()".format()
-
-        def __eq__(self, other):
-            if not other.is_invalid_response():
-                return False
-            return True
-    class UNSUPPORTED_TYPE:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+        def __repr__(self):
+            return "DecodingError.InvalidResponse({})".format(str(self))
+    _UniffiTempDecodingError.InvalidResponse = InvalidResponse # type: ignore
+    class UnsupportedType(_UniffiTempDecodingError):
+        def __init__(self):
             pass
-            
-
-        def __str__(self):
-            return "DecodingError.UNSUPPORTED_TYPE()".format()
-
-        def __eq__(self, other):
-            if not other.is_unsupported_type():
-                return False
-            return True
-    class INVALID_ADDRESS:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+        def __repr__(self):
+            return "DecodingError.UnsupportedType({})".format(str(self))
+    _UniffiTempDecodingError.UnsupportedType = UnsupportedType # type: ignore
+    class InvalidAddress(_UniffiTempDecodingError):
+        def __init__(self):
             pass
-            
-
-        def __str__(self):
-            return "DecodingError.INVALID_ADDRESS()".format()
-
-        def __eq__(self, other):
-            if not other.is_invalid_address():
-                return False
-            return True
-    class REQUEST_FAILED:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+        def __repr__(self):
+            return "DecodingError.InvalidAddress({})".format(str(self))
+    _UniffiTempDecodingError.InvalidAddress = InvalidAddress # type: ignore
+    class RequestFailed(_UniffiTempDecodingError):
+        def __init__(self):
             pass
-            
-
-        def __str__(self):
-            return "DecodingError.REQUEST_FAILED()".format()
-
-        def __eq__(self, other):
-            if not other.is_request_failed():
-                return False
-            return True
-    class CLIENT_CREATION_FAILED:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+        def __repr__(self):
+            return "DecodingError.RequestFailed({})".format(str(self))
+    _UniffiTempDecodingError.RequestFailed = RequestFailed # type: ignore
+    class ClientCreationFailed(_UniffiTempDecodingError):
+        def __init__(self):
             pass
-            
+        def __repr__(self):
+            return "DecodingError.ClientCreationFailed({})".format(str(self))
+    _UniffiTempDecodingError.ClientCreationFailed = ClientCreationFailed # type: ignore
+    class InvoiceCreationFailed(_UniffiTempDecodingError):
+        def __init__(self, error_message):
+            super().__init__(", ".join([
+                "error_message={!r}".format(error_message),
+            ]))
+            self.error_message = error_message
+        def __repr__(self):
+            return "DecodingError.InvoiceCreationFailed({})".format(str(self))
+    _UniffiTempDecodingError.InvoiceCreationFailed = InvoiceCreationFailed # type: ignore
 
-        def __str__(self):
-            return "DecodingError.CLIENT_CREATION_FAILED()".format()
-
-        def __eq__(self, other):
-            if not other.is_client_creation_failed():
-                return False
-            return True
-    class INVOICE_CREATION_FAILED:
-        message: "str";
-
-        @typing.no_type_check
-        def __init__(self,message: "str"):
-            
-            self.message = message
-            
-
-        def __str__(self):
-            return "DecodingError.INVOICE_CREATION_FAILED(message={})".format(self.message)
-
-        def __eq__(self, other):
-            if not other.is_invoice_creation_failed():
-                return False
-            if self.message != other.message:
-                return False
-            return True
-    
-
-    # For each variant, we have an `is_NAME` method for easily checking
-    # whether an instance is that variant.
-    def is_invalid_format(self) -> bool:
-        return isinstance(self, DecodingError.INVALID_FORMAT)
-    def is_invalid_network(self) -> bool:
-        return isinstance(self, DecodingError.INVALID_NETWORK)
-    def is_invalid_amount(self) -> bool:
-        return isinstance(self, DecodingError.INVALID_AMOUNT)
-    def is_invalid_lnurl_pay_amount(self) -> bool:
-        return isinstance(self, DecodingError.INVALID_LNURL_PAY_AMOUNT)
-    def is_invalid_timestamp(self) -> bool:
-        return isinstance(self, DecodingError.INVALID_TIMESTAMP)
-    def is_invalid_checksum(self) -> bool:
-        return isinstance(self, DecodingError.INVALID_CHECKSUM)
-    def is_invalid_response(self) -> bool:
-        return isinstance(self, DecodingError.INVALID_RESPONSE)
-    def is_unsupported_type(self) -> bool:
-        return isinstance(self, DecodingError.UNSUPPORTED_TYPE)
-    def is_invalid_address(self) -> bool:
-        return isinstance(self, DecodingError.INVALID_ADDRESS)
-    def is_request_failed(self) -> bool:
-        return isinstance(self, DecodingError.REQUEST_FAILED)
-    def is_client_creation_failed(self) -> bool:
-        return isinstance(self, DecodingError.CLIENT_CREATION_FAILED)
-    def is_invoice_creation_failed(self) -> bool:
-        return isinstance(self, DecodingError.INVOICE_CREATION_FAILED)
-    
-
-# Now, a little trick - we make each nested variant class be a subclass of the main
-# enum class, so that method calls and instance checks etc will work intuitively.
-# We might be able to do this a little more neatly with a metaclass, but this'll do.
-DecodingError.INVALID_FORMAT = type("DecodingError.INVALID_FORMAT", (DecodingError.INVALID_FORMAT, DecodingError,), {})  # type: ignore
-DecodingError.INVALID_NETWORK = type("DecodingError.INVALID_NETWORK", (DecodingError.INVALID_NETWORK, DecodingError,), {})  # type: ignore
-DecodingError.INVALID_AMOUNT = type("DecodingError.INVALID_AMOUNT", (DecodingError.INVALID_AMOUNT, DecodingError,), {})  # type: ignore
-DecodingError.INVALID_LNURL_PAY_AMOUNT = type("DecodingError.INVALID_LNURL_PAY_AMOUNT", (DecodingError.INVALID_LNURL_PAY_AMOUNT, DecodingError,), {})  # type: ignore
-DecodingError.INVALID_TIMESTAMP = type("DecodingError.INVALID_TIMESTAMP", (DecodingError.INVALID_TIMESTAMP, DecodingError,), {})  # type: ignore
-DecodingError.INVALID_CHECKSUM = type("DecodingError.INVALID_CHECKSUM", (DecodingError.INVALID_CHECKSUM, DecodingError,), {})  # type: ignore
-DecodingError.INVALID_RESPONSE = type("DecodingError.INVALID_RESPONSE", (DecodingError.INVALID_RESPONSE, DecodingError,), {})  # type: ignore
-DecodingError.UNSUPPORTED_TYPE = type("DecodingError.UNSUPPORTED_TYPE", (DecodingError.UNSUPPORTED_TYPE, DecodingError,), {})  # type: ignore
-DecodingError.INVALID_ADDRESS = type("DecodingError.INVALID_ADDRESS", (DecodingError.INVALID_ADDRESS, DecodingError,), {})  # type: ignore
-DecodingError.REQUEST_FAILED = type("DecodingError.REQUEST_FAILED", (DecodingError.REQUEST_FAILED, DecodingError,), {})  # type: ignore
-DecodingError.CLIENT_CREATION_FAILED = type("DecodingError.CLIENT_CREATION_FAILED", (DecodingError.CLIENT_CREATION_FAILED, DecodingError,), {})  # type: ignore
-DecodingError.INVOICE_CREATION_FAILED = type("DecodingError.INVOICE_CREATION_FAILED", (DecodingError.INVOICE_CREATION_FAILED, DecodingError,), {})  # type: ignore
-
-
+DecodingError = _UniffiTempDecodingError # type: ignore
+del _UniffiTempDecodingError
 
 
 class _UniffiConverterTypeDecodingError(_UniffiConverterRustBuffer):
@@ -1691,223 +1552,140 @@ class _UniffiConverterTypeDecodingError(_UniffiConverterRustBuffer):
     def read(buf):
         variant = buf.read_i32()
         if variant == 1:
-            return DecodingError.INVALID_FORMAT(
+            return DecodingError.InvalidFormat(
             )
         if variant == 2:
-            return DecodingError.INVALID_NETWORK(
+            return DecodingError.InvalidNetwork(
             )
         if variant == 3:
-            return DecodingError.INVALID_AMOUNT(
+            return DecodingError.InvalidAmount(
             )
         if variant == 4:
-            return DecodingError.INVALID_LNURL_PAY_AMOUNT(
-                _UniffiConverterUInt64.read(buf),
-                _UniffiConverterUInt64.read(buf),
-                _UniffiConverterUInt64.read(buf),
+            return DecodingError.InvalidLnurlPayAmount(
+                amount_satoshis=_UniffiConverterUInt64.read(buf),
+                min=_UniffiConverterUInt64.read(buf),
+                max=_UniffiConverterUInt64.read(buf),
             )
         if variant == 5:
-            return DecodingError.INVALID_TIMESTAMP(
+            return DecodingError.InvalidTimestamp(
             )
         if variant == 6:
-            return DecodingError.INVALID_CHECKSUM(
+            return DecodingError.InvalidChecksum(
             )
         if variant == 7:
-            return DecodingError.INVALID_RESPONSE(
+            return DecodingError.InvalidResponse(
             )
         if variant == 8:
-            return DecodingError.UNSUPPORTED_TYPE(
+            return DecodingError.UnsupportedType(
             )
         if variant == 9:
-            return DecodingError.INVALID_ADDRESS(
+            return DecodingError.InvalidAddress(
             )
         if variant == 10:
-            return DecodingError.REQUEST_FAILED(
+            return DecodingError.RequestFailed(
             )
         if variant == 11:
-            return DecodingError.CLIENT_CREATION_FAILED(
+            return DecodingError.ClientCreationFailed(
             )
         if variant == 12:
-            return DecodingError.INVOICE_CREATION_FAILED(
-                _UniffiConverterString.read(buf),
+            return DecodingError.InvoiceCreationFailed(
+                error_message=_UniffiConverterString.read(buf),
             )
         raise InternalError("Raw enum value doesn't match any cases")
 
+    @staticmethod
     def write(value, buf):
-        if value.is_invalid_format():
+        if isinstance(value, DecodingError.InvalidFormat):
             buf.write_i32(1)
-        if value.is_invalid_network():
+        if isinstance(value, DecodingError.InvalidNetwork):
             buf.write_i32(2)
-        if value.is_invalid_amount():
+        if isinstance(value, DecodingError.InvalidAmount):
             buf.write_i32(3)
-        if value.is_invalid_lnurl_pay_amount():
+        if isinstance(value, DecodingError.InvalidLnurlPayAmount):
             buf.write_i32(4)
             _UniffiConverterUInt64.write(value.amount_satoshis, buf)
             _UniffiConverterUInt64.write(value.min, buf)
             _UniffiConverterUInt64.write(value.max, buf)
-        if value.is_invalid_timestamp():
+        if isinstance(value, DecodingError.InvalidTimestamp):
             buf.write_i32(5)
-        if value.is_invalid_checksum():
+        if isinstance(value, DecodingError.InvalidChecksum):
             buf.write_i32(6)
-        if value.is_invalid_response():
+        if isinstance(value, DecodingError.InvalidResponse):
             buf.write_i32(7)
-        if value.is_unsupported_type():
+        if isinstance(value, DecodingError.UnsupportedType):
             buf.write_i32(8)
-        if value.is_invalid_address():
+        if isinstance(value, DecodingError.InvalidAddress):
             buf.write_i32(9)
-        if value.is_request_failed():
+        if isinstance(value, DecodingError.RequestFailed):
             buf.write_i32(10)
-        if value.is_client_creation_failed():
+        if isinstance(value, DecodingError.ClientCreationFailed):
             buf.write_i32(11)
-        if value.is_invoice_creation_failed():
+        if isinstance(value, DecodingError.InvoiceCreationFailed):
             buf.write_i32(12)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.error_message, buf)
 
 
+# LnurlError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class LnurlError(Exception):
+    pass
 
+_UniffiTempLnurlError = LnurlError
 
-
-
-
-class LnurlError:
-    def __init__(self):
-        raise RuntimeError("LnurlError cannot be instantiated directly")
-
-    # Each enum variant is a nested class of the enum itself.
-    class INVALID_ADDRESS:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+class LnurlError:  # type: ignore
+    class InvalidAddress(_UniffiTempLnurlError):
+        def __init__(self):
             pass
-            
-
-        def __str__(self):
-            return "LnurlError.INVALID_ADDRESS()".format()
-
-        def __eq__(self, other):
-            if not other.is_invalid_address():
-                return False
-            return True
-    class CLIENT_CREATION_FAILED:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+        def __repr__(self):
+            return "LnurlError.InvalidAddress({})".format(str(self))
+    _UniffiTempLnurlError.InvalidAddress = InvalidAddress # type: ignore
+    class ClientCreationFailed(_UniffiTempLnurlError):
+        def __init__(self):
             pass
-            
-
-        def __str__(self):
-            return "LnurlError.CLIENT_CREATION_FAILED()".format()
-
-        def __eq__(self, other):
-            if not other.is_client_creation_failed():
-                return False
-            return True
-    class REQUEST_FAILED:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+        def __repr__(self):
+            return "LnurlError.ClientCreationFailed({})".format(str(self))
+    _UniffiTempLnurlError.ClientCreationFailed = ClientCreationFailed # type: ignore
+    class RequestFailed(_UniffiTempLnurlError):
+        def __init__(self):
             pass
-            
-
-        def __str__(self):
-            return "LnurlError.REQUEST_FAILED()".format()
-
-        def __eq__(self, other):
-            if not other.is_request_failed():
-                return False
-            return True
-    class INVALID_RESPONSE:
-        
-
-        @typing.no_type_check
-        def __init__(self,):
-            
+        def __repr__(self):
+            return "LnurlError.RequestFailed({})".format(str(self))
+    _UniffiTempLnurlError.RequestFailed = RequestFailed # type: ignore
+    class InvalidResponse(_UniffiTempLnurlError):
+        def __init__(self):
             pass
-            
-
-        def __str__(self):
-            return "LnurlError.INVALID_RESPONSE()".format()
-
-        def __eq__(self, other):
-            if not other.is_invalid_response():
-                return False
-            return True
-    class INVALID_AMOUNT:
-        amount_satoshis: "int";min: "int";max: "int";
-
-        @typing.no_type_check
-        def __init__(self,amount_satoshis: "int", min: "int", max: "int"):
-            
+        def __repr__(self):
+            return "LnurlError.InvalidResponse({})".format(str(self))
+    _UniffiTempLnurlError.InvalidResponse = InvalidResponse # type: ignore
+    class InvalidAmount(_UniffiTempLnurlError):
+        def __init__(self, amount_satoshis, min, max):
+            super().__init__(", ".join([
+                "amount_satoshis={!r}".format(amount_satoshis),
+                "min={!r}".format(min),
+                "max={!r}".format(max),
+            ]))
             self.amount_satoshis = amount_satoshis
             self.min = min
             self.max = max
-            
+        def __repr__(self):
+            return "LnurlError.InvalidAmount({})".format(str(self))
+    _UniffiTempLnurlError.InvalidAmount = InvalidAmount # type: ignore
+    class InvoiceCreationFailed(_UniffiTempLnurlError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "LnurlError.InvoiceCreationFailed({})".format(str(self))
+    _UniffiTempLnurlError.InvoiceCreationFailed = InvoiceCreationFailed # type: ignore
 
-        def __str__(self):
-            return "LnurlError.INVALID_AMOUNT(amount_satoshis={}, min={}, max={})".format(self.amount_satoshis, self.min, self.max)
-
-        def __eq__(self, other):
-            if not other.is_invalid_amount():
-                return False
-            if self.amount_satoshis != other.amount_satoshis:
-                return False
-            if self.min != other.min:
-                return False
-            if self.max != other.max:
-                return False
-            return True
-    class INVOICE_CREATION_FAILED:
-        message: "str";
-
-        @typing.no_type_check
-        def __init__(self,message: "str"):
-            
-            self.message = message
-            
-
-        def __str__(self):
-            return "LnurlError.INVOICE_CREATION_FAILED(message={})".format(self.message)
-
-        def __eq__(self, other):
-            if not other.is_invoice_creation_failed():
-                return False
-            if self.message != other.message:
-                return False
-            return True
-    
-
-    # For each variant, we have an `is_NAME` method for easily checking
-    # whether an instance is that variant.
-    def is_invalid_address(self) -> bool:
-        return isinstance(self, LnurlError.INVALID_ADDRESS)
-    def is_client_creation_failed(self) -> bool:
-        return isinstance(self, LnurlError.CLIENT_CREATION_FAILED)
-    def is_request_failed(self) -> bool:
-        return isinstance(self, LnurlError.REQUEST_FAILED)
-    def is_invalid_response(self) -> bool:
-        return isinstance(self, LnurlError.INVALID_RESPONSE)
-    def is_invalid_amount(self) -> bool:
-        return isinstance(self, LnurlError.INVALID_AMOUNT)
-    def is_invoice_creation_failed(self) -> bool:
-        return isinstance(self, LnurlError.INVOICE_CREATION_FAILED)
-    
-
-# Now, a little trick - we make each nested variant class be a subclass of the main
-# enum class, so that method calls and instance checks etc will work intuitively.
-# We might be able to do this a little more neatly with a metaclass, but this'll do.
-LnurlError.INVALID_ADDRESS = type("LnurlError.INVALID_ADDRESS", (LnurlError.INVALID_ADDRESS, LnurlError,), {})  # type: ignore
-LnurlError.CLIENT_CREATION_FAILED = type("LnurlError.CLIENT_CREATION_FAILED", (LnurlError.CLIENT_CREATION_FAILED, LnurlError,), {})  # type: ignore
-LnurlError.REQUEST_FAILED = type("LnurlError.REQUEST_FAILED", (LnurlError.REQUEST_FAILED, LnurlError,), {})  # type: ignore
-LnurlError.INVALID_RESPONSE = type("LnurlError.INVALID_RESPONSE", (LnurlError.INVALID_RESPONSE, LnurlError,), {})  # type: ignore
-LnurlError.INVALID_AMOUNT = type("LnurlError.INVALID_AMOUNT", (LnurlError.INVALID_AMOUNT, LnurlError,), {})  # type: ignore
-LnurlError.INVOICE_CREATION_FAILED = type("LnurlError.INVOICE_CREATION_FAILED", (LnurlError.INVOICE_CREATION_FAILED, LnurlError,), {})  # type: ignore
-
-
+LnurlError = _UniffiTempLnurlError # type: ignore
+del _UniffiTempLnurlError
 
 
 class _UniffiConverterTypeLnurlError(_UniffiConverterRustBuffer):
@@ -1915,48 +1693,47 @@ class _UniffiConverterTypeLnurlError(_UniffiConverterRustBuffer):
     def read(buf):
         variant = buf.read_i32()
         if variant == 1:
-            return LnurlError.INVALID_ADDRESS(
+            return LnurlError.InvalidAddress(
             )
         if variant == 2:
-            return LnurlError.CLIENT_CREATION_FAILED(
+            return LnurlError.ClientCreationFailed(
             )
         if variant == 3:
-            return LnurlError.REQUEST_FAILED(
+            return LnurlError.RequestFailed(
             )
         if variant == 4:
-            return LnurlError.INVALID_RESPONSE(
+            return LnurlError.InvalidResponse(
             )
         if variant == 5:
-            return LnurlError.INVALID_AMOUNT(
-                _UniffiConverterUInt64.read(buf),
-                _UniffiConverterUInt64.read(buf),
-                _UniffiConverterUInt64.read(buf),
+            return LnurlError.InvalidAmount(
+                amount_satoshis=_UniffiConverterUInt64.read(buf),
+                min=_UniffiConverterUInt64.read(buf),
+                max=_UniffiConverterUInt64.read(buf),
             )
         if variant == 6:
-            return LnurlError.INVOICE_CREATION_FAILED(
-                _UniffiConverterString.read(buf),
+            return LnurlError.InvoiceCreationFailed(
+                error_details=_UniffiConverterString.read(buf),
             )
         raise InternalError("Raw enum value doesn't match any cases")
 
+    @staticmethod
     def write(value, buf):
-        if value.is_invalid_address():
+        if isinstance(value, LnurlError.InvalidAddress):
             buf.write_i32(1)
-        if value.is_client_creation_failed():
+        if isinstance(value, LnurlError.ClientCreationFailed):
             buf.write_i32(2)
-        if value.is_request_failed():
+        if isinstance(value, LnurlError.RequestFailed):
             buf.write_i32(3)
-        if value.is_invalid_response():
+        if isinstance(value, LnurlError.InvalidResponse):
             buf.write_i32(4)
-        if value.is_invalid_amount():
+        if isinstance(value, LnurlError.InvalidAmount):
             buf.write_i32(5)
             _UniffiConverterUInt64.write(value.amount_satoshis, buf)
             _UniffiConverterUInt64.write(value.min, buf)
             _UniffiConverterUInt64.write(value.max, buf)
-        if value.is_invoice_creation_failed():
+        if isinstance(value, LnurlError.InvoiceCreationFailed):
             buf.write_i32(6)
-            _UniffiConverterString.write(value.message, buf)
-
-
+            _UniffiConverterString.write(value.error_details, buf)
 
 
 
@@ -2042,21 +1819,21 @@ class Scanner:
                 return False
             return True
     class PUBKY_AUTH:
-        auth: "PubkyAuth";
+        data: "str";
 
         @typing.no_type_check
-        def __init__(self,auth: "PubkyAuth"):
+        def __init__(self,data: "str"):
             
-            self.auth = auth
+            self.data = data
             
 
         def __str__(self):
-            return "Scanner.PUBKY_AUTH(auth={})".format(self.auth)
+            return "Scanner.PUBKY_AUTH(data={})".format(self.data)
 
         def __eq__(self, other):
             if not other.is_pubky_auth():
                 return False
-            if self.auth != other.auth:
+            if self.data != other.data:
                 return False
             return True
     class LNURL_CHANNEL:
@@ -2266,7 +2043,7 @@ class _UniffiConverterTypeScanner(_UniffiConverterRustBuffer):
             )
         if variant == 3:
             return Scanner.PUBKY_AUTH(
-                _UniffiConverterTypePubkyAuth.read(buf),
+                _UniffiConverterString.read(buf),
             )
         if variant == 4:
             return Scanner.LNURL_CHANNEL(
@@ -2312,7 +2089,7 @@ class _UniffiConverterTypeScanner(_UniffiConverterRustBuffer):
             _UniffiConverterTypeLightningInvoice.write(value.invoice, buf)
         if value.is_pubky_auth():
             buf.write_i32(3)
-            _UniffiConverterTypePubkyAuth.write(value.auth, buf)
+            _UniffiConverterString.write(value.data, buf)
         if value.is_lnurl_channel():
             buf.write_i32(4)
             _UniffiConverterTypeLnurlChannelData.write(value.data, buf)

@@ -63,6 +63,6 @@ async fn generate_invoice(
         .await
         .map(|invoice| invoice.pr)
         .map_err(|e| LnurlError::InvoiceCreationFailed {
-            message: e.to_string(),
+            error_details: e.to_string(),
         })
 }

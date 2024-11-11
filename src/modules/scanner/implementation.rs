@@ -122,9 +122,7 @@ impl Scanner {
             }
         } else if invoice_str.to_lowercase().starts_with("pubkyauth:") {
             Ok(Scanner::PubkyAuth {
-                auth: PubkyAuth {
-                    data: invoice_str.to_string()
-                }
+                data: invoice_str.to_string()
             })
         } else if let Some(lnurl) = Self::find_lnurl(invoice_str) {
             Self::decode_lnurl(&lnurl).await

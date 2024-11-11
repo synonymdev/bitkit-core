@@ -1087,26 +1087,68 @@ public object FfiConverterTypeValidationResult: FfiConverterRustBuffer<Validatio
 
 
 
-enum class AddressError {
-    INVALID_ADDRESS,INVALID_NETWORK;
-    companion object
-}
 
-public object FfiConverterTypeAddressError: FfiConverterRustBuffer<AddressError> {
-    override fun read(buf: ByteBuffer) = try {
-        AddressError.values()[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+sealed class AddressException: Exception() {
+    // Each variant is a nested class
+    
+    class InvalidAddress(
+        ) : AddressException() {
+        override val message
+            get() = ""
+    }
+    
+    class InvalidNetwork(
+        ) : AddressException() {
+        override val message
+            get() = ""
+    }
+    
+
+    companion object ErrorHandler : CallStatusErrorHandler<AddressException> {
+        override fun lift(error_buf: RustBuffer.ByValue): AddressException = FfiConverterTypeAddressError.lift(error_buf)
     }
 
-    override fun allocationSize(value: AddressError) = 4
-
-    override fun write(value: AddressError, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
-    }
+    
 }
 
+public object FfiConverterTypeAddressError : FfiConverterRustBuffer<AddressException> {
+    override fun read(buf: ByteBuffer): AddressException {
+        
 
+        return when(buf.getInt()) {
+            1 -> AddressException.InvalidAddress()
+            2 -> AddressException.InvalidNetwork()
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: AddressException): Int {
+        return when(value) {
+            is AddressException.InvalidAddress -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+            )
+            is AddressException.InvalidNetwork -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+            )
+        }
+    }
+
+    override fun write(value: AddressException, buf: ByteBuffer) {
+        when(value) {
+            is AddressException.InvalidAddress -> {
+                buf.putInt(1)
+                Unit
+            }
+            is AddressException.InvalidNetwork -> {
+                buf.putInt(2)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
 
 
 
@@ -1135,336 +1177,380 @@ public object FfiConverterTypeAddressType: FfiConverterRustBuffer<AddressType> {
 
 
 
-sealed class DecodingError {
-    object InvalidFormat : DecodingError()
+
+sealed class DecodingException: Exception() {
+    // Each variant is a nested class
     
-    object InvalidNetwork : DecodingError()
+    class InvalidFormat(
+        ) : DecodingException() {
+        override val message
+            get() = ""
+    }
     
-    object InvalidAmount : DecodingError()
+    class InvalidNetwork(
+        ) : DecodingException() {
+        override val message
+            get() = ""
+    }
     
-    data class InvalidLnurlPayAmount(
+    class InvalidAmount(
+        ) : DecodingException() {
+        override val message
+            get() = ""
+    }
+    
+    class InvalidLnurlPayAmount(
         val `amountSatoshis`: ULong, 
         val `min`: ULong, 
         val `max`: ULong
-        ) : DecodingError() {
-        companion object
+        ) : DecodingException() {
+        override val message
+            get() = "amountSatoshis=${ `amountSatoshis` }, min=${ `min` }, max=${ `max` }"
     }
-    object InvalidTimestamp : DecodingError()
     
-    object InvalidChecksum : DecodingError()
+    class InvalidTimestamp(
+        ) : DecodingException() {
+        override val message
+            get() = ""
+    }
     
-    object InvalidResponse : DecodingError()
+    class InvalidChecksum(
+        ) : DecodingException() {
+        override val message
+            get() = ""
+    }
     
-    object UnsupportedType : DecodingError()
+    class InvalidResponse(
+        ) : DecodingException() {
+        override val message
+            get() = ""
+    }
     
-    object InvalidAddress : DecodingError()
+    class UnsupportedType(
+        ) : DecodingException() {
+        override val message
+            get() = ""
+    }
     
-    object RequestFailed : DecodingError()
+    class InvalidAddress(
+        ) : DecodingException() {
+        override val message
+            get() = ""
+    }
     
-    object ClientCreationFailed : DecodingError()
+    class RequestFailed(
+        ) : DecodingException() {
+        override val message
+            get() = ""
+    }
     
-    data class InvoiceCreationFailed(
-        val `message`: String
-        ) : DecodingError() {
-        companion object
+    class ClientCreationFailed(
+        ) : DecodingException() {
+        override val message
+            get() = ""
+    }
+    
+    class InvoiceCreationFailed(
+        val `errorMessage`: String
+        ) : DecodingException() {
+        override val message
+            get() = "errorMessage=${ `errorMessage` }"
     }
     
 
+    companion object ErrorHandler : CallStatusErrorHandler<DecodingException> {
+        override fun lift(error_buf: RustBuffer.ByValue): DecodingException = FfiConverterTypeDecodingError.lift(error_buf)
+    }
+
     
-    companion object
 }
 
-public object FfiConverterTypeDecodingError : FfiConverterRustBuffer<DecodingError>{
-    override fun read(buf: ByteBuffer): DecodingError {
+public object FfiConverterTypeDecodingError : FfiConverterRustBuffer<DecodingException> {
+    override fun read(buf: ByteBuffer): DecodingException {
+        
+
         return when(buf.getInt()) {
-            1 -> DecodingError.InvalidFormat
-            2 -> DecodingError.InvalidNetwork
-            3 -> DecodingError.InvalidAmount
-            4 -> DecodingError.InvalidLnurlPayAmount(
+            1 -> DecodingException.InvalidFormat()
+            2 -> DecodingException.InvalidNetwork()
+            3 -> DecodingException.InvalidAmount()
+            4 -> DecodingException.InvalidLnurlPayAmount(
                 FfiConverterULong.read(buf),
                 FfiConverterULong.read(buf),
                 FfiConverterULong.read(buf),
                 )
-            5 -> DecodingError.InvalidTimestamp
-            6 -> DecodingError.InvalidChecksum
-            7 -> DecodingError.InvalidResponse
-            8 -> DecodingError.UnsupportedType
-            9 -> DecodingError.InvalidAddress
-            10 -> DecodingError.RequestFailed
-            11 -> DecodingError.ClientCreationFailed
-            12 -> DecodingError.InvoiceCreationFailed(
+            5 -> DecodingException.InvalidTimestamp()
+            6 -> DecodingException.InvalidChecksum()
+            7 -> DecodingException.InvalidResponse()
+            8 -> DecodingException.UnsupportedType()
+            9 -> DecodingException.InvalidAddress()
+            10 -> DecodingException.RequestFailed()
+            11 -> DecodingException.ClientCreationFailed()
+            12 -> DecodingException.InvoiceCreationFailed(
                 FfiConverterString.read(buf),
                 )
-            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
 
-    override fun allocationSize(value: DecodingError) = when(value) {
-        is DecodingError.InvalidFormat -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+    override fun allocationSize(value: DecodingException): Int {
+        return when(value) {
+            is DecodingException.InvalidFormat -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is DecodingError.InvalidNetwork -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is DecodingException.InvalidNetwork -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is DecodingError.InvalidAmount -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is DecodingException.InvalidAmount -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is DecodingError.InvalidLnurlPayAmount -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is DecodingException.InvalidLnurlPayAmount -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
                 + FfiConverterULong.allocationSize(value.`amountSatoshis`)
                 + FfiConverterULong.allocationSize(value.`min`)
                 + FfiConverterULong.allocationSize(value.`max`)
             )
-        }
-        is DecodingError.InvalidTimestamp -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is DecodingException.InvalidTimestamp -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is DecodingError.InvalidChecksum -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is DecodingException.InvalidChecksum -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is DecodingError.InvalidResponse -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is DecodingException.InvalidResponse -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is DecodingError.UnsupportedType -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is DecodingException.UnsupportedType -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is DecodingError.InvalidAddress -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is DecodingException.InvalidAddress -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is DecodingError.RequestFailed -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is DecodingException.RequestFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is DecodingError.ClientCreationFailed -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is DecodingException.ClientCreationFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is DecodingError.InvoiceCreationFailed -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is DecodingException.InvoiceCreationFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`errorMessage`)
             )
         }
     }
 
-    override fun write(value: DecodingError, buf: ByteBuffer) {
+    override fun write(value: DecodingException, buf: ByteBuffer) {
         when(value) {
-            is DecodingError.InvalidFormat -> {
+            is DecodingException.InvalidFormat -> {
                 buf.putInt(1)
                 Unit
             }
-            is DecodingError.InvalidNetwork -> {
+            is DecodingException.InvalidNetwork -> {
                 buf.putInt(2)
                 Unit
             }
-            is DecodingError.InvalidAmount -> {
+            is DecodingException.InvalidAmount -> {
                 buf.putInt(3)
                 Unit
             }
-            is DecodingError.InvalidLnurlPayAmount -> {
+            is DecodingException.InvalidLnurlPayAmount -> {
                 buf.putInt(4)
                 FfiConverterULong.write(value.`amountSatoshis`, buf)
                 FfiConverterULong.write(value.`min`, buf)
                 FfiConverterULong.write(value.`max`, buf)
                 Unit
             }
-            is DecodingError.InvalidTimestamp -> {
+            is DecodingException.InvalidTimestamp -> {
                 buf.putInt(5)
                 Unit
             }
-            is DecodingError.InvalidChecksum -> {
+            is DecodingException.InvalidChecksum -> {
                 buf.putInt(6)
                 Unit
             }
-            is DecodingError.InvalidResponse -> {
+            is DecodingException.InvalidResponse -> {
                 buf.putInt(7)
                 Unit
             }
-            is DecodingError.UnsupportedType -> {
+            is DecodingException.UnsupportedType -> {
                 buf.putInt(8)
                 Unit
             }
-            is DecodingError.InvalidAddress -> {
+            is DecodingException.InvalidAddress -> {
                 buf.putInt(9)
                 Unit
             }
-            is DecodingError.RequestFailed -> {
+            is DecodingException.RequestFailed -> {
                 buf.putInt(10)
                 Unit
             }
-            is DecodingError.ClientCreationFailed -> {
+            is DecodingException.ClientCreationFailed -> {
                 buf.putInt(11)
                 Unit
             }
-            is DecodingError.InvoiceCreationFailed -> {
+            is DecodingException.InvoiceCreationFailed -> {
                 buf.putInt(12)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`errorMessage`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
+
 }
 
 
 
 
 
-
-sealed class LnurlError {
-    object InvalidAddress : LnurlError()
+sealed class LnurlException: Exception() {
+    // Each variant is a nested class
     
-    object ClientCreationFailed : LnurlError()
+    class InvalidAddress(
+        ) : LnurlException() {
+        override val message
+            get() = ""
+    }
     
-    object RequestFailed : LnurlError()
+    class ClientCreationFailed(
+        ) : LnurlException() {
+        override val message
+            get() = ""
+    }
     
-    object InvalidResponse : LnurlError()
+    class RequestFailed(
+        ) : LnurlException() {
+        override val message
+            get() = ""
+    }
     
-    data class InvalidAmount(
+    class InvalidResponse(
+        ) : LnurlException() {
+        override val message
+            get() = ""
+    }
+    
+    class InvalidAmount(
         val `amountSatoshis`: ULong, 
         val `min`: ULong, 
         val `max`: ULong
-        ) : LnurlError() {
-        companion object
+        ) : LnurlException() {
+        override val message
+            get() = "amountSatoshis=${ `amountSatoshis` }, min=${ `min` }, max=${ `max` }"
     }
-    data class InvoiceCreationFailed(
-        val `message`: String
-        ) : LnurlError() {
-        companion object
+    
+    class InvoiceCreationFailed(
+        val `errorDetails`: String
+        ) : LnurlException() {
+        override val message
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
 
+    companion object ErrorHandler : CallStatusErrorHandler<LnurlException> {
+        override fun lift(error_buf: RustBuffer.ByValue): LnurlException = FfiConverterTypeLnurlError.lift(error_buf)
+    }
+
     
-    companion object
 }
 
-public object FfiConverterTypeLnurlError : FfiConverterRustBuffer<LnurlError>{
-    override fun read(buf: ByteBuffer): LnurlError {
+public object FfiConverterTypeLnurlError : FfiConverterRustBuffer<LnurlException> {
+    override fun read(buf: ByteBuffer): LnurlException {
+        
+
         return when(buf.getInt()) {
-            1 -> LnurlError.InvalidAddress
-            2 -> LnurlError.ClientCreationFailed
-            3 -> LnurlError.RequestFailed
-            4 -> LnurlError.InvalidResponse
-            5 -> LnurlError.InvalidAmount(
+            1 -> LnurlException.InvalidAddress()
+            2 -> LnurlException.ClientCreationFailed()
+            3 -> LnurlException.RequestFailed()
+            4 -> LnurlException.InvalidResponse()
+            5 -> LnurlException.InvalidAmount(
                 FfiConverterULong.read(buf),
                 FfiConverterULong.read(buf),
                 FfiConverterULong.read(buf),
                 )
-            6 -> LnurlError.InvoiceCreationFailed(
+            6 -> LnurlException.InvoiceCreationFailed(
                 FfiConverterString.read(buf),
                 )
-            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
 
-    override fun allocationSize(value: LnurlError) = when(value) {
-        is LnurlError.InvalidAddress -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+    override fun allocationSize(value: LnurlException): Int {
+        return when(value) {
+            is LnurlException.InvalidAddress -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is LnurlError.ClientCreationFailed -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is LnurlException.ClientCreationFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is LnurlError.RequestFailed -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is LnurlException.RequestFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is LnurlError.InvalidResponse -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is LnurlException.InvalidResponse -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
             )
-        }
-        is LnurlError.InvalidAmount -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is LnurlException.InvalidAmount -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
                 + FfiConverterULong.allocationSize(value.`amountSatoshis`)
                 + FfiConverterULong.allocationSize(value.`min`)
                 + FfiConverterULong.allocationSize(value.`max`)
             )
-        }
-        is LnurlError.InvoiceCreationFailed -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
+            is LnurlException.InvoiceCreationFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`errorDetails`)
             )
         }
     }
 
-    override fun write(value: LnurlError, buf: ByteBuffer) {
+    override fun write(value: LnurlException, buf: ByteBuffer) {
         when(value) {
-            is LnurlError.InvalidAddress -> {
+            is LnurlException.InvalidAddress -> {
                 buf.putInt(1)
                 Unit
             }
-            is LnurlError.ClientCreationFailed -> {
+            is LnurlException.ClientCreationFailed -> {
                 buf.putInt(2)
                 Unit
             }
-            is LnurlError.RequestFailed -> {
+            is LnurlException.RequestFailed -> {
                 buf.putInt(3)
                 Unit
             }
-            is LnurlError.InvalidResponse -> {
+            is LnurlException.InvalidResponse -> {
                 buf.putInt(4)
                 Unit
             }
-            is LnurlError.InvalidAmount -> {
+            is LnurlException.InvalidAmount -> {
                 buf.putInt(5)
                 FfiConverterULong.write(value.`amountSatoshis`, buf)
                 FfiConverterULong.write(value.`min`, buf)
                 FfiConverterULong.write(value.`max`, buf)
                 Unit
             }
-            is LnurlError.InvoiceCreationFailed -> {
+            is LnurlException.InvoiceCreationFailed -> {
                 buf.putInt(6)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
+
 }
-
-
 
 
 
@@ -1505,7 +1591,7 @@ sealed class Scanner {
         companion object
     }
     data class PubkyAuth(
-        val `auth`: PubkyAuth
+        val `data`: String
         ) : Scanner() {
         companion object
     }
@@ -1566,7 +1652,7 @@ public object FfiConverterTypeScanner : FfiConverterRustBuffer<Scanner>{
                 FfiConverterTypeLightningInvoice.read(buf),
                 )
             3 -> Scanner.PubkyAuth(
-                FfiConverterTypePubkyAuth.read(buf),
+                FfiConverterString.read(buf),
                 )
             4 -> Scanner.LnurlChannel(
                 FfiConverterTypeLnurlChannelData.read(buf),
@@ -1616,7 +1702,7 @@ public object FfiConverterTypeScanner : FfiConverterRustBuffer<Scanner>{
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4
-                + FfiConverterTypePubkyAuth.allocationSize(value.`auth`)
+                + FfiConverterString.allocationSize(value.`data`)
             )
         }
         is Scanner.LnurlChannel -> {
@@ -1692,7 +1778,7 @@ public object FfiConverterTypeScanner : FfiConverterRustBuffer<Scanner>{
             }
             is Scanner.PubkyAuth -> {
                 buf.putInt(3)
-                FfiConverterTypePubkyAuth.write(value.`auth`, buf)
+                FfiConverterString.write(value.`data`, buf)
                 Unit
             }
             is Scanner.LnurlChannel -> {
@@ -1949,7 +2035,7 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<String, St
 
 
 
-@Throws(DecodingError::class)
+@Throws(DecodingException::class)
 
 @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
 suspend fun `decode`(`invoice`: String) : Scanner {
@@ -1961,10 +2047,10 @@ suspend fun `decode`(`invoice`: String) : Scanner {
         // lift function
         { FfiConverterTypeScanner.lift(it) },
         // Error FFI converter
-        DecodingError.ErrorHandler,
+        DecodingException.ErrorHandler,
     )
 }
-@Throws(LnurlError::class)
+@Throws(LnurlException::class)
 
 @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
 suspend fun `getLnurlInvoice`(`address`: String, `amountSatoshis`: ULong) : String {
@@ -1976,14 +2062,14 @@ suspend fun `getLnurlInvoice`(`address`: String, `amountSatoshis`: ULong) : Stri
         // lift function
         { FfiConverterString.lift(it) },
         // Error FFI converter
-        LnurlError.ErrorHandler,
+        LnurlException.ErrorHandler,
     )
 }
-@Throws(AddressError::class)
+@Throws(AddressException::class)
 
 fun `validateBitcoinAddress`(`address`: String): ValidationResult {
     return FfiConverterTypeValidationResult.lift(
-    rustCallWithError(AddressError) { _status ->
+    rustCallWithError(AddressException) { _status ->
     _UniFFILib.INSTANCE.uniffi_bitkitcore_fn_func_validate_bitcoin_address(FfiConverterString.lower(`address`),_status)
 })
 }

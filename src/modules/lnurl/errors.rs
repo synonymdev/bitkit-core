@@ -1,6 +1,7 @@
 use thiserror::Error;
 
-#[derive(uniffi::Enum, Debug, Error)]
+#[derive(uniffi::Error, Debug, Error)]
+#[non_exhaustive]
 pub enum LnurlError {
     #[error("Invalid Lightning Address format")]
     InvalidAddress,
@@ -16,8 +17,8 @@ pub enum LnurlError {
         min: u64,
         max: u64,
     },
-    #[error("Failed to generate invoice: {message}")]
+    #[error("Failed to generate invoice: {error_details}")]
     InvoiceCreationFailed {
-        message: String,
+        error_details: String,
     },
 }

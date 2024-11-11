@@ -37,9 +37,9 @@ fn handle_decode_result(result: Result<Scanner, DecodingError>) {
             }
         }
 
-        Ok(Scanner::PubkyAuth { auth }) => {
+        Ok(Scanner::PubkyAuth { data }) => {
             println!("\nSuccessfully decoded Pubkey Auth:");
-            println!("Data: {}", auth.data);
+            println!("Data: {}", data);
         }
 
         Ok(Scanner::LnurlChannel { data }) => {

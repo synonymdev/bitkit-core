@@ -5,6 +5,6 @@ mod implementation;
 #[cfg(test)]
 mod tests;
 
-pub use errors::DecodingError;
+pub use errors::*;
 pub use types::*;
 pub use implementation::*;

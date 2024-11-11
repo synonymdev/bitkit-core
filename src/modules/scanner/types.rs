@@ -99,7 +99,7 @@ pub struct LnurlAddressData {
 
 #[derive(uniffi::Record, Serialize, Debug, Clone)]
 pub struct PubkyAuth {
-    pub data: String
+    pub data: String,
 }
 
 #[derive(uniffi::Record, Serialize, Debug, Clone)]
@@ -127,7 +127,7 @@ pub struct LightningInvoice {
 pub enum Scanner {
     OnChain { invoice: OnChainInvoice },
     Lightning { invoice: LightningInvoice },
-    PubkyAuth { auth: PubkyAuth },
+    PubkyAuth { data: String },
     LnurlChannel { data: LnurlChannelData },
     LnurlAuth { data: LnurlAuthData },
     LnurlWithdraw { data: LnurlWithdrawData },

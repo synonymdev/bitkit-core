@@ -1084,13 +1084,18 @@ public func FfiConverterTypeValidationResult_lower(_ value: ValidationResult) ->
     return FfiConverterTypeValidationResult.lower(value)
 }
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 public enum AddressError {
+
     
-    case invalidAddress
-    case invalidNetwork
+    
+    case InvalidAddress
+    case InvalidNetwork
+
+    fileprivate static func uniffiErrorHandler(_ error: RustBuffer) throws -> Error {
+        return try FfiConverterTypeAddressError.lift(error)
+    }
 }
+
 
 public struct FfiConverterTypeAddressError: FfiConverterRustBuffer {
     typealias SwiftType = AddressError
@@ -1098,24 +1103,29 @@ public struct FfiConverterTypeAddressError: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> AddressError {
         let variant: Int32 = try readInt(&buf)
         switch variant {
+
         
-        case 1: return .invalidAddress
+
         
-        case 2: return .invalidNetwork
-        
-        default: throw UniffiInternalError.unexpectedEnumCase
+        case 1: return .InvalidAddress
+        case 2: return .InvalidNetwork
+
+         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: AddressError, into buf: inout [UInt8]) {
         switch value {
+
+        
+
         
         
-        case .invalidAddress:
+        case .InvalidAddress:
             writeInt(&buf, Int32(1))
         
         
-        case .invalidNetwork:
+        case .InvalidNetwork:
             writeInt(&buf, Int32(2))
         
         }
@@ -1123,18 +1133,9 @@ public struct FfiConverterTypeAddressError: FfiConverterRustBuffer {
 }
 
 
-public func FfiConverterTypeAddressError_lift(_ buf: RustBuffer) throws -> AddressError {
-    return try FfiConverterTypeAddressError.lift(buf)
-}
-
-public func FfiConverterTypeAddressError_lower(_ value: AddressError) -> RustBuffer {
-    return FfiConverterTypeAddressError.lower(value)
-}
-
-
 extension AddressError: Equatable, Hashable {}
 
-
+extension AddressError: Error { }
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
@@ -1216,23 +1217,28 @@ extension AddressType: Equatable, Hashable {}
 
 
 
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 public enum DecodingError {
+
     
-    case invalidFormat
-    case invalidNetwork
-    case invalidAmount
-    case invalidLnurlPayAmount(amountSatoshis: UInt64, min: UInt64, max: UInt64)
-    case invalidTimestamp
-    case invalidChecksum
-    case invalidResponse
-    case unsupportedType
-    case invalidAddress
-    case requestFailed
-    case clientCreationFailed
-    case invoiceCreationFailed(message: String)
+    
+    case InvalidFormat
+    case InvalidNetwork
+    case InvalidAmount
+    case InvalidLnurlPayAmount(amountSatoshis: UInt64, min: UInt64, max: UInt64)
+    case InvalidTimestamp
+    case InvalidChecksum
+    case InvalidResponse
+    case UnsupportedType
+    case InvalidAddress
+    case RequestFailed
+    case ClientCreationFailed
+    case InvoiceCreationFailed(errorMessage: String)
+
+    fileprivate static func uniffiErrorHandler(_ error: RustBuffer) throws -> Error {
+        return try FfiConverterTypeDecodingError.lift(error)
+    }
 }
+
 
 public struct FfiConverterTypeDecodingError: FfiConverterRustBuffer {
     typealias SwiftType = DecodingError
@@ -1240,125 +1246,116 @@ public struct FfiConverterTypeDecodingError: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> DecodingError {
         let variant: Int32 = try readInt(&buf)
         switch variant {
+
         
-        case 1: return .invalidFormat
+
         
-        case 2: return .invalidNetwork
-        
-        case 3: return .invalidAmount
-        
-        case 4: return .invalidLnurlPayAmount(
+        case 1: return .InvalidFormat
+        case 2: return .InvalidNetwork
+        case 3: return .InvalidAmount
+        case 4: return .InvalidLnurlPayAmount(
             amountSatoshis: try FfiConverterUInt64.read(from: &buf), 
             min: try FfiConverterUInt64.read(from: &buf), 
             max: try FfiConverterUInt64.read(from: &buf)
-        )
-        
-        case 5: return .invalidTimestamp
-        
-        case 6: return .invalidChecksum
-        
-        case 7: return .invalidResponse
-        
-        case 8: return .unsupportedType
-        
-        case 9: return .invalidAddress
-        
-        case 10: return .requestFailed
-        
-        case 11: return .clientCreationFailed
-        
-        case 12: return .invoiceCreationFailed(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
-        default: throw UniffiInternalError.unexpectedEnumCase
+            )
+        case 5: return .InvalidTimestamp
+        case 6: return .InvalidChecksum
+        case 7: return .InvalidResponse
+        case 8: return .UnsupportedType
+        case 9: return .InvalidAddress
+        case 10: return .RequestFailed
+        case 11: return .ClientCreationFailed
+        case 12: return .InvoiceCreationFailed(
+            errorMessage: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: DecodingError, into buf: inout [UInt8]) {
         switch value {
+
+        
+
         
         
-        case .invalidFormat:
+        case .InvalidFormat:
             writeInt(&buf, Int32(1))
         
         
-        case .invalidNetwork:
+        case .InvalidNetwork:
             writeInt(&buf, Int32(2))
         
         
-        case .invalidAmount:
+        case .InvalidAmount:
             writeInt(&buf, Int32(3))
         
         
-        case let .invalidLnurlPayAmount(amountSatoshis,min,max):
+        case let .InvalidLnurlPayAmount(amountSatoshis,min,max):
             writeInt(&buf, Int32(4))
             FfiConverterUInt64.write(amountSatoshis, into: &buf)
             FfiConverterUInt64.write(min, into: &buf)
             FfiConverterUInt64.write(max, into: &buf)
             
         
-        case .invalidTimestamp:
+        case .InvalidTimestamp:
             writeInt(&buf, Int32(5))
         
         
-        case .invalidChecksum:
+        case .InvalidChecksum:
             writeInt(&buf, Int32(6))
         
         
-        case .invalidResponse:
+        case .InvalidResponse:
             writeInt(&buf, Int32(7))
         
         
-        case .unsupportedType:
+        case .UnsupportedType:
             writeInt(&buf, Int32(8))
         
         
-        case .invalidAddress:
+        case .InvalidAddress:
             writeInt(&buf, Int32(9))
         
         
-        case .requestFailed:
+        case .RequestFailed:
             writeInt(&buf, Int32(10))
         
         
-        case .clientCreationFailed:
+        case .ClientCreationFailed:
             writeInt(&buf, Int32(11))
         
         
-        case let .invoiceCreationFailed(message):
+        case let .InvoiceCreationFailed(errorMessage):
             writeInt(&buf, Int32(12))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(errorMessage, into: &buf)
             
         }
     }
 }
 
 
-public func FfiConverterTypeDecodingError_lift(_ buf: RustBuffer) throws -> DecodingError {
-    return try FfiConverterTypeDecodingError.lift(buf)
-}
-
-public func FfiConverterTypeDecodingError_lower(_ value: DecodingError) -> RustBuffer {
-    return FfiConverterTypeDecodingError.lower(value)
-}
-
-
 extension DecodingError: Equatable, Hashable {}
 
+extension DecodingError: Error { }
 
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 public enum LnurlError {
+
     
-    case invalidAddress
-    case clientCreationFailed
-    case requestFailed
-    case invalidResponse
-    case invalidAmount(amountSatoshis: UInt64, min: UInt64, max: UInt64)
-    case invoiceCreationFailed(message: String)
+    
+    case InvalidAddress
+    case ClientCreationFailed
+    case RequestFailed
+    case InvalidResponse
+    case InvalidAmount(amountSatoshis: UInt64, min: UInt64, max: UInt64)
+    case InvoiceCreationFailed(errorDetails: String)
+
+    fileprivate static func uniffiErrorHandler(_ error: RustBuffer) throws -> Error {
+        return try FfiConverterTypeLnurlError.lift(error)
+    }
 }
+
 
 public struct FfiConverterTypeLnurlError: FfiConverterRustBuffer {
     typealias SwiftType = LnurlError
@@ -1366,77 +1363,69 @@ public struct FfiConverterTypeLnurlError: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> LnurlError {
         let variant: Int32 = try readInt(&buf)
         switch variant {
+
         
-        case 1: return .invalidAddress
+
         
-        case 2: return .clientCreationFailed
-        
-        case 3: return .requestFailed
-        
-        case 4: return .invalidResponse
-        
-        case 5: return .invalidAmount(
+        case 1: return .InvalidAddress
+        case 2: return .ClientCreationFailed
+        case 3: return .RequestFailed
+        case 4: return .InvalidResponse
+        case 5: return .InvalidAmount(
             amountSatoshis: try FfiConverterUInt64.read(from: &buf), 
             min: try FfiConverterUInt64.read(from: &buf), 
             max: try FfiConverterUInt64.read(from: &buf)
-        )
-        
-        case 6: return .invoiceCreationFailed(
-            message: try FfiConverterString.read(from: &buf)
-        )
-        
-        default: throw UniffiInternalError.unexpectedEnumCase
+            )
+        case 6: return .InvoiceCreationFailed(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: LnurlError, into buf: inout [UInt8]) {
         switch value {
+
+        
+
         
         
-        case .invalidAddress:
+        case .InvalidAddress:
             writeInt(&buf, Int32(1))
         
         
-        case .clientCreationFailed:
+        case .ClientCreationFailed:
             writeInt(&buf, Int32(2))
         
         
-        case .requestFailed:
+        case .RequestFailed:
             writeInt(&buf, Int32(3))
         
         
-        case .invalidResponse:
+        case .InvalidResponse:
             writeInt(&buf, Int32(4))
         
         
-        case let .invalidAmount(amountSatoshis,min,max):
+        case let .InvalidAmount(amountSatoshis,min,max):
             writeInt(&buf, Int32(5))
             FfiConverterUInt64.write(amountSatoshis, into: &buf)
             FfiConverterUInt64.write(min, into: &buf)
             FfiConverterUInt64.write(max, into: &buf)
             
         
-        case let .invoiceCreationFailed(message):
+        case let .InvoiceCreationFailed(errorDetails):
             writeInt(&buf, Int32(6))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(errorDetails, into: &buf)
             
         }
     }
 }
 
 
-public func FfiConverterTypeLnurlError_lift(_ buf: RustBuffer) throws -> LnurlError {
-    return try FfiConverterTypeLnurlError.lift(buf)
-}
-
-public func FfiConverterTypeLnurlError_lower(_ value: LnurlError) -> RustBuffer {
-    return FfiConverterTypeLnurlError.lower(value)
-}
-
-
 extension LnurlError: Equatable, Hashable {}
 
-
+extension LnurlError: Error { }
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
@@ -1510,7 +1499,7 @@ public enum Scanner {
     
     case onChain(invoice: OnChainInvoice)
     case lightning(invoice: LightningInvoice)
-    case pubkyAuth(auth: PubkyAuth)
+    case pubkyAuth(data: String)
     case lnurlChannel(data: LnurlChannelData)
     case lnurlAuth(data: LnurlAuthData)
     case lnurlWithdraw(data: LnurlWithdrawData)
@@ -1537,7 +1526,7 @@ public struct FfiConverterTypeScanner: FfiConverterRustBuffer {
         )
         
         case 3: return .pubkyAuth(
-            auth: try FfiConverterTypePubkyAuth.read(from: &buf)
+            data: try FfiConverterString.read(from: &buf)
         )
         
         case 4: return .lnurlChannel(
@@ -1591,9 +1580,9 @@ public struct FfiConverterTypeScanner: FfiConverterRustBuffer {
             FfiConverterTypeLightningInvoice.write(invoice, into: &buf)
             
         
-        case let .pubkyAuth(auth):
+        case let .pubkyAuth(data):
             writeInt(&buf, Int32(3))
-            FfiConverterTypePubkyAuth.write(auth, into: &buf)
+            FfiConverterString.write(data, into: &buf)
             
         
         case let .lnurlChannel(data):

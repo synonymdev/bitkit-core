@@ -1,6 +1,9 @@
 use thiserror::Error;
+use crate::lnurl::LnurlError;
+use crate::onchain::AddressError;
 
-#[derive(uniffi::Enum, Debug, Error)]
+#[derive(uniffi::Error, Debug, Error)]
+#[non_exhaustive]
 pub enum DecodingError {
     #[error("Invalid invoice format")]
     InvalidFormat,
@@ -24,12 +27,44 @@ pub enum DecodingError {
     UnsupportedType,
     #[error("Invalid address")]
     InvalidAddress,
-    #[error("Lnurl request failed")]
+    #[error("LNURL request failed")]
     RequestFailed,
     #[error("Client creation failed")]
     ClientCreationFailed,
-    #[error("Invoice creation failed: {message}")]
+    #[error("Invoice creation failed: {error_message}")]
     InvoiceCreationFailed {
-        message: String,
+        error_message: String,
     },
+}
+
+impl From<LnurlError> for DecodingError {
+    fn from(error: LnurlError) -> Self {
+        match error {
+            LnurlError::InvoiceCreationFailed { error_details } => {
+                DecodingError::InvoiceCreationFailed {
+                    error_message: error_details
+                }
+            },
+            LnurlError::InvalidAddress => DecodingError::InvalidFormat,
+            LnurlError::ClientCreationFailed => DecodingError::ClientCreationFailed,
+            LnurlError::RequestFailed => DecodingError::RequestFailed,
+            LnurlError::InvalidResponse => DecodingError::InvalidResponse,
+            LnurlError::InvalidAmount { amount_satoshis, min, max } => {
+                DecodingError::InvalidLNURLPayAmount {
+                    amount_satoshis,
+                    min,
+                    max
+                }
+            }
+        }
+    }
+}
+
+impl From<AddressError> for DecodingError {
+    fn from(error: AddressError) -> Self {
+        match error {
+            AddressError::InvalidAddress => DecodingError::InvalidAddress,
+            AddressError::InvalidNetwork => DecodingError::InvalidNetwork,
+        }
+    }
 }
