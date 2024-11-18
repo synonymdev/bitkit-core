@@ -271,7 +271,7 @@ suspend fun decodeInvoice() {
             is DecodingError.InvalidAddress -> println("Invalid address")
             is DecodingError.RequestFailed -> println("LNURL request failed")
             is DecodingError.ClientCreationFailed -> println("Client creation failed")
-            is DecodingError.InvoiceCreationFailed -> println("Invoice creation failed: ${e.message}")
+            is DecodingError.InvoiceCreationFailed -> println("Invoice creation failed: ${e.error_message}")
         }
     }
 }
@@ -394,7 +394,7 @@ except DecodingError as e:
   elif isinstance(e, DecodingError.ClientCreationFailed):
     print("Client creation failed")
   elif isinstance(e, DecodingError.InvoiceCreationFailed):
-    print(f"Invoice creation failed: {e.message}")
+    print(f"Invoice creation failed: {e.error_message}")
 ```
 
 ## Supported Types
