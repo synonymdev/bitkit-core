@@ -2,10 +2,6 @@ uniffi::setup_scaffolding!();
 
 mod modules;
 
-use std::sync::Arc;
-use tokio::runtime::Runtime;
-use uniffi::deps::once_cell::sync::Lazy;
-
 // Re-export commonly used types and functions
 pub use modules::scanner::{Scanner, DecodingError};
 pub use modules::lnurl;
