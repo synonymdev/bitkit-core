@@ -483,6 +483,7 @@ fileprivate struct FfiConverterData: FfiConverterRustBuffer {
 
 
 public struct LightningInvoice {
+    public var bolt11: String
     public var paymentHash: Data
     public var amountSatoshis: UInt64
     public var timestampSeconds: UInt64
@@ -494,7 +495,8 @@ public struct LightningInvoice {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(paymentHash: Data, amountSatoshis: UInt64, timestampSeconds: UInt64, expirySeconds: UInt64, isExpired: Bool, description: String?, networkType: NetworkType, payeeNodeId: Data?) {
+    public init(bolt11: String, paymentHash: Data, amountSatoshis: UInt64, timestampSeconds: UInt64, expirySeconds: UInt64, isExpired: Bool, description: String?, networkType: NetworkType, payeeNodeId: Data?) {
+        self.bolt11 = bolt11
         self.paymentHash = paymentHash
         self.amountSatoshis = amountSatoshis
         self.timestampSeconds = timestampSeconds
@@ -510,6 +512,9 @@ public struct LightningInvoice {
 
 extension LightningInvoice: Equatable, Hashable {
     public static func ==(lhs: LightningInvoice, rhs: LightningInvoice) -> Bool {
+        if lhs.bolt11 != rhs.bolt11 {
+            return false
+        }
         if lhs.paymentHash != rhs.paymentHash {
             return false
         }
@@ -538,6 +543,7 @@ extension LightningInvoice: Equatable, Hashable {
     }
 
     public func hash(into hasher: inout Hasher) {
+        hasher.combine(bolt11)
         hasher.combine(paymentHash)
         hasher.combine(amountSatoshis)
         hasher.combine(timestampSeconds)
@@ -554,6 +560,7 @@ public struct FfiConverterTypeLightningInvoice: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> LightningInvoice {
         return
             try LightningInvoice(
+                bolt11: FfiConverterString.read(from: &buf), 
                 paymentHash: FfiConverterData.read(from: &buf), 
                 amountSatoshis: FfiConverterUInt64.read(from: &buf), 
                 timestampSeconds: FfiConverterUInt64.read(from: &buf), 
@@ -566,6 +573,7 @@ public struct FfiConverterTypeLightningInvoice: FfiConverterRustBuffer {
     }
 
     public static func write(_ value: LightningInvoice, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.bolt11, into: &buf)
         FfiConverterData.write(value.paymentHash, into: &buf)
         FfiConverterUInt64.write(value.amountSatoshis, into: &buf)
         FfiConverterUInt64.write(value.timestampSeconds, into: &buf)

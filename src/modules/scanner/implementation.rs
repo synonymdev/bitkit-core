@@ -271,6 +271,7 @@ impl Scanner {
 
         Ok(Scanner::Lightning {
             invoice: LightningInvoice {
+                bolt11: invoice_str.to_string(),
                 payment_hash,
                 amount_satoshis,
                 timestamp_seconds: timestamp.timestamp() as u64,

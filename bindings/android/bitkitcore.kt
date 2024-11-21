@@ -1081,6 +1081,7 @@ public object FfiConverterByteArray: FfiConverterRustBuffer<ByteArray> {
 
 
 data class LightningInvoice (
+    var `bolt11`: kotlin.String, 
     var `paymentHash`: kotlin.ByteArray, 
     var `amountSatoshis`: kotlin.ULong, 
     var `timestampSeconds`: kotlin.ULong, 
@@ -1097,6 +1098,7 @@ data class LightningInvoice (
 public object FfiConverterTypeLightningInvoice: FfiConverterRustBuffer<LightningInvoice> {
     override fun read(buf: ByteBuffer): LightningInvoice {
         return LightningInvoice(
+            FfiConverterString.read(buf),
             FfiConverterByteArray.read(buf),
             FfiConverterULong.read(buf),
             FfiConverterULong.read(buf),
@@ -1109,6 +1111,7 @@ public object FfiConverterTypeLightningInvoice: FfiConverterRustBuffer<Lightning
     }
 
     override fun allocationSize(value: LightningInvoice) = (
+            FfiConverterString.allocationSize(value.`bolt11`) +
             FfiConverterByteArray.allocationSize(value.`paymentHash`) +
             FfiConverterULong.allocationSize(value.`amountSatoshis`) +
             FfiConverterULong.allocationSize(value.`timestampSeconds`) +
@@ -1120,6 +1123,7 @@ public object FfiConverterTypeLightningInvoice: FfiConverterRustBuffer<Lightning
     )
 
     override fun write(value: LightningInvoice, buf: ByteBuffer) {
+            FfiConverterString.write(value.`bolt11`, buf)
             FfiConverterByteArray.write(value.`paymentHash`, buf)
             FfiConverterULong.write(value.`amountSatoshis`, buf)
             FfiConverterULong.write(value.`timestampSeconds`, buf)

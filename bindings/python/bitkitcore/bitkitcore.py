@@ -975,6 +975,7 @@ class _UniffiConverterBytes(_UniffiConverterRustBuffer):
 
 
 class LightningInvoice:
+    bolt11: "str"
     payment_hash: "bytes"
     amount_satoshis: "int"
     timestamp_seconds: "int"
@@ -984,7 +985,8 @@ class LightningInvoice:
     network_type: "NetworkType"
     payee_node_id: "typing.Optional[bytes]"
     @typing.no_type_check
-    def __init__(self, *, payment_hash: "bytes", amount_satoshis: "int", timestamp_seconds: "int", expiry_seconds: "int", is_expired: "bool", description: "typing.Optional[str]", network_type: "NetworkType", payee_node_id: "typing.Optional[bytes]"):
+    def __init__(self, *, bolt11: "str", payment_hash: "bytes", amount_satoshis: "int", timestamp_seconds: "int", expiry_seconds: "int", is_expired: "bool", description: "typing.Optional[str]", network_type: "NetworkType", payee_node_id: "typing.Optional[bytes]"):
+        self.bolt11 = bolt11
         self.payment_hash = payment_hash
         self.amount_satoshis = amount_satoshis
         self.timestamp_seconds = timestamp_seconds
@@ -995,9 +997,11 @@ class LightningInvoice:
         self.payee_node_id = payee_node_id
 
     def __str__(self):
-        return "LightningInvoice(payment_hash={}, amount_satoshis={}, timestamp_seconds={}, expiry_seconds={}, is_expired={}, description={}, network_type={}, payee_node_id={})".format(self.payment_hash, self.amount_satoshis, self.timestamp_seconds, self.expiry_seconds, self.is_expired, self.description, self.network_type, self.payee_node_id)
+        return "LightningInvoice(bolt11={}, payment_hash={}, amount_satoshis={}, timestamp_seconds={}, expiry_seconds={}, is_expired={}, description={}, network_type={}, payee_node_id={})".format(self.bolt11, self.payment_hash, self.amount_satoshis, self.timestamp_seconds, self.expiry_seconds, self.is_expired, self.description, self.network_type, self.payee_node_id)
 
     def __eq__(self, other):
+        if self.bolt11 != other.bolt11:
+            return False
         if self.payment_hash != other.payment_hash:
             return False
         if self.amount_satoshis != other.amount_satoshis:
@@ -1020,6 +1024,7 @@ class _UniffiConverterTypeLightningInvoice(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
         return LightningInvoice(
+            bolt11=_UniffiConverterString.read(buf),
             payment_hash=_UniffiConverterBytes.read(buf),
             amount_satoshis=_UniffiConverterUInt64.read(buf),
             timestamp_seconds=_UniffiConverterUInt64.read(buf),
@@ -1032,6 +1037,7 @@ class _UniffiConverterTypeLightningInvoice(_UniffiConverterRustBuffer):
 
     @staticmethod
     def check_lower(value):
+        _UniffiConverterString.check_lower(value.bolt11)
         _UniffiConverterBytes.check_lower(value.payment_hash)
         _UniffiConverterUInt64.check_lower(value.amount_satoshis)
         _UniffiConverterUInt64.check_lower(value.timestamp_seconds)
@@ -1043,6 +1049,7 @@ class _UniffiConverterTypeLightningInvoice(_UniffiConverterRustBuffer):
 
     @staticmethod
     def write(value, buf):
+        _UniffiConverterString.write(value.bolt11, buf)
         _UniffiConverterBytes.write(value.payment_hash, buf)
         _UniffiConverterUInt64.write(value.amount_satoshis, buf)
         _UniffiConverterUInt64.write(value.timestamp_seconds, buf)
