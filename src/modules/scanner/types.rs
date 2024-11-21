@@ -106,6 +106,7 @@ pub struct OnChainInvoice {
 
 #[derive(uniffi::Record, Debug, Clone)]
 pub struct LightningInvoice {
+    pub bolt11: String,
     pub payment_hash: Vec<u8>,
     pub amount_satoshis: u64,
     pub timestamp_seconds: u64,
