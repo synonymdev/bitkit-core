@@ -725,8 +725,6 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
-
-
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -748,15 +746,11 @@ internal interface UniffiLib : Library {
     ): Long
     fun uniffi_bitkitcore_fn_func_delete_activity_by_id(`activityId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Byte
-    fun uniffi_bitkitcore_fn_func_get_activities_by_tag(`tag`: RustBuffer.ByValue,`limit`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    fun uniffi_bitkitcore_fn_func_get_activities(`filter`: RustBuffer.ByValue,`limit`: RustBuffer.ByValue,`sortDirection`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_get_activities_by_tag(`tag`: RustBuffer.ByValue,`limit`: RustBuffer.ByValue,`sortDirection`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_get_activity_by_id(`activityId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_bitkitcore_fn_func_get_all_activities(`limit`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_bitkitcore_fn_func_get_all_lightning_activities(`limit`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
-    ): RustBuffer.ByValue
-    fun uniffi_bitkitcore_fn_func_get_all_onchain_activities(`limit`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_get_lnurl_invoice(`address`: RustBuffer.ByValue,`amountSatoshis`: Long,
     ): Long
@@ -769,6 +763,8 @@ internal interface UniffiLib : Library {
     fun uniffi_bitkitcore_fn_func_remove_tags(`activityId`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_bitkitcore_fn_func_update_activity(`activityId`: RustBuffer.ByValue,`activity`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_bitkitcore_fn_func_upsert_activity(`activity`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_bitkitcore_fn_func_validate_bitcoin_address(`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -890,15 +886,11 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_bitkitcore_checksum_func_delete_activity_by_id(
     ): Short
+    fun uniffi_bitkitcore_checksum_func_get_activities(
+    ): Short
     fun uniffi_bitkitcore_checksum_func_get_activities_by_tag(
     ): Short
     fun uniffi_bitkitcore_checksum_func_get_activity_by_id(
-    ): Short
-    fun uniffi_bitkitcore_checksum_func_get_all_activities(
-    ): Short
-    fun uniffi_bitkitcore_checksum_func_get_all_lightning_activities(
-    ): Short
-    fun uniffi_bitkitcore_checksum_func_get_all_onchain_activities(
     ): Short
     fun uniffi_bitkitcore_checksum_func_get_lnurl_invoice(
     ): Short
@@ -911,6 +903,8 @@ internal interface UniffiLib : Library {
     fun uniffi_bitkitcore_checksum_func_remove_tags(
     ): Short
     fun uniffi_bitkitcore_checksum_func_update_activity(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_upsert_activity(
     ): Short
     fun uniffi_bitkitcore_checksum_func_validate_bitcoin_address(
     ): Short
@@ -940,19 +934,13 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 42602.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_get_activities() != 55403.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 52823.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_bitkitcore_checksum_func_get_all_activities() != 23070.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_bitkitcore_checksum_func_get_all_lightning_activities() != 48129.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
-    if (lib.uniffi_bitkitcore_checksum_func_get_all_onchain_activities() != 7355.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475.toShort()) {
@@ -971,6 +959,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_update_activity() != 42510.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_upsert_activity() != 32175.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003.toShort()) {
@@ -1096,26 +1087,6 @@ public object FfiConverterULong: FfiConverter<ULong, Long> {
     }
 }
 
-public object FfiConverterLong: FfiConverter<Long, Long> {
-    override fun lift(value: Long): Long {
-        return value
-    }
-
-    override fun read(buf: ByteBuffer): Long {
-        return buf.getLong()
-    }
-
-    override fun lower(value: Long): Long {
-        return value
-    }
-
-    override fun allocationSize(value: Long) = 8UL
-
-    override fun write(value: Long, buf: ByteBuffer) {
-        buf.putLong(value)
-    }
-}
-
 public object FfiConverterBoolean: FfiConverter<Boolean, Byte> {
     override fun lift(value: Byte): Boolean {
         return value.toInt() != 0
@@ -1210,17 +1181,16 @@ public object FfiConverterByteArray: FfiConverterRustBuffer<ByteArray> {
 
 data class LightningActivity (
     var `id`: kotlin.String, 
-    var `activityType`: ActivityType, 
     var `txType`: PaymentType, 
     var `status`: PaymentState, 
-    var `value`: kotlin.Long, 
-    var `fee`: kotlin.Long?, 
+    var `value`: kotlin.ULong, 
+    var `fee`: kotlin.ULong?, 
     var `invoice`: kotlin.String, 
     var `message`: kotlin.String, 
-    var `timestamp`: kotlin.Long, 
+    var `timestamp`: kotlin.ULong, 
     var `preimage`: kotlin.String?, 
-    var `createdAt`: kotlin.Long?, 
-    var `updatedAt`: kotlin.Long?
+    var `createdAt`: kotlin.ULong?, 
+    var `updatedAt`: kotlin.ULong?
 ) {
     
     companion object
@@ -1230,48 +1200,45 @@ public object FfiConverterTypeLightningActivity: FfiConverterRustBuffer<Lightnin
     override fun read(buf: ByteBuffer): LightningActivity {
         return LightningActivity(
             FfiConverterString.read(buf),
-            FfiConverterTypeActivityType.read(buf),
             FfiConverterTypePaymentType.read(buf),
             FfiConverterTypePaymentState.read(buf),
-            FfiConverterLong.read(buf),
-            FfiConverterOptionalLong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterOptionalULong.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
-            FfiConverterLong.read(buf),
+            FfiConverterULong.read(buf),
             FfiConverterOptionalString.read(buf),
-            FfiConverterOptionalLong.read(buf),
-            FfiConverterOptionalLong.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalULong.read(buf),
         )
     }
 
     override fun allocationSize(value: LightningActivity) = (
             FfiConverterString.allocationSize(value.`id`) +
-            FfiConverterTypeActivityType.allocationSize(value.`activityType`) +
             FfiConverterTypePaymentType.allocationSize(value.`txType`) +
             FfiConverterTypePaymentState.allocationSize(value.`status`) +
-            FfiConverterLong.allocationSize(value.`value`) +
-            FfiConverterOptionalLong.allocationSize(value.`fee`) +
+            FfiConverterULong.allocationSize(value.`value`) +
+            FfiConverterOptionalULong.allocationSize(value.`fee`) +
             FfiConverterString.allocationSize(value.`invoice`) +
             FfiConverterString.allocationSize(value.`message`) +
-            FfiConverterLong.allocationSize(value.`timestamp`) +
+            FfiConverterULong.allocationSize(value.`timestamp`) +
             FfiConverterOptionalString.allocationSize(value.`preimage`) +
-            FfiConverterOptionalLong.allocationSize(value.`createdAt`) +
-            FfiConverterOptionalLong.allocationSize(value.`updatedAt`)
+            FfiConverterOptionalULong.allocationSize(value.`createdAt`) +
+            FfiConverterOptionalULong.allocationSize(value.`updatedAt`)
     )
 
     override fun write(value: LightningActivity, buf: ByteBuffer) {
             FfiConverterString.write(value.`id`, buf)
-            FfiConverterTypeActivityType.write(value.`activityType`, buf)
             FfiConverterTypePaymentType.write(value.`txType`, buf)
             FfiConverterTypePaymentState.write(value.`status`, buf)
-            FfiConverterLong.write(value.`value`, buf)
-            FfiConverterOptionalLong.write(value.`fee`, buf)
+            FfiConverterULong.write(value.`value`, buf)
+            FfiConverterOptionalULong.write(value.`fee`, buf)
             FfiConverterString.write(value.`invoice`, buf)
             FfiConverterString.write(value.`message`, buf)
-            FfiConverterLong.write(value.`timestamp`, buf)
+            FfiConverterULong.write(value.`timestamp`, buf)
             FfiConverterOptionalString.write(value.`preimage`, buf)
-            FfiConverterOptionalLong.write(value.`createdAt`, buf)
-            FfiConverterOptionalLong.write(value.`updatedAt`, buf)
+            FfiConverterOptionalULong.write(value.`createdAt`, buf)
+            FfiConverterOptionalULong.write(value.`updatedAt`, buf)
     }
 }
 
@@ -1582,23 +1549,22 @@ public object FfiConverterTypeOnChainInvoice: FfiConverterRustBuffer<OnChainInvo
 
 data class OnchainActivity (
     var `id`: kotlin.String, 
-    var `activityType`: ActivityType, 
     var `txType`: PaymentType, 
     var `txId`: kotlin.String, 
-    var `value`: kotlin.Long, 
-    var `fee`: kotlin.Long, 
-    var `feeRate`: kotlin.Long, 
+    var `value`: kotlin.ULong, 
+    var `fee`: kotlin.ULong, 
+    var `feeRate`: kotlin.ULong, 
     var `address`: kotlin.String, 
     var `confirmed`: kotlin.Boolean, 
-    var `timestamp`: kotlin.Long, 
+    var `timestamp`: kotlin.ULong, 
     var `isBoosted`: kotlin.Boolean, 
     var `isTransfer`: kotlin.Boolean, 
     var `doesExist`: kotlin.Boolean, 
-    var `confirmTimestamp`: kotlin.Long?, 
+    var `confirmTimestamp`: kotlin.ULong?, 
     var `channelId`: kotlin.String?, 
     var `transferTxId`: kotlin.String?, 
-    var `createdAt`: kotlin.Long?, 
-    var `updatedAt`: kotlin.Long?
+    var `createdAt`: kotlin.ULong?, 
+    var `updatedAt`: kotlin.ULong?
 ) {
     
     companion object
@@ -1608,66 +1574,63 @@ public object FfiConverterTypeOnchainActivity: FfiConverterRustBuffer<OnchainAct
     override fun read(buf: ByteBuffer): OnchainActivity {
         return OnchainActivity(
             FfiConverterString.read(buf),
-            FfiConverterTypeActivityType.read(buf),
             FfiConverterTypePaymentType.read(buf),
             FfiConverterString.read(buf),
-            FfiConverterLong.read(buf),
-            FfiConverterLong.read(buf),
-            FfiConverterLong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
             FfiConverterString.read(buf),
             FfiConverterBoolean.read(buf),
-            FfiConverterLong.read(buf),
+            FfiConverterULong.read(buf),
             FfiConverterBoolean.read(buf),
             FfiConverterBoolean.read(buf),
             FfiConverterBoolean.read(buf),
-            FfiConverterOptionalLong.read(buf),
+            FfiConverterOptionalULong.read(buf),
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalString.read(buf),
-            FfiConverterOptionalLong.read(buf),
-            FfiConverterOptionalLong.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalULong.read(buf),
         )
     }
 
     override fun allocationSize(value: OnchainActivity) = (
             FfiConverterString.allocationSize(value.`id`) +
-            FfiConverterTypeActivityType.allocationSize(value.`activityType`) +
             FfiConverterTypePaymentType.allocationSize(value.`txType`) +
             FfiConverterString.allocationSize(value.`txId`) +
-            FfiConverterLong.allocationSize(value.`value`) +
-            FfiConverterLong.allocationSize(value.`fee`) +
-            FfiConverterLong.allocationSize(value.`feeRate`) +
+            FfiConverterULong.allocationSize(value.`value`) +
+            FfiConverterULong.allocationSize(value.`fee`) +
+            FfiConverterULong.allocationSize(value.`feeRate`) +
             FfiConverterString.allocationSize(value.`address`) +
             FfiConverterBoolean.allocationSize(value.`confirmed`) +
-            FfiConverterLong.allocationSize(value.`timestamp`) +
+            FfiConverterULong.allocationSize(value.`timestamp`) +
             FfiConverterBoolean.allocationSize(value.`isBoosted`) +
             FfiConverterBoolean.allocationSize(value.`isTransfer`) +
             FfiConverterBoolean.allocationSize(value.`doesExist`) +
-            FfiConverterOptionalLong.allocationSize(value.`confirmTimestamp`) +
+            FfiConverterOptionalULong.allocationSize(value.`confirmTimestamp`) +
             FfiConverterOptionalString.allocationSize(value.`channelId`) +
             FfiConverterOptionalString.allocationSize(value.`transferTxId`) +
-            FfiConverterOptionalLong.allocationSize(value.`createdAt`) +
-            FfiConverterOptionalLong.allocationSize(value.`updatedAt`)
+            FfiConverterOptionalULong.allocationSize(value.`createdAt`) +
+            FfiConverterOptionalULong.allocationSize(value.`updatedAt`)
     )
 
     override fun write(value: OnchainActivity, buf: ByteBuffer) {
             FfiConverterString.write(value.`id`, buf)
-            FfiConverterTypeActivityType.write(value.`activityType`, buf)
             FfiConverterTypePaymentType.write(value.`txType`, buf)
             FfiConverterString.write(value.`txId`, buf)
-            FfiConverterLong.write(value.`value`, buf)
-            FfiConverterLong.write(value.`fee`, buf)
-            FfiConverterLong.write(value.`feeRate`, buf)
+            FfiConverterULong.write(value.`value`, buf)
+            FfiConverterULong.write(value.`fee`, buf)
+            FfiConverterULong.write(value.`feeRate`, buf)
             FfiConverterString.write(value.`address`, buf)
             FfiConverterBoolean.write(value.`confirmed`, buf)
-            FfiConverterLong.write(value.`timestamp`, buf)
+            FfiConverterULong.write(value.`timestamp`, buf)
             FfiConverterBoolean.write(value.`isBoosted`, buf)
             FfiConverterBoolean.write(value.`isTransfer`, buf)
             FfiConverterBoolean.write(value.`doesExist`, buf)
-            FfiConverterOptionalLong.write(value.`confirmTimestamp`, buf)
+            FfiConverterOptionalULong.write(value.`confirmTimestamp`, buf)
             FfiConverterOptionalString.write(value.`channelId`, buf)
             FfiConverterOptionalString.write(value.`transferTxId`, buf)
-            FfiConverterOptionalLong.write(value.`createdAt`, buf)
-            FfiConverterOptionalLong.write(value.`updatedAt`, buf)
+            FfiConverterOptionalULong.write(value.`createdAt`, buf)
+            FfiConverterOptionalULong.write(value.`updatedAt`, buf)
     }
 }
 
@@ -1975,6 +1938,34 @@ public object FfiConverterTypeActivityError : FfiConverterRustBuffer<ActivityExc
 
 
 
+enum class ActivityFilter {
+    
+    ALL,
+    LIGHTNING,
+    ONCHAIN;
+    companion object
+}
+
+
+public object FfiConverterTypeActivityFilter: FfiConverterRustBuffer<ActivityFilter> {
+    override fun read(buf: ByteBuffer) = try {
+        ActivityFilter.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: ActivityFilter) = 4UL
+
+    override fun write(value: ActivityFilter, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+
 enum class ActivityType {
     
     ONCHAIN,
@@ -2090,6 +2081,167 @@ public object FfiConverterTypeAddressType: FfiConverterRustBuffer<AddressType> {
 
     override fun write(value: AddressType, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+sealed class BlocktankError {
+    
+    object InvalidBlocktank : BlocktankError()
+    
+    
+    data class InitializationError(
+        val `message`: kotlin.String) : BlocktankError() {
+        companion object
+    }
+    
+    data class InsertError(
+        val `message`: kotlin.String) : BlocktankError() {
+        companion object
+    }
+    
+    data class RetrievalError(
+        val `message`: kotlin.String) : BlocktankError() {
+        companion object
+    }
+    
+    data class DataError(
+        val `message`: kotlin.String) : BlocktankError() {
+        companion object
+    }
+    
+    data class ConnectionError(
+        val `message`: kotlin.String) : BlocktankError() {
+        companion object
+    }
+    
+    data class SerializationError(
+        val `message`: kotlin.String) : BlocktankError() {
+        companion object
+    }
+    
+
+    
+    companion object
+}
+
+public object FfiConverterTypeBlocktankError : FfiConverterRustBuffer<BlocktankError>{
+    override fun read(buf: ByteBuffer): BlocktankError {
+        return when(buf.getInt()) {
+            1 -> BlocktankError.InvalidBlocktank
+            2 -> BlocktankError.InitializationError(
+                FfiConverterString.read(buf),
+                )
+            3 -> BlocktankError.InsertError(
+                FfiConverterString.read(buf),
+                )
+            4 -> BlocktankError.RetrievalError(
+                FfiConverterString.read(buf),
+                )
+            5 -> BlocktankError.DataError(
+                FfiConverterString.read(buf),
+                )
+            6 -> BlocktankError.ConnectionError(
+                FfiConverterString.read(buf),
+                )
+            7 -> BlocktankError.SerializationError(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: BlocktankError) = when(value) {
+        is BlocktankError.InvalidBlocktank -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BlocktankError.InitializationError -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`message`)
+            )
+        }
+        is BlocktankError.InsertError -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`message`)
+            )
+        }
+        is BlocktankError.RetrievalError -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`message`)
+            )
+        }
+        is BlocktankError.DataError -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`message`)
+            )
+        }
+        is BlocktankError.ConnectionError -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`message`)
+            )
+        }
+        is BlocktankError.SerializationError -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`message`)
+            )
+        }
+    }
+
+    override fun write(value: BlocktankError, buf: ByteBuffer) {
+        when(value) {
+            is BlocktankError.InvalidBlocktank -> {
+                buf.putInt(1)
+                Unit
+            }
+            is BlocktankError.InitializationError -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`message`, buf)
+                Unit
+            }
+            is BlocktankError.InsertError -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`message`, buf)
+                Unit
+            }
+            is BlocktankError.RetrievalError -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`message`, buf)
+                Unit
+            }
+            is BlocktankError.DataError -> {
+                buf.putInt(5)
+                FfiConverterString.write(value.`message`, buf)
+                Unit
+            }
+            is BlocktankError.ConnectionError -> {
+                buf.putInt(6)
+                FfiConverterString.write(value.`message`, buf)
+                Unit
+            }
+            is BlocktankError.SerializationError -> {
+                buf.putInt(7)
+                FfiConverterString.write(value.`message`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
 }
 
@@ -2894,6 +3046,33 @@ public object FfiConverterTypeScanner : FfiConverterRustBuffer<Scanner>{
 
 
 
+enum class SortDirection {
+    
+    ASC,
+    DESC;
+    companion object
+}
+
+
+public object FfiConverterTypeSortDirection: FfiConverterRustBuffer<SortDirection> {
+    override fun read(buf: ByteBuffer) = try {
+        SortDirection.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: SortDirection) = 4UL
+
+    override fun write(value: SortDirection, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+
 public object FfiConverterOptionalUInt: FfiConverterRustBuffer<kotlin.UInt?> {
     override fun read(buf: ByteBuffer): kotlin.UInt? {
         if (buf.get().toInt() == 0) {
@@ -2945,35 +3124,6 @@ public object FfiConverterOptionalULong: FfiConverterRustBuffer<kotlin.ULong?> {
         } else {
             buf.put(1)
             FfiConverterULong.write(value, buf)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterOptionalLong: FfiConverterRustBuffer<kotlin.Long?> {
-    override fun read(buf: ByteBuffer): kotlin.Long? {
-        if (buf.get().toInt() == 0) {
-            return null
-        }
-        return FfiConverterLong.read(buf)
-    }
-
-    override fun allocationSize(value: kotlin.Long?): ULong {
-        if (value == null) {
-            return 1UL
-        } else {
-            return 1UL + FfiConverterLong.allocationSize(value)
-        }
-    }
-
-    override fun write(value: kotlin.Long?, buf: ByteBuffer) {
-        if (value == null) {
-            buf.put(0)
-        } else {
-            buf.put(1)
-            FfiConverterLong.write(value, buf)
         }
     }
 }
@@ -3068,6 +3218,35 @@ public object FfiConverterOptionalTypeActivity: FfiConverterRustBuffer<Activity?
 
 
 
+public object FfiConverterOptionalTypeSortDirection: FfiConverterRustBuffer<SortDirection?> {
+    override fun read(buf: ByteBuffer): SortDirection? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeSortDirection.read(buf)
+    }
+
+    override fun allocationSize(value: SortDirection?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeSortDirection.allocationSize(value)
+        }
+    }
+
+    override fun write(value: SortDirection?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeSortDirection.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalMapStringString: FfiConverterRustBuffer<Map<kotlin.String, kotlin.String>?> {
     override fun read(buf: ByteBuffer): Map<kotlin.String, kotlin.String>? {
         if (buf.get().toInt() == 0) {
@@ -3115,56 +3294,6 @@ public object FfiConverterSequenceString: FfiConverterRustBuffer<List<kotlin.Str
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterString.write(it, buf)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterSequenceTypeLightningActivity: FfiConverterRustBuffer<List<LightningActivity>> {
-    override fun read(buf: ByteBuffer): List<LightningActivity> {
-        val len = buf.getInt()
-        return List<LightningActivity>(len) {
-            FfiConverterTypeLightningActivity.read(buf)
-        }
-    }
-
-    override fun allocationSize(value: List<LightningActivity>): ULong {
-        val sizeForLength = 4UL
-        val sizeForItems = value.map { FfiConverterTypeLightningActivity.allocationSize(it) }.sum()
-        return sizeForLength + sizeForItems
-    }
-
-    override fun write(value: List<LightningActivity>, buf: ByteBuffer) {
-        buf.putInt(value.size)
-        value.iterator().forEach {
-            FfiConverterTypeLightningActivity.write(it, buf)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterSequenceTypeOnchainActivity: FfiConverterRustBuffer<List<OnchainActivity>> {
-    override fun read(buf: ByteBuffer): List<OnchainActivity> {
-        val len = buf.getInt()
-        return List<OnchainActivity>(len) {
-            FfiConverterTypeOnchainActivity.read(buf)
-        }
-    }
-
-    override fun allocationSize(value: List<OnchainActivity>): ULong {
-        val sizeForLength = 4UL
-        val sizeForItems = value.map { FfiConverterTypeOnchainActivity.allocationSize(it) }.sum()
-        return sizeForLength + sizeForItems
-    }
-
-    override fun write(value: List<OnchainActivity>, buf: ByteBuffer) {
-        buf.putInt(value.size)
-        value.iterator().forEach {
-            FfiConverterTypeOnchainActivity.write(it, buf)
         }
     }
 }
@@ -3270,11 +3399,21 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
     }
     
 
-    @Throws(ActivityException::class) fun `getActivitiesByTag`(`tag`: kotlin.String, `limit`: kotlin.UInt?): List<Activity> {
+    @Throws(ActivityException::class) fun `getActivities`(`filter`: ActivityFilter, `limit`: kotlin.UInt?, `sortDirection`: SortDirection?): List<Activity> {
+            return FfiConverterSequenceTypeActivity.lift(
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_activities(
+        FfiConverterTypeActivityFilter.lower(`filter`),FfiConverterOptionalUInt.lower(`limit`),FfiConverterOptionalTypeSortDirection.lower(`sortDirection`),_status)
+}
+    )
+    }
+    
+
+    @Throws(ActivityException::class) fun `getActivitiesByTag`(`tag`: kotlin.String, `limit`: kotlin.UInt?, `sortDirection`: SortDirection?): List<Activity> {
             return FfiConverterSequenceTypeActivity.lift(
     uniffiRustCallWithError(ActivityException) { _status ->
     UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_activities_by_tag(
-        FfiConverterString.lower(`tag`),FfiConverterOptionalUInt.lower(`limit`),_status)
+        FfiConverterString.lower(`tag`),FfiConverterOptionalUInt.lower(`limit`),FfiConverterOptionalTypeSortDirection.lower(`sortDirection`),_status)
 }
     )
     }
@@ -3285,36 +3424,6 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
     uniffiRustCallWithError(ActivityException) { _status ->
     UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_activity_by_id(
         FfiConverterString.lower(`activityId`),_status)
-}
-    )
-    }
-    
-
-    @Throws(ActivityException::class) fun `getAllActivities`(`limit`: kotlin.UInt?): List<Activity> {
-            return FfiConverterSequenceTypeActivity.lift(
-    uniffiRustCallWithError(ActivityException) { _status ->
-    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_all_activities(
-        FfiConverterOptionalUInt.lower(`limit`),_status)
-}
-    )
-    }
-    
-
-    @Throws(ActivityException::class) fun `getAllLightningActivities`(`limit`: kotlin.UInt?): List<LightningActivity> {
-            return FfiConverterSequenceTypeLightningActivity.lift(
-    uniffiRustCallWithError(ActivityException) { _status ->
-    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_all_lightning_activities(
-        FfiConverterOptionalUInt.lower(`limit`),_status)
-}
-    )
-    }
-    
-
-    @Throws(ActivityException::class) fun `getAllOnchainActivities`(`limit`: kotlin.UInt?): List<OnchainActivity> {
-            return FfiConverterSequenceTypeOnchainActivity.lift(
-    uniffiRustCallWithError(ActivityException) { _status ->
-    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_all_onchain_activities(
-        FfiConverterOptionalUInt.lower(`limit`),_status)
 }
     )
     }
@@ -3378,6 +3487,15 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
     uniffiRustCallWithError(ActivityException) { _status ->
     UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_update_activity(
         FfiConverterString.lower(`activityId`),FfiConverterTypeActivity.lower(`activity`),_status)
+}
+    
+    
+
+    @Throws(ActivityException::class) fun `upsertActivity`(`activity`: Activity)
+        = 
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_upsert_activity(
+        FfiConverterTypeActivity.lower(`activity`),_status)
 }
     
     
