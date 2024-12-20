@@ -1,13 +1,5 @@
 use rusqlite::{Connection, OptionalExtension};
-use crate::activity::{
-    Activity,
-    ActivityError,
-    ActivityType,
-    LightningActivity,
-    OnchainActivity,
-    PaymentState,
-    PaymentType
-};
+use crate::activity::{Activity, ActivityError, ActivityFilter, LightningActivity, OnchainActivity, PaymentState, PaymentType, SortDirection};
 
 pub struct ActivityDB {
     pub conn: Connection,
@@ -28,14 +20,14 @@ const CREATE_ONCHAIN_TABLE: &str = "
         tx_id TEXT NOT NULL,
         address TEXT NOT NULL CHECK (length(address) > 0),
         confirmed BOOLEAN NOT NULL,
-        value INTEGER NOT NULL,
+        value INTEGER NOT NULL CHECK (value >= 0),
         fee INTEGER NOT NULL CHECK (fee >= 0),
         fee_rate INTEGER NOT NULL CHECK (fee_rate >= 0),
         is_boosted BOOLEAN NOT NULL,
         is_transfer BOOLEAN NOT NULL,
         does_exist BOOLEAN NOT NULL,
         confirm_timestamp INTEGER CHECK (
-            confirm_timestamp IS NULL OR confirm_timestamp > 0
+            confirm_timestamp IS NULL OR confirm_timestamp >= 0
         ),
         channel_id TEXT CHECK (
             channel_id IS NULL OR length(channel_id) > 0
@@ -50,7 +42,7 @@ const CREATE_LIGHTNING_TABLE: &str = "
     CREATE TABLE IF NOT EXISTS lightning_activity (
         id TEXT PRIMARY KEY,
         invoice TEXT NOT NULL CHECK (length(invoice) > 0),
-        value INTEGER NOT NULL,
+        value INTEGER NOT NULL CHECK (value >= 0),
         status TEXT NOT NULL CHECK (status IN ('pending', 'succeeded', 'failed')),
         fee INTEGER CHECK (fee IS NULL OR fee >= 0),
         message TEXT NOT NULL,
@@ -209,6 +201,29 @@ impl ActivityDB {
         Ok(())
     }
 
+    pub fn upsert_activity(&mut self, activity: &Activity) -> Result<(), ActivityError> {
+        match activity {
+            Activity::Onchain(onchain) => {
+                match self.update_onchain_activity_by_id(&onchain.id, onchain) {
+                    Ok(_) => Ok(()),
+                    Err(ActivityError::DataError { message }) if message == "No activity found with given ID" => {
+                        self.insert_onchain_activity(onchain)
+                    }
+                    Err(e) => Err(e),
+                }
+            },
+            Activity::Lightning(lightning) => {
+                match self.update_lightning_activity_by_id(&lightning.id, lightning) {
+                    Ok(_) => Ok(()),
+                    Err(ActivityError::DataError { message }) if message == "No activity found with given ID" => {
+                        self.insert_lightning_activity(lightning)
+                    }
+                    Err(e) => Err(e),
+                }
+            },
+        }
+    }
+
     /// Inserts a new onchain activity into the database.
     pub fn insert_onchain_activity(&mut self, activity: &OnchainActivity) -> Result<(), ActivityError> {
         if activity.id.is_empty() {
@@ -332,94 +347,114 @@ impl ActivityDB {
         Ok(())
     }
 
-    /// Retrieves all activities (both onchain and lightning) with optional limit, ordered by timestamp.
-    pub fn get_all_activities(&self, limit: Option<u32>) -> Result<Vec<Activity>, ActivityError> {
-        let limit_clause = limit.map_or(String::new(), |n| format!("LIMIT {}", n));
+    pub fn get_activities(
+        &self,
+        filter: ActivityFilter,
+        limit: Option<u32>,
+        sort_direction: Option<SortDirection>
+    ) -> Result<Vec<Activity>, ActivityError> {
+        let direction = sort_direction.unwrap_or_default();
+        let filter_clause = match filter {
+            ActivityFilter::All => "",
+            ActivityFilter::Lightning => "WHERE a.activity_type = 'lightning'",
+            ActivityFilter::Onchain => "WHERE a.activity_type = 'onchain'",
+        };
 
         let sql = format!(
-            "
-                SELECT
-                    a.id,
-                    a.activity_type,
-                    a.tx_type,
-                    a.timestamp,
-                    a.created_at,
-                    a.updated_at,
+            "SELECT
+                a.id,
+                a.activity_type,
+                a.tx_type,
+                a.timestamp,
+                a.created_at,
+                a.updated_at,
 
-                    -- Onchain columns (when activity_type = 'onchain')
-                    o.tx_id AS onchain_tx_id,
-                    o.value AS onchain_value,
-                    o.fee AS onchain_fee,
-                    o.fee_rate AS onchain_fee_rate,
-                    o.address AS onchain_address,
-                    o.confirmed AS onchain_confirmed,
-                    o.is_boosted AS onchain_is_boosted,
-                    o.is_transfer AS onchain_is_transfer,
-                    o.does_exist AS onchain_does_exist,
-                    o.confirm_timestamp AS onchain_confirm_timestamp,
-                    o.channel_id AS onchain_channel_id,
-                    o.transfer_tx_id AS onchain_transfer_tx_id,
+                -- Onchain columns
+                o.tx_id AS onchain_tx_id,
+                o.value AS onchain_value,
+                o.fee AS onchain_fee,
+                o.fee_rate AS onchain_fee_rate,
+                o.address AS onchain_address,
+                o.confirmed AS onchain_confirmed,
+                o.is_boosted AS onchain_is_boosted,
+                o.is_transfer AS onchain_is_transfer,
+                o.does_exist AS onchain_does_exist,
+                o.confirm_timestamp AS onchain_confirm_timestamp,
+                o.channel_id AS onchain_channel_id,
+                o.transfer_tx_id AS onchain_transfer_tx_id,
 
-                    -- Lightning columns (when activity_type = 'lightning')
-                    l.invoice AS ln_invoice,
-                    l.value AS ln_value,
-                    l.status AS ln_status,
-                    l.fee AS ln_fee,
-                    l.message AS ln_message,
-                    l.preimage AS ln_preimage
+                -- Lightning columns
+                l.invoice AS ln_invoice,
+                l.value AS ln_value,
+                l.status AS ln_status,
+                l.fee AS ln_fee,
+                l.message AS ln_message,
+                l.preimage AS ln_preimage
 
-                FROM activities a
-                LEFT JOIN onchain_activity o ON a.id = o.id AND a.activity_type = 'onchain'
-                LEFT JOIN lightning_activity l ON a.id = l.id AND a.activity_type = 'lightning'
-                ORDER BY a.timestamp DESC
-                {limit_clause}
-            "
+            FROM activities a
+            LEFT JOIN onchain_activity o ON a.id = o.id AND a.activity_type = 'onchain'
+            LEFT JOIN lightning_activity l ON a.id = l.id AND a.activity_type = 'lightning'
+            {filter_clause}
+            ORDER BY a.timestamp {direction}
+            {limit_clause}",
+            filter_clause = filter_clause,
+            direction = Self::sort_direction_to_sql(direction),
+            limit_clause = limit.map_or(String::new(), |n| format!("LIMIT {}", n))
         );
 
         let mut stmt = self.conn.prepare(&sql).map_err(|e| ActivityError::RetrievalError {
             message: format!("Failed to prepare statement: {}", e),
         })?;
 
-        // Map each row into either an OnchainActivity or a LightningActivity based on activity_type
         let activity_iter = stmt.query_map([], |row| {
             let activity_type: String = row.get(1)?;
             match activity_type.as_str() {
                 "onchain" => {
+                    let timestamp: i64 = row.get(3)?;
+                    let created_at: Option<i64> = row.get(4)?;
+                    let updated_at: Option<i64> = row.get(5)?;
+                    let value: i64 = row.get(7)?;
+                    let fee: i64 = row.get(8)?;
+                    let fee_rate: i64 = row.get(9)?;
+                    let confirm_timestamp: Option<i64> = row.get(15)?;
+
                     Ok(Activity::Onchain(OnchainActivity {
                         id: row.get(0)?,
-                        activity_type: ActivityType::Onchain,
                         tx_type: Self::parse_payment_type(row, 2)?,
-                        timestamp: row.get(3)?,
-                        created_at: row.get(4)?,
-                        updated_at: row.get(5)?,
-
+                        timestamp: timestamp as u64,
+                        created_at: created_at.map(|t| t as u64),
+                        updated_at: updated_at.map(|t| t as u64),
                         tx_id: row.get(6)?,
-                        value: row.get(7)?,
-                        fee: row.get(8)?,
-                        fee_rate: row.get(9)?,
+                        value: value as u64,
+                        fee: fee as u64,
+                        fee_rate: fee_rate as u64,
                         address: row.get(10)?,
                         confirmed: row.get(11)?,
                         is_boosted: row.get(12)?,
                         is_transfer: row.get(13)?,
                         does_exist: row.get(14)?,
-                        confirm_timestamp: row.get(15)?,
+                        confirm_timestamp: confirm_timestamp.map(|t| t as u64),
                         channel_id: row.get(16)?,
                         transfer_tx_id: row.get(17)?,
                     }))
                 }
                 "lightning" => {
+                    let timestamp: i64 = row.get(3)?;
+                    let created_at: Option<i64> = row.get(4)?;
+                    let updated_at: Option<i64> = row.get(5)?;
+                    let value: i64 = row.get(19)?;
+                    let fee: Option<i64> = row.get(21)?;
+
                     Ok(Activity::Lightning(LightningActivity {
                         id: row.get(0)?,
-                        activity_type: ActivityType::Lightning,
                         tx_type: Self::parse_payment_type(row, 2)?,
-                        timestamp: row.get(3)?,
-                        created_at: row.get(4)?,
-                        updated_at: row.get(5)?,
-
+                        timestamp: timestamp as u64,
+                        created_at: created_at.map(|t| t as u64),
+                        updated_at: updated_at.map(|t| t as u64),
                         invoice: row.get(18)?,
-                        value: row.get(19)?,
+                        value: value as u64,
                         status: Self::parse_payment_state(row, 20)?,
-                        fee: row.get(21)?,
+                        fee: fee.map(|f| f as u64),
                         message: row.get(22)?,
                         preimage: row.get(23)?,
                     }))
@@ -445,115 +480,6 @@ impl ActivityDB {
         Ok(activities)
     }
 
-
-
-    /// Retrieves all onchain activities with optional limit.
-    pub fn get_all_onchain_activities(&self, limit: Option<u32>) -> Result<Vec<OnchainActivity>, ActivityError> {
-        let sql = format!(
-            "SELECT
-                a.id, a.tx_type, o.tx_id, o.value, o.fee, o.fee_rate,
-                o.address, o.confirmed, a.timestamp, o.is_boosted,
-                o.is_transfer, o.does_exist, o.confirm_timestamp,
-                o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at
-            FROM activities a
-            JOIN onchain_activity o ON a.id = o.id
-            WHERE a.activity_type = 'onchain'
-            ORDER BY a.timestamp DESC {}",
-            limit.map_or(String::new(), |n| format!("LIMIT {}", n))
-        );
-
-        let mut stmt = self.conn.prepare(&sql).map_err(|e| ActivityError::RetrievalError {
-            message: format!("Failed to prepare statement: {}", e),
-        })?;
-
-        let activities = match stmt.query_map([], |row| {
-            Ok(OnchainActivity {
-                id: row.get(0)?,
-                activity_type: ActivityType::Onchain,
-                tx_type: Self::parse_payment_type(row, 1)?,
-                tx_id: row.get(2)?,
-                value: row.get(3)?,
-                fee: row.get(4)?,
-                fee_rate: row.get(5)?,
-                address: row.get(6)?,
-                confirmed: row.get(7)?,
-                timestamp: row.get(8)?,
-                is_boosted: row.get(9)?,
-                is_transfer: row.get(10)?,
-                does_exist: row.get(11)?,
-                confirm_timestamp: row.get(12)?,
-                channel_id: row.get(13)?,
-                transfer_tx_id: row.get(14)?,
-                created_at: row.get(15)?,
-                updated_at: row.get(16)?,
-            })
-        }) {
-            Ok(activities) => activities,
-            Err(e) => return Err(ActivityError::RetrievalError {
-                message: format!("Failed to execute query: {}", e),
-            })
-        };
-
-        let mut result = Vec::new();
-        for activity in activities {
-            result.push(activity.map_err(|e| ActivityError::DataError {
-                message: format!("Failed to process row: {}", e),
-            })?);
-        }
-
-        Ok(result)
-    }
-
-    /// Retrieves all lightning activities with optional limit.
-    pub fn get_all_lightning_activities(&self, limit: Option<u32>) -> Result<Vec<LightningActivity>, ActivityError> {
-        let sql = format!(
-            "SELECT
-                a.id, a.tx_type, l.status, l.value, l.fee,
-                l.invoice, l.message, a.timestamp,
-                l.preimage, a.created_at, a.updated_at
-            FROM activities a
-            JOIN lightning_activity l ON a.id = l.id
-            WHERE a.activity_type = 'lightning'
-            ORDER BY a.timestamp DESC {}",
-            limit.map_or(String::new(), |n| format!("LIMIT {}", n))
-        );
-
-        let mut stmt = self.conn.prepare(&sql).map_err(|e| ActivityError::RetrievalError {
-            message: format!("Failed to prepare statement: {}", e),
-        })?;
-
-        let activities = match stmt.query_map([], |row| {
-            Ok(LightningActivity {
-                id: row.get(0)?,
-                activity_type: ActivityType::Lightning,
-                tx_type: Self::parse_payment_type(row, 1)?,
-                status: Self::parse_payment_state(row, 2)?,
-                value: row.get(3)?,
-                fee: row.get(4)?,
-                invoice: row.get(5)?,
-                message: row.get(6)?,
-                timestamp: row.get(7)?,
-                preimage: row.get(8)?,
-                created_at: row.get(9)?,
-                updated_at: row.get(10)?,
-            })
-        }) {
-            Ok(activities) => activities,
-            Err(e) => return Err(ActivityError::RetrievalError {
-                message: format!("Failed to execute query: {}", e),
-            })
-        };
-
-        let mut result = Vec::new();
-        for activity in activities {
-            result.push(activity.map_err(|e| ActivityError::DataError {
-                message: format!("Failed to process row: {}", e),
-            })?);
-        }
-
-        Ok(result)
-    }
-
     /// Retrieves a single activity by its ID.
     pub fn get_activity_by_id(&self, activity_id: &str) -> Result<Option<Activity>, ActivityError> {
     let activity_type: String = match self.conn.query_row(
@@ -568,90 +494,102 @@ impl ActivityDB {
         }),
     };
 
-        match activity_type.as_str() {
-            "onchain" => {
-                let sql = "
-                    SELECT
-                        a.id, a.tx_type, o.tx_id, o.value, o.fee, o.fee_rate,
-                        o.address, o.confirmed, a.timestamp, o.is_boosted,
-                        o.is_transfer, o.does_exist, o.confirm_timestamp,
-                        o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at
-                    FROM activities a
-                    JOIN onchain_activity o ON a.id = o.id
-                    WHERE a.id = ?1";
+    match activity_type.as_str() {
+        "onchain" => {
+            let sql = "
+                SELECT
+                    a.id, a.tx_type, o.tx_id, o.value, o.fee, o.fee_rate,
+                    o.address, o.confirmed, a.timestamp, o.is_boosted,
+                    o.is_transfer, o.does_exist, o.confirm_timestamp,
+                    o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at
+                FROM activities a
+                JOIN onchain_activity o ON a.id = o.id
+                WHERE a.id = ?1";
 
-                let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
-                    message: format!("Failed to prepare statement: {}", e),
-                })?;
+            let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
+                message: format!("Failed to prepare statement: {}", e),
+            })?;
 
-                let activity = match stmt.query_row([activity_id], |row| {
-                    Ok(Activity::Onchain(OnchainActivity {
-                        id: row.get(0)?,
-                        activity_type: ActivityType::Onchain,
-                        tx_type: Self::parse_payment_type(row, 1)?,
-                        tx_id: row.get(2)?,
-                        value: row.get(3)?,
-                        fee: row.get(4)?,
-                        fee_rate: row.get(5)?,
-                        address: row.get(6)?,
-                        confirmed: row.get(7)?,
-                        timestamp: row.get(8)?,
-                        is_boosted: row.get(9)?,
-                        is_transfer: row.get(10)?,
-                        does_exist: row.get(11)?,
-                        confirm_timestamp: row.get(12)?,
-                        channel_id: row.get(13)?,
-                        transfer_tx_id: row.get(14)?,
-                        created_at: row.get(15)?,
-                        updated_at: row.get(16)?,
-                    }))
-                }) {
-                    Ok(activity) => Ok(Some(activity)),
-                    Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-                    Err(e) => Err(ActivityError::RetrievalError {
-                        message: format!("Failed to get onchain activity: {}", e),
-                    }),
-                };
-                activity
-            },
-            "lightning" => {
-                let sql = "
-                    SELECT
-                        a.id, a.tx_type, l.status, l.value, l.fee,
-                        l.invoice, l.message, a.timestamp,
-                        l.preimage, a.created_at, a.updated_at
-                    FROM activities a
-                    JOIN lightning_activity l ON a.id = l.id
-                    WHERE a.id = ?1";
+            let activity = match stmt.query_row([activity_id], |row| {
+                let value: i64 = row.get(3)?;
+                let fee: i64 = row.get(4)?;
+                let fee_rate: i64 = row.get(5)?;
+                let timestamp: i64 = row.get(8)?;
+                let confirm_timestamp: Option<i64> = row.get(12)?;
+                let created_at: Option<i64> = row.get(15)?;
+                let updated_at: Option<i64> = row.get(16)?;
 
-                let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
-                    message: format!("Failed to prepare statement: {}", e),
-                })?;
+                Ok(Activity::Onchain(OnchainActivity {
+                    id: row.get(0)?,
+                    tx_type: Self::parse_payment_type(row, 1)?,
+                    tx_id: row.get(2)?,
+                    value: value as u64,
+                    fee: fee as u64,
+                    fee_rate: fee_rate as u64,
+                    address: row.get(6)?,
+                    confirmed: row.get(7)?,
+                    timestamp: timestamp as u64,
+                    is_boosted: row.get(9)?,
+                    is_transfer: row.get(10)?,
+                    does_exist: row.get(11)?,
+                    confirm_timestamp: confirm_timestamp.map(|t| t as u64),
+                    channel_id: row.get(13)?,
+                    transfer_tx_id: row.get(14)?,
+                    created_at: created_at.map(|t| t as u64),
+                    updated_at: updated_at.map(|t| t as u64),
+                }))
+            }) {
+                Ok(activity) => Ok(Some(activity)),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(ActivityError::RetrievalError {
+                    message: format!("Failed to get onchain activity: {}", e),
+                }),
+            };
+            activity
+        },
+        "lightning" => {
+            let sql = "
+                SELECT
+                    a.id, a.tx_type, l.status, l.value, l.fee,
+                    l.invoice, l.message, a.timestamp,
+                    l.preimage, a.created_at, a.updated_at
+                FROM activities a
+                JOIN lightning_activity l ON a.id = l.id
+                WHERE a.id = ?1";
 
-                let activity = stmt.query_row([activity_id], |row| {
-                    Ok(Activity::Lightning(LightningActivity {
-                        id: row.get(0)?,
-                        activity_type: ActivityType::Lightning,
-                        tx_type: Self::parse_payment_type(row, 1)?,
-                        status: Self::parse_payment_state(row, 2)?,
-                        value: row.get(3)?,
-                        fee: row.get(4)?,
-                        invoice: row.get(5)?,
-                        message: row.get(6)?,
-                        timestamp: row.get(7)?,
-                        preimage: row.get(8)?,
-                        created_at: row.get(9)?,
-                        updated_at: row.get(10)?,
-                    }))
-                }).map_err(|e| ActivityError::RetrievalError {
-                    message: format!("Failed to get lightning activity: {}", e),
-                });
+            let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
+                message: format!("Failed to prepare statement: {}", e),
+            })?;
 
-                Ok(Some(activity?))
-            },
-            _ => Ok(None),
-        }
+            let activity = stmt.query_row([activity_id], |row| {
+                let value: i64 = row.get(3)?;
+                let fee: Option<i64> = row.get(4)?;
+                let timestamp: i64 = row.get(7)?;
+                let created_at: Option<i64> = row.get(9)?;
+                let updated_at: Option<i64> = row.get(10)?;
+
+                Ok(Activity::Lightning(LightningActivity {
+                    id: row.get(0)?,
+                    tx_type: Self::parse_payment_type(row, 1)?,
+                    status: Self::parse_payment_state(row, 2)?,
+                    value: value as u64,
+                    fee: fee.map(|f| f as u64),
+                    invoice: row.get(5)?,
+                    message: row.get(6)?,
+                    timestamp: timestamp as u64,
+                    preimage: row.get(8)?,
+                    created_at: created_at.map(|t| t as u64),
+                    updated_at: updated_at.map(|t| t as u64),
+                }))
+            }).map_err(|e| ActivityError::RetrievalError {
+                message: format!("Failed to get lightning activity: {}", e),
+            });
+
+            Ok(Some(activity?))
+        },
+        _ => Ok(None),
     }
+}
 
     /// Updates an existing onchain activity by ID.
     pub fn update_onchain_activity_by_id(&mut self, activity_id: &str, activity: &OnchainActivity) -> Result<(), ActivityError> {
@@ -907,14 +845,16 @@ impl ActivityDB {
     }
 
     /// Get activities by tag with optional limit
-    pub fn get_activities_by_tag(&self, tag: &str, limit: Option<u32>) -> Result<Vec<Activity>, ActivityError> {
+    pub fn get_activities_by_tag(&self, tag: &str, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError> {
+        let direction = sort_direction.unwrap_or_default();
         let sql = format!(
             "SELECT a.id, a.activity_type
              FROM activities a
              JOIN activity_tags t ON a.id = t.activity_id
              WHERE t.tag = ?1
-             ORDER BY a.timestamp DESC {}",
-            limit.map_or(String::new(), |n| format!("LIMIT {}", n))
+             ORDER BY a.timestamp {} {}",
+                Self::sort_direction_to_sql(direction),
+                limit.map_or(String::new(), |n| format!("LIMIT {}", n))
         );
 
         let mut stmt = self.conn.prepare(&sql).map_err(|e| ActivityError::RetrievalError {
@@ -985,6 +925,14 @@ impl ActivityDB {
                 "status".to_string(),
                 rusqlite::types::Type::Text,
             )),
+        }
+    }
+
+    /// Helper function to convert SortDirection to SQL string
+    fn sort_direction_to_sql(direction: SortDirection) -> &'static str {
+        match direction {
+            SortDirection::Asc => "ASC",
+            SortDirection::Desc => "DESC"
         }
     }
 }

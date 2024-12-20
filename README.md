@@ -38,18 +38,10 @@
     ```rust
     fn insert_activity(activity: Activity) -> Result<(), ActivityError>
     ```
-  - [get_all_activities](src/modules/activity/README.md#usage-examples): Get all activities (both onchain and lightning) sorted by timestamp
+  - [get_activities](src/modules/activity/README.md#usage-examples): Get activities with optional filtering, limit and sort direction
     ```rust
-    fn get_all_activities(limit: Option<u32>) -> Result<Vec<Activity>, ActivityError>
-    ```
-  - [get_all_onchain_activities](src/modules/activity/README.md#usage-examples): Get all onchain activities
-    ```rust
-    fn get_all_onchain_activities(limit: Option<u32>) -> Result<Vec<OnchainActivity>, ActivityError>
-    ```
-  - [get_all_lightning_activities](src/modules/activity/README.md#usage-examples): Get all lightning activities
-    ```rust
-    fn get_all_lightning_activities(limit: Option<u32>) -> Result<Vec<LightningActivity>, ActivityError>
-    ```
+    fn get_activities(filter: ActivityFilter, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError>
+    ```  
   - [get_activity_by_id](src/modules/activity/README.md#usage-examples): Look up any activity by its ID
     ```rust
     fn get_activity_by_id(activity_id: String) -> Result<Option<Activity>, ActivityError>
@@ -76,7 +68,11 @@
     ```
   - [get_activities_by_tag](src/modules/activity/README.md#usage-examples): Get all activities with a specific tag
     ```rust
-    fn get_activities_by_tag(tag: String, limit: Option<u32>) -> Result<Vec<Activity>, ActivityError>
+    fn get_activities_by_tag(tag: String, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError>
+    ```
+  - [upsert_activity](src/modules/activity/README.md#usage-examples): Insert or update an activity
+    ```rust
+    fn upsert_activity(activity: Activity) -> Result<(), ActivityError>
     ```
 
 ## Building the Bindings

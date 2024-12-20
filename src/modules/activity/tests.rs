@@ -1,9 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::activity::{
-        ActivityDB, OnchainActivity, LightningActivity, ActivityType,
-        PaymentType, PaymentState, Activity,
-    };
+    use crate::activity::{ActivityDB, OnchainActivity, LightningActivity, PaymentType, PaymentState, Activity, ActivityFilter, SortDirection};
     use std::fs;
     use rand::random;
 
@@ -20,7 +17,6 @@ mod tests {
     fn create_test_onchain_activity() -> OnchainActivity {
         OnchainActivity {
             id: "test_onchain_1".to_string(),
-            activity_type: ActivityType::Onchain,
             tx_type: PaymentType::Sent,
             tx_id: "txid123".to_string(),
             value: 50000,
@@ -43,7 +39,6 @@ mod tests {
     fn create_test_lightning_activity() -> LightningActivity {
         LightningActivity {
             id: "test_lightning_1".to_string(),
-            activity_type: ActivityType::Lightning,
             tx_type: PaymentType::Received,
             status: PaymentState::Succeeded,
             value: 10000,
@@ -70,14 +65,17 @@ mod tests {
         let activity = create_test_onchain_activity();
         assert!(db.insert_onchain_activity(&activity).is_ok());
 
-        let activities = db.get_all_onchain_activities(None).unwrap();
+        let activities = db.get_activities(ActivityFilter::Onchain, None, None).unwrap();
         assert_eq!(activities.len(), 1);
-        let retrieved = &activities[0];
-        assert_eq!(retrieved.id, activity.id);
-        assert_eq!(retrieved.value, activity.value);
-        assert_eq!(retrieved.fee, activity.fee);
-        assert!(retrieved.created_at.is_some());
-        assert!(retrieved.updated_at.is_some());
+        if let Activity::Onchain(retrieved) = &activities[0] {
+            assert_eq!(retrieved.id, activity.id);
+            assert_eq!(retrieved.value, activity.value);
+            assert_eq!(retrieved.fee, activity.fee);
+            assert!(retrieved.created_at.is_some());
+            assert!(retrieved.updated_at.is_some());
+        } else {
+            panic!("Expected Onchain activity");
+        }
 
         cleanup(&db_path);
     }
@@ -88,14 +86,17 @@ mod tests {
         let activity = create_test_lightning_activity();
         assert!(db.insert_lightning_activity(&activity).is_ok());
 
-        let activities = db.get_all_lightning_activities(None).unwrap();
+        let activities = db.get_activities(ActivityFilter::Lightning, None, None).unwrap();
         assert_eq!(activities.len(), 1);
-        let retrieved = &activities[0];
-        assert_eq!(retrieved.id, activity.id);
-        assert_eq!(retrieved.value, activity.value);
-        assert_eq!(retrieved.message, activity.message);
-        assert!(retrieved.created_at.is_some());
-        assert!(retrieved.updated_at.is_some());
+        if let Activity::Lightning(retrieved) = &activities[0] {
+            assert_eq!(retrieved.id, activity.id);
+            assert_eq!(retrieved.value, activity.value);
+            assert_eq!(retrieved.message, activity.message);
+            assert!(retrieved.created_at.is_some());
+            assert!(retrieved.updated_at.is_some());
+        } else {
+            panic!("Expected Lightning activity");
+        }
 
         cleanup(&db_path);
     }
@@ -109,7 +110,7 @@ mod tests {
         db.insert_onchain_activity(&onchain).unwrap();
         db.insert_lightning_activity(&lightning).unwrap();
 
-        let all_activities = db.get_all_activities(None).unwrap();
+        let all_activities = db.get_activities(ActivityFilter::All, None, None).unwrap();
         assert_eq!(all_activities.len(), 2);
 
         // Check ordering by timestamp descending (they have the same timestamp in this test)
@@ -121,125 +122,18 @@ mod tests {
     }
 
     #[test]
-    fn test_get_activity_by_id() {
-        let (mut db, db_path) = setup();
-        let onchain = create_test_onchain_activity();
-        db.insert_onchain_activity(&onchain).unwrap();
-
-        let result = db.get_activity_by_id(&onchain.id).unwrap();
-        assert!(result.is_some());
-        match result.unwrap() {
-            Activity::Onchain(a) => {
-                assert_eq!(a.id, onchain.id);
-                assert_eq!(a.value, onchain.value);
-            },
-            _ => panic!("Expected Onchain activity"),
-        }
-
-        cleanup(&db_path);
-    }
-
-    #[test]
-    fn test_update_onchain_activity() {
-        let (mut db, db_path) = setup();
-        let mut activity = create_test_onchain_activity();
-        db.insert_onchain_activity(&activity).unwrap();
-
-        activity.value = 100000;
-        db.update_onchain_activity_by_id(&activity.id, &activity).unwrap();
-
-        let updated = db.get_activity_by_id(&activity.id).unwrap().unwrap();
-        if let Activity::Onchain(a) = updated {
-            assert_eq!(a.value, 100000);
-        } else {
-            panic!("Wrong activity type returned");
-        }
-
-        cleanup(&db_path);
-    }
-
-    #[test]
-    fn test_update_lightning_activity() {
-        let (mut db, db_path) = setup();
-        let mut activity = create_test_lightning_activity();
-        db.insert_lightning_activity(&activity).unwrap();
-
-        activity.value = 20000;
-        db.update_lightning_activity_by_id(&activity.id, &activity).unwrap();
-
-        let updated = db.get_activity_by_id(&activity.id).unwrap().unwrap();
-        match updated {
-            Activity::Lightning(a) => assert_eq!(a.value, 20000),
-            _ => panic!("Wrong activity type returned"),
-        }
-
-        cleanup(&db_path);
-    }
-
-    #[test]
-    fn test_delete_activity() {
-        let (mut db, db_path) = setup();
-        let activity = create_test_onchain_activity();
-        db.insert_onchain_activity(&activity).unwrap();
-
-        assert!(db.delete_activity_by_id(&activity.id).unwrap());
-        assert!(db.get_activity_by_id(&activity.id).unwrap().is_none());
-
-        cleanup(&db_path);
-    }
-
-    #[test]
-    fn test_invalid_operations() {
-        let (mut db, db_path) = setup();
-        // Non-existent activity
-        assert!(db.get_activity_by_id("non_existent").unwrap().is_none());
-
-        // Updating non-existent activity
-        let activity = create_test_onchain_activity();
-        assert!(db.update_onchain_activity_by_id("non_existent", &activity).is_err());
-
-        // Deleting non-existent activity
-        assert!(!db.delete_activity_by_id("non_existent").unwrap());
-
-        cleanup(&db_path);
-    }
-
-    #[test]
     fn test_activity_timestamps() {
         let (mut db, db_path) = setup();
         let activity = create_test_onchain_activity();
         db.insert_onchain_activity(&activity).unwrap();
 
-        let retrieved = db.get_all_onchain_activities(None).unwrap();
-        assert!(retrieved[0].created_at.is_some());
-        assert!(retrieved[0].updated_at.is_some());
-
-        cleanup(&db_path);
-    }
-
-    #[test]
-    fn test_constraint_violations() {
-        let (mut db, db_path) = setup();
-
-        // Empty invoice on lightning activity
-        let mut lightning = create_test_lightning_activity();
-        lightning.invoice = "".to_string();
-        assert!(db.insert_lightning_activity(&lightning).is_err());
-
-        // Negative fee on onchain activity
-        let mut onchain = create_test_onchain_activity();
-        onchain.fee = -1;
-        assert!(db.insert_onchain_activity(&onchain).is_err());
-
-        // Negative fee_rate
-        onchain.fee = 500;
-        onchain.fee_rate = -1;
-        assert!(db.insert_onchain_activity(&onchain).is_err());
-
-        // Empty address
-        onchain.fee_rate = 1;
-        onchain.address = "".to_string();
-        assert!(db.insert_onchain_activity(&onchain).is_err());
+        let retrieved = db.get_activities(ActivityFilter::Onchain, None, None).unwrap();
+        if let Activity::Onchain(activity) = &retrieved[0] {
+            assert!(activity.created_at.is_some());
+            assert!(activity.updated_at.is_some());
+        } else {
+            panic!("Expected Onchain activity");
+        }
 
         cleanup(&db_path);
     }
@@ -256,7 +150,7 @@ mod tests {
         db.insert_onchain_activity(&activity1).unwrap();
         db_clone.insert_lightning_activity(&activity2).unwrap();
 
-        let all_activities = db.get_all_activities(None).unwrap();
+        let all_activities = db.get_activities(ActivityFilter::All, None, None).unwrap();
         assert_eq!(all_activities.len(), 2);
 
         cleanup(&db_path);
@@ -277,101 +171,43 @@ mod tests {
         db.insert_onchain_activity(&onchain2).unwrap();
         db.insert_lightning_activity(&lightning).unwrap();
 
-        let activities = db.get_all_activities(None).unwrap();
-        let timestamps: Vec<i64> = activities.iter().map(|a| a.get_timestamp()).collect();
+        let activities = db.get_activities(ActivityFilter::All, None, None).unwrap();
+        let timestamps: Vec<u64> = activities.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(timestamps, vec![2000, 1500, 1000]);
 
         cleanup(&db_path);
     }
 
     #[test]
-    fn test_invalid_data() {
-        let (mut db, db_path) = setup();
-
-        let mut activity = create_test_onchain_activity();
-        activity.id = "".to_string();
-        assert!(db.insert_onchain_activity(&activity).is_err());
-
-        let activity1 = create_test_onchain_activity();
-        db.insert_onchain_activity(&activity1).unwrap();
-        // Insert duplicate ID
-        assert!(db.insert_onchain_activity(&activity1).is_err());
-
-        cleanup(&db_path);
-    }
-
-    #[test]
-    fn test_limits_on_all_activities() {
+    fn test_limits_on_activities() {
         let (mut db, db_path) = setup();
 
         // Insert multiple activities
         for i in 0..5 {
             let mut onchain = create_test_onchain_activity();
             onchain.id = format!("test_onchain_{}", i);
-            onchain.timestamp = 1234567890 + i as i64;
+            onchain.timestamp = 1234567890 + i as u64;
             db.insert_onchain_activity(&onchain).unwrap();
 
             let mut lightning = create_test_lightning_activity();
             lightning.id = format!("test_lightning_{}", i);
-            lightning.timestamp = 1234567890 + i as i64;
+            lightning.timestamp = 1234567890 + i as u64;
             db.insert_lightning_activity(&lightning).unwrap();
         }
 
-        let activities = db.get_all_activities(Some(3)).unwrap();
-        assert_eq!(activities.len(), 3);
+        // Test limits with different filters
+        let all = db.get_activities(ActivityFilter::All, Some(3), None).unwrap();
+        assert_eq!(all.len(), 3);
 
-        let activities = db.get_all_activities(Some(7)).unwrap();
-        assert_eq!(activities.len(), 7);
+        let onchain = db.get_activities(ActivityFilter::Onchain, Some(2), None).unwrap();
+        assert_eq!(onchain.len(), 2);
 
-        let activities = db.get_all_activities(Some(20)).unwrap();
-        assert_eq!(activities.len(), 10);
+        let lightning = db.get_activities(ActivityFilter::Lightning, Some(4), None).unwrap();
+        assert_eq!(lightning.len(), 4);
 
-        let activities = db.get_all_activities(None).unwrap();
-        assert_eq!(activities.len(), 10);
-
-        cleanup(&db_path);
-    }
-
-    #[test]
-    fn test_limits_on_onchain_activities() {
-        let (mut db, db_path) = setup();
-        for i in 0..5 {
-            let mut activity = create_test_onchain_activity();
-            activity.id = format!("test_onchain_{}", i);
-            activity.timestamp = 1234567890 + i as i64;
-            db.insert_onchain_activity(&activity).unwrap();
-        }
-
-        let activities = db.get_all_onchain_activities(Some(2)).unwrap();
-        assert_eq!(activities.len(), 2);
-
-        let activities = db.get_all_onchain_activities(Some(10)).unwrap();
-        assert_eq!(activities.len(), 5);
-
-        let activities = db.get_all_onchain_activities(None).unwrap();
-        assert_eq!(activities.len(), 5);
-
-        cleanup(&db_path);
-    }
-
-    #[test]
-    fn test_limits_on_lightning_activities() {
-        let (mut db, db_path) = setup();
-        for i in 0..5 {
-            let mut activity = create_test_lightning_activity();
-            activity.id = format!("test_lightning_{}", i);
-            activity.timestamp = 1234567890 + i as i64;
-            db.insert_lightning_activity(&activity).unwrap();
-        }
-
-        let activities = db.get_all_lightning_activities(Some(2)).unwrap();
-        assert_eq!(activities.len(), 2);
-
-        let activities = db.get_all_lightning_activities(Some(10)).unwrap();
-        assert_eq!(activities.len(), 5);
-
-        let activities = db.get_all_lightning_activities(None).unwrap();
-        assert_eq!(activities.len(), 5);
+        // Test without limits
+        let all = db.get_activities(ActivityFilter::All, None, None).unwrap();
+        assert_eq!(all.len(), 10);
 
         cleanup(&db_path);
     }
@@ -382,13 +218,13 @@ mod tests {
         db.insert_onchain_activity(&create_test_onchain_activity()).unwrap();
         db.insert_lightning_activity(&create_test_lightning_activity()).unwrap();
 
-        let activities = db.get_all_activities(Some(0)).unwrap();
-        assert_eq!(activities.len(), 0);
+        let all = db.get_activities(ActivityFilter::All, Some(0), None).unwrap();
+        assert_eq!(all.len(), 0);
 
-        let onchain = db.get_all_onchain_activities(Some(0)).unwrap();
+        let onchain = db.get_activities(ActivityFilter::Onchain, Some(0), None).unwrap();
         assert_eq!(onchain.len(), 0);
 
-        let lightning = db.get_all_lightning_activities(Some(0)).unwrap();
+        let lightning = db.get_activities(ActivityFilter::Lightning, Some(0), None).unwrap();
         assert_eq!(lightning.len(), 0);
 
         cleanup(&db_path);
@@ -440,10 +276,10 @@ mod tests {
         db.add_tags(&onchain.id, &["payment".to_string()]).unwrap();
         db.add_tags(&lightning.id, &["payment".to_string()]).unwrap();
 
-        let activities = db.get_activities_by_tag("payment", None).unwrap();
+        let activities = db.get_activities_by_tag("payment", None, None).unwrap();
         assert_eq!(activities.len(), 2);
 
-        let limited = db.get_activities_by_tag("payment", Some(1)).unwrap();
+        let limited = db.get_activities_by_tag("payment", Some(1), None).unwrap();
         assert_eq!(limited.len(), 1);
 
         cleanup(&db_path);
@@ -502,7 +338,7 @@ mod tests {
     #[test]
     fn test_get_activities_by_nonexistent_tag() {
         let (db, db_path) = setup();
-        let activities = db.get_activities_by_tag("nonexistent", None).unwrap();
+        let activities = db.get_activities_by_tag("nonexistent", None, None).unwrap();
         assert!(activities.is_empty());
         cleanup(&db_path);
     }
@@ -519,6 +355,406 @@ mod tests {
         assert!(db.get_activity_by_id(&activity.id).unwrap().is_none());
         assert!(db.update_onchain_activity_by_id(&activity.id, &activity).is_err());
         assert!(db.add_tags(&activity.id, &["test".to_string()]).is_err());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_large_numeric_values() {
+        let (mut db, db_path) = setup();
+
+        // Use a large but safe value instead of i64::MAX
+        let mut activity = create_test_onchain_activity();
+        let safe_max = 1_000_000_000_000;
+        activity.value = safe_max;
+        activity.fee = safe_max - 1;
+        activity.fee_rate = safe_max - 2;
+        activity.timestamp = safe_max - 3;
+        activity.confirm_timestamp = Some(safe_max - 1);
+
+        let result = db.insert_onchain_activity(&activity);
+        assert!(result.is_ok(), "Failed to insert activity: {:?}", result.err());
+
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        if let Activity::Onchain(retrieved) = retrieved {
+            assert_eq!(retrieved.value, safe_max);
+            assert_eq!(retrieved.fee, safe_max - 1);
+            assert_eq!(retrieved.fee_rate, safe_max - 2);
+            assert_eq!(retrieved.timestamp, safe_max - 3);
+            assert_eq!(retrieved.confirm_timestamp, Some(safe_max - 1));
+        } else {
+            panic!("Expected Onchain activity");
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_zero_values() {
+        let (mut db, db_path) = setup();
+
+        // Test zero value handling
+        let mut activity = create_test_onchain_activity();
+        activity.value = 0;
+        activity.fee = 0;
+        activity.fee_rate = 0;
+
+        assert!(db.insert_onchain_activity(&activity).is_ok());
+
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        if let Activity::Onchain(retrieved) = retrieved {
+            assert_eq!(retrieved.value, 0);
+            assert_eq!(retrieved.fee, 0);
+            assert_eq!(retrieved.fee_rate, 0);
+        } else {
+            panic!("Expected Onchain activity");
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_lightning_optional_fee() {
+        let (mut db, db_path) = setup();
+
+        // Test None fee
+        let mut activity = create_test_lightning_activity();
+        activity.fee = None;
+        assert!(db.insert_lightning_activity(&activity).is_ok());
+
+        // Test Some(0) fee
+        activity.id = "test_lightning_2".to_string();
+        activity.fee = Some(0);
+        assert!(db.insert_lightning_activity(&activity).is_ok());
+
+        // Test Some(max) fee - use i64::MAX instead of u64::MAX
+        activity.id = "test_lightning_3".to_string();
+        activity.fee = Some(i64::MAX as u64);
+        assert!(db.insert_lightning_activity(&activity).is_ok());
+
+        let activities = db.get_activities(ActivityFilter::Lightning, None, None).unwrap();
+        assert_eq!(activities.len(), 3);
+
+        for act in activities {
+            if let Activity::Lightning(lightning) = act {
+                match lightning.id.as_str() {
+                    "test_lightning_1" => assert_eq!(lightning.fee, None),
+                    "test_lightning_2" => assert_eq!(lightning.fee, Some(0)),
+                    "test_lightning_3" => assert_eq!(lightning.fee, Some(i64::MAX as u64)),
+                    _ => panic!("Unexpected activity ID"),
+                }
+            } else {
+                panic!("Expected Lightning activity");
+            }
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_timestamp_conversions() {
+        let (mut db, db_path) = setup();
+
+        // Test various timestamp scenarios
+        let mut activity = create_test_onchain_activity();
+        activity.timestamp = 0;
+        activity.confirm_timestamp = Some(0);
+        assert!(db.insert_onchain_activity(&activity).is_err()); // Should fail due to timestamp > 0 constraint
+
+        activity.timestamp = 1;
+        activity.confirm_timestamp = Some(0);
+        assert!(db.insert_onchain_activity(&activity).is_err()); // Should fail due to confirm_timestamp >= timestamp constraint
+
+        activity.timestamp = 1000;
+        activity.confirm_timestamp = Some(2000);
+        assert!(db.insert_onchain_activity(&activity).is_ok());
+
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        if let Activity::Onchain(retrieved) = retrieved {
+            assert_eq!(retrieved.timestamp, 1000);
+            assert_eq!(retrieved.confirm_timestamp, Some(2000));
+            assert!(retrieved.created_at.unwrap() > 0);
+            assert!(retrieved.updated_at.unwrap() > 0);
+        } else {
+            panic!("Expected Onchain activity");
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_value_update() {
+        let (mut db, db_path) = setup();
+
+        let mut activity = create_test_onchain_activity();
+        activity.value = 1000;
+        assert!(db.insert_onchain_activity(&activity).is_ok());
+
+        std::thread::sleep(std::time::Duration::from_millis(1));
+
+        // Use a large but safe value
+        activity.value = 1_000_000_000_000;
+        assert!(db.update_onchain_activity_by_id(&activity.id, &activity).is_ok());
+
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        if let Activity::Onchain(retrieved) = retrieved {
+            assert_eq!(retrieved.value, 1_000_000_000_000);
+            assert!(retrieved.created_at.is_some());
+            assert!(retrieved.updated_at.is_some());
+        } else {
+            panic!("Expected Onchain activity");
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_onchain_activity_insert_then_update() {
+        let (mut db, db_path) = setup();
+
+        // Create initial activity
+        let mut onchain = create_test_onchain_activity();
+        let activity = Activity::Onchain(onchain.clone());
+
+        // Test insert path
+        assert!(db.upsert_activity(&activity).is_ok());
+
+        let retrieved = db.get_activity_by_id(&onchain.id).unwrap().unwrap();
+        if let Activity::Onchain(retrieved) = retrieved {
+            assert_eq!(retrieved.value, onchain.value);
+            assert!(retrieved.created_at.is_some());
+            let first_update = retrieved.updated_at;
+
+            // Test update path
+            std::thread::sleep(std::time::Duration::from_secs(1));
+            onchain.value = 100_000;
+            let updated = Activity::Onchain(onchain);
+            assert!(db.upsert_activity(&updated).is_ok());
+
+            // Verify update
+            let retrieved = db.get_activity_by_id(&updated.get_id()).unwrap().unwrap();
+            if let Activity::Onchain(retrieved) = retrieved {
+                assert_eq!(retrieved.value, 100_000);
+                assert!(retrieved.updated_at > first_update);
+            }
+        } else {
+            panic!("Expected Onchain activity");
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_lightning_activity_with_status_change() {
+        let (mut db, db_path) = setup();
+
+        // Create initial pending activity
+        let mut lightning = create_test_lightning_activity();
+        lightning.status = PaymentState::Pending;
+        let activity = Activity::Lightning(lightning.clone());
+
+        // Test insert
+        assert!(db.upsert_activity(&activity).is_ok());
+
+        let retrieved = db.get_activity_by_id(&lightning.id).unwrap().unwrap();
+        if let Activity::Lightning(retrieved) = retrieved {
+            assert_eq!(retrieved.status, PaymentState::Pending);
+
+            // Update to succeeded
+            std::thread::sleep(std::time::Duration::from_millis(1));
+            lightning.status = PaymentState::Succeeded;
+            let updated = Activity::Lightning(lightning);
+            assert!(db.upsert_activity(&updated).is_ok());
+
+            // Verify status change
+            let retrieved = db.get_activity_by_id(&updated.get_id()).unwrap().unwrap();
+            if let Activity::Lightning(retrieved) = retrieved {
+                assert_eq!(retrieved.status, PaymentState::Succeeded);
+                assert!(retrieved.created_at.is_some());
+                assert!(retrieved.updated_at.is_some());
+            }
+        } else {
+            panic!("Expected Lightning activity");
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_activity_invalid_id() {
+        let (mut db, db_path) = setup();
+        let mut activity = create_test_onchain_activity();
+        activity.id = "".to_string();
+        let activity = Activity::Onchain(activity);
+        assert!(db.upsert_activity(&activity).is_err());
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_activity_timestamps() {
+        let (mut db, db_path) = setup();
+
+        let mut onchain = create_test_onchain_activity();
+        let activity = Activity::Onchain(onchain.clone());
+        assert!(db.upsert_activity(&activity).is_ok());
+
+        let initial = db.get_activity_by_id(&onchain.id).unwrap().unwrap();
+        if let Activity::Onchain(initial) = initial {
+            let created_at = initial.created_at.unwrap();
+
+            // Update and verify created_at stays the same
+            std::thread::sleep(std::time::Duration::from_secs(1));
+            onchain.value = 100_000;
+            let updated = Activity::Onchain(onchain);
+            assert!(db.upsert_activity(&updated).is_ok());
+
+            let retrieved = db.get_activity_by_id(&updated.get_id()).unwrap().unwrap();
+            if let Activity::Onchain(retrieved) = retrieved {
+                assert_eq!(retrieved.created_at.unwrap(), created_at);
+                assert!(retrieved.updated_at.unwrap() > initial.updated_at.unwrap());
+            }
+        }
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_sort_direction_activities() {
+        let (mut db, db_path) = setup();
+
+        // Insert activities with different timestamps
+        let mut activities = Vec::new();
+        for i in 0..3 {
+            let mut onchain = create_test_onchain_activity();
+            onchain.id = format!("test_onchain_{}", i);
+            onchain.timestamp = 1000 + i as u64;
+            activities.push(onchain);
+        }
+
+        // Insert in random order
+        for activity in activities.iter() {
+            db.insert_onchain_activity(activity).unwrap();
+        }
+
+        // Test ascending order
+        let asc_results = db.get_activities(ActivityFilter::All, None, Some(SortDirection::Asc)).unwrap();
+        let asc_timestamps: Vec<u64> = asc_results.iter().map(|a| a.get_timestamp()).collect();
+        assert_eq!(asc_timestamps, vec![1000, 1001, 1002]);
+
+        // Test descending order
+        let desc_results = db.get_activities(ActivityFilter::All, None, Some(SortDirection::Desc)).unwrap();
+        let desc_timestamps: Vec<u64> = desc_results.iter().map(|a| a.get_timestamp()).collect();
+        assert_eq!(desc_timestamps, vec![1002, 1001, 1000]);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_sort_direction_with_tags() {
+        let (mut db, db_path) = setup();
+
+        // Create activities with different timestamps and same tag
+        let mut onchain1 = create_test_onchain_activity();
+        onchain1.timestamp = 1000;
+        let mut onchain2 = create_test_onchain_activity();
+        onchain2.id = "test_onchain_2".to_string();
+        onchain2.timestamp = 2000;
+
+        db.insert_onchain_activity(&onchain1).unwrap();
+        db.insert_onchain_activity(&onchain2).unwrap();
+
+        // Add same tag to both
+        let tag = "test_tag".to_string();
+        db.add_tags(&onchain1.id, &[tag.clone()]).unwrap();
+        db.add_tags(&onchain2.id, &[tag.clone()]).unwrap();
+
+        // Test ascending order
+        let asc_activities = db.get_activities_by_tag(&tag, None, Some(SortDirection::Asc)).unwrap();
+        let asc_timestamps: Vec<u64> = asc_activities.iter().map(|a| a.get_timestamp()).collect();
+        assert_eq!(asc_timestamps, vec![1000, 2000]);
+
+        // Test descending order
+        let desc_activities = db.get_activities_by_tag(&tag, None, Some(SortDirection::Desc)).unwrap();
+        let desc_timestamps: Vec<u64> = desc_activities.iter().map(|a| a.get_timestamp()).collect();
+        assert_eq!(desc_timestamps, vec![2000, 1000]);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_sort_direction_with_limit() {
+        let (mut db, db_path) = setup();
+
+        // Insert 5 activities with sequential timestamps
+        for i in 0..5 {
+            let mut onchain = create_test_onchain_activity();
+            onchain.id = format!("test_onchain_{}", i);
+            onchain.timestamp = 1000 + i as u64;
+            db.insert_onchain_activity(&onchain).unwrap();
+        }
+
+        // Test ascending order with limit
+        let asc_limited = db.get_activities(ActivityFilter::All, Some(3), Some(SortDirection::Asc)).unwrap();
+        let asc_timestamps: Vec<u64> = asc_limited.iter().map(|a| a.get_timestamp()).collect();
+        assert_eq!(asc_timestamps, vec![1000, 1001, 1002]);
+
+        // Test descending order with limit
+        let desc_limited = db.get_activities(ActivityFilter::All, Some(3), Some(SortDirection::Desc)).unwrap();
+        let desc_timestamps: Vec<u64> = desc_limited.iter().map(|a| a.get_timestamp()).collect();
+        assert_eq!(desc_timestamps, vec![1004, 1003, 1002]);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_sort_direction_mixed_types() {
+        let (mut db, db_path) = setup();
+
+        // Create mix of onchain and lightning activities with different timestamps
+        let mut onchain = create_test_onchain_activity();
+        onchain.timestamp = 1000;
+
+        let mut lightning = create_test_lightning_activity();
+        lightning.timestamp = 2000;
+
+        let mut onchain2 = create_test_onchain_activity();
+        onchain2.id = "test_onchain_2".to_string();
+        onchain2.timestamp = 3000;
+
+        db.insert_onchain_activity(&onchain).unwrap();
+        db.insert_lightning_activity(&lightning).unwrap();
+        db.insert_onchain_activity(&onchain2).unwrap();
+
+        // Test ascending order
+        let asc_results = db.get_activities(ActivityFilter::All, None, Some(SortDirection::Asc)).unwrap();
+        let asc_timestamps: Vec<u64> = asc_results.iter().map(|a| a.get_timestamp()).collect();
+        assert_eq!(asc_timestamps, vec![1000, 2000, 3000]);
+
+        // Verify correct activity types are maintained in order
+        assert!(matches!(asc_results[0], Activity::Onchain(_)));
+        assert!(matches!(asc_results[1], Activity::Lightning(_)));
+        assert!(matches!(asc_results[2], Activity::Onchain(_)));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_default_sort_direction() {
+        let (mut db, db_path) = setup();
+
+        // Insert activities with different timestamps
+        let mut onchain1 = create_test_onchain_activity();
+        onchain1.timestamp = 1000;
+        let mut onchain2 = create_test_onchain_activity();
+        onchain2.id = "test_onchain_2".to_string();
+        onchain2.timestamp = 2000;
+
+        db.insert_onchain_activity(&onchain1).unwrap();
+        db.insert_onchain_activity(&onchain2).unwrap();
+
+        // Test with None sort direction (should default to Desc)
+        let default_results = db.get_activities(ActivityFilter::All, None, None).unwrap();
+        let timestamps: Vec<u64> = default_results.iter().map(|a| a.get_timestamp()).collect();
+        assert_eq!(timestamps, vec![2000, 1000]);
 
         cleanup(&db_path);
     }

@@ -12,13 +12,8 @@ pub use modules::scanner::{
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
-use crate::activity::{
-    ActivityError,
-    ActivityDB,
-    OnchainActivity,
-    LightningActivity,
-    Activity
-};
+use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection};
+//use crate::modules::blocktank::{BlocktankDB, BlocktankError};
 use crate::onchain::{
     AddressError,
     ValidationResult
@@ -84,7 +79,7 @@ pub fn init_db(base_path: String) -> Result<String, DbError> {
 }
 
 #[uniffi::export]
-pub fn get_all_onchain_activities(limit: Option<u32>) -> Result<Vec<OnchainActivity>, ActivityError> {
+pub fn get_activities(filter: ActivityFilter, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
         message: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -92,19 +87,19 @@ pub fn get_all_onchain_activities(limit: Option<u32>) -> Result<Vec<OnchainActiv
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
         message: "Database not initialized. Call init_db first.".to_string()
     })?;
-    db.get_all_onchain_activities(limit)
+    db.get_activities(filter, limit, sort_direction)
 }
 
 #[uniffi::export]
-pub fn get_all_lightning_activities(limit: Option<u32>) -> Result<Vec<LightningActivity>, ActivityError> {
+pub fn upsert_activity(activity: Activity) -> Result<(), ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
         message: "Database not initialized. Call init_db first.".to_string()
     })?;
-    let guard = cell.lock().unwrap();
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
+    let mut guard = cell.lock().unwrap();
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
         message: "Database not initialized. Call init_db first.".to_string()
     })?;
-    db.get_all_lightning_activities(limit)
+    db.upsert_activity(&activity)
 }
 
 #[uniffi::export]
@@ -135,18 +130,6 @@ pub fn update_activity(activity_id: String, activity: Activity) -> Result<(), Ac
         Activity::Onchain(onchain) => db.update_onchain_activity_by_id(&activity_id, &onchain),
         Activity::Lightning(lightning) => db.update_lightning_activity_by_id(&activity_id, &lightning),
     }
-}
-
-#[uniffi::export]
-pub fn get_all_activities(limit: Option<u32>) -> Result<Vec<Activity>, ActivityError> {
-    let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    let guard = cell.lock().unwrap();
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    db.get_all_activities(limit)
 }
 
 #[uniffi::export]
@@ -210,7 +193,7 @@ pub fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError> {
 }
 
 #[uniffi::export]
-pub fn get_activities_by_tag(tag: String, limit: Option<u32>) -> Result<Vec<Activity>, ActivityError> {
+pub fn get_activities_by_tag(tag: String, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
         message: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -218,5 +201,5 @@ pub fn get_activities_by_tag(tag: String, limit: Option<u32>) -> Result<Vec<Acti
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
         message: "Database not initialized. Call init_db first.".to_string()
     })?;
-    db.get_activities_by_tag(&tag, limit)
+    db.get_activities_by_tag(&tag, limit, sort_direction)
 }
