@@ -461,9 +461,31 @@ def _uniffi_check_contract_api_version(lib):
         raise InternalError("UniFFI contract version mismatch: try cleaning and rebuilding your project")
 
 def _uniffi_check_api_checksums(lib):
+    if lib.uniffi_bitkitcore_checksum_func_add_tags() != 63739:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_decode() != 28437:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_activities() != 55403:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 52823:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_tags() != 11308:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_init_db() != 9643:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_insert_activity() != 1510:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_remove_tags() != 58873:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_update_activity() != 42510:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_upsert_activity() != 32175:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -573,15 +595,77 @@ class UniffiForeignFutureStructVoid(ctypes.Structure):
     ]
 UNIFFI_FOREIGN_FUTURE_COMPLETE_VOID = ctypes.CFUNCTYPE(None,ctypes.c_uint64,UniffiForeignFutureStructVoid,
 )
+_UniffiLib.uniffi_bitkitcore_fn_func_add_tags.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_add_tags.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_decode.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_decode.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.restype = ctypes.c_int8
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activities.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activities.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice.argtypes = (
     _UniffiRustBuffer,
     ctypes.c_uint64,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_tags.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_tags.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_init_db.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_init_db.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_remove_tags.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_remove_tags.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_update_activity.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_update_activity.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_activity.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_activity.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_validate_bitcoin_address.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -855,12 +939,45 @@ _UniffiLib.ffi_bitkitcore_rust_future_complete_void.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.ffi_bitkitcore_rust_future_complete_void.restype = None
+_UniffiLib.uniffi_bitkitcore_checksum_func_add_tags.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_add_tags.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_decode.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_decode.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_delete_activity_by_id.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_delete_activity_by_id.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_activities.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_activities.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_by_tag.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_by_tag.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_tags.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_tags.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_init_db.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_init_db.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_remove_tags.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_remove_tags.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_update_activity.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_update_activity.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_activity.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_activity.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.restype = ctypes.c_uint16
@@ -972,6 +1089,106 @@ class _UniffiConverterBytes(_UniffiConverterRustBuffer):
     def write(value, buf):
         buf.write_i32(len(value))
         buf.write(value)
+
+
+class LightningActivity:
+    id: "str"
+    tx_type: "PaymentType"
+    status: "PaymentState"
+    value: "int"
+    fee: "typing.Optional[int]"
+    invoice: "str"
+    message: "str"
+    timestamp: "int"
+    preimage: "typing.Optional[str]"
+    created_at: "typing.Optional[int]"
+    updated_at: "typing.Optional[int]"
+    @typing.no_type_check
+    def __init__(self, *, id: "str", tx_type: "PaymentType", status: "PaymentState", value: "int", fee: "typing.Optional[int]", invoice: "str", message: "str", timestamp: "int", preimage: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]"):
+        self.id = id
+        self.tx_type = tx_type
+        self.status = status
+        self.value = value
+        self.fee = fee
+        self.invoice = invoice
+        self.message = message
+        self.timestamp = timestamp
+        self.preimage = preimage
+        self.created_at = created_at
+        self.updated_at = updated_at
+
+    def __str__(self):
+        return "LightningActivity(id={}, tx_type={}, status={}, value={}, fee={}, invoice={}, message={}, timestamp={}, preimage={}, created_at={}, updated_at={})".format(self.id, self.tx_type, self.status, self.value, self.fee, self.invoice, self.message, self.timestamp, self.preimage, self.created_at, self.updated_at)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.tx_type != other.tx_type:
+            return False
+        if self.status != other.status:
+            return False
+        if self.value != other.value:
+            return False
+        if self.fee != other.fee:
+            return False
+        if self.invoice != other.invoice:
+            return False
+        if self.message != other.message:
+            return False
+        if self.timestamp != other.timestamp:
+            return False
+        if self.preimage != other.preimage:
+            return False
+        if self.created_at != other.created_at:
+            return False
+        if self.updated_at != other.updated_at:
+            return False
+        return True
+
+class _UniffiConverterTypeLightningActivity(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return LightningActivity(
+            id=_UniffiConverterString.read(buf),
+            tx_type=_UniffiConverterTypePaymentType.read(buf),
+            status=_UniffiConverterTypePaymentState.read(buf),
+            value=_UniffiConverterUInt64.read(buf),
+            fee=_UniffiConverterOptionalUInt64.read(buf),
+            invoice=_UniffiConverterString.read(buf),
+            message=_UniffiConverterString.read(buf),
+            timestamp=_UniffiConverterUInt64.read(buf),
+            preimage=_UniffiConverterOptionalString.read(buf),
+            created_at=_UniffiConverterOptionalUInt64.read(buf),
+            updated_at=_UniffiConverterOptionalUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterTypePaymentType.check_lower(value.tx_type)
+        _UniffiConverterTypePaymentState.check_lower(value.status)
+        _UniffiConverterUInt64.check_lower(value.value)
+        _UniffiConverterOptionalUInt64.check_lower(value.fee)
+        _UniffiConverterString.check_lower(value.invoice)
+        _UniffiConverterString.check_lower(value.message)
+        _UniffiConverterUInt64.check_lower(value.timestamp)
+        _UniffiConverterOptionalString.check_lower(value.preimage)
+        _UniffiConverterOptionalUInt64.check_lower(value.created_at)
+        _UniffiConverterOptionalUInt64.check_lower(value.updated_at)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterTypePaymentType.write(value.tx_type, buf)
+        _UniffiConverterTypePaymentState.write(value.status, buf)
+        _UniffiConverterUInt64.write(value.value, buf)
+        _UniffiConverterOptionalUInt64.write(value.fee, buf)
+        _UniffiConverterString.write(value.invoice, buf)
+        _UniffiConverterString.write(value.message, buf)
+        _UniffiConverterUInt64.write(value.timestamp, buf)
+        _UniffiConverterOptionalString.write(value.preimage, buf)
+        _UniffiConverterOptionalUInt64.write(value.created_at, buf)
+        _UniffiConverterOptionalUInt64.write(value.updated_at, buf)
 
 
 class LightningInvoice:
@@ -1408,6 +1625,148 @@ class _UniffiConverterTypeOnChainInvoice(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalMapStringString.write(value.params, buf)
 
 
+class OnchainActivity:
+    id: "str"
+    tx_type: "PaymentType"
+    tx_id: "str"
+    value: "int"
+    fee: "int"
+    fee_rate: "int"
+    address: "str"
+    confirmed: "bool"
+    timestamp: "int"
+    is_boosted: "bool"
+    is_transfer: "bool"
+    does_exist: "bool"
+    confirm_timestamp: "typing.Optional[int]"
+    channel_id: "typing.Optional[str]"
+    transfer_tx_id: "typing.Optional[str]"
+    created_at: "typing.Optional[int]"
+    updated_at: "typing.Optional[int]"
+    @typing.no_type_check
+    def __init__(self, *, id: "str", tx_type: "PaymentType", tx_id: "str", value: "int", fee: "int", fee_rate: "int", address: "str", confirmed: "bool", timestamp: "int", is_boosted: "bool", is_transfer: "bool", does_exist: "bool", confirm_timestamp: "typing.Optional[int]", channel_id: "typing.Optional[str]", transfer_tx_id: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]"):
+        self.id = id
+        self.tx_type = tx_type
+        self.tx_id = tx_id
+        self.value = value
+        self.fee = fee
+        self.fee_rate = fee_rate
+        self.address = address
+        self.confirmed = confirmed
+        self.timestamp = timestamp
+        self.is_boosted = is_boosted
+        self.is_transfer = is_transfer
+        self.does_exist = does_exist
+        self.confirm_timestamp = confirm_timestamp
+        self.channel_id = channel_id
+        self.transfer_tx_id = transfer_tx_id
+        self.created_at = created_at
+        self.updated_at = updated_at
+
+    def __str__(self):
+        return "OnchainActivity(id={}, tx_type={}, tx_id={}, value={}, fee={}, fee_rate={}, address={}, confirmed={}, timestamp={}, is_boosted={}, is_transfer={}, does_exist={}, confirm_timestamp={}, channel_id={}, transfer_tx_id={}, created_at={}, updated_at={})".format(self.id, self.tx_type, self.tx_id, self.value, self.fee, self.fee_rate, self.address, self.confirmed, self.timestamp, self.is_boosted, self.is_transfer, self.does_exist, self.confirm_timestamp, self.channel_id, self.transfer_tx_id, self.created_at, self.updated_at)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.tx_type != other.tx_type:
+            return False
+        if self.tx_id != other.tx_id:
+            return False
+        if self.value != other.value:
+            return False
+        if self.fee != other.fee:
+            return False
+        if self.fee_rate != other.fee_rate:
+            return False
+        if self.address != other.address:
+            return False
+        if self.confirmed != other.confirmed:
+            return False
+        if self.timestamp != other.timestamp:
+            return False
+        if self.is_boosted != other.is_boosted:
+            return False
+        if self.is_transfer != other.is_transfer:
+            return False
+        if self.does_exist != other.does_exist:
+            return False
+        if self.confirm_timestamp != other.confirm_timestamp:
+            return False
+        if self.channel_id != other.channel_id:
+            return False
+        if self.transfer_tx_id != other.transfer_tx_id:
+            return False
+        if self.created_at != other.created_at:
+            return False
+        if self.updated_at != other.updated_at:
+            return False
+        return True
+
+class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return OnchainActivity(
+            id=_UniffiConverterString.read(buf),
+            tx_type=_UniffiConverterTypePaymentType.read(buf),
+            tx_id=_UniffiConverterString.read(buf),
+            value=_UniffiConverterUInt64.read(buf),
+            fee=_UniffiConverterUInt64.read(buf),
+            fee_rate=_UniffiConverterUInt64.read(buf),
+            address=_UniffiConverterString.read(buf),
+            confirmed=_UniffiConverterBool.read(buf),
+            timestamp=_UniffiConverterUInt64.read(buf),
+            is_boosted=_UniffiConverterBool.read(buf),
+            is_transfer=_UniffiConverterBool.read(buf),
+            does_exist=_UniffiConverterBool.read(buf),
+            confirm_timestamp=_UniffiConverterOptionalUInt64.read(buf),
+            channel_id=_UniffiConverterOptionalString.read(buf),
+            transfer_tx_id=_UniffiConverterOptionalString.read(buf),
+            created_at=_UniffiConverterOptionalUInt64.read(buf),
+            updated_at=_UniffiConverterOptionalUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterTypePaymentType.check_lower(value.tx_type)
+        _UniffiConverterString.check_lower(value.tx_id)
+        _UniffiConverterUInt64.check_lower(value.value)
+        _UniffiConverterUInt64.check_lower(value.fee)
+        _UniffiConverterUInt64.check_lower(value.fee_rate)
+        _UniffiConverterString.check_lower(value.address)
+        _UniffiConverterBool.check_lower(value.confirmed)
+        _UniffiConverterUInt64.check_lower(value.timestamp)
+        _UniffiConverterBool.check_lower(value.is_boosted)
+        _UniffiConverterBool.check_lower(value.is_transfer)
+        _UniffiConverterBool.check_lower(value.does_exist)
+        _UniffiConverterOptionalUInt64.check_lower(value.confirm_timestamp)
+        _UniffiConverterOptionalString.check_lower(value.channel_id)
+        _UniffiConverterOptionalString.check_lower(value.transfer_tx_id)
+        _UniffiConverterOptionalUInt64.check_lower(value.created_at)
+        _UniffiConverterOptionalUInt64.check_lower(value.updated_at)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterTypePaymentType.write(value.tx_type, buf)
+        _UniffiConverterString.write(value.tx_id, buf)
+        _UniffiConverterUInt64.write(value.value, buf)
+        _UniffiConverterUInt64.write(value.fee, buf)
+        _UniffiConverterUInt64.write(value.fee_rate, buf)
+        _UniffiConverterString.write(value.address, buf)
+        _UniffiConverterBool.write(value.confirmed, buf)
+        _UniffiConverterUInt64.write(value.timestamp, buf)
+        _UniffiConverterBool.write(value.is_boosted, buf)
+        _UniffiConverterBool.write(value.is_transfer, buf)
+        _UniffiConverterBool.write(value.does_exist, buf)
+        _UniffiConverterOptionalUInt64.write(value.confirm_timestamp, buf)
+        _UniffiConverterOptionalString.write(value.channel_id, buf)
+        _UniffiConverterOptionalString.write(value.transfer_tx_id, buf)
+        _UniffiConverterOptionalUInt64.write(value.created_at, buf)
+        _UniffiConverterOptionalUInt64.write(value.updated_at, buf)
+
+
 class PubkyAuth:
     data: "str"
     @typing.no_type_check
@@ -1480,6 +1839,353 @@ class _UniffiConverterTypeValidationResult(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.address, buf)
         _UniffiConverterTypeNetworkType.write(value.network, buf)
         _UniffiConverterTypeAddressType.write(value.address_type, buf)
+
+
+
+
+
+class Activity:
+    def __init__(self):
+        raise RuntimeError("Activity cannot be instantiated directly")
+
+    # Each enum variant is a nested class of the enum itself.
+    class ONCHAIN:
+        def __init__(self, *values):
+            if len(values) != 1:
+                raise TypeError(f"Expected a tuple of len 1, found len {len(values)}")
+            if not isinstance(values[0], OnchainActivity):
+                raise TypeError(f"unexpected type for tuple element 0 - expected 'OnchainActivity', got '{type(values[0])}'")
+            self._values = values
+
+        def __getitem__(self, index):
+            return self._values[index]
+
+        def __str__(self):
+            return f"Activity.ONCHAIN{self._values!r}"
+
+        def __eq__(self, other):
+            if not other.is_onchain():
+                return False
+            return self._values == other._values
+    class LIGHTNING:
+        def __init__(self, *values):
+            if len(values) != 1:
+                raise TypeError(f"Expected a tuple of len 1, found len {len(values)}")
+            if not isinstance(values[0], LightningActivity):
+                raise TypeError(f"unexpected type for tuple element 0 - expected 'LightningActivity', got '{type(values[0])}'")
+            self._values = values
+
+        def __getitem__(self, index):
+            return self._values[index]
+
+        def __str__(self):
+            return f"Activity.LIGHTNING{self._values!r}"
+
+        def __eq__(self, other):
+            if not other.is_lightning():
+                return False
+            return self._values == other._values
+    
+
+    # For each variant, we have an `is_NAME` method for easily checking
+    # whether an instance is that variant.
+    def is_onchain(self) -> bool:
+        return isinstance(self, Activity.ONCHAIN)
+    def is_lightning(self) -> bool:
+        return isinstance(self, Activity.LIGHTNING)
+    
+
+# Now, a little trick - we make each nested variant class be a subclass of the main
+# enum class, so that method calls and instance checks etc will work intuitively.
+# We might be able to do this a little more neatly with a metaclass, but this'll do.
+Activity.ONCHAIN = type("Activity.ONCHAIN", (Activity.ONCHAIN, Activity,), {})  # type: ignore
+Activity.LIGHTNING = type("Activity.LIGHTNING", (Activity.LIGHTNING, Activity,), {})  # type: ignore
+
+
+
+
+class _UniffiConverterTypeActivity(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return Activity.ONCHAIN(
+                _UniffiConverterTypeOnchainActivity.read(buf),
+            )
+        if variant == 2:
+            return Activity.LIGHTNING(
+                _UniffiConverterTypeLightningActivity.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value.is_onchain():
+            _UniffiConverterTypeOnchainActivity.check_lower(value._values[0])
+            return
+        if value.is_lightning():
+            _UniffiConverterTypeLightningActivity.check_lower(value._values[0])
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value.is_onchain():
+            buf.write_i32(1)
+            _UniffiConverterTypeOnchainActivity.write(value._values[0], buf)
+        if value.is_lightning():
+            buf.write_i32(2)
+            _UniffiConverterTypeLightningActivity.write(value._values[0], buf)
+
+
+
+
+# ActivityError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class ActivityError(Exception):
+    pass
+
+_UniffiTempActivityError = ActivityError
+
+class ActivityError:  # type: ignore
+    class InvalidActivity(_UniffiTempActivityError):
+
+        def __init__(self):
+            pass
+        def __repr__(self):
+            return "ActivityError.InvalidActivity({})".format(str(self))
+    _UniffiTempActivityError.InvalidActivity = InvalidActivity # type: ignore
+    class InitializationError(_UniffiTempActivityError):
+
+        def __init__(self, message):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+            ]))
+            self.message = message
+        def __repr__(self):
+            return "ActivityError.InitializationError({})".format(str(self))
+    _UniffiTempActivityError.InitializationError = InitializationError # type: ignore
+    class InsertError(_UniffiTempActivityError):
+
+        def __init__(self, message):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+            ]))
+            self.message = message
+        def __repr__(self):
+            return "ActivityError.InsertError({})".format(str(self))
+    _UniffiTempActivityError.InsertError = InsertError # type: ignore
+    class RetrievalError(_UniffiTempActivityError):
+
+        def __init__(self, message):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+            ]))
+            self.message = message
+        def __repr__(self):
+            return "ActivityError.RetrievalError({})".format(str(self))
+    _UniffiTempActivityError.RetrievalError = RetrievalError # type: ignore
+    class DataError(_UniffiTempActivityError):
+
+        def __init__(self, message):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+            ]))
+            self.message = message
+        def __repr__(self):
+            return "ActivityError.DataError({})".format(str(self))
+    _UniffiTempActivityError.DataError = DataError # type: ignore
+    class ConnectionError(_UniffiTempActivityError):
+
+        def __init__(self, message):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+            ]))
+            self.message = message
+        def __repr__(self):
+            return "ActivityError.ConnectionError({})".format(str(self))
+    _UniffiTempActivityError.ConnectionError = ConnectionError # type: ignore
+    class SerializationError(_UniffiTempActivityError):
+
+        def __init__(self, message):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+            ]))
+            self.message = message
+        def __repr__(self):
+            return "ActivityError.SerializationError({})".format(str(self))
+    _UniffiTempActivityError.SerializationError = SerializationError # type: ignore
+
+ActivityError = _UniffiTempActivityError # type: ignore
+del _UniffiTempActivityError
+
+
+class _UniffiConverterTypeActivityError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return ActivityError.InvalidActivity(
+            )
+        if variant == 2:
+            return ActivityError.InitializationError(
+                message=_UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return ActivityError.InsertError(
+                message=_UniffiConverterString.read(buf),
+            )
+        if variant == 4:
+            return ActivityError.RetrievalError(
+                message=_UniffiConverterString.read(buf),
+            )
+        if variant == 5:
+            return ActivityError.DataError(
+                message=_UniffiConverterString.read(buf),
+            )
+        if variant == 6:
+            return ActivityError.ConnectionError(
+                message=_UniffiConverterString.read(buf),
+            )
+        if variant == 7:
+            return ActivityError.SerializationError(
+                message=_UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, ActivityError.InvalidActivity):
+            return
+        if isinstance(value, ActivityError.InitializationError):
+            _UniffiConverterString.check_lower(value.message)
+            return
+        if isinstance(value, ActivityError.InsertError):
+            _UniffiConverterString.check_lower(value.message)
+            return
+        if isinstance(value, ActivityError.RetrievalError):
+            _UniffiConverterString.check_lower(value.message)
+            return
+        if isinstance(value, ActivityError.DataError):
+            _UniffiConverterString.check_lower(value.message)
+            return
+        if isinstance(value, ActivityError.ConnectionError):
+            _UniffiConverterString.check_lower(value.message)
+            return
+        if isinstance(value, ActivityError.SerializationError):
+            _UniffiConverterString.check_lower(value.message)
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, ActivityError.InvalidActivity):
+            buf.write_i32(1)
+        if isinstance(value, ActivityError.InitializationError):
+            buf.write_i32(2)
+            _UniffiConverterString.write(value.message, buf)
+        if isinstance(value, ActivityError.InsertError):
+            buf.write_i32(3)
+            _UniffiConverterString.write(value.message, buf)
+        if isinstance(value, ActivityError.RetrievalError):
+            buf.write_i32(4)
+            _UniffiConverterString.write(value.message, buf)
+        if isinstance(value, ActivityError.DataError):
+            buf.write_i32(5)
+            _UniffiConverterString.write(value.message, buf)
+        if isinstance(value, ActivityError.ConnectionError):
+            buf.write_i32(6)
+            _UniffiConverterString.write(value.message, buf)
+        if isinstance(value, ActivityError.SerializationError):
+            buf.write_i32(7)
+            _UniffiConverterString.write(value.message, buf)
+
+
+
+
+
+class ActivityFilter(enum.Enum):
+    ALL = 0
+    
+    LIGHTNING = 1
+    
+    ONCHAIN = 2
+    
+
+
+class _UniffiConverterTypeActivityFilter(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return ActivityFilter.ALL
+        if variant == 2:
+            return ActivityFilter.LIGHTNING
+        if variant == 3:
+            return ActivityFilter.ONCHAIN
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == ActivityFilter.ALL:
+            return
+        if value == ActivityFilter.LIGHTNING:
+            return
+        if value == ActivityFilter.ONCHAIN:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == ActivityFilter.ALL:
+            buf.write_i32(1)
+        if value == ActivityFilter.LIGHTNING:
+            buf.write_i32(2)
+        if value == ActivityFilter.ONCHAIN:
+            buf.write_i32(3)
+
+
+
+
+
+
+
+class ActivityType(enum.Enum):
+    ONCHAIN = 0
+    
+    LIGHTNING = 1
+    
+
+
+class _UniffiConverterTypeActivityType(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return ActivityType.ONCHAIN
+        if variant == 2:
+            return ActivityType.LIGHTNING
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == ActivityType.ONCHAIN:
+            return
+        if value == ActivityType.LIGHTNING:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == ActivityType.ONCHAIN:
+            buf.write_i32(1)
+        if value == ActivityType.LIGHTNING:
+            buf.write_i32(2)
+
+
 
 
 # AddressError
@@ -1608,6 +2314,76 @@ class _UniffiConverterTypeAddressType(_UniffiConverterRustBuffer):
             buf.write_i32(6)
 
 
+
+
+# DbError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class DbError(Exception):
+    pass
+
+_UniffiTempDbError = DbError
+
+class DbError:  # type: ignore
+    class ActivityError(_UniffiTempDbError):
+
+        def __init__(self, ):
+            super().__init__(", ".join([
+                "={!r}".format(),
+            ]))
+            self. = 
+        def __repr__(self):
+            return "DbError.ActivityError({})".format(str(self))
+    _UniffiTempDbError.ActivityError = ActivityError # type: ignore
+    class InitializationError(_UniffiTempDbError):
+
+        def __init__(self, message):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+            ]))
+            self.message = message
+        def __repr__(self):
+            return "DbError.InitializationError({})".format(str(self))
+    _UniffiTempDbError.InitializationError = InitializationError # type: ignore
+
+DbError = _UniffiTempDbError # type: ignore
+del _UniffiTempDbError
+
+
+class _UniffiConverterTypeDbError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return DbError.ActivityError(
+                =_UniffiConverterTypeActivityError.read(buf),
+            )
+        if variant == 2:
+            return DbError.InitializationError(
+                message=_UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, DbError.ActivityError):
+            _UniffiConverterTypeActivityError.check_lower(value.)
+            return
+        if isinstance(value, DbError.InitializationError):
+            _UniffiConverterString.check_lower(value.message)
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, DbError.ActivityError):
+            buf.write_i32(1)
+            _UniffiConverterTypeActivityError.write(value., buf)
+        if isinstance(value, DbError.InitializationError):
+            buf.write_i32(2)
+            _UniffiConverterString.write(value.message, buf)
 
 
 # DecodingError
@@ -2023,6 +2799,90 @@ class _UniffiConverterTypeNetworkType(_UniffiConverterRustBuffer):
 
 
 
+class PaymentState(enum.Enum):
+    PENDING = 0
+    
+    SUCCEEDED = 1
+    
+    FAILED = 2
+    
+
+
+class _UniffiConverterTypePaymentState(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return PaymentState.PENDING
+        if variant == 2:
+            return PaymentState.SUCCEEDED
+        if variant == 3:
+            return PaymentState.FAILED
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == PaymentState.PENDING:
+            return
+        if value == PaymentState.SUCCEEDED:
+            return
+        if value == PaymentState.FAILED:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == PaymentState.PENDING:
+            buf.write_i32(1)
+        if value == PaymentState.SUCCEEDED:
+            buf.write_i32(2)
+        if value == PaymentState.FAILED:
+            buf.write_i32(3)
+
+
+
+
+
+
+
+class PaymentType(enum.Enum):
+    SENT = 0
+    
+    RECEIVED = 1
+    
+
+
+class _UniffiConverterTypePaymentType(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return PaymentType.SENT
+        if variant == 2:
+            return PaymentType.RECEIVED
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == PaymentType.SENT:
+            return
+        if value == PaymentType.RECEIVED:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == PaymentType.SENT:
+            buf.write_i32(1)
+        if value == PaymentType.RECEIVED:
+            buf.write_i32(2)
+
+
+
+
+
+
+
 class Scanner:
     def __init__(self):
         raise RuntimeError("Scanner cannot be instantiated directly")
@@ -2395,6 +3255,44 @@ class _UniffiConverterTypeScanner(_UniffiConverterRustBuffer):
 
 
 
+
+
+class SortDirection(enum.Enum):
+    ASC = 0
+    
+    DESC = 1
+    
+
+
+class _UniffiConverterTypeSortDirection(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return SortDirection.ASC
+        if variant == 2:
+            return SortDirection.DESC
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == SortDirection.ASC:
+            return
+        if value == SortDirection.DESC:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == SortDirection.ASC:
+            buf.write_i32(1)
+        if value == SortDirection.DESC:
+            buf.write_i32(2)
+
+
+
+
+
 class _UniffiConverterOptionalUInt32(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -2503,6 +3401,60 @@ class _UniffiConverterOptionalBytes(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypeActivity(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeActivity.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeActivity.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeActivity.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeSortDirection(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeSortDirection.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeSortDirection.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeSortDirection.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalMapStringString(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -2527,6 +3479,56 @@ class _UniffiConverterOptionalMapStringString(_UniffiConverterRustBuffer):
             return _UniffiConverterMapStringString.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterSequenceString(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterString.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterString.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterString.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeActivity(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeActivity.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeActivity.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeActivity.read(buf) for i in range(count)
+        ]
 
 
 
@@ -2624,6 +3626,16 @@ async def _uniffi_rust_call_async(rust_future, ffi_poll, ffi_complete, ffi_free,
         )
     finally:
         ffi_free(rust_future)
+
+def add_tags(activity_id: "str",tags: "typing.List[str]") -> None:
+    _UniffiConverterString.check_lower(activity_id)
+    
+    _UniffiConverterSequenceString.check_lower(tags)
+    
+    _rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_add_tags,
+        _UniffiConverterString.lower(activity_id),
+        _UniffiConverterSequenceString.lower(tags))
+
 async def decode(invoice: "str") -> "Scanner":
 
     _UniffiConverterString.check_lower(invoice)
@@ -2641,6 +3653,46 @@ async def decode(invoice: "str") -> "Scanner":
 _UniffiConverterTypeDecodingError,
 
     )
+
+def delete_activity_by_id(activity_id: "str") -> "bool":
+    _UniffiConverterString.check_lower(activity_id)
+    
+    return _UniffiConverterBool.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id,
+        _UniffiConverterString.lower(activity_id)))
+
+
+def get_activities(filter: "ActivityFilter",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
+    _UniffiConverterTypeActivityFilter.check_lower(filter)
+    
+    _UniffiConverterOptionalUInt32.check_lower(limit)
+    
+    _UniffiConverterOptionalTypeSortDirection.check_lower(sort_direction)
+    
+    return _UniffiConverterSequenceTypeActivity.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activities,
+        _UniffiConverterTypeActivityFilter.lower(filter),
+        _UniffiConverterOptionalUInt32.lower(limit),
+        _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)))
+
+
+def get_activities_by_tag(tag: "str",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
+    _UniffiConverterString.check_lower(tag)
+    
+    _UniffiConverterOptionalUInt32.check_lower(limit)
+    
+    _UniffiConverterOptionalTypeSortDirection.check_lower(sort_direction)
+    
+    return _UniffiConverterSequenceTypeActivity.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag,
+        _UniffiConverterString.lower(tag),
+        _UniffiConverterOptionalUInt32.lower(limit),
+        _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)))
+
+
+def get_activity_by_id(activity_id: "str") -> "typing.Optional[Activity]":
+    _UniffiConverterString.check_lower(activity_id)
+    
+    return _UniffiConverterOptionalTypeActivity.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id,
+        _UniffiConverterString.lower(activity_id)))
+
 async def get_lnurl_invoice(address: "str",amount_satoshis: "int") -> "str":
 
     _UniffiConverterString.check_lower(address)
@@ -2662,6 +3714,54 @@ _UniffiConverterTypeLnurlError,
 
     )
 
+def get_tags(activity_id: "str") -> "typing.List[str]":
+    _UniffiConverterString.check_lower(activity_id)
+    
+    return _UniffiConverterSequenceString.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_tags,
+        _UniffiConverterString.lower(activity_id)))
+
+
+def init_db(base_path: "str") -> "str":
+    _UniffiConverterString.check_lower(base_path)
+    
+    return _UniffiConverterString.lift(_rust_call_with_error(_UniffiConverterTypeDbError,_UniffiLib.uniffi_bitkitcore_fn_func_init_db,
+        _UniffiConverterString.lower(base_path)))
+
+
+def insert_activity(activity: "Activity") -> None:
+    _UniffiConverterTypeActivity.check_lower(activity)
+    
+    _rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_insert_activity,
+        _UniffiConverterTypeActivity.lower(activity))
+
+
+def remove_tags(activity_id: "str",tags: "typing.List[str]") -> None:
+    _UniffiConverterString.check_lower(activity_id)
+    
+    _UniffiConverterSequenceString.check_lower(tags)
+    
+    _rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_remove_tags,
+        _UniffiConverterString.lower(activity_id),
+        _UniffiConverterSequenceString.lower(tags))
+
+
+def update_activity(activity_id: "str",activity: "Activity") -> None:
+    _UniffiConverterString.check_lower(activity_id)
+    
+    _UniffiConverterTypeActivity.check_lower(activity)
+    
+    _rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_update_activity,
+        _UniffiConverterString.lower(activity_id),
+        _UniffiConverterTypeActivity.lower(activity))
+
+
+def upsert_activity(activity: "Activity") -> None:
+    _UniffiConverterTypeActivity.check_lower(activity)
+    
+    _rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_activity,
+        _UniffiConverterTypeActivity.lower(activity))
+
+
 def validate_bitcoin_address(address: "str") -> "ValidationResult":
     _UniffiConverterString.check_lower(address)
     
@@ -2671,12 +3771,21 @@ def validate_bitcoin_address(address: "str") -> "ValidationResult":
 
 __all__ = [
     "InternalError",
+    "Activity",
+    "ActivityError",
+    "ActivityFilter",
+    "ActivityType",
     "AddressError",
     "AddressType",
+    "DbError",
     "DecodingError",
     "LnurlError",
     "NetworkType",
+    "PaymentState",
+    "PaymentType",
     "Scanner",
+    "SortDirection",
+    "LightningActivity",
     "LightningInvoice",
     "LnurlAddressData",
     "LnurlAuthData",
@@ -2684,10 +3793,22 @@ __all__ = [
     "LnurlPayData",
     "LnurlWithdrawData",
     "OnChainInvoice",
+    "OnchainActivity",
     "PubkyAuth",
     "ValidationResult",
+    "add_tags",
     "decode",
+    "delete_activity_by_id",
+    "get_activities",
+    "get_activities_by_tag",
+    "get_activity_by_id",
     "get_lnurl_invoice",
+    "get_tags",
+    "init_db",
+    "insert_activity",
+    "remove_tags",
+    "update_activity",
+    "upsert_activity",
     "validate_bitcoin_address",
     "uniffi_set_event_loop",
 ]
