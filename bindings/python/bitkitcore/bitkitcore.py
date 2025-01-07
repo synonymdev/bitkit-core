@@ -467,7 +467,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_activities() != 55403:
+    if lib.uniffi_bitkitcore_checksum_func_get_activities() != 3334:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 52823:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -611,6 +611,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.restype = ctypes.c_int8
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activities.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -3428,6 +3433,33 @@ class _UniffiConverterOptionalTypeActivity(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypePaymentType(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypePaymentType.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypePaymentType.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypePaymentType.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypeSortDirection(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -3450,6 +3482,33 @@ class _UniffiConverterOptionalTypeSortDirection(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterTypeSortDirection.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalSequenceString(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterSequenceString.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterSequenceString.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterSequenceString.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -3661,8 +3720,18 @@ def delete_activity_by_id(activity_id: "str") -> "bool":
         _UniffiConverterString.lower(activity_id)))
 
 
-def get_activities(filter: "ActivityFilter",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
+def get_activities(filter: "ActivityFilter",tx_type: "typing.Optional[PaymentType]",tags: "typing.Optional[typing.List[str]]",search: "typing.Optional[str]",min_date: "typing.Optional[int]",max_date: "typing.Optional[int]",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
     _UniffiConverterTypeActivityFilter.check_lower(filter)
+    
+    _UniffiConverterOptionalTypePaymentType.check_lower(tx_type)
+    
+    _UniffiConverterOptionalSequenceString.check_lower(tags)
+    
+    _UniffiConverterOptionalString.check_lower(search)
+    
+    _UniffiConverterOptionalUInt64.check_lower(min_date)
+    
+    _UniffiConverterOptionalUInt64.check_lower(max_date)
     
     _UniffiConverterOptionalUInt32.check_lower(limit)
     
@@ -3670,6 +3739,11 @@ def get_activities(filter: "ActivityFilter",limit: "typing.Optional[int]",sort_d
     
     return _UniffiConverterSequenceTypeActivity.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activities,
         _UniffiConverterTypeActivityFilter.lower(filter),
+        _UniffiConverterOptionalTypePaymentType.lower(tx_type),
+        _UniffiConverterOptionalSequenceString.lower(tags),
+        _UniffiConverterOptionalString.lower(search),
+        _UniffiConverterOptionalUInt64.lower(min_date),
+        _UniffiConverterOptionalUInt64.lower(max_date),
         _UniffiConverterOptionalUInt32.lower(limit),
         _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)))
 
