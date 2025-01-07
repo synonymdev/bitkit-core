@@ -1933,37 +1933,19 @@ public struct FfiConverterTypeDbError: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> DbError {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-
-        
-
-        
-        case 1: return .ActivityError(
-            : try FfiConverterTypeActivityError.read(from: &buf)
-            )
-        case 2: return .InitializationError(
-            message: try FfiConverterString.read(from: &buf)
-            )
-
-         default: throw UniffiInternalError.unexpectedEnumCase
+        case 1: return .ActivityError(try FfiConverterTypeActivityError.read(from: &buf))
+        case 2: return .InitializationError(message: try FfiConverterString.read(from: &buf))
+        default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
-
     public static func write(_ value: DbError, into buf: inout [UInt8]) {
         switch value {
-
-        
-
-        
-        
-        case let .ActivityError():
+        case let .ActivityError(error):
             writeInt(&buf, Int32(1))
-            FfiConverterTypeActivityError.write(, into: &buf)
-            
-        
+            FfiConverterTypeActivityError.write(error, into: &buf)
         case let .InitializationError(message):
             writeInt(&buf, Int32(2))
             FfiConverterString.write(message, into: &buf)
-            
         }
     }
 }
