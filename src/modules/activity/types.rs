@@ -58,13 +58,13 @@ pub enum ActivityType {
     Lightning,
 }
 
-#[derive(Debug, Serialize, Deserialize, uniffi::Enum, Clone)]
+#[derive(Debug, Serialize, Deserialize, uniffi::Enum, Clone, PartialEq, Eq)]
 pub enum PaymentType {
     Sent,
     Received,
 }
 
-#[derive(Debug, Serialize, Deserialize, uniffi::Enum, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, uniffi::Enum, Clone, PartialEq, Eq)]
 pub enum PaymentState {
     Pending,
     Succeeded,

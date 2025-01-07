@@ -17,10 +17,23 @@ The Activity module is responsible for storing and managing transaction/activity
 fn init_db(base_path: String) -> Result<String, DbError>
 
 // Get activities with optional filter, limit, and sort direction
-fn get_activities(filter: ActivityFilter, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError>
+fn get_activities(
+  filter: ActivityFilter,
+  tx_type: Option<PaymentType>,
+  tags: Option<Vec<String>>,
+  search: Option<String>,
+  min_date: Option<u64>,
+  max_date: Option<u64>,
+  limit: Option<u32>,
+  sort_direction: Option<SortDirection>
+) -> Result<Vec<Activity>, ActivityError>
 
 // Get activities by tag with optional limit and sort direction
-fn get_activities_by_tag(tag: String, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError>
+fn get_activities_by_tag(
+  tag: String,
+  limit: Option<u32>,
+  sort_direction: Option<SortDirection>
+) -> Result<Vec<Activity>, ActivityError>
 
 // Insert a new activity
 fn insert_activity(activity: Activity) -> Result<(), ActivityError>
@@ -77,10 +90,29 @@ func manageActivities() {
         let activity = Activity.onchain(onchainActivity)
         try insertActivity(activity: activity)
         
-        // Retrieve activities with filter, limit, and sort direction
-        let allActivities = try getActivities(filter: .all, limit: 10, sortDirection: .desc)
-        let onchainActivities = try getActivities(filter: .onchain, limit: 10, sortDirection: .asc)
-        let lightningActivities = try getActivities(filter: .lightning, limit: 10)
+        // Retrieve activities with advanced filtering
+        let filteredActivities = try getActivities(
+            filter: .all,
+            txType: .sent,
+            tags: ["coffee", "food"],
+            search: "bc1q",
+            minDate: 1234567890,
+            maxDate: 1234667890,
+            limit: 10,
+            sortDirection: .desc
+        )
+        
+        // Simple query (all parameters are optional)
+        let simpleQuery = try getActivities(
+            filter: .all,
+            txType: nil,
+            tags: nil,
+            search: nil,
+            minDate: nil,
+            maxDate: nil,
+            limit: 10,
+            sortDirection: .desc
+        )
         
         // Get specific activity
         if let foundActivity = try getActivityById(activityId: "tx123") {
@@ -138,19 +170,46 @@ fun manageActivities() {
         val activity = Activity.Lightning(lightningActivity)
         insertActivity(activity)
         
-        // Retrieve activities with filter, limit, and sort direction
-        val allActivities = getActivities(
+        // Retrieve activities with advanced filtering
+        val filteredActivities = getActivities(
             filter = ActivityFilter.ALL,
+            txType = PaymentType.SENT,
+            tags = listOf("coffee", "food"),
+            search = "bc1q",
+            minDate = 1234567890,
+            maxDate = 1234667890,
             limit = 20,
             sortDirection = SortDirection.DESC
         )
-        val onchainActivities = getActivities(
-            filter = ActivityFilter.ONCHAIN,
+        
+        // Simple query (all parameters are optional)
+        val simpleQuery = getActivities(
+            filter = ActivityFilter.ALL,
+            txType = null,
+            tags = null,
+            search = null,
+            minDate = null,
+            maxDate = null,
             limit = 20,
-            sortDirection = SortDirection.ASC
+            sortDirection = SortDirection.DESC
         )
-        val lightningActivities = getActivities(
+        
+        // Filter by specific criteria
+        val sentPayments = getActivities(
+            filter = ActivityFilter.ALL,
+            txType = PaymentType.SENT,
+            limit = 20
+        )
+        
+        val recentLightning = getActivities(
             filter = ActivityFilter.LIGHTNING,
+            minDate = System.currentTimeMillis() / 1000 - 86400, // Last 24 hours
+            limit = 20
+        )
+        
+        val taggedPayments = getActivities(
+            filter = ActivityFilter.ALL,
+            tags = listOf("coffee"),
             limit = 20
         )
         
@@ -217,19 +276,46 @@ try:
     activity = Activity.Onchain(onchain_activity)
     insert_activity(activity)
     
-    # Retrieve activities with filter, limit, and sort direction
-    all_activities = get_activities(
+    # Retrieve activities with advanced filtering
+    filtered_activities = get_activities(
         filter=ActivityFilter.ALL,
+        tx_type=PaymentType.SENT,
+        tags=["coffee", "food"],
+        search="bc1q",
+        min_date=1234567890,
+        max_date=1234667890,
         limit=10,
         sort_direction=SortDirection.DESC
     )
-    onchain_activities = get_activities(
-        filter=ActivityFilter.ONCHAIN,
+    
+    # Simple query (all parameters are optional)
+    simple_query = get_activities(
+        filter=ActivityFilter.ALL,
+        tx_type=None,
+        tags=None,
+        search=None,
+        min_date=None,
+        max_date=None,
         limit=10,
-        sort_direction=SortDirection.ASC
+        sort_direction=SortDirection.DESC
     )
-    lightning_activities = get_activities(
+    
+    # Filter by specific criteria
+    sent_payments = get_activities(
+        filter=ActivityFilter.ALL,
+        tx_type=PaymentType.SENT,
+        limit=10
+    )
+    
+    recent_lightning = get_activities(
         filter=ActivityFilter.LIGHTNING,
+        min_date=int(time.time()) - 86400,  # Last 24 hours
+        limit=10
+    )
+    
+    tagged_payments = get_activities(
+        filter=ActivityFilter.ALL,
+        tags=["coffee"],
         limit=10
     )
     
@@ -330,9 +416,10 @@ descending order (newest first) by default.
 
 ## Error Handling
 
-Database operations can throw the following errors:
-- Database initialization errors
-- Insert operation failures
-- Query execution failures
-- Invalid data format errors
-- Database connection errors
+The module uses the `ActivityError` enum which includes:
+- `InitializationError`: Database setup and initialization failures
+- `ConnectionError`: Database connection issues
+- `DataError`: Issues with data format or constraints
+- `InsertError`: Failures during insert operations
+- `RetrievalError`: Failures during data retrieval
+- `UpdateError`: Failures during update operations

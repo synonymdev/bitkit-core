@@ -350,59 +350,122 @@ impl ActivityDB {
     pub fn get_activities(
         &self,
         filter: ActivityFilter,
+        tx_type: Option<PaymentType>,
+        tags: Option<Vec<String>>,
+        search: Option<String>,
+        min_date: Option<u64>,
+        max_date: Option<u64>,
         limit: Option<u32>,
-        sort_direction: Option<SortDirection>
+        sort_direction: Option<SortDirection>,
     ) -> Result<Vec<Activity>, ActivityError> {
         let direction = sort_direction.unwrap_or_default();
-        let filter_clause = match filter {
-            ActivityFilter::All => "",
-            ActivityFilter::Lightning => "WHERE a.activity_type = 'lightning'",
-            ActivityFilter::Onchain => "WHERE a.activity_type = 'onchain'",
-        };
 
-        let sql = format!(
-            "SELECT
-                a.id,
-                a.activity_type,
-                a.tx_type,
-                a.timestamp,
-                a.created_at,
-                a.updated_at,
-
-                -- Onchain columns
-                o.tx_id AS onchain_tx_id,
-                o.value AS onchain_value,
-                o.fee AS onchain_fee,
-                o.fee_rate AS onchain_fee_rate,
-                o.address AS onchain_address,
-                o.confirmed AS onchain_confirmed,
-                o.is_boosted AS onchain_is_boosted,
-                o.is_transfer AS onchain_is_transfer,
-                o.does_exist AS onchain_does_exist,
-                o.confirm_timestamp AS onchain_confirm_timestamp,
-                o.channel_id AS onchain_channel_id,
-                o.transfer_tx_id AS onchain_transfer_tx_id,
-
-                -- Lightning columns
-                l.invoice AS ln_invoice,
-                l.value AS ln_value,
-                l.status AS ln_status,
-                l.fee AS ln_fee,
-                l.message AS ln_message,
-                l.preimage AS ln_preimage
-
+        let mut query = String::from(
+            "WITH filtered_activities AS (
+            SELECT DISTINCT a.id
             FROM activities a
-            LEFT JOIN onchain_activity o ON a.id = o.id AND a.activity_type = 'onchain'
-            LEFT JOIN lightning_activity l ON a.id = l.id AND a.activity_type = 'lightning'
-            {filter_clause}
-            ORDER BY a.timestamp {direction}
-            {limit_clause}",
-            filter_clause = filter_clause,
-            direction = Self::sort_direction_to_sql(direction),
-            limit_clause = limit.map_or(String::new(), |n| format!("LIMIT {}", n))
+            LEFT JOIN activity_tags t ON a.id = t.activity_id
+            LEFT JOIN onchain_activity o ON a.id = o.id
+            LEFT JOIN lightning_activity l ON a.id = l.id
+            WHERE 1=1"
         );
 
-        let mut stmt = self.conn.prepare(&sql).map_err(|e| ActivityError::RetrievalError {
+        // Activity type filter
+        match filter {
+            ActivityFilter::Lightning => query.push_str(" AND a.activity_type = 'lightning'"),
+            ActivityFilter::Onchain => query.push_str(" AND a.activity_type = 'onchain'"),
+            ActivityFilter::All => {}
+        }
+
+        // Transaction type filter
+        if let Some(tx_type) = tx_type {
+            query.push_str(&format!(" AND a.tx_type = '{}'",
+                                    Self::payment_type_to_string(&tx_type)));
+        }
+
+        // Tags filter (ANY of the provided tags)
+        if let Some(tag_list) = tags {
+            if !tag_list.is_empty() {
+                query.push_str(" AND t.tag IN (");
+                query.push_str(&tag_list
+                    .iter()
+                    .map(|t| format!("'{}'", t.replace('\'', "''")))
+                    .collect::<Vec<_>>()
+                    .join(","));
+                query.push(')');
+            }
+        }
+
+        // Date range filters
+        if let Some(min) = min_date {
+            query.push_str(&format!(" AND a.timestamp >= {}", min));
+        }
+        if let Some(max) = max_date {
+            query.push_str(&format!(" AND a.timestamp <= {}", max));
+        }
+
+        // Text search filter
+        if let Some(search_text) = search {
+            if !search_text.is_empty() {
+                let search_pattern = format!("%{}%", search_text.replace('\'', "''"));
+                query.push_str(&format!(
+                    " AND (
+                o.address LIKE '{}' OR
+                l.invoice LIKE '{}' OR
+                l.message LIKE '{}'
+            )",
+                    search_pattern, search_pattern, search_pattern
+                ));
+            }
+        }
+
+        query.push_str(")");
+
+        // Main query
+        query.push_str("
+        SELECT
+            a.id,
+            a.activity_type,
+            a.tx_type,
+            a.timestamp,
+            a.created_at,
+            a.updated_at,
+
+            -- Onchain columns
+            o.tx_id AS onchain_tx_id,
+            o.value AS onchain_value,
+            o.fee AS onchain_fee,
+            o.fee_rate AS onchain_fee_rate,
+            o.address AS onchain_address,
+            o.confirmed AS onchain_confirmed,
+            o.is_boosted AS onchain_is_boosted,
+            o.is_transfer AS onchain_is_transfer,
+            o.does_exist AS onchain_does_exist,
+            o.confirm_timestamp AS onchain_confirm_timestamp,
+            o.channel_id AS onchain_channel_id,
+            o.transfer_tx_id AS onchain_transfer_tx_id,
+
+            -- Lightning columns
+            l.invoice AS ln_invoice,
+            l.value AS ln_value,
+            l.status AS ln_status,
+            l.fee AS ln_fee,
+            l.message AS ln_message,
+            l.preimage AS ln_preimage
+
+        FROM activities a
+        INNER JOIN filtered_activities fa ON a.id = fa.id
+        LEFT JOIN onchain_activity o ON a.id = o.id AND a.activity_type = 'onchain'
+        LEFT JOIN lightning_activity l ON a.id = l.id AND a.activity_type = 'lightning'
+        ORDER BY a.timestamp ");
+
+        // Add sort direction and limit
+        query.push_str(Self::sort_direction_to_sql(direction));
+        if let Some(n) = limit {
+            query.push_str(&format!(" LIMIT {}", n));
+        }
+
+        let mut stmt = self.conn.prepare(&query).map_err(|e| ActivityError::RetrievalError {
             message: format!("Failed to prepare statement: {}", e),
         })?;
 
