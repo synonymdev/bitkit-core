@@ -65,7 +65,7 @@ mod tests {
         let activity = create_test_onchain_activity();
         assert!(db.insert_onchain_activity(&activity).is_ok());
 
-        let activities = db.get_activities(ActivityFilter::Onchain, None, None, None, None, None, None, None).unwrap();
+        let activities = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, None, None).unwrap();
         assert_eq!(activities.len(), 1);
         if let Activity::Onchain(retrieved) = &activities[0] {
             assert_eq!(retrieved.id, activity.id);
@@ -86,7 +86,7 @@ mod tests {
         let activity = create_test_lightning_activity();
         assert!(db.insert_lightning_activity(&activity).is_ok());
 
-        let activities = db.get_activities(ActivityFilter::Lightning, None, None, None, None, None, None, None).unwrap();
+        let activities = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, None, None).unwrap();
         assert_eq!(activities.len(), 1);
         if let Activity::Lightning(retrieved) = &activities[0] {
             assert_eq!(retrieved.id, activity.id);
@@ -110,7 +110,7 @@ mod tests {
         db.insert_onchain_activity(&onchain).unwrap();
         db.insert_lightning_activity(&lightning).unwrap();
 
-        let all_activities = db.get_activities(ActivityFilter::All, None, None, None, None, None, None, None).unwrap();
+        let all_activities = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, None).unwrap();
         assert_eq!(all_activities.len(), 2);
 
         // Check ordering by timestamp descending (they have the same timestamp in this test)
@@ -127,7 +127,7 @@ mod tests {
         let activity = create_test_onchain_activity();
         db.insert_onchain_activity(&activity).unwrap();
 
-        let retrieved = db.get_activities(ActivityFilter::Onchain, None, None, None, None, None, None, None).unwrap();
+        let retrieved = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, None, None).unwrap();
         if let Activity::Onchain(activity) = &retrieved[0] {
             assert!(activity.created_at.is_some());
             assert!(activity.updated_at.is_some());
@@ -150,7 +150,7 @@ mod tests {
         db.insert_onchain_activity(&activity1).unwrap();
         db_clone.insert_lightning_activity(&activity2).unwrap();
 
-        let all_activities = db.get_activities(ActivityFilter::All, None, None, None, None, None, None, None).unwrap();
+        let all_activities = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, None).unwrap();
         assert_eq!(all_activities.len(), 2);
 
         cleanup(&db_path);
@@ -171,7 +171,7 @@ mod tests {
         db.insert_onchain_activity(&onchain2).unwrap();
         db.insert_lightning_activity(&lightning).unwrap();
 
-        let activities = db.get_activities(ActivityFilter::All, None, None, None, None, None, None, None).unwrap();
+        let activities = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, None).unwrap();
         let timestamps: Vec<u64> = activities.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(timestamps, vec![2000, 1500, 1000]);
 
@@ -196,17 +196,17 @@ mod tests {
         }
 
         // Test limits with different filters
-        let all = db.get_activities(ActivityFilter::All, None, None, None, None, None, Some(3), None).unwrap();
+        let all = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, Some(3), None).unwrap();
         assert_eq!(all.len(), 3);
 
-        let onchain = db.get_activities(ActivityFilter::Onchain, None, None, None, None, None, Some(2), None).unwrap();
+        let onchain = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, Some(2), None).unwrap();
         assert_eq!(onchain.len(), 2);
 
-        let lightning = db.get_activities(ActivityFilter::Lightning, None, None, None, None, None, Some(4), None).unwrap();
+        let lightning = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, Some(4), None).unwrap();
         assert_eq!(lightning.len(), 4);
 
         // Test without limits
-        let all = db.get_activities(ActivityFilter::All, None, None, None, None, None, None, None).unwrap();
+        let all = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, None).unwrap();
         assert_eq!(all.len(), 10);
 
         cleanup(&db_path);
@@ -218,13 +218,13 @@ mod tests {
         db.insert_onchain_activity(&create_test_onchain_activity()).unwrap();
         db.insert_lightning_activity(&create_test_lightning_activity()).unwrap();
 
-        let all = db.get_activities(ActivityFilter::All, None, None, None, None, None, Some(0), None).unwrap();
+        let all = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, Some(0), None).unwrap();
         assert_eq!(all.len(), 0);
 
-        let onchain = db.get_activities(ActivityFilter::Onchain, None, None, None, None, None, Some(0), None).unwrap();
+        let onchain = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, Some(0), None).unwrap();
         assert_eq!(onchain.len(), 0);
 
-        let lightning = db.get_activities(ActivityFilter::Lightning, None, None, None, None, None, Some(0), None).unwrap();
+        let lightning = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, Some(0), None).unwrap();
         assert_eq!(lightning.len(), 0);
 
         cleanup(&db_path);
@@ -432,7 +432,7 @@ mod tests {
         activity.fee = Some(i64::MAX as u64);
         assert!(db.insert_lightning_activity(&activity).is_ok());
 
-        let activities = db.get_activities(ActivityFilter::Lightning, None, None, None, None, None, None, None).unwrap();
+        let activities = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, None, None).unwrap();
         assert_eq!(activities.len(), 3);
 
         for act in activities {
@@ -636,12 +636,12 @@ mod tests {
         }
 
         // Test ascending order
-        let asc_results = db.get_activities(ActivityFilter::All, None, None, None, None, None, None, Some(SortDirection::Asc)).unwrap();
+        let asc_results = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, Some(SortDirection::Asc)).unwrap();
         let asc_timestamps: Vec<u64> = asc_results.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(asc_timestamps, vec![1000, 1001, 1002]);
 
         // Test descending order
-        let desc_results = db.get_activities(ActivityFilter::All, None, None, None, None, None, None, Some(SortDirection::Desc)).unwrap();
+        let desc_results = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, Some(SortDirection::Desc)).unwrap();
         let desc_timestamps: Vec<u64> = desc_results.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(desc_timestamps, vec![1002, 1001, 1000]);
 
@@ -693,12 +693,12 @@ mod tests {
         }
 
         // Test ascending order with limit
-        let asc_limited = db.get_activities(ActivityFilter::All, None, None, None, None, None, Some(3), Some(SortDirection::Asc)).unwrap();
+        let asc_limited = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, Some(3), Some(SortDirection::Asc)).unwrap();
         let asc_timestamps: Vec<u64> = asc_limited.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(asc_timestamps, vec![1000, 1001, 1002]);
 
         // Test descending order with limit
-        let desc_limited = db.get_activities(ActivityFilter::All, None, None, None, None, None, Some(3), Some(SortDirection::Desc)).unwrap();
+        let desc_limited = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, Some(3), Some(SortDirection::Desc)).unwrap();
         let desc_timestamps: Vec<u64> = desc_limited.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(desc_timestamps, vec![1004, 1003, 1002]);
 
@@ -725,7 +725,7 @@ mod tests {
         db.insert_onchain_activity(&onchain2).unwrap();
 
         // Test ascending order
-        let asc_results = db.get_activities(ActivityFilter::All, None, None, None, None, None, None, Some(SortDirection::Asc)).unwrap();
+        let asc_results = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, Some(SortDirection::Asc)).unwrap();
         let asc_timestamps: Vec<u64> = asc_results.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(asc_timestamps, vec![1000, 2000, 3000]);
 
@@ -752,7 +752,7 @@ mod tests {
         db.insert_onchain_activity(&onchain2).unwrap();
 
         // Test with None sort direction (should default to Desc)
-        let default_results = db.get_activities(ActivityFilter::All, None, None, None, None, None, None, None).unwrap();
+        let default_results = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, None).unwrap();
         let timestamps: Vec<u64> = default_results.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(timestamps, vec![2000, 1000]);
 
@@ -776,7 +776,7 @@ mod tests {
 
         // Test filtering by sent
         let sent_activities = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             Some(PaymentType::Sent),
             None,
             None,
@@ -790,7 +790,7 @@ mod tests {
 
         // Test filtering by received
         let received_activities = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             Some(PaymentType::Received),
             None,
             None,
@@ -821,7 +821,7 @@ mod tests {
 
         // Test address search
         let address_results = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             None,
             Some("xyz123".to_string()),
@@ -835,7 +835,7 @@ mod tests {
 
         // Test message search
         let message_results = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             None,
             Some("Coffee".to_string()),
@@ -871,7 +871,7 @@ mod tests {
 
         // Test min date
         let min_date_results = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             None,
             None,
@@ -884,7 +884,7 @@ mod tests {
 
         // Test max date
         let max_date_results = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             None,
             None,
@@ -897,7 +897,7 @@ mod tests {
 
         // Test date range
         let range_results = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             None,
             None,
@@ -936,7 +936,7 @@ mod tests {
 
         // Test combined filters
         let results = db.get_activities(
-            ActivityFilter::Onchain,
+            Some(ActivityFilter::Onchain),
             Some(PaymentType::Received),
             Some(vec!["payment".to_string()]),
             Some("abc".to_string()),
@@ -968,7 +968,7 @@ mod tests {
 
         // Test empty search string - should return all results, same as if no search was provided
         let empty_search = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             None,
             Some("".to_string()),
@@ -981,7 +981,7 @@ mod tests {
 
         // Test empty tags array
         let empty_tags = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             Some(vec![]),
             None,
@@ -1017,7 +1017,7 @@ mod tests {
 
         // Test filtering with multiple tags (OR condition)
         let results = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             Some(vec!["tag1".to_string(), "tag2".to_string()]),
             None,
@@ -1030,7 +1030,7 @@ mod tests {
 
         // Test with non-existent tag mixed with existing tags
         let mixed_results = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             Some(vec!["tag1".to_string(), "nonexistent".to_string()]),
             None,
@@ -1053,7 +1053,7 @@ mod tests {
 
         // Test max date before min date
         let invalid_range = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             None,
             None,
@@ -1066,7 +1066,7 @@ mod tests {
 
         // Test dates way in the future
         let future_date = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             None,
             None,
@@ -1090,7 +1090,7 @@ mod tests {
 
         // Test lowercase search
         let lower_results = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             None,
             Some("coffee".to_string()),
@@ -1103,7 +1103,7 @@ mod tests {
 
         // Test uppercase search
         let upper_results = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             None,
             Some("COFFEE".to_string()),
@@ -1116,7 +1116,7 @@ mod tests {
 
         // Test mixed case search
         let mixed_results = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             None,
             Some("CoFfEe".to_string()),
@@ -1144,7 +1144,7 @@ mod tests {
 
         // Verify tags from both connections
         let results = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             Some(vec!["tag1".to_string(), "tag2".to_string()]),
             None,
@@ -1173,7 +1173,7 @@ mod tests {
 
         // Search with special characters
         let special_results = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             None,
             Some("%chars".to_string()),
@@ -1186,7 +1186,7 @@ mod tests {
 
         // Search with underscore
         let underscore_results = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             None,
             Some("_special".to_string()),
@@ -1220,7 +1220,7 @@ mod tests {
 
         // Test pagination with combined filters
         let page1 = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             Some(vec!["even".to_string()]),
             Some("address".to_string()),
@@ -1234,7 +1234,7 @@ mod tests {
         // Get next page
         let min_date = page1.last().unwrap().get_timestamp();
         let page2 = db.get_activities(
-            ActivityFilter::All,
+            Some(ActivityFilter::All),
             None,
             Some(vec!["even".to_string()]),
             Some("address".to_string()),

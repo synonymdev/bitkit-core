@@ -80,7 +80,7 @@ pub fn init_db(base_path: String) -> Result<String, DbError> {
 
 #[uniffi::export]
 pub fn get_activities(
-    filter: ActivityFilter,
+    filter: Option<ActivityFilter>,
     tx_type: Option<PaymentType>,
     tags: Option<Vec<String>>,
     search: Option<String>,

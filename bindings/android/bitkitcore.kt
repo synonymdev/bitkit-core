@@ -934,7 +934,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_get_activities() != 3334.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_get_activities() != 21347.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 52823.toShort()) {
@@ -3057,6 +3057,35 @@ public object FfiConverterOptionalTypeActivity: FfiConverterRustBuffer<Activity?
 
 
 
+public object FfiConverterOptionalTypeActivityFilter: FfiConverterRustBuffer<ActivityFilter?> {
+    override fun read(buf: ByteBuffer): ActivityFilter? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeActivityFilter.read(buf)
+    }
+
+    override fun allocationSize(value: ActivityFilter?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeActivityFilter.allocationSize(value)
+        }
+    }
+
+    override fun write(value: ActivityFilter?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeActivityFilter.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypePaymentType: FfiConverterRustBuffer<PaymentType?> {
     override fun read(buf: ByteBuffer): PaymentType? {
         if (buf.get().toInt() == 0) {
@@ -3296,11 +3325,11 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
     }
     
 
-    @Throws(ActivityException::class) fun `getActivities`(`filter`: ActivityFilter, `txType`: PaymentType?, `tags`: List<kotlin.String>?, `search`: kotlin.String?, `minDate`: kotlin.ULong?, `maxDate`: kotlin.ULong?, `limit`: kotlin.UInt?, `sortDirection`: SortDirection?): List<Activity> {
+    @Throws(ActivityException::class) fun `getActivities`(`filter`: ActivityFilter?, `txType`: PaymentType?, `tags`: List<kotlin.String>?, `search`: kotlin.String?, `minDate`: kotlin.ULong?, `maxDate`: kotlin.ULong?, `limit`: kotlin.UInt?, `sortDirection`: SortDirection?): List<Activity> {
             return FfiConverterSequenceTypeActivity.lift(
     uniffiRustCallWithError(ActivityException) { _status ->
     UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_activities(
-        FfiConverterTypeActivityFilter.lower(`filter`),FfiConverterOptionalTypePaymentType.lower(`txType`),FfiConverterOptionalSequenceString.lower(`tags`),FfiConverterOptionalString.lower(`search`),FfiConverterOptionalULong.lower(`minDate`),FfiConverterOptionalULong.lower(`maxDate`),FfiConverterOptionalUInt.lower(`limit`),FfiConverterOptionalTypeSortDirection.lower(`sortDirection`),_status)
+        FfiConverterOptionalTypeActivityFilter.lower(`filter`),FfiConverterOptionalTypePaymentType.lower(`txType`),FfiConverterOptionalSequenceString.lower(`tags`),FfiConverterOptionalString.lower(`search`),FfiConverterOptionalULong.lower(`minDate`),FfiConverterOptionalULong.lower(`maxDate`),FfiConverterOptionalUInt.lower(`limit`),FfiConverterOptionalTypeSortDirection.lower(`sortDirection`),_status)
 }
     )
     }

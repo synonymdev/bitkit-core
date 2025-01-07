@@ -2661,6 +2661,27 @@ fileprivate struct FfiConverterOptionTypeActivity: FfiConverterRustBuffer {
     }
 }
 
+fileprivate struct FfiConverterOptionTypeActivityFilter: FfiConverterRustBuffer {
+    typealias SwiftType = ActivityFilter?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeActivityFilter.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeActivityFilter.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
 fileprivate struct FfiConverterOptionTypePaymentType: FfiConverterRustBuffer {
     typealias SwiftType = PaymentType?
 
@@ -2885,10 +2906,10 @@ public func deleteActivityById(activityId: String)throws  -> Bool {
     )
 })
 }
-public func getActivities(filter: ActivityFilter, txType: PaymentType?, tags: [String]?, search: String?, minDate: UInt64?, maxDate: UInt64?, limit: UInt32?, sortDirection: SortDirection?)throws  -> [Activity] {
+public func getActivities(filter: ActivityFilter?, txType: PaymentType?, tags: [String]?, search: String?, minDate: UInt64?, maxDate: UInt64?, limit: UInt32?, sortDirection: SortDirection?)throws  -> [Activity] {
     return try  FfiConverterSequenceTypeActivity.lift(try rustCallWithError(FfiConverterTypeActivityError.lift) {
     uniffi_bitkitcore_fn_func_get_activities(
-        FfiConverterTypeActivityFilter.lower(filter),
+        FfiConverterOptionTypeActivityFilter.lower(filter),
         FfiConverterOptionTypePaymentType.lower(txType),
         FfiConverterOptionSequenceString.lower(tags),
         FfiConverterOptionString.lower(search),
@@ -3001,7 +3022,7 @@ private var initializationResult: InitializationResult {
     if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_activities() != 3334) {
+    if (uniffi_bitkitcore_checksum_func_get_activities() != 21347) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 52823) {

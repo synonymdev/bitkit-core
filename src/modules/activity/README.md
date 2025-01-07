@@ -16,7 +16,7 @@ The Activity module is responsible for storing and managing transaction/activity
 // Initialize the database with a specified path
 fn init_db(base_path: String) -> Result<String, DbError>
 
-// Get activities with optional filter, limit, and sort direction
+// Get activities with optional filter, tx_type, tags, search, min_date, max_date, limit, and sort direction
 fn get_activities(
   filter: ActivityFilter,
   tx_type: Option<PaymentType>,

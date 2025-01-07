@@ -349,7 +349,7 @@ impl ActivityDB {
 
     pub fn get_activities(
         &self,
-        filter: ActivityFilter,
+        filter: Option<ActivityFilter>,
         tx_type: Option<PaymentType>,
         tags: Option<Vec<String>>,
         search: Option<String>,
@@ -359,6 +359,7 @@ impl ActivityDB {
         sort_direction: Option<SortDirection>,
     ) -> Result<Vec<Activity>, ActivityError> {
         let direction = sort_direction.unwrap_or_default();
+        let filter = filter.unwrap_or(ActivityFilter::All);
 
         let mut query = String::from(
             "WITH filtered_activities AS (
