@@ -18,7 +18,7 @@ fn init_db(base_path: String) -> Result<String, DbError>
 
 // Get activities with optional filter, tx_type, tags, search, min_date, max_date, limit, and sort direction
 fn get_activities(
-  filter: ActivityFilter,
+  filter: Option<ActivityFilter>,
   tx_type: Option<PaymentType>,
   tags: Option<Vec<String>>,
   search: Option<String>,
