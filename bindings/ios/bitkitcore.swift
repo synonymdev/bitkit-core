@@ -1928,27 +1928,26 @@ public enum DbError {
 
 
 public struct FfiConverterTypeDbError: FfiConverterRustBuffer {
-   typealias SwiftType = DbError
+    typealias SwiftType = DbError
 
-   public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> DbError {
-       let variant: Int32 = try readInt(&buf)
-       switch variant {
-       case 1: return .ActivityError(try FfiConverterTypeActivityError.read(from: &buf))
-       case 2: return .InitializationError(message: try FfiConverterString.read(from: &buf))
-       default: throw UniffiInternalError.unexpectedEnumCase
-       }
-   }
-
-   public static func write(_ value: DbError, into buf: inout [UInt8]) {
-       switch value {
-       case let .ActivityError(error):
-           writeInt(&buf, Int32(1))
-           FfiConverterTypeActivityError.write(error, into: &buf)
-       case let .InitializationError(message):
-           writeInt(&buf, Int32(2))
-           FfiConverterString.write(message, into: &buf)
-       }
-   }
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> DbError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        case 1: return .ActivityError(try FfiConverterTypeActivityError.read(from: &buf))
+        case 2: return .InitializationError(message: try FfiConverterString.read(from: &buf))
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+    public static func write(_ value: DbError, into buf: inout [UInt8]) {
+        switch value {
+        case let .ActivityError(error):
+            writeInt(&buf, Int32(1))
+            FfiConverterTypeActivityError.write(error, into: &buf)
+        case let .InitializationError(message):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(message, into: &buf)
+        }
+    }
 }
 
 
@@ -2662,6 +2661,48 @@ fileprivate struct FfiConverterOptionTypeActivity: FfiConverterRustBuffer {
     }
 }
 
+fileprivate struct FfiConverterOptionTypeActivityFilter: FfiConverterRustBuffer {
+    typealias SwiftType = ActivityFilter?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeActivityFilter.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeActivityFilter.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypePaymentType: FfiConverterRustBuffer {
+    typealias SwiftType = PaymentType?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypePaymentType.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypePaymentType.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
 fileprivate struct FfiConverterOptionTypeSortDirection: FfiConverterRustBuffer {
     typealias SwiftType = SortDirection?
 
@@ -2678,6 +2719,27 @@ fileprivate struct FfiConverterOptionTypeSortDirection: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeSortDirection.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionSequenceString: FfiConverterRustBuffer {
+    typealias SwiftType = [String]?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterSequenceString.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterSequenceString.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -2844,10 +2906,15 @@ public func deleteActivityById(activityId: String)throws  -> Bool {
     )
 })
 }
-public func getActivities(filter: ActivityFilter, limit: UInt32?, sortDirection: SortDirection?)throws  -> [Activity] {
+public func getActivities(filter: ActivityFilter?, txType: PaymentType?, tags: [String]?, search: String?, minDate: UInt64?, maxDate: UInt64?, limit: UInt32?, sortDirection: SortDirection?)throws  -> [Activity] {
     return try  FfiConverterSequenceTypeActivity.lift(try rustCallWithError(FfiConverterTypeActivityError.lift) {
     uniffi_bitkitcore_fn_func_get_activities(
-        FfiConverterTypeActivityFilter.lower(filter),
+        FfiConverterOptionTypeActivityFilter.lower(filter),
+        FfiConverterOptionTypePaymentType.lower(txType),
+        FfiConverterOptionSequenceString.lower(tags),
+        FfiConverterOptionString.lower(search),
+        FfiConverterOptionUInt64.lower(minDate),
+        FfiConverterOptionUInt64.lower(maxDate),
         FfiConverterOptionUInt32.lower(limit),
         FfiConverterOptionTypeSortDirection.lower(sortDirection),$0
     )
@@ -2955,7 +3022,7 @@ private var initializationResult: InitializationResult {
     if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_activities() != 55403) {
+    if (uniffi_bitkitcore_checksum_func_get_activities() != 21347) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 52823) {

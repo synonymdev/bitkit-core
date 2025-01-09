@@ -12,7 +12,7 @@ pub use modules::scanner::{
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
-use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection};
+use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType};
 //use crate::modules::blocktank::{BlocktankDB, BlocktankError};
 use crate::onchain::{
     AddressError,
@@ -79,7 +79,16 @@ pub fn init_db(base_path: String) -> Result<String, DbError> {
 }
 
 #[uniffi::export]
-pub fn get_activities(filter: ActivityFilter, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError> {
+pub fn get_activities(
+    filter: Option<ActivityFilter>,
+    tx_type: Option<PaymentType>,
+    tags: Option<Vec<String>>,
+    search: Option<String>,
+    min_date: Option<u64>,
+    max_date: Option<u64>,
+    limit: Option<u32>,
+    sort_direction: Option<SortDirection>
+) -> Result<Vec<Activity>, ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
         message: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -87,7 +96,7 @@ pub fn get_activities(filter: ActivityFilter, limit: Option<u32>, sort_direction
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
         message: "Database not initialized. Call init_db first.".to_string()
     })?;
-    db.get_activities(filter, limit, sort_direction)
+    db.get_activities(filter, tx_type, tags, search, min_date, max_date, limit, sort_direction)
 }
 
 #[uniffi::export]

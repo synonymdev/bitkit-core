@@ -32,7 +32,7 @@
 - Activity:
   - [init_db](src/modules/activity/README.md#usage-examples): Initialize database
     ```rust
-    fn init_db(db_path: String) -> Result<String, DbError>
+    fn init_db(base_path: String) -> Result<String, DbError>
     ```
   - [insert_activity](src/modules/activity/README.md#usage-examples): Insert an activity (onchain or lightning)
     ```rust
