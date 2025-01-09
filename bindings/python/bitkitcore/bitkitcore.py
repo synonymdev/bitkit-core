@@ -473,6 +473,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_tags() != 11308:
@@ -634,6 +636,10 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice.argtypes = (
     _UniffiRustBuffer,
     ctypes.c_uint64,
@@ -962,6 +968,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_by_tag.restype = ctype
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_all_unique_tags.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_all_unique_tags.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice.restype = ctypes.c_uint16
@@ -3794,6 +3803,10 @@ def get_activity_by_id(activity_id: "str") -> "typing.Optional[Activity]":
     return _UniffiConverterOptionalTypeActivity.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id,
         _UniffiConverterString.lower(activity_id)))
 
+
+def get_all_unique_tags() -> "typing.List[str]":
+    return _UniffiConverterSequenceString.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags,))
+
 async def get_lnurl_invoice(address: "str",amount_satoshis: "int") -> "str":
 
     _UniffiConverterString.check_lower(address)
@@ -3903,6 +3916,7 @@ __all__ = [
     "get_activities",
     "get_activities_by_tag",
     "get_activity_by_id",
+    "get_all_unique_tags",
     "get_lnurl_invoice",
     "get_tags",
     "init_db",
