@@ -948,6 +948,26 @@ impl ActivityDB {
         Ok(activities)
     }
 
+    /// Returns all unique tags stored in the database
+    pub fn get_all_unique_tags(&self) -> Result<Vec<String>, ActivityError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT DISTINCT tag FROM activity_tags ORDER BY tag ASC"
+        ).map_err(|e| ActivityError::RetrievalError {
+            message: format!("Failed to prepare statement: {}", e),
+        })?;
+
+        let tags = stmt.query_map([], |row| row.get(0))
+            .map_err(|e| ActivityError::RetrievalError {
+                message: format!("Failed to execute query: {}", e),
+            })?
+            .collect::<Result<Vec<String>, _>>()
+            .map_err(|e| ActivityError::DataError {
+                message: format!("Failed to process rows: {}", e),
+            })?;
+
+        Ok(tags)
+    }
+
     /// Helper function to convert PaymentType to string
     fn payment_type_to_string(payment_type: &PaymentType) -> &'static str {
         match payment_type {

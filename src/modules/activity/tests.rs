@@ -1249,4 +1249,35 @@ mod tests {
 
         cleanup(&db_path);
     }
+
+    #[test]
+    fn test_get_all_tags() {
+        let (mut db, db_path) = setup();
+
+        // Create some activities with different tags
+        let activity1 = create_test_onchain_activity();
+        let mut activity2 = create_test_onchain_activity();
+        activity2.id = "test_onchain_2".to_string();
+
+        db.insert_onchain_activity(&activity1).unwrap();
+        db.insert_onchain_activity(&activity2).unwrap();
+
+        // Add various tags
+        db.add_tags(&activity1.id, &["payment".to_string(), "coffee".to_string()]).unwrap();
+        db.add_tags(&activity2.id, &["payment".to_string(), "food".to_string()]).unwrap();
+
+        // Get all unique tags
+        let all_tags = db.get_all_unique_tags().unwrap();
+
+        // Check results
+        assert_eq!(all_tags.len(), 3); // Should be ["coffee", "food", "payment"]
+        assert!(all_tags.contains(&"coffee".to_string()));
+        assert!(all_tags.contains(&"food".to_string()));
+        assert!(all_tags.contains(&"payment".to_string()));
+
+        // Verify they're sorted alphabetically
+        assert_eq!(all_tags, vec!["coffee", "food", "payment"]);
+
+        cleanup(&db_path);
+    }
 }
