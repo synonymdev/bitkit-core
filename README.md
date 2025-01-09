@@ -66,6 +66,10 @@
     ```rust
     fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError>
     ```
+  - [get_all_unique_tags](src/modules/activity/README.md#usage-examples): Get all unique tags in the database sorted alphabetically
+    ```rust
+    fn get_all_unique_tags() -> Result<Vec<String>, ActivityError>
+    ```
   - [get_activities_by_tag](src/modules/activity/README.md#usage-examples): Get all activities with a specific tag
     ```rust
     fn get_activities_by_tag(tag: String, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError>
