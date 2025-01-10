@@ -212,3 +212,15 @@ pub fn get_activities_by_tag(tag: String, limit: Option<u32>, sort_direction: Op
     })?;
     db.get_activities_by_tag(&tag, limit, sort_direction)
 }
+
+#[uniffi::export]
+pub fn get_all_unique_tags() -> Result<Vec<String>, ActivityError> {
+    let cell = DB.get().ok_or(ActivityError::ConnectionError {
+        message: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    let guard = cell.lock().unwrap();
+    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
+        message: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.get_all_unique_tags()
+}

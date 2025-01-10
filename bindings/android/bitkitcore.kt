@@ -725,6 +725,8 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -751,6 +753,8 @@ internal interface UniffiLib : Library {
     fun uniffi_bitkitcore_fn_func_get_activities_by_tag(`tag`: RustBuffer.ByValue,`limit`: RustBuffer.ByValue,`sortDirection`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_get_activity_by_id(`activityId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_get_all_unique_tags(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_get_lnurl_invoice(`address`: RustBuffer.ByValue,`amountSatoshis`: Long,
     ): Long
@@ -892,6 +896,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_bitkitcore_checksum_func_get_activity_by_id(
     ): Short
+    fun uniffi_bitkitcore_checksum_func_get_all_unique_tags(
+    ): Short
     fun uniffi_bitkitcore_checksum_func_get_lnurl_invoice(
     ): Short
     fun uniffi_bitkitcore_checksum_func_get_tags(
@@ -941,6 +947,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475.toShort()) {
@@ -3350,6 +3359,16 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
     uniffiRustCallWithError(ActivityException) { _status ->
     UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_activity_by_id(
         FfiConverterString.lower(`activityId`),_status)
+}
+    )
+    }
+    
+
+    @Throws(ActivityException::class) fun `getAllUniqueTags`(): List<kotlin.String> {
+            return FfiConverterSequenceString.lift(
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_all_unique_tags(
+        _status)
 }
     )
     }

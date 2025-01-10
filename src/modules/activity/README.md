@@ -54,6 +54,7 @@ fn delete_activity_by_id(activity_id: String) -> Result<bool, ActivityError>
 fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
 fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
 fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError>
+fn get_all_unique_tags() -> Result<Vec<String>, ActivityError>
 ```
 
 ## Usage Examples
@@ -132,6 +133,9 @@ func manageActivities() {
         try addTags(activityId: "tx123", tags: ["payment", "coffee"])
         let tags = try getTags(activityId: "tx123")
         let taggedActivities = try getActivitiesByTag(tag: "coffee", limit: 5, sortDirection: .desc)
+        
+        // Get all unique tags
+        let allUniqueTags = try getAllUniqueTags()  // ["coffee", "food", "payment"]
         
         try removeTags(activityId: "tx123", tags: ["payment"])
         
@@ -233,6 +237,9 @@ fun manageActivities() {
             limit = 5,
             sortDirection = SortDirection.DESC
         )
+        
+        // Get all unique tags
+        val allUniqueTags = getAllUniqueTags()  // ["coffee", "food", "payment"]
 
         removeTags(activityId = "ln456", tags = listOf("income"))
         
@@ -338,6 +345,9 @@ try:
         limit=5,
         sort_direction=SortDirection.DESC
     )
+    
+    # Get all unique tags with optional sorting
+    all_unique_tags = get_all_unique_tags()  # ["coffee", "food", "payment"]
     
     remove_tags("tx123", ["payment"])
 
