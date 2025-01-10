@@ -1775,57 +1775,59 @@ public object FfiConverterTypeActivity : FfiConverterRustBuffer<Activity>{
 sealed class ActivityException: Exception() {
     
     class InvalidActivity(
+        
+        val ``: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = ""
+            get() = "=${ `` }"
     }
     
     class InitializationException(
         
-        val `message`: kotlin.String
+        val ``: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "=${ `` }"
     }
     
     class InsertException(
         
-        val `message`: kotlin.String
+        val ``: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "=${ `` }"
     }
     
     class RetrievalException(
         
-        val `message`: kotlin.String
+        val ``: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "=${ `` }"
     }
     
     class DataException(
         
-        val `message`: kotlin.String
+        val ``: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "=${ `` }"
     }
     
     class ConnectionException(
         
-        val `message`: kotlin.String
+        val ``: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "=${ `` }"
     }
     
     class SerializationException(
         
-        val `message`: kotlin.String
+        val ``: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "=${ `` }"
     }
     
 
@@ -1841,7 +1843,9 @@ public object FfiConverterTypeActivityError : FfiConverterRustBuffer<ActivityExc
         
 
         return when(buf.getInt()) {
-            1 -> ActivityException.InvalidActivity()
+            1 -> ActivityException.InvalidActivity(
+                FfiConverterString.read(buf),
+                )
             2 -> ActivityException.InitializationException(
                 FfiConverterString.read(buf),
                 )
@@ -1869,36 +1873,37 @@ public object FfiConverterTypeActivityError : FfiConverterRustBuffer<ActivityExc
             is ActivityException.InvalidActivity -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
+                + FfiConverterString.allocationSize(value.``)
             )
             is ActivityException.InitializationException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.``)
             )
             is ActivityException.InsertException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.``)
             )
             is ActivityException.RetrievalException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.``)
             )
             is ActivityException.DataException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.``)
             )
             is ActivityException.ConnectionException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.``)
             )
             is ActivityException.SerializationException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.``)
             )
         }
     }
@@ -1907,36 +1912,37 @@ public object FfiConverterTypeActivityError : FfiConverterRustBuffer<ActivityExc
         when(value) {
             is ActivityException.InvalidActivity -> {
                 buf.putInt(1)
+                FfiConverterString.write(value.``, buf)
                 Unit
             }
             is ActivityException.InitializationException -> {
                 buf.putInt(2)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.``, buf)
                 Unit
             }
             is ActivityException.InsertException -> {
                 buf.putInt(3)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.``, buf)
                 Unit
             }
             is ActivityException.RetrievalException -> {
                 buf.putInt(4)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.``, buf)
                 Unit
             }
             is ActivityException.DataException -> {
                 buf.putInt(5)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.``, buf)
                 Unit
             }
             is ActivityException.ConnectionException -> {
                 buf.putInt(6)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.``, buf)
                 Unit
             }
             is ActivityException.SerializationException -> {
                 buf.putInt(7)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.``, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -2101,7 +2107,7 @@ public object FfiConverterTypeAddressType: FfiConverterRustBuffer<AddressType> {
 
 sealed class DbException: Exception() {
     
-    class ActivityException(
+    class DbActivityException(
         
         val ``: ActivityException
         ) : DbException() {
@@ -2111,10 +2117,10 @@ sealed class DbException: Exception() {
     
     class InitializationException(
         
-        val `message`: kotlin.String
+        val ``: kotlin.String
         ) : DbException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "=${ `` }"
     }
     
 
@@ -2130,7 +2136,7 @@ public object FfiConverterTypeDbError : FfiConverterRustBuffer<DbException> {
         
 
         return when(buf.getInt()) {
-            1 -> DbException.ActivityException(
+            1 -> DbException.DbActivityException(
                 FfiConverterTypeActivityError.read(buf),
                 )
             2 -> DbException.InitializationException(
@@ -2142,7 +2148,7 @@ public object FfiConverterTypeDbError : FfiConverterRustBuffer<DbException> {
 
     override fun allocationSize(value: DbException): ULong {
         return when(value) {
-            is DbException.ActivityException -> (
+            is DbException.DbActivityException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
                 + FfiConverterTypeActivityError.allocationSize(value.``)
@@ -2150,21 +2156,21 @@ public object FfiConverterTypeDbError : FfiConverterRustBuffer<DbException> {
             is DbException.InitializationException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.``)
             )
         }
     }
 
     override fun write(value: DbException, buf: ByteBuffer) {
         when(value) {
-            is DbException.ActivityException -> {
+            is DbException.DbActivityException -> {
                 buf.putInt(1)
                 FfiConverterTypeActivityError.write(value.``, buf)
                 Unit
             }
             is DbException.InitializationException -> {
                 buf.putInt(2)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.``, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
