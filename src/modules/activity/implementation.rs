@@ -123,9 +123,9 @@ impl ActivityDB {
         // Create the directory if it doesn't exist
         if let Some(dir_path) = std::path::Path::new(db_path).parent() {
             if !dir_path.exists() {
-                std::fs::create_dir_all(dir_path).map_err(|e| ActivityError::InitializationError(
-                    format!("Failed to create directory: {}", e)
-                ))?;
+                std::fs::create_dir_all(dir_path).map_err(|e| ActivityError::InitializationError {
+                    error_details: format!("Failed to create directory: {}", e),
+                })?;
             }
         }
 
@@ -140,9 +140,9 @@ impl ActivityDB {
         let conn = match Connection::open(&final_path) {
             Ok(conn) => conn,
             Err(e) => {
-                return Err(ActivityError::InitializationError(
-                    format!("Error opening database: {}", e)
-                ));
+                return Err(ActivityError::InitializationError{
+                    error_details: format!("Error opening database: {}", e),
+                });
             }
         };
         let db = ActivityDB { conn };
@@ -154,47 +154,47 @@ impl ActivityDB {
     fn initialize(&self) -> Result<(), ActivityError> {
         // Create base activities table
         if let Err(e) = self.conn.execute(CREATE_ACTIVITIES_TABLE, []) {
-            return Err(ActivityError::InitializationError(
-                format!("Error creating activities table: {}", e)
-            ));
+            return Err(ActivityError::InitializationError {
+                error_details: format!("Error creating activities table: {}", e),
+            });
         }
 
         // Create onchain table
         if let Err(e) = self.conn.execute(CREATE_ONCHAIN_TABLE, []) {
-            return Err(ActivityError::InitializationError(
-                format!("Error creating onchain_activity table: {}", e)
-            ));
+            return Err(ActivityError::InitializationError {
+                error_details: format!("Error creating onchain_activity table: {}", e),
+            });
         }
 
         // Create lightning table
         if let Err(e) = self.conn.execute(CREATE_LIGHTNING_TABLE, []) {
-            return Err(ActivityError::InitializationError(
-                format!("Error creating lightning_activity table: {}", e)
-            ));
+            return Err(ActivityError::InitializationError {
+                error_details: format!("Error creating lightning_activity table: {}", e),
+            });
         }
 
         // Create tags table
         if let Err(e) = self.conn.execute(CREATE_TAGS_TABLE, []) {
-            return Err(ActivityError::InitializationError(
-                format!("Error creating tags table: {}", e)
-            ));
+            return Err(ActivityError::InitializationError {
+                error_details: format!("Error creating tags table: {}", e),
+            });
         }
 
         // Create indexes
         for statement in INDEX_STATEMENTS {
             if let Err(e) = self.conn.execute(statement, []) {
-                return Err(ActivityError::InitializationError(
-                    format!("Error creating index: {}", e)
-                ));
+                return Err(ActivityError::InitializationError {
+                    error_details: format!("Error creating index: {}", e),
+                });
             }
         }
 
         // Create triggers
         for statement in TRIGGER_STATEMENTS {
             if let Err(e) = self.conn.execute(statement, []) {
-                return Err(ActivityError::InitializationError(
-                    format!("Error creating trigger: {}", e)
-                ));
+                return Err(ActivityError::InitializationError {
+                    error_details: format!("Error creating trigger: {}", e),
+                });
             }
         }
 
@@ -206,7 +206,7 @@ impl ActivityDB {
             Activity::Onchain(onchain) => {
                 match self.update_onchain_activity_by_id(&onchain.id, onchain) {
                     Ok(_) => Ok(()),
-                    Err(ActivityError::DataError(error_details)) if error_details == "No activity found with given ID" => {
+                    Err(ActivityError::DataError{ error_details }) if error_details == "No activity found with given ID" => {
                         self.insert_onchain_activity(onchain)
                     }
                     Err(e) => Err(e),
@@ -215,7 +215,7 @@ impl ActivityDB {
             Activity::Lightning(lightning) => {
                 match self.update_lightning_activity_by_id(&lightning.id, lightning) {
                     Ok(_) => Ok(()),
-                    Err(ActivityError::DataError(error_details)) if error_details == "No activity found with given ID" => {
+                    Err(ActivityError::DataError { error_details }) if error_details == "No activity found with given ID" => {
                         self.insert_lightning_activity(lightning)
                     }
                     Err(e) => Err(e),
@@ -227,14 +227,14 @@ impl ActivityDB {
     /// Inserts a new onchain activity into the database.
     pub fn insert_onchain_activity(&mut self, activity: &OnchainActivity) -> Result<(), ActivityError> {
         if activity.id.is_empty() {
-            return Err(ActivityError::DataError(
-                "Activity ID cannot be empty".to_string()
-            ));
+            return Err(ActivityError::DataError {
+                error_details: "Activity ID cannot be empty".to_string(),
+            });
         }
 
-        let tx = match self.conn.transaction().map_err(|e| ActivityError::DataError(
-            format!("Failed to start transaction: {}", e)
-        )) {
+        let tx = match self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        }) {
             Ok(tx) => tx,
             Err(e) => return Err(e),
         };
@@ -253,9 +253,9 @@ impl ActivityDB {
                 Self::payment_type_to_string(&activity.tx_type),
                 activity.timestamp,
             ),
-        ).map_err(|e| ActivityError::InsertError(
-            format!("Failed to insert into activities: {}", e)
-        ))?;
+        ).map_err(|e| ActivityError::InsertError {
+            error_details: format!("Failed to insert into activities: {}", e),
+        })?;
 
         let onchain_sql = "
             INSERT INTO onchain_activity (
@@ -283,22 +283,22 @@ impl ActivityDB {
                 &activity.channel_id,
                 &activity.transfer_tx_id,
             ),
-        ).map_err(|e| ActivityError::InsertError(
-            format!("Failed to insert into onchain_activity: {}", e)
-        ))?;
+        ).map_err(|e| ActivityError::InsertError {
+            error_details: format!("Failed to insert into onchain_activity: {}", e),
+        })?;
 
-        tx.commit().map_err(|e| ActivityError::DataError(
-            format!("Failed to commit transaction: {}", e)
-        ))?;
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
 
         Ok(())
     }
 
     /// Inserts a new lightning activity into the database.
     pub fn insert_lightning_activity(&mut self, activity: &LightningActivity) -> Result<(), ActivityError> {
-        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError(
-            format!("Failed to start transaction: {}", e)
-        ))?;
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
 
         let activities_sql = "
             INSERT INTO activities (
@@ -314,9 +314,9 @@ impl ActivityDB {
                 Self::payment_type_to_string(&activity.tx_type),
                 activity.timestamp,
             ),
-        ).map_err(|e| ActivityError::InsertError(
-            format!("Failed to insert into activities: {}", e)
-        ))?;
+        ).map_err(|e| ActivityError::InsertError {
+            error_details: format!("Failed to insert into activities: {}", e),
+        })?;
 
         let lightning_sql = "
             INSERT INTO lightning_activity (
@@ -336,13 +336,13 @@ impl ActivityDB {
                 &activity.message,
                 &activity.preimage,
             ),
-        ).map_err(|e| ActivityError::InsertError(
-            format!("Failed to insert into lightning_activity: {}", e)
-        ))?;
+        ).map_err(|e| ActivityError::InsertError {
+            error_details: format!("Failed to insert into lightning_activity: {}", e),
+        })?;
 
-        tx.commit().map_err(|e| ActivityError::DataError(
-            format!("Failed to commit transaction: {}", e)
-        ))?;
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
 
         Ok(())
     }
@@ -466,9 +466,9 @@ impl ActivityDB {
             query.push_str(&format!(" LIMIT {}", n));
         }
 
-        let mut stmt = self.conn.prepare(&query).map_err(|e| ActivityError::RetrievalError(
-            format!("Failed to prepare statement: {}", e)
-        ))?;
+        let mut stmt = self.conn.prepare(&query).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
 
         let activity_iter = stmt.query_map([], |row| {
             let activity_type: String = row.get(1)?;
@@ -529,15 +529,15 @@ impl ActivityDB {
                     rusqlite::types::Type::Text,
                 )),
             }
-        }).map_err(|e| ActivityError::RetrievalError(
-            format!("Failed to execute query: {}", e)
-        ))?;
+        }).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to execute query: {}", e),
+        })?;
 
         let mut activities = Vec::new();
         for activity_res in activity_iter {
-            let activity = activity_res.map_err(|e| ActivityError::DataError(
-                format!("Failed to process row: {}", e)
-            ))?;
+            let activity = activity_res.map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to process row: {}", e),
+            })?;
             activities.push(activity);
         }
 
@@ -546,21 +546,21 @@ impl ActivityDB {
 
     /// Retrieves a single activity by its ID.
     pub fn get_activity_by_id(&self, activity_id: &str) -> Result<Option<Activity>, ActivityError> {
-        let activity_type: String = match self.conn.query_row(
-            "SELECT activity_type FROM activities WHERE id = ?1",
-            [activity_id],
-            |row| row.get(0),
-        ) {
-            Ok(activity_type) => activity_type,
-            Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
-            Err(e) => return Err(ActivityError::RetrievalError(
-                format!("Failed to get activity type: {}", e)
-            )),
-        };
+    let activity_type: String = match self.conn.query_row(
+        "SELECT activity_type FROM activities WHERE id = ?1",
+        [activity_id],
+        |row| row.get(0),
+    ) {
+        Ok(activity_type) => activity_type,
+        Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
+        Err(e) => return Err(ActivityError::RetrievalError {
+            error_details: format!("Failed to get activity type: {}", e),
+        }),
+    };
 
-        match activity_type.as_str() {
-            "onchain" => {
-                let sql = "
+    match activity_type.as_str() {
+        "onchain" => {
+            let sql = "
                 SELECT
                     a.id, a.tx_type, o.tx_id, o.value, o.fee, o.fee_rate,
                     o.address, o.confirmed, a.timestamp, o.is_boosted,
@@ -570,49 +570,49 @@ impl ActivityDB {
                 JOIN onchain_activity o ON a.id = o.id
                 WHERE a.id = ?1";
 
-                let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError(
-                    format!("Failed to prepare statement: {}", e)
-                ))?;
+            let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
 
-                let activity = match stmt.query_row([activity_id], |row| {
-                    let value: i64 = row.get(3)?;
-                    let fee: i64 = row.get(4)?;
-                    let fee_rate: i64 = row.get(5)?;
-                    let timestamp: i64 = row.get(8)?;
-                    let confirm_timestamp: Option<i64> = row.get(12)?;
-                    let created_at: Option<i64> = row.get(15)?;
-                    let updated_at: Option<i64> = row.get(16)?;
+            let activity = match stmt.query_row([activity_id], |row| {
+                let value: i64 = row.get(3)?;
+                let fee: i64 = row.get(4)?;
+                let fee_rate: i64 = row.get(5)?;
+                let timestamp: i64 = row.get(8)?;
+                let confirm_timestamp: Option<i64> = row.get(12)?;
+                let created_at: Option<i64> = row.get(15)?;
+                let updated_at: Option<i64> = row.get(16)?;
 
-                    Ok(Activity::Onchain(OnchainActivity {
-                        id: row.get(0)?,
-                        tx_type: Self::parse_payment_type(row, 1)?,
-                        tx_id: row.get(2)?,
-                        value: value as u64,
-                        fee: fee as u64,
-                        fee_rate: fee_rate as u64,
-                        address: row.get(6)?,
-                        confirmed: row.get(7)?,
-                        timestamp: timestamp as u64,
-                        is_boosted: row.get(9)?,
-                        is_transfer: row.get(10)?,
-                        does_exist: row.get(11)?,
-                        confirm_timestamp: confirm_timestamp.map(|t| t as u64),
-                        channel_id: row.get(13)?,
-                        transfer_tx_id: row.get(14)?,
-                        created_at: created_at.map(|t| t as u64),
-                        updated_at: updated_at.map(|t| t as u64),
-                    }))
-                }) {
-                    Ok(activity) => Ok(Some(activity)),
-                    Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-                    Err(e) => Err(ActivityError::RetrievalError(
-                        format!("Failed to get onchain activity: {}", e)
-                    )),
-                };
-                activity
-            },
-            "lightning" => {
-                let sql = "
+                Ok(Activity::Onchain(OnchainActivity {
+                    id: row.get(0)?,
+                    tx_type: Self::parse_payment_type(row, 1)?,
+                    tx_id: row.get(2)?,
+                    value: value as u64,
+                    fee: fee as u64,
+                    fee_rate: fee_rate as u64,
+                    address: row.get(6)?,
+                    confirmed: row.get(7)?,
+                    timestamp: timestamp as u64,
+                    is_boosted: row.get(9)?,
+                    is_transfer: row.get(10)?,
+                    does_exist: row.get(11)?,
+                    confirm_timestamp: confirm_timestamp.map(|t| t as u64),
+                    channel_id: row.get(13)?,
+                    transfer_tx_id: row.get(14)?,
+                    created_at: created_at.map(|t| t as u64),
+                    updated_at: updated_at.map(|t| t as u64),
+                }))
+            }) {
+                Ok(activity) => Ok(Some(activity)),
+                Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+                Err(e) => Err(ActivityError::RetrievalError {
+                    error_details: format!("Failed to get onchain activity: {}", e),
+                }),
+            };
+            activity
+        },
+        "lightning" => {
+            let sql = "
                 SELECT
                     a.id, a.tx_type, l.status, l.value, l.fee,
                     l.invoice, l.message, a.timestamp,
@@ -621,45 +621,45 @@ impl ActivityDB {
                 JOIN lightning_activity l ON a.id = l.id
                 WHERE a.id = ?1";
 
-                let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError(
-                    format!("Failed to prepare statement: {}", e)
-                ))?;
+            let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
 
-                let activity = stmt.query_row([activity_id], |row| {
-                    let value: i64 = row.get(3)?;
-                    let fee: Option<i64> = row.get(4)?;
-                    let timestamp: i64 = row.get(7)?;
-                    let created_at: Option<i64> = row.get(9)?;
-                    let updated_at: Option<i64> = row.get(10)?;
+            let activity = stmt.query_row([activity_id], |row| {
+                let value: i64 = row.get(3)?;
+                let fee: Option<i64> = row.get(4)?;
+                let timestamp: i64 = row.get(7)?;
+                let created_at: Option<i64> = row.get(9)?;
+                let updated_at: Option<i64> = row.get(10)?;
 
-                    Ok(Activity::Lightning(LightningActivity {
-                        id: row.get(0)?,
-                        tx_type: Self::parse_payment_type(row, 1)?,
-                        status: Self::parse_payment_state(row, 2)?,
-                        value: value as u64,
-                        fee: fee.map(|f| f as u64),
-                        invoice: row.get(5)?,
-                        message: row.get(6)?,
-                        timestamp: timestamp as u64,
-                        preimage: row.get(8)?,
-                        created_at: created_at.map(|t| t as u64),
-                        updated_at: updated_at.map(|t| t as u64),
-                    }))
-                }).map_err(|e| ActivityError::RetrievalError (
-                    format!("Failed to get lightning activity: {}", e)
-                ));
+                Ok(Activity::Lightning(LightningActivity {
+                    id: row.get(0)?,
+                    tx_type: Self::parse_payment_type(row, 1)?,
+                    status: Self::parse_payment_state(row, 2)?,
+                    value: value as u64,
+                    fee: fee.map(|f| f as u64),
+                    invoice: row.get(5)?,
+                    message: row.get(6)?,
+                    timestamp: timestamp as u64,
+                    preimage: row.get(8)?,
+                    created_at: created_at.map(|t| t as u64),
+                    updated_at: updated_at.map(|t| t as u64),
+                }))
+            }).map_err(|e| ActivityError::RetrievalError {
+                error_details: format!("Failed to get lightning activity: {}", e),
+            });
 
-                Ok(Some(activity?))
-            },
-            _ => Ok(None),
-        }
+            Ok(Some(activity?))
+        },
+        _ => Ok(None),
     }
+}
 
     /// Updates an existing onchain activity by ID.
     pub fn update_onchain_activity_by_id(&mut self, activity_id: &str, activity: &OnchainActivity) -> Result<(), ActivityError> {
-        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError(
-            format!("Failed to start transaction: {}", e)
-        ))?;
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
 
         let activities_sql = "
             UPDATE activities SET
@@ -674,14 +674,14 @@ impl ActivityDB {
                 activity.timestamp,
                 activity_id,
             ),
-        ).map_err(|e| ActivityError::DataError(
-            format!("Failed to update activities: {}", e)
-        ))?;
+        ).map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to update activities: {}", e),
+        })?;
 
         if rows == 0 {
-            return Err(ActivityError::DataError(
-                "No activity found with given ID".to_string()
-            ));
+            return Err(ActivityError::DataError {
+                error_details: "No activity found with given ID".to_string(),
+            });
         }
 
         let onchain_sql = "
@@ -717,22 +717,22 @@ impl ActivityDB {
                 &activity.transfer_tx_id,
                 activity_id,
             ),
-        ).map_err(|e| ActivityError::DataError(
-            format!("Failed to update onchain_activity: {}", e)
-        ))?;
+        ).map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to update onchain_activity: {}", e),
+        })?;
 
-        tx.commit().map_err(|e| ActivityError::DataError (
-            format!("Failed to commit transaction: {}", e)
-        ))?;
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
 
         Ok(())
     }
 
     /// Updates an existing lightning activity by ID.
     pub fn update_lightning_activity_by_id(&mut self, activity_id: &str, activity: &LightningActivity) -> Result<(), ActivityError> {
-        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError(
-            format!("Failed to start transaction: {}", e)
-        ))?;
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
 
         let activities_sql = "
             UPDATE activities SET
@@ -747,14 +747,14 @@ impl ActivityDB {
                 activity.timestamp,
                 activity_id,
             ),
-        ).map_err(|e| ActivityError::DataError(
-            format!("Failed to update activities: {}", e)
-        ))?;
+        ).map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to update activities: {}", e),
+        })?;
 
         if rows == 0 {
-            return Err(ActivityError::DataError(
-                "No activity found with given ID".to_string()
-            ));
+            return Err(ActivityError::DataError {
+                error_details: "No activity found with given ID".to_string(),
+            });
         }
 
         let lightning_sql = "
@@ -778,22 +778,22 @@ impl ActivityDB {
                 &activity.preimage,
                 activity_id,
             ),
-        ).map_err(|e| ActivityError::DataError(
-            format!("Failed to update lightning_activity: {}", e)
-        ))?;
+        ).map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to update lightning_activity: {}", e),
+        })?;
 
-        tx.commit().map_err(|e| ActivityError::DataError(
-            format!("Failed to commit transaction: {}", e)
-        ))?;
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
 
         Ok(())
     }
 
     /// Deletes an activity and associated data.
     pub fn delete_activity_by_id(&mut self, activity_id: &str) -> Result<bool, ActivityError> {
-        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError(
-            format!("Failed to start transaction: {}", e)
-        ))?;
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
 
         // Delete from activities table (this will cascade to other tables)
         let rows = match tx.execute(
@@ -803,15 +803,15 @@ impl ActivityDB {
             Ok(rows) => rows,
             Err(e) => {
                 tx.rollback().ok();
-                return Err(ActivityError::DataError (
-                    format!("Failed to delete activity: {}", e)
-                ));
+                return Err(ActivityError::DataError {
+                    error_details: format!("Failed to delete activity: {}", e),
+                });
             }
         };
 
-        tx.commit().map_err(|e| ActivityError::DataError(
-            format!("Failed to commit transaction: {}", e)
-        ))?;
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
 
         Ok(rows > 0)
     }
@@ -823,54 +823,54 @@ impl ActivityDB {
             "SELECT 1 FROM activities WHERE id = ?1",
             [activity_id],
             |_| Ok(true)
-        ).optional().map_err(|e| ActivityError::DataError(
-            format!("Failed to check activity existence: {}", e)
-        ))?.unwrap_or(false);
+        ).optional().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to check activity existence: {}", e),
+        })?.unwrap_or(false);
 
         if !exists {
-            return Err(ActivityError::DataError(
-                format!("Activity {} does not exist", activity_id)
-            ));
+            return Err(ActivityError::DataError {
+                error_details: format!("Activity {} does not exist", activity_id),
+            });
         }
 
-        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError(
-            format!("Failed to start transaction: {}", e)
-        ))?;
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
 
         for tag in tags {
             tx.execute(
                 "INSERT OR IGNORE INTO activity_tags (activity_id, tag) VALUES (?1, ?2)",
                 [activity_id, tag],
-            ).map_err(|e| ActivityError::DataError(
-                format!("Failed to insert tag: {}", e)
-            ))?;
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to insert tag: {}", e),
+            })?;
         }
 
-        tx.commit().map_err(|e| ActivityError::DataError(
-            format!("Failed to commit transaction: {}", e)
-        ))?;
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
 
         Ok(())
     }
 
     /// Remove tags from an activity
     pub fn remove_tags(&mut self, activity_id: &str, tags: &[String]) -> Result<(), ActivityError> {
-        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError(
-            format!("Failed to start transaction: {}", e)
-        ))?;
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
 
         for tag in tags {
             tx.execute(
                 "DELETE FROM activity_tags WHERE activity_id = ?1 AND tag = ?2",
                 [activity_id, tag],
-            ).map_err(|e| ActivityError::DataError(
-                format!("Failed to remove tag: {}", e)
-            ))?;
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to remove tag: {}", e),
+            })?;
         }
 
-        tx.commit().map_err(|e| ActivityError::DataError(
-            format!("Failed to commit transaction: {}", e)
-        ))?;
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
 
         Ok(())
     }
@@ -882,9 +882,9 @@ impl ActivityDB {
             "SELECT 1 FROM activities WHERE id = ?1",
             [activity_id],
             |_| Ok(true)
-        ).optional().map_err(|e| ActivityError::DataError(
-            format!("Failed to check activity existence: {}", e)
-        ))?.unwrap_or(false);
+        ).optional().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to check activity existence: {}", e),
+        })?.unwrap_or(false);
 
         if !exists {
             return Ok(Vec::new());
@@ -892,18 +892,18 @@ impl ActivityDB {
 
         let mut stmt = self.conn.prepare(
             "SELECT tag FROM activity_tags WHERE activity_id = ?1",
-        ).map_err(|e| ActivityError::RetrievalError(
-            format!("Failed to prepare statement: {}", e)
-        ))?;
+        ).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
 
         let tags = stmt.query_map([activity_id], |row| row.get(0))
-            .map_err(|e| ActivityError::RetrievalError(
-                format!("Failed to execute query: {}", e)
-            ))?
+            .map_err(|e| ActivityError::RetrievalError {
+                error_details: format!("Failed to execute query: {}", e),
+            })?
             .collect::<Result<Vec<String>, _>>()
-            .map_err(|e| ActivityError::DataError(
-                format!("Failed to process rows: {}", e)
-            ))?;
+            .map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to process rows: {}", e),
+            })?;
 
         Ok(tags)
     }
@@ -917,28 +917,28 @@ impl ActivityDB {
              JOIN activity_tags t ON a.id = t.activity_id
              WHERE t.tag = ?1
              ORDER BY a.timestamp {} {}",
-            Self::sort_direction_to_sql(direction),
-            limit.map_or(String::new(), |n| format!("LIMIT {}", n))
+                Self::sort_direction_to_sql(direction),
+                limit.map_or(String::new(), |n| format!("LIMIT {}", n))
         );
 
-        let mut stmt = self.conn.prepare(&sql).map_err(|e| ActivityError::RetrievalError(
-            format!("Failed to prepare statement: {}", e)
-        ))?;
+        let mut stmt = self.conn.prepare(&sql).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
 
         let rows = match stmt.query_map([tag], |row| {
             Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
         }) {
             Ok(rows) => rows,
-            Err(e) => return Err(ActivityError::RetrievalError(
-                format!("Failed to execute query: {}", e)
-            ))
+            Err(e) => return Err(ActivityError::RetrievalError {
+                error_details: format!("Failed to execute query: {}", e),
+            })
         };
 
         let mut activities = Vec::new();
         for row in rows {
-            let (id, _) = row.map_err(|e| ActivityError::DataError(
-                format!("Failed to process row: {}", e)
-            ))?;
+            let (id, _) = row.map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to process row: {}", e),
+            })?;
 
             if let Some(activity) = self.get_activity_by_id(&id)? {
                 activities.push(activity);
@@ -952,18 +952,18 @@ impl ActivityDB {
     pub fn get_all_unique_tags(&self) -> Result<Vec<String>, ActivityError> {
         let mut stmt = self.conn.prepare(
             "SELECT DISTINCT tag FROM activity_tags ORDER BY tag ASC"
-        ).map_err(|e| ActivityError::RetrievalError(
-            format!("Failed to prepare statement: {}", e)
-        ))?;
+        ).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
 
         let tags = stmt.query_map([], |row| row.get(0))
-            .map_err(|e| ActivityError::RetrievalError(
-                format!("Failed to execute query: {}", e)
-            ))?
+            .map_err(|e| ActivityError::RetrievalError {
+                error_details: format!("Failed to execute query: {}", e),
+            })?
             .collect::<Result<Vec<String>, _>>()
-            .map_err(|e| ActivityError::DataError(
-                format!("Failed to process rows: {}", e)
-            ))?;
+            .map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to process rows: {}", e),
+            })?;
 
         Ok(tags)
     }

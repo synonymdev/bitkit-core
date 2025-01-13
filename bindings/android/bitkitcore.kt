@@ -1776,58 +1776,58 @@ sealed class ActivityException: Exception() {
     
     class InvalidActivity(
         
-        val ``: kotlin.String
+        val `errorDetails`: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = "=${ `` }"
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
     class InitializationException(
         
-        val ``: kotlin.String
+        val `errorDetails`: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = "=${ `` }"
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
     class InsertException(
         
-        val ``: kotlin.String
+        val `errorDetails`: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = "=${ `` }"
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
     class RetrievalException(
         
-        val ``: kotlin.String
+        val `errorDetails`: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = "=${ `` }"
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
     class DataException(
         
-        val ``: kotlin.String
+        val `errorDetails`: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = "=${ `` }"
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
     class ConnectionException(
         
-        val ``: kotlin.String
+        val `errorDetails`: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = "=${ `` }"
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
     class SerializationException(
         
-        val ``: kotlin.String
+        val `errorDetails`: kotlin.String
         ) : ActivityException() {
         override val message
-            get() = "=${ `` }"
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
 
@@ -1873,37 +1873,37 @@ public object FfiConverterTypeActivityError : FfiConverterRustBuffer<ActivityExc
             is ActivityException.InvalidActivity -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.``)
+                + FfiConverterString.allocationSize(value.`errorDetails`)
             )
             is ActivityException.InitializationException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.``)
+                + FfiConverterString.allocationSize(value.`errorDetails`)
             )
             is ActivityException.InsertException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.``)
+                + FfiConverterString.allocationSize(value.`errorDetails`)
             )
             is ActivityException.RetrievalException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.``)
+                + FfiConverterString.allocationSize(value.`errorDetails`)
             )
             is ActivityException.DataException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.``)
+                + FfiConverterString.allocationSize(value.`errorDetails`)
             )
             is ActivityException.ConnectionException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.``)
+                + FfiConverterString.allocationSize(value.`errorDetails`)
             )
             is ActivityException.SerializationException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.``)
+                + FfiConverterString.allocationSize(value.`errorDetails`)
             )
         }
     }
@@ -1912,37 +1912,37 @@ public object FfiConverterTypeActivityError : FfiConverterRustBuffer<ActivityExc
         when(value) {
             is ActivityException.InvalidActivity -> {
                 buf.putInt(1)
-                FfiConverterString.write(value.``, buf)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
             is ActivityException.InitializationException -> {
                 buf.putInt(2)
-                FfiConverterString.write(value.``, buf)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
             is ActivityException.InsertException -> {
                 buf.putInt(3)
-                FfiConverterString.write(value.``, buf)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
             is ActivityException.RetrievalException -> {
                 buf.putInt(4)
-                FfiConverterString.write(value.``, buf)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
             is ActivityException.DataException -> {
                 buf.putInt(5)
-                FfiConverterString.write(value.``, buf)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
             is ActivityException.ConnectionException -> {
                 buf.putInt(6)
-                FfiConverterString.write(value.``, buf)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
             is ActivityException.SerializationException -> {
                 buf.putInt(7)
-                FfiConverterString.write(value.``, buf)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -2109,18 +2109,18 @@ sealed class DbException: Exception() {
     
     class DbActivityException(
         
-        val ``: ActivityException
+        val `errorDetails`: ActivityException
         ) : DbException() {
         override val message
-            get() = "=${ `` }"
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
     class InitializationException(
         
-        val ``: kotlin.String
+        val `errorDetails`: kotlin.String
         ) : DbException() {
         override val message
-            get() = "=${ `` }"
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
 
@@ -2151,12 +2151,12 @@ public object FfiConverterTypeDbError : FfiConverterRustBuffer<DbException> {
             is DbException.DbActivityException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterTypeActivityError.allocationSize(value.``)
+                + FfiConverterTypeActivityError.allocationSize(value.`errorDetails`)
             )
             is DbException.InitializationException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.``)
+                + FfiConverterString.allocationSize(value.`errorDetails`)
             )
         }
     }
@@ -2165,12 +2165,12 @@ public object FfiConverterTypeDbError : FfiConverterRustBuffer<DbException> {
         when(value) {
             is DbException.DbActivityException -> {
                 buf.putInt(1)
-                FfiConverterTypeActivityError.write(value.``, buf)
+                FfiConverterTypeActivityError.write(value.`errorDetails`, buf)
                 Unit
             }
             is DbException.InitializationException -> {
                 buf.putInt(2)
-                FfiConverterString.write(value.``, buf)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }

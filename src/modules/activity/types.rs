@@ -128,15 +128,21 @@ pub enum SortDirection {
 #[derive(uniffi::Error, Debug, Error)]
 #[non_exhaustive]
 pub enum DbError {
-    #[error("{0}")]
-    DbActivityError(ActivityError),
+    #[error("DB Activity Error: {error_details}")]
+    DbActivityError {
+        error_details: ActivityError
+    },
 
-    #[error("{0}")]
-    InitializationError(String),
+    #[error("Initialization Error: {error_details}")]
+    InitializationError {
+        error_details: String
+    },
 }
 
 impl From<ActivityError> for DbError {
-    fn from(err: ActivityError) -> DbError {
-        DbError::DbActivityError(err)
+    fn from(error: ActivityError) -> Self {
+        DbError::DbActivityError {
+            error_details: error
+        }
     }
 }
