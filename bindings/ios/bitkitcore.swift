@@ -1566,18 +1566,19 @@ public enum ActivityError {
 
     
     
-    case InvalidActivity
-    case InitializationError(message: String
+    case InvalidActivity(errorDetails: String
     )
-    case InsertError(message: String
+    case InitializationError(errorDetails: String
     )
-    case RetrievalError(message: String
+    case InsertError(errorDetails: String
     )
-    case DataError(message: String
+    case RetrievalError(errorDetails: String
     )
-    case ConnectionError(message: String
+    case DataError(errorDetails: String
     )
-    case SerializationError(message: String
+    case ConnectionError(errorDetails: String
+    )
+    case SerializationError(errorDetails: String
     )
 }
 
@@ -1592,24 +1593,26 @@ public struct FfiConverterTypeActivityError: FfiConverterRustBuffer {
         
 
         
-        case 1: return .InvalidActivity
+        case 1: return .InvalidActivity(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
         case 2: return .InitializationError(
-            message: try FfiConverterString.read(from: &buf)
+            errorDetails: try FfiConverterString.read(from: &buf)
             )
         case 3: return .InsertError(
-            message: try FfiConverterString.read(from: &buf)
+            errorDetails: try FfiConverterString.read(from: &buf)
             )
         case 4: return .RetrievalError(
-            message: try FfiConverterString.read(from: &buf)
+            errorDetails: try FfiConverterString.read(from: &buf)
             )
         case 5: return .DataError(
-            message: try FfiConverterString.read(from: &buf)
+            errorDetails: try FfiConverterString.read(from: &buf)
             )
         case 6: return .ConnectionError(
-            message: try FfiConverterString.read(from: &buf)
+            errorDetails: try FfiConverterString.read(from: &buf)
             )
         case 7: return .SerializationError(
-            message: try FfiConverterString.read(from: &buf)
+            errorDetails: try FfiConverterString.read(from: &buf)
             )
 
          default: throw UniffiInternalError.unexpectedEnumCase
@@ -1623,38 +1626,39 @@ public struct FfiConverterTypeActivityError: FfiConverterRustBuffer {
 
         
         
-        case .InvalidActivity:
+        case let .InvalidActivity(errorDetails):
             writeInt(&buf, Int32(1))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
         
-        
-        case let .InitializationError(message):
+        case let .InitializationError(errorDetails):
             writeInt(&buf, Int32(2))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case let .InsertError(message):
+        case let .InsertError(errorDetails):
             writeInt(&buf, Int32(3))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case let .RetrievalError(message):
+        case let .RetrievalError(errorDetails):
             writeInt(&buf, Int32(4))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case let .DataError(message):
+        case let .DataError(errorDetails):
             writeInt(&buf, Int32(5))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case let .ConnectionError(message):
+        case let .ConnectionError(errorDetails):
             writeInt(&buf, Int32(6))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case let .SerializationError(message):
+        case let .SerializationError(errorDetails):
             writeInt(&buf, Int32(7))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(errorDetails, into: &buf)
             
         }
     }
@@ -1920,9 +1924,9 @@ public enum DbError {
 
     
     
-    case ActivityError(ActivityError
+    case DbActivityError(errorDetails: ActivityError
     )
-    case InitializationError(message: String
+    case InitializationError(errorDetails: String
     )
 }
 
@@ -1933,19 +1937,24 @@ public struct FfiConverterTypeDbError: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> DbError {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-        case 1: return .ActivityError(try FfiConverterTypeActivityError.read(from: &buf))
-        case 2: return .InitializationError(message: try FfiConverterString.read(from: &buf))
+        case 1: return .DbActivityError(
+            errorDetails: try FfiConverterTypeActivityError.read(from: &buf)
+        )
+        case 2: return .InitializationError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+        )
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
+
     public static func write(_ value: DbError, into buf: inout [UInt8]) {
         switch value {
-        case let .ActivityError(error):
+        case let .DbActivityError(errorDetails):
             writeInt(&buf, Int32(1))
-            FfiConverterTypeActivityError.write(error, into: &buf)
-        case let .InitializationError(message):
+            FfiConverterTypeActivityError.write(errorDetails, into: &buf)
+        case let .InitializationError(errorDetails):
             writeInt(&buf, Int32(2))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(errorDetails, into: &buf)
         }
     }
 }

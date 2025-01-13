@@ -1968,68 +1968,71 @@ _UniffiTempActivityError = ActivityError
 class ActivityError:  # type: ignore
     class InvalidActivity(_UniffiTempActivityError):
 
-        def __init__(self):
-            pass
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
         def __repr__(self):
             return "ActivityError.InvalidActivity({})".format(str(self))
     _UniffiTempActivityError.InvalidActivity = InvalidActivity # type: ignore
     class InitializationError(_UniffiTempActivityError):
 
-        def __init__(self, message):
+        def __init__(self, error_details):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "error_details={!r}".format(error_details),
             ]))
-            self.message = message
+            self.error_details = error_details
         def __repr__(self):
             return "ActivityError.InitializationError({})".format(str(self))
     _UniffiTempActivityError.InitializationError = InitializationError # type: ignore
     class InsertError(_UniffiTempActivityError):
 
-        def __init__(self, message):
+        def __init__(self, error_details):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "error_details={!r}".format(error_details),
             ]))
-            self.message = message
+            self.error_details = error_details
         def __repr__(self):
             return "ActivityError.InsertError({})".format(str(self))
     _UniffiTempActivityError.InsertError = InsertError # type: ignore
     class RetrievalError(_UniffiTempActivityError):
 
-        def __init__(self, message):
+        def __init__(self, error_details):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "error_details={!r}".format(error_details),
             ]))
-            self.message = message
+            self.error_details = error_details
         def __repr__(self):
             return "ActivityError.RetrievalError({})".format(str(self))
     _UniffiTempActivityError.RetrievalError = RetrievalError # type: ignore
     class DataError(_UniffiTempActivityError):
 
-        def __init__(self, message):
+        def __init__(self, error_details):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "error_details={!r}".format(error_details),
             ]))
-            self.message = message
+            self.error_details = error_details
         def __repr__(self):
             return "ActivityError.DataError({})".format(str(self))
     _UniffiTempActivityError.DataError = DataError # type: ignore
     class ConnectionError(_UniffiTempActivityError):
 
-        def __init__(self, message):
+        def __init__(self, error_details):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "error_details={!r}".format(error_details),
             ]))
-            self.message = message
+            self.error_details = error_details
         def __repr__(self):
             return "ActivityError.ConnectionError({})".format(str(self))
     _UniffiTempActivityError.ConnectionError = ConnectionError # type: ignore
     class SerializationError(_UniffiTempActivityError):
 
-        def __init__(self, message):
+        def __init__(self, error_details):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "error_details={!r}".format(error_details),
             ]))
-            self.message = message
+            self.error_details = error_details
         def __repr__(self):
             return "ActivityError.SerializationError({})".format(str(self))
     _UniffiTempActivityError.SerializationError = SerializationError # type: ignore
@@ -2044,78 +2047,81 @@ class _UniffiConverterTypeActivityError(_UniffiConverterRustBuffer):
         variant = buf.read_i32()
         if variant == 1:
             return ActivityError.InvalidActivity(
+                error_details=_UniffiConverterString.read(buf),
             )
         if variant == 2:
             return ActivityError.InitializationError(
-                message=_UniffiConverterString.read(buf),
+                error_details=_UniffiConverterString.read(buf),
             )
         if variant == 3:
             return ActivityError.InsertError(
-                message=_UniffiConverterString.read(buf),
+                error_details=_UniffiConverterString.read(buf),
             )
         if variant == 4:
             return ActivityError.RetrievalError(
-                message=_UniffiConverterString.read(buf),
+                error_details=_UniffiConverterString.read(buf),
             )
         if variant == 5:
             return ActivityError.DataError(
-                message=_UniffiConverterString.read(buf),
+                error_details=_UniffiConverterString.read(buf),
             )
         if variant == 6:
             return ActivityError.ConnectionError(
-                message=_UniffiConverterString.read(buf),
+                error_details=_UniffiConverterString.read(buf),
             )
         if variant == 7:
             return ActivityError.SerializationError(
-                message=_UniffiConverterString.read(buf),
+                error_details=_UniffiConverterString.read(buf),
             )
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
     def check_lower(value):
         if isinstance(value, ActivityError.InvalidActivity):
+            _UniffiConverterString.check_lower(value.error_details)
             return
         if isinstance(value, ActivityError.InitializationError):
-            _UniffiConverterString.check_lower(value.message)
+            _UniffiConverterString.check_lower(value.error_details)
             return
         if isinstance(value, ActivityError.InsertError):
-            _UniffiConverterString.check_lower(value.message)
+            _UniffiConverterString.check_lower(value.error_details)
             return
         if isinstance(value, ActivityError.RetrievalError):
-            _UniffiConverterString.check_lower(value.message)
+            _UniffiConverterString.check_lower(value.error_details)
             return
         if isinstance(value, ActivityError.DataError):
-            _UniffiConverterString.check_lower(value.message)
+            _UniffiConverterString.check_lower(value.error_details)
             return
         if isinstance(value, ActivityError.ConnectionError):
-            _UniffiConverterString.check_lower(value.message)
+            _UniffiConverterString.check_lower(value.error_details)
             return
         if isinstance(value, ActivityError.SerializationError):
-            _UniffiConverterString.check_lower(value.message)
+            _UniffiConverterString.check_lower(value.error_details)
             return
 
     @staticmethod
     def write(value, buf):
         if isinstance(value, ActivityError.InvalidActivity):
             buf.write_i32(1)
+            _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, ActivityError.InitializationError):
             buf.write_i32(2)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, ActivityError.InsertError):
             buf.write_i32(3)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, ActivityError.RetrievalError):
             buf.write_i32(4)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, ActivityError.DataError):
             buf.write_i32(5)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, ActivityError.ConnectionError):
             buf.write_i32(6)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, ActivityError.SerializationError):
             buf.write_i32(7)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.error_details, buf)
 
 
 
@@ -2342,23 +2348,23 @@ class DbError(Exception):
 _UniffiTempDbError = DbError
 
 class DbError:  # type: ignore
-    class ActivityError(_UniffiTempDbError):
+    class DbActivityError(_UniffiTempDbError):
 
-        def __init__(self, ):
+        def __init__(self, error_details):
             super().__init__(", ".join([
-                "={!r}".format(),
+                "error_details={!r}".format(error_details),
             ]))
-            self. = 
+            self.error_details = error_details
         def __repr__(self):
-            return "DbError.ActivityError({})".format(str(self))
-    _UniffiTempDbError.ActivityError = ActivityError # type: ignore
+            return "DbError.DbActivityError({})".format(str(self))
+    _UniffiTempDbError.DbActivityError = DbActivityError # type: ignore
     class InitializationError(_UniffiTempDbError):
 
-        def __init__(self, message):
+        def __init__(self, error_details):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "error_details={!r}".format(error_details),
             ]))
-            self.message = message
+            self.error_details = error_details
         def __repr__(self):
             return "DbError.InitializationError({})".format(str(self))
     _UniffiTempDbError.InitializationError = InitializationError # type: ignore
@@ -2372,32 +2378,32 @@ class _UniffiConverterTypeDbError(_UniffiConverterRustBuffer):
     def read(buf):
         variant = buf.read_i32()
         if variant == 1:
-            return DbError.ActivityError(
-                =_UniffiConverterTypeActivityError.read(buf),
+            return DbError.DbActivityError(
+                error_details=_UniffiConverterTypeActivityError.read(buf),
             )
         if variant == 2:
             return DbError.InitializationError(
-                message=_UniffiConverterString.read(buf),
+                error_details=_UniffiConverterString.read(buf),
             )
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
     def check_lower(value):
-        if isinstance(value, DbError.ActivityError):
-            _UniffiConverterTypeActivityError.check_lower(value.)
+        if isinstance(value, DbError.DbActivityError):
+            _UniffiConverterTypeActivityError.check_lower(value.error_details)
             return
         if isinstance(value, DbError.InitializationError):
-            _UniffiConverterString.check_lower(value.message)
+            _UniffiConverterString.check_lower(value.error_details)
             return
 
     @staticmethod
     def write(value, buf):
-        if isinstance(value, DbError.ActivityError):
+        if isinstance(value, DbError.DbActivityError):
             buf.write_i32(1)
-            _UniffiConverterTypeActivityError.write(value., buf)
+            _UniffiConverterTypeActivityError.write(value.error_details, buf)
         if isinstance(value, DbError.InitializationError):
             buf.write_i32(2)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.error_details, buf)
 
 
 # DecodingError
