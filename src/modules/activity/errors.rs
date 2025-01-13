@@ -1,37 +1,39 @@
 use thiserror::Error;
 
 #[derive(uniffi::Error, Debug, Error)]
-#[non_exhaustive]
 pub enum ActivityError {
-    #[error("Invalid Activity")]
-    InvalidActivity,
-    #[error("Database initialization failed: {message}")]
+    #[error("Invalid Activity: {error_details}")]
+    InvalidActivity {
+        error_details: String,
+    },
+
+    #[error("Database initialization failed: {error_details}")]
     InitializationError {
-        message: String,
+        error_details: String,
     },
 
-    #[error("Failed to insert activity: {message}")]
+    #[error("Failed to insert activity: {error_details}")]
     InsertError {
-        message: String,
+        error_details: String,
     },
 
-    #[error("Failed to retrieve activities: {message}")]
+    #[error("Failed to retrieve activities: {error_details}")]
     RetrievalError {
-        message: String,
+        error_details: String,
     },
 
-    #[error("Invalid data format: {message}")]
+    #[error("Invalid data format: {error_details}")]
     DataError {
-        message: String,
+        error_details: String,
     },
 
-    #[error("Database connection error: {message}")]
+    #[error("Database connection error: {error_details}")]
     ConnectionError {
-        message: String,
+        error_details: String,
     },
 
-    #[error("Serialization error: {message}")]
+    #[error("Serialization error: {error_details}")]
     SerializationError {
-        message: String,
+        error_details: String,
     }
 }

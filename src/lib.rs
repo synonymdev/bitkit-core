@@ -4,7 +4,7 @@ mod modules;
 
 use once_cell::sync::OnceCell;
 use std::sync::Mutex;
-
+use thiserror::Error;
 pub use modules::scanner::{
     Scanner,
     DecodingError
@@ -12,7 +12,7 @@ pub use modules::scanner::{
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
-use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType};
+use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError};
 //use crate::modules::blocktank::{BlocktankDB, BlocktankError};
 use crate::onchain::{
     AddressError,
@@ -23,16 +23,6 @@ use crate::onchain::{
 pub struct DatabaseConnections {
     activity_db: Option<ActivityDB>,
     // blocktank_db: Option<BlocktankDB>,
-}
-
-#[derive(thiserror::Error, Debug, uniffi::Enum)]
-pub enum DbError {
-    #[error("Activity DB Error: {0}")]
-    ActivityError(#[from] ActivityError),
-    // #[error("Blocktank DB Error: {0}")]
-    // BlocktankError(#[from] BlocktankError),
-    #[error("Database initialization failed: {message}")]
-    InitializationError { message: String },
 }
 
 static DB: OnceCell<Mutex<DatabaseConnections>> = OnceCell::new();
@@ -73,7 +63,7 @@ pub fn init_db(base_path: String) -> Result<String, DbError> {
         Ok("Databases initialized successfully".to_string())
     } else {
         Err(DbError::InitializationError {
-            message: "Failed to initialize global DB state".to_string()
+            error_details: "Failed to initialize global DB state".to_string()
         })
     }
 }
@@ -90,11 +80,11 @@ pub fn get_activities(
     sort_direction: Option<SortDirection>
 ) -> Result<Vec<Activity>, ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     let guard = cell.lock().unwrap();
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.get_activities(filter, tx_type, tags, search, min_date, max_date, limit, sort_direction)
 }
@@ -102,11 +92,11 @@ pub fn get_activities(
 #[uniffi::export]
 pub fn upsert_activity(activity: Activity) -> Result<(), ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     let mut guard = cell.lock().unwrap();
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.upsert_activity(&activity)
 }
@@ -114,11 +104,11 @@ pub fn upsert_activity(activity: Activity) -> Result<(), ActivityError> {
 #[uniffi::export]
 pub fn insert_activity(activity: Activity) -> Result<(), ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     let mut guard = cell.lock().unwrap();
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     match activity {
         Activity::Onchain(onchain) => db.insert_onchain_activity(&onchain),
@@ -129,11 +119,11 @@ pub fn insert_activity(activity: Activity) -> Result<(), ActivityError> {
 #[uniffi::export]
 pub fn update_activity(activity_id: String, activity: Activity) -> Result<(), ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     let mut guard = cell.lock().unwrap();
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     match activity {
         Activity::Onchain(onchain) => db.update_onchain_activity_by_id(&activity_id, &onchain),
@@ -144,11 +134,11 @@ pub fn update_activity(activity_id: String, activity: Activity) -> Result<(), Ac
 #[uniffi::export]
 pub fn get_activity_by_id(activity_id: String) -> Result<Option<Activity>, ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     let guard = cell.lock().unwrap();
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.get_activity_by_id(&activity_id)
 }
@@ -156,11 +146,11 @@ pub fn get_activity_by_id(activity_id: String) -> Result<Option<Activity>, Activ
 #[uniffi::export]
 pub fn delete_activity_by_id(activity_id: String) -> Result<bool, ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     let mut guard = cell.lock().unwrap();
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.delete_activity_by_id(&activity_id)
 }
@@ -168,11 +158,11 @@ pub fn delete_activity_by_id(activity_id: String) -> Result<bool, ActivityError>
 #[uniffi::export]
 pub fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     let mut guard = cell.lock().unwrap();
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.add_tags(&activity_id, &tags)
 }
@@ -180,11 +170,11 @@ pub fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityEr
 #[uniffi::export]
 pub fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     let mut guard = cell.lock().unwrap();
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.remove_tags(&activity_id, &tags)
 }
@@ -192,11 +182,11 @@ pub fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), Activit
 #[uniffi::export]
 pub fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     let guard = cell.lock().unwrap();
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.get_tags(&activity_id)
 }
@@ -204,11 +194,11 @@ pub fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError> {
 #[uniffi::export]
 pub fn get_activities_by_tag(tag: String, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     let guard = cell.lock().unwrap();
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.get_activities_by_tag(&tag, limit, sort_direction)
 }
@@ -216,11 +206,11 @@ pub fn get_activities_by_tag(tag: String, limit: Option<u32>, sort_direction: Op
 #[uniffi::export]
 pub fn get_all_unique_tags() -> Result<Vec<String>, ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     let guard = cell.lock().unwrap();
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        message: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.get_all_unique_tags()
 }

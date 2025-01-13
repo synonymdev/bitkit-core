@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
+use crate::activity::ActivityError;
 
 #[derive(Debug, uniffi::Enum)]
 pub enum Activity {
@@ -121,4 +123,26 @@ impl Default for SortDirection {
 pub enum SortDirection {
     Asc,
     Desc,
+}
+
+#[derive(uniffi::Error, Debug, Error)]
+#[non_exhaustive]
+pub enum DbError {
+    #[error("DB Activity Error: {error_details}")]
+    DbActivityError {
+        error_details: ActivityError
+    },
+
+    #[error("Initialization Error: {error_details}")]
+    InitializationError {
+        error_details: String
+    },
+}
+
+impl From<ActivityError> for DbError {
+    fn from(error: ActivityError) -> Self {
+        DbError::DbActivityError {
+            error_details: error
+        }
+    }
 }
