@@ -5,6 +5,7 @@ mod modules;
 use once_cell::sync::OnceCell;
 use tokio::sync::Mutex;
 use rust_blocktank_client::{BtOrderState, IBtOrder};
+use tokio::runtime::Runtime;
 pub use modules::scanner::{
     Scanner,
     DecodingError
@@ -18,6 +19,7 @@ use crate::onchain::{
     AddressError,
     ValidationResult
 };
+static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 
 
 pub struct DatabaseConnections {
@@ -26,6 +28,13 @@ pub struct DatabaseConnections {
 }
 
 static DB: OnceCell<Mutex<DatabaseConnections>> = OnceCell::new();
+
+fn init_runtime() {
+    RUNTIME.get_or_init(|| {
+        Runtime::new().expect("Failed to create Tokio runtime")
+    });
+}
+
 
 #[uniffi::export]
 pub async fn decode(invoice: String) -> Result<Scanner, DecodingError> {
@@ -44,6 +53,7 @@ pub fn validate_bitcoin_address(address: String) -> Result<ValidationResult, Add
 
 #[uniffi::export]
 pub async fn init_db(base_path: String) -> Result<String, DbError> {
+    init_runtime();
     DB.get_or_init(|| {
         Mutex::new(DatabaseConnections {
             activity_db: None,
