@@ -461,37 +461,37 @@ def _uniffi_check_contract_api_version(lib):
         raise InternalError("UniFFI contract version mismatch: try cleaning and rebuilding your project")
 
 def _uniffi_check_api_checksums(lib):
-    if lib.uniffi_bitkitcore_checksum_func_add_tags() != 3539:
+    if lib.uniffi_bitkitcore_checksum_func_add_tags() != 63739:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_decode() != 28437:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 10186:
+    if lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_activities() != 10868:
+    if lib.uniffi_bitkitcore_checksum_func_get_activities() != 21347:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 40629:
+    if lib.uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 52823:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 57834:
+    if lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 47129:
+    if lib.uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_info() != 43607:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_tags() != 63724:
+    if lib.uniffi_bitkitcore_checksum_func_get_tags() != 11308:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_init_db() != 7388:
+    if lib.uniffi_bitkitcore_checksum_func_init_db() != 9643:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_insert_activity() != 19334:
+    if lib.uniffi_bitkitcore_checksum_func_insert_activity() != 1510:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_remove_tags() != 9871:
+    if lib.uniffi_bitkitcore_checksum_func_remove_tags() != 58873:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_update_activity() != 58767:
+    if lib.uniffi_bitkitcore_checksum_func_update_activity() != 42510:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_update_blocktank_url() != 23665:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_upsert_activity() != 24957:
+    if lib.uniffi_bitkitcore_checksum_func_upsert_activity() != 32175:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -604,16 +604,18 @@ UNIFFI_FOREIGN_FUTURE_COMPLETE_VOID = ctypes.CFUNCTYPE(None,ctypes.c_uint64,Unif
 _UniffiLib.uniffi_bitkitcore_fn_func_add_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_add_tags.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_add_tags.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_decode.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_decode.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.argtypes = (
     _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.restype = ctypes.c_int8
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activities.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -623,21 +625,25 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_activities.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_get_activities.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activities.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.argtypes = (
     _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_info.argtypes = (
     _UniffiRustBuffer,
 )
@@ -649,34 +655,40 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice.argtypes = (
 _UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_get_tags.argtypes = (
     _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_get_tags.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_tags.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_init_db.argtypes = (
     _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_init_db.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_init_db.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.argtypes = (
     _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_remove_tags.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_remove_tags.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_update_activity.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_update_activity.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_update_activity.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_update_blocktank_url.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_update_blocktank_url.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_upsert_activity.argtypes = (
     _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_upsert_activity.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_activity.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_validate_bitcoin_address.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -6405,27 +6417,16 @@ async def _uniffi_rust_call_async(rust_future, ffi_poll, ffi_complete, ffi_free,
         )
     finally:
         ffi_free(rust_future)
-async def add_tags(activity_id: "str",tags: "typing.List[str]") -> None:
 
+def add_tags(activity_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(activity_id)
     
     _UniffiConverterSequenceString.check_lower(tags)
     
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_add_tags(
+    _rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_add_tags,
         _UniffiConverterString.lower(activity_id),
-        _UniffiConverterSequenceString.lower(tags)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
-        # lift function
-        lambda val: None,
-        
-        
-    # Error FFI converter
-_UniffiConverterTypeActivityError,
+        _UniffiConverterSequenceString.lower(tags))
 
-    )
 async def decode(invoice: "str") -> "Scanner":
 
     _UniffiConverterString.check_lower(invoice)
@@ -6443,25 +6444,15 @@ async def decode(invoice: "str") -> "Scanner":
 _UniffiConverterTypeDecodingError,
 
     )
-async def delete_activity_by_id(activity_id: "str") -> "bool":
 
+def delete_activity_by_id(activity_id: "str") -> "bool":
     _UniffiConverterString.check_lower(activity_id)
     
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id(
-        _UniffiConverterString.lower(activity_id)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_i8,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_i8,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_i8,
-        # lift function
-        _UniffiConverterBool.lift,
-        
-    # Error FFI converter
-_UniffiConverterTypeActivityError,
+    return _UniffiConverterBool.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id,
+        _UniffiConverterString.lower(activity_id)))
 
-    )
-async def get_activities(filter: "typing.Optional[ActivityFilter]",tx_type: "typing.Optional[PaymentType]",tags: "typing.Optional[typing.List[str]]",search: "typing.Optional[str]",min_date: "typing.Optional[int]",max_date: "typing.Optional[int]",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
 
+def get_activities(filter: "typing.Optional[ActivityFilter]",tx_type: "typing.Optional[PaymentType]",tags: "typing.Optional[typing.List[str]]",search: "typing.Optional[str]",min_date: "typing.Optional[int]",max_date: "typing.Optional[int]",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
     _UniffiConverterOptionalTypeActivityFilter.check_lower(filter)
     
     _UniffiConverterOptionalTypePaymentType.check_lower(tx_type)
@@ -6478,8 +6469,7 @@ async def get_activities(filter: "typing.Optional[ActivityFilter]",tx_type: "typ
     
     _UniffiConverterOptionalTypeSortDirection.check_lower(sort_direction)
     
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_get_activities(
+    return _UniffiConverterSequenceTypeActivity.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activities,
         _UniffiConverterOptionalTypeActivityFilter.lower(filter),
         _UniffiConverterOptionalTypePaymentType.lower(tx_type),
         _UniffiConverterOptionalSequenceString.lower(tags),
@@ -6487,71 +6477,32 @@ async def get_activities(filter: "typing.Optional[ActivityFilter]",tx_type: "typ
         _UniffiConverterOptionalUInt64.lower(min_date),
         _UniffiConverterOptionalUInt64.lower(max_date),
         _UniffiConverterOptionalUInt32.lower(limit),
-        _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
-        # lift function
-        _UniffiConverterSequenceTypeActivity.lift,
-        
-    # Error FFI converter
-_UniffiConverterTypeActivityError,
+        _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)))
 
-    )
-async def get_activities_by_tag(tag: "str",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
 
+def get_activities_by_tag(tag: "str",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
     _UniffiConverterString.check_lower(tag)
     
     _UniffiConverterOptionalUInt32.check_lower(limit)
     
     _UniffiConverterOptionalTypeSortDirection.check_lower(sort_direction)
     
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag(
+    return _UniffiConverterSequenceTypeActivity.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag,
         _UniffiConverterString.lower(tag),
         _UniffiConverterOptionalUInt32.lower(limit),
-        _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
-        # lift function
-        _UniffiConverterSequenceTypeActivity.lift,
-        
-    # Error FFI converter
-_UniffiConverterTypeActivityError,
+        _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)))
 
-    )
-async def get_activity_by_id(activity_id: "str") -> "typing.Optional[Activity]":
 
+def get_activity_by_id(activity_id: "str") -> "typing.Optional[Activity]":
     _UniffiConverterString.check_lower(activity_id)
     
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id(
-        _UniffiConverterString.lower(activity_id)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
-        # lift function
-        _UniffiConverterOptionalTypeActivity.lift,
-        
-    # Error FFI converter
-_UniffiConverterTypeActivityError,
+    return _UniffiConverterOptionalTypeActivity.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id,
+        _UniffiConverterString.lower(activity_id)))
 
-    )
-async def get_all_unique_tags() -> "typing.List[str]":
 
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags(),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
-        # lift function
-        _UniffiConverterSequenceString.lift,
-        
-    # Error FFI converter
-_UniffiConverterTypeActivityError,
+def get_all_unique_tags() -> "typing.List[str]":
+    return _UniffiConverterSequenceString.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags,))
 
-    )
 async def get_info(refresh: "typing.Optional[bool]") -> "typing.Optional[IBtInfo]":
 
     _UniffiConverterOptionalBool.check_lower(refresh)
@@ -6589,100 +6540,47 @@ async def get_lnurl_invoice(address: "str",amount_satoshis: "int") -> "str":
 _UniffiConverterTypeLnurlError,
 
     )
-async def get_tags(activity_id: "str") -> "typing.List[str]":
 
+def get_tags(activity_id: "str") -> "typing.List[str]":
     _UniffiConverterString.check_lower(activity_id)
     
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_get_tags(
-        _UniffiConverterString.lower(activity_id)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
-        # lift function
-        _UniffiConverterSequenceString.lift,
-        
-    # Error FFI converter
-_UniffiConverterTypeActivityError,
+    return _UniffiConverterSequenceString.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_tags,
+        _UniffiConverterString.lower(activity_id)))
 
-    )
-async def init_db(base_path: "str") -> "str":
 
+def init_db(base_path: "str") -> "str":
     _UniffiConverterString.check_lower(base_path)
     
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_init_db(
-        _UniffiConverterString.lower(base_path)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
-        # lift function
-        _UniffiConverterString.lift,
-        
-    # Error FFI converter
-_UniffiConverterTypeDbError,
+    return _UniffiConverterString.lift(_rust_call_with_error(_UniffiConverterTypeDbError,_UniffiLib.uniffi_bitkitcore_fn_func_init_db,
+        _UniffiConverterString.lower(base_path)))
 
-    )
-async def insert_activity(activity: "Activity") -> None:
 
+def insert_activity(activity: "Activity") -> None:
     _UniffiConverterTypeActivity.check_lower(activity)
     
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_insert_activity(
-        _UniffiConverterTypeActivity.lower(activity)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
-        # lift function
-        lambda val: None,
-        
-        
-    # Error FFI converter
-_UniffiConverterTypeActivityError,
+    _rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_insert_activity,
+        _UniffiConverterTypeActivity.lower(activity))
 
-    )
-async def remove_tags(activity_id: "str",tags: "typing.List[str]") -> None:
 
+def remove_tags(activity_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(activity_id)
     
     _UniffiConverterSequenceString.check_lower(tags)
     
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_remove_tags(
+    _rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_remove_tags,
         _UniffiConverterString.lower(activity_id),
-        _UniffiConverterSequenceString.lower(tags)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
-        # lift function
-        lambda val: None,
-        
-        
-    # Error FFI converter
-_UniffiConverterTypeActivityError,
+        _UniffiConverterSequenceString.lower(tags))
 
-    )
-async def update_activity(activity_id: "str",activity: "Activity") -> None:
 
+def update_activity(activity_id: "str",activity: "Activity") -> None:
     _UniffiConverterString.check_lower(activity_id)
     
     _UniffiConverterTypeActivity.check_lower(activity)
     
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_update_activity(
+    _rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_update_activity,
         _UniffiConverterString.lower(activity_id),
-        _UniffiConverterTypeActivity.lower(activity)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
-        # lift function
-        lambda val: None,
-        
-        
-    # Error FFI converter
-_UniffiConverterTypeActivityError,
+        _UniffiConverterTypeActivity.lower(activity))
 
-    )
 async def update_blocktank_url(new_url: "str") -> None:
 
     """
@@ -6705,24 +6603,13 @@ async def update_blocktank_url(new_url: "str") -> None:
 _UniffiConverterTypeBlocktankError,
 
     )
-async def upsert_activity(activity: "Activity") -> None:
 
+def upsert_activity(activity: "Activity") -> None:
     _UniffiConverterTypeActivity.check_lower(activity)
     
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_upsert_activity(
-        _UniffiConverterTypeActivity.lower(activity)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
-        # lift function
-        lambda val: None,
-        
-        
-    # Error FFI converter
-_UniffiConverterTypeActivityError,
+    _rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_activity,
+        _UniffiConverterTypeActivity.lower(activity))
 
-    )
 
 def validate_bitcoin_address(address: "str") -> "ValidationResult":
     _UniffiConverterString.check_lower(address)

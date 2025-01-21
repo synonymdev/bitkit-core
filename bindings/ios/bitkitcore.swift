@@ -6091,19 +6091,12 @@ fileprivate func uniffiFutureContinuationCallback(handle: UInt64, pollResult: In
         print("uniffiFutureContinuationCallback invalid handle")
     }
 }
-public func addTags(activityId: String, tags: [String])async throws  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_add_tags(FfiConverterString.lower(activityId),FfiConverterSequenceString.lower(tags)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_void,
-            completeFunc: ffi_bitkitcore_rust_future_complete_void,
-            freeFunc: ffi_bitkitcore_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: FfiConverterTypeActivityError.lift
-        )
+public func addTags(activityId: String, tags: [String])throws  {try rustCallWithError(FfiConverterTypeActivityError.lift) {
+    uniffi_bitkitcore_fn_func_add_tags(
+        FfiConverterString.lower(activityId),
+        FfiConverterSequenceString.lower(tags),$0
+    )
+}
 }
 public func decode(invoice: String)async throws  -> Scanner {
     return
@@ -6119,75 +6112,48 @@ public func decode(invoice: String)async throws  -> Scanner {
             errorHandler: FfiConverterTypeDecodingError.lift
         )
 }
-public func deleteActivityById(activityId: String)async throws  -> Bool {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_delete_activity_by_id(FfiConverterString.lower(activityId)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_i8,
-            completeFunc: ffi_bitkitcore_rust_future_complete_i8,
-            freeFunc: ffi_bitkitcore_rust_future_free_i8,
-            liftFunc: FfiConverterBool.lift,
-            errorHandler: FfiConverterTypeActivityError.lift
-        )
+public func deleteActivityById(activityId: String)throws  -> Bool {
+    return try  FfiConverterBool.lift(try rustCallWithError(FfiConverterTypeActivityError.lift) {
+    uniffi_bitkitcore_fn_func_delete_activity_by_id(
+        FfiConverterString.lower(activityId),$0
+    )
+})
 }
-public func getActivities(filter: ActivityFilter?, txType: PaymentType?, tags: [String]?, search: String?, minDate: UInt64?, maxDate: UInt64?, limit: UInt32?, sortDirection: SortDirection?)async throws  -> [Activity] {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_get_activities(FfiConverterOptionTypeActivityFilter.lower(filter),FfiConverterOptionTypePaymentType.lower(txType),FfiConverterOptionSequenceString.lower(tags),FfiConverterOptionString.lower(search),FfiConverterOptionUInt64.lower(minDate),FfiConverterOptionUInt64.lower(maxDate),FfiConverterOptionUInt32.lower(limit),FfiConverterOptionTypeSortDirection.lower(sortDirection)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
-            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
-            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterSequenceTypeActivity.lift,
-            errorHandler: FfiConverterTypeActivityError.lift
-        )
+public func getActivities(filter: ActivityFilter?, txType: PaymentType?, tags: [String]?, search: String?, minDate: UInt64?, maxDate: UInt64?, limit: UInt32?, sortDirection: SortDirection?)throws  -> [Activity] {
+    return try  FfiConverterSequenceTypeActivity.lift(try rustCallWithError(FfiConverterTypeActivityError.lift) {
+    uniffi_bitkitcore_fn_func_get_activities(
+        FfiConverterOptionTypeActivityFilter.lower(filter),
+        FfiConverterOptionTypePaymentType.lower(txType),
+        FfiConverterOptionSequenceString.lower(tags),
+        FfiConverterOptionString.lower(search),
+        FfiConverterOptionUInt64.lower(minDate),
+        FfiConverterOptionUInt64.lower(maxDate),
+        FfiConverterOptionUInt32.lower(limit),
+        FfiConverterOptionTypeSortDirection.lower(sortDirection),$0
+    )
+})
 }
-public func getActivitiesByTag(tag: String, limit: UInt32?, sortDirection: SortDirection?)async throws  -> [Activity] {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_get_activities_by_tag(FfiConverterString.lower(tag),FfiConverterOptionUInt32.lower(limit),FfiConverterOptionTypeSortDirection.lower(sortDirection)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
-            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
-            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterSequenceTypeActivity.lift,
-            errorHandler: FfiConverterTypeActivityError.lift
-        )
+public func getActivitiesByTag(tag: String, limit: UInt32?, sortDirection: SortDirection?)throws  -> [Activity] {
+    return try  FfiConverterSequenceTypeActivity.lift(try rustCallWithError(FfiConverterTypeActivityError.lift) {
+    uniffi_bitkitcore_fn_func_get_activities_by_tag(
+        FfiConverterString.lower(tag),
+        FfiConverterOptionUInt32.lower(limit),
+        FfiConverterOptionTypeSortDirection.lower(sortDirection),$0
+    )
+})
 }
-public func getActivityById(activityId: String)async throws  -> Activity? {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_get_activity_by_id(FfiConverterString.lower(activityId)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
-            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
-            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterOptionTypeActivity.lift,
-            errorHandler: FfiConverterTypeActivityError.lift
-        )
+public func getActivityById(activityId: String)throws  -> Activity? {
+    return try  FfiConverterOptionTypeActivity.lift(try rustCallWithError(FfiConverterTypeActivityError.lift) {
+    uniffi_bitkitcore_fn_func_get_activity_by_id(
+        FfiConverterString.lower(activityId),$0
+    )
+})
 }
-public func getAllUniqueTags()async throws  -> [String] {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_get_all_unique_tags(
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
-            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
-            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterSequenceString.lift,
-            errorHandler: FfiConverterTypeActivityError.lift
-        )
+public func getAllUniqueTags()throws  -> [String] {
+    return try  FfiConverterSequenceString.lift(try rustCallWithError(FfiConverterTypeActivityError.lift) {
+    uniffi_bitkitcore_fn_func_get_all_unique_tags($0
+    )
+})
 }
 public func getInfo(refresh: Bool?)async throws  -> IBtInfo? {
     return
@@ -6217,75 +6183,39 @@ public func getLnurlInvoice(address: String, amountSatoshis: UInt64)async throws
             errorHandler: FfiConverterTypeLnurlError.lift
         )
 }
-public func getTags(activityId: String)async throws  -> [String] {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_get_tags(FfiConverterString.lower(activityId)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
-            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
-            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterSequenceString.lift,
-            errorHandler: FfiConverterTypeActivityError.lift
-        )
+public func getTags(activityId: String)throws  -> [String] {
+    return try  FfiConverterSequenceString.lift(try rustCallWithError(FfiConverterTypeActivityError.lift) {
+    uniffi_bitkitcore_fn_func_get_tags(
+        FfiConverterString.lower(activityId),$0
+    )
+})
 }
-public func initDb(basePath: String)async throws  -> String {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_init_db(FfiConverterString.lower(basePath)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
-            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
-            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterString.lift,
-            errorHandler: FfiConverterTypeDbError.lift
-        )
+public func initDb(basePath: String)throws  -> String {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeDbError.lift) {
+    uniffi_bitkitcore_fn_func_init_db(
+        FfiConverterString.lower(basePath),$0
+    )
+})
 }
-public func insertActivity(activity: Activity)async throws  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_insert_activity(FfiConverterTypeActivity.lower(activity)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_void,
-            completeFunc: ffi_bitkitcore_rust_future_complete_void,
-            freeFunc: ffi_bitkitcore_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: FfiConverterTypeActivityError.lift
-        )
+public func insertActivity(activity: Activity)throws  {try rustCallWithError(FfiConverterTypeActivityError.lift) {
+    uniffi_bitkitcore_fn_func_insert_activity(
+        FfiConverterTypeActivity.lower(activity),$0
+    )
 }
-public func removeTags(activityId: String, tags: [String])async throws  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_remove_tags(FfiConverterString.lower(activityId),FfiConverterSequenceString.lower(tags)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_void,
-            completeFunc: ffi_bitkitcore_rust_future_complete_void,
-            freeFunc: ffi_bitkitcore_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: FfiConverterTypeActivityError.lift
-        )
 }
-public func updateActivity(activityId: String, activity: Activity)async throws  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_update_activity(FfiConverterString.lower(activityId),FfiConverterTypeActivity.lower(activity)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_void,
-            completeFunc: ffi_bitkitcore_rust_future_complete_void,
-            freeFunc: ffi_bitkitcore_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: FfiConverterTypeActivityError.lift
-        )
+public func removeTags(activityId: String, tags: [String])throws  {try rustCallWithError(FfiConverterTypeActivityError.lift) {
+    uniffi_bitkitcore_fn_func_remove_tags(
+        FfiConverterString.lower(activityId),
+        FfiConverterSequenceString.lower(tags),$0
+    )
+}
+}
+public func updateActivity(activityId: String, activity: Activity)throws  {try rustCallWithError(FfiConverterTypeActivityError.lift) {
+    uniffi_bitkitcore_fn_func_update_activity(
+        FfiConverterString.lower(activityId),
+        FfiConverterTypeActivity.lower(activity),$0
+    )
+}
 }
 /**
  * Blocktank Module
@@ -6304,19 +6234,11 @@ public func updateBlocktankUrl(newUrl: String)async throws  {
             errorHandler: FfiConverterTypeBlocktankError.lift
         )
 }
-public func upsertActivity(activity: Activity)async throws  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_upsert_activity(FfiConverterTypeActivity.lower(activity)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_void,
-            completeFunc: ffi_bitkitcore_rust_future_complete_void,
-            freeFunc: ffi_bitkitcore_rust_future_free_void,
-            liftFunc: { $0 },
-            errorHandler: FfiConverterTypeActivityError.lift
-        )
+public func upsertActivity(activity: Activity)throws  {try rustCallWithError(FfiConverterTypeActivityError.lift) {
+    uniffi_bitkitcore_fn_func_upsert_activity(
+        FfiConverterTypeActivity.lower(activity),$0
+    )
+}
 }
 public func validateBitcoinAddress(address: String)throws  -> ValidationResult {
     return try  FfiConverterTypeValidationResult.lift(try rustCallWithError(FfiConverterTypeAddressError.lift) {
@@ -6341,25 +6263,25 @@ private var initializationResult: InitializationResult {
     if bindings_contract_version != scaffolding_contract_version {
         return InitializationResult.contractVersionMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_add_tags() != 3539) {
+    if (uniffi_bitkitcore_checksum_func_add_tags() != 63739) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_decode() != 28437) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 10186) {
+    if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_activities() != 10868) {
+    if (uniffi_bitkitcore_checksum_func_get_activities() != 21347) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 40629) {
+    if (uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 52823) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_activity_by_id() != 57834) {
+    if (uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 47129) {
+    if (uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_info() != 43607) {
@@ -6368,25 +6290,25 @@ private var initializationResult: InitializationResult {
     if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_tags() != 63724) {
+    if (uniffi_bitkitcore_checksum_func_get_tags() != 11308) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_init_db() != 7388) {
+    if (uniffi_bitkitcore_checksum_func_init_db() != 9643) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_insert_activity() != 19334) {
+    if (uniffi_bitkitcore_checksum_func_insert_activity() != 1510) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_remove_tags() != 9871) {
+    if (uniffi_bitkitcore_checksum_func_remove_tags() != 58873) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_update_activity() != 58767) {
+    if (uniffi_bitkitcore_checksum_func_update_activity() != 42510) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_update_blocktank_url() != 23665) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_upsert_activity() != 24957) {
+    if (uniffi_bitkitcore_checksum_func_upsert_activity() != 32175) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003) {

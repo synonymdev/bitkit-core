@@ -746,38 +746,38 @@ internal interface UniffiLib : Library {
         
     }
 
-    fun uniffi_bitkitcore_fn_func_add_tags(`activityId`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,
-    ): Long
+    fun uniffi_bitkitcore_fn_func_add_tags(`activityId`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_bitkitcore_fn_func_decode(`invoice`: RustBuffer.ByValue,
     ): Long
-    fun uniffi_bitkitcore_fn_func_delete_activity_by_id(`activityId`: RustBuffer.ByValue,
-    ): Long
-    fun uniffi_bitkitcore_fn_func_get_activities(`filter`: RustBuffer.ByValue,`txType`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,`search`: RustBuffer.ByValue,`minDate`: RustBuffer.ByValue,`maxDate`: RustBuffer.ByValue,`limit`: RustBuffer.ByValue,`sortDirection`: RustBuffer.ByValue,
-    ): Long
-    fun uniffi_bitkitcore_fn_func_get_activities_by_tag(`tag`: RustBuffer.ByValue,`limit`: RustBuffer.ByValue,`sortDirection`: RustBuffer.ByValue,
-    ): Long
-    fun uniffi_bitkitcore_fn_func_get_activity_by_id(`activityId`: RustBuffer.ByValue,
-    ): Long
-    fun uniffi_bitkitcore_fn_func_get_all_unique_tags(
-    ): Long
+    fun uniffi_bitkitcore_fn_func_delete_activity_by_id(`activityId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Byte
+    fun uniffi_bitkitcore_fn_func_get_activities(`filter`: RustBuffer.ByValue,`txType`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,`search`: RustBuffer.ByValue,`minDate`: RustBuffer.ByValue,`maxDate`: RustBuffer.ByValue,`limit`: RustBuffer.ByValue,`sortDirection`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_get_activities_by_tag(`tag`: RustBuffer.ByValue,`limit`: RustBuffer.ByValue,`sortDirection`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_get_activity_by_id(`activityId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_get_all_unique_tags(uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_get_info(`refresh`: RustBuffer.ByValue,
     ): Long
     fun uniffi_bitkitcore_fn_func_get_lnurl_invoice(`address`: RustBuffer.ByValue,`amountSatoshis`: Long,
     ): Long
-    fun uniffi_bitkitcore_fn_func_get_tags(`activityId`: RustBuffer.ByValue,
-    ): Long
-    fun uniffi_bitkitcore_fn_func_init_db(`basePath`: RustBuffer.ByValue,
-    ): Long
-    fun uniffi_bitkitcore_fn_func_insert_activity(`activity`: RustBuffer.ByValue,
-    ): Long
-    fun uniffi_bitkitcore_fn_func_remove_tags(`activityId`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,
-    ): Long
-    fun uniffi_bitkitcore_fn_func_update_activity(`activityId`: RustBuffer.ByValue,`activity`: RustBuffer.ByValue,
-    ): Long
+    fun uniffi_bitkitcore_fn_func_get_tags(`activityId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_init_db(`basePath`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_insert_activity(`activity`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_bitkitcore_fn_func_remove_tags(`activityId`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_bitkitcore_fn_func_update_activity(`activityId`: RustBuffer.ByValue,`activity`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_bitkitcore_fn_func_update_blocktank_url(`newUrl`: RustBuffer.ByValue,
     ): Long
-    fun uniffi_bitkitcore_fn_func_upsert_activity(`activity`: RustBuffer.ByValue,
-    ): Long
+    fun uniffi_bitkitcore_fn_func_upsert_activity(`activity`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_bitkitcore_fn_func_validate_bitcoin_address(`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun ffi_bitkitcore_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
@@ -943,25 +943,25 @@ private fun uniffiCheckContractApiVersion(lib: UniffiLib) {
 
 @Suppress("UNUSED_PARAMETER")
 private fun uniffiCheckApiChecksums(lib: UniffiLib) {
-    if (lib.uniffi_bitkitcore_checksum_func_add_tags() != 3539.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_add_tags() != 63739.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_decode() != 28437.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 10186.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_get_activities() != 10868.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_get_activities() != 21347.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 40629.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 52823.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 57834.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 47129.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_get_info() != 43607.toShort()) {
@@ -970,25 +970,25 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_get_tags() != 63724.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_get_tags() != 11308.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_init_db() != 7388.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_init_db() != 9643.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_insert_activity() != 19334.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_insert_activity() != 1510.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_remove_tags() != 9871.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_remove_tags() != 58873.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_update_activity() != 58767.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_update_activity() != 42510.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_update_blocktank_url() != 23665.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_upsert_activity() != 24957.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_upsert_activity() != 32175.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003.toShort()) {
@@ -5327,21 +5327,14 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
 
 
 
-    @Throws(ActivityException::class)
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-     suspend fun `addTags`(`activityId`: kotlin.String, `tags`: List<kotlin.String>) {
-        return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_add_tags(FfiConverterString.lower(`activityId`),FfiConverterSequenceString.lower(`tags`),),
-        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
-        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
-        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_void(future) },
-        // lift function
-        { Unit },
-        
-        // Error FFI converter
-        ActivityException.ErrorHandler,
-    )
-    }
+    @Throws(ActivityException::class) fun `addTags`(`activityId`: kotlin.String, `tags`: List<kotlin.String>)
+        = 
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_add_tags(
+        FfiConverterString.lower(`activityId`),FfiConverterSequenceString.lower(`tags`),_status)
+}
+    
+    
 
     @Throws(DecodingException::class)
     @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
@@ -5358,80 +5351,55 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
     )
     }
 
-    @Throws(ActivityException::class)
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-     suspend fun `deleteActivityById`(`activityId`: kotlin.String) : kotlin.Boolean {
-        return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_delete_activity_by_id(FfiConverterString.lower(`activityId`),),
-        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_i8(future, callback, continuation) },
-        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_i8(future, continuation) },
-        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_i8(future) },
-        // lift function
-        { FfiConverterBoolean.lift(it) },
-        // Error FFI converter
-        ActivityException.ErrorHandler,
+    @Throws(ActivityException::class) fun `deleteActivityById`(`activityId`: kotlin.String): kotlin.Boolean {
+            return FfiConverterBoolean.lift(
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_delete_activity_by_id(
+        FfiConverterString.lower(`activityId`),_status)
+}
     )
     }
+    
 
-    @Throws(ActivityException::class)
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-     suspend fun `getActivities`(`filter`: ActivityFilter?, `txType`: PaymentType?, `tags`: List<kotlin.String>?, `search`: kotlin.String?, `minDate`: kotlin.ULong?, `maxDate`: kotlin.ULong?, `limit`: kotlin.UInt?, `sortDirection`: SortDirection?) : List<Activity> {
-        return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_activities(FfiConverterOptionalTypeActivityFilter.lower(`filter`),FfiConverterOptionalTypePaymentType.lower(`txType`),FfiConverterOptionalSequenceString.lower(`tags`),FfiConverterOptionalString.lower(`search`),FfiConverterOptionalULong.lower(`minDate`),FfiConverterOptionalULong.lower(`maxDate`),FfiConverterOptionalUInt.lower(`limit`),FfiConverterOptionalTypeSortDirection.lower(`sortDirection`),),
-        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        // lift function
-        { FfiConverterSequenceTypeActivity.lift(it) },
-        // Error FFI converter
-        ActivityException.ErrorHandler,
+    @Throws(ActivityException::class) fun `getActivities`(`filter`: ActivityFilter?, `txType`: PaymentType?, `tags`: List<kotlin.String>?, `search`: kotlin.String?, `minDate`: kotlin.ULong?, `maxDate`: kotlin.ULong?, `limit`: kotlin.UInt?, `sortDirection`: SortDirection?): List<Activity> {
+            return FfiConverterSequenceTypeActivity.lift(
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_activities(
+        FfiConverterOptionalTypeActivityFilter.lower(`filter`),FfiConverterOptionalTypePaymentType.lower(`txType`),FfiConverterOptionalSequenceString.lower(`tags`),FfiConverterOptionalString.lower(`search`),FfiConverterOptionalULong.lower(`minDate`),FfiConverterOptionalULong.lower(`maxDate`),FfiConverterOptionalUInt.lower(`limit`),FfiConverterOptionalTypeSortDirection.lower(`sortDirection`),_status)
+}
     )
     }
+    
 
-    @Throws(ActivityException::class)
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-     suspend fun `getActivitiesByTag`(`tag`: kotlin.String, `limit`: kotlin.UInt?, `sortDirection`: SortDirection?) : List<Activity> {
-        return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_activities_by_tag(FfiConverterString.lower(`tag`),FfiConverterOptionalUInt.lower(`limit`),FfiConverterOptionalTypeSortDirection.lower(`sortDirection`),),
-        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        // lift function
-        { FfiConverterSequenceTypeActivity.lift(it) },
-        // Error FFI converter
-        ActivityException.ErrorHandler,
+    @Throws(ActivityException::class) fun `getActivitiesByTag`(`tag`: kotlin.String, `limit`: kotlin.UInt?, `sortDirection`: SortDirection?): List<Activity> {
+            return FfiConverterSequenceTypeActivity.lift(
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_activities_by_tag(
+        FfiConverterString.lower(`tag`),FfiConverterOptionalUInt.lower(`limit`),FfiConverterOptionalTypeSortDirection.lower(`sortDirection`),_status)
+}
     )
     }
+    
 
-    @Throws(ActivityException::class)
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-     suspend fun `getActivityById`(`activityId`: kotlin.String) : Activity? {
-        return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_activity_by_id(FfiConverterString.lower(`activityId`),),
-        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        // lift function
-        { FfiConverterOptionalTypeActivity.lift(it) },
-        // Error FFI converter
-        ActivityException.ErrorHandler,
+    @Throws(ActivityException::class) fun `getActivityById`(`activityId`: kotlin.String): Activity? {
+            return FfiConverterOptionalTypeActivity.lift(
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_activity_by_id(
+        FfiConverterString.lower(`activityId`),_status)
+}
     )
     }
+    
 
-    @Throws(ActivityException::class)
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-     suspend fun `getAllUniqueTags`() : List<kotlin.String> {
-        return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_all_unique_tags(),
-        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        // lift function
-        { FfiConverterSequenceString.lift(it) },
-        // Error FFI converter
-        ActivityException.ErrorHandler,
+    @Throws(ActivityException::class) fun `getAllUniqueTags`(): List<kotlin.String> {
+            return FfiConverterSequenceString.lift(
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_all_unique_tags(
+        _status)
+}
     )
     }
+    
 
     @Throws(BlocktankException::class)
     @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
@@ -5463,83 +5431,52 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
     )
     }
 
-    @Throws(ActivityException::class)
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-     suspend fun `getTags`(`activityId`: kotlin.String) : List<kotlin.String> {
-        return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_tags(FfiConverterString.lower(`activityId`),),
-        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        // lift function
-        { FfiConverterSequenceString.lift(it) },
-        // Error FFI converter
-        ActivityException.ErrorHandler,
+    @Throws(ActivityException::class) fun `getTags`(`activityId`: kotlin.String): List<kotlin.String> {
+            return FfiConverterSequenceString.lift(
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_tags(
+        FfiConverterString.lower(`activityId`),_status)
+}
     )
     }
+    
 
-    @Throws(DbException::class)
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-     suspend fun `initDb`(`basePath`: kotlin.String) : kotlin.String {
-        return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_init_db(FfiConverterString.lower(`basePath`),),
-        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        // lift function
-        { FfiConverterString.lift(it) },
-        // Error FFI converter
-        DbException.ErrorHandler,
+    @Throws(DbException::class) fun `initDb`(`basePath`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCallWithError(DbException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_init_db(
+        FfiConverterString.lower(`basePath`),_status)
+}
     )
     }
+    
 
-    @Throws(ActivityException::class)
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-     suspend fun `insertActivity`(`activity`: Activity) {
-        return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_insert_activity(FfiConverterTypeActivity.lower(`activity`),),
-        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
-        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
-        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_void(future) },
-        // lift function
-        { Unit },
-        
-        // Error FFI converter
-        ActivityException.ErrorHandler,
-    )
-    }
+    @Throws(ActivityException::class) fun `insertActivity`(`activity`: Activity)
+        = 
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_insert_activity(
+        FfiConverterTypeActivity.lower(`activity`),_status)
+}
+    
+    
 
-    @Throws(ActivityException::class)
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-     suspend fun `removeTags`(`activityId`: kotlin.String, `tags`: List<kotlin.String>) {
-        return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_remove_tags(FfiConverterString.lower(`activityId`),FfiConverterSequenceString.lower(`tags`),),
-        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
-        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
-        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_void(future) },
-        // lift function
-        { Unit },
-        
-        // Error FFI converter
-        ActivityException.ErrorHandler,
-    )
-    }
+    @Throws(ActivityException::class) fun `removeTags`(`activityId`: kotlin.String, `tags`: List<kotlin.String>)
+        = 
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_remove_tags(
+        FfiConverterString.lower(`activityId`),FfiConverterSequenceString.lower(`tags`),_status)
+}
+    
+    
 
-    @Throws(ActivityException::class)
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-     suspend fun `updateActivity`(`activityId`: kotlin.String, `activity`: Activity) {
-        return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_update_activity(FfiConverterString.lower(`activityId`),FfiConverterTypeActivity.lower(`activity`),),
-        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
-        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
-        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_void(future) },
-        // lift function
-        { Unit },
-        
-        // Error FFI converter
-        ActivityException.ErrorHandler,
-    )
-    }
+    @Throws(ActivityException::class) fun `updateActivity`(`activityId`: kotlin.String, `activity`: Activity)
+        = 
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_update_activity(
+        FfiConverterString.lower(`activityId`),FfiConverterTypeActivity.lower(`activity`),_status)
+}
+    
+    
 
         /**
          * Blocktank Module
@@ -5560,21 +5497,14 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
     )
     }
 
-    @Throws(ActivityException::class)
-    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-     suspend fun `upsertActivity`(`activity`: Activity) {
-        return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_upsert_activity(FfiConverterTypeActivity.lower(`activity`),),
-        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
-        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
-        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_void(future) },
-        // lift function
-        { Unit },
-        
-        // Error FFI converter
-        ActivityException.ErrorHandler,
-    )
-    }
+    @Throws(ActivityException::class) fun `upsertActivity`(`activity`: Activity)
+        = 
+    uniffiRustCallWithError(ActivityException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_upsert_activity(
+        FfiConverterTypeActivity.lower(`activity`),_status)
+}
+    
+    
 
     @Throws(AddressException::class) fun `validateBitcoinAddress`(`address`: kotlin.String): ValidationResult {
             return FfiConverterTypeValidationResult.lift(
