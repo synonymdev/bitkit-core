@@ -4838,45 +4838,24 @@ public struct FfiConverterTypeDbError: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> DbError {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-
-        
-
-        
         case 1: return .DbActivityError(
             errorDetails: try FfiConverterTypeActivityError.read(from: &buf)
-            )
-        case 2: return .DbBlocktankError(
-            errorDetails: try FfiConverterTypeBlocktankError.read(from: &buf)
-            )
-        case 3: return .InitializationError(
+        )
+        case 2: return .InitializationError(
             errorDetails: try FfiConverterString.read(from: &buf)
-            )
-
-         default: throw UniffiInternalError.unexpectedEnumCase
+        )
+        default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: DbError, into buf: inout [UInt8]) {
         switch value {
-
-        
-
-        
-        
         case let .DbActivityError(errorDetails):
             writeInt(&buf, Int32(1))
             FfiConverterTypeActivityError.write(errorDetails, into: &buf)
-            
-        
-        case let .DbBlocktankError(errorDetails):
-            writeInt(&buf, Int32(2))
-            FfiConverterTypeBlocktankError.write(errorDetails, into: &buf)
-            
-        
         case let .InitializationError(errorDetails):
-            writeInt(&buf, Int32(3))
+            writeInt(&buf, Int32(2))
             FfiConverterString.write(errorDetails, into: &buf)
-            
         }
     }
 }
