@@ -253,7 +253,7 @@ typedef void (*UniffiForeignFutureCompleteVoid)(uint64_t, UniffiForeignFutureStr
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_TAGS
-void uniffi_bitkitcore_fn_func_add_tags(RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_add_tags(RustBuffer activity_id, RustBuffer tags
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DECODE
@@ -263,28 +263,33 @@ uint64_t uniffi_bitkitcore_fn_func_decode(RustBuffer invoice
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_ACTIVITY_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_ACTIVITY_BY_ID
-int8_t uniffi_bitkitcore_fn_func_delete_activity_by_id(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_delete_activity_by_id(RustBuffer activity_id
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES
-RustBuffer uniffi_bitkitcore_fn_func_get_activities(RustBuffer filter, RustBuffer tx_type, RustBuffer tags, RustBuffer search, RustBuffer min_date, RustBuffer max_date, RustBuffer limit, RustBuffer sort_direction, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_get_activities(RustBuffer filter, RustBuffer tx_type, RustBuffer tags, RustBuffer search, RustBuffer min_date, RustBuffer max_date, RustBuffer limit, RustBuffer sort_direction
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES_BY_TAG
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES_BY_TAG
-RustBuffer uniffi_bitkitcore_fn_func_get_activities_by_tag(RustBuffer tag, RustBuffer limit, RustBuffer sort_direction, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_get_activities_by_tag(RustBuffer tag, RustBuffer limit, RustBuffer sort_direction
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITY_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITY_BY_ID
-RustBuffer uniffi_bitkitcore_fn_func_get_activity_by_id(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_get_activity_by_id(RustBuffer activity_id
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_UNIQUE_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_UNIQUE_TAGS
-RustBuffer uniffi_bitkitcore_fn_func_get_all_unique_tags(RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_get_all_unique_tags(void
     
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_INFO
+uint64_t uniffi_bitkitcore_fn_func_get_info(RustBuffer refresh
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_LNURL_INVOICE
@@ -294,32 +299,37 @@ uint64_t uniffi_bitkitcore_fn_func_get_lnurl_invoice(RustBuffer address, uint64_
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TAGS
-RustBuffer uniffi_bitkitcore_fn_func_get_tags(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_get_tags(RustBuffer activity_id
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INIT_DB
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INIT_DB
-RustBuffer uniffi_bitkitcore_fn_func_init_db(RustBuffer base_path, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_init_db(RustBuffer base_path
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INSERT_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INSERT_ACTIVITY
-void uniffi_bitkitcore_fn_func_insert_activity(RustBuffer activity, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_insert_activity(RustBuffer activity
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_TAGS
-void uniffi_bitkitcore_fn_func_remove_tags(RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_remove_tags(RustBuffer activity_id, RustBuffer tags
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPDATE_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPDATE_ACTIVITY
-void uniffi_bitkitcore_fn_func_update_activity(RustBuffer activity_id, RustBuffer activity, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_update_activity(RustBuffer activity_id, RustBuffer activity
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPDATE_BLOCKTANK_URL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPDATE_BLOCKTANK_URL
+uint64_t uniffi_bitkitcore_fn_func_update_blocktank_url(RustBuffer new_url
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_ACTIVITY
-void uniffi_bitkitcore_fn_func_upsert_activity(RustBuffer activity, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_upsert_activity(RustBuffer activity
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_BITCOIN_ADDRESS
@@ -649,6 +659,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_all_unique_tags(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_INFO
+uint16_t uniffi_bitkitcore_checksum_func_get_info(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_LNURL_INVOICE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_LNURL_INVOICE
 uint16_t uniffi_bitkitcore_checksum_func_get_lnurl_invoice(void
@@ -682,6 +698,12 @@ uint16_t uniffi_bitkitcore_checksum_func_remove_tags(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPDATE_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPDATE_ACTIVITY
 uint16_t uniffi_bitkitcore_checksum_func_update_activity(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPDATE_BLOCKTANK_URL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPDATE_BLOCKTANK_URL
+uint16_t uniffi_bitkitcore_checksum_func_update_blocktank_url(void
     
 );
 #endif
