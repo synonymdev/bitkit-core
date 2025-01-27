@@ -33,9 +33,9 @@ use rust_blocktank_client::{
     CreateOrderOptions as ExternalCreateOrderOptions,
     CreateCjitOptions as ExternalCreateCjitOptions,
 };
+use serde::{Deserialize, Serialize};
 
-
-#[derive(uniffi::Enum)]
+#[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum BitcoinNetworkEnum {
     Mainnet,
     Testnet,
@@ -65,7 +65,7 @@ impl From<BitcoinNetworkEnum> for ExternalBitcoinNetworkEnum {
     }
 }
 
-#[derive(uniffi::Enum)]
+#[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum BtBolt11InvoiceState {
     Pending,
     Holding,
@@ -95,7 +95,7 @@ impl From<BtBolt11InvoiceState> for ExternalBtBolt11InvoiceState {
     }
 }
 
-#[derive(uniffi::Enum, Debug)]
+#[derive(uniffi::Enum, Debug, Deserialize, Serialize)]
 pub enum BtChannelOrderErrorType {
     WrongOrderState,
     PeerNotReachable,
@@ -135,7 +135,7 @@ impl From<BtChannelOrderErrorType> for ExternalBtChannelOrderErrorType {
 }
 
 
-#[derive(uniffi::Enum)]
+#[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum BtOpenChannelState {
     Opening,
     Open,
@@ -163,7 +163,7 @@ impl From<BtOpenChannelState> for ExternalBtOpenChannelState {
 }
 
 
-#[derive(uniffi::Enum)]
+#[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum BtOrderState {
     Created,
     Expired,
@@ -194,7 +194,7 @@ impl From<BtOrderState> for ExternalBtOrderState {
 }
 
 
-#[derive(uniffi::Enum)]
+#[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum BtOrderState2 {
     Created,
     Expired,
@@ -224,7 +224,7 @@ impl From<BtOrderState2> for ExternalBtOrderState2 {
     }
 }
 
-#[derive(uniffi::Enum)]
+#[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum BtPaymentState {
     Created,
     PartiallyPaid,
@@ -258,7 +258,7 @@ impl From<BtPaymentState> for ExternalBtPaymentState {
 }
 
 
-#[derive(uniffi::Enum)]
+#[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum BtPaymentState2 {
     Created,
     Paid,
@@ -292,7 +292,7 @@ impl From<BtPaymentState2> for ExternalBtPaymentState2 {
 }
 
 
-#[derive(uniffi::Enum)]
+#[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum CJitStateEnum {
     Created,
     Completed,
@@ -322,7 +322,7 @@ impl From<CJitStateEnum> for ExternalCJitStateEnum {
     }
 }
 
-#[derive(uniffi::Enum)]
+#[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum ManualRefundStateEnum {
     Created,
     Approved,
@@ -353,7 +353,7 @@ impl From<ManualRefundStateEnum> for ExternalManualRefundStateEnum {
 }
 
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct ILspNode {
     pub alias: String,
     pub pubkey: String,
@@ -383,16 +383,16 @@ impl From<ILspNode> for ExternalILspNode {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtInfoOptions {
-    pub min_channel_size_sat: i64,
-    pub max_channel_size_sat: i64,
-    pub min_expiry_weeks: i32,
-    pub max_expiry_weeks: i32,
-    pub min_payment_confirmations: i32,
-    pub min_high_risk_payment_confirmations: i32,
-    pub max_0_conf_client_balance_sat: i64,
-    pub max_client_balance_sat: i64,
+    pub min_channel_size_sat: u64,
+    pub max_channel_size_sat: u64,
+    pub min_expiry_weeks: u32,
+    pub max_expiry_weeks: u32,
+    pub min_payment_confirmations: u32,
+    pub min_high_risk_payment_confirmations: u32,
+    pub max_0_conf_client_balance_sat: u64,
+    pub max_client_balance_sat: u64,
 }
 
 impl From<ExternalIBtInfoOptions> for IBtInfoOptions {
@@ -426,12 +426,12 @@ impl From<IBtInfoOptions> for ExternalIBtInfoOptions {
 }
 
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IDiscount {
     pub code: String,
-    pub absolute_sat: i64,
+    pub absolute_sat: u64,
     pub relative: f64,
-    pub overall_sat: i64,
+    pub overall_sat: u64,
 }
 
 impl From<ExternalIDiscount> for IDiscount {
@@ -457,12 +457,12 @@ impl From<IDiscount> for ExternalIDiscount {
 }
 
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtBolt11Invoice {
     pub request: String,
     pub state: BtBolt11InvoiceState,
-    pub expires_at: u64,
-    pub updated_at: u64,
+    pub expires_at: String,
+    pub updated_at: String,
 }
 
 impl From<ExternalIBtBolt11Invoice> for IBtBolt11Invoice {
@@ -487,12 +487,12 @@ impl From<IBtBolt11Invoice> for ExternalIBtBolt11Invoice {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtChannelClose {
     pub tx_id: String,
     pub close_type: String, // 'cooperative' | 'force' | 'breach'
     pub initiator: String,  // 'lsp' | 'client'
-    pub registered_at: u64,
+    pub registered_at: String,
 }
 
 impl From<ExternalIBtChannelClose> for IBtChannelClose {
@@ -517,10 +517,10 @@ impl From<IBtChannelClose> for ExternalIBtChannelClose {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct FundingTx {
     pub id: String,
-    pub vout: i32,
+    pub vout: u64,
 }
 
 impl From<ExternalFundingTx> for FundingTx {
@@ -541,7 +541,7 @@ impl From<FundingTx> for ExternalFundingTx {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtChannel {
     pub state: BtOpenChannelState,
     pub lsp_node_pubkey: String,
@@ -583,9 +583,9 @@ impl From<IBtChannel> for ExternalIBtChannel {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IManualRefund {
-    pub amount_sat: i64,
+    pub amount_sat: u64,
     pub target: String,
     pub state: ManualRefundStateEnum,
     pub created_by_name: String,
@@ -622,13 +622,13 @@ impl From<IManualRefund> for ExternalIManualRefund {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtOnchainTransaction {
-    pub amount_sat: i64,
+    pub amount_sat: u64,
     pub tx_id: String,
-    pub vout: i32,
-    pub block_height: Option<i32>,
-    pub block_confirmation_count: i32,
+    pub vout: u32,
+    pub block_height: Option<u32>,
+    pub block_confirmation_count: u32,
     pub fee_rate_sat_per_vbyte: f64,
     pub confirmed: bool,
     pub suspicious_0_conf_reason: String,
@@ -664,11 +664,11 @@ impl From<IBtOnchainTransaction> for ExternalIBtOnchainTransaction {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtOnchainTransactions {
     pub address: String,
-    pub confirmed_sat: i64,
-    pub required_confirmations: i32,
+    pub confirmed_sat: u64,
+    pub required_confirmations: u32,
     pub transactions: Vec<IBtOnchainTransaction>,
 }
 
@@ -694,11 +694,11 @@ impl From<IBtOnchainTransactions> for ExternalIBtOnchainTransactions {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtPayment {
     pub state: BtPaymentState,
     pub state2: BtPaymentState2,
-    pub paid_sat: i64,
+    pub paid_sat: u64,
     pub bolt11_invoice: IBtBolt11Invoice,
     pub onchain: IBtOnchainTransactions,
     pub is_manually_paid: Option<bool>,
@@ -737,10 +737,10 @@ impl From<IBtPayment> for ExternalIBtPayment {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBt0ConfMinTxFeeWindow {
     pub sat_per_vbyte: f64,
-    pub validity_ends_at: u64,
+    pub validity_ends_at: String,
 }
 
 impl From<ExternalIBt0ConfMinTxFeeWindow> for IBt0ConfMinTxFeeWindow {
@@ -761,22 +761,22 @@ impl From<IBt0ConfMinTxFeeWindow> for ExternalIBt0ConfMinTxFeeWindow {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtOrder {
     pub id: String,
     pub state: BtOrderState,
     pub state2: BtOrderState2,
-    pub fee_sat: i64,
-    pub network_fee_sat: i64,
-    pub service_fee_sat: i64,
-    pub lsp_balance_sat: i64,
-    pub client_balance_sat: i64,
+    pub fee_sat: u64,
+    pub network_fee_sat: u64,
+    pub service_fee_sat: u64,
+    pub lsp_balance_sat: u64,
+    pub client_balance_sat: u64,
     pub zero_conf: bool,
     pub zero_reserve: bool,
     pub client_node_id: Option<String>,
-    pub channel_expiry_weeks: i32,
-    pub channel_expires_at: u64,
-    pub order_expires_at: u64,
+    pub channel_expiry_weeks: u32,
+    pub channel_expires_at: String,
+    pub order_expires_at: String,
     pub channel: Option<IBtChannel>,
     pub lsp_node: ILspNode,
     pub lnurl: Option<String>,
@@ -784,8 +784,8 @@ pub struct IBtOrder {
     pub coupon_code: Option<String>,
     pub source: Option<String>,
     pub discount: Option<IDiscount>,
-    pub updated_at: u64,
-    pub created_at: u64,
+    pub updated_at: String,
+    pub created_at: String,
 }
 
 impl From<ExternalIBtOrder> for IBtOrder {
@@ -848,15 +848,15 @@ impl From<IBtOrder> for ExternalIBtOrder {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct ICJitEntry {
     pub id: String,
     pub state: CJitStateEnum,
-    pub fee_sat: i64,
-    pub network_fee_sat: i64,
-    pub service_fee_sat: i64,
-    pub channel_size_sat: i64,
-    pub channel_expiry_weeks: i32,
+    pub fee_sat: u64,
+    pub network_fee_sat: u64,
+    pub service_fee_sat: u64,
+    pub channel_size_sat: u64,
+    pub channel_expiry_weeks: u32,
     pub channel_open_error: Option<String>,
     pub node_id: String,
     pub invoice: IBtBolt11Invoice,
@@ -865,9 +865,9 @@ pub struct ICJitEntry {
     pub coupon_code: String,
     pub source: Option<String>,
     pub discount: Option<IDiscount>,
-    pub expires_at: u64,
-    pub updated_at: u64,
-    pub created_at: u64,
+    pub expires_at: String,
+    pub updated_at: String,
+    pub created_at: String,
 }
 
 impl From<ExternalICJitEntry> for ICJitEntry {
@@ -920,7 +920,7 @@ impl From<ICJitEntry> for ExternalICJitEntry {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtInfoVersions {
     pub http: String,
     pub btc: String,
@@ -947,9 +947,9 @@ impl From<IBtInfoVersions> for ExternalIBtInfoVersions {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtInfo {
-    pub version: i32,
+    pub version: u32,
     pub nodes: Vec<ILspNode>,
     pub options: IBtInfoOptions,
     pub versions: IBtInfoVersions,
@@ -980,11 +980,11 @@ impl From<IBtInfo> for ExternalIBtInfo {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct FeeRates {
-    pub fast: i32,
-    pub mid: i32,
-    pub slow: i32,
+    pub fast: u32,
+    pub mid: u32,
+    pub slow: u32,
 }
 
 impl From<ExternalFeeRates> for FeeRates {
@@ -1006,7 +1006,7 @@ impl From<FeeRates> for ExternalFeeRates {
         }
     }
 }
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtInfoOnchain {
     pub network: BitcoinNetworkEnum,
     pub fee_rates: FeeRates,
@@ -1030,9 +1030,9 @@ impl From<IBtInfoOnchain> for ExternalIBtInfoOnchain {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtEstimateFeeResponse {
-    pub fee_sat: i64,
+    pub fee_sat: u64,
     pub min_0_conf_tx_fee: IBt0ConfMinTxFeeWindow,
 }
 
@@ -1053,11 +1053,11 @@ impl From<IBtEstimateFeeResponse> for ExternalIBtEstimateFeeResponse {
         }
     }
 }
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtEstimateFeeResponse2 {
-    pub fee_sat: i64,
-    pub network_fee_sat: i64,
-    pub service_fee_sat: i64,
+    pub fee_sat: u64,
+    pub network_fee_sat: u64,
+    pub service_fee_sat: u64,
     pub min_0_conf_tx_fee: IBt0ConfMinTxFeeWindow,
 }
 
@@ -1083,9 +1083,9 @@ impl From<IBtEstimateFeeResponse2> for ExternalIBtEstimateFeeResponse2 {
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct CreateOrderOptions {
-    pub client_balance_sat: i64,
+    pub client_balance_sat: u64,
     pub lsp_node_id: Option<String>,
     pub coupon_code: String,
     pub source: Option<String>,
@@ -1095,8 +1095,7 @@ pub struct CreateOrderOptions {
     pub zero_reserve: bool,
     pub client_node_id: Option<String>,
     pub signature: Option<String>,
-    pub timestamp: Option<u64>,
-    pub node_id: Option<String>,
+    pub timestamp: Option<String>,
     pub refund_onchain_address: Option<String>,
     pub announce_channel: bool,
 }
@@ -1115,7 +1114,6 @@ impl From<ExternalCreateOrderOptions> for CreateOrderOptions {
             client_node_id: other.client_node_id,
             signature: other.signature,
             timestamp: other.timestamp,
-            node_id: other.node_id,
             refund_onchain_address: other.refund_onchain_address,
             announce_channel: other.announce_channel,
         }
@@ -1136,14 +1134,13 @@ impl From<CreateOrderOptions> for ExternalCreateOrderOptions {
             client_node_id: other.client_node_id,
             signature: other.signature,
             timestamp: other.timestamp,
-            node_id: other.node_id,
             refund_onchain_address: other.refund_onchain_address,
             announce_channel: other.announce_channel,
         }
     }
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct CreateCjitOptions {
     pub source: Option<String>,
     pub discount_code: Option<String>,

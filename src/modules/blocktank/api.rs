@@ -1,4 +1,4 @@
-use rust_blocktank_client::{IBtInfo};
+use rust_blocktank_client::{CreateCjitOptions, CreateOrderOptions, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, IBtInfo, IBtOrder, ICJitEntry};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError};
 
 impl BlocktankDB {
@@ -11,5 +11,188 @@ impl BlocktankDB {
 
         self.upsert_info(&info).await?;
         Ok(info)
+    }
+
+    /// Creates a new order and stores it in the database
+    pub async fn create_and_store_order(
+        &self,
+        lsp_balance_sat: u64,
+        channel_expiry_weeks: u32,
+        options: Option<CreateOrderOptions>,
+    ) -> Result<IBtOrder, BlocktankError> {
+        let response = self.client.create_order(
+            lsp_balance_sat,
+            channel_expiry_weeks,
+            options
+        ).await;
+
+        println!("Raw API response: {:#?}", response);
+
+        let order = response.map_err(|e| BlocktankError::DataError {
+            error_details: format!("Failed to create order with Blocktank client: {}", e)
+        })?;
+
+        self.upsert_order(&order).await?;
+        Ok(order)
+    }
+
+    pub async fn open_channel(
+        &self,
+        order_id: String,
+        connection_string: String
+    ) -> Result<IBtOrder, BlocktankError> {
+        let response = self.client.open_channel(
+            &order_id,
+            &connection_string,
+        ).await.map_err(|e| BlocktankError::DataError {
+            error_details: format!("Failed to open channel with Blocktank client: {}", e)
+        })?;
+
+        self.upsert_order(&response).await?;
+        Ok(response)
+    }
+
+    /// Fetches and updates multiple orders in the database
+    pub async fn refresh_orders(&self, order_ids: &[String]) -> Result<Vec<IBtOrder>, BlocktankError> {
+        let orders = self.client.get_orders(order_ids)
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to fetch orders: {}", e)
+            })?;
+
+        for order in &orders {
+            self.upsert_order(order).await?;
+        }
+
+        Ok(orders)
+    }
+
+    /// Fetches and stores the active orders in the database
+    pub async fn refresh_active_orders(&self) -> Result<Vec<IBtOrder>, BlocktankError> {
+        let active_orders = self.get_active_orders().await?;
+
+        if active_orders.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let order_ids: Vec<String> = active_orders
+            .iter()
+            .map(|order| order.id.clone())
+            .collect();
+
+        self.refresh_orders(&order_ids).await
+    }
+
+    pub async fn get_min_zero_conf_tx_fee(
+        &self,
+        order_id: String,
+    ) -> Result<IBt0ConfMinTxFeeWindow, BlocktankError> {
+        let response = self.client.get_min_zero_conf_tx_fee(&order_id)
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to get minimum zero-conf transaction fee: {}", e)
+            })?;
+
+        Ok(response)
+    }
+
+    pub async fn estimate_order_fee(
+        &self,
+        lsp_balance_sat: u64,
+        channel_expiry_weeks: u32,
+        options: Option<CreateOrderOptions>,
+    ) -> Result<IBtEstimateFeeResponse, BlocktankError> {
+        let response = self.client.estimate_order_fee(
+            lsp_balance_sat,
+            channel_expiry_weeks,
+            options
+        ).await.map_err(|e| BlocktankError::DataError {
+            error_details: format!("Failed to estimate order fee: {}", e)
+        })?;
+
+        Ok(response)
+    }
+
+    pub async fn estimate_order_fee_full(
+        &self,
+        lsp_balance_sat: u64,
+        channel_expiry_weeks: u32,
+        options: Option<CreateOrderOptions>,
+    ) -> Result<IBtEstimateFeeResponse2, BlocktankError> {
+        let response = self.client.estimate_order_fee_full(
+            lsp_balance_sat,
+            channel_expiry_weeks,
+            options
+        ).await.map_err(|e| BlocktankError::DataError {
+            error_details: format!("Failed to estimate full order fee: {}", e)
+        })?;
+
+        Ok(response)
+    }
+
+    pub async fn create_cjit_entry(
+        &self,
+        channel_size_sat: u64,
+        invoice_sat: u64,
+        invoice_description: &str,
+        node_id: &str,
+        channel_expiry_weeks: u32,
+        options: Option<CreateCjitOptions>,
+    ) -> Result<ICJitEntry, BlocktankError> {
+        let response = self.client.create_cjit_entry(
+            channel_size_sat,
+            invoice_sat,
+            invoice_description,
+            node_id,
+            channel_expiry_weeks,
+            options
+        ).await.map_err(|e| BlocktankError::DataError {
+            error_details: format!("Failed to create CJIT entry: {}", e)
+        })?;
+
+        self.upsert_cjit_entry(&response).await?;
+        Ok(response)
+    }
+
+    /// Fetches a CJIT entry by ID from Blocktank and stores it in the database.
+    /// Returns the fetched CJIT entry if successful.
+    pub async fn refresh_cjit_entry(&self, entry_id: &str) -> Result<ICJitEntry, BlocktankError> {
+        let response = self.client.get_cjit_entry(entry_id)
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to fetch CJIT entry from Blocktank: {}", e)
+            })?;
+
+        self.upsert_cjit_entry(&response).await?;
+        Ok(response)
+    }
+
+    /// Fetches and stores the active CJIT entries in the database
+    pub async fn refresh_active_cjit_entries(&self) -> Result<Vec<ICJitEntry>, BlocktankError> {
+        let active_entries = self.get_active_cjit_entries().await?;
+
+        if active_entries.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let entry_ids: Vec<String> = active_entries
+            .iter()
+            .map(|entry| entry.id.clone())
+            .collect();
+
+        // Since we don't have a bulk refresh method for CJIT entries,
+        // we'll refresh them one by one
+        let mut refreshed_entries = Vec::new();
+        for entry_id in entry_ids {
+            match self.refresh_cjit_entry(&entry_id).await {
+                Ok(entry) => refreshed_entries.push(entry),
+                Err(e) => {
+                    println!("Warning: Failed to refresh CJIT entry {}: {}", entry_id, e);
+                    continue;
+                }
+            }
+        }
+
+        Ok(refreshed_entries)
     }
 }

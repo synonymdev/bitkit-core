@@ -36,21 +36,17 @@ pub const CREATE_ORDERS_TABLE: &str = "
         zero_reserve BOOLEAN NOT NULL,
         client_node_id TEXT,
         channel_expiry_weeks INTEGER NOT NULL CHECK (channel_expiry_weeks > 0),
-        channel_expires_at INTEGER NOT NULL CHECK (channel_expires_at > 0),
-        order_expires_at INTEGER NOT NULL CHECK (order_expires_at > 0),
+        channel_expires_at TEXT NOT NULL,
+        order_expires_at TEXT NOT NULL,
         lnurl TEXT,
         coupon_code TEXT,
         source TEXT,
-        updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-        created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+        updated_at TEXT,
+        created_at TEXT,
         channel_data TEXT,  -- JSON for IBtChannel
         lsp_node_data TEXT NOT NULL,  -- JSON for ILspNode
         payment_data TEXT NOT NULL,  -- JSON for IBtPayment
-        discount_data TEXT,  -- JSON for IDiscount
-        CONSTRAINT check_expires CHECK (
-            channel_expires_at > created_at
-            AND order_expires_at > created_at
-        )
+        discount_data TEXT  -- JSON for IDiscount
     )";
 
 pub const CREATE_INFO_TABLE: &str = "
@@ -60,7 +56,7 @@ pub const CREATE_INFO_TABLE: &str = "
         options TEXT NOT NULL,  -- JSON of IBtInfoOptions
         versions TEXT NOT NULL,  -- JSON of IBtInfoVersions
         onchain TEXT NOT NULL,  -- JSON of IBtInfoOnchain
-        updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+        updated_at TEXT,
         is_current BOOLEAN NOT NULL DEFAULT 1
     )";
 
@@ -77,45 +73,17 @@ pub const CREATE_CJIT_ENTRIES_TABLE: &str = "
         node_id TEXT NOT NULL,
         coupon_code TEXT NOT NULL,
         source TEXT,
-        expires_at INTEGER NOT NULL CHECK (expires_at > 0),
-        updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-        created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+        expires_at TEXT NOT NULL,
+        updated_at TEXT,
+        created_at TEXT,
         invoice_data TEXT NOT NULL,  -- JSON for IBtBolt11Invoice
         channel_data TEXT,  -- JSON for IBtChannel
         lsp_node_data TEXT NOT NULL,  -- JSON for ILspNode
-        discount_data TEXT,  -- JSON for IDiscount
-        CONSTRAINT check_expires CHECK (expires_at > created_at)
+        discount_data TEXT  -- JSON for IDiscount
     )";
 
-/// Trigger statements for automatic timestamp updates and data management
+/// Trigger statements for data management
 pub const TRIGGER_STATEMENTS: &[&str] = &[
-    // Orders update trigger
-    "CREATE TRIGGER IF NOT EXISTS orders_update_trigger
-     AFTER UPDATE ON orders
-     BEGIN
-         UPDATE orders
-         SET updated_at = strftime('%s', 'now')
-         WHERE id = NEW.id;
-     END",
-
-    // Info update trigger with version management
-    "CREATE TRIGGER IF NOT EXISTS info_update_trigger
-     AFTER UPDATE ON info
-     BEGIN
-         UPDATE info
-         SET updated_at = strftime('%s', 'now')
-         WHERE version = NEW.version;
-     END",
-
-    // CJIT entries update trigger
-    "CREATE TRIGGER IF NOT EXISTS cjit_entries_update_trigger
-     AFTER UPDATE ON cjit_entries
-     BEGIN
-         UPDATE cjit_entries
-         SET updated_at = strftime('%s', 'now')
-         WHERE id = NEW.id;
-     END",
-
     // Ensure single current version trigger - INSERT
     "CREATE TRIGGER IF NOT EXISTS ensure_single_current_version_insert
      BEFORE INSERT ON info

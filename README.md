@@ -78,6 +78,92 @@
     ```rust
     fn upsert_activity(activity: Activity) -> Result<(), ActivityError>
     ```
+- Blocktank:
+  - [init_db](src/modules/activity/README.md#usage-examples): Initialize database
+    ```rust
+    fn init_db(base_path: String) -> Result<String, DbError>
+    ```
+    - [update_blocktank_url](src/modules/blocktank/README.md#usage-examples): Update the Blocktank URL
+        ```rust
+        async fn update_blocktank_url(new_url: String) -> Result<(), BlocktankError>
+        ```
+    - [get_info](src/modules/blocktank/README.md#usage-examples): Get service information with optional refresh
+        ```rust
+        async fn get_info(refresh: Option<bool>) -> Result<Option<IBtInfo>, BlocktankError>
+        ```
+    - [create_order](src/modules/blocktank/README.md#usage-examples): Create a new order
+        ```rust
+        async fn create_order(
+            lsp_balance_sat: u64,
+            channel_expiry_weeks: u32,
+            options: Option<CreateOrderOptions>,
+        ) -> Result<IBtOrder, BlocktankError>
+        ```
+    - [open_channel](src/modules/blocktank/README.md#usage-examples): Open a channel for an order
+        ```rust
+        async fn open_channel(
+            order_id: String,
+            connection_string: String,
+        ) -> Result<IBtOrder, BlocktankError>
+        ```
+    - [get_orders](src/modules/blocktank/README.md#usage-examples): Get orders with optional filtering
+        ```rust
+        async fn get_orders(
+            order_ids: Option<Vec<String>>,
+            filter: Option<BtOrderState2>,
+            refresh: bool,
+        ) -> Result<Vec<IBtOrder>, BlocktankError>
+        ```
+    - [refresh_active_orders](src/modules/blocktank/README.md#usage-examples): Refresh all active orders
+        ```rust
+        async fn refresh_active_orders() -> Result<Vec<IBtOrder>, BlocktankError>
+        ```
+    - [get_min_zero_conf_tx_fee](src/modules/blocktank/README.md#usage-examples): Get minimum zero-conf transaction fee for an order
+        ```rust
+        async fn get_min_zero_conf_tx_fee(
+            order_id: String,
+        ) -> Result<IBt0ConfMinTxFeeWindow, BlocktankError>
+        ```
+    - [estimate_order_fee](src/modules/blocktank/README.md#usage-examples): Estimate order fee
+        ```rust
+        async fn estimate_order_fee(
+            lsp_balance_sat: u64,
+            channel_expiry_weeks: u32,
+            options: Option<CreateOrderOptions>,
+        ) -> Result<IBtEstimateFeeResponse, BlocktankError>
+        ```
+    - [estimate_order_fee_full](src/modules/blocktank/README.md#usage-examples): Estimate order fee with full breakdown
+        ```rust
+        async fn estimate_order_fee_full(
+            lsp_balance_sat: u64,
+            channel_expiry_weeks: u32,
+            options: Option<CreateOrderOptions>,
+        ) -> Result<IBtEstimateFeeResponse2, BlocktankError>
+        ```
+    - [create_cjit_entry](src/modules/blocktank/README.md#usage-examples): Create a CJIT entry
+        ```rust
+        async fn create_cjit_entry(
+            channel_size_sat: u64,
+            invoice_sat: u64,
+            invoice_description: String,
+            node_id: String,
+            channel_expiry_weeks: u32,
+            options: Option<CreateCjitOptions>,
+        ) -> Result<ICJitEntry, BlocktankError>
+        ```
+    - [get_cjit_entries](src/modules/blocktank/README.md#usage-examples): Get CJIT entries with optional filtering
+        ```rust
+        async fn get_cjit_entries(
+            entry_ids: Option<Vec<String>>,
+            filter: Option<CJitStateEnum>,
+            refresh: bool,
+        ) -> Result<Vec<ICJitEntry>, BlocktankError>
+        ```
+    - [refresh_active_cjit_entries](src/modules/blocktank/README.md#usage-examples): Refresh all active CJIT entries
+        ```rust
+        async fn refresh_active_cjit_entries() -> Result<Vec<ICJitEntry>, BlocktankError>
+        ```
+
 
 ## Building the Bindings
 
