@@ -463,9 +463,17 @@ def _uniffi_check_contract_api_version(lib):
 def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_add_tags() != 63739:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_create_cjit_entry() != 51504:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_create_order() != 33461:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_decode() != 28437:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_estimate_order_fee() != 9548:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activities() != 21347:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -475,7 +483,15 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_cjit_entries() != 29342:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_info() != 43607:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee() != 6427:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_orders() != 47460:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_tags() != 11308:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -483,9 +499,17 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_insert_activity() != 1510:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_open_channel() != 21402:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries() != 5324:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_refresh_active_orders() != 50661:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_remove_tags() != 58873:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_update_activity() != 42510:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_update_blocktank_url() != 52161:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_upsert_activity() != 32175:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -603,6 +627,21 @@ _UniffiLib.uniffi_bitkitcore_fn_func_add_tags.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_add_tags.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_create_cjit_entry.argtypes = (
+    ctypes.c_uint64,
+    ctypes.c_uint64,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.c_uint32,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_create_cjit_entry.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_create_order.argtypes = (
+    ctypes.c_uint64,
+    ctypes.c_uint32,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_create_order.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_decode.argtypes = (
     _UniffiRustBuffer,
 )
@@ -612,6 +651,18 @@ _UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.restype = ctypes.c_int8
+_UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee.argtypes = (
+    ctypes.c_uint64,
+    ctypes.c_uint32,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee_full.argtypes = (
+    ctypes.c_uint64,
+    ctypes.c_uint32,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee_full.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activities.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -640,11 +691,31 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_cjit_entries.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.c_int8,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_cjit_entries.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_info.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_info.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice.argtypes = (
     _UniffiRustBuffer,
     ctypes.c_uint64,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_min_zero_conf_tx_fee.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_min_zero_conf_tx_fee.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_orders.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.c_int8,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_orders.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_get_tags.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -660,6 +731,17 @@ _UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_open_channel.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_open_channel.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_cjit_entries.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_cjit_entries.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_orders.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_orders.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -672,6 +754,10 @@ _UniffiLib.uniffi_bitkitcore_fn_func_update_activity.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_update_activity.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_update_blocktank_url.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_update_blocktank_url.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_upsert_activity.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -953,12 +1039,24 @@ _UniffiLib.ffi_bitkitcore_rust_future_complete_void.restype = None
 _UniffiLib.uniffi_bitkitcore_checksum_func_add_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_add_tags.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_create_cjit_entry.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_create_cjit_entry.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_create_order.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_create_order.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_decode.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_decode.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_delete_activity_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_delete_activity_by_id.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities.restype = ctypes.c_uint16
@@ -971,9 +1069,21 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.restype = ctypes.c
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_unique_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_unique_tags.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_cjit_entries.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_cjit_entries.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_info.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_info.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_orders.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_orders.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_tags.restype = ctypes.c_uint16
@@ -983,12 +1093,24 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_init_db.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_refresh_active_orders.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_refresh_active_orders.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_tags.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_update_activity.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_update_activity.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_update_blocktank_url.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_update_blocktank_url.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_activity.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_activity.restype = ctypes.c_uint16
@@ -1030,6 +1152,15 @@ class _UniffiConverterUInt64(_UniffiConverterPrimitiveInt):
     @staticmethod
     def write(value, buf):
         buf.write_u64(value)
+
+class _UniffiConverterDouble(_UniffiConverterPrimitiveFloat):
+    @staticmethod
+    def read(buf):
+        return buf.read_double()
+
+    @staticmethod
+    def write(value, buf):
+        buf.write_double(value)
 
 class _UniffiConverterBool:
     @classmethod
@@ -1103,6 +1234,1501 @@ class _UniffiConverterBytes(_UniffiConverterRustBuffer):
     def write(value, buf):
         buf.write_i32(len(value))
         buf.write(value)
+
+
+class CreateCjitOptions:
+    source: "typing.Optional[str]"
+    discount_code: "typing.Optional[str]"
+    @typing.no_type_check
+    def __init__(self, *, source: "typing.Optional[str]", discount_code: "typing.Optional[str]"):
+        self.source = source
+        self.discount_code = discount_code
+
+    def __str__(self):
+        return "CreateCjitOptions(source={}, discount_code={})".format(self.source, self.discount_code)
+
+    def __eq__(self, other):
+        if self.source != other.source:
+            return False
+        if self.discount_code != other.discount_code:
+            return False
+        return True
+
+class _UniffiConverterTypeCreateCjitOptions(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return CreateCjitOptions(
+            source=_UniffiConverterOptionalString.read(buf),
+            discount_code=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterOptionalString.check_lower(value.source)
+        _UniffiConverterOptionalString.check_lower(value.discount_code)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterOptionalString.write(value.source, buf)
+        _UniffiConverterOptionalString.write(value.discount_code, buf)
+
+
+class CreateOrderOptions:
+    client_balance_sat: "int"
+    lsp_node_id: "typing.Optional[str]"
+    coupon_code: "str"
+    source: "typing.Optional[str]"
+    discount_code: "typing.Optional[str]"
+    turbo_channel: "bool"
+    zero_conf_payment: "typing.Optional[bool]"
+    zero_reserve: "bool"
+    client_node_id: "typing.Optional[str]"
+    signature: "typing.Optional[str]"
+    timestamp: "typing.Optional[str]"
+    refund_onchain_address: "typing.Optional[str]"
+    announce_channel: "bool"
+    @typing.no_type_check
+    def __init__(self, *, client_balance_sat: "int", lsp_node_id: "typing.Optional[str]", coupon_code: "str", source: "typing.Optional[str]", discount_code: "typing.Optional[str]", turbo_channel: "bool", zero_conf_payment: "typing.Optional[bool]", zero_reserve: "bool", client_node_id: "typing.Optional[str]", signature: "typing.Optional[str]", timestamp: "typing.Optional[str]", refund_onchain_address: "typing.Optional[str]", announce_channel: "bool"):
+        self.client_balance_sat = client_balance_sat
+        self.lsp_node_id = lsp_node_id
+        self.coupon_code = coupon_code
+        self.source = source
+        self.discount_code = discount_code
+        self.turbo_channel = turbo_channel
+        self.zero_conf_payment = zero_conf_payment
+        self.zero_reserve = zero_reserve
+        self.client_node_id = client_node_id
+        self.signature = signature
+        self.timestamp = timestamp
+        self.refund_onchain_address = refund_onchain_address
+        self.announce_channel = announce_channel
+
+    def __str__(self):
+        return "CreateOrderOptions(client_balance_sat={}, lsp_node_id={}, coupon_code={}, source={}, discount_code={}, turbo_channel={}, zero_conf_payment={}, zero_reserve={}, client_node_id={}, signature={}, timestamp={}, refund_onchain_address={}, announce_channel={})".format(self.client_balance_sat, self.lsp_node_id, self.coupon_code, self.source, self.discount_code, self.turbo_channel, self.zero_conf_payment, self.zero_reserve, self.client_node_id, self.signature, self.timestamp, self.refund_onchain_address, self.announce_channel)
+
+    def __eq__(self, other):
+        if self.client_balance_sat != other.client_balance_sat:
+            return False
+        if self.lsp_node_id != other.lsp_node_id:
+            return False
+        if self.coupon_code != other.coupon_code:
+            return False
+        if self.source != other.source:
+            return False
+        if self.discount_code != other.discount_code:
+            return False
+        if self.turbo_channel != other.turbo_channel:
+            return False
+        if self.zero_conf_payment != other.zero_conf_payment:
+            return False
+        if self.zero_reserve != other.zero_reserve:
+            return False
+        if self.client_node_id != other.client_node_id:
+            return False
+        if self.signature != other.signature:
+            return False
+        if self.timestamp != other.timestamp:
+            return False
+        if self.refund_onchain_address != other.refund_onchain_address:
+            return False
+        if self.announce_channel != other.announce_channel:
+            return False
+        return True
+
+class _UniffiConverterTypeCreateOrderOptions(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return CreateOrderOptions(
+            client_balance_sat=_UniffiConverterUInt64.read(buf),
+            lsp_node_id=_UniffiConverterOptionalString.read(buf),
+            coupon_code=_UniffiConverterString.read(buf),
+            source=_UniffiConverterOptionalString.read(buf),
+            discount_code=_UniffiConverterOptionalString.read(buf),
+            turbo_channel=_UniffiConverterBool.read(buf),
+            zero_conf_payment=_UniffiConverterOptionalBool.read(buf),
+            zero_reserve=_UniffiConverterBool.read(buf),
+            client_node_id=_UniffiConverterOptionalString.read(buf),
+            signature=_UniffiConverterOptionalString.read(buf),
+            timestamp=_UniffiConverterOptionalString.read(buf),
+            refund_onchain_address=_UniffiConverterOptionalString.read(buf),
+            announce_channel=_UniffiConverterBool.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.client_balance_sat)
+        _UniffiConverterOptionalString.check_lower(value.lsp_node_id)
+        _UniffiConverterString.check_lower(value.coupon_code)
+        _UniffiConverterOptionalString.check_lower(value.source)
+        _UniffiConverterOptionalString.check_lower(value.discount_code)
+        _UniffiConverterBool.check_lower(value.turbo_channel)
+        _UniffiConverterOptionalBool.check_lower(value.zero_conf_payment)
+        _UniffiConverterBool.check_lower(value.zero_reserve)
+        _UniffiConverterOptionalString.check_lower(value.client_node_id)
+        _UniffiConverterOptionalString.check_lower(value.signature)
+        _UniffiConverterOptionalString.check_lower(value.timestamp)
+        _UniffiConverterOptionalString.check_lower(value.refund_onchain_address)
+        _UniffiConverterBool.check_lower(value.announce_channel)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.client_balance_sat, buf)
+        _UniffiConverterOptionalString.write(value.lsp_node_id, buf)
+        _UniffiConverterString.write(value.coupon_code, buf)
+        _UniffiConverterOptionalString.write(value.source, buf)
+        _UniffiConverterOptionalString.write(value.discount_code, buf)
+        _UniffiConverterBool.write(value.turbo_channel, buf)
+        _UniffiConverterOptionalBool.write(value.zero_conf_payment, buf)
+        _UniffiConverterBool.write(value.zero_reserve, buf)
+        _UniffiConverterOptionalString.write(value.client_node_id, buf)
+        _UniffiConverterOptionalString.write(value.signature, buf)
+        _UniffiConverterOptionalString.write(value.timestamp, buf)
+        _UniffiConverterOptionalString.write(value.refund_onchain_address, buf)
+        _UniffiConverterBool.write(value.announce_channel, buf)
+
+
+class ErrorData:
+    error_details: "str"
+    @typing.no_type_check
+    def __init__(self, *, error_details: "str"):
+        self.error_details = error_details
+
+    def __str__(self):
+        return "ErrorData(error_details={})".format(self.error_details)
+
+    def __eq__(self, other):
+        if self.error_details != other.error_details:
+            return False
+        return True
+
+class _UniffiConverterTypeErrorData(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return ErrorData(
+            error_details=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.error_details)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.error_details, buf)
+
+
+class FeeRates:
+    fast: "int"
+    mid: "int"
+    slow: "int"
+    @typing.no_type_check
+    def __init__(self, *, fast: "int", mid: "int", slow: "int"):
+        self.fast = fast
+        self.mid = mid
+        self.slow = slow
+
+    def __str__(self):
+        return "FeeRates(fast={}, mid={}, slow={})".format(self.fast, self.mid, self.slow)
+
+    def __eq__(self, other):
+        if self.fast != other.fast:
+            return False
+        if self.mid != other.mid:
+            return False
+        if self.slow != other.slow:
+            return False
+        return True
+
+class _UniffiConverterTypeFeeRates(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return FeeRates(
+            fast=_UniffiConverterUInt32.read(buf),
+            mid=_UniffiConverterUInt32.read(buf),
+            slow=_UniffiConverterUInt32.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt32.check_lower(value.fast)
+        _UniffiConverterUInt32.check_lower(value.mid)
+        _UniffiConverterUInt32.check_lower(value.slow)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt32.write(value.fast, buf)
+        _UniffiConverterUInt32.write(value.mid, buf)
+        _UniffiConverterUInt32.write(value.slow, buf)
+
+
+class FundingTx:
+    id: "str"
+    vout: "int"
+    @typing.no_type_check
+    def __init__(self, *, id: "str", vout: "int"):
+        self.id = id
+        self.vout = vout
+
+    def __str__(self):
+        return "FundingTx(id={}, vout={})".format(self.id, self.vout)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.vout != other.vout:
+            return False
+        return True
+
+class _UniffiConverterTypeFundingTx(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return FundingTx(
+            id=_UniffiConverterString.read(buf),
+            vout=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterUInt64.check_lower(value.vout)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterUInt64.write(value.vout, buf)
+
+
+class IBt0ConfMinTxFeeWindow:
+    sat_per_vbyte: "float"
+    validity_ends_at: "str"
+    @typing.no_type_check
+    def __init__(self, *, sat_per_vbyte: "float", validity_ends_at: "str"):
+        self.sat_per_vbyte = sat_per_vbyte
+        self.validity_ends_at = validity_ends_at
+
+    def __str__(self):
+        return "IBt0ConfMinTxFeeWindow(sat_per_vbyte={}, validity_ends_at={})".format(self.sat_per_vbyte, self.validity_ends_at)
+
+    def __eq__(self, other):
+        if self.sat_per_vbyte != other.sat_per_vbyte:
+            return False
+        if self.validity_ends_at != other.validity_ends_at:
+            return False
+        return True
+
+class _UniffiConverterTypeIBt0ConfMinTxFeeWindow(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBt0ConfMinTxFeeWindow(
+            sat_per_vbyte=_UniffiConverterDouble.read(buf),
+            validity_ends_at=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterDouble.check_lower(value.sat_per_vbyte)
+        _UniffiConverterString.check_lower(value.validity_ends_at)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterDouble.write(value.sat_per_vbyte, buf)
+        _UniffiConverterString.write(value.validity_ends_at, buf)
+
+
+class IBtBolt11Invoice:
+    request: "str"
+    state: "BtBolt11InvoiceState"
+    expires_at: "str"
+    updated_at: "str"
+    @typing.no_type_check
+    def __init__(self, *, request: "str", state: "BtBolt11InvoiceState", expires_at: "str", updated_at: "str"):
+        self.request = request
+        self.state = state
+        self.expires_at = expires_at
+        self.updated_at = updated_at
+
+    def __str__(self):
+        return "IBtBolt11Invoice(request={}, state={}, expires_at={}, updated_at={})".format(self.request, self.state, self.expires_at, self.updated_at)
+
+    def __eq__(self, other):
+        if self.request != other.request:
+            return False
+        if self.state != other.state:
+            return False
+        if self.expires_at != other.expires_at:
+            return False
+        if self.updated_at != other.updated_at:
+            return False
+        return True
+
+class _UniffiConverterTypeIBtBolt11Invoice(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBtBolt11Invoice(
+            request=_UniffiConverterString.read(buf),
+            state=_UniffiConverterTypeBtBolt11InvoiceState.read(buf),
+            expires_at=_UniffiConverterString.read(buf),
+            updated_at=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.request)
+        _UniffiConverterTypeBtBolt11InvoiceState.check_lower(value.state)
+        _UniffiConverterString.check_lower(value.expires_at)
+        _UniffiConverterString.check_lower(value.updated_at)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.request, buf)
+        _UniffiConverterTypeBtBolt11InvoiceState.write(value.state, buf)
+        _UniffiConverterString.write(value.expires_at, buf)
+        _UniffiConverterString.write(value.updated_at, buf)
+
+
+class IBtChannel:
+    state: "BtOpenChannelState"
+    lsp_node_pubkey: "str"
+    client_node_pubkey: "str"
+    announce_channel: "bool"
+    funding_tx: "FundingTx"
+    closing_tx_id: "typing.Optional[str]"
+    close: "typing.Optional[IBtChannelClose]"
+    short_channel_id: "typing.Optional[str]"
+    @typing.no_type_check
+    def __init__(self, *, state: "BtOpenChannelState", lsp_node_pubkey: "str", client_node_pubkey: "str", announce_channel: "bool", funding_tx: "FundingTx", closing_tx_id: "typing.Optional[str]", close: "typing.Optional[IBtChannelClose]", short_channel_id: "typing.Optional[str]"):
+        self.state = state
+        self.lsp_node_pubkey = lsp_node_pubkey
+        self.client_node_pubkey = client_node_pubkey
+        self.announce_channel = announce_channel
+        self.funding_tx = funding_tx
+        self.closing_tx_id = closing_tx_id
+        self.close = close
+        self.short_channel_id = short_channel_id
+
+    def __str__(self):
+        return "IBtChannel(state={}, lsp_node_pubkey={}, client_node_pubkey={}, announce_channel={}, funding_tx={}, closing_tx_id={}, close={}, short_channel_id={})".format(self.state, self.lsp_node_pubkey, self.client_node_pubkey, self.announce_channel, self.funding_tx, self.closing_tx_id, self.close, self.short_channel_id)
+
+    def __eq__(self, other):
+        if self.state != other.state:
+            return False
+        if self.lsp_node_pubkey != other.lsp_node_pubkey:
+            return False
+        if self.client_node_pubkey != other.client_node_pubkey:
+            return False
+        if self.announce_channel != other.announce_channel:
+            return False
+        if self.funding_tx != other.funding_tx:
+            return False
+        if self.closing_tx_id != other.closing_tx_id:
+            return False
+        if self.close != other.close:
+            return False
+        if self.short_channel_id != other.short_channel_id:
+            return False
+        return True
+
+class _UniffiConverterTypeIBtChannel(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBtChannel(
+            state=_UniffiConverterTypeBtOpenChannelState.read(buf),
+            lsp_node_pubkey=_UniffiConverterString.read(buf),
+            client_node_pubkey=_UniffiConverterString.read(buf),
+            announce_channel=_UniffiConverterBool.read(buf),
+            funding_tx=_UniffiConverterTypeFundingTx.read(buf),
+            closing_tx_id=_UniffiConverterOptionalString.read(buf),
+            close=_UniffiConverterOptionalTypeIBtChannelClose.read(buf),
+            short_channel_id=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterTypeBtOpenChannelState.check_lower(value.state)
+        _UniffiConverterString.check_lower(value.lsp_node_pubkey)
+        _UniffiConverterString.check_lower(value.client_node_pubkey)
+        _UniffiConverterBool.check_lower(value.announce_channel)
+        _UniffiConverterTypeFundingTx.check_lower(value.funding_tx)
+        _UniffiConverterOptionalString.check_lower(value.closing_tx_id)
+        _UniffiConverterOptionalTypeIBtChannelClose.check_lower(value.close)
+        _UniffiConverterOptionalString.check_lower(value.short_channel_id)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterTypeBtOpenChannelState.write(value.state, buf)
+        _UniffiConverterString.write(value.lsp_node_pubkey, buf)
+        _UniffiConverterString.write(value.client_node_pubkey, buf)
+        _UniffiConverterBool.write(value.announce_channel, buf)
+        _UniffiConverterTypeFundingTx.write(value.funding_tx, buf)
+        _UniffiConverterOptionalString.write(value.closing_tx_id, buf)
+        _UniffiConverterOptionalTypeIBtChannelClose.write(value.close, buf)
+        _UniffiConverterOptionalString.write(value.short_channel_id, buf)
+
+
+class IBtChannelClose:
+    tx_id: "str"
+    close_type: "str"
+    initiator: "str"
+    registered_at: "str"
+    @typing.no_type_check
+    def __init__(self, *, tx_id: "str", close_type: "str", initiator: "str", registered_at: "str"):
+        self.tx_id = tx_id
+        self.close_type = close_type
+        self.initiator = initiator
+        self.registered_at = registered_at
+
+    def __str__(self):
+        return "IBtChannelClose(tx_id={}, close_type={}, initiator={}, registered_at={})".format(self.tx_id, self.close_type, self.initiator, self.registered_at)
+
+    def __eq__(self, other):
+        if self.tx_id != other.tx_id:
+            return False
+        if self.close_type != other.close_type:
+            return False
+        if self.initiator != other.initiator:
+            return False
+        if self.registered_at != other.registered_at:
+            return False
+        return True
+
+class _UniffiConverterTypeIBtChannelClose(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBtChannelClose(
+            tx_id=_UniffiConverterString.read(buf),
+            close_type=_UniffiConverterString.read(buf),
+            initiator=_UniffiConverterString.read(buf),
+            registered_at=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.tx_id)
+        _UniffiConverterString.check_lower(value.close_type)
+        _UniffiConverterString.check_lower(value.initiator)
+        _UniffiConverterString.check_lower(value.registered_at)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.tx_id, buf)
+        _UniffiConverterString.write(value.close_type, buf)
+        _UniffiConverterString.write(value.initiator, buf)
+        _UniffiConverterString.write(value.registered_at, buf)
+
+
+class IBtEstimateFeeResponse:
+    fee_sat: "int"
+    min_0_conf_tx_fee: "IBt0ConfMinTxFeeWindow"
+    @typing.no_type_check
+    def __init__(self, *, fee_sat: "int", min_0_conf_tx_fee: "IBt0ConfMinTxFeeWindow"):
+        self.fee_sat = fee_sat
+        self.min_0_conf_tx_fee = min_0_conf_tx_fee
+
+    def __str__(self):
+        return "IBtEstimateFeeResponse(fee_sat={}, min_0_conf_tx_fee={})".format(self.fee_sat, self.min_0_conf_tx_fee)
+
+    def __eq__(self, other):
+        if self.fee_sat != other.fee_sat:
+            return False
+        if self.min_0_conf_tx_fee != other.min_0_conf_tx_fee:
+            return False
+        return True
+
+class _UniffiConverterTypeIBtEstimateFeeResponse(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBtEstimateFeeResponse(
+            fee_sat=_UniffiConverterUInt64.read(buf),
+            min_0_conf_tx_fee=_UniffiConverterTypeIBt0ConfMinTxFeeWindow.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.fee_sat)
+        _UniffiConverterTypeIBt0ConfMinTxFeeWindow.check_lower(value.min_0_conf_tx_fee)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.fee_sat, buf)
+        _UniffiConverterTypeIBt0ConfMinTxFeeWindow.write(value.min_0_conf_tx_fee, buf)
+
+
+class IBtEstimateFeeResponse2:
+    fee_sat: "int"
+    network_fee_sat: "int"
+    service_fee_sat: "int"
+    min_0_conf_tx_fee: "IBt0ConfMinTxFeeWindow"
+    @typing.no_type_check
+    def __init__(self, *, fee_sat: "int", network_fee_sat: "int", service_fee_sat: "int", min_0_conf_tx_fee: "IBt0ConfMinTxFeeWindow"):
+        self.fee_sat = fee_sat
+        self.network_fee_sat = network_fee_sat
+        self.service_fee_sat = service_fee_sat
+        self.min_0_conf_tx_fee = min_0_conf_tx_fee
+
+    def __str__(self):
+        return "IBtEstimateFeeResponse2(fee_sat={}, network_fee_sat={}, service_fee_sat={}, min_0_conf_tx_fee={})".format(self.fee_sat, self.network_fee_sat, self.service_fee_sat, self.min_0_conf_tx_fee)
+
+    def __eq__(self, other):
+        if self.fee_sat != other.fee_sat:
+            return False
+        if self.network_fee_sat != other.network_fee_sat:
+            return False
+        if self.service_fee_sat != other.service_fee_sat:
+            return False
+        if self.min_0_conf_tx_fee != other.min_0_conf_tx_fee:
+            return False
+        return True
+
+class _UniffiConverterTypeIBtEstimateFeeResponse2(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBtEstimateFeeResponse2(
+            fee_sat=_UniffiConverterUInt64.read(buf),
+            network_fee_sat=_UniffiConverterUInt64.read(buf),
+            service_fee_sat=_UniffiConverterUInt64.read(buf),
+            min_0_conf_tx_fee=_UniffiConverterTypeIBt0ConfMinTxFeeWindow.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.fee_sat)
+        _UniffiConverterUInt64.check_lower(value.network_fee_sat)
+        _UniffiConverterUInt64.check_lower(value.service_fee_sat)
+        _UniffiConverterTypeIBt0ConfMinTxFeeWindow.check_lower(value.min_0_conf_tx_fee)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.fee_sat, buf)
+        _UniffiConverterUInt64.write(value.network_fee_sat, buf)
+        _UniffiConverterUInt64.write(value.service_fee_sat, buf)
+        _UniffiConverterTypeIBt0ConfMinTxFeeWindow.write(value.min_0_conf_tx_fee, buf)
+
+
+class IBtInfo:
+    version: "int"
+    nodes: "typing.List[ILspNode]"
+    options: "IBtInfoOptions"
+    versions: "IBtInfoVersions"
+    onchain: "IBtInfoOnchain"
+    @typing.no_type_check
+    def __init__(self, *, version: "int", nodes: "typing.List[ILspNode]", options: "IBtInfoOptions", versions: "IBtInfoVersions", onchain: "IBtInfoOnchain"):
+        self.version = version
+        self.nodes = nodes
+        self.options = options
+        self.versions = versions
+        self.onchain = onchain
+
+    def __str__(self):
+        return "IBtInfo(version={}, nodes={}, options={}, versions={}, onchain={})".format(self.version, self.nodes, self.options, self.versions, self.onchain)
+
+    def __eq__(self, other):
+        if self.version != other.version:
+            return False
+        if self.nodes != other.nodes:
+            return False
+        if self.options != other.options:
+            return False
+        if self.versions != other.versions:
+            return False
+        if self.onchain != other.onchain:
+            return False
+        return True
+
+class _UniffiConverterTypeIBtInfo(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBtInfo(
+            version=_UniffiConverterUInt32.read(buf),
+            nodes=_UniffiConverterSequenceTypeILspNode.read(buf),
+            options=_UniffiConverterTypeIBtInfoOptions.read(buf),
+            versions=_UniffiConverterTypeIBtInfoVersions.read(buf),
+            onchain=_UniffiConverterTypeIBtInfoOnchain.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt32.check_lower(value.version)
+        _UniffiConverterSequenceTypeILspNode.check_lower(value.nodes)
+        _UniffiConverterTypeIBtInfoOptions.check_lower(value.options)
+        _UniffiConverterTypeIBtInfoVersions.check_lower(value.versions)
+        _UniffiConverterTypeIBtInfoOnchain.check_lower(value.onchain)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt32.write(value.version, buf)
+        _UniffiConverterSequenceTypeILspNode.write(value.nodes, buf)
+        _UniffiConverterTypeIBtInfoOptions.write(value.options, buf)
+        _UniffiConverterTypeIBtInfoVersions.write(value.versions, buf)
+        _UniffiConverterTypeIBtInfoOnchain.write(value.onchain, buf)
+
+
+class IBtInfoOnchain:
+    network: "BitcoinNetworkEnum"
+    fee_rates: "FeeRates"
+    @typing.no_type_check
+    def __init__(self, *, network: "BitcoinNetworkEnum", fee_rates: "FeeRates"):
+        self.network = network
+        self.fee_rates = fee_rates
+
+    def __str__(self):
+        return "IBtInfoOnchain(network={}, fee_rates={})".format(self.network, self.fee_rates)
+
+    def __eq__(self, other):
+        if self.network != other.network:
+            return False
+        if self.fee_rates != other.fee_rates:
+            return False
+        return True
+
+class _UniffiConverterTypeIBtInfoOnchain(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBtInfoOnchain(
+            network=_UniffiConverterTypeBitcoinNetworkEnum.read(buf),
+            fee_rates=_UniffiConverterTypeFeeRates.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterTypeBitcoinNetworkEnum.check_lower(value.network)
+        _UniffiConverterTypeFeeRates.check_lower(value.fee_rates)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterTypeBitcoinNetworkEnum.write(value.network, buf)
+        _UniffiConverterTypeFeeRates.write(value.fee_rates, buf)
+
+
+class IBtInfoOptions:
+    min_channel_size_sat: "int"
+    max_channel_size_sat: "int"
+    min_expiry_weeks: "int"
+    max_expiry_weeks: "int"
+    min_payment_confirmations: "int"
+    min_high_risk_payment_confirmations: "int"
+    max_0_conf_client_balance_sat: "int"
+    max_client_balance_sat: "int"
+    @typing.no_type_check
+    def __init__(self, *, min_channel_size_sat: "int", max_channel_size_sat: "int", min_expiry_weeks: "int", max_expiry_weeks: "int", min_payment_confirmations: "int", min_high_risk_payment_confirmations: "int", max_0_conf_client_balance_sat: "int", max_client_balance_sat: "int"):
+        self.min_channel_size_sat = min_channel_size_sat
+        self.max_channel_size_sat = max_channel_size_sat
+        self.min_expiry_weeks = min_expiry_weeks
+        self.max_expiry_weeks = max_expiry_weeks
+        self.min_payment_confirmations = min_payment_confirmations
+        self.min_high_risk_payment_confirmations = min_high_risk_payment_confirmations
+        self.max_0_conf_client_balance_sat = max_0_conf_client_balance_sat
+        self.max_client_balance_sat = max_client_balance_sat
+
+    def __str__(self):
+        return "IBtInfoOptions(min_channel_size_sat={}, max_channel_size_sat={}, min_expiry_weeks={}, max_expiry_weeks={}, min_payment_confirmations={}, min_high_risk_payment_confirmations={}, max_0_conf_client_balance_sat={}, max_client_balance_sat={})".format(self.min_channel_size_sat, self.max_channel_size_sat, self.min_expiry_weeks, self.max_expiry_weeks, self.min_payment_confirmations, self.min_high_risk_payment_confirmations, self.max_0_conf_client_balance_sat, self.max_client_balance_sat)
+
+    def __eq__(self, other):
+        if self.min_channel_size_sat != other.min_channel_size_sat:
+            return False
+        if self.max_channel_size_sat != other.max_channel_size_sat:
+            return False
+        if self.min_expiry_weeks != other.min_expiry_weeks:
+            return False
+        if self.max_expiry_weeks != other.max_expiry_weeks:
+            return False
+        if self.min_payment_confirmations != other.min_payment_confirmations:
+            return False
+        if self.min_high_risk_payment_confirmations != other.min_high_risk_payment_confirmations:
+            return False
+        if self.max_0_conf_client_balance_sat != other.max_0_conf_client_balance_sat:
+            return False
+        if self.max_client_balance_sat != other.max_client_balance_sat:
+            return False
+        return True
+
+class _UniffiConverterTypeIBtInfoOptions(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBtInfoOptions(
+            min_channel_size_sat=_UniffiConverterUInt64.read(buf),
+            max_channel_size_sat=_UniffiConverterUInt64.read(buf),
+            min_expiry_weeks=_UniffiConverterUInt32.read(buf),
+            max_expiry_weeks=_UniffiConverterUInt32.read(buf),
+            min_payment_confirmations=_UniffiConverterUInt32.read(buf),
+            min_high_risk_payment_confirmations=_UniffiConverterUInt32.read(buf),
+            max_0_conf_client_balance_sat=_UniffiConverterUInt64.read(buf),
+            max_client_balance_sat=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.min_channel_size_sat)
+        _UniffiConverterUInt64.check_lower(value.max_channel_size_sat)
+        _UniffiConverterUInt32.check_lower(value.min_expiry_weeks)
+        _UniffiConverterUInt32.check_lower(value.max_expiry_weeks)
+        _UniffiConverterUInt32.check_lower(value.min_payment_confirmations)
+        _UniffiConverterUInt32.check_lower(value.min_high_risk_payment_confirmations)
+        _UniffiConverterUInt64.check_lower(value.max_0_conf_client_balance_sat)
+        _UniffiConverterUInt64.check_lower(value.max_client_balance_sat)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.min_channel_size_sat, buf)
+        _UniffiConverterUInt64.write(value.max_channel_size_sat, buf)
+        _UniffiConverterUInt32.write(value.min_expiry_weeks, buf)
+        _UniffiConverterUInt32.write(value.max_expiry_weeks, buf)
+        _UniffiConverterUInt32.write(value.min_payment_confirmations, buf)
+        _UniffiConverterUInt32.write(value.min_high_risk_payment_confirmations, buf)
+        _UniffiConverterUInt64.write(value.max_0_conf_client_balance_sat, buf)
+        _UniffiConverterUInt64.write(value.max_client_balance_sat, buf)
+
+
+class IBtInfoVersions:
+    http: "str"
+    btc: "str"
+    ln2: "str"
+    @typing.no_type_check
+    def __init__(self, *, http: "str", btc: "str", ln2: "str"):
+        self.http = http
+        self.btc = btc
+        self.ln2 = ln2
+
+    def __str__(self):
+        return "IBtInfoVersions(http={}, btc={}, ln2={})".format(self.http, self.btc, self.ln2)
+
+    def __eq__(self, other):
+        if self.http != other.http:
+            return False
+        if self.btc != other.btc:
+            return False
+        if self.ln2 != other.ln2:
+            return False
+        return True
+
+class _UniffiConverterTypeIBtInfoVersions(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBtInfoVersions(
+            http=_UniffiConverterString.read(buf),
+            btc=_UniffiConverterString.read(buf),
+            ln2=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.http)
+        _UniffiConverterString.check_lower(value.btc)
+        _UniffiConverterString.check_lower(value.ln2)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.http, buf)
+        _UniffiConverterString.write(value.btc, buf)
+        _UniffiConverterString.write(value.ln2, buf)
+
+
+class IBtOnchainTransaction:
+    amount_sat: "int"
+    tx_id: "str"
+    vout: "int"
+    block_height: "typing.Optional[int]"
+    block_confirmation_count: "int"
+    fee_rate_sat_per_vbyte: "float"
+    confirmed: "bool"
+    suspicious_0_conf_reason: "str"
+    @typing.no_type_check
+    def __init__(self, *, amount_sat: "int", tx_id: "str", vout: "int", block_height: "typing.Optional[int]", block_confirmation_count: "int", fee_rate_sat_per_vbyte: "float", confirmed: "bool", suspicious_0_conf_reason: "str"):
+        self.amount_sat = amount_sat
+        self.tx_id = tx_id
+        self.vout = vout
+        self.block_height = block_height
+        self.block_confirmation_count = block_confirmation_count
+        self.fee_rate_sat_per_vbyte = fee_rate_sat_per_vbyte
+        self.confirmed = confirmed
+        self.suspicious_0_conf_reason = suspicious_0_conf_reason
+
+    def __str__(self):
+        return "IBtOnchainTransaction(amount_sat={}, tx_id={}, vout={}, block_height={}, block_confirmation_count={}, fee_rate_sat_per_vbyte={}, confirmed={}, suspicious_0_conf_reason={})".format(self.amount_sat, self.tx_id, self.vout, self.block_height, self.block_confirmation_count, self.fee_rate_sat_per_vbyte, self.confirmed, self.suspicious_0_conf_reason)
+
+    def __eq__(self, other):
+        if self.amount_sat != other.amount_sat:
+            return False
+        if self.tx_id != other.tx_id:
+            return False
+        if self.vout != other.vout:
+            return False
+        if self.block_height != other.block_height:
+            return False
+        if self.block_confirmation_count != other.block_confirmation_count:
+            return False
+        if self.fee_rate_sat_per_vbyte != other.fee_rate_sat_per_vbyte:
+            return False
+        if self.confirmed != other.confirmed:
+            return False
+        if self.suspicious_0_conf_reason != other.suspicious_0_conf_reason:
+            return False
+        return True
+
+class _UniffiConverterTypeIBtOnchainTransaction(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBtOnchainTransaction(
+            amount_sat=_UniffiConverterUInt64.read(buf),
+            tx_id=_UniffiConverterString.read(buf),
+            vout=_UniffiConverterUInt32.read(buf),
+            block_height=_UniffiConverterOptionalUInt32.read(buf),
+            block_confirmation_count=_UniffiConverterUInt32.read(buf),
+            fee_rate_sat_per_vbyte=_UniffiConverterDouble.read(buf),
+            confirmed=_UniffiConverterBool.read(buf),
+            suspicious_0_conf_reason=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.amount_sat)
+        _UniffiConverterString.check_lower(value.tx_id)
+        _UniffiConverterUInt32.check_lower(value.vout)
+        _UniffiConverterOptionalUInt32.check_lower(value.block_height)
+        _UniffiConverterUInt32.check_lower(value.block_confirmation_count)
+        _UniffiConverterDouble.check_lower(value.fee_rate_sat_per_vbyte)
+        _UniffiConverterBool.check_lower(value.confirmed)
+        _UniffiConverterString.check_lower(value.suspicious_0_conf_reason)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.amount_sat, buf)
+        _UniffiConverterString.write(value.tx_id, buf)
+        _UniffiConverterUInt32.write(value.vout, buf)
+        _UniffiConverterOptionalUInt32.write(value.block_height, buf)
+        _UniffiConverterUInt32.write(value.block_confirmation_count, buf)
+        _UniffiConverterDouble.write(value.fee_rate_sat_per_vbyte, buf)
+        _UniffiConverterBool.write(value.confirmed, buf)
+        _UniffiConverterString.write(value.suspicious_0_conf_reason, buf)
+
+
+class IBtOnchainTransactions:
+    address: "str"
+    confirmed_sat: "int"
+    required_confirmations: "int"
+    transactions: "typing.List[IBtOnchainTransaction]"
+    @typing.no_type_check
+    def __init__(self, *, address: "str", confirmed_sat: "int", required_confirmations: "int", transactions: "typing.List[IBtOnchainTransaction]"):
+        self.address = address
+        self.confirmed_sat = confirmed_sat
+        self.required_confirmations = required_confirmations
+        self.transactions = transactions
+
+    def __str__(self):
+        return "IBtOnchainTransactions(address={}, confirmed_sat={}, required_confirmations={}, transactions={})".format(self.address, self.confirmed_sat, self.required_confirmations, self.transactions)
+
+    def __eq__(self, other):
+        if self.address != other.address:
+            return False
+        if self.confirmed_sat != other.confirmed_sat:
+            return False
+        if self.required_confirmations != other.required_confirmations:
+            return False
+        if self.transactions != other.transactions:
+            return False
+        return True
+
+class _UniffiConverterTypeIBtOnchainTransactions(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBtOnchainTransactions(
+            address=_UniffiConverterString.read(buf),
+            confirmed_sat=_UniffiConverterUInt64.read(buf),
+            required_confirmations=_UniffiConverterUInt32.read(buf),
+            transactions=_UniffiConverterSequenceTypeIBtOnchainTransaction.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.address)
+        _UniffiConverterUInt64.check_lower(value.confirmed_sat)
+        _UniffiConverterUInt32.check_lower(value.required_confirmations)
+        _UniffiConverterSequenceTypeIBtOnchainTransaction.check_lower(value.transactions)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.address, buf)
+        _UniffiConverterUInt64.write(value.confirmed_sat, buf)
+        _UniffiConverterUInt32.write(value.required_confirmations, buf)
+        _UniffiConverterSequenceTypeIBtOnchainTransaction.write(value.transactions, buf)
+
+
+class IBtOrder:
+    id: "str"
+    state: "BtOrderState"
+    state2: "BtOrderState2"
+    fee_sat: "int"
+    network_fee_sat: "int"
+    service_fee_sat: "int"
+    lsp_balance_sat: "int"
+    client_balance_sat: "int"
+    zero_conf: "bool"
+    zero_reserve: "bool"
+    client_node_id: "typing.Optional[str]"
+    channel_expiry_weeks: "int"
+    channel_expires_at: "str"
+    order_expires_at: "str"
+    channel: "typing.Optional[IBtChannel]"
+    lsp_node: "ILspNode"
+    lnurl: "typing.Optional[str]"
+    payment: "IBtPayment"
+    coupon_code: "typing.Optional[str]"
+    source: "typing.Optional[str]"
+    discount: "typing.Optional[IDiscount]"
+    updated_at: "str"
+    created_at: "str"
+    @typing.no_type_check
+    def __init__(self, *, id: "str", state: "BtOrderState", state2: "BtOrderState2", fee_sat: "int", network_fee_sat: "int", service_fee_sat: "int", lsp_balance_sat: "int", client_balance_sat: "int", zero_conf: "bool", zero_reserve: "bool", client_node_id: "typing.Optional[str]", channel_expiry_weeks: "int", channel_expires_at: "str", order_expires_at: "str", channel: "typing.Optional[IBtChannel]", lsp_node: "ILspNode", lnurl: "typing.Optional[str]", payment: "IBtPayment", coupon_code: "typing.Optional[str]", source: "typing.Optional[str]", discount: "typing.Optional[IDiscount]", updated_at: "str", created_at: "str"):
+        self.id = id
+        self.state = state
+        self.state2 = state2
+        self.fee_sat = fee_sat
+        self.network_fee_sat = network_fee_sat
+        self.service_fee_sat = service_fee_sat
+        self.lsp_balance_sat = lsp_balance_sat
+        self.client_balance_sat = client_balance_sat
+        self.zero_conf = zero_conf
+        self.zero_reserve = zero_reserve
+        self.client_node_id = client_node_id
+        self.channel_expiry_weeks = channel_expiry_weeks
+        self.channel_expires_at = channel_expires_at
+        self.order_expires_at = order_expires_at
+        self.channel = channel
+        self.lsp_node = lsp_node
+        self.lnurl = lnurl
+        self.payment = payment
+        self.coupon_code = coupon_code
+        self.source = source
+        self.discount = discount
+        self.updated_at = updated_at
+        self.created_at = created_at
+
+    def __str__(self):
+        return "IBtOrder(id={}, state={}, state2={}, fee_sat={}, network_fee_sat={}, service_fee_sat={}, lsp_balance_sat={}, client_balance_sat={}, zero_conf={}, zero_reserve={}, client_node_id={}, channel_expiry_weeks={}, channel_expires_at={}, order_expires_at={}, channel={}, lsp_node={}, lnurl={}, payment={}, coupon_code={}, source={}, discount={}, updated_at={}, created_at={})".format(self.id, self.state, self.state2, self.fee_sat, self.network_fee_sat, self.service_fee_sat, self.lsp_balance_sat, self.client_balance_sat, self.zero_conf, self.zero_reserve, self.client_node_id, self.channel_expiry_weeks, self.channel_expires_at, self.order_expires_at, self.channel, self.lsp_node, self.lnurl, self.payment, self.coupon_code, self.source, self.discount, self.updated_at, self.created_at)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.state != other.state:
+            return False
+        if self.state2 != other.state2:
+            return False
+        if self.fee_sat != other.fee_sat:
+            return False
+        if self.network_fee_sat != other.network_fee_sat:
+            return False
+        if self.service_fee_sat != other.service_fee_sat:
+            return False
+        if self.lsp_balance_sat != other.lsp_balance_sat:
+            return False
+        if self.client_balance_sat != other.client_balance_sat:
+            return False
+        if self.zero_conf != other.zero_conf:
+            return False
+        if self.zero_reserve != other.zero_reserve:
+            return False
+        if self.client_node_id != other.client_node_id:
+            return False
+        if self.channel_expiry_weeks != other.channel_expiry_weeks:
+            return False
+        if self.channel_expires_at != other.channel_expires_at:
+            return False
+        if self.order_expires_at != other.order_expires_at:
+            return False
+        if self.channel != other.channel:
+            return False
+        if self.lsp_node != other.lsp_node:
+            return False
+        if self.lnurl != other.lnurl:
+            return False
+        if self.payment != other.payment:
+            return False
+        if self.coupon_code != other.coupon_code:
+            return False
+        if self.source != other.source:
+            return False
+        if self.discount != other.discount:
+            return False
+        if self.updated_at != other.updated_at:
+            return False
+        if self.created_at != other.created_at:
+            return False
+        return True
+
+class _UniffiConverterTypeIBtOrder(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBtOrder(
+            id=_UniffiConverterString.read(buf),
+            state=_UniffiConverterTypeBtOrderState.read(buf),
+            state2=_UniffiConverterTypeBtOrderState2.read(buf),
+            fee_sat=_UniffiConverterUInt64.read(buf),
+            network_fee_sat=_UniffiConverterUInt64.read(buf),
+            service_fee_sat=_UniffiConverterUInt64.read(buf),
+            lsp_balance_sat=_UniffiConverterUInt64.read(buf),
+            client_balance_sat=_UniffiConverterUInt64.read(buf),
+            zero_conf=_UniffiConverterBool.read(buf),
+            zero_reserve=_UniffiConverterBool.read(buf),
+            client_node_id=_UniffiConverterOptionalString.read(buf),
+            channel_expiry_weeks=_UniffiConverterUInt32.read(buf),
+            channel_expires_at=_UniffiConverterString.read(buf),
+            order_expires_at=_UniffiConverterString.read(buf),
+            channel=_UniffiConverterOptionalTypeIBtChannel.read(buf),
+            lsp_node=_UniffiConverterTypeILspNode.read(buf),
+            lnurl=_UniffiConverterOptionalString.read(buf),
+            payment=_UniffiConverterTypeIBtPayment.read(buf),
+            coupon_code=_UniffiConverterOptionalString.read(buf),
+            source=_UniffiConverterOptionalString.read(buf),
+            discount=_UniffiConverterOptionalTypeIDiscount.read(buf),
+            updated_at=_UniffiConverterString.read(buf),
+            created_at=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterTypeBtOrderState.check_lower(value.state)
+        _UniffiConverterTypeBtOrderState2.check_lower(value.state2)
+        _UniffiConverterUInt64.check_lower(value.fee_sat)
+        _UniffiConverterUInt64.check_lower(value.network_fee_sat)
+        _UniffiConverterUInt64.check_lower(value.service_fee_sat)
+        _UniffiConverterUInt64.check_lower(value.lsp_balance_sat)
+        _UniffiConverterUInt64.check_lower(value.client_balance_sat)
+        _UniffiConverterBool.check_lower(value.zero_conf)
+        _UniffiConverterBool.check_lower(value.zero_reserve)
+        _UniffiConverterOptionalString.check_lower(value.client_node_id)
+        _UniffiConverterUInt32.check_lower(value.channel_expiry_weeks)
+        _UniffiConverterString.check_lower(value.channel_expires_at)
+        _UniffiConverterString.check_lower(value.order_expires_at)
+        _UniffiConverterOptionalTypeIBtChannel.check_lower(value.channel)
+        _UniffiConverterTypeILspNode.check_lower(value.lsp_node)
+        _UniffiConverterOptionalString.check_lower(value.lnurl)
+        _UniffiConverterTypeIBtPayment.check_lower(value.payment)
+        _UniffiConverterOptionalString.check_lower(value.coupon_code)
+        _UniffiConverterOptionalString.check_lower(value.source)
+        _UniffiConverterOptionalTypeIDiscount.check_lower(value.discount)
+        _UniffiConverterString.check_lower(value.updated_at)
+        _UniffiConverterString.check_lower(value.created_at)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterTypeBtOrderState.write(value.state, buf)
+        _UniffiConverterTypeBtOrderState2.write(value.state2, buf)
+        _UniffiConverterUInt64.write(value.fee_sat, buf)
+        _UniffiConverterUInt64.write(value.network_fee_sat, buf)
+        _UniffiConverterUInt64.write(value.service_fee_sat, buf)
+        _UniffiConverterUInt64.write(value.lsp_balance_sat, buf)
+        _UniffiConverterUInt64.write(value.client_balance_sat, buf)
+        _UniffiConverterBool.write(value.zero_conf, buf)
+        _UniffiConverterBool.write(value.zero_reserve, buf)
+        _UniffiConverterOptionalString.write(value.client_node_id, buf)
+        _UniffiConverterUInt32.write(value.channel_expiry_weeks, buf)
+        _UniffiConverterString.write(value.channel_expires_at, buf)
+        _UniffiConverterString.write(value.order_expires_at, buf)
+        _UniffiConverterOptionalTypeIBtChannel.write(value.channel, buf)
+        _UniffiConverterTypeILspNode.write(value.lsp_node, buf)
+        _UniffiConverterOptionalString.write(value.lnurl, buf)
+        _UniffiConverterTypeIBtPayment.write(value.payment, buf)
+        _UniffiConverterOptionalString.write(value.coupon_code, buf)
+        _UniffiConverterOptionalString.write(value.source, buf)
+        _UniffiConverterOptionalTypeIDiscount.write(value.discount, buf)
+        _UniffiConverterString.write(value.updated_at, buf)
+        _UniffiConverterString.write(value.created_at, buf)
+
+
+class IBtPayment:
+    state: "BtPaymentState"
+    state2: "BtPaymentState2"
+    paid_sat: "int"
+    bolt11_invoice: "IBtBolt11Invoice"
+    onchain: "IBtOnchainTransactions"
+    is_manually_paid: "typing.Optional[bool]"
+    manual_refunds: "typing.Optional[typing.List[IManualRefund]]"
+    @typing.no_type_check
+    def __init__(self, *, state: "BtPaymentState", state2: "BtPaymentState2", paid_sat: "int", bolt11_invoice: "IBtBolt11Invoice", onchain: "IBtOnchainTransactions", is_manually_paid: "typing.Optional[bool]", manual_refunds: "typing.Optional[typing.List[IManualRefund]]"):
+        self.state = state
+        self.state2 = state2
+        self.paid_sat = paid_sat
+        self.bolt11_invoice = bolt11_invoice
+        self.onchain = onchain
+        self.is_manually_paid = is_manually_paid
+        self.manual_refunds = manual_refunds
+
+    def __str__(self):
+        return "IBtPayment(state={}, state2={}, paid_sat={}, bolt11_invoice={}, onchain={}, is_manually_paid={}, manual_refunds={})".format(self.state, self.state2, self.paid_sat, self.bolt11_invoice, self.onchain, self.is_manually_paid, self.manual_refunds)
+
+    def __eq__(self, other):
+        if self.state != other.state:
+            return False
+        if self.state2 != other.state2:
+            return False
+        if self.paid_sat != other.paid_sat:
+            return False
+        if self.bolt11_invoice != other.bolt11_invoice:
+            return False
+        if self.onchain != other.onchain:
+            return False
+        if self.is_manually_paid != other.is_manually_paid:
+            return False
+        if self.manual_refunds != other.manual_refunds:
+            return False
+        return True
+
+class _UniffiConverterTypeIBtPayment(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IBtPayment(
+            state=_UniffiConverterTypeBtPaymentState.read(buf),
+            state2=_UniffiConverterTypeBtPaymentState2.read(buf),
+            paid_sat=_UniffiConverterUInt64.read(buf),
+            bolt11_invoice=_UniffiConverterTypeIBtBolt11Invoice.read(buf),
+            onchain=_UniffiConverterTypeIBtOnchainTransactions.read(buf),
+            is_manually_paid=_UniffiConverterOptionalBool.read(buf),
+            manual_refunds=_UniffiConverterOptionalSequenceTypeIManualRefund.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterTypeBtPaymentState.check_lower(value.state)
+        _UniffiConverterTypeBtPaymentState2.check_lower(value.state2)
+        _UniffiConverterUInt64.check_lower(value.paid_sat)
+        _UniffiConverterTypeIBtBolt11Invoice.check_lower(value.bolt11_invoice)
+        _UniffiConverterTypeIBtOnchainTransactions.check_lower(value.onchain)
+        _UniffiConverterOptionalBool.check_lower(value.is_manually_paid)
+        _UniffiConverterOptionalSequenceTypeIManualRefund.check_lower(value.manual_refunds)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterTypeBtPaymentState.write(value.state, buf)
+        _UniffiConverterTypeBtPaymentState2.write(value.state2, buf)
+        _UniffiConverterUInt64.write(value.paid_sat, buf)
+        _UniffiConverterTypeIBtBolt11Invoice.write(value.bolt11_invoice, buf)
+        _UniffiConverterTypeIBtOnchainTransactions.write(value.onchain, buf)
+        _UniffiConverterOptionalBool.write(value.is_manually_paid, buf)
+        _UniffiConverterOptionalSequenceTypeIManualRefund.write(value.manual_refunds, buf)
+
+
+class IcJitEntry:
+    id: "str"
+    state: "CJitStateEnum"
+    fee_sat: "int"
+    network_fee_sat: "int"
+    service_fee_sat: "int"
+    channel_size_sat: "int"
+    channel_expiry_weeks: "int"
+    channel_open_error: "typing.Optional[str]"
+    node_id: "str"
+    invoice: "IBtBolt11Invoice"
+    channel: "typing.Optional[IBtChannel]"
+    lsp_node: "ILspNode"
+    coupon_code: "str"
+    source: "typing.Optional[str]"
+    discount: "typing.Optional[IDiscount]"
+    expires_at: "str"
+    updated_at: "str"
+    created_at: "str"
+    @typing.no_type_check
+    def __init__(self, *, id: "str", state: "CJitStateEnum", fee_sat: "int", network_fee_sat: "int", service_fee_sat: "int", channel_size_sat: "int", channel_expiry_weeks: "int", channel_open_error: "typing.Optional[str]", node_id: "str", invoice: "IBtBolt11Invoice", channel: "typing.Optional[IBtChannel]", lsp_node: "ILspNode", coupon_code: "str", source: "typing.Optional[str]", discount: "typing.Optional[IDiscount]", expires_at: "str", updated_at: "str", created_at: "str"):
+        self.id = id
+        self.state = state
+        self.fee_sat = fee_sat
+        self.network_fee_sat = network_fee_sat
+        self.service_fee_sat = service_fee_sat
+        self.channel_size_sat = channel_size_sat
+        self.channel_expiry_weeks = channel_expiry_weeks
+        self.channel_open_error = channel_open_error
+        self.node_id = node_id
+        self.invoice = invoice
+        self.channel = channel
+        self.lsp_node = lsp_node
+        self.coupon_code = coupon_code
+        self.source = source
+        self.discount = discount
+        self.expires_at = expires_at
+        self.updated_at = updated_at
+        self.created_at = created_at
+
+    def __str__(self):
+        return "IcJitEntry(id={}, state={}, fee_sat={}, network_fee_sat={}, service_fee_sat={}, channel_size_sat={}, channel_expiry_weeks={}, channel_open_error={}, node_id={}, invoice={}, channel={}, lsp_node={}, coupon_code={}, source={}, discount={}, expires_at={}, updated_at={}, created_at={})".format(self.id, self.state, self.fee_sat, self.network_fee_sat, self.service_fee_sat, self.channel_size_sat, self.channel_expiry_weeks, self.channel_open_error, self.node_id, self.invoice, self.channel, self.lsp_node, self.coupon_code, self.source, self.discount, self.expires_at, self.updated_at, self.created_at)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.state != other.state:
+            return False
+        if self.fee_sat != other.fee_sat:
+            return False
+        if self.network_fee_sat != other.network_fee_sat:
+            return False
+        if self.service_fee_sat != other.service_fee_sat:
+            return False
+        if self.channel_size_sat != other.channel_size_sat:
+            return False
+        if self.channel_expiry_weeks != other.channel_expiry_weeks:
+            return False
+        if self.channel_open_error != other.channel_open_error:
+            return False
+        if self.node_id != other.node_id:
+            return False
+        if self.invoice != other.invoice:
+            return False
+        if self.channel != other.channel:
+            return False
+        if self.lsp_node != other.lsp_node:
+            return False
+        if self.coupon_code != other.coupon_code:
+            return False
+        if self.source != other.source:
+            return False
+        if self.discount != other.discount:
+            return False
+        if self.expires_at != other.expires_at:
+            return False
+        if self.updated_at != other.updated_at:
+            return False
+        if self.created_at != other.created_at:
+            return False
+        return True
+
+class _UniffiConverterTypeICJitEntry(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IcJitEntry(
+            id=_UniffiConverterString.read(buf),
+            state=_UniffiConverterTypeCJitStateEnum.read(buf),
+            fee_sat=_UniffiConverterUInt64.read(buf),
+            network_fee_sat=_UniffiConverterUInt64.read(buf),
+            service_fee_sat=_UniffiConverterUInt64.read(buf),
+            channel_size_sat=_UniffiConverterUInt64.read(buf),
+            channel_expiry_weeks=_UniffiConverterUInt32.read(buf),
+            channel_open_error=_UniffiConverterOptionalString.read(buf),
+            node_id=_UniffiConverterString.read(buf),
+            invoice=_UniffiConverterTypeIBtBolt11Invoice.read(buf),
+            channel=_UniffiConverterOptionalTypeIBtChannel.read(buf),
+            lsp_node=_UniffiConverterTypeILspNode.read(buf),
+            coupon_code=_UniffiConverterString.read(buf),
+            source=_UniffiConverterOptionalString.read(buf),
+            discount=_UniffiConverterOptionalTypeIDiscount.read(buf),
+            expires_at=_UniffiConverterString.read(buf),
+            updated_at=_UniffiConverterString.read(buf),
+            created_at=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterTypeCJitStateEnum.check_lower(value.state)
+        _UniffiConverterUInt64.check_lower(value.fee_sat)
+        _UniffiConverterUInt64.check_lower(value.network_fee_sat)
+        _UniffiConverterUInt64.check_lower(value.service_fee_sat)
+        _UniffiConverterUInt64.check_lower(value.channel_size_sat)
+        _UniffiConverterUInt32.check_lower(value.channel_expiry_weeks)
+        _UniffiConverterOptionalString.check_lower(value.channel_open_error)
+        _UniffiConverterString.check_lower(value.node_id)
+        _UniffiConverterTypeIBtBolt11Invoice.check_lower(value.invoice)
+        _UniffiConverterOptionalTypeIBtChannel.check_lower(value.channel)
+        _UniffiConverterTypeILspNode.check_lower(value.lsp_node)
+        _UniffiConverterString.check_lower(value.coupon_code)
+        _UniffiConverterOptionalString.check_lower(value.source)
+        _UniffiConverterOptionalTypeIDiscount.check_lower(value.discount)
+        _UniffiConverterString.check_lower(value.expires_at)
+        _UniffiConverterString.check_lower(value.updated_at)
+        _UniffiConverterString.check_lower(value.created_at)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterTypeCJitStateEnum.write(value.state, buf)
+        _UniffiConverterUInt64.write(value.fee_sat, buf)
+        _UniffiConverterUInt64.write(value.network_fee_sat, buf)
+        _UniffiConverterUInt64.write(value.service_fee_sat, buf)
+        _UniffiConverterUInt64.write(value.channel_size_sat, buf)
+        _UniffiConverterUInt32.write(value.channel_expiry_weeks, buf)
+        _UniffiConverterOptionalString.write(value.channel_open_error, buf)
+        _UniffiConverterString.write(value.node_id, buf)
+        _UniffiConverterTypeIBtBolt11Invoice.write(value.invoice, buf)
+        _UniffiConverterOptionalTypeIBtChannel.write(value.channel, buf)
+        _UniffiConverterTypeILspNode.write(value.lsp_node, buf)
+        _UniffiConverterString.write(value.coupon_code, buf)
+        _UniffiConverterOptionalString.write(value.source, buf)
+        _UniffiConverterOptionalTypeIDiscount.write(value.discount, buf)
+        _UniffiConverterString.write(value.expires_at, buf)
+        _UniffiConverterString.write(value.updated_at, buf)
+        _UniffiConverterString.write(value.created_at, buf)
+
+
+class IDiscount:
+    code: "str"
+    absolute_sat: "int"
+    relative: "float"
+    overall_sat: "int"
+    @typing.no_type_check
+    def __init__(self, *, code: "str", absolute_sat: "int", relative: "float", overall_sat: "int"):
+        self.code = code
+        self.absolute_sat = absolute_sat
+        self.relative = relative
+        self.overall_sat = overall_sat
+
+    def __str__(self):
+        return "IDiscount(code={}, absolute_sat={}, relative={}, overall_sat={})".format(self.code, self.absolute_sat, self.relative, self.overall_sat)
+
+    def __eq__(self, other):
+        if self.code != other.code:
+            return False
+        if self.absolute_sat != other.absolute_sat:
+            return False
+        if self.relative != other.relative:
+            return False
+        if self.overall_sat != other.overall_sat:
+            return False
+        return True
+
+class _UniffiConverterTypeIDiscount(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IDiscount(
+            code=_UniffiConverterString.read(buf),
+            absolute_sat=_UniffiConverterUInt64.read(buf),
+            relative=_UniffiConverterDouble.read(buf),
+            overall_sat=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.code)
+        _UniffiConverterUInt64.check_lower(value.absolute_sat)
+        _UniffiConverterDouble.check_lower(value.relative)
+        _UniffiConverterUInt64.check_lower(value.overall_sat)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.code, buf)
+        _UniffiConverterUInt64.write(value.absolute_sat, buf)
+        _UniffiConverterDouble.write(value.relative, buf)
+        _UniffiConverterUInt64.write(value.overall_sat, buf)
+
+
+class ILspNode:
+    alias: "str"
+    pubkey: "str"
+    connection_strings: "typing.List[str]"
+    readonly: "typing.Optional[bool]"
+    @typing.no_type_check
+    def __init__(self, *, alias: "str", pubkey: "str", connection_strings: "typing.List[str]", readonly: "typing.Optional[bool]"):
+        self.alias = alias
+        self.pubkey = pubkey
+        self.connection_strings = connection_strings
+        self.readonly = readonly
+
+    def __str__(self):
+        return "ILspNode(alias={}, pubkey={}, connection_strings={}, readonly={})".format(self.alias, self.pubkey, self.connection_strings, self.readonly)
+
+    def __eq__(self, other):
+        if self.alias != other.alias:
+            return False
+        if self.pubkey != other.pubkey:
+            return False
+        if self.connection_strings != other.connection_strings:
+            return False
+        if self.readonly != other.readonly:
+            return False
+        return True
+
+class _UniffiConverterTypeILspNode(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return ILspNode(
+            alias=_UniffiConverterString.read(buf),
+            pubkey=_UniffiConverterString.read(buf),
+            connection_strings=_UniffiConverterSequenceString.read(buf),
+            readonly=_UniffiConverterOptionalBool.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.alias)
+        _UniffiConverterString.check_lower(value.pubkey)
+        _UniffiConverterSequenceString.check_lower(value.connection_strings)
+        _UniffiConverterOptionalBool.check_lower(value.readonly)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.alias, buf)
+        _UniffiConverterString.write(value.pubkey, buf)
+        _UniffiConverterSequenceString.write(value.connection_strings, buf)
+        _UniffiConverterOptionalBool.write(value.readonly, buf)
+
+
+class IManualRefund:
+    amount_sat: "int"
+    target: "str"
+    state: "ManualRefundStateEnum"
+    created_by_name: "str"
+    voted_by_name: "typing.Optional[str]"
+    reason: "typing.Optional[str]"
+    target_type: "str"
+    @typing.no_type_check
+    def __init__(self, *, amount_sat: "int", target: "str", state: "ManualRefundStateEnum", created_by_name: "str", voted_by_name: "typing.Optional[str]", reason: "typing.Optional[str]", target_type: "str"):
+        self.amount_sat = amount_sat
+        self.target = target
+        self.state = state
+        self.created_by_name = created_by_name
+        self.voted_by_name = voted_by_name
+        self.reason = reason
+        self.target_type = target_type
+
+    def __str__(self):
+        return "IManualRefund(amount_sat={}, target={}, state={}, created_by_name={}, voted_by_name={}, reason={}, target_type={})".format(self.amount_sat, self.target, self.state, self.created_by_name, self.voted_by_name, self.reason, self.target_type)
+
+    def __eq__(self, other):
+        if self.amount_sat != other.amount_sat:
+            return False
+        if self.target != other.target:
+            return False
+        if self.state != other.state:
+            return False
+        if self.created_by_name != other.created_by_name:
+            return False
+        if self.voted_by_name != other.voted_by_name:
+            return False
+        if self.reason != other.reason:
+            return False
+        if self.target_type != other.target_type:
+            return False
+        return True
+
+class _UniffiConverterTypeIManualRefund(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IManualRefund(
+            amount_sat=_UniffiConverterUInt64.read(buf),
+            target=_UniffiConverterString.read(buf),
+            state=_UniffiConverterTypeManualRefundStateEnum.read(buf),
+            created_by_name=_UniffiConverterString.read(buf),
+            voted_by_name=_UniffiConverterOptionalString.read(buf),
+            reason=_UniffiConverterOptionalString.read(buf),
+            target_type=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.amount_sat)
+        _UniffiConverterString.check_lower(value.target)
+        _UniffiConverterTypeManualRefundStateEnum.check_lower(value.state)
+        _UniffiConverterString.check_lower(value.created_by_name)
+        _UniffiConverterOptionalString.check_lower(value.voted_by_name)
+        _UniffiConverterOptionalString.check_lower(value.reason)
+        _UniffiConverterString.check_lower(value.target_type)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.amount_sat, buf)
+        _UniffiConverterString.write(value.target, buf)
+        _UniffiConverterTypeManualRefundStateEnum.write(value.state, buf)
+        _UniffiConverterString.write(value.created_by_name, buf)
+        _UniffiConverterOptionalString.write(value.voted_by_name, buf)
+        _UniffiConverterOptionalString.write(value.reason, buf)
+        _UniffiConverterString.write(value.target_type, buf)
 
 
 class LightningActivity:
@@ -2336,6 +3962,803 @@ class _UniffiConverterTypeAddressType(_UniffiConverterRustBuffer):
 
 
 
+
+
+
+class BitcoinNetworkEnum(enum.Enum):
+    MAINNET = 0
+    
+    TESTNET = 1
+    
+    SIGNET = 2
+    
+    REGTEST = 3
+    
+
+
+class _UniffiConverterTypeBitcoinNetworkEnum(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BitcoinNetworkEnum.MAINNET
+        if variant == 2:
+            return BitcoinNetworkEnum.TESTNET
+        if variant == 3:
+            return BitcoinNetworkEnum.SIGNET
+        if variant == 4:
+            return BitcoinNetworkEnum.REGTEST
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == BitcoinNetworkEnum.MAINNET:
+            return
+        if value == BitcoinNetworkEnum.TESTNET:
+            return
+        if value == BitcoinNetworkEnum.SIGNET:
+            return
+        if value == BitcoinNetworkEnum.REGTEST:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == BitcoinNetworkEnum.MAINNET:
+            buf.write_i32(1)
+        if value == BitcoinNetworkEnum.TESTNET:
+            buf.write_i32(2)
+        if value == BitcoinNetworkEnum.SIGNET:
+            buf.write_i32(3)
+        if value == BitcoinNetworkEnum.REGTEST:
+            buf.write_i32(4)
+
+
+
+
+# BlocktankError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class BlocktankError(Exception):
+    pass
+
+_UniffiTempBlocktankError = BlocktankError
+
+class BlocktankError:  # type: ignore
+    class HttpClient(_UniffiTempBlocktankError):
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "BlocktankError.HttpClient({})".format(str(self))
+    _UniffiTempBlocktankError.HttpClient = HttpClient # type: ignore
+    class BlocktankClient(_UniffiTempBlocktankError):
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "BlocktankError.BlocktankClient({})".format(str(self))
+    _UniffiTempBlocktankError.BlocktankClient = BlocktankClient # type: ignore
+    class InvalidBlocktank(_UniffiTempBlocktankError):
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "BlocktankError.InvalidBlocktank({})".format(str(self))
+    _UniffiTempBlocktankError.InvalidBlocktank = InvalidBlocktank # type: ignore
+    class InitializationError(_UniffiTempBlocktankError):
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "BlocktankError.InitializationError({})".format(str(self))
+    _UniffiTempBlocktankError.InitializationError = InitializationError # type: ignore
+    class InsertError(_UniffiTempBlocktankError):
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "BlocktankError.InsertError({})".format(str(self))
+    _UniffiTempBlocktankError.InsertError = InsertError # type: ignore
+    class RetrievalError(_UniffiTempBlocktankError):
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "BlocktankError.RetrievalError({})".format(str(self))
+    _UniffiTempBlocktankError.RetrievalError = RetrievalError # type: ignore
+    class DataError(_UniffiTempBlocktankError):
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "BlocktankError.DataError({})".format(str(self))
+    _UniffiTempBlocktankError.DataError = DataError # type: ignore
+    class ConnectionError(_UniffiTempBlocktankError):
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "BlocktankError.ConnectionError({})".format(str(self))
+    _UniffiTempBlocktankError.ConnectionError = ConnectionError # type: ignore
+    class SerializationError(_UniffiTempBlocktankError):
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "BlocktankError.SerializationError({})".format(str(self))
+    _UniffiTempBlocktankError.SerializationError = SerializationError # type: ignore
+    class ChannelOpen(_UniffiTempBlocktankError):
+
+        def __init__(self, error_type, error_details):
+            super().__init__(", ".join([
+                "error_type={!r}".format(error_type),
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_type = error_type
+            self.error_details = error_details
+        def __repr__(self):
+            return "BlocktankError.ChannelOpen({})".format(str(self))
+    _UniffiTempBlocktankError.ChannelOpen = ChannelOpen # type: ignore
+    class OrderState(_UniffiTempBlocktankError):
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "BlocktankError.OrderState({})".format(str(self))
+    _UniffiTempBlocktankError.OrderState = OrderState # type: ignore
+    class InvalidParameter(_UniffiTempBlocktankError):
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "BlocktankError.InvalidParameter({})".format(str(self))
+    _UniffiTempBlocktankError.InvalidParameter = InvalidParameter # type: ignore
+    class DatabaseError(_UniffiTempBlocktankError):
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "BlocktankError.DatabaseError({})".format(str(self))
+    _UniffiTempBlocktankError.DatabaseError = DatabaseError # type: ignore
+
+BlocktankError = _UniffiTempBlocktankError # type: ignore
+del _UniffiTempBlocktankError
+
+
+class _UniffiConverterTypeBlocktankError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BlocktankError.HttpClient(
+                error_details=_UniffiConverterString.read(buf),
+            )
+        if variant == 2:
+            return BlocktankError.BlocktankClient(
+                error_details=_UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return BlocktankError.InvalidBlocktank(
+                error_details=_UniffiConverterString.read(buf),
+            )
+        if variant == 4:
+            return BlocktankError.InitializationError(
+                error_details=_UniffiConverterString.read(buf),
+            )
+        if variant == 5:
+            return BlocktankError.InsertError(
+                error_details=_UniffiConverterString.read(buf),
+            )
+        if variant == 6:
+            return BlocktankError.RetrievalError(
+                error_details=_UniffiConverterString.read(buf),
+            )
+        if variant == 7:
+            return BlocktankError.DataError(
+                error_details=_UniffiConverterString.read(buf),
+            )
+        if variant == 8:
+            return BlocktankError.ConnectionError(
+                error_details=_UniffiConverterString.read(buf),
+            )
+        if variant == 9:
+            return BlocktankError.SerializationError(
+                error_details=_UniffiConverterString.read(buf),
+            )
+        if variant == 10:
+            return BlocktankError.ChannelOpen(
+                error_type=_UniffiConverterTypeBtChannelOrderErrorType.read(buf),
+                error_details=_UniffiConverterString.read(buf),
+            )
+        if variant == 11:
+            return BlocktankError.OrderState(
+                error_details=_UniffiConverterString.read(buf),
+            )
+        if variant == 12:
+            return BlocktankError.InvalidParameter(
+                error_details=_UniffiConverterString.read(buf),
+            )
+        if variant == 13:
+            return BlocktankError.DatabaseError(
+                error_details=_UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, BlocktankError.HttpClient):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BlocktankError.BlocktankClient):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BlocktankError.InvalidBlocktank):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BlocktankError.InitializationError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BlocktankError.InsertError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BlocktankError.RetrievalError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BlocktankError.DataError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BlocktankError.ConnectionError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BlocktankError.SerializationError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BlocktankError.ChannelOpen):
+            _UniffiConverterTypeBtChannelOrderErrorType.check_lower(value.error_type)
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BlocktankError.OrderState):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BlocktankError.InvalidParameter):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BlocktankError.DatabaseError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, BlocktankError.HttpClient):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BlocktankError.BlocktankClient):
+            buf.write_i32(2)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BlocktankError.InvalidBlocktank):
+            buf.write_i32(3)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BlocktankError.InitializationError):
+            buf.write_i32(4)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BlocktankError.InsertError):
+            buf.write_i32(5)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BlocktankError.RetrievalError):
+            buf.write_i32(6)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BlocktankError.DataError):
+            buf.write_i32(7)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BlocktankError.ConnectionError):
+            buf.write_i32(8)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BlocktankError.SerializationError):
+            buf.write_i32(9)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BlocktankError.ChannelOpen):
+            buf.write_i32(10)
+            _UniffiConverterTypeBtChannelOrderErrorType.write(value.error_type, buf)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BlocktankError.OrderState):
+            buf.write_i32(11)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BlocktankError.InvalidParameter):
+            buf.write_i32(12)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BlocktankError.DatabaseError):
+            buf.write_i32(13)
+            _UniffiConverterString.write(value.error_details, buf)
+
+
+
+
+
+class BtBolt11InvoiceState(enum.Enum):
+    PENDING = 0
+    
+    HOLDING = 1
+    
+    PAID = 2
+    
+    CANCELED = 3
+    
+
+
+class _UniffiConverterTypeBtBolt11InvoiceState(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BtBolt11InvoiceState.PENDING
+        if variant == 2:
+            return BtBolt11InvoiceState.HOLDING
+        if variant == 3:
+            return BtBolt11InvoiceState.PAID
+        if variant == 4:
+            return BtBolt11InvoiceState.CANCELED
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == BtBolt11InvoiceState.PENDING:
+            return
+        if value == BtBolt11InvoiceState.HOLDING:
+            return
+        if value == BtBolt11InvoiceState.PAID:
+            return
+        if value == BtBolt11InvoiceState.CANCELED:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == BtBolt11InvoiceState.PENDING:
+            buf.write_i32(1)
+        if value == BtBolt11InvoiceState.HOLDING:
+            buf.write_i32(2)
+        if value == BtBolt11InvoiceState.PAID:
+            buf.write_i32(3)
+        if value == BtBolt11InvoiceState.CANCELED:
+            buf.write_i32(4)
+
+
+
+
+
+
+
+class BtChannelOrderErrorType(enum.Enum):
+    WRONG_ORDER_STATE = 0
+    
+    PEER_NOT_REACHABLE = 1
+    
+    CHANNEL_REJECTED_BY_DESTINATION = 2
+    
+    CHANNEL_REJECTED_BY_LSP = 3
+    
+    BLOCKTANK_NOT_READY = 4
+    
+
+
+class _UniffiConverterTypeBtChannelOrderErrorType(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BtChannelOrderErrorType.WRONG_ORDER_STATE
+        if variant == 2:
+            return BtChannelOrderErrorType.PEER_NOT_REACHABLE
+        if variant == 3:
+            return BtChannelOrderErrorType.CHANNEL_REJECTED_BY_DESTINATION
+        if variant == 4:
+            return BtChannelOrderErrorType.CHANNEL_REJECTED_BY_LSP
+        if variant == 5:
+            return BtChannelOrderErrorType.BLOCKTANK_NOT_READY
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == BtChannelOrderErrorType.WRONG_ORDER_STATE:
+            return
+        if value == BtChannelOrderErrorType.PEER_NOT_REACHABLE:
+            return
+        if value == BtChannelOrderErrorType.CHANNEL_REJECTED_BY_DESTINATION:
+            return
+        if value == BtChannelOrderErrorType.CHANNEL_REJECTED_BY_LSP:
+            return
+        if value == BtChannelOrderErrorType.BLOCKTANK_NOT_READY:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == BtChannelOrderErrorType.WRONG_ORDER_STATE:
+            buf.write_i32(1)
+        if value == BtChannelOrderErrorType.PEER_NOT_REACHABLE:
+            buf.write_i32(2)
+        if value == BtChannelOrderErrorType.CHANNEL_REJECTED_BY_DESTINATION:
+            buf.write_i32(3)
+        if value == BtChannelOrderErrorType.CHANNEL_REJECTED_BY_LSP:
+            buf.write_i32(4)
+        if value == BtChannelOrderErrorType.BLOCKTANK_NOT_READY:
+            buf.write_i32(5)
+
+
+
+
+
+
+
+class BtOpenChannelState(enum.Enum):
+    OPENING = 0
+    
+    OPEN = 1
+    
+    CLOSED = 2
+    
+
+
+class _UniffiConverterTypeBtOpenChannelState(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BtOpenChannelState.OPENING
+        if variant == 2:
+            return BtOpenChannelState.OPEN
+        if variant == 3:
+            return BtOpenChannelState.CLOSED
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == BtOpenChannelState.OPENING:
+            return
+        if value == BtOpenChannelState.OPEN:
+            return
+        if value == BtOpenChannelState.CLOSED:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == BtOpenChannelState.OPENING:
+            buf.write_i32(1)
+        if value == BtOpenChannelState.OPEN:
+            buf.write_i32(2)
+        if value == BtOpenChannelState.CLOSED:
+            buf.write_i32(3)
+
+
+
+
+
+
+
+class BtOrderState(enum.Enum):
+    CREATED = 0
+    
+    EXPIRED = 1
+    
+    OPEN = 2
+    
+    CLOSED = 3
+    
+
+
+class _UniffiConverterTypeBtOrderState(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BtOrderState.CREATED
+        if variant == 2:
+            return BtOrderState.EXPIRED
+        if variant == 3:
+            return BtOrderState.OPEN
+        if variant == 4:
+            return BtOrderState.CLOSED
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == BtOrderState.CREATED:
+            return
+        if value == BtOrderState.EXPIRED:
+            return
+        if value == BtOrderState.OPEN:
+            return
+        if value == BtOrderState.CLOSED:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == BtOrderState.CREATED:
+            buf.write_i32(1)
+        if value == BtOrderState.EXPIRED:
+            buf.write_i32(2)
+        if value == BtOrderState.OPEN:
+            buf.write_i32(3)
+        if value == BtOrderState.CLOSED:
+            buf.write_i32(4)
+
+
+
+
+
+
+
+class BtOrderState2(enum.Enum):
+    CREATED = 0
+    
+    EXPIRED = 1
+    
+    EXECUTED = 2
+    
+    PAID = 3
+    
+
+
+class _UniffiConverterTypeBtOrderState2(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BtOrderState2.CREATED
+        if variant == 2:
+            return BtOrderState2.EXPIRED
+        if variant == 3:
+            return BtOrderState2.EXECUTED
+        if variant == 4:
+            return BtOrderState2.PAID
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == BtOrderState2.CREATED:
+            return
+        if value == BtOrderState2.EXPIRED:
+            return
+        if value == BtOrderState2.EXECUTED:
+            return
+        if value == BtOrderState2.PAID:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == BtOrderState2.CREATED:
+            buf.write_i32(1)
+        if value == BtOrderState2.EXPIRED:
+            buf.write_i32(2)
+        if value == BtOrderState2.EXECUTED:
+            buf.write_i32(3)
+        if value == BtOrderState2.PAID:
+            buf.write_i32(4)
+
+
+
+
+
+
+
+class BtPaymentState(enum.Enum):
+    CREATED = 0
+    
+    PARTIALLY_PAID = 1
+    
+    PAID = 2
+    
+    REFUNDED = 3
+    
+    REFUND_AVAILABLE = 4
+    
+
+
+class _UniffiConverterTypeBtPaymentState(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BtPaymentState.CREATED
+        if variant == 2:
+            return BtPaymentState.PARTIALLY_PAID
+        if variant == 3:
+            return BtPaymentState.PAID
+        if variant == 4:
+            return BtPaymentState.REFUNDED
+        if variant == 5:
+            return BtPaymentState.REFUND_AVAILABLE
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == BtPaymentState.CREATED:
+            return
+        if value == BtPaymentState.PARTIALLY_PAID:
+            return
+        if value == BtPaymentState.PAID:
+            return
+        if value == BtPaymentState.REFUNDED:
+            return
+        if value == BtPaymentState.REFUND_AVAILABLE:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == BtPaymentState.CREATED:
+            buf.write_i32(1)
+        if value == BtPaymentState.PARTIALLY_PAID:
+            buf.write_i32(2)
+        if value == BtPaymentState.PAID:
+            buf.write_i32(3)
+        if value == BtPaymentState.REFUNDED:
+            buf.write_i32(4)
+        if value == BtPaymentState.REFUND_AVAILABLE:
+            buf.write_i32(5)
+
+
+
+
+
+
+
+class BtPaymentState2(enum.Enum):
+    CREATED = 0
+    
+    PAID = 1
+    
+    REFUNDED = 2
+    
+    REFUND_AVAILABLE = 3
+    
+    CANCELED = 4
+    
+
+
+class _UniffiConverterTypeBtPaymentState2(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BtPaymentState2.CREATED
+        if variant == 2:
+            return BtPaymentState2.PAID
+        if variant == 3:
+            return BtPaymentState2.REFUNDED
+        if variant == 4:
+            return BtPaymentState2.REFUND_AVAILABLE
+        if variant == 5:
+            return BtPaymentState2.CANCELED
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == BtPaymentState2.CREATED:
+            return
+        if value == BtPaymentState2.PAID:
+            return
+        if value == BtPaymentState2.REFUNDED:
+            return
+        if value == BtPaymentState2.REFUND_AVAILABLE:
+            return
+        if value == BtPaymentState2.CANCELED:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == BtPaymentState2.CREATED:
+            buf.write_i32(1)
+        if value == BtPaymentState2.PAID:
+            buf.write_i32(2)
+        if value == BtPaymentState2.REFUNDED:
+            buf.write_i32(3)
+        if value == BtPaymentState2.REFUND_AVAILABLE:
+            buf.write_i32(4)
+        if value == BtPaymentState2.CANCELED:
+            buf.write_i32(5)
+
+
+
+
+
+
+
+class CJitStateEnum(enum.Enum):
+    CREATED = 0
+    
+    COMPLETED = 1
+    
+    EXPIRED = 2
+    
+    FAILED = 3
+    
+
+
+class _UniffiConverterTypeCJitStateEnum(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return CJitStateEnum.CREATED
+        if variant == 2:
+            return CJitStateEnum.COMPLETED
+        if variant == 3:
+            return CJitStateEnum.EXPIRED
+        if variant == 4:
+            return CJitStateEnum.FAILED
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == CJitStateEnum.CREATED:
+            return
+        if value == CJitStateEnum.COMPLETED:
+            return
+        if value == CJitStateEnum.EXPIRED:
+            return
+        if value == CJitStateEnum.FAILED:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == CJitStateEnum.CREATED:
+            buf.write_i32(1)
+        if value == CJitStateEnum.COMPLETED:
+            buf.write_i32(2)
+        if value == CJitStateEnum.EXPIRED:
+            buf.write_i32(3)
+        if value == CJitStateEnum.FAILED:
+            buf.write_i32(4)
+
+
+
+
 # DbError
 # We want to define each variant as a nested class that's also a subclass,
 # which is tricky in Python.  To accomplish this we're going to create each
@@ -2358,6 +4781,16 @@ class DbError:  # type: ignore
         def __repr__(self):
             return "DbError.DbActivityError({})".format(str(self))
     _UniffiTempDbError.DbActivityError = DbActivityError # type: ignore
+    class DbBlocktankError(_UniffiTempDbError):
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+        def __repr__(self):
+            return "DbError.DbBlocktankError({})".format(str(self))
+    _UniffiTempDbError.DbBlocktankError = DbBlocktankError # type: ignore
     class InitializationError(_UniffiTempDbError):
 
         def __init__(self, error_details):
@@ -2382,6 +4815,10 @@ class _UniffiConverterTypeDbError(_UniffiConverterRustBuffer):
                 error_details=_UniffiConverterTypeActivityError.read(buf),
             )
         if variant == 2:
+            return DbError.DbBlocktankError(
+                error_details=_UniffiConverterTypeBlocktankError.read(buf),
+            )
+        if variant == 3:
             return DbError.InitializationError(
                 error_details=_UniffiConverterString.read(buf),
             )
@@ -2392,6 +4829,9 @@ class _UniffiConverterTypeDbError(_UniffiConverterRustBuffer):
         if isinstance(value, DbError.DbActivityError):
             _UniffiConverterTypeActivityError.check_lower(value.error_details)
             return
+        if isinstance(value, DbError.DbBlocktankError):
+            _UniffiConverterTypeBlocktankError.check_lower(value.error_details)
+            return
         if isinstance(value, DbError.InitializationError):
             _UniffiConverterString.check_lower(value.error_details)
             return
@@ -2401,8 +4841,11 @@ class _UniffiConverterTypeDbError(_UniffiConverterRustBuffer):
         if isinstance(value, DbError.DbActivityError):
             buf.write_i32(1)
             _UniffiConverterTypeActivityError.write(value.error_details, buf)
-        if isinstance(value, DbError.InitializationError):
+        if isinstance(value, DbError.DbBlocktankError):
             buf.write_i32(2)
+            _UniffiConverterTypeBlocktankError.write(value.error_details, buf)
+        if isinstance(value, DbError.InitializationError):
+            buf.write_i32(3)
             _UniffiConverterString.write(value.error_details, buf)
 
 
@@ -2760,6 +5203,60 @@ class _UniffiConverterTypeLnurlError(_UniffiConverterRustBuffer):
         if isinstance(value, LnurlError.InvoiceCreationFailed):
             buf.write_i32(6)
             _UniffiConverterString.write(value.error_details, buf)
+
+
+
+
+
+class ManualRefundStateEnum(enum.Enum):
+    CREATED = 0
+    
+    APPROVED = 1
+    
+    REJECTED = 2
+    
+    SENT = 3
+    
+
+
+class _UniffiConverterTypeManualRefundStateEnum(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return ManualRefundStateEnum.CREATED
+        if variant == 2:
+            return ManualRefundStateEnum.APPROVED
+        if variant == 3:
+            return ManualRefundStateEnum.REJECTED
+        if variant == 4:
+            return ManualRefundStateEnum.SENT
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == ManualRefundStateEnum.CREATED:
+            return
+        if value == ManualRefundStateEnum.APPROVED:
+            return
+        if value == ManualRefundStateEnum.REJECTED:
+            return
+        if value == ManualRefundStateEnum.SENT:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == ManualRefundStateEnum.CREATED:
+            buf.write_i32(1)
+        if value == ManualRefundStateEnum.APPROVED:
+            buf.write_i32(2)
+        if value == ManualRefundStateEnum.REJECTED:
+            buf.write_i32(3)
+        if value == ManualRefundStateEnum.SENT:
+            buf.write_i32(4)
+
+
 
 
 
@@ -3367,6 +5864,33 @@ class _UniffiConverterOptionalUInt64(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalBool(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterBool.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterBool.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterBool.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalString(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -3421,6 +5945,168 @@ class _UniffiConverterOptionalBytes(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypeCreateCjitOptions(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeCreateCjitOptions.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeCreateCjitOptions.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeCreateCjitOptions.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeCreateOrderOptions(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeCreateOrderOptions.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeCreateOrderOptions.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeCreateOrderOptions.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeIBtChannel(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeIBtChannel.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeIBtChannel.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeIBtChannel.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeIBtChannelClose(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeIBtChannelClose.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeIBtChannelClose.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeIBtChannelClose.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeIBtInfo(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeIBtInfo.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeIBtInfo.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeIBtInfo.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeIDiscount(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeIDiscount.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeIDiscount.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeIDiscount.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypeActivity(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -3470,6 +6156,60 @@ class _UniffiConverterOptionalTypeActivityFilter(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterTypeActivityFilter.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeBtOrderState2(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeBtOrderState2.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeBtOrderState2.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeBtOrderState2.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeCJitStateEnum(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeCJitStateEnum.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeCJitStateEnum.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeCJitStateEnum.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -3556,6 +6296,33 @@ class _UniffiConverterOptionalSequenceString(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalSequenceTypeIManualRefund(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterSequenceTypeIManualRefund.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterSequenceTypeIManualRefund.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterSequenceTypeIManualRefund.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalMapStringString(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -3604,6 +6371,131 @@ class _UniffiConverterSequenceString(_UniffiConverterRustBuffer):
 
         return [
             _UniffiConverterString.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeIBtOnchainTransaction(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeIBtOnchainTransaction.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeIBtOnchainTransaction.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeIBtOnchainTransaction.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeIBtOrder(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeIBtOrder.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeIBtOrder.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeIBtOrder.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeICJitEntry(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeICJitEntry.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeICJitEntry.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeICJitEntry.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeILspNode(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeILspNode.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeILspNode.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeILspNode.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeIManualRefund(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeIManualRefund.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeIManualRefund.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeIManualRefund.read(buf) for i in range(count)
         ]
 
 
@@ -3737,6 +6629,61 @@ def add_tags(activity_id: "str",tags: "typing.List[str]") -> None:
         _UniffiConverterString.lower(activity_id),
         _UniffiConverterSequenceString.lower(tags))
 
+async def create_cjit_entry(channel_size_sat: "int",invoice_sat: "int",invoice_description: "str",node_id: "str",channel_expiry_weeks: "int",options: "typing.Optional[CreateCjitOptions]") -> "IcJitEntry":
+
+    _UniffiConverterUInt64.check_lower(channel_size_sat)
+    
+    _UniffiConverterUInt64.check_lower(invoice_sat)
+    
+    _UniffiConverterString.check_lower(invoice_description)
+    
+    _UniffiConverterString.check_lower(node_id)
+    
+    _UniffiConverterUInt32.check_lower(channel_expiry_weeks)
+    
+    _UniffiConverterOptionalTypeCreateCjitOptions.check_lower(options)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_create_cjit_entry(
+        _UniffiConverterUInt64.lower(channel_size_sat),
+        _UniffiConverterUInt64.lower(invoice_sat),
+        _UniffiConverterString.lower(invoice_description),
+        _UniffiConverterString.lower(node_id),
+        _UniffiConverterUInt32.lower(channel_expiry_weeks),
+        _UniffiConverterOptionalTypeCreateCjitOptions.lower(options)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeICJitEntry.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+async def create_order(lsp_balance_sat: "int",channel_expiry_weeks: "int",options: "typing.Optional[CreateOrderOptions]") -> "IBtOrder":
+
+    _UniffiConverterUInt64.check_lower(lsp_balance_sat)
+    
+    _UniffiConverterUInt32.check_lower(channel_expiry_weeks)
+    
+    _UniffiConverterOptionalTypeCreateOrderOptions.check_lower(options)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_create_order(
+        _UniffiConverterUInt64.lower(lsp_balance_sat),
+        _UniffiConverterUInt32.lower(channel_expiry_weeks),
+        _UniffiConverterOptionalTypeCreateOrderOptions.lower(options)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeIBtOrder.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
 async def decode(invoice: "str") -> "Scanner":
 
     _UniffiConverterString.check_lower(invoice)
@@ -3761,6 +6708,52 @@ def delete_activity_by_id(activity_id: "str") -> "bool":
     return _UniffiConverterBool.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id,
         _UniffiConverterString.lower(activity_id)))
 
+async def estimate_order_fee(lsp_balance_sat: "int",channel_expiry_weeks: "int",options: "typing.Optional[CreateOrderOptions]") -> "IBtEstimateFeeResponse":
+
+    _UniffiConverterUInt64.check_lower(lsp_balance_sat)
+    
+    _UniffiConverterUInt32.check_lower(channel_expiry_weeks)
+    
+    _UniffiConverterOptionalTypeCreateOrderOptions.check_lower(options)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee(
+        _UniffiConverterUInt64.lower(lsp_balance_sat),
+        _UniffiConverterUInt32.lower(channel_expiry_weeks),
+        _UniffiConverterOptionalTypeCreateOrderOptions.lower(options)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeIBtEstimateFeeResponse.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+async def estimate_order_fee_full(lsp_balance_sat: "int",channel_expiry_weeks: "int",options: "typing.Optional[CreateOrderOptions]") -> "IBtEstimateFeeResponse2":
+
+    _UniffiConverterUInt64.check_lower(lsp_balance_sat)
+    
+    _UniffiConverterUInt32.check_lower(channel_expiry_weeks)
+    
+    _UniffiConverterOptionalTypeCreateOrderOptions.check_lower(options)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee_full(
+        _UniffiConverterUInt64.lower(lsp_balance_sat),
+        _UniffiConverterUInt32.lower(channel_expiry_weeks),
+        _UniffiConverterOptionalTypeCreateOrderOptions.lower(options)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeIBtEstimateFeeResponse2.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
 
 def get_activities(filter: "typing.Optional[ActivityFilter]",tx_type: "typing.Optional[PaymentType]",tags: "typing.Optional[typing.List[str]]",search: "typing.Optional[str]",min_date: "typing.Optional[int]",max_date: "typing.Optional[int]",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
     _UniffiConverterOptionalTypeActivityFilter.check_lower(filter)
@@ -3813,6 +6806,46 @@ def get_activity_by_id(activity_id: "str") -> "typing.Optional[Activity]":
 def get_all_unique_tags() -> "typing.List[str]":
     return _UniffiConverterSequenceString.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags,))
 
+async def get_cjit_entries(entry_ids: "typing.Optional[typing.List[str]]",filter: "typing.Optional[CJitStateEnum]",refresh: "bool") -> "typing.List[IcJitEntry]":
+
+    _UniffiConverterOptionalSequenceString.check_lower(entry_ids)
+    
+    _UniffiConverterOptionalTypeCJitStateEnum.check_lower(filter)
+    
+    _UniffiConverterBool.check_lower(refresh)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_get_cjit_entries(
+        _UniffiConverterOptionalSequenceString.lower(entry_ids),
+        _UniffiConverterOptionalTypeCJitStateEnum.lower(filter),
+        _UniffiConverterBool.lower(refresh)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterSequenceTypeICJitEntry.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+async def get_info(refresh: "typing.Optional[bool]") -> "typing.Optional[IBtInfo]":
+
+    _UniffiConverterOptionalBool.check_lower(refresh)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_get_info(
+        _UniffiConverterOptionalBool.lower(refresh)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterOptionalTypeIBtInfo.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
 async def get_lnurl_invoice(address: "str",amount_satoshis: "int") -> "str":
 
     _UniffiConverterString.check_lower(address)
@@ -3831,6 +6864,46 @@ async def get_lnurl_invoice(address: "str",amount_satoshis: "int") -> "str":
         
     # Error FFI converter
 _UniffiConverterTypeLnurlError,
+
+    )
+async def get_min_zero_conf_tx_fee(order_id: "str") -> "IBt0ConfMinTxFeeWindow":
+
+    _UniffiConverterString.check_lower(order_id)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_get_min_zero_conf_tx_fee(
+        _UniffiConverterString.lower(order_id)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeIBt0ConfMinTxFeeWindow.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+async def get_orders(order_ids: "typing.Optional[typing.List[str]]",filter: "typing.Optional[BtOrderState2]",refresh: "bool") -> "typing.List[IBtOrder]":
+
+    _UniffiConverterOptionalSequenceString.check_lower(order_ids)
+    
+    _UniffiConverterOptionalTypeBtOrderState2.check_lower(filter)
+    
+    _UniffiConverterBool.check_lower(refresh)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_get_orders(
+        _UniffiConverterOptionalSequenceString.lower(order_ids),
+        _UniffiConverterOptionalTypeBtOrderState2.lower(filter),
+        _UniffiConverterBool.lower(refresh)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterSequenceTypeIBtOrder.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
 
     )
 
@@ -3854,6 +6927,62 @@ def insert_activity(activity: "Activity") -> None:
     _rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_insert_activity,
         _UniffiConverterTypeActivity.lower(activity))
 
+async def open_channel(order_id: "str",connection_string: "str") -> "IBtOrder":
+
+    _UniffiConverterString.check_lower(order_id)
+    
+    _UniffiConverterString.check_lower(connection_string)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_open_channel(
+        _UniffiConverterString.lower(order_id),
+        _UniffiConverterString.lower(connection_string)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeIBtOrder.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+async def refresh_active_cjit_entries() -> "typing.List[IcJitEntry]":
+
+    """
+    Refresh all active CJIT entries in the database with latest data from the LSP
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_cjit_entries(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterSequenceTypeICJitEntry.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+async def refresh_active_orders() -> "typing.List[IBtOrder]":
+
+    """
+    Refresh all active orders in the database with latest data from the LSP
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_orders(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterSequenceTypeIBtOrder.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
 
 def remove_tags(activity_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(activity_id)
@@ -3874,6 +7003,24 @@ def update_activity(activity_id: "str",activity: "Activity") -> None:
         _UniffiConverterString.lower(activity_id),
         _UniffiConverterTypeActivity.lower(activity))
 
+async def update_blocktank_url(new_url: "str") -> None:
+
+    _UniffiConverterString.check_lower(new_url)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_update_blocktank_url(
+        _UniffiConverterString.lower(new_url)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
 
 def upsert_activity(activity: "Activity") -> None:
     _UniffiConverterTypeActivity.check_lower(activity)
@@ -3897,14 +7044,48 @@ __all__ = [
     "ActivityType",
     "AddressError",
     "AddressType",
+    "BitcoinNetworkEnum",
+    "BlocktankError",
+    "BtBolt11InvoiceState",
+    "BtChannelOrderErrorType",
+    "BtOpenChannelState",
+    "BtOrderState",
+    "BtOrderState2",
+    "BtPaymentState",
+    "BtPaymentState2",
+    "CJitStateEnum",
     "DbError",
     "DecodingError",
     "LnurlError",
+    "ManualRefundStateEnum",
     "NetworkType",
     "PaymentState",
     "PaymentType",
     "Scanner",
     "SortDirection",
+    "CreateCjitOptions",
+    "CreateOrderOptions",
+    "ErrorData",
+    "FeeRates",
+    "FundingTx",
+    "IBt0ConfMinTxFeeWindow",
+    "IBtBolt11Invoice",
+    "IBtChannel",
+    "IBtChannelClose",
+    "IBtEstimateFeeResponse",
+    "IBtEstimateFeeResponse2",
+    "IBtInfo",
+    "IBtInfoOnchain",
+    "IBtInfoOptions",
+    "IBtInfoVersions",
+    "IBtOnchainTransaction",
+    "IBtOnchainTransactions",
+    "IBtOrder",
+    "IBtPayment",
+    "IcJitEntry",
+    "IDiscount",
+    "ILspNode",
+    "IManualRefund",
     "LightningActivity",
     "LightningInvoice",
     "LnurlAddressData",
@@ -3917,18 +7098,30 @@ __all__ = [
     "PubkyAuth",
     "ValidationResult",
     "add_tags",
+    "create_cjit_entry",
+    "create_order",
     "decode",
     "delete_activity_by_id",
+    "estimate_order_fee",
+    "estimate_order_fee_full",
     "get_activities",
     "get_activities_by_tag",
     "get_activity_by_id",
     "get_all_unique_tags",
+    "get_cjit_entries",
+    "get_info",
     "get_lnurl_invoice",
+    "get_min_zero_conf_tx_fee",
+    "get_orders",
     "get_tags",
     "init_db",
     "insert_activity",
+    "open_channel",
+    "refresh_active_cjit_entries",
+    "refresh_active_orders",
     "remove_tags",
     "update_activity",
+    "update_blocktank_url",
     "upsert_activity",
     "validate_bitcoin_address",
     "uniffi_set_event_loop",

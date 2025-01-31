@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use crate::activity::ActivityError;
+use crate::modules::blocktank::BlocktankError;
 
 #[derive(Debug, uniffi::Enum)]
 pub enum Activity {
@@ -133,6 +134,11 @@ pub enum DbError {
         error_details: ActivityError
     },
 
+    #[error("DB Blocktank Error: {error_details}")]
+    DbBlocktankError {
+        error_details: BlocktankError
+    },
+
     #[error("Initialization Error: {error_details}")]
     InitializationError {
         error_details: String
@@ -142,6 +148,14 @@ pub enum DbError {
 impl From<ActivityError> for DbError {
     fn from(error: ActivityError) -> Self {
         DbError::DbActivityError {
+            error_details: error
+        }
+    }
+}
+
+impl From<BlocktankError> for DbError {
+    fn from(error: BlocktankError) -> Self {
+        DbError::DbBlocktankError {
             error_details: error
         }
     }
