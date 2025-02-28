@@ -163,7 +163,54 @@
         ```rust
         async fn refresh_active_cjit_entries() -> Result<Vec<ICJitEntry>, BlocktankError>
         ```
-
+    - [register_device](src/modules/blocktank/README.md#usage-examples): Register a device for notifications
+        ```rust
+        async fn register_device(
+          device_token: String,
+          public_key: String,
+          features: Vec<String>,
+          node_id: String,
+          iso_timestamp: String,
+          signature: String,
+        ) -> Result<String, BlocktankError>
+        ```
+    - [test_notification](src/modules/blocktank/README.md#usage-examples): Send a test notification to a registered device
+        ```rust
+        async fn test_notification(
+          device_token: String,
+          secret_message: String,
+        ) -> Result<String, BlocktankError>
+        ```
+    - [regtest_mine](src/modules/blocktank/README.md#usage-examples): Mine blocks in regtest mode
+        ```rust
+        async fn regtest_mine(count: Option<u32>) -> Result<(), BlocktankError>
+        ```
+    - [regtest_deposit](src/modules/blocktank/README.md#usage-examples): Deposit funds to an address in regtest mode
+        ```rust
+        async fn regtest_deposit(
+          address: String,
+          amount_sat: Option<u64>,
+        ) -> Result<String, BlocktankError>
+        ```
+    - [regtest_pay](src/modules/blocktank/README.md#usage-examples): Pay an invoice in regtest mode
+        ```rust
+        async fn regtest_pay(
+          invoice: String,
+          amount_sat: Option<u64>,
+        ) -> Result<String, BlocktankError>
+        ```
+    - [regtest_get_payment](src/modules/blocktank/README.md#usage-examples): Get payment information in regtest mode
+        ```rust
+        async fn regtest_get_payment(payment_id: String) -> Result<IBtBolt11Invoice, BlocktankError>
+        ```
+    - [regtest_close_channel](src/modules/blocktank/README.md#usage-examples): Close a channel in regtest mode
+        ```rust
+        async fn regtest_close_channel(
+          funding_tx_id: String,
+          vout: u32,
+          force_close_after_s: Option<u64>,
+        ) -> Result<String, BlocktankError>        
+      ```
 
 ## Building the Bindings
 

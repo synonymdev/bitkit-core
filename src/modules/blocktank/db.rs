@@ -12,7 +12,8 @@ impl BlocktankDB {
             error_details: format!("Error opening database: {}", e),
         })?;
 
-        let client = BlocktankClient::new(Some(blocktank_url.unwrap_or(DEFAULT_BLOCKTANK_URL)))
+        let url = blocktank_url.unwrap_or(DEFAULT_BLOCKTANK_URL);
+        let client = BlocktankClient::new(Some(url))
             .map_err(|e| BlocktankError::InitializationError {
                 error_details: format!("Failed to initialize Blocktank client: {}", e),
             })?;
@@ -20,6 +21,7 @@ impl BlocktankDB {
         let db = BlocktankDB {
             conn: Mutex::new(conn),
             client,
+            blocktank_url: url.to_string(),
         };
         db.initialize().await?;
         Ok(db)
@@ -110,8 +112,9 @@ impl BlocktankDB {
             error_details: format!("Failed to initialize Blocktank client with the new URL: {}", e),
         })?;
 
-        // Update the client instance
+        // Update both the client and URL
         self.client = new_client;
+        self.blocktank_url = new_url.to_string();
 
         Ok(())
     }

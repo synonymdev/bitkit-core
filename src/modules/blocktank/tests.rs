@@ -1,6 +1,6 @@
 //const STAGING_SERVER: &str = "https://api1.blocktank.to/api";
 //const STAGING_SERVER: &str = "https://api.stag.blocktank.to/api";
-const STAGING_SERVER: &str = "https://api.stag0.blocktank.to/blocktank/api/v2";
+const STAGING_SERVER: &str = "https://api.stag.blocktank.to/blocktank/api/v2";
 
 #[cfg(test)]
 mod tests {
@@ -1427,5 +1427,40 @@ mod tests {
         // Now test refresh_active_cjit_entries with no active entries
         let empty_result = db.refresh_active_cjit_entries().await.unwrap();
         assert_eq!(empty_result.len(), 0, "Should return empty vec when no active entries exist");
+    }
+
+    #[tokio::test]
+    async fn test_regtest_mine() {
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        // Test mining 1 block
+        let result = db.regtest_mine(Some(1)).await;
+        assert!(result.is_ok(), "Failed to mine 1 block: {:?}", result.err());
+    }
+
+    #[tokio::test]
+    async fn test_regtest_deposit() {
+        let client = BlocktankClient::new(Some(STAGING_SERVER))
+            .expect("Failed to create BlocktankClient");
+
+        let test_address = "bcrt1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu";
+
+        // Test deposit with specific amount
+        let result = client.regtest_deposit(test_address, Some(50000)).await;
+
+        match result {
+            Ok(txid) => {
+                println!("Successfully deposited to address, txid: {}", txid);
+                assert!(!txid.is_empty(), "Transaction ID should not be empty");
+            },
+            Err(err) => {
+                if err.to_string().contains("not in regtest mode") ||
+                    err.to_string().contains("Bad Request") {
+                    println!("Skipping test_regtest_deposit: Not in regtest mode or not supported in this environment");
+                    return;
+                } else {
+                    panic!("API call to regtest_deposit failed with unexpected error: {:?}", err);
+                }
+            }
+        }
     }
 }

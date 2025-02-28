@@ -13,20 +13,7 @@ pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError};
-use crate::modules::blocktank::{
-    BlocktankDB,
-    BlocktankError,
-    IBtInfo,
-    IBtOrder,
-    CreateOrderOptions,
-    BtOrderState2,
-    IBt0ConfMinTxFeeWindow,
-    IBtEstimateFeeResponse,
-    IBtEstimateFeeResponse2,
-    CreateCjitOptions,
-    ICJitEntry,
-    CJitStateEnum
-};
+use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice};
 use crate::onchain::{
     AddressError,
     ValidationResult
@@ -555,6 +542,213 @@ pub async fn refresh_active_cjit_entries() -> Result<Vec<ICJitEntry>, BlocktankE
         db.refresh_active_cjit_entries().await.map(|entries| {
             entries.into_iter().map(|entry| entry.into()).collect()
         })
+    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
+        error_details: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn register_device(
+    device_token: String,
+    public_key: String,
+    features: Vec<String>,
+    node_id: String,
+    iso_timestamp: String,
+    signature: String,
+) -> Result<String, BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+
+        let url = &db.blocktank_url;
+        let client = reqwest::Client::new();
+        let response = client.post(&format!("{}/device", url))
+            .json(&serde_json::json!({
+                "deviceToken": device_token,
+                "publicKey": public_key,
+                "features": features,
+                "nodeId": node_id,
+                "isoTimestamp": iso_timestamp,
+                "signature": signature
+            }))
+            .send()
+            .await
+            .map_err(|e| BlocktankError::HttpClient {
+                error_details: format!("Failed to register device: {}", e)
+            })?;
+
+        let status = response.status();
+        if !status.is_success() {
+            let error_text = response.text().await.map_err(|e| BlocktankError::HttpClient {
+                error_details: format!("Failed to read error response: {}", e)
+            })?;
+            return Err(BlocktankError::HttpClient {
+                error_details: format!("Failed to register device. Status: {}. Response: {}", status, error_text)
+            });
+        }
+
+        // Get the response body as text
+        response.text().await.map_err(|e| BlocktankError::HttpClient {
+            error_details: format!("Failed to read response body: {}", e)
+        })
+    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
+        error_details: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn test_notification(
+    device_token: String,
+    secret_message: String,
+) -> Result<String, BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+
+        let url = &db.blocktank_url;
+        let client = reqwest::Client::new();
+        let response = client.post(&format!("{}/device/{}/test-notification", url, device_token))
+            .json(&serde_json::json!({
+                "data": {
+                    "source": "blocktank",
+                    "type": "orderPaymentConfirmed",
+                    "payload": {
+                        "secretMessage": secret_message
+                    }
+                }
+            }))
+            .send()
+            .await
+            .map_err(|e| BlocktankError::HttpClient {
+                error_details: format!("Failed to send test notification: {}", e)
+            })?;
+
+        let status = response.status();
+        if !status.is_success() {
+            let error_text = response.text().await.map_err(|e| BlocktankError::HttpClient {
+                error_details: format!("Failed to read error response: {}", e)
+            })?;
+            return Err(BlocktankError::HttpClient {
+                error_details: format!("Failed to send test notification. Status: {}. Response: {}", status, error_text)
+            });
+        }
+
+        // Get the response body as text
+        response.text().await.map_err(|e| BlocktankError::HttpClient {
+            error_details: format!("Failed to read response body: {}", e)
+        })
+    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
+        error_details: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn regtest_mine(count: Option<u32>) -> Result<(), BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+
+        db.regtest_mine(count).await
+    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
+        error_details: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn regtest_deposit(
+    address: String,
+    amount_sat: Option<u64>,
+) -> Result<String, BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+
+        db.regtest_deposit(&address, amount_sat).await
+    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
+        error_details: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn regtest_pay(
+    invoice: String,
+    amount_sat: Option<u64>,
+) -> Result<String, BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+
+        db.regtest_pay(&invoice, amount_sat).await
+    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
+        error_details: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn regtest_get_payment(payment_id: String) -> Result<IBtBolt11Invoice, BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+
+        db.regtest_get_payment(&payment_id).await.map(|invoice| invoice.into())
+    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
+        error_details: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn regtest_close_channel(
+    funding_tx_id: String,
+    vout: u32,
+    force_close_after_s: Option<u64>,
+) -> Result<String, BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+
+        db.regtest_close_channel(&funding_tx_id, vout, force_close_after_s).await
     }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
         error_details: format!("Runtime error: {}", e)
     }))

@@ -75,6 +75,47 @@ async fn get_cjit_entries(
 
 // Refresh all active CJIT entries
 async fn refresh_active_cjit_entries() -> Result<Vec<ICJitEntry>, BlocktankError>
+
+// Register a device for notifications
+async fn register_device(
+    device_token: String,
+    public_key: String,
+    features: Vec<String>,
+    node_id: String,
+    iso_timestamp: String,
+    signature: String,
+) -> Result<String, BlocktankError>
+
+// Send a test notification to a registered device
+async fn test_notification(
+    device_token: String,
+    secret_message: String,
+) -> Result<String, BlocktankError>
+
+// Mine blocks in regtest mode
+async fn regtest_mine(count: Option<u32>) -> Result<(), BlocktankError>
+
+// Deposit funds to an address in regtest mode
+async fn regtest_deposit(
+    address: String,
+    amount_sat: Option<u64>,
+) -> Result<String, BlocktankError>
+
+// Pay an invoice in regtest mode
+async fn regtest_pay(
+    invoice: String,
+    amount_sat: Option<u64>,
+) -> Result<String, BlocktankError>
+
+// Get payment information in regtest mode
+async fn regtest_get_payment(payment_id: String) -> Result<IBtBolt11Invoice, BlocktankError>
+
+// Close a channel in regtest mode
+async fn regtest_close_channel(
+    funding_tx_id: String,
+    vout: u32,
+    force_close_after_s: Option<u64>,
+) -> Result<String, BlocktankError>
 ```
 
 ## Usage Examples
@@ -131,6 +172,56 @@ func manageBlocktank() async {
         let activeCjitEntries = try await refreshActiveCjitEntries()
         print("Active CJIT entries: \(activeCjitEntries.count)")
         
+        // Register a device for notifications
+        let deviceToken = "example-device-token"
+        let publicKey = "device-public-key"
+        let features = ["lightning", "channel"]
+        let nodeId = "node-id"
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+        let signature = "signature-of-timestamp-with-node-private-key"
+        
+        let registrationResult = try await registerDevice(
+            deviceToken: deviceToken,
+            publicKey: publicKey,
+            features: features,
+            nodeId: nodeId,
+            isoTimestamp: timestamp,
+            signature: signature
+        )
+        print("Device registration result: \(registrationResult)")
+        
+        // Send a test notification
+        let notificationResult = try await testNotification(
+            deviceToken: deviceToken,
+            secretMessage: "Test notification message"
+        )
+        print("Test notification result: \(notificationResult)")
+        
+        // For testing/development in regtest mode
+        try await regtestMine(count: 6)  // Mine 6 blocks
+        
+        let depositTxid = try await regtestDeposit(
+            address: "bcrt1...",
+            amountSat: 100000
+        )
+        print("Deposited funds, txid: \(depositTxid)")
+        
+        let paymentId = try await regtestPay(
+            invoice: "lnbcrt...",
+            amountSat: 10000
+        )
+        print("Payment made, id: \(paymentId)")
+        
+        let paymentInfo = try await regtestGetPayment(paymentId: paymentId)
+        print("Payment status: \(paymentInfo.status)")
+        
+        let closeTxid = try await regtestCloseChannel(
+            fundingTxId: "txid",
+            vout: 0,
+            forceCloseAfterS: 60
+        )
+        print("Channel closed, txid: \(closeTxid)")
+        
     } catch {
         print("Error: \(error)")
     }
@@ -184,6 +275,56 @@ suspend fun manageBlocktank() {
         val activeCjitEntries = refreshActiveCjitEntries()
         println("Active CJIT entries: ${activeCjitEntries.size}")
         
+        // Register device for notifications
+        val deviceToken = "example-device-token"
+        val publicKey = "device-public-key"
+        val features = listOf("lightning", "channel")
+        val nodeId = "node-id"
+        val timestamp = java.time.format.DateTimeFormatter.ISO_INSTANT.format(java.time.Instant.now())
+        val signature = "signature-of-timestamp-with-node-private-key"
+        
+        val registrationResult = registerDevice(
+            deviceToken = deviceToken,
+            publicKey = publicKey,
+            features = features,
+            nodeId = nodeId,
+            isoTimestamp = timestamp,
+            signature = signature
+        )
+        println("Device registration result: $registrationResult")
+        
+        // Send a test notification
+        val notificationResult = testNotification(
+            deviceToken = deviceToken,
+            secretMessage = "Test notification message"
+        )
+        println("Test notification result: $notificationResult")
+        
+        // For regtest mode testing
+        regtestMine(count = 6)  // Mine 6 blocks
+        
+        val depositTxid = regtestDeposit(
+            address = "bcrt1...",
+            amountSat = 100000
+        )
+        println("Deposited funds, txid: $depositTxid")
+        
+        val paymentId = regtestPay(
+            invoice = "lnbcrt...",
+            amountSat = 10000
+        )
+        println("Payment made, id: $paymentId")
+        
+        val paymentInfo = regtestGetPayment(paymentId = paymentId)
+        println("Payment status: ${paymentInfo.status}")
+        
+        val closeTxid = regtestCloseChannel(
+            fundingTxId = "txid",
+            vout = 0,
+            forceCloseAfterS = 60
+        )
+        println("Channel closed, txid: $closeTxid")
+        
     } catch (e: Exception) {
         println("Error: $e")
     }
@@ -194,6 +335,7 @@ suspend fun manageBlocktank() {
 ```python
 from bitkitcore import *
 import asyncio
+from datetime import datetime, timezone
 
 async def manage_blocktank():
     try:
@@ -236,6 +378,56 @@ async def manage_blocktank():
         
         active_cjit_entries = await refresh_active_cjit_entries()
         print(f"Active CJIT entries: {len(active_cjit_entries)}")
+        
+        # Register a device for notifications
+        device_token = "example-device-token"
+        public_key = "device-public-key"
+        features = ["lightning", "channel"]
+        node_id = "node-id"
+        timestamp = datetime.now(timezone.utc).isoformat()
+        signature = "signature-of-timestamp-with-node-private-key"
+        
+        registration_result = await register_device(
+            device_token=device_token,
+            public_key=public_key,
+            features=features,
+            node_id=node_id,
+            iso_timestamp=timestamp,
+            signature=signature
+        )
+        print(f"Device registration result: {registration_result}")
+        
+        # Send a test notification
+        notification_result = await test_notification(
+            device_token=device_token,
+            secret_message="Test notification message"
+        )
+        print(f"Test notification result: {notification_result}")
+        
+        # For regtest mode testing
+        await regtest_mine(count=6)  # Mine 6 blocks
+        
+        deposit_txid = await regtest_deposit(
+            address="bcrt1...",
+            amount_sat=100000
+        )
+        print(f"Deposited funds, txid: {deposit_txid}")
+        
+        payment_id = await regtest_pay(
+            invoice="lnbcrt...",
+            amount_sat=10000
+        )
+        print(f"Payment made, id: {payment_id}")
+        
+        payment_info = await regtest_get_payment(payment_id=payment_id)
+        print(f"Payment status: {payment_info.status}")
+        
+        close_txid = await regtest_close_channel(
+            funding_tx_id="txid",
+            vout=0,
+            force_close_after_s=60
+        )
+        print(f"Channel closed, txid: {close_txid}")
         
     except Exception as e:
         print(f"Error: {e}")

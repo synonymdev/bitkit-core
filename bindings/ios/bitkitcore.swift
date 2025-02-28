@@ -6422,12 +6422,110 @@ public func refreshActiveOrders()async throws  -> [IBtOrder] {
             errorHandler: FfiConverterTypeBlocktankError.lift
         )
 }
+public func registerDevice(deviceToken: String, publicKey: String, features: [String], nodeId: String, isoTimestamp: String, signature: String)async throws  -> String {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_register_device(FfiConverterString.lower(deviceToken),FfiConverterString.lower(publicKey),FfiConverterSequenceString.lower(features),FfiConverterString.lower(nodeId),FfiConverterString.lower(isoTimestamp),FfiConverterString.lower(signature)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
+public func regtestCloseChannel(fundingTxId: String, vout: UInt32, forceCloseAfterS: UInt64?)async throws  -> String {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_regtest_close_channel(FfiConverterString.lower(fundingTxId),FfiConverterUInt32.lower(vout),FfiConverterOptionUInt64.lower(forceCloseAfterS)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
+public func regtestDeposit(address: String, amountSat: UInt64?)async throws  -> String {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_regtest_deposit(FfiConverterString.lower(address),FfiConverterOptionUInt64.lower(amountSat)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
+public func regtestGetPayment(paymentId: String)async throws  -> IBtBolt11Invoice {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_regtest_get_payment(FfiConverterString.lower(paymentId)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeIBtBolt11Invoice.lift,
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
+public func regtestMine(count: UInt32?)async throws  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_regtest_mine(FfiConverterOptionUInt32.lower(count)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
+public func regtestPay(invoice: String, amountSat: UInt64?)async throws  -> String {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_regtest_pay(FfiConverterString.lower(invoice),FfiConverterOptionUInt64.lower(amountSat)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
 public func removeTags(activityId: String, tags: [String])throws  {try rustCallWithError(FfiConverterTypeActivityError.lift) {
     uniffi_bitkitcore_fn_func_remove_tags(
         FfiConverterString.lower(activityId),
         FfiConverterSequenceString.lower(tags),$0
     )
 }
+}
+public func testNotification(deviceToken: String, secretMessage: String)async throws  -> String {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_test_notification(FfiConverterString.lower(deviceToken),FfiConverterString.lower(secretMessage)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
 }
 public func updateActivity(activityId: String, activity: Activity)throws  {try rustCallWithError(FfiConverterTypeActivityError.lift) {
     uniffi_bitkitcore_fn_func_update_activity(
@@ -6545,7 +6643,28 @@ private var initializationResult: InitializationResult {
     if (uniffi_bitkitcore_checksum_func_refresh_active_orders() != 50661) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_register_device() != 31513) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_regtest_close_channel() != 48652) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_regtest_deposit() != 30356) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_regtest_get_payment() != 56623) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_regtest_mine() != 58685) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_regtest_pay() != 48342) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_remove_tags() != 58873) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_test_notification() != 20406) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_update_activity() != 42510) {

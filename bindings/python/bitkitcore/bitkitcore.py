@@ -505,7 +505,21 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_refresh_active_orders() != 50661:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_register_device() != 31513:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_regtest_close_channel() != 48652:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_regtest_deposit() != 30356:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_regtest_get_payment() != 56623:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_regtest_mine() != 58685:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_regtest_pay() != 48342:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_remove_tags() != 58873:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_test_notification() != 20406:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_update_activity() != 42510:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -742,12 +756,50 @@ _UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_cjit_entries.restype = ctype
 _UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_orders.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_orders.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_register_device.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_register_device.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_regtest_close_channel.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.c_uint32,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_regtest_close_channel.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_regtest_deposit.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_regtest_deposit.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_regtest_get_payment.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_regtest_get_payment.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_regtest_mine.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_regtest_mine.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_regtest_pay.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_regtest_pay.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_tags.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_test_notification.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_test_notification.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_update_activity.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1102,9 +1154,30 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries.restype =
 _UniffiLib.uniffi_bitkitcore_checksum_func_refresh_active_orders.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_refresh_active_orders.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_register_device.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_register_device.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_regtest_close_channel.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_regtest_close_channel.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_regtest_deposit.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_regtest_deposit.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_regtest_get_payment.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_regtest_get_payment.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_regtest_mine.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_regtest_mine.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_regtest_pay.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_regtest_pay.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_tags.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_test_notification.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_test_notification.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_update_activity.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_update_activity.restype = ctypes.c_uint16
@@ -6983,6 +7056,136 @@ async def refresh_active_orders() -> "typing.List[IBtOrder]":
 _UniffiConverterTypeBlocktankError,
 
     )
+async def register_device(device_token: "str",public_key: "str",features: "typing.List[str]",node_id: "str",iso_timestamp: "str",signature: "str") -> "str":
+
+    _UniffiConverterString.check_lower(device_token)
+    
+    _UniffiConverterString.check_lower(public_key)
+    
+    _UniffiConverterSequenceString.check_lower(features)
+    
+    _UniffiConverterString.check_lower(node_id)
+    
+    _UniffiConverterString.check_lower(iso_timestamp)
+    
+    _UniffiConverterString.check_lower(signature)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_register_device(
+        _UniffiConverterString.lower(device_token),
+        _UniffiConverterString.lower(public_key),
+        _UniffiConverterSequenceString.lower(features),
+        _UniffiConverterString.lower(node_id),
+        _UniffiConverterString.lower(iso_timestamp),
+        _UniffiConverterString.lower(signature)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+async def regtest_close_channel(funding_tx_id: "str",vout: "int",force_close_after_s: "typing.Optional[int]") -> "str":
+
+    _UniffiConverterString.check_lower(funding_tx_id)
+    
+    _UniffiConverterUInt32.check_lower(vout)
+    
+    _UniffiConverterOptionalUInt64.check_lower(force_close_after_s)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_regtest_close_channel(
+        _UniffiConverterString.lower(funding_tx_id),
+        _UniffiConverterUInt32.lower(vout),
+        _UniffiConverterOptionalUInt64.lower(force_close_after_s)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+async def regtest_deposit(address: "str",amount_sat: "typing.Optional[int]") -> "str":
+
+    _UniffiConverterString.check_lower(address)
+    
+    _UniffiConverterOptionalUInt64.check_lower(amount_sat)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_regtest_deposit(
+        _UniffiConverterString.lower(address),
+        _UniffiConverterOptionalUInt64.lower(amount_sat)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+async def regtest_get_payment(payment_id: "str") -> "IBtBolt11Invoice":
+
+    _UniffiConverterString.check_lower(payment_id)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_regtest_get_payment(
+        _UniffiConverterString.lower(payment_id)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeIBtBolt11Invoice.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+async def regtest_mine(count: "typing.Optional[int]") -> None:
+
+    _UniffiConverterOptionalUInt32.check_lower(count)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_regtest_mine(
+        _UniffiConverterOptionalUInt32.lower(count)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+async def regtest_pay(invoice: "str",amount_sat: "typing.Optional[int]") -> "str":
+
+    _UniffiConverterString.check_lower(invoice)
+    
+    _UniffiConverterOptionalUInt64.check_lower(amount_sat)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_regtest_pay(
+        _UniffiConverterString.lower(invoice),
+        _UniffiConverterOptionalUInt64.lower(amount_sat)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
 
 def remove_tags(activity_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(activity_id)
@@ -6993,6 +7196,26 @@ def remove_tags(activity_id: "str",tags: "typing.List[str]") -> None:
         _UniffiConverterString.lower(activity_id),
         _UniffiConverterSequenceString.lower(tags))
 
+async def test_notification(device_token: "str",secret_message: "str") -> "str":
+
+    _UniffiConverterString.check_lower(device_token)
+    
+    _UniffiConverterString.check_lower(secret_message)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_test_notification(
+        _UniffiConverterString.lower(device_token),
+        _UniffiConverterString.lower(secret_message)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
 
 def update_activity(activity_id: "str",activity: "Activity") -> None:
     _UniffiConverterString.check_lower(activity_id)
@@ -7119,7 +7342,14 @@ __all__ = [
     "open_channel",
     "refresh_active_cjit_entries",
     "refresh_active_orders",
+    "register_device",
+    "regtest_close_channel",
+    "regtest_deposit",
+    "regtest_get_payment",
+    "regtest_mine",
+    "regtest_pay",
     "remove_tags",
+    "test_notification",
     "update_activity",
     "update_blocktank_url",
     "upsert_activity",
