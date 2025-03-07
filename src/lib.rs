@@ -566,37 +566,14 @@ pub async fn register_device(
             error_details: "Database not initialized. Call init_db first.".to_string()
         })?;
 
-        let url = &db.blocktank_url;
-        let client = reqwest::Client::new();
-        let response = client.post(&format!("{}/device", url))
-            .json(&serde_json::json!({
-                "deviceToken": device_token,
-                "publicKey": public_key,
-                "features": features,
-                "nodeId": node_id,
-                "isoTimestamp": iso_timestamp,
-                "signature": signature
-            }))
-            .send()
-            .await
-            .map_err(|e| BlocktankError::HttpClient {
-                error_details: format!("Failed to register device: {}", e)
-            })?;
-
-        let status = response.status();
-        if !status.is_success() {
-            let error_text = response.text().await.map_err(|e| BlocktankError::HttpClient {
-                error_details: format!("Failed to read error response: {}", e)
-            })?;
-            return Err(BlocktankError::HttpClient {
-                error_details: format!("Failed to register device. Status: {}. Response: {}", status, error_text)
-            });
-        }
-
-        // Get the response body as text
-        response.text().await.map_err(|e| BlocktankError::HttpClient {
-            error_details: format!("Failed to read response body: {}", e)
-        })
+        db.register_device(
+            &device_token,
+            &public_key,
+            &features,
+            &node_id,
+            &iso_timestamp,
+            &signature
+        ).await
     }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
         error_details: format!("Runtime error: {}", e)
     }))
@@ -606,6 +583,7 @@ pub async fn register_device(
 pub async fn test_notification(
     device_token: String,
     secret_message: String,
+    notification_type: Option<String>,
 ) -> Result<String, BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
@@ -617,38 +595,8 @@ pub async fn test_notification(
             error_details: "Database not initialized. Call init_db first.".to_string()
         })?;
 
-        let url = &db.blocktank_url;
-        let client = reqwest::Client::new();
-        let response = client.post(&format!("{}/device/{}/test-notification", url, device_token))
-            .json(&serde_json::json!({
-                "data": {
-                    "source": "blocktank",
-                    "type": "orderPaymentConfirmed",
-                    "payload": {
-                        "secretMessage": secret_message
-                    }
-                }
-            }))
-            .send()
-            .await
-            .map_err(|e| BlocktankError::HttpClient {
-                error_details: format!("Failed to send test notification: {}", e)
-            })?;
-
-        let status = response.status();
-        if !status.is_success() {
-            let error_text = response.text().await.map_err(|e| BlocktankError::HttpClient {
-                error_details: format!("Failed to read error response: {}", e)
-            })?;
-            return Err(BlocktankError::HttpClient {
-                error_details: format!("Failed to send test notification. Status: {}. Response: {}", status, error_text)
-            });
-        }
-
-        // Get the response body as text
-        response.text().await.map_err(|e| BlocktankError::HttpClient {
-            error_details: format!("Failed to read response body: {}", e)
-        })
+        let notification_type = notification_type.unwrap_or("orderPaymentConfirmed".to_string());
+        db.test_notification(&device_token, &secret_message, &notification_type).await
     }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
         error_details: format!("Runtime error: {}", e)
     }))

@@ -263,4 +263,46 @@ impl BlocktankDB {
                 error_details: format!("Failed to close channel: {}", e)
             })
     }
+
+    /// Registers a device with Blocktank
+    pub async fn register_device(
+        &self,
+        device_token: &str,
+        public_key: &str,
+        features: &[String],
+        node_id: &str,
+        iso_timestamp: &str,
+        signature: &str,
+    ) -> Result<String, BlocktankError> {
+        self.client.register_device(
+            device_token,
+            public_key,
+            features,
+            node_id,
+            iso_timestamp,
+            signature
+        )
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to register device: {}", e)
+            })
+    }
+
+    /// Sends a test notification to a registered device
+    pub async fn test_notification(
+        &self,
+        device_token: &str,
+        secret_message: &str,
+        notification_type: &str,
+    ) -> Result<String, BlocktankError> {
+        self.client.test_notification(
+            device_token,
+            secret_message,
+            Option::from(notification_type)
+        )
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to send test notification: {}", e)
+            })
+    }
 }

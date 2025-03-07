@@ -6513,11 +6513,11 @@ public func removeTags(activityId: String, tags: [String])throws  {try rustCallW
     )
 }
 }
-public func testNotification(deviceToken: String, secretMessage: String)async throws  -> String {
+public func testNotification(deviceToken: String, secretMessage: String, notificationType: String?)async throws  -> String {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_test_notification(FfiConverterString.lower(deviceToken),FfiConverterString.lower(secretMessage)
+                uniffi_bitkitcore_fn_func_test_notification(FfiConverterString.lower(deviceToken),FfiConverterString.lower(secretMessage),FfiConverterOptionString.lower(notificationType)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
@@ -6664,7 +6664,7 @@ private var initializationResult: InitializationResult {
     if (uniffi_bitkitcore_checksum_func_remove_tags() != 58873) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_test_notification() != 20406) {
+    if (uniffi_bitkitcore_checksum_func_test_notification() != 33162) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_update_activity() != 42510) {
