@@ -555,6 +555,7 @@ pub async fn register_device(
     node_id: String,
     iso_timestamp: String,
     signature: String,
+    custom_url: Option<String>
 ) -> Result<String, BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
@@ -572,7 +573,8 @@ pub async fn register_device(
             &features,
             &node_id,
             &iso_timestamp,
-            &signature
+            &signature,
+            custom_url.as_deref()
         ).await
     }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
         error_details: format!("Runtime error: {}", e)
@@ -584,6 +586,7 @@ pub async fn test_notification(
     device_token: String,
     secret_message: String,
     notification_type: Option<String>,
+    custom_url: Option<String>
 ) -> Result<String, BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
@@ -595,8 +598,12 @@ pub async fn test_notification(
             error_details: "Database not initialized. Call init_db first.".to_string()
         })?;
 
-        let notification_type = notification_type.unwrap_or("orderPaymentConfirmed".to_string());
-        db.test_notification(&device_token, &secret_message, &notification_type).await
+        db.test_notification(
+            &device_token,
+            &secret_message,
+            notification_type.as_deref(),
+            custom_url.as_deref()
+        ).await
     }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
         error_details: format!("Runtime error: {}", e)
     }))

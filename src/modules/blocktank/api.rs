@@ -273,6 +273,7 @@ impl BlocktankDB {
         node_id: &str,
         iso_timestamp: &str,
         signature: &str,
+        custom_url: Option<&str>,
     ) -> Result<String, BlocktankError> {
         self.client.register_device(
             device_token,
@@ -280,7 +281,8 @@ impl BlocktankDB {
             features,
             node_id,
             iso_timestamp,
-            signature
+            signature,
+            custom_url
         )
             .await
             .map_err(|e| BlocktankError::DataError {
@@ -293,12 +295,14 @@ impl BlocktankDB {
         &self,
         device_token: &str,
         secret_message: &str,
-        notification_type: &str,
+        notification_type: Option<&str>,
+        custom_url: Option<&str>,
     ) -> Result<String, BlocktankError> {
         self.client.test_notification(
             device_token,
             secret_message,
-            Option::from(notification_type)
+            notification_type,
+            custom_url
         )
             .await
             .map_err(|e| BlocktankError::DataError {

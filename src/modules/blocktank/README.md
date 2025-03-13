@@ -84,14 +84,16 @@ async fn register_device(
     node_id: String,
     iso_timestamp: String,
     signature: String,
+    custom_url: Option<String>
 ) -> Result<String, BlocktankError>
 
 // Send a test notification to a registered device
 async fn test_notification(
     device_token: String,
     secret_message: String,
+    notification_type: Option<String>,
+    custom_url: Option<String>
 ) -> Result<String, BlocktankError>
-
 // Mine blocks in regtest mode
 async fn regtest_mine(count: Option<u32>) -> Result<(), BlocktankError>
 
@@ -353,7 +355,7 @@ async def manage_blocktank():
         # Create an order
         options = CreateOrderOptions(
             client_balance_sat=50000,
-            turbo_channel=True,
+            zero_conf=True,
             zero_reserve=True
         )
         order = await create_order(

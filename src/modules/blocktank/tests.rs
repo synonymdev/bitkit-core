@@ -343,9 +343,8 @@ mod tests {
         let timestamp = chrono::Utc::now().to_rfc3339();
 
         let options = CreateOrderOptions {
-            client_balance_sat: 20000,
             coupon_code: "".to_string(),
-            turbo_channel: true,
+            zero_conf: true,
             zero_reserve: false,
             announce_channel: false,
             ..Default::default()
@@ -356,7 +355,7 @@ mod tests {
 
         let order = result.unwrap();
         assert_eq!(order.lsp_balance_sat, 100000);
-        assert_eq!(order.client_balance_sat, 20000);
+        assert_eq!(order.client_balance_sat, 0);
 
     }
 
@@ -367,9 +366,9 @@ mod tests {
 
         // Create actual orders through the API
         let options = CreateOrderOptions {
-            client_balance_sat: 20000,
+            client_balance_sat: 0,
             coupon_code: "".to_string(),
-            turbo_channel: true,
+            zero_conf: true,
             zero_reserve: false,
             announce_channel: false,
             ..Default::default()
@@ -414,11 +413,11 @@ mod tests {
                     if order.id == order1.id {
                         found_order1 = true;
                         assert_eq!(order.lsp_balance_sat, 100000);
-                        assert_eq!(order.client_balance_sat, 20000);
+                        assert_eq!(order.client_balance_sat, 0);
                     } else if order.id == order2.id {
                         found_order2 = true;
                         assert_eq!(order.lsp_balance_sat, 150000);
-                        assert_eq!(order.client_balance_sat, 20000);
+                        assert_eq!(order.client_balance_sat, 0);
                     }
 
                     // Verify database state
@@ -694,9 +693,9 @@ mod tests {
 
         // Create test orders with different states
         let options = CreateOrderOptions {
-            client_balance_sat: 20000,
+            client_balance_sat: 0,
             coupon_code: "".to_string(),
-            turbo_channel: true,
+            zero_conf: true,
             zero_reserve: false,
             announce_channel: false,
             ..Default::default()
@@ -737,12 +736,12 @@ mod tests {
                     if order.id == order1.id {
                         found_order1 = true;
                         assert_eq!(order.lsp_balance_sat, 100000);
-                        assert_eq!(order.client_balance_sat, 20000);
+                        assert_eq!(order.client_balance_sat, 0);
                         assert!(matches!(order.state2, BtOrderState2::Created));
                     } else if order.id == order2.id {
                         found_order2 = true;
                         assert_eq!(order.lsp_balance_sat, 150000);
-                        assert_eq!(order.client_balance_sat, 20000);
+                        assert_eq!(order.client_balance_sat, 0);
                     }
 
                     // Verify order is in an active state
@@ -798,9 +797,9 @@ mod tests {
 
         // First create an order to get a valid order ID
         let options = CreateOrderOptions {
-            client_balance_sat: 20000,
+            client_balance_sat: 0,
             coupon_code: "".to_string(),
-            turbo_channel: true,
+            zero_conf: true,
             zero_reserve: false,
             announce_channel: false,
             ..Default::default()
@@ -837,9 +836,9 @@ mod tests {
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
 
         let options = Some(CreateOrderOptions {
-            client_balance_sat: 20000,
+            client_balance_sat: 0,
             coupon_code: "".to_string(),
-            turbo_channel: true,
+            zero_conf: true,
             zero_reserve: false,
             announce_channel: false,
             ..Default::default()
@@ -872,7 +871,7 @@ mod tests {
         let options = Some(CreateOrderOptions {
             client_balance_sat: 20000,
             coupon_code: "".to_string(),
-            turbo_channel: true,
+            zero_conf: true,
             zero_reserve: false,
             announce_channel: false,
             ..Default::default()

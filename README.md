@@ -172,6 +172,7 @@
           node_id: String,
           iso_timestamp: String,
           signature: String,
+          custom_url: Option<String>
         ) -> Result<String, BlocktankError>
         ```
     - [test_notification](src/modules/blocktank/README.md#usage-examples): Send a test notification to a registered device
@@ -179,6 +180,8 @@
         async fn test_notification(
           device_token: String,
           secret_message: String,
+          notification_type: Option<String>,
+          custom_url: Option<String>
         ) -> Result<String, BlocktankError>
         ```
     - [regtest_mine](src/modules/blocktank/README.md#usage-examples): Mine blocks in regtest mode
