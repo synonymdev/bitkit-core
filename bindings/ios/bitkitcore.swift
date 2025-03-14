@@ -558,7 +558,7 @@ public struct CreateOrderOptions {
     public var couponCode: String
     public var source: String?
     public var discountCode: String?
-    public var turboChannel: Bool
+    public var zeroConf: Bool
     public var zeroConfPayment: Bool?
     public var zeroReserve: Bool
     public var clientNodeId: String?
@@ -569,13 +569,13 @@ public struct CreateOrderOptions {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(clientBalanceSat: UInt64, lspNodeId: String?, couponCode: String, source: String?, discountCode: String?, turboChannel: Bool, zeroConfPayment: Bool?, zeroReserve: Bool, clientNodeId: String?, signature: String?, timestamp: String?, refundOnchainAddress: String?, announceChannel: Bool) {
+    public init(clientBalanceSat: UInt64, lspNodeId: String?, couponCode: String, source: String?, discountCode: String?, zeroConf: Bool, zeroConfPayment: Bool?, zeroReserve: Bool, clientNodeId: String?, signature: String?, timestamp: String?, refundOnchainAddress: String?, announceChannel: Bool) {
         self.clientBalanceSat = clientBalanceSat
         self.lspNodeId = lspNodeId
         self.couponCode = couponCode
         self.source = source
         self.discountCode = discountCode
-        self.turboChannel = turboChannel
+        self.zeroConf = zeroConf
         self.zeroConfPayment = zeroConfPayment
         self.zeroReserve = zeroReserve
         self.clientNodeId = clientNodeId
@@ -605,7 +605,7 @@ extension CreateOrderOptions: Equatable, Hashable {
         if lhs.discountCode != rhs.discountCode {
             return false
         }
-        if lhs.turboChannel != rhs.turboChannel {
+        if lhs.zeroConf != rhs.zeroConf {
             return false
         }
         if lhs.zeroConfPayment != rhs.zeroConfPayment {
@@ -638,7 +638,7 @@ extension CreateOrderOptions: Equatable, Hashable {
         hasher.combine(couponCode)
         hasher.combine(source)
         hasher.combine(discountCode)
-        hasher.combine(turboChannel)
+        hasher.combine(zeroConf)
         hasher.combine(zeroConfPayment)
         hasher.combine(zeroReserve)
         hasher.combine(clientNodeId)
@@ -659,7 +659,7 @@ public struct FfiConverterTypeCreateOrderOptions: FfiConverterRustBuffer {
                 couponCode: FfiConverterString.read(from: &buf), 
                 source: FfiConverterOptionString.read(from: &buf), 
                 discountCode: FfiConverterOptionString.read(from: &buf), 
-                turboChannel: FfiConverterBool.read(from: &buf), 
+                zeroConf: FfiConverterBool.read(from: &buf), 
                 zeroConfPayment: FfiConverterOptionBool.read(from: &buf), 
                 zeroReserve: FfiConverterBool.read(from: &buf), 
                 clientNodeId: FfiConverterOptionString.read(from: &buf), 
@@ -676,7 +676,7 @@ public struct FfiConverterTypeCreateOrderOptions: FfiConverterRustBuffer {
         FfiConverterString.write(value.couponCode, into: &buf)
         FfiConverterOptionString.write(value.source, into: &buf)
         FfiConverterOptionString.write(value.discountCode, into: &buf)
-        FfiConverterBool.write(value.turboChannel, into: &buf)
+        FfiConverterBool.write(value.zeroConf, into: &buf)
         FfiConverterOptionBool.write(value.zeroConfPayment, into: &buf)
         FfiConverterBool.write(value.zeroReserve, into: &buf)
         FfiConverterOptionString.write(value.clientNodeId, into: &buf)
@@ -6422,12 +6422,110 @@ public func refreshActiveOrders()async throws  -> [IBtOrder] {
             errorHandler: FfiConverterTypeBlocktankError.lift
         )
 }
+public func registerDevice(deviceToken: String, publicKey: String, features: [String], nodeId: String, isoTimestamp: String, signature: String, customUrl: String?)async throws  -> String {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_register_device(FfiConverterString.lower(deviceToken),FfiConverterString.lower(publicKey),FfiConverterSequenceString.lower(features),FfiConverterString.lower(nodeId),FfiConverterString.lower(isoTimestamp),FfiConverterString.lower(signature),FfiConverterOptionString.lower(customUrl)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
+public func regtestCloseChannel(fundingTxId: String, vout: UInt32, forceCloseAfterS: UInt64?)async throws  -> String {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_regtest_close_channel(FfiConverterString.lower(fundingTxId),FfiConverterUInt32.lower(vout),FfiConverterOptionUInt64.lower(forceCloseAfterS)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
+public func regtestDeposit(address: String, amountSat: UInt64?)async throws  -> String {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_regtest_deposit(FfiConverterString.lower(address),FfiConverterOptionUInt64.lower(amountSat)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
+public func regtestGetPayment(paymentId: String)async throws  -> IBtBolt11Invoice {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_regtest_get_payment(FfiConverterString.lower(paymentId)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeIBtBolt11Invoice.lift,
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
+public func regtestMine(count: UInt32?)async throws  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_regtest_mine(FfiConverterOptionUInt32.lower(count)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
+public func regtestPay(invoice: String, amountSat: UInt64?)async throws  -> String {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_regtest_pay(FfiConverterString.lower(invoice),FfiConverterOptionUInt64.lower(amountSat)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
 public func removeTags(activityId: String, tags: [String])throws  {try rustCallWithError(FfiConverterTypeActivityError.lift) {
     uniffi_bitkitcore_fn_func_remove_tags(
         FfiConverterString.lower(activityId),
         FfiConverterSequenceString.lower(tags),$0
     )
 }
+}
+public func testNotification(deviceToken: String, secretMessage: String, notificationType: String?, customUrl: String?)async throws  -> String {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_test_notification(FfiConverterString.lower(deviceToken),FfiConverterString.lower(secretMessage),FfiConverterOptionString.lower(notificationType),FfiConverterOptionString.lower(customUrl)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
 }
 public func updateActivity(activityId: String, activity: Activity)throws  {try rustCallWithError(FfiConverterTypeActivityError.lift) {
     uniffi_bitkitcore_fn_func_update_activity(
@@ -6545,7 +6643,28 @@ private var initializationResult: InitializationResult {
     if (uniffi_bitkitcore_checksum_func_refresh_active_orders() != 50661) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_register_device() != 54847) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_regtest_close_channel() != 48652) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_regtest_deposit() != 30356) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_regtest_get_payment() != 56623) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_regtest_mine() != 58685) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_regtest_pay() != 48342) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_remove_tags() != 58873) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_test_notification() != 32857) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_update_activity() != 42510) {

@@ -5,6 +5,7 @@ use rusqlite::Connection;
 pub struct BlocktankDB {
     pub(crate) conn: Mutex<Connection>,
     pub(crate) client: BlocktankClient,
+    pub(crate) blocktank_url: String,
 }
 
 pub const CREATE_ENUM_TABLES: &[&str] = &[

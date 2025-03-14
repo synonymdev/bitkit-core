@@ -1,4 +1,14 @@
-use rust_blocktank_client::{CreateCjitOptions, CreateOrderOptions, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, IBtInfo, IBtOrder, ICJitEntry};
+use rust_blocktank_client::{
+    CreateCjitOptions,
+    CreateOrderOptions,
+    IBt0ConfMinTxFeeWindow,
+    IBtBolt11Invoice,
+    IBtEstimateFeeResponse,
+    IBtEstimateFeeResponse2,
+    IBtInfo,
+    IBtOrder,
+    ICJitEntry
+};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError};
 
 impl BlocktankDB {
@@ -194,5 +204,109 @@ impl BlocktankDB {
         }
 
         Ok(refreshed_entries)
+    }
+
+    /// Mines blocks on the regtest network
+    pub async fn regtest_mine(&self, count: Option<u32>) -> Result<(), BlocktankError> {
+        self.client.regtest_mine(count)
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to mine blocks: {}", e)
+            })
+    }
+
+    /// Deposits satoshis to an address on the regtest network
+    pub async fn regtest_deposit(
+        &self,
+        address: &str,
+        amount_sat: Option<u64>,
+    ) -> Result<String, BlocktankError> {
+        self.client.regtest_deposit(address, amount_sat)
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to deposit to address: {}", e)
+            })
+    }
+
+    /// Pays an invoice on the regtest network
+    pub async fn regtest_pay(
+        &self,
+        invoice: &str,
+        amount_sat: Option<u64>,
+    ) -> Result<String, BlocktankError> {
+        self.client.regtest_pay(invoice, amount_sat)
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to pay invoice: {}", e)
+            })
+    }
+
+    /// Gets paid invoice on the regtest network
+    pub async fn regtest_get_payment(&self, payment_id: &str) -> Result<IBtBolt11Invoice, BlocktankError> {
+        self.client.regtest_get_payment(payment_id)
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to get payment: {}", e)
+            })
+    }
+
+    /// Closes a channel on the regtest network
+    pub async fn regtest_close_channel(
+        &self,
+        funding_tx_id: &str,
+        vout: u32,
+        force_close_after_s: Option<u64>,
+    ) -> Result<String, BlocktankError> {
+        self.client.regtest_close_channel(funding_tx_id, vout, force_close_after_s)
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to close channel: {}", e)
+            })
+    }
+
+    /// Registers a device with Blocktank
+    pub async fn register_device(
+        &self,
+        device_token: &str,
+        public_key: &str,
+        features: &[String],
+        node_id: &str,
+        iso_timestamp: &str,
+        signature: &str,
+        custom_url: Option<&str>,
+    ) -> Result<String, BlocktankError> {
+        self.client.register_device(
+            device_token,
+            public_key,
+            features,
+            node_id,
+            iso_timestamp,
+            signature,
+            custom_url
+        )
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to register device: {}", e)
+            })
+    }
+
+    /// Sends a test notification to a registered device
+    pub async fn test_notification(
+        &self,
+        device_token: &str,
+        secret_message: &str,
+        notification_type: Option<&str>,
+        custom_url: Option<&str>,
+    ) -> Result<String, BlocktankError> {
+        self.client.test_notification(
+            device_token,
+            secret_message,
+            notification_type,
+            custom_url
+        )
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to send test notification: {}", e)
+            })
     }
 }
