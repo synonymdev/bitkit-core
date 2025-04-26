@@ -19,21 +19,20 @@ func initializeTrezor() async {
         print("Trezor initialized: \(result)")
     } catch let error as HardwareError {
         switch error {
-        case .initializationError(let message):
-            print("Initialization failed: \(message)")
-        case .ioError(let message):
-            print("IO error: \(message)")
+        case .initializationError(let details):
+            print("Initialization failed: \(details.error_details)")
+        case .ioError(let details):
+            print("IO error: \(details.error_details)")
         case .executableDirectoryError:
             print("Failed to get executable directory")
-        case .communicationError(let message):
-            print("Communication error: \(message)")
-        case .jsonError(let message):
-            print("JSON parsing error: \(message)")
+        case .communicationError(let details):
+            print("Communication error: \(details.error_details)")
+        case .jsonError(let details):
+            print("JSON parsing error: \(details.error_details)")
         }
     }
 }
 ```
-
 ### Android (Kotlin) Example
 ```kotlin
 import com.synonym.bitkitcore.*
@@ -44,16 +43,15 @@ suspend fun initializeTrezor() {
         println("Trezor initialized: $result")
     } catch (e: HardwareError) {
         when (e) {
-            is HardwareError.InitializationError -> println("Initialization failed: ${e.message}")
-            is HardwareError.IoError -> println("IO error: ${e.message}")
+            is HardwareError.InitializationError -> println("Initialization failed: ${e.error_details}")
+            is HardwareError.IoError -> println("IO error: ${e.error_details}")
             is HardwareError.ExecutableDirectoryError -> println("Failed to get executable directory")
-            is HardwareError.CommunicationError -> println("Communication error: ${e.message}")
-            is HardwareError.JsonError -> println("JSON parsing error: ${e.message}")
+            is HardwareError.CommunicationError -> println("Communication error: ${e.error_details}")
+            is HardwareError.JsonError -> println("JSON parsing error: ${e.error_details}")
         }
     }
 }
 ```
-
 ### Python Example
 ```python
 from bitkitcore import initialize_trezor_library, HardwareError
@@ -64,29 +62,29 @@ async def initialize_trezor():
         print(f"Trezor initialized: {result}")
     except HardwareError as e:
         if isinstance(e, HardwareError.InitializationError):
-            print(f"Initialization failed: {e.message}")
+            print(f"Initialization failed: {e.error_details}")
         elif isinstance(e, HardwareError.IoError):
-            print(f"IO error: {e.message}")
+            print(f"IO error: {e.error_details}")
         elif isinstance(e, HardwareError.ExecutableDirectoryError):
             print("Failed to get executable directory")
         elif isinstance(e, HardwareError.CommunicationError):
-            print(f"Communication error: {e.message}")
+            print(f"Communication error: {e.error_details}")
         elif isinstance(e, HardwareError.JsonError):
-            print(f"JSON parsing error: {e.message}")
+            print(f"JSON parsing error: {e.error_details}")
 ```
 
 ## Error Handling
 
 ### HardwareError
 - `InitializationError`: Failed to initialize hardware wallet, includes:
-  - `message`: Detailed error message from the device
+  - `error_details`: Detailed error message from the device
 - `IoError`: I/O error occurred during communication, includes:
-  - `message`: Detailed I/O error message
+  - `error_details`: Detailed I/O error message
 - `ExecutableDirectoryError`: Failed to get the executable directory path
 - `CommunicationError`: Failed to communicate with the hardware device, includes:
-  - `message`: Detailed communication error message
+  - `error_details`: Detailed communication error message
 - `JsonError`: JSON serialization/deserialization error, includes:
-  - `message`: Detailed JSON error message
+  - `error_details`: Detailed JSON error message
 
 ## Implementation Details
 

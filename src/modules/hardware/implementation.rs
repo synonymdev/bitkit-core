@@ -6,7 +6,7 @@ use crate::modules::hardware::types::{AddressInfo, PublicKeyInfo, TrezorClient, 
 impl TrezorClient {
     fn new() -> Result<Self, HardwareError> {
         let exe_dir = std::env::current_exe()
-            .map_err(|e| HardwareError::IoError(e.to_string()))?
+            .map_err(|e| HardwareError::IoError { error_details: e.to_string() })?
             .parent()
             .ok_or(HardwareError::ExecutableDirectoryError)?
             .to_path_buf();
@@ -31,7 +31,7 @@ impl TrezorClient {
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
             .spawn()
-            .map_err(|e| HardwareError::IoError(e.to_string()))?;
+            .map_err(|e| HardwareError::IoError { error_details: e.to_string() })?;
 
         let reader = BufReader::new(process.stdout.take().unwrap());
 
@@ -47,17 +47,17 @@ impl TrezorClient {
         // Send command to the script via stdin
         if let Some(ref mut stdin) = self.process.stdin {
             writeln!(stdin, "{}", command_str)
-                .map_err(|e| HardwareError::IoError(e.to_string()))?;
+                .map_err(|e| HardwareError::IoError { error_details: e.to_string() })?;
             stdin.flush()
-                .map_err(|e| HardwareError::IoError(e.to_string()))?;
+                .map_err(|e| HardwareError::IoError { error_details: e.to_string() })?;
         } else {
-            return Err(HardwareError::CommunicationError("Failed to get stdin".into()));
+            return Err(HardwareError::CommunicationError { error_details: "Failed to get stdin".into() });
         }
 
         // Read response (JSON) from stdout
         let mut line = String::new();
         self.reader.read_line(&mut line)
-            .map_err(|e| HardwareError::IoError(e.to_string()))?;
+            .map_err(|e| HardwareError::IoError { error_details: e.to_string() })?;
 
         let s = line.trim();
 
@@ -80,14 +80,14 @@ impl TrezorClient {
     fn init(&mut self) -> Result<TrezorResponse<()>, HardwareError> {
         let response = self.send_command(json!({ "command": "init" }))?;
         let typed_response: TrezorResponse<()> = serde_json::from_value(response)
-            .map_err(|e| HardwareError::JsonError(e.to_string()))?;
+            .map_err(|e| HardwareError::JsonError { error_details: e.to_string() })?;
         Ok(typed_response)
     }
 
     fn get_features(&mut self) -> Result<TrezorResponse<TrezorDeviceFeatures>, HardwareError> {
         let response = self.send_command(json!({ "command": "getFeatures" }))?;
         let typed_response: TrezorResponse<TrezorDeviceFeatures> = serde_json::from_value(response)
-            .map_err(|e| HardwareError::JsonError(e.to_string()))?;
+            .map_err(|e| HardwareError::JsonError { error_details: e.to_string() })?;
         Ok(typed_response)
     }
 
@@ -98,7 +98,7 @@ impl TrezorClient {
             "coin": coin
         }))?;
         let typed_response: TrezorResponse<PublicKeyInfo> = serde_json::from_value(response)
-            .map_err(|e| HardwareError::JsonError(e.to_string()))?;
+            .map_err(|e| HardwareError::JsonError { error_details: e.to_string() })?;
         Ok(typed_response)
     }
 
@@ -110,14 +110,14 @@ impl TrezorClient {
             "showOnTrezor": show_on_trezor
         }))?;
         let typed_response: TrezorResponse<AddressInfo> = serde_json::from_value(response)
-            .map_err(|e| HardwareError::JsonError(e.to_string()))?;
+            .map_err(|e| HardwareError::JsonError { error_details: e.to_string() })?;
         Ok(typed_response)
     }
 
     fn exit(&mut self) -> Result<TrezorResponse<()>, HardwareError> {
         let response = self.send_command(json!({ "command": "exit" }))?;
         let typed_response: TrezorResponse<()> = serde_json::from_value(response)
-            .map_err(|e| HardwareError::JsonError(e.to_string()))?;
+            .map_err(|e| HardwareError::JsonError { error_details: e.to_string() })?;
         Ok(typed_response)
     }
 }
@@ -141,7 +141,7 @@ pub fn initialize() -> Result<String, HardwareError> {
     } else {
         let error_msg = init.error.unwrap_or_else(|| "Unknown error".to_string());
         eprintln!("❌ Trezor library initialization failed: {}", error_msg);
-        Err(HardwareError::InitializationError(error_msg))
+        Err(HardwareError::InitializationError { error_details: error_msg })
     }
 }
 
@@ -152,6 +152,6 @@ pub fn get_device_features(trezor: &mut TrezorClient) -> Result<TrezorDeviceFeat
     } else {
         let error_msg = features.error.unwrap_or_else(|| "Unknown error".to_string());
         eprintln!("❌ Get features failed: {}", error_msg);
-        Err(HardwareError::InitializationError(error_msg))
+        Err(HardwareError::InitializationError { error_details: error_msg })
     }
 }

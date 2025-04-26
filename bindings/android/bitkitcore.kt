@@ -4255,18 +4255,18 @@ sealed class HardwareException: Exception() {
     
     class InitializationException(
         
-        val ``: kotlin.String
+        val `errorDetails`: kotlin.String
         ) : HardwareException() {
         override val message
-            get() = "=${ `` }"
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
     class IoException(
         
-        val ``: kotlin.String
+        val `errorDetails`: kotlin.String
         ) : HardwareException() {
         override val message
-            get() = "=${ `` }"
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
     class ExecutableDirectoryException(
@@ -4277,18 +4277,18 @@ sealed class HardwareException: Exception() {
     
     class CommunicationException(
         
-        val ``: kotlin.String
+        val `errorDetails`: kotlin.String
         ) : HardwareException() {
         override val message
-            get() = "=${ `` }"
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
     class JsonException(
         
-        val ``: kotlin.String
+        val `errorDetails`: kotlin.String
         ) : HardwareException() {
         override val message
-            get() = "=${ `` }"
+            get() = "errorDetails=${ `errorDetails` }"
     }
     
 
@@ -4326,12 +4326,12 @@ public object FfiConverterTypeHardwareError : FfiConverterRustBuffer<HardwareExc
             is HardwareException.InitializationException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.``)
+                + FfiConverterString.allocationSize(value.`errorDetails`)
             )
             is HardwareException.IoException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.``)
+                + FfiConverterString.allocationSize(value.`errorDetails`)
             )
             is HardwareException.ExecutableDirectoryException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
@@ -4340,12 +4340,12 @@ public object FfiConverterTypeHardwareError : FfiConverterRustBuffer<HardwareExc
             is HardwareException.CommunicationException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.``)
+                + FfiConverterString.allocationSize(value.`errorDetails`)
             )
             is HardwareException.JsonException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
-                + FfiConverterString.allocationSize(value.``)
+                + FfiConverterString.allocationSize(value.`errorDetails`)
             )
         }
     }
@@ -4354,12 +4354,12 @@ public object FfiConverterTypeHardwareError : FfiConverterRustBuffer<HardwareExc
         when(value) {
             is HardwareException.InitializationException -> {
                 buf.putInt(1)
-                FfiConverterString.write(value.``, buf)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
             is HardwareException.IoException -> {
                 buf.putInt(2)
-                FfiConverterString.write(value.``, buf)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
             is HardwareException.ExecutableDirectoryException -> {
@@ -4368,12 +4368,12 @@ public object FfiConverterTypeHardwareError : FfiConverterRustBuffer<HardwareExc
             }
             is HardwareException.CommunicationException -> {
                 buf.putInt(4)
-                FfiConverterString.write(value.``, buf)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
             is HardwareException.JsonException -> {
                 buf.putInt(5)
-                FfiConverterString.write(value.``, buf)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }

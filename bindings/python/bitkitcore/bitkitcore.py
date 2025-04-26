@@ -5168,21 +5168,21 @@ _UniffiTempHardwareError = HardwareError
 class HardwareError:  # type: ignore
     class InitializationError(_UniffiTempHardwareError):
 
-        def __init__(self, ):
+        def __init__(self, error_details):
             super().__init__(", ".join([
-                "={!r}".format(),
+                "error_details={!r}".format(error_details),
             ]))
-            self. = 
+            self.error_details = error_details
         def __repr__(self):
             return "HardwareError.InitializationError({})".format(str(self))
     _UniffiTempHardwareError.InitializationError = InitializationError # type: ignore
     class IoError(_UniffiTempHardwareError):
 
-        def __init__(self, ):
+        def __init__(self, error_details):
             super().__init__(", ".join([
-                "={!r}".format(),
+                "error_details={!r}".format(error_details),
             ]))
-            self. = 
+            self.error_details = error_details
         def __repr__(self):
             return "HardwareError.IoError({})".format(str(self))
     _UniffiTempHardwareError.IoError = IoError # type: ignore
@@ -5195,21 +5195,21 @@ class HardwareError:  # type: ignore
     _UniffiTempHardwareError.ExecutableDirectoryError = ExecutableDirectoryError # type: ignore
     class CommunicationError(_UniffiTempHardwareError):
 
-        def __init__(self, ):
+        def __init__(self, error_details):
             super().__init__(", ".join([
-                "={!r}".format(),
+                "error_details={!r}".format(error_details),
             ]))
-            self. = 
+            self.error_details = error_details
         def __repr__(self):
             return "HardwareError.CommunicationError({})".format(str(self))
     _UniffiTempHardwareError.CommunicationError = CommunicationError # type: ignore
     class JsonError(_UniffiTempHardwareError):
 
-        def __init__(self, ):
+        def __init__(self, error_details):
             super().__init__(", ".join([
-                "={!r}".format(),
+                "error_details={!r}".format(error_details),
             ]))
-            self. = 
+            self.error_details = error_details
         def __repr__(self):
             return "HardwareError.JsonError({})".format(str(self))
     _UniffiTempHardwareError.JsonError = JsonError # type: ignore
@@ -5224,58 +5224,58 @@ class _UniffiConverterTypeHardwareError(_UniffiConverterRustBuffer):
         variant = buf.read_i32()
         if variant == 1:
             return HardwareError.InitializationError(
-                =_UniffiConverterString.read(buf),
+                error_details=_UniffiConverterString.read(buf),
             )
         if variant == 2:
             return HardwareError.IoError(
-                =_UniffiConverterString.read(buf),
+                error_details=_UniffiConverterString.read(buf),
             )
         if variant == 3:
             return HardwareError.ExecutableDirectoryError(
             )
         if variant == 4:
             return HardwareError.CommunicationError(
-                =_UniffiConverterString.read(buf),
+                error_details=_UniffiConverterString.read(buf),
             )
         if variant == 5:
             return HardwareError.JsonError(
-                =_UniffiConverterString.read(buf),
+                error_details=_UniffiConverterString.read(buf),
             )
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
     def check_lower(value):
         if isinstance(value, HardwareError.InitializationError):
-            _UniffiConverterString.check_lower(value.)
+            _UniffiConverterString.check_lower(value.error_details)
             return
         if isinstance(value, HardwareError.IoError):
-            _UniffiConverterString.check_lower(value.)
+            _UniffiConverterString.check_lower(value.error_details)
             return
         if isinstance(value, HardwareError.ExecutableDirectoryError):
             return
         if isinstance(value, HardwareError.CommunicationError):
-            _UniffiConverterString.check_lower(value.)
+            _UniffiConverterString.check_lower(value.error_details)
             return
         if isinstance(value, HardwareError.JsonError):
-            _UniffiConverterString.check_lower(value.)
+            _UniffiConverterString.check_lower(value.error_details)
             return
 
     @staticmethod
     def write(value, buf):
         if isinstance(value, HardwareError.InitializationError):
             buf.write_i32(1)
-            _UniffiConverterString.write(value., buf)
+            _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, HardwareError.IoError):
             buf.write_i32(2)
-            _UniffiConverterString.write(value., buf)
+            _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, HardwareError.ExecutableDirectoryError):
             buf.write_i32(3)
         if isinstance(value, HardwareError.CommunicationError):
             buf.write_i32(4)
-            _UniffiConverterString.write(value., buf)
+            _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, HardwareError.JsonError):
             buf.write_i32(5)
-            _UniffiConverterString.write(value., buf)
+            _UniffiConverterString.write(value.error_details, buf)
 
 
 # LnurlError

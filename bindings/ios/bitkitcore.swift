@@ -4979,14 +4979,14 @@ public enum HardwareError {
 
     
     
-    case InitializationError(String
+    case InitializationError(errorDetails: String
     )
-    case IoError(String
+    case IoError(errorDetails: String
     )
     case ExecutableDirectoryError
-    case CommunicationError(String
+    case CommunicationError(errorDetails: String
     )
-    case JsonError(String
+    case JsonError(errorDetails: String
     )
 }
 
@@ -5002,17 +5002,17 @@ public struct FfiConverterTypeHardwareError: FfiConverterRustBuffer {
 
         
         case 1: return .InitializationError(
-            : try FfiConverterString.read(from: &buf)
+            errorDetails: try FfiConverterString.read(from: &buf)
             )
         case 2: return .IoError(
-            : try FfiConverterString.read(from: &buf)
+            errorDetails: try FfiConverterString.read(from: &buf)
             )
         case 3: return .ExecutableDirectoryError
         case 4: return .CommunicationError(
-            : try FfiConverterString.read(from: &buf)
+            errorDetails: try FfiConverterString.read(from: &buf)
             )
         case 5: return .JsonError(
-            : try FfiConverterString.read(from: &buf)
+            errorDetails: try FfiConverterString.read(from: &buf)
             )
 
          default: throw UniffiInternalError.unexpectedEnumCase
@@ -5026,28 +5026,28 @@ public struct FfiConverterTypeHardwareError: FfiConverterRustBuffer {
 
         
         
-        case let .InitializationError():
+        case let .InitializationError(errorDetails):
             writeInt(&buf, Int32(1))
-            FfiConverterString.write(, into: &buf)
+            FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case let .IoError():
+        case let .IoError(errorDetails):
             writeInt(&buf, Int32(2))
-            FfiConverterString.write(, into: &buf)
+            FfiConverterString.write(errorDetails, into: &buf)
             
         
         case .ExecutableDirectoryError:
             writeInt(&buf, Int32(3))
         
         
-        case let .CommunicationError():
+        case let .CommunicationError(errorDetails):
             writeInt(&buf, Int32(4))
-            FfiConverterString.write(, into: &buf)
+            FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case let .JsonError():
+        case let .JsonError(errorDetails):
             writeInt(&buf, Int32(5))
-            FfiConverterString.write(, into: &buf)
+            FfiConverterString.write(errorDetails, into: &buf)
             
         }
     }
