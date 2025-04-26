@@ -22,6 +22,8 @@ use crate::onchain::{
 use std::sync::Mutex as StdMutex;
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex as TokioMutex;
+use crate::modules::hardware;
+use crate::modules::hardware::HardwareError;
 
 pub struct DatabaseConnections {
     activity_db: Option<ActivityDB>,
@@ -707,4 +709,9 @@ pub async fn regtest_close_channel(
     }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
         error_details: format!("Runtime error: {}", e)
     }))
+}
+
+#[uniffi::export]
+pub fn initialize_trezor_library() -> Result<String, HardwareError> {
+    hardware::initialize()
 }

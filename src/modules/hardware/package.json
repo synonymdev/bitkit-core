@@ -1,0 +1,16 @@
+{
+  "name": "js-in-rust",
+  "version": "1.0.0",
+  "description": "",
+  "main": "functions.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "bundle": "npx esbuild functions-with-trezor.js \\\n  --bundle \\\n  --platform=node \\\n  --format=cjs \\\n  --outfile=bundle.js\n"
+  },
+  "private": true,
+  "dependencies": {
+    "@trezor/connect": "^9.5.4",
+    "@trezor/connect-web": "^9.5.4",
+    "@trezor/connect-webextension": "^9.5.4"
+  }
+}
