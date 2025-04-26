@@ -342,6 +342,12 @@ RustBuffer uniffi_bitkitcore_fn_func_get_tags(RustBuffer activity_id, RustCallSt
 RustBuffer uniffi_bitkitcore_fn_func_init_db(RustBuffer base_path, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INITIALIZE_TREZOR_LIBRARY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INITIALIZE_TREZOR_LIBRARY
+RustBuffer uniffi_bitkitcore_fn_func_initialize_trezor_library(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INSERT_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INSERT_ACTIVITY
 void uniffi_bitkitcore_fn_func_insert_activity(RustBuffer activity, RustCallStatus *_Nonnull out_status
@@ -809,6 +815,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_tags(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INIT_DB
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INIT_DB
 uint16_t uniffi_bitkitcore_checksum_func_init_db(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INITIALIZE_TREZOR_LIBRARY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INITIALIZE_TREZOR_LIBRARY
+uint16_t uniffi_bitkitcore_checksum_func_initialize_trezor_library(void
     
 );
 #endif

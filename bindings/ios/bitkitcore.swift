@@ -4975,6 +4975,90 @@ extension DecodingError: Equatable, Hashable {}
 extension DecodingError: Error { }
 
 
+public enum HardwareError {
+
+    
+    
+    case InitializationError(String
+    )
+    case IoError(String
+    )
+    case ExecutableDirectoryError
+    case CommunicationError(String
+    )
+    case JsonError(String
+    )
+}
+
+
+public struct FfiConverterTypeHardwareError: FfiConverterRustBuffer {
+    typealias SwiftType = HardwareError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> HardwareError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .InitializationError(
+            : try FfiConverterString.read(from: &buf)
+            )
+        case 2: return .IoError(
+            : try FfiConverterString.read(from: &buf)
+            )
+        case 3: return .ExecutableDirectoryError
+        case 4: return .CommunicationError(
+            : try FfiConverterString.read(from: &buf)
+            )
+        case 5: return .JsonError(
+            : try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: HardwareError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .InitializationError():
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(, into: &buf)
+            
+        
+        case let .IoError():
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(, into: &buf)
+            
+        
+        case .ExecutableDirectoryError:
+            writeInt(&buf, Int32(3))
+        
+        
+        case let .CommunicationError():
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(, into: &buf)
+            
+        
+        case let .JsonError():
+            writeInt(&buf, Int32(5))
+            FfiConverterString.write(, into: &buf)
+            
+        }
+    }
+}
+
+
+extension HardwareError: Equatable, Hashable {}
+
+extension HardwareError: Error { }
+
+
 public enum LnurlError {
 
     
@@ -6368,6 +6452,12 @@ public func initDb(basePath: String)throws  -> String {
     )
 })
 }
+public func initializeTrezorLibrary()throws  -> String {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeHardwareError.lift) {
+    uniffi_bitkitcore_fn_func_initialize_trezor_library($0
+    )
+})
+}
 public func insertActivity(activity: Activity)throws  {try rustCallWithError(FfiConverterTypeActivityError.lift) {
     uniffi_bitkitcore_fn_func_insert_activity(
         FfiConverterTypeActivity.lower(activity),$0
@@ -6629,6 +6719,9 @@ private var initializationResult: InitializationResult {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_init_db() != 9643) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_initialize_trezor_library() != 22908) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_insert_activity() != 1510) {

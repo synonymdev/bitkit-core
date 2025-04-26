@@ -765,6 +765,8 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -815,6 +817,8 @@ internal interface UniffiLib : Library {
     fun uniffi_bitkitcore_fn_func_get_tags(`activityId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_init_db(`basePath`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_initialize_trezor_library(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_insert_activity(`activity`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
@@ -996,6 +1000,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_bitkitcore_checksum_func_init_db(
     ): Short
+    fun uniffi_bitkitcore_checksum_func_initialize_trezor_library(
+    ): Short
     fun uniffi_bitkitcore_checksum_func_insert_activity(
     ): Short
     fun uniffi_bitkitcore_checksum_func_open_channel(
@@ -1097,6 +1103,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_init_db() != 9643.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_initialize_trezor_library() != 22908.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_insert_activity() != 1510.toShort()) {
@@ -4242,6 +4251,140 @@ public object FfiConverterTypeDecodingError : FfiConverterRustBuffer<DecodingExc
 
 
 
+sealed class HardwareException: Exception() {
+    
+    class InitializationException(
+        
+        val ``: kotlin.String
+        ) : HardwareException() {
+        override val message
+            get() = "=${ `` }"
+    }
+    
+    class IoException(
+        
+        val ``: kotlin.String
+        ) : HardwareException() {
+        override val message
+            get() = "=${ `` }"
+    }
+    
+    class ExecutableDirectoryException(
+        ) : HardwareException() {
+        override val message
+            get() = ""
+    }
+    
+    class CommunicationException(
+        
+        val ``: kotlin.String
+        ) : HardwareException() {
+        override val message
+            get() = "=${ `` }"
+    }
+    
+    class JsonException(
+        
+        val ``: kotlin.String
+        ) : HardwareException() {
+        override val message
+            get() = "=${ `` }"
+    }
+    
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<HardwareException> {
+        override fun lift(error_buf: RustBuffer.ByValue): HardwareException = FfiConverterTypeHardwareError.lift(error_buf)
+    }
+
+    
+}
+
+public object FfiConverterTypeHardwareError : FfiConverterRustBuffer<HardwareException> {
+    override fun read(buf: ByteBuffer): HardwareException {
+        
+
+        return when(buf.getInt()) {
+            1 -> HardwareException.InitializationException(
+                FfiConverterString.read(buf),
+                )
+            2 -> HardwareException.IoException(
+                FfiConverterString.read(buf),
+                )
+            3 -> HardwareException.ExecutableDirectoryException()
+            4 -> HardwareException.CommunicationException(
+                FfiConverterString.read(buf),
+                )
+            5 -> HardwareException.JsonException(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: HardwareException): ULong {
+        return when(value) {
+            is HardwareException.InitializationException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.``)
+            )
+            is HardwareException.IoException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.``)
+            )
+            is HardwareException.ExecutableDirectoryException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is HardwareException.CommunicationException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.``)
+            )
+            is HardwareException.JsonException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.``)
+            )
+        }
+    }
+
+    override fun write(value: HardwareException, buf: ByteBuffer) {
+        when(value) {
+            is HardwareException.InitializationException -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.``, buf)
+                Unit
+            }
+            is HardwareException.IoException -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.``, buf)
+                Unit
+            }
+            is HardwareException.ExecutableDirectoryException -> {
+                buf.putInt(3)
+                Unit
+            }
+            is HardwareException.CommunicationException -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.``, buf)
+                Unit
+            }
+            is HardwareException.JsonException -> {
+                buf.putInt(5)
+                FfiConverterString.write(value.``, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+
+
 sealed class LnurlException: Exception() {
     
     class InvalidAddress(
@@ -5797,6 +5940,16 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
     uniffiRustCallWithError(DbException) { _status ->
     UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_init_db(
         FfiConverterString.lower(`basePath`),_status)
+}
+    )
+    }
+    
+
+    @Throws(HardwareException::class) fun `initializeTrezorLibrary`(): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCallWithError(HardwareException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_initialize_trezor_library(
+        _status)
 }
     )
     }

@@ -497,6 +497,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_init_db() != 9643:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_initialize_trezor_library() != 22908:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_insert_activity() != 1510:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_open_channel() != 21402:
@@ -740,6 +742,10 @@ _UniffiLib.uniffi_bitkitcore_fn_func_init_db.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_init_db.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_initialize_trezor_library.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_initialize_trezor_library.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1145,6 +1151,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_tags.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_init_db.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_init_db.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_initialize_trezor_library.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_initialize_trezor_library.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.restype = ctypes.c_uint16
@@ -5145,6 +5154,130 @@ class _UniffiConverterTypeDecodingError(_UniffiConverterRustBuffer):
             _UniffiConverterString.write(value.error_message, buf)
 
 
+# HardwareError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class HardwareError(Exception):
+    pass
+
+_UniffiTempHardwareError = HardwareError
+
+class HardwareError:  # type: ignore
+    class InitializationError(_UniffiTempHardwareError):
+
+        def __init__(self, ):
+            super().__init__(", ".join([
+                "={!r}".format(),
+            ]))
+            self. = 
+        def __repr__(self):
+            return "HardwareError.InitializationError({})".format(str(self))
+    _UniffiTempHardwareError.InitializationError = InitializationError # type: ignore
+    class IoError(_UniffiTempHardwareError):
+
+        def __init__(self, ):
+            super().__init__(", ".join([
+                "={!r}".format(),
+            ]))
+            self. = 
+        def __repr__(self):
+            return "HardwareError.IoError({})".format(str(self))
+    _UniffiTempHardwareError.IoError = IoError # type: ignore
+    class ExecutableDirectoryError(_UniffiTempHardwareError):
+
+        def __init__(self):
+            pass
+        def __repr__(self):
+            return "HardwareError.ExecutableDirectoryError({})".format(str(self))
+    _UniffiTempHardwareError.ExecutableDirectoryError = ExecutableDirectoryError # type: ignore
+    class CommunicationError(_UniffiTempHardwareError):
+
+        def __init__(self, ):
+            super().__init__(", ".join([
+                "={!r}".format(),
+            ]))
+            self. = 
+        def __repr__(self):
+            return "HardwareError.CommunicationError({})".format(str(self))
+    _UniffiTempHardwareError.CommunicationError = CommunicationError # type: ignore
+    class JsonError(_UniffiTempHardwareError):
+
+        def __init__(self, ):
+            super().__init__(", ".join([
+                "={!r}".format(),
+            ]))
+            self. = 
+        def __repr__(self):
+            return "HardwareError.JsonError({})".format(str(self))
+    _UniffiTempHardwareError.JsonError = JsonError # type: ignore
+
+HardwareError = _UniffiTempHardwareError # type: ignore
+del _UniffiTempHardwareError
+
+
+class _UniffiConverterTypeHardwareError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return HardwareError.InitializationError(
+                =_UniffiConverterString.read(buf),
+            )
+        if variant == 2:
+            return HardwareError.IoError(
+                =_UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return HardwareError.ExecutableDirectoryError(
+            )
+        if variant == 4:
+            return HardwareError.CommunicationError(
+                =_UniffiConverterString.read(buf),
+            )
+        if variant == 5:
+            return HardwareError.JsonError(
+                =_UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, HardwareError.InitializationError):
+            _UniffiConverterString.check_lower(value.)
+            return
+        if isinstance(value, HardwareError.IoError):
+            _UniffiConverterString.check_lower(value.)
+            return
+        if isinstance(value, HardwareError.ExecutableDirectoryError):
+            return
+        if isinstance(value, HardwareError.CommunicationError):
+            _UniffiConverterString.check_lower(value.)
+            return
+        if isinstance(value, HardwareError.JsonError):
+            _UniffiConverterString.check_lower(value.)
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, HardwareError.InitializationError):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value., buf)
+        if isinstance(value, HardwareError.IoError):
+            buf.write_i32(2)
+            _UniffiConverterString.write(value., buf)
+        if isinstance(value, HardwareError.ExecutableDirectoryError):
+            buf.write_i32(3)
+        if isinstance(value, HardwareError.CommunicationError):
+            buf.write_i32(4)
+            _UniffiConverterString.write(value., buf)
+        if isinstance(value, HardwareError.JsonError):
+            buf.write_i32(5)
+            _UniffiConverterString.write(value., buf)
+
+
 # LnurlError
 # We want to define each variant as a nested class that's also a subclass,
 # which is tricky in Python.  To accomplish this we're going to create each
@@ -6997,6 +7130,10 @@ def init_db(base_path: "str") -> "str":
         _UniffiConverterString.lower(base_path)))
 
 
+def initialize_trezor_library() -> "str":
+    return _UniffiConverterString.lift(_rust_call_with_error(_UniffiConverterTypeHardwareError,_UniffiLib.uniffi_bitkitcore_fn_func_initialize_trezor_library,))
+
+
 def insert_activity(activity: "Activity") -> None:
     _UniffiConverterTypeActivity.check_lower(activity)
     
@@ -7291,6 +7428,7 @@ __all__ = [
     "CJitStateEnum",
     "DbError",
     "DecodingError",
+    "HardwareError",
     "LnurlError",
     "ManualRefundStateEnum",
     "NetworkType",
@@ -7350,6 +7488,7 @@ __all__ = [
     "get_orders",
     "get_tags",
     "init_db",
+    "initialize_trezor_library",
     "insert_activity",
     "open_channel",
     "refresh_active_cjit_entries",

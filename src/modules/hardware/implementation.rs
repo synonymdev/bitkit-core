@@ -5,6 +5,15 @@ use crate::modules::hardware::types::{AddressInfo, PublicKeyInfo, TrezorClient, 
 
 impl TrezorClient {
     fn new() -> Result<Self, HardwareError> {
+        let exe_dir = std::env::current_exe()
+            .map_err(|e| HardwareError::IoError(e.to_string()))?
+            .parent()
+            .ok_or(HardwareError::ExecutableDirectoryError)?
+            .to_path_buf();
+        let js_file_path = exe_dir.join("functions-with-trezor.js");
+        if !js_file_path.exists() {
+            return Err(HardwareError::ExecutableDirectoryError);
+        }
         // Start the Deno script as a persistent process
         let mut process = Command::new("deno")
             .arg("run")
@@ -17,7 +26,7 @@ impl TrezorClient {
             .arg("--allow-write")
             .arg("--allow-scripts=npm:blake-hash@2.0.0,npm:tiny-secp256k1@1.1.7,npm:protobufjs@7.4.0,npm:usb@2.15.0")
             .arg("--node-modules-dir")
-            .arg("functions-with-trezor.js")
+            .arg(js_file_path.to_str().unwrap())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
