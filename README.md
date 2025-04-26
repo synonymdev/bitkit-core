@@ -12,6 +12,9 @@
     - Network validation (Mainnet, Testnet, Regtest)
 - Activity Module
     - Store and manage transaction/activity history for both Bitcoin and Lightning Network payments
+- Hardware Module
+    - Trezor hardware wallet integration
+    - Cross-platform communication with Trezor devices
 
 ## Available Modules: Methods
 - Scanner
@@ -77,6 +80,11 @@
   - [upsert_activity](src/modules/activity/README.md#usage-examples): Insert or update an activity
     ```rust
     fn upsert_activity(activity: Activity) -> Result<(), ActivityError>
+    ```
+- Hardware:
+  - [initialize_trezor_library](src/modules/hardware/README.md#usage-examples): Initialize connection to Trezor hardware wallet
+    ```rust
+    fn initialize_trezor_library() -> Result<String, HardwareError>
     ```
 - Blocktank:
   - [init_db](src/modules/activity/README.md#usage-examples): Initialize database
