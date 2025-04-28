@@ -2,16 +2,20 @@
 
 ## Features
 - Scanner Module
-    - Decode and parse Lightning/Bitcoin payment formats
-    - Support for BOLT-11, BIP21 & LNURL
+  - Decode and parse Lightning/Bitcoin payment formats
+  - Support for BOLT-11, BIP21 & LNURL
 - LNURL Module
-    - Lightning Address invoice generation
+  - Lightning Address invoice generation
 - Onchain Module
-    - Bitcoin address validation and type detection
-    - Support for Legacy, SegWit, Native SegWit & Taproot addresses
-    - Network validation (Mainnet, Testnet, Regtest)
+  - Bitcoin address validation and type detection
+  - BIP39 mnemonic phrase generation
+  - Bitcoin address derivation from mnemonic phrases
+  - Private key derivation
+  - Batch address derivation
+  - Support for Legacy, SegWit, Native SegWit & Taproot addresses
+  - Network validation (Mainnet, Testnet, Regtest)
 - Activity Module
-    - Store and manage transaction/activity history for both Bitcoin and Lightning Network payments
+  - Store and manage transaction/activity history for both Bitcoin and Lightning Network payments
 
 ## Available Modules: Methods
 - Scanner
@@ -27,7 +31,41 @@
 - Onchain:
   - [validate_bitcoin_address](src/modules/onchain/README.md#usage-examples): Validates a Bitcoin address and returns its type and network.
     ```rust
-        fn validate_bitcoin_address(address: String) -> Result<ValidationResult, AddressError>
+    fn validate_bitcoin_address(address: String) -> Result<ValidationResult, AddressError>
+    ```
+  - [genenerate_mnemonic](src/modules/onchain/README.md#usage-examples): Generates a BIP39 mnemonic phrase.
+    ```rust
+    fn genenerate_mnemonic(word_count: Option<WordCount>) -> Result<String, AddressError>
+    ```
+  - [derive_bitcoin_address](src/modules/onchain/README.md#usage-examples): Derives a Bitcoin address from a mnemonic phrase.
+    ```rust
+    fn derive_bitcoin_address(
+        mnemonic_phrase: String,
+        derivation_path_str: Option<String>,
+        network: Option<Network>,
+        bip39_passphrase: Option<String>
+    ) -> Result<GetAddressResponse, AddressError>
+    ```
+  - [derive_bitcoin_addresses](src/modules/onchain/README.md#usage-examples): Derives multiple Bitcoin addresses from a mnemonic phrase.
+    ```rust
+    fn derive_bitcoin_addresses(
+        mnemonic_phrase: String,
+        derivation_path_str: Option<String>,
+        network: Option<Network>,
+        bip39_passphrase: Option<String>,
+        is_change: Option<bool>,
+        start_index: Option<u32>,
+        count: Option<u32>
+    ) -> Result<GetAddressesResponse, AddressError>
+    ```
+  - [derive_private_key](src/modules/onchain/README.md#usage-examples): Derives a private key from a mnemonic phrase.
+    ```rust
+    fn derive_private_key(
+        mnemonic_phrase: String,
+        derivation_path_str: Option<String>,
+        network: Option<Network>,
+        bip39_passphrase: Option<String>
+    ) -> Result<String, AddressError>
     ```
 - Activity:
   - [init_db](src/modules/activity/README.md#usage-examples): Initialize database
