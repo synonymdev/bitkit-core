@@ -1,8 +1,9 @@
 use bitcoin::address::{Address, NetworkUnchecked};
-use bitcoin::Network;
 use std::str::FromStr;
 use crate::modules::scanner::{NetworkType};
 use crate::onchain::AddressError;
+use bitcoin::Network;
+use crate::onchain::types::{GetAddressResponse, GetAddressesResponse, WordCount};
 use super::types::{AddressType, ValidationResult};
 
 pub struct BitcoinAddressValidator;
@@ -19,7 +20,7 @@ impl BitcoinAddressValidator {
             Ok(n) => n,
             Err(e) => return Err(e),
         };
-        match verify_network(unchecked_addr, expected_network) {
+        match verify_network(unchecked_addr, expected_network.into()) {
             Ok(_) => {},
             Err(e) => return Err(e),
         }
@@ -32,6 +33,89 @@ impl BitcoinAddressValidator {
             network: NetworkType::from(expected_network),
             address_type,
         })
+    }
+
+    pub fn genenerate_mnemonic(
+        word_count: Option<WordCount>,
+    ) -> Result<String, AddressError> {
+        let external_word_count = word_count.map(|wc| wc.into());
+        let mnemonic = bitcoin_address_generator::generate_mnemonic(external_word_count, None);
+        match mnemonic {
+            Ok(mnemonic) => {
+                println!("✓ Generated mnemonic: {}", mnemonic);
+                Ok(mnemonic)
+            },
+            Err(e) => {
+                println!("✗ Failed to generate mnemonic: {:?}", e);
+                Err(AddressError::MnemonicGenerationFailed)
+            }
+        }
+    }
+
+    pub fn derive_bitcoin_address(
+        mnemonic_phrase: &str,
+        derivation_path_str: Option<&str>,
+        network: Option<Network>,
+        bip39_passphrase: Option<&str>,
+    ) -> Result<GetAddressResponse, AddressError> {
+        let address = bitcoin_address_generator::derive_bitcoin_address(
+            mnemonic_phrase,
+            derivation_path_str,
+            network.into(),
+            bip39_passphrase,
+        )
+            .map_err(|e| {
+                println!("✗ Failed to derive address: {:?}", e);
+                AddressError::AddressDerivationFailed
+            })?;
+
+        Ok(address.into())
+    }
+
+    pub fn derive_bitcoin_addresses(
+        mnemonic_phrase: &str,
+        derivation_path_str: Option<&str>,
+        network: Option<Network>,
+        bip39_passphrase: Option<&str>,
+        is_change: Option<bool>,
+        start_index: Option<u32>,
+        count: Option<u32>,
+    ) -> Result<GetAddressesResponse, AddressError> {
+        let addresses = bitcoin_address_generator::derive_bitcoin_addresses(
+            mnemonic_phrase,
+            derivation_path_str,
+            network.into(),
+            bip39_passphrase,
+            is_change,
+            start_index,
+            count,
+        )
+            .map_err(|e| {
+                println!("✗ Failed to derive addresses: {:?}", e);
+                AddressError::AddressDerivationFailed
+            })?;
+
+        Ok(addresses.into())
+    }
+
+    pub fn derive_private_key(
+        mnemonic_phrase: &str,
+        derivation_path_str: Option<&str>,
+        network: Option<Network>,
+        bip39_passphrase: Option<&str>,
+    ) -> Result<String, AddressError> {
+        let private_key = bitcoin_address_generator::derive_private_key(
+            mnemonic_phrase,
+            derivation_path_str,
+            network.into(),
+            bip39_passphrase,
+        )
+            .map_err(|e| {
+                println!("✗ Failed to derive private key: {:?}", e);
+                AddressError::AddressDerivationFailed
+            })?;
+
+        Ok(private_key)
     }
 }
 

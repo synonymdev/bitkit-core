@@ -7,4 +7,10 @@ pub enum AddressError {
     InvalidAddress,
     #[error("Invalid network type")]
     InvalidNetwork,
+    #[error("Mnemonic generation failed")]
+    MnemonicGenerationFailed,
+    #[error("Invalid mnemonic format")]
+    InvalidMnemonic,
+    #[error("Address derivation failed")]
+    AddressDerivationFailed,
 }

@@ -868,6 +868,144 @@ public func FfiConverterTypeFundingTx_lower(_ value: FundingTx) -> RustBuffer {
 }
 
 
+public struct GetAddressResponse {
+    /**
+     * The generated Bitcoin address as a string
+     */
+    public var address: String
+    /**
+     * The derivation path used to generate the address
+     */
+    public var path: String
+    /**
+     * The hexadecimal representation of the public key
+     */
+    public var publicKey: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The generated Bitcoin address as a string
+         */address: String, 
+        /**
+         * The derivation path used to generate the address
+         */path: String, 
+        /**
+         * The hexadecimal representation of the public key
+         */publicKey: String) {
+        self.address = address
+        self.path = path
+        self.publicKey = publicKey
+    }
+}
+
+
+
+extension GetAddressResponse: Equatable, Hashable {
+    public static func ==(lhs: GetAddressResponse, rhs: GetAddressResponse) -> Bool {
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.path != rhs.path {
+            return false
+        }
+        if lhs.publicKey != rhs.publicKey {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(address)
+        hasher.combine(path)
+        hasher.combine(publicKey)
+    }
+}
+
+
+public struct FfiConverterTypeGetAddressResponse: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> GetAddressResponse {
+        return
+            try GetAddressResponse(
+                address: FfiConverterString.read(from: &buf), 
+                path: FfiConverterString.read(from: &buf), 
+                publicKey: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: GetAddressResponse, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.address, into: &buf)
+        FfiConverterString.write(value.path, into: &buf)
+        FfiConverterString.write(value.publicKey, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeGetAddressResponse_lift(_ buf: RustBuffer) throws -> GetAddressResponse {
+    return try FfiConverterTypeGetAddressResponse.lift(buf)
+}
+
+public func FfiConverterTypeGetAddressResponse_lower(_ value: GetAddressResponse) -> RustBuffer {
+    return FfiConverterTypeGetAddressResponse.lower(value)
+}
+
+
+public struct GetAddressesResponse {
+    /**
+     * Vector of generated Bitcoin addresses
+     */
+    public var addresses: [GetAddressResponse]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Vector of generated Bitcoin addresses
+         */addresses: [GetAddressResponse]) {
+        self.addresses = addresses
+    }
+}
+
+
+
+extension GetAddressesResponse: Equatable, Hashable {
+    public static func ==(lhs: GetAddressesResponse, rhs: GetAddressesResponse) -> Bool {
+        if lhs.addresses != rhs.addresses {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(addresses)
+    }
+}
+
+
+public struct FfiConverterTypeGetAddressesResponse: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> GetAddressesResponse {
+        return
+            try GetAddressesResponse(
+                addresses: FfiConverterSequenceTypeGetAddressResponse.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: GetAddressesResponse, into buf: inout [UInt8]) {
+        FfiConverterSequenceTypeGetAddressResponse.write(value.addresses, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeGetAddressesResponse_lift(_ buf: RustBuffer) throws -> GetAddressesResponse {
+    return try FfiConverterTypeGetAddressesResponse.lift(buf)
+}
+
+public func FfiConverterTypeGetAddressesResponse_lower(_ value: GetAddressesResponse) -> RustBuffer {
+    return FfiConverterTypeGetAddressesResponse.lower(value)
+}
+
+
 public struct IBt0ConfMinTxFeeWindow {
     public var satPerVbyte: Double
     public var validityEndsAt: String
@@ -3853,6 +3991,9 @@ public enum AddressError {
     
     case InvalidAddress
     case InvalidNetwork
+    case MnemonicGenerationFailed
+    case InvalidMnemonic
+    case AddressDerivationFailed
 }
 
 
@@ -3868,6 +4009,9 @@ public struct FfiConverterTypeAddressError: FfiConverterRustBuffer {
         
         case 1: return .InvalidAddress
         case 2: return .InvalidNetwork
+        case 3: return .MnemonicGenerationFailed
+        case 4: return .InvalidMnemonic
+        case 5: return .AddressDerivationFailed
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -3886,6 +4030,18 @@ public struct FfiConverterTypeAddressError: FfiConverterRustBuffer {
         
         case .InvalidNetwork:
             writeInt(&buf, Int32(2))
+        
+        
+        case .MnemonicGenerationFailed:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .InvalidMnemonic:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .AddressDerivationFailed:
+            writeInt(&buf, Int32(5))
         
         }
     }
@@ -5132,6 +5288,97 @@ extension ManualRefundStateEnum: Equatable, Hashable {}
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
+public enum Network {
+    
+    /**
+     * Mainnet Bitcoin.
+     */
+    case bitcoin
+    /**
+     * Bitcoin's testnet network.
+     */
+    case testnet
+    /**
+     * Bitcoin's testnet4 network.
+     */
+    case testnet4
+    /**
+     * Bitcoin's signet network.
+     */
+    case signet
+    /**
+     * Bitcoin's regtest network.
+     */
+    case regtest
+}
+
+
+public struct FfiConverterTypeNetwork: FfiConverterRustBuffer {
+    typealias SwiftType = Network
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Network {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .bitcoin
+        
+        case 2: return .testnet
+        
+        case 3: return .testnet4
+        
+        case 4: return .signet
+        
+        case 5: return .regtest
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: Network, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .bitcoin:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .testnet:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .testnet4:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .signet:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .regtest:
+            writeInt(&buf, Int32(5))
+        
+        }
+    }
+}
+
+
+public func FfiConverterTypeNetwork_lift(_ buf: RustBuffer) throws -> Network {
+    return try FfiConverterTypeNetwork.lift(buf)
+}
+
+public func FfiConverterTypeNetwork_lower(_ value: Network) -> RustBuffer {
+    return FfiConverterTypeNetwork.lower(value)
+}
+
+
+
+extension Network: Equatable, Hashable {}
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 public enum NetworkType {
     
     case bitcoin
@@ -5522,6 +5769,97 @@ extension SortDirection: Equatable, Hashable {}
 
 
 
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
+public enum WordCount {
+    
+    /**
+     * 12-word mnemonic (128 bits of entropy)
+     */
+    case words12
+    /**
+     * 15-word mnemonic (160 bits of entropy)
+     */
+    case words15
+    /**
+     * 18-word mnemonic (192 bits of entropy)
+     */
+    case words18
+    /**
+     * 21-word mnemonic (224 bits of entropy)
+     */
+    case words21
+    /**
+     * 24-word mnemonic (256 bits of entropy)
+     */
+    case words24
+}
+
+
+public struct FfiConverterTypeWordCount: FfiConverterRustBuffer {
+    typealias SwiftType = WordCount
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> WordCount {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .words12
+        
+        case 2: return .words15
+        
+        case 3: return .words18
+        
+        case 4: return .words21
+        
+        case 5: return .words24
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: WordCount, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .words12:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .words15:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .words18:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .words21:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .words24:
+            writeInt(&buf, Int32(5))
+        
+        }
+    }
+}
+
+
+public func FfiConverterTypeWordCount_lift(_ buf: RustBuffer) throws -> WordCount {
+    return try FfiConverterTypeWordCount.lift(buf)
+}
+
+public func FfiConverterTypeWordCount_lower(_ value: WordCount) -> RustBuffer {
+    return FfiConverterTypeWordCount.lower(value)
+}
+
+
+
+extension WordCount: Equatable, Hashable {}
+
+
+
 fileprivate struct FfiConverterOptionUInt32: FfiConverterRustBuffer {
     typealias SwiftType = UInt32?
 
@@ -5837,6 +6175,27 @@ fileprivate struct FfiConverterOptionTypeCJitStateEnum: FfiConverterRustBuffer {
     }
 }
 
+fileprivate struct FfiConverterOptionTypeNetwork: FfiConverterRustBuffer {
+    typealias SwiftType = Network?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeNetwork.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeNetwork.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
 fileprivate struct FfiConverterOptionTypePaymentType: FfiConverterRustBuffer {
     typealias SwiftType = PaymentType?
 
@@ -5874,6 +6233,27 @@ fileprivate struct FfiConverterOptionTypeSortDirection: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeSortDirection.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeWordCount: FfiConverterRustBuffer {
+    typealias SwiftType = WordCount?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeWordCount.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeWordCount.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -5959,6 +6339,28 @@ fileprivate struct FfiConverterSequenceString: FfiConverterRustBuffer {
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterString.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypeGetAddressResponse: FfiConverterRustBuffer {
+    typealias SwiftType = [GetAddressResponse]
+
+    public static func write(_ value: [GetAddressResponse], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeGetAddressResponse.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [GetAddressResponse] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [GetAddressResponse]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeGetAddressResponse.read(from: &buf))
         }
         return seq
     }
@@ -6220,6 +6622,39 @@ public func deleteActivityById(activityId: String)throws  -> Bool {
     )
 })
 }
+public func deriveBitcoinAddress(mnemonicPhrase: String, derivationPathStr: String?, network: Network?, bip39Passphrase: String?)throws  -> GetAddressResponse {
+    return try  FfiConverterTypeGetAddressResponse.lift(try rustCallWithError(FfiConverterTypeAddressError.lift) {
+    uniffi_bitkitcore_fn_func_derive_bitcoin_address(
+        FfiConverterString.lower(mnemonicPhrase),
+        FfiConverterOptionString.lower(derivationPathStr),
+        FfiConverterOptionTypeNetwork.lower(network),
+        FfiConverterOptionString.lower(bip39Passphrase),$0
+    )
+})
+}
+public func deriveBitcoinAddresses(mnemonicPhrase: String, derivationPathStr: String?, network: Network?, bip39Passphrase: String?, isChange: Bool?, startIndex: UInt32?, count: UInt32?)throws  -> GetAddressesResponse {
+    return try  FfiConverterTypeGetAddressesResponse.lift(try rustCallWithError(FfiConverterTypeAddressError.lift) {
+    uniffi_bitkitcore_fn_func_derive_bitcoin_addresses(
+        FfiConverterString.lower(mnemonicPhrase),
+        FfiConverterOptionString.lower(derivationPathStr),
+        FfiConverterOptionTypeNetwork.lower(network),
+        FfiConverterOptionString.lower(bip39Passphrase),
+        FfiConverterOptionBool.lower(isChange),
+        FfiConverterOptionUInt32.lower(startIndex),
+        FfiConverterOptionUInt32.lower(count),$0
+    )
+})
+}
+public func derivePrivateKey(mnemonicPhrase: String, derivationPathStr: String?, network: Network?, bip39Passphrase: String?)throws  -> String {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeAddressError.lift) {
+    uniffi_bitkitcore_fn_func_derive_private_key(
+        FfiConverterString.lower(mnemonicPhrase),
+        FfiConverterOptionString.lower(derivationPathStr),
+        FfiConverterOptionTypeNetwork.lower(network),
+        FfiConverterOptionString.lower(bip39Passphrase),$0
+    )
+})
+}
 public func estimateOrderFee(lspBalanceSat: UInt64, channelExpiryWeeks: UInt32, options: CreateOrderOptions?)async throws  -> IBtEstimateFeeResponse {
     return
         try  await uniffiRustCallAsync(
@@ -6247,6 +6682,13 @@ public func estimateOrderFeeFull(lspBalanceSat: UInt64, channelExpiryWeeks: UInt
             liftFunc: FfiConverterTypeIBtEstimateFeeResponse2.lift,
             errorHandler: FfiConverterTypeBlocktankError.lift
         )
+}
+public func generateMnemonic(wordCount: WordCount?)throws  -> String {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeAddressError.lift) {
+    uniffi_bitkitcore_fn_func_generate_mnemonic(
+        FfiConverterOptionTypeWordCount.lower(wordCount),$0
+    )
+})
 }
 public func getActivities(filter: ActivityFilter?, txType: PaymentType?, tags: [String]?, search: String?, minDate: UInt64?, maxDate: UInt64?, limit: UInt32?, sortDirection: SortDirection?)throws  -> [Activity] {
     return try  FfiConverterSequenceTypeActivity.lift(try rustCallWithError(FfiConverterTypeActivityError.lift) {
@@ -6592,10 +7034,22 @@ private var initializationResult: InitializationResult {
     if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_derive_bitcoin_address() != 35090) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses() != 34371) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_derive_private_key() != 25155) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_estimate_order_fee() != 9548) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_activities() != 21347) {

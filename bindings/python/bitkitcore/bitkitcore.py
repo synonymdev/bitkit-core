@@ -471,9 +471,17 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_derive_bitcoin_address() != 35090:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses() != 34371:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_derive_private_key() != 25155:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_estimate_order_fee() != 9548:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activities() != 21347:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -665,6 +673,33 @@ _UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.restype = ctypes.c_int8
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_bitcoin_address.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_bitcoin_address.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_bitcoin_addresses.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_bitcoin_addresses.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_private_key.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_private_key.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee.argtypes = (
     ctypes.c_uint64,
     ctypes.c_uint32,
@@ -677,6 +712,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee_full.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee_full.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_generate_mnemonic.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_generate_mnemonic.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activities.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1106,12 +1146,24 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_decode.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_delete_activity_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_delete_activity_by_id.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_address.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_address.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_private_key.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_private_key.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_generate_mnemonic.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_generate_mnemonic.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities.restype = ctypes.c_uint16
@@ -1572,6 +1624,96 @@ class _UniffiConverterTypeFundingTx(_UniffiConverterRustBuffer):
     def write(value, buf):
         _UniffiConverterString.write(value.id, buf)
         _UniffiConverterUInt64.write(value.vout, buf)
+
+
+class GetAddressResponse:
+    address: "str"
+    """
+    The generated Bitcoin address as a string
+    """
+
+    path: "str"
+    """
+    The derivation path used to generate the address
+    """
+
+    public_key: "str"
+    """
+    The hexadecimal representation of the public key
+    """
+
+    @typing.no_type_check
+    def __init__(self, *, address: "str", path: "str", public_key: "str"):
+        self.address = address
+        self.path = path
+        self.public_key = public_key
+
+    def __str__(self):
+        return "GetAddressResponse(address={}, path={}, public_key={})".format(self.address, self.path, self.public_key)
+
+    def __eq__(self, other):
+        if self.address != other.address:
+            return False
+        if self.path != other.path:
+            return False
+        if self.public_key != other.public_key:
+            return False
+        return True
+
+class _UniffiConverterTypeGetAddressResponse(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return GetAddressResponse(
+            address=_UniffiConverterString.read(buf),
+            path=_UniffiConverterString.read(buf),
+            public_key=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.address)
+        _UniffiConverterString.check_lower(value.path)
+        _UniffiConverterString.check_lower(value.public_key)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.address, buf)
+        _UniffiConverterString.write(value.path, buf)
+        _UniffiConverterString.write(value.public_key, buf)
+
+
+class GetAddressesResponse:
+    addresses: "typing.List[GetAddressResponse]"
+    """
+    Vector of generated Bitcoin addresses
+    """
+
+    @typing.no_type_check
+    def __init__(self, *, addresses: "typing.List[GetAddressResponse]"):
+        self.addresses = addresses
+
+    def __str__(self):
+        return "GetAddressesResponse(addresses={})".format(self.addresses)
+
+    def __eq__(self, other):
+        if self.addresses != other.addresses:
+            return False
+        return True
+
+class _UniffiConverterTypeGetAddressesResponse(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return GetAddressesResponse(
+            addresses=_UniffiConverterSequenceTypeGetAddressResponse.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterSequenceTypeGetAddressResponse.check_lower(value.addresses)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterSequenceTypeGetAddressResponse.write(value.addresses, buf)
 
 
 class IBt0ConfMinTxFeeWindow:
@@ -3936,6 +4078,27 @@ class AddressError:  # type: ignore
         def __repr__(self):
             return "AddressError.InvalidNetwork({})".format(str(self))
     _UniffiTempAddressError.InvalidNetwork = InvalidNetwork # type: ignore
+    class MnemonicGenerationFailed(_UniffiTempAddressError):
+
+        def __init__(self):
+            pass
+        def __repr__(self):
+            return "AddressError.MnemonicGenerationFailed({})".format(str(self))
+    _UniffiTempAddressError.MnemonicGenerationFailed = MnemonicGenerationFailed # type: ignore
+    class InvalidMnemonic(_UniffiTempAddressError):
+
+        def __init__(self):
+            pass
+        def __repr__(self):
+            return "AddressError.InvalidMnemonic({})".format(str(self))
+    _UniffiTempAddressError.InvalidMnemonic = InvalidMnemonic # type: ignore
+    class AddressDerivationFailed(_UniffiTempAddressError):
+
+        def __init__(self):
+            pass
+        def __repr__(self):
+            return "AddressError.AddressDerivationFailed({})".format(str(self))
+    _UniffiTempAddressError.AddressDerivationFailed = AddressDerivationFailed # type: ignore
 
 AddressError = _UniffiTempAddressError # type: ignore
 del _UniffiTempAddressError
@@ -3951,6 +4114,15 @@ class _UniffiConverterTypeAddressError(_UniffiConverterRustBuffer):
         if variant == 2:
             return AddressError.InvalidNetwork(
             )
+        if variant == 3:
+            return AddressError.MnemonicGenerationFailed(
+            )
+        if variant == 4:
+            return AddressError.InvalidMnemonic(
+            )
+        if variant == 5:
+            return AddressError.AddressDerivationFailed(
+            )
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
@@ -3959,6 +4131,12 @@ class _UniffiConverterTypeAddressError(_UniffiConverterRustBuffer):
             return
         if isinstance(value, AddressError.InvalidNetwork):
             return
+        if isinstance(value, AddressError.MnemonicGenerationFailed):
+            return
+        if isinstance(value, AddressError.InvalidMnemonic):
+            return
+        if isinstance(value, AddressError.AddressDerivationFailed):
+            return
 
     @staticmethod
     def write(value, buf):
@@ -3966,6 +4144,12 @@ class _UniffiConverterTypeAddressError(_UniffiConverterRustBuffer):
             buf.write_i32(1)
         if isinstance(value, AddressError.InvalidNetwork):
             buf.write_i32(2)
+        if isinstance(value, AddressError.MnemonicGenerationFailed):
+            buf.write_i32(3)
+        if isinstance(value, AddressError.InvalidMnemonic):
+            buf.write_i32(4)
+        if isinstance(value, AddressError.AddressDerivationFailed):
+            buf.write_i32(5)
 
 
 
@@ -5338,6 +5522,88 @@ class _UniffiConverterTypeManualRefundStateEnum(_UniffiConverterRustBuffer):
 
 
 
+class Network(enum.Enum):
+    BITCOIN = 0
+    """
+    Mainnet Bitcoin.
+    """
+
+    
+    TESTNET = 1
+    """
+    Bitcoin's testnet network.
+    """
+
+    
+    TESTNET4 = 2
+    """
+    Bitcoin's testnet4 network.
+    """
+
+    
+    SIGNET = 3
+    """
+    Bitcoin's signet network.
+    """
+
+    
+    REGTEST = 4
+    """
+    Bitcoin's regtest network.
+    """
+
+    
+
+
+class _UniffiConverterTypeNetwork(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return Network.BITCOIN
+        if variant == 2:
+            return Network.TESTNET
+        if variant == 3:
+            return Network.TESTNET4
+        if variant == 4:
+            return Network.SIGNET
+        if variant == 5:
+            return Network.REGTEST
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == Network.BITCOIN:
+            return
+        if value == Network.TESTNET:
+            return
+        if value == Network.TESTNET4:
+            return
+        if value == Network.SIGNET:
+            return
+        if value == Network.REGTEST:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == Network.BITCOIN:
+            buf.write_i32(1)
+        if value == Network.TESTNET:
+            buf.write_i32(2)
+        if value == Network.TESTNET4:
+            buf.write_i32(3)
+        if value == Network.SIGNET:
+            buf.write_i32(4)
+        if value == Network.REGTEST:
+            buf.write_i32(5)
+
+
+
+
+
+
+
 class NetworkType(enum.Enum):
     BITCOIN = 0
     
@@ -5886,6 +6152,88 @@ class _UniffiConverterTypeSortDirection(_UniffiConverterRustBuffer):
 
 
 
+
+
+class WordCount(enum.Enum):
+    WORDS12 = 12
+    """
+    12-word mnemonic (128 bits of entropy)
+    """
+
+    
+    WORDS15 = 15
+    """
+    15-word mnemonic (160 bits of entropy)
+    """
+
+    
+    WORDS18 = 18
+    """
+    18-word mnemonic (192 bits of entropy)
+    """
+
+    
+    WORDS21 = 21
+    """
+    21-word mnemonic (224 bits of entropy)
+    """
+
+    
+    WORDS24 = 24
+    """
+    24-word mnemonic (256 bits of entropy)
+    """
+
+    
+
+
+class _UniffiConverterTypeWordCount(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return WordCount.WORDS12
+        if variant == 2:
+            return WordCount.WORDS15
+        if variant == 3:
+            return WordCount.WORDS18
+        if variant == 4:
+            return WordCount.WORDS21
+        if variant == 5:
+            return WordCount.WORDS24
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == WordCount.WORDS12:
+            return
+        if value == WordCount.WORDS15:
+            return
+        if value == WordCount.WORDS18:
+            return
+        if value == WordCount.WORDS21:
+            return
+        if value == WordCount.WORDS24:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == WordCount.WORDS12:
+            buf.write_i32(1)
+        if value == WordCount.WORDS15:
+            buf.write_i32(2)
+        if value == WordCount.WORDS18:
+            buf.write_i32(3)
+        if value == WordCount.WORDS21:
+            buf.write_i32(4)
+        if value == WordCount.WORDS24:
+            buf.write_i32(5)
+
+
+
+
+
 class _UniffiConverterOptionalUInt32(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -6291,6 +6639,33 @@ class _UniffiConverterOptionalTypeCJitStateEnum(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypeNetwork(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeNetwork.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeNetwork.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeNetwork.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypePaymentType(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -6340,6 +6715,33 @@ class _UniffiConverterOptionalTypeSortDirection(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterTypeSortDirection.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeWordCount(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeWordCount.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeWordCount.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeWordCount.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -6447,6 +6849,31 @@ class _UniffiConverterSequenceString(_UniffiConverterRustBuffer):
 
         return [
             _UniffiConverterString.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeGetAddressResponse(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeGetAddressResponse.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeGetAddressResponse.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeGetAddressResponse.read(buf) for i in range(count)
         ]
 
 
@@ -6784,6 +7211,63 @@ def delete_activity_by_id(activity_id: "str") -> "bool":
     return _UniffiConverterBool.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id,
         _UniffiConverterString.lower(activity_id)))
 
+
+def derive_bitcoin_address(mnemonic_phrase: "str",derivation_path_str: "typing.Optional[str]",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]") -> "GetAddressResponse":
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+    
+    _UniffiConverterOptionalString.check_lower(derivation_path_str)
+    
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+    
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+    
+    return _UniffiConverterTypeGetAddressResponse.lift(_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_derive_bitcoin_address,
+        _UniffiConverterString.lower(mnemonic_phrase),
+        _UniffiConverterOptionalString.lower(derivation_path_str),
+        _UniffiConverterOptionalTypeNetwork.lower(network),
+        _UniffiConverterOptionalString.lower(bip39_passphrase)))
+
+
+def derive_bitcoin_addresses(mnemonic_phrase: "str",derivation_path_str: "typing.Optional[str]",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",is_change: "typing.Optional[bool]",start_index: "typing.Optional[int]",count: "typing.Optional[int]") -> "GetAddressesResponse":
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+    
+    _UniffiConverterOptionalString.check_lower(derivation_path_str)
+    
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+    
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+    
+    _UniffiConverterOptionalBool.check_lower(is_change)
+    
+    _UniffiConverterOptionalUInt32.check_lower(start_index)
+    
+    _UniffiConverterOptionalUInt32.check_lower(count)
+    
+    return _UniffiConverterTypeGetAddressesResponse.lift(_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_derive_bitcoin_addresses,
+        _UniffiConverterString.lower(mnemonic_phrase),
+        _UniffiConverterOptionalString.lower(derivation_path_str),
+        _UniffiConverterOptionalTypeNetwork.lower(network),
+        _UniffiConverterOptionalString.lower(bip39_passphrase),
+        _UniffiConverterOptionalBool.lower(is_change),
+        _UniffiConverterOptionalUInt32.lower(start_index),
+        _UniffiConverterOptionalUInt32.lower(count)))
+
+
+def derive_private_key(mnemonic_phrase: "str",derivation_path_str: "typing.Optional[str]",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]") -> "str":
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+    
+    _UniffiConverterOptionalString.check_lower(derivation_path_str)
+    
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+    
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+    
+    return _UniffiConverterString.lift(_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_derive_private_key,
+        _UniffiConverterString.lower(mnemonic_phrase),
+        _UniffiConverterOptionalString.lower(derivation_path_str),
+        _UniffiConverterOptionalTypeNetwork.lower(network),
+        _UniffiConverterOptionalString.lower(bip39_passphrase)))
+
 async def estimate_order_fee(lsp_balance_sat: "int",channel_expiry_weeks: "int",options: "typing.Optional[CreateOrderOptions]") -> "IBtEstimateFeeResponse":
 
     _UniffiConverterUInt64.check_lower(lsp_balance_sat)
@@ -6830,6 +7314,13 @@ async def estimate_order_fee_full(lsp_balance_sat: "int",channel_expiry_weeks: "
 _UniffiConverterTypeBlocktankError,
 
     )
+
+def generate_mnemonic(word_count: "typing.Optional[WordCount]") -> "str":
+    _UniffiConverterOptionalTypeWordCount.check_lower(word_count)
+    
+    return _UniffiConverterString.lift(_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_generate_mnemonic,
+        _UniffiConverterOptionalTypeWordCount.lower(word_count)))
+
 
 def get_activities(filter: "typing.Optional[ActivityFilter]",tx_type: "typing.Optional[PaymentType]",tags: "typing.Optional[typing.List[str]]",search: "typing.Optional[str]",min_date: "typing.Optional[int]",max_date: "typing.Optional[int]",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
     _UniffiConverterOptionalTypeActivityFilter.check_lower(filter)
@@ -7293,16 +7784,20 @@ __all__ = [
     "DecodingError",
     "LnurlError",
     "ManualRefundStateEnum",
+    "Network",
     "NetworkType",
     "PaymentState",
     "PaymentType",
     "Scanner",
     "SortDirection",
+    "WordCount",
     "CreateCjitOptions",
     "CreateOrderOptions",
     "ErrorData",
     "FeeRates",
     "FundingTx",
+    "GetAddressResponse",
+    "GetAddressesResponse",
     "IBt0ConfMinTxFeeWindow",
     "IBtBolt11Invoice",
     "IBtChannel",
@@ -7337,8 +7832,12 @@ __all__ = [
     "create_order",
     "decode",
     "delete_activity_by_id",
+    "derive_bitcoin_address",
+    "derive_bitcoin_addresses",
+    "derive_private_key",
     "estimate_order_fee",
     "estimate_order_fee_full",
+    "generate_mnemonic",
     "get_activities",
     "get_activities_by_tag",
     "get_activity_by_id",

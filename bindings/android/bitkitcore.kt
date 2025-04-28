@@ -765,6 +765,14 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
+
+
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -790,10 +798,18 @@ internal interface UniffiLib : Library {
     ): Long
     fun uniffi_bitkitcore_fn_func_delete_activity_by_id(`activityId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Byte
+    fun uniffi_bitkitcore_fn_func_derive_bitcoin_address(`mnemonicPhrase`: RustBuffer.ByValue,`derivationPathStr`: RustBuffer.ByValue,`network`: RustBuffer.ByValue,`bip39Passphrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_derive_bitcoin_addresses(`mnemonicPhrase`: RustBuffer.ByValue,`derivationPathStr`: RustBuffer.ByValue,`network`: RustBuffer.ByValue,`bip39Passphrase`: RustBuffer.ByValue,`isChange`: RustBuffer.ByValue,`startIndex`: RustBuffer.ByValue,`count`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_derive_private_key(`mnemonicPhrase`: RustBuffer.ByValue,`derivationPathStr`: RustBuffer.ByValue,`network`: RustBuffer.ByValue,`bip39Passphrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_estimate_order_fee(`lspBalanceSat`: Long,`channelExpiryWeeks`: Int,`options`: RustBuffer.ByValue,
     ): Long
     fun uniffi_bitkitcore_fn_func_estimate_order_fee_full(`lspBalanceSat`: Long,`channelExpiryWeeks`: Int,`options`: RustBuffer.ByValue,
     ): Long
+    fun uniffi_bitkitcore_fn_func_generate_mnemonic(`wordCount`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_get_activities(`filter`: RustBuffer.ByValue,`txType`: RustBuffer.ByValue,`tags`: RustBuffer.ByValue,`search`: RustBuffer.ByValue,`minDate`: RustBuffer.ByValue,`maxDate`: RustBuffer.ByValue,`limit`: RustBuffer.ByValue,`sortDirection`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_get_activities_by_tag(`tag`: RustBuffer.ByValue,`limit`: RustBuffer.ByValue,`sortDirection`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -970,9 +986,17 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_bitkitcore_checksum_func_delete_activity_by_id(
     ): Short
+    fun uniffi_bitkitcore_checksum_func_derive_bitcoin_address(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_derive_private_key(
+    ): Short
     fun uniffi_bitkitcore_checksum_func_estimate_order_fee(
     ): Short
     fun uniffi_bitkitcore_checksum_func_estimate_order_fee_full(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_generate_mnemonic(
     ): Short
     fun uniffi_bitkitcore_checksum_func_get_activities(
     ): Short
@@ -1060,10 +1084,22 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_bitkitcore_checksum_func_derive_bitcoin_address() != 35090.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses() != 34371.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_derive_private_key() != 25155.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_bitkitcore_checksum_func_estimate_order_fee() != 9548.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_get_activities() != 21347.toShort()) {
@@ -1563,6 +1599,76 @@ public object FfiConverterTypeFundingTx: FfiConverterRustBuffer<FundingTx> {
     override fun write(value: FundingTx, buf: ByteBuffer) {
             FfiConverterString.write(value.`id`, buf)
             FfiConverterULong.write(value.`vout`, buf)
+    }
+}
+
+
+
+data class GetAddressResponse (
+    /**
+     * The generated Bitcoin address as a string
+     */
+    var `address`: kotlin.String, 
+    /**
+     * The derivation path used to generate the address
+     */
+    var `path`: kotlin.String, 
+    /**
+     * The hexadecimal representation of the public key
+     */
+    var `publicKey`: kotlin.String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeGetAddressResponse: FfiConverterRustBuffer<GetAddressResponse> {
+    override fun read(buf: ByteBuffer): GetAddressResponse {
+        return GetAddressResponse(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: GetAddressResponse) = (
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterString.allocationSize(value.`path`) +
+            FfiConverterString.allocationSize(value.`publicKey`)
+    )
+
+    override fun write(value: GetAddressResponse, buf: ByteBuffer) {
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterString.write(value.`path`, buf)
+            FfiConverterString.write(value.`publicKey`, buf)
+    }
+}
+
+
+
+data class GetAddressesResponse (
+    /**
+     * Vector of generated Bitcoin addresses
+     */
+    var `addresses`: List<GetAddressResponse>
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeGetAddressesResponse: FfiConverterRustBuffer<GetAddressesResponse> {
+    override fun read(buf: ByteBuffer): GetAddressesResponse {
+        return GetAddressesResponse(
+            FfiConverterSequenceTypeGetAddressResponse.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: GetAddressesResponse) = (
+            FfiConverterSequenceTypeGetAddressResponse.allocationSize(value.`addresses`)
+    )
+
+    override fun write(value: GetAddressesResponse, buf: ByteBuffer) {
+            FfiConverterSequenceTypeGetAddressResponse.write(value.`addresses`, buf)
     }
 }
 
@@ -3249,6 +3355,24 @@ sealed class AddressException: Exception() {
             get() = ""
     }
     
+    class MnemonicGenerationFailed(
+        ) : AddressException() {
+        override val message
+            get() = ""
+    }
+    
+    class InvalidMnemonic(
+        ) : AddressException() {
+        override val message
+            get() = ""
+    }
+    
+    class AddressDerivationFailed(
+        ) : AddressException() {
+        override val message
+            get() = ""
+    }
+    
 
     companion object ErrorHandler : UniffiRustCallStatusErrorHandler<AddressException> {
         override fun lift(error_buf: RustBuffer.ByValue): AddressException = FfiConverterTypeAddressError.lift(error_buf)
@@ -3264,6 +3388,9 @@ public object FfiConverterTypeAddressError : FfiConverterRustBuffer<AddressExcep
         return when(buf.getInt()) {
             1 -> AddressException.InvalidAddress()
             2 -> AddressException.InvalidNetwork()
+            3 -> AddressException.MnemonicGenerationFailed()
+            4 -> AddressException.InvalidMnemonic()
+            5 -> AddressException.AddressDerivationFailed()
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
@@ -3278,6 +3405,18 @@ public object FfiConverterTypeAddressError : FfiConverterRustBuffer<AddressExcep
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
             )
+            is AddressException.MnemonicGenerationFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is AddressException.InvalidMnemonic -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is AddressException.AddressDerivationFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
         }
     }
 
@@ -3289,6 +3428,18 @@ public object FfiConverterTypeAddressError : FfiConverterRustBuffer<AddressExcep
             }
             is AddressException.InvalidNetwork -> {
                 buf.putInt(2)
+                Unit
+            }
+            is AddressException.MnemonicGenerationFailed -> {
+                buf.putInt(3)
+                Unit
+            }
+            is AddressException.InvalidMnemonic -> {
+                buf.putInt(4)
+                Unit
+            }
+            is AddressException.AddressDerivationFailed -> {
+                buf.putInt(5)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -4417,6 +4568,51 @@ public object FfiConverterTypeManualRefundStateEnum: FfiConverterRustBuffer<Manu
 
 
 
+enum class Network {
+    
+    /**
+     * Mainnet Bitcoin.
+     */
+    BITCOIN,
+    /**
+     * Bitcoin's testnet network.
+     */
+    TESTNET,
+    /**
+     * Bitcoin's testnet4 network.
+     */
+    TESTNET4,
+    /**
+     * Bitcoin's signet network.
+     */
+    SIGNET,
+    /**
+     * Bitcoin's regtest network.
+     */
+    REGTEST;
+    companion object
+}
+
+
+public object FfiConverterTypeNetwork: FfiConverterRustBuffer<Network> {
+    override fun read(buf: ByteBuffer) = try {
+        Network.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: Network) = 4UL
+
+    override fun write(value: Network, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+
 enum class NetworkType {
     
     BITCOIN,
@@ -4770,6 +4966,51 @@ public object FfiConverterTypeSortDirection: FfiConverterRustBuffer<SortDirectio
     override fun allocationSize(value: SortDirection) = 4UL
 
     override fun write(value: SortDirection, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+
+enum class WordCount {
+    
+    /**
+     * 12-word mnemonic (128 bits of entropy)
+     */
+    WORDS12,
+    /**
+     * 15-word mnemonic (160 bits of entropy)
+     */
+    WORDS15,
+    /**
+     * 18-word mnemonic (192 bits of entropy)
+     */
+    WORDS18,
+    /**
+     * 21-word mnemonic (224 bits of entropy)
+     */
+    WORDS21,
+    /**
+     * 24-word mnemonic (256 bits of entropy)
+     */
+    WORDS24;
+    companion object
+}
+
+
+public object FfiConverterTypeWordCount: FfiConverterRustBuffer<WordCount> {
+    override fun read(buf: ByteBuffer) = try {
+        WordCount.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: WordCount) = 4UL
+
+    override fun write(value: WordCount, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
@@ -5214,6 +5455,35 @@ public object FfiConverterOptionalTypeCJitStateEnum: FfiConverterRustBuffer<CJit
 
 
 
+public object FfiConverterOptionalTypeNetwork: FfiConverterRustBuffer<Network?> {
+    override fun read(buf: ByteBuffer): Network? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeNetwork.read(buf)
+    }
+
+    override fun allocationSize(value: Network?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeNetwork.allocationSize(value)
+        }
+    }
+
+    override fun write(value: Network?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeNetwork.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypePaymentType: FfiConverterRustBuffer<PaymentType?> {
     override fun read(buf: ByteBuffer): PaymentType? {
         if (buf.get().toInt() == 0) {
@@ -5265,6 +5535,35 @@ public object FfiConverterOptionalTypeSortDirection: FfiConverterRustBuffer<Sort
         } else {
             buf.put(1)
             FfiConverterTypeSortDirection.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeWordCount: FfiConverterRustBuffer<WordCount?> {
+    override fun read(buf: ByteBuffer): WordCount? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeWordCount.read(buf)
+    }
+
+    override fun allocationSize(value: WordCount?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeWordCount.allocationSize(value)
+        }
+    }
+
+    override fun write(value: WordCount?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeWordCount.write(value, buf)
         }
     }
 }
@@ -5377,6 +5676,31 @@ public object FfiConverterSequenceString: FfiConverterRustBuffer<List<kotlin.Str
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterString.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeGetAddressResponse: FfiConverterRustBuffer<List<GetAddressResponse>> {
+    override fun read(buf: ByteBuffer): List<GetAddressResponse> {
+        val len = buf.getInt()
+        return List<GetAddressResponse>(len) {
+            FfiConverterTypeGetAddressResponse.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<GetAddressResponse>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeGetAddressResponse.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<GetAddressResponse>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeGetAddressResponse.write(it, buf)
         }
     }
 }
@@ -5637,6 +5961,36 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
     }
     
 
+    @Throws(AddressException::class) fun `deriveBitcoinAddress`(`mnemonicPhrase`: kotlin.String, `derivationPathStr`: kotlin.String?, `network`: Network?, `bip39Passphrase`: kotlin.String?): GetAddressResponse {
+            return FfiConverterTypeGetAddressResponse.lift(
+    uniffiRustCallWithError(AddressException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_derive_bitcoin_address(
+        FfiConverterString.lower(`mnemonicPhrase`),FfiConverterOptionalString.lower(`derivationPathStr`),FfiConverterOptionalTypeNetwork.lower(`network`),FfiConverterOptionalString.lower(`bip39Passphrase`),_status)
+}
+    )
+    }
+    
+
+    @Throws(AddressException::class) fun `deriveBitcoinAddresses`(`mnemonicPhrase`: kotlin.String, `derivationPathStr`: kotlin.String?, `network`: Network?, `bip39Passphrase`: kotlin.String?, `isChange`: kotlin.Boolean?, `startIndex`: kotlin.UInt?, `count`: kotlin.UInt?): GetAddressesResponse {
+            return FfiConverterTypeGetAddressesResponse.lift(
+    uniffiRustCallWithError(AddressException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_derive_bitcoin_addresses(
+        FfiConverterString.lower(`mnemonicPhrase`),FfiConverterOptionalString.lower(`derivationPathStr`),FfiConverterOptionalTypeNetwork.lower(`network`),FfiConverterOptionalString.lower(`bip39Passphrase`),FfiConverterOptionalBoolean.lower(`isChange`),FfiConverterOptionalUInt.lower(`startIndex`),FfiConverterOptionalUInt.lower(`count`),_status)
+}
+    )
+    }
+    
+
+    @Throws(AddressException::class) fun `derivePrivateKey`(`mnemonicPhrase`: kotlin.String, `derivationPathStr`: kotlin.String?, `network`: Network?, `bip39Passphrase`: kotlin.String?): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCallWithError(AddressException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_derive_private_key(
+        FfiConverterString.lower(`mnemonicPhrase`),FfiConverterOptionalString.lower(`derivationPathStr`),FfiConverterOptionalTypeNetwork.lower(`network`),FfiConverterOptionalString.lower(`bip39Passphrase`),_status)
+}
+    )
+    }
+    
+
     @Throws(BlocktankException::class)
     @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
      suspend fun `estimateOrderFee`(`lspBalanceSat`: kotlin.ULong, `channelExpiryWeeks`: kotlin.UInt, `options`: CreateOrderOptions?) : IBtEstimateFeeResponse {
@@ -5666,6 +6020,16 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
         BlocktankException.ErrorHandler,
     )
     }
+
+    @Throws(AddressException::class) fun `generateMnemonic`(`wordCount`: WordCount?): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCallWithError(AddressException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_generate_mnemonic(
+        FfiConverterOptionalTypeWordCount.lower(`wordCount`),_status)
+}
+    )
+    }
+    
 
     @Throws(ActivityException::class) fun `getActivities`(`filter`: ActivityFilter?, `txType`: PaymentType?, `tags`: List<kotlin.String>?, `search`: kotlin.String?, `minDate`: kotlin.ULong?, `maxDate`: kotlin.ULong?, `limit`: kotlin.UInt?, `sortDirection`: SortDirection?): List<Activity> {
             return FfiConverterSequenceTypeActivity.lift(
