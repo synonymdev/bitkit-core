@@ -30,6 +30,7 @@ rust-blocktank-client = { version = "0.0.10", features = ["rustls-tls"] }
 reqwest = { version = "0.12.12", features = ["json", "rustls-tls", "rustls-tls-native-roots"], default-features = false }
 r2d2 = "0.8.10"
 r2d2_sqlite = "0.25.0"
+bitcoin-address-generator = "0.1.1"
 
 [dev-dependencies]
 tokio = { version = "1.40.0", features = ["full"] }
@@ -49,6 +50,10 @@ rustflags = [
 rustflags = [
     "-C", "link-arg=-Wl,--allow-multiple-definition",
 ]
+
+
+
+
 
 
 

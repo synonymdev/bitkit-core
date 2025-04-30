@@ -276,6 +276,21 @@ uint64_t uniffi_bitkitcore_fn_func_decode(RustBuffer invoice
 int8_t uniffi_bitkitcore_fn_func_delete_activity_by_id(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_BITCOIN_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_BITCOIN_ADDRESS
+RustBuffer uniffi_bitkitcore_fn_func_derive_bitcoin_address(RustBuffer mnemonic_phrase, RustBuffer derivation_path_str, RustBuffer network, RustBuffer bip39_passphrase, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_BITCOIN_ADDRESSES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_BITCOIN_ADDRESSES
+RustBuffer uniffi_bitkitcore_fn_func_derive_bitcoin_addresses(RustBuffer mnemonic_phrase, RustBuffer derivation_path_str, RustBuffer network, RustBuffer bip39_passphrase, RustBuffer is_change, RustBuffer start_index, RustBuffer count, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_PRIVATE_KEY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_PRIVATE_KEY
+RustBuffer uniffi_bitkitcore_fn_func_derive_private_key(RustBuffer mnemonic_phrase, RustBuffer derivation_path_str, RustBuffer network, RustBuffer bip39_passphrase, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ESTIMATE_ORDER_FEE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ESTIMATE_ORDER_FEE
 uint64_t uniffi_bitkitcore_fn_func_estimate_order_fee(uint64_t lsp_balance_sat, uint32_t channel_expiry_weeks, RustBuffer options
@@ -284,6 +299,11 @@ uint64_t uniffi_bitkitcore_fn_func_estimate_order_fee(uint64_t lsp_balance_sat, 
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ESTIMATE_ORDER_FEE_FULL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ESTIMATE_ORDER_FEE_FULL
 uint64_t uniffi_bitkitcore_fn_func_estimate_order_fee_full(uint64_t lsp_balance_sat, uint32_t channel_expiry_weeks, RustBuffer options
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GENERATE_MNEMONIC
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GENERATE_MNEMONIC
+RustBuffer uniffi_bitkitcore_fn_func_generate_mnemonic(RustBuffer word_count, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES
@@ -734,6 +754,24 @@ uint16_t uniffi_bitkitcore_checksum_func_delete_activity_by_id(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_BITCOIN_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_BITCOIN_ADDRESS
+uint16_t uniffi_bitkitcore_checksum_func_derive_bitcoin_address(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_BITCOIN_ADDRESSES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_BITCOIN_ADDRESSES
+uint16_t uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_PRIVATE_KEY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_PRIVATE_KEY
+uint16_t uniffi_bitkitcore_checksum_func_derive_private_key(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ESTIMATE_ORDER_FEE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ESTIMATE_ORDER_FEE
 uint16_t uniffi_bitkitcore_checksum_func_estimate_order_fee(void
@@ -743,6 +781,12 @@ uint16_t uniffi_bitkitcore_checksum_func_estimate_order_fee(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ESTIMATE_ORDER_FEE_FULL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ESTIMATE_ORDER_FEE_FULL
 uint16_t uniffi_bitkitcore_checksum_func_estimate_order_fee_full(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GENERATE_MNEMONIC
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GENERATE_MNEMONIC
+uint16_t uniffi_bitkitcore_checksum_func_generate_mnemonic(void
     
 );
 #endif

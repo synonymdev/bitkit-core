@@ -65,6 +65,9 @@ impl From<AddressError> for DecodingError {
         match error {
             AddressError::InvalidAddress => DecodingError::InvalidAddress,
             AddressError::InvalidNetwork => DecodingError::InvalidNetwork,
+            AddressError::InvalidMnemonic => DecodingError::InvalidFormat,
+            AddressError::MnemonicGenerationFailed => DecodingError::InvalidFormat,
+            AddressError::AddressDerivationFailed => DecodingError::InvalidFormat,
         }
     }
 }

@@ -14,10 +14,7 @@ pub use modules::onchain;
 pub use modules::activity;
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice};
-use crate::onchain::{
-    AddressError,
-    ValidationResult
-};
+use crate::onchain::{AddressError, ValidationResult, WordCount, GetAddressResponse, Network, GetAddressesResponse};
 
 use std::sync::Mutex as StdMutex;
 use tokio::runtime::Runtime;
@@ -54,6 +51,63 @@ pub async fn get_lnurl_invoice(address: String, amount_satoshis: u64) -> Result<
 #[uniffi::export]
 pub fn validate_bitcoin_address(address: String) -> Result<ValidationResult, AddressError> {
     onchain::BitcoinAddressValidator::validate_address(&address)
+}
+
+#[uniffi::export]
+pub fn generate_mnemonic(word_count: Option<WordCount>) -> Result<String, AddressError> {
+    let external_word_count = word_count.map(|wc| wc.into());
+    onchain::BitcoinAddressValidator::genenerate_mnemonic(external_word_count)
+}
+
+#[uniffi::export]
+pub fn derive_bitcoin_address(
+    mnemonic_phrase: String,
+    derivation_path_str: Option<String>,
+    network: Option<Network>,
+    bip39_passphrase: Option<String>,
+) -> Result<GetAddressResponse, AddressError> {
+    onchain::BitcoinAddressValidator::derive_bitcoin_address(
+        &mnemonic_phrase,
+        derivation_path_str.as_deref(),
+        network.map(|n| n.into()),
+        bip39_passphrase.as_deref(),
+    )
+}
+
+#[uniffi::export]
+pub fn derive_bitcoin_addresses(
+    mnemonic_phrase: String,
+    derivation_path_str: Option<String>,
+    network: Option<Network>,
+    bip39_passphrase: Option<String>,
+    is_change: Option<bool>,
+    start_index: Option<u32>,
+    count: Option<u32>,
+) -> Result<GetAddressesResponse, AddressError> {
+    onchain::BitcoinAddressValidator::derive_bitcoin_addresses(
+        &mnemonic_phrase,
+        derivation_path_str.as_deref(),
+        network.map(|n| n.into()),
+        bip39_passphrase.as_deref(),
+        is_change,
+        start_index,
+        count,
+    )
+}
+
+#[uniffi::export]
+pub fn derive_private_key(
+    mnemonic_phrase: String,
+    derivation_path_str: Option<String>,
+    network: Option<Network>,
+    bip39_passphrase: Option<String>,
+) -> Result<String, AddressError> {
+    onchain::BitcoinAddressValidator::derive_private_key(
+        &mnemonic_phrase,
+        derivation_path_str.as_deref(),
+        network.map(|n| n.into()),
+        bip39_passphrase.as_deref(),
+    )
 }
 
 #[uniffi::export]
