@@ -16,6 +16,16 @@
   - Network validation (Mainnet, Testnet, Regtest)
 - Activity Module
   - Store and manage transaction/activity history for both Bitcoin and Lightning Network payments
+- Blocktank Module
+  - Create and manage Lightning Service Provider (LSP) orders
+  - Channel opening and management
+  - Just-in-time channel creation
+- Trezor Module
+  - Integration with Trezor hardware wallets through deep linking
+  - Get device features and capabilities
+  - Derive addresses for specified paths
+  - Retrieve account information
+  - Handle responses from Trezor devices
 
 ## Available Modules: Methods
 - Scanner
@@ -117,7 +127,7 @@
     fn upsert_activity(activity: Activity) -> Result<(), ActivityError>
     ```
 - Blocktank:
-  - [init_db](src/modules/activity/README.md#usage-examples): Initialize database
+  - [init_db](src/modules/blocktank/README.md#usage-examples): Initialize database
     ```rust
     fn init_db(base_path: String) -> Result<String, DbError>
     ```
@@ -251,7 +261,64 @@
           vout: u32,
           force_close_after_s: Option<u64>,
         ) -> Result<String, BlocktankError>        
-      ```
+        ```
+- Trezor:
+  - [trezor_get_features](src/modules/trezor/README.md#usage-examples): Get device features and capabilities
+    ```rust
+    fn trezor_get_features(
+        callback_url: String,
+        request_id: Option<String>,
+        trezor_environment: Option<TrezorEnvironment>
+    ) -> Result<DeepLinkResult, TrezorConnectError>
+    ```
+  - [trezor_get_address](src/modules/trezor/README.md#usage-examples): Get address for the specified path
+    ```rust
+    fn trezor_get_address(
+        path: String,
+        callback_url: String,
+        request_id: Option<String>,
+        trezor_environment: Option<TrezorEnvironment>,
+        address: Option<String>,
+        showOnTrezor: Option<bool>,
+        chunkify: Option<bool>,
+        useEventListener: Option<bool>,
+        coin: Option<String>,
+        crossChain: Option<bool>,
+        multisig: Option<MultisigRedeemScriptType>,
+        scriptType: Option<String>,
+        unlockPath: Option<UnlockPath>,
+        common: Option<CommonParams>,
+    ) -> Result<DeepLinkResult, TrezorConnectError>
+    ```
+  - [trezor_get_account_info](src/modules/trezor/README.md#usage-examples): Get account info for the specified parameters
+    ```rust
+    fn trezor_get_account_info(
+        coin: String,
+        callback_url: String,
+        request_id: Option<String>,
+        trezor_environment: Option<TrezorEnvironment>,
+        path: Option<String>,
+        descriptor: Option<String>,
+        details: Option<AccountInfoDetails>,
+        tokens: Option<TokenFilter>,
+        page: Option<u32>,
+        pageSize: Option<u32>,
+        from: Option<u32>,
+        to: Option<u32>,
+        gap: Option<u32>,
+        contractFilter: Option<String>,
+        marker: Option<XrpMarker>,
+        defaultAccountType: Option<DefaultAccountType>,
+        suppressBackupWarning: Option<bool>,
+        common: Option<CommonParams>,
+    ) -> Result<DeepLinkResult, TrezorConnectError>
+    ```
+  - [trezor_handle_deep_link](src/modules/trezor/README.md#usage-examples): Handle a callback URL from Trezor
+    ```rust
+    fn trezor_handle_deep_link(
+        callback_url: String,
+    ) -> Result<TrezorResponsePayload, TrezorConnectError>
+    ```
 
 ## Building the Bindings
 
@@ -275,4 +342,25 @@ cargo run --bin example
 ### Run Tests:
 ```
 cargo test
+```
+
+### Run Specific Tests:
+```
+# Run tests for the Scanner module
+cargo test modules::scanner
+    
+# Run tests for the LNURL module
+cargo test modules::lnurl
+    
+# Run tests for the Onchain module
+cargo test modules::onchain
+    
+# Run tests for the Activity module
+cargo test modules::activity
+    
+# Run tests for the Blocktank module
+cargo test modules::blocktank  
+
+# Run tests for the Trezor module
+cargo test modules::trezor  
 ```

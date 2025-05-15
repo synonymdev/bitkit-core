@@ -19,6 +19,8 @@ use crate::onchain::{AddressError, ValidationResult, WordCount, GetAddressRespon
 use std::sync::Mutex as StdMutex;
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex as TokioMutex;
+use crate::modules::trezor;
+use crate::modules::trezor::{AccountInfoDetails, CommonParams, DeepLinkResult, DefaultAccountType, GetAccountInfoParams, GetAddressParams, MultisigRedeemScriptType, TokenFilter, TrezorConnectError, TrezorEnvironment, TrezorResponsePayload, UnlockPath, XrpMarker};
 
 pub struct DatabaseConnections {
     activity_db: Option<ActivityDB>,
@@ -761,4 +763,126 @@ pub async fn regtest_close_channel(
     }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
         error_details: format!("Runtime error: {}", e)
     }))
+}
+
+#[uniffi::export]
+pub fn trezor_get_features(
+    callback_url: String,
+    request_id: Option<String>,
+    trezor_environment: Option<TrezorEnvironment>
+) -> Result<DeepLinkResult, TrezorConnectError> {
+    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
+    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
+        Ok(client) => client,
+        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    };
+    match trezor_client.get_features(request_id) {
+        Ok(result) => Ok(result),
+        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    }
+}
+
+#[uniffi::export]
+pub fn trezor_get_address(
+    path: String,
+    callback_url: String,
+    request_id: Option<String>,
+    trezor_environment: Option<TrezorEnvironment>,
+    address: Option<String>,
+    showOnTrezor: Option<bool>,
+    chunkify: Option<bool>,
+    useEventListener: Option<bool>,
+    coin: Option<String>,
+    crossChain: Option<bool>,
+    multisig: Option<MultisigRedeemScriptType>,
+    scriptType: Option<String>,
+    unlockPath: Option<UnlockPath>,
+    common: Option<CommonParams>,
+) -> Result<DeepLinkResult, TrezorConnectError> {
+    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
+    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
+        Ok(client) => client,
+        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    };
+
+    let coin = Some(coin.unwrap_or_else(|| "btc".to_string()));
+    let params = GetAddressParams {
+        path,
+        address,
+        showOnTrezor,
+        chunkify,
+        useEventListener,
+        coin,
+        crossChain,
+        multisig,
+        scriptType,
+        unlockPath,
+        common,
+    };
+
+    match trezor_client.get_address(params, request_id) {
+        Ok(result) => Ok(result),
+        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    }
+}
+
+#[uniffi::export]
+pub fn trezor_get_account_info(
+    coin: String,
+    callback_url: String,
+    request_id: Option<String>,
+    trezor_environment: Option<TrezorEnvironment>,
+    path: Option<String>,
+    descriptor: Option<String>,
+    details: Option<AccountInfoDetails>,
+    tokens: Option<TokenFilter>,
+    page: Option<u32>,
+    pageSize: Option<u32>,
+    from: Option<u32>,
+    to: Option<u32>,
+    gap: Option<u32>,
+    contractFilter: Option<String>,
+    marker: Option<XrpMarker>,
+    defaultAccountType: Option<DefaultAccountType>,
+    suppressBackupWarning: Option<bool>,
+    common: Option<CommonParams>,
+) -> Result<DeepLinkResult, TrezorConnectError> {
+    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
+    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
+        Ok(client) => client,
+        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    };
+
+    let params = GetAccountInfoParams {
+        path,
+        descriptor,
+        coin,
+        details,
+        tokens,
+        page,
+        pageSize,
+        from,
+        to,
+        gap,
+        contractFilter,
+        marker,
+        defaultAccountType,
+        suppressBackupWarning,
+        common,
+    };
+
+    match trezor_client.get_account_info(params, request_id) {
+        Ok(result) => Ok(result),
+        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    }
+}
+
+#[uniffi::export]
+pub fn trezor_handle_deep_link(
+    callback_url: String,
+) -> Result<TrezorResponsePayload, TrezorConnectError> {
+    match trezor::handle_deep_link(callback_url) {
+        Ok(result) => Ok(result),
+        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    }
 }
