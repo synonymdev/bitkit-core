@@ -31,6 +31,7 @@ reqwest = { version = "0.12.12", features = ["json", "rustls-tls", "rustls-tls-n
 r2d2 = "0.8.10"
 r2d2_sqlite = "0.25.0"
 bitcoin-address-generator = "0.1.1"
+uuid = { version = "1.16.0", features = ["v4"] }
 
 [dev-dependencies]
 tokio = { version = "1.40.0", features = ["full"] }
@@ -50,13 +51,6 @@ rustflags = [
 rustflags = [
     "-C", "link-arg=-Wl,--allow-multiple-definition",
 ]
-
-
-
-
-
-
-
 
 [[bin]]
 name = "example"
