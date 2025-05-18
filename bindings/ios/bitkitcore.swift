@@ -381,6 +381,19 @@ fileprivate class UniffiHandleMap<T> {
 // Public interface members begin here.
 
 
+fileprivate struct FfiConverterUInt8: FfiConverterPrimitive {
+    typealias FfiType = UInt8
+    typealias SwiftType = UInt8
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UInt8 {
+        return try lift(readInt(&buf))
+    }
+
+    public static func write(_ value: UInt8, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
 fileprivate struct FfiConverterUInt32: FfiConverterPrimitive {
     typealias FfiType = UInt32
     typealias SwiftType = UInt32
@@ -492,6 +505,766 @@ fileprivate struct FfiConverterData: FfiConverterRustBuffer {
         writeInt(&buf, len)
         writeBytes(&buf, value)
     }
+}
+
+
+/**
+ * Account addresses
+ */
+public struct AccountAddresses {
+    /**
+     * Used addresses
+     */
+    public var used: [AddressInfo]
+    /**
+     * Unused addresses
+     */
+    public var unused: [AddressInfo]
+    /**
+     * Change addresses
+     */
+    public var change: [AddressInfo]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Used addresses
+         */used: [AddressInfo], 
+        /**
+         * Unused addresses
+         */unused: [AddressInfo], 
+        /**
+         * Change addresses
+         */change: [AddressInfo]) {
+        self.used = used
+        self.unused = unused
+        self.change = change
+    }
+}
+
+
+
+extension AccountAddresses: Equatable, Hashable {
+    public static func ==(lhs: AccountAddresses, rhs: AccountAddresses) -> Bool {
+        if lhs.used != rhs.used {
+            return false
+        }
+        if lhs.unused != rhs.unused {
+            return false
+        }
+        if lhs.change != rhs.change {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(used)
+        hasher.combine(unused)
+        hasher.combine(change)
+    }
+}
+
+
+public struct FfiConverterTypeAccountAddresses: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> AccountAddresses {
+        return
+            try AccountAddresses(
+                used: FfiConverterSequenceTypeAddressInfo.read(from: &buf), 
+                unused: FfiConverterSequenceTypeAddressInfo.read(from: &buf), 
+                change: FfiConverterSequenceTypeAddressInfo.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: AccountAddresses, into buf: inout [UInt8]) {
+        FfiConverterSequenceTypeAddressInfo.write(value.used, into: &buf)
+        FfiConverterSequenceTypeAddressInfo.write(value.unused, into: &buf)
+        FfiConverterSequenceTypeAddressInfo.write(value.change, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeAccountAddresses_lift(_ buf: RustBuffer) throws -> AccountAddresses {
+    return try FfiConverterTypeAccountAddresses.lift(buf)
+}
+
+public func FfiConverterTypeAccountAddresses_lower(_ value: AccountAddresses) -> RustBuffer {
+    return FfiConverterTypeAccountAddresses.lower(value)
+}
+
+
+/**
+ * Account info response
+ */
+public struct AccountInfoResponse {
+    public var id: UInt32
+    public var path: String
+    public var descriptor: String
+    public var legacyXpub: String?
+    public var balance: String
+    public var availableBalance: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: UInt32, path: String, descriptor: String, legacyXpub: String?, balance: String, availableBalance: String) {
+        self.id = id
+        self.path = path
+        self.descriptor = descriptor
+        self.legacyXpub = legacyXpub
+        self.balance = balance
+        self.availableBalance = availableBalance
+    }
+}
+
+
+
+extension AccountInfoResponse: Equatable, Hashable {
+    public static func ==(lhs: AccountInfoResponse, rhs: AccountInfoResponse) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.path != rhs.path {
+            return false
+        }
+        if lhs.descriptor != rhs.descriptor {
+            return false
+        }
+        if lhs.legacyXpub != rhs.legacyXpub {
+            return false
+        }
+        if lhs.balance != rhs.balance {
+            return false
+        }
+        if lhs.availableBalance != rhs.availableBalance {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(path)
+        hasher.combine(descriptor)
+        hasher.combine(legacyXpub)
+        hasher.combine(balance)
+        hasher.combine(availableBalance)
+    }
+}
+
+
+public struct FfiConverterTypeAccountInfoResponse: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> AccountInfoResponse {
+        return
+            try AccountInfoResponse(
+                id: FfiConverterUInt32.read(from: &buf), 
+                path: FfiConverterString.read(from: &buf), 
+                descriptor: FfiConverterString.read(from: &buf), 
+                legacyXpub: FfiConverterOptionString.read(from: &buf), 
+                balance: FfiConverterString.read(from: &buf), 
+                availableBalance: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: AccountInfoResponse, into buf: inout [UInt8]) {
+        FfiConverterUInt32.write(value.id, into: &buf)
+        FfiConverterString.write(value.path, into: &buf)
+        FfiConverterString.write(value.descriptor, into: &buf)
+        FfiConverterOptionString.write(value.legacyXpub, into: &buf)
+        FfiConverterString.write(value.balance, into: &buf)
+        FfiConverterString.write(value.availableBalance, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeAccountInfoResponse_lift(_ buf: RustBuffer) throws -> AccountInfoResponse {
+    return try FfiConverterTypeAccountInfoResponse.lift(buf)
+}
+
+public func FfiConverterTypeAccountInfoResponse_lower(_ value: AccountInfoResponse) -> RustBuffer {
+    return FfiConverterTypeAccountInfoResponse.lower(value)
+}
+
+
+/**
+ * UTXO information for account
+ */
+public struct AccountUtxo {
+    /**
+     * Transaction ID
+     */
+    public var txid: String
+    /**
+     * Output index
+     */
+    public var vout: UInt32
+    /**
+     * Amount in satoshis
+     */
+    public var amount: String
+    /**
+     * Block height
+     */
+    public var blockHeight: UInt32?
+    /**
+     * Address
+     */
+    public var address: String
+    /**
+     * Derivation path
+     */
+    public var path: String
+    /**
+     * Number of confirmations
+     */
+    public var confirmations: UInt32?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Transaction ID
+         */txid: String, 
+        /**
+         * Output index
+         */vout: UInt32, 
+        /**
+         * Amount in satoshis
+         */amount: String, 
+        /**
+         * Block height
+         */blockHeight: UInt32?, 
+        /**
+         * Address
+         */address: String, 
+        /**
+         * Derivation path
+         */path: String, 
+        /**
+         * Number of confirmations
+         */confirmations: UInt32?) {
+        self.txid = txid
+        self.vout = vout
+        self.amount = amount
+        self.blockHeight = blockHeight
+        self.address = address
+        self.path = path
+        self.confirmations = confirmations
+    }
+}
+
+
+
+extension AccountUtxo: Equatable, Hashable {
+    public static func ==(lhs: AccountUtxo, rhs: AccountUtxo) -> Bool {
+        if lhs.txid != rhs.txid {
+            return false
+        }
+        if lhs.vout != rhs.vout {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.blockHeight != rhs.blockHeight {
+            return false
+        }
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.path != rhs.path {
+            return false
+        }
+        if lhs.confirmations != rhs.confirmations {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(txid)
+        hasher.combine(vout)
+        hasher.combine(amount)
+        hasher.combine(blockHeight)
+        hasher.combine(address)
+        hasher.combine(path)
+        hasher.combine(confirmations)
+    }
+}
+
+
+public struct FfiConverterTypeAccountUtxo: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> AccountUtxo {
+        return
+            try AccountUtxo(
+                txid: FfiConverterString.read(from: &buf), 
+                vout: FfiConverterUInt32.read(from: &buf), 
+                amount: FfiConverterString.read(from: &buf), 
+                blockHeight: FfiConverterOptionUInt32.read(from: &buf), 
+                address: FfiConverterString.read(from: &buf), 
+                path: FfiConverterString.read(from: &buf), 
+                confirmations: FfiConverterOptionUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: AccountUtxo, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.txid, into: &buf)
+        FfiConverterUInt32.write(value.vout, into: &buf)
+        FfiConverterString.write(value.amount, into: &buf)
+        FfiConverterOptionUInt32.write(value.blockHeight, into: &buf)
+        FfiConverterString.write(value.address, into: &buf)
+        FfiConverterString.write(value.path, into: &buf)
+        FfiConverterOptionUInt32.write(value.confirmations, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeAccountUtxo_lift(_ buf: RustBuffer) throws -> AccountUtxo {
+    return try FfiConverterTypeAccountUtxo.lift(buf)
+}
+
+public func FfiConverterTypeAccountUtxo_lower(_ value: AccountUtxo) -> RustBuffer {
+    return FfiConverterTypeAccountUtxo.lower(value)
+}
+
+
+/**
+ * Address information
+ */
+public struct AddressInfo {
+    /**
+     * Address string
+     */
+    public var address: String
+    /**
+     * Derivation path
+     */
+    public var path: String
+    /**
+     * Number of transfers
+     */
+    public var transfers: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Address string
+         */address: String, 
+        /**
+         * Derivation path
+         */path: String, 
+        /**
+         * Number of transfers
+         */transfers: UInt32) {
+        self.address = address
+        self.path = path
+        self.transfers = transfers
+    }
+}
+
+
+
+extension AddressInfo: Equatable, Hashable {
+    public static func ==(lhs: AddressInfo, rhs: AddressInfo) -> Bool {
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.path != rhs.path {
+            return false
+        }
+        if lhs.transfers != rhs.transfers {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(address)
+        hasher.combine(path)
+        hasher.combine(transfers)
+    }
+}
+
+
+public struct FfiConverterTypeAddressInfo: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> AddressInfo {
+        return
+            try AddressInfo(
+                address: FfiConverterString.read(from: &buf), 
+                path: FfiConverterString.read(from: &buf), 
+                transfers: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: AddressInfo, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.address, into: &buf)
+        FfiConverterString.write(value.path, into: &buf)
+        FfiConverterUInt32.write(value.transfers, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeAddressInfo_lift(_ buf: RustBuffer) throws -> AddressInfo {
+    return try FfiConverterTypeAddressInfo.lift(buf)
+}
+
+public func FfiConverterTypeAddressInfo_lower(_ value: AddressInfo) -> RustBuffer {
+    return FfiConverterTypeAddressInfo.lower(value)
+}
+
+
+/**
+ * Address response containing the derived address information
+ */
+public struct AddressResponse {
+    public var address: String
+    public var path: [UInt32]
+    public var serializedPath: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(address: String, path: [UInt32], serializedPath: String) {
+        self.address = address
+        self.path = path
+        self.serializedPath = serializedPath
+    }
+}
+
+
+
+extension AddressResponse: Equatable, Hashable {
+    public static func ==(lhs: AddressResponse, rhs: AddressResponse) -> Bool {
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.path != rhs.path {
+            return false
+        }
+        if lhs.serializedPath != rhs.serializedPath {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(address)
+        hasher.combine(path)
+        hasher.combine(serializedPath)
+    }
+}
+
+
+public struct FfiConverterTypeAddressResponse: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> AddressResponse {
+        return
+            try AddressResponse(
+                address: FfiConverterString.read(from: &buf), 
+                path: FfiConverterSequenceUInt32.read(from: &buf), 
+                serializedPath: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: AddressResponse, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.address, into: &buf)
+        FfiConverterSequenceUInt32.write(value.path, into: &buf)
+        FfiConverterString.write(value.serializedPath, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeAddressResponse_lift(_ buf: RustBuffer) throws -> AddressResponse {
+    return try FfiConverterTypeAddressResponse.lift(buf)
+}
+
+public func FfiConverterTypeAddressResponse_lower(_ value: AddressResponse) -> RustBuffer {
+    return FfiConverterTypeAddressResponse.lower(value)
+}
+
+
+/**
+ * Coin purchase memo
+ */
+public struct CoinPurchaseMemo {
+    /**
+     * Coin type
+     */
+    public var coinType: UInt32
+    /**
+     * Amount
+     */
+    public var amount: UInt64
+    /**
+     * Address
+     */
+    public var address: String
+    /**
+     * MAC
+     */
+    public var mac: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Coin type
+         */coinType: UInt32, 
+        /**
+         * Amount
+         */amount: UInt64, 
+        /**
+         * Address
+         */address: String, 
+        /**
+         * MAC
+         */mac: String) {
+        self.coinType = coinType
+        self.amount = amount
+        self.address = address
+        self.mac = mac
+    }
+}
+
+
+
+extension CoinPurchaseMemo: Equatable, Hashable {
+    public static func ==(lhs: CoinPurchaseMemo, rhs: CoinPurchaseMemo) -> Bool {
+        if lhs.coinType != rhs.coinType {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.mac != rhs.mac {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(coinType)
+        hasher.combine(amount)
+        hasher.combine(address)
+        hasher.combine(mac)
+    }
+}
+
+
+public struct FfiConverterTypeCoinPurchaseMemo: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CoinPurchaseMemo {
+        return
+            try CoinPurchaseMemo(
+                coinType: FfiConverterUInt32.read(from: &buf), 
+                amount: FfiConverterUInt64.read(from: &buf), 
+                address: FfiConverterString.read(from: &buf), 
+                mac: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: CoinPurchaseMemo, into buf: inout [UInt8]) {
+        FfiConverterUInt32.write(value.coinType, into: &buf)
+        FfiConverterUInt64.write(value.amount, into: &buf)
+        FfiConverterString.write(value.address, into: &buf)
+        FfiConverterString.write(value.mac, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeCoinPurchaseMemo_lift(_ buf: RustBuffer) throws -> CoinPurchaseMemo {
+    return try FfiConverterTypeCoinPurchaseMemo.lift(buf)
+}
+
+public func FfiConverterTypeCoinPurchaseMemo_lower(_ value: CoinPurchaseMemo) -> RustBuffer {
+    return FfiConverterTypeCoinPurchaseMemo.lower(value)
+}
+
+
+/**
+ * Common parameters for all Trezor Connect methods
+ */
+public struct CommonParams {
+    /**
+     * Specific device instance to use
+     */
+    public var device: DeviceParams?
+    /**
+     * Set to true if method should use empty passphrase
+     */
+    public var useEmptyPassphrase: Bool?
+    /**
+     * Allow seedless device
+     */
+    public var allowSeedlessDevice: Bool?
+    /**
+     * Skip final reload
+     */
+    public var skipFinalReload: Bool?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Specific device instance to use
+         */device: DeviceParams?, 
+        /**
+         * Set to true if method should use empty passphrase
+         */useEmptyPassphrase: Bool?, 
+        /**
+         * Allow seedless device
+         */allowSeedlessDevice: Bool?, 
+        /**
+         * Skip final reload
+         */skipFinalReload: Bool?) {
+        self.device = device
+        self.useEmptyPassphrase = useEmptyPassphrase
+        self.allowSeedlessDevice = allowSeedlessDevice
+        self.skipFinalReload = skipFinalReload
+    }
+}
+
+
+
+extension CommonParams: Equatable, Hashable {
+    public static func ==(lhs: CommonParams, rhs: CommonParams) -> Bool {
+        if lhs.device != rhs.device {
+            return false
+        }
+        if lhs.useEmptyPassphrase != rhs.useEmptyPassphrase {
+            return false
+        }
+        if lhs.allowSeedlessDevice != rhs.allowSeedlessDevice {
+            return false
+        }
+        if lhs.skipFinalReload != rhs.skipFinalReload {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(device)
+        hasher.combine(useEmptyPassphrase)
+        hasher.combine(allowSeedlessDevice)
+        hasher.combine(skipFinalReload)
+    }
+}
+
+
+public struct FfiConverterTypeCommonParams: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CommonParams {
+        return
+            try CommonParams(
+                device: FfiConverterOptionTypeDeviceParams.read(from: &buf), 
+                useEmptyPassphrase: FfiConverterOptionBool.read(from: &buf), 
+                allowSeedlessDevice: FfiConverterOptionBool.read(from: &buf), 
+                skipFinalReload: FfiConverterOptionBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: CommonParams, into buf: inout [UInt8]) {
+        FfiConverterOptionTypeDeviceParams.write(value.device, into: &buf)
+        FfiConverterOptionBool.write(value.useEmptyPassphrase, into: &buf)
+        FfiConverterOptionBool.write(value.allowSeedlessDevice, into: &buf)
+        FfiConverterOptionBool.write(value.skipFinalReload, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeCommonParams_lift(_ buf: RustBuffer) throws -> CommonParams {
+    return try FfiConverterTypeCommonParams.lift(buf)
+}
+
+public func FfiConverterTypeCommonParams_lower(_ value: CommonParams) -> RustBuffer {
+    return FfiConverterTypeCommonParams.lower(value)
+}
+
+
+/**
+ * Account information for compose transaction
+ */
+public struct ComposeAccount {
+    /**
+     * Derivation path
+     */
+    public var path: String
+    /**
+     * Account addresses
+     */
+    public var addresses: AccountAddresses
+    /**
+     * UTXOs
+     */
+    public var utxo: [AccountUtxo]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Derivation path
+         */path: String, 
+        /**
+         * Account addresses
+         */addresses: AccountAddresses, 
+        /**
+         * UTXOs
+         */utxo: [AccountUtxo]) {
+        self.path = path
+        self.addresses = addresses
+        self.utxo = utxo
+    }
+}
+
+
+
+extension ComposeAccount: Equatable, Hashable {
+    public static func ==(lhs: ComposeAccount, rhs: ComposeAccount) -> Bool {
+        if lhs.path != rhs.path {
+            return false
+        }
+        if lhs.addresses != rhs.addresses {
+            return false
+        }
+        if lhs.utxo != rhs.utxo {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(path)
+        hasher.combine(addresses)
+        hasher.combine(utxo)
+    }
+}
+
+
+public struct FfiConverterTypeComposeAccount: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ComposeAccount {
+        return
+            try ComposeAccount(
+                path: FfiConverterString.read(from: &buf), 
+                addresses: FfiConverterTypeAccountAddresses.read(from: &buf), 
+                utxo: FfiConverterSequenceTypeAccountUtxo.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ComposeAccount, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.path, into: &buf)
+        FfiConverterTypeAccountAddresses.write(value.addresses, into: &buf)
+        FfiConverterSequenceTypeAccountUtxo.write(value.utxo, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeComposeAccount_lift(_ buf: RustBuffer) throws -> ComposeAccount {
+    return try FfiConverterTypeComposeAccount.lift(buf)
+}
+
+public func FfiConverterTypeComposeAccount_lower(_ value: ComposeAccount) -> RustBuffer {
+    return FfiConverterTypeComposeAccount.lower(value)
 }
 
 
@@ -697,6 +1470,150 @@ public func FfiConverterTypeCreateOrderOptions_lower(_ value: CreateOrderOptions
 }
 
 
+/**
+ * Result type for deep link generation, including the URL and the ID used
+ */
+public struct DeepLinkResult {
+    /**
+     * The generated deep link URL
+     */
+    public var url: String
+    /**
+     * The request ID used (either provided or auto-generated)
+     */
+    public var requestId: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The generated deep link URL
+         */url: String, 
+        /**
+         * The request ID used (either provided or auto-generated)
+         */requestId: String) {
+        self.url = url
+        self.requestId = requestId
+    }
+}
+
+
+
+extension DeepLinkResult: Equatable, Hashable {
+    public static func ==(lhs: DeepLinkResult, rhs: DeepLinkResult) -> Bool {
+        if lhs.url != rhs.url {
+            return false
+        }
+        if lhs.requestId != rhs.requestId {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(url)
+        hasher.combine(requestId)
+    }
+}
+
+
+public struct FfiConverterTypeDeepLinkResult: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> DeepLinkResult {
+        return
+            try DeepLinkResult(
+                url: FfiConverterString.read(from: &buf), 
+                requestId: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: DeepLinkResult, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.url, into: &buf)
+        FfiConverterString.write(value.requestId, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeDeepLinkResult_lift(_ buf: RustBuffer) throws -> DeepLinkResult {
+    return try FfiConverterTypeDeepLinkResult.lift(buf)
+}
+
+public func FfiConverterTypeDeepLinkResult_lower(_ value: DeepLinkResult) -> RustBuffer {
+    return FfiConverterTypeDeepLinkResult.lower(value)
+}
+
+
+/**
+ * Parameters for specifying a particular device
+ */
+public struct DeviceParams {
+    /**
+     * Device instance path
+     */
+    public var path: String?
+    /**
+     * Device instance ID
+     */
+    public var instance: UInt32?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Device instance path
+         */path: String?, 
+        /**
+         * Device instance ID
+         */instance: UInt32?) {
+        self.path = path
+        self.instance = instance
+    }
+}
+
+
+
+extension DeviceParams: Equatable, Hashable {
+    public static func ==(lhs: DeviceParams, rhs: DeviceParams) -> Bool {
+        if lhs.path != rhs.path {
+            return false
+        }
+        if lhs.instance != rhs.instance {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(path)
+        hasher.combine(instance)
+    }
+}
+
+
+public struct FfiConverterTypeDeviceParams: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> DeviceParams {
+        return
+            try DeviceParams(
+                path: FfiConverterOptionString.read(from: &buf), 
+                instance: FfiConverterOptionUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: DeviceParams, into buf: inout [UInt8]) {
+        FfiConverterOptionString.write(value.path, into: &buf)
+        FfiConverterOptionUInt32.write(value.instance, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeDeviceParams_lift(_ buf: RustBuffer) throws -> DeviceParams {
+    return try FfiConverterTypeDeviceParams.lift(buf)
+}
+
+public func FfiConverterTypeDeviceParams_lower(_ value: DeviceParams) -> RustBuffer {
+    return FfiConverterTypeDeviceParams.lower(value)
+}
+
+
 public struct ErrorData {
     public var errorDetails: String
 
@@ -743,6 +1660,184 @@ public func FfiConverterTypeErrorData_lift(_ buf: RustBuffer) throws -> ErrorDat
 
 public func FfiConverterTypeErrorData_lower(_ value: ErrorData) -> RustBuffer {
     return FfiConverterTypeErrorData.lower(value)
+}
+
+
+/**
+ * Feature response containing device capabilities and information
+ */
+public struct FeatureResponse {
+    public var vendor: String
+    public var majorVersion: UInt32
+    public var minorVersion: UInt32
+    public var patchVersion: UInt32
+    public var deviceId: String
+    public var capabilities: [String]?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(vendor: String, majorVersion: UInt32, minorVersion: UInt32, patchVersion: UInt32, deviceId: String, capabilities: [String]?) {
+        self.vendor = vendor
+        self.majorVersion = majorVersion
+        self.minorVersion = minorVersion
+        self.patchVersion = patchVersion
+        self.deviceId = deviceId
+        self.capabilities = capabilities
+    }
+}
+
+
+
+extension FeatureResponse: Equatable, Hashable {
+    public static func ==(lhs: FeatureResponse, rhs: FeatureResponse) -> Bool {
+        if lhs.vendor != rhs.vendor {
+            return false
+        }
+        if lhs.majorVersion != rhs.majorVersion {
+            return false
+        }
+        if lhs.minorVersion != rhs.minorVersion {
+            return false
+        }
+        if lhs.patchVersion != rhs.patchVersion {
+            return false
+        }
+        if lhs.deviceId != rhs.deviceId {
+            return false
+        }
+        if lhs.capabilities != rhs.capabilities {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(vendor)
+        hasher.combine(majorVersion)
+        hasher.combine(minorVersion)
+        hasher.combine(patchVersion)
+        hasher.combine(deviceId)
+        hasher.combine(capabilities)
+    }
+}
+
+
+public struct FfiConverterTypeFeatureResponse: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FeatureResponse {
+        return
+            try FeatureResponse(
+                vendor: FfiConverterString.read(from: &buf), 
+                majorVersion: FfiConverterUInt32.read(from: &buf), 
+                minorVersion: FfiConverterUInt32.read(from: &buf), 
+                patchVersion: FfiConverterUInt32.read(from: &buf), 
+                deviceId: FfiConverterString.read(from: &buf), 
+                capabilities: FfiConverterOptionSequenceString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: FeatureResponse, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.vendor, into: &buf)
+        FfiConverterUInt32.write(value.majorVersion, into: &buf)
+        FfiConverterUInt32.write(value.minorVersion, into: &buf)
+        FfiConverterUInt32.write(value.patchVersion, into: &buf)
+        FfiConverterString.write(value.deviceId, into: &buf)
+        FfiConverterOptionSequenceString.write(value.capabilities, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeFeatureResponse_lift(_ buf: RustBuffer) throws -> FeatureResponse {
+    return try FfiConverterTypeFeatureResponse.lift(buf)
+}
+
+public func FfiConverterTypeFeatureResponse_lower(_ value: FeatureResponse) -> RustBuffer {
+    return FfiConverterTypeFeatureResponse.lower(value)
+}
+
+
+/**
+ * Fee level for compose transaction
+ */
+public struct FeeLevel {
+    /**
+     * Fee per unit (satoshi/byte or satoshi/vbyte)
+     */
+    public var feePerUnit: String
+    /**
+     * Base fee in satoshi (optional, used in RBF and DOGE)
+     */
+    public var baseFee: UInt32?
+    /**
+     * Floor base fee (optional, used in DOGE)
+     */
+    public var floorBaseFee: Bool?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Fee per unit (satoshi/byte or satoshi/vbyte)
+         */feePerUnit: String, 
+        /**
+         * Base fee in satoshi (optional, used in RBF and DOGE)
+         */baseFee: UInt32?, 
+        /**
+         * Floor base fee (optional, used in DOGE)
+         */floorBaseFee: Bool?) {
+        self.feePerUnit = feePerUnit
+        self.baseFee = baseFee
+        self.floorBaseFee = floorBaseFee
+    }
+}
+
+
+
+extension FeeLevel: Equatable, Hashable {
+    public static func ==(lhs: FeeLevel, rhs: FeeLevel) -> Bool {
+        if lhs.feePerUnit != rhs.feePerUnit {
+            return false
+        }
+        if lhs.baseFee != rhs.baseFee {
+            return false
+        }
+        if lhs.floorBaseFee != rhs.floorBaseFee {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(feePerUnit)
+        hasher.combine(baseFee)
+        hasher.combine(floorBaseFee)
+    }
+}
+
+
+public struct FfiConverterTypeFeeLevel: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FeeLevel {
+        return
+            try FeeLevel(
+                feePerUnit: FfiConverterString.read(from: &buf), 
+                baseFee: FfiConverterOptionUInt32.read(from: &buf), 
+                floorBaseFee: FfiConverterOptionBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: FeeLevel, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.feePerUnit, into: &buf)
+        FfiConverterOptionUInt32.write(value.baseFee, into: &buf)
+        FfiConverterOptionBool.write(value.floorBaseFee, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeFeeLevel_lift(_ buf: RustBuffer) throws -> FeeLevel {
+    return try FfiConverterTypeFeeLevel.lift(buf)
+}
+
+public func FfiConverterTypeFeeLevel_lower(_ value: FeeLevel) -> RustBuffer {
+    return FfiConverterTypeFeeLevel.lower(value)
 }
 
 
@@ -1003,6 +2098,220 @@ public func FfiConverterTypeGetAddressesResponse_lift(_ buf: RustBuffer) throws 
 
 public func FfiConverterTypeGetAddressesResponse_lower(_ value: GetAddressesResponse) -> RustBuffer {
     return FfiConverterTypeGetAddressesResponse.lower(value)
+}
+
+
+/**
+ * HD Node Path Type
+ */
+public struct HdNodePathType {
+    /**
+     * Node data (can be String or HDNodeType)
+     */
+    public var node: HdNodeTypeOrString
+    /**
+     * BIP32 derivation path
+     */
+    public var addressN: [UInt32]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Node data (can be String or HDNodeType)
+         */node: HdNodeTypeOrString, 
+        /**
+         * BIP32 derivation path
+         */addressN: [UInt32]) {
+        self.node = node
+        self.addressN = addressN
+    }
+}
+
+
+
+extension HdNodePathType: Equatable, Hashable {
+    public static func ==(lhs: HdNodePathType, rhs: HdNodePathType) -> Bool {
+        if lhs.node != rhs.node {
+            return false
+        }
+        if lhs.addressN != rhs.addressN {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(node)
+        hasher.combine(addressN)
+    }
+}
+
+
+public struct FfiConverterTypeHDNodePathType: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> HdNodePathType {
+        return
+            try HdNodePathType(
+                node: FfiConverterTypeHDNodeTypeOrString.read(from: &buf), 
+                addressN: FfiConverterSequenceUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: HdNodePathType, into buf: inout [UInt8]) {
+        FfiConverterTypeHDNodeTypeOrString.write(value.node, into: &buf)
+        FfiConverterSequenceUInt32.write(value.addressN, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeHDNodePathType_lift(_ buf: RustBuffer) throws -> HdNodePathType {
+    return try FfiConverterTypeHDNodePathType.lift(buf)
+}
+
+public func FfiConverterTypeHDNodePathType_lower(_ value: HdNodePathType) -> RustBuffer {
+    return FfiConverterTypeHDNodePathType.lower(value)
+}
+
+
+/**
+ * HD Node Type
+ */
+public struct HdNodeType {
+    /**
+     * Depth
+     */
+    public var depth: UInt32
+    /**
+     * Fingerprint
+     */
+    public var fingerprint: UInt32
+    /**
+     * Child number
+     */
+    public var childNum: UInt32
+    /**
+     * Chain code
+     */
+    public var chainCode: String
+    /**
+     * Public key
+     */
+    public var publicKey: String
+    /**
+     * Private key (optional)
+     */
+    public var privateKey: String?
+    /**
+     * BIP32 derivation path (optional)
+     */
+    public var addressN: [UInt32]?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Depth
+         */depth: UInt32, 
+        /**
+         * Fingerprint
+         */fingerprint: UInt32, 
+        /**
+         * Child number
+         */childNum: UInt32, 
+        /**
+         * Chain code
+         */chainCode: String, 
+        /**
+         * Public key
+         */publicKey: String, 
+        /**
+         * Private key (optional)
+         */privateKey: String?, 
+        /**
+         * BIP32 derivation path (optional)
+         */addressN: [UInt32]?) {
+        self.depth = depth
+        self.fingerprint = fingerprint
+        self.childNum = childNum
+        self.chainCode = chainCode
+        self.publicKey = publicKey
+        self.privateKey = privateKey
+        self.addressN = addressN
+    }
+}
+
+
+
+extension HdNodeType: Equatable, Hashable {
+    public static func ==(lhs: HdNodeType, rhs: HdNodeType) -> Bool {
+        if lhs.depth != rhs.depth {
+            return false
+        }
+        if lhs.fingerprint != rhs.fingerprint {
+            return false
+        }
+        if lhs.childNum != rhs.childNum {
+            return false
+        }
+        if lhs.chainCode != rhs.chainCode {
+            return false
+        }
+        if lhs.publicKey != rhs.publicKey {
+            return false
+        }
+        if lhs.privateKey != rhs.privateKey {
+            return false
+        }
+        if lhs.addressN != rhs.addressN {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(depth)
+        hasher.combine(fingerprint)
+        hasher.combine(childNum)
+        hasher.combine(chainCode)
+        hasher.combine(publicKey)
+        hasher.combine(privateKey)
+        hasher.combine(addressN)
+    }
+}
+
+
+public struct FfiConverterTypeHDNodeType: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> HdNodeType {
+        return
+            try HdNodeType(
+                depth: FfiConverterUInt32.read(from: &buf), 
+                fingerprint: FfiConverterUInt32.read(from: &buf), 
+                childNum: FfiConverterUInt32.read(from: &buf), 
+                chainCode: FfiConverterString.read(from: &buf), 
+                publicKey: FfiConverterString.read(from: &buf), 
+                privateKey: FfiConverterOptionString.read(from: &buf), 
+                addressN: FfiConverterOptionSequenceUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: HdNodeType, into buf: inout [UInt8]) {
+        FfiConverterUInt32.write(value.depth, into: &buf)
+        FfiConverterUInt32.write(value.fingerprint, into: &buf)
+        FfiConverterUInt32.write(value.childNum, into: &buf)
+        FfiConverterString.write(value.chainCode, into: &buf)
+        FfiConverterString.write(value.publicKey, into: &buf)
+        FfiConverterOptionString.write(value.privateKey, into: &buf)
+        FfiConverterOptionSequenceUInt32.write(value.addressN, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeHDNodeType_lift(_ buf: RustBuffer) throws -> HdNodeType {
+    return try FfiConverterTypeHDNodeType.lift(buf)
+}
+
+public func FfiConverterTypeHDNodeType_lower(_ value: HdNodeType) -> RustBuffer {
+    return FfiConverterTypeHDNodeType.lower(value)
 }
 
 
@@ -3327,6 +4636,192 @@ public func FfiConverterTypeLnurlWithdrawData_lower(_ value: LnurlWithdrawData) 
 }
 
 
+/**
+ * Message signature response
+ */
+public struct MessageSignatureResponse {
+    /**
+     * Signer address
+     */
+    public var address: String
+    /**
+     * Signature in base64 format
+     */
+    public var signature: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Signer address
+         */address: String, 
+        /**
+         * Signature in base64 format
+         */signature: String) {
+        self.address = address
+        self.signature = signature
+    }
+}
+
+
+
+extension MessageSignatureResponse: Equatable, Hashable {
+    public static func ==(lhs: MessageSignatureResponse, rhs: MessageSignatureResponse) -> Bool {
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.signature != rhs.signature {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(address)
+        hasher.combine(signature)
+    }
+}
+
+
+public struct FfiConverterTypeMessageSignatureResponse: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> MessageSignatureResponse {
+        return
+            try MessageSignatureResponse(
+                address: FfiConverterString.read(from: &buf), 
+                signature: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: MessageSignatureResponse, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.address, into: &buf)
+        FfiConverterString.write(value.signature, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeMessageSignatureResponse_lift(_ buf: RustBuffer) throws -> MessageSignatureResponse {
+    return try FfiConverterTypeMessageSignatureResponse.lift(buf)
+}
+
+public func FfiConverterTypeMessageSignatureResponse_lower(_ value: MessageSignatureResponse) -> RustBuffer {
+    return FfiConverterTypeMessageSignatureResponse.lower(value)
+}
+
+
+/**
+ * Multisig Redeem Script Type
+ */
+public struct MultisigRedeemScriptType {
+    /**
+     * Public keys
+     */
+    public var pubkeys: [HdNodePathType]
+    /**
+     * Signatures
+     */
+    public var signatures: [String]
+    /**
+     * M-of-N threshold
+     */
+    public var m: UInt32
+    /**
+     * Nodes (optional)
+     */
+    public var nodes: [HdNodeType]?
+    /**
+     * Pubkeys order (optional): 0 for PRESERVED, 1 for LEXICOGRAPHIC
+     */
+    public var pubkeysOrder: UInt8?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Public keys
+         */pubkeys: [HdNodePathType], 
+        /**
+         * Signatures
+         */signatures: [String], 
+        /**
+         * M-of-N threshold
+         */m: UInt32, 
+        /**
+         * Nodes (optional)
+         */nodes: [HdNodeType]?, 
+        /**
+         * Pubkeys order (optional): 0 for PRESERVED, 1 for LEXICOGRAPHIC
+         */pubkeysOrder: UInt8?) {
+        self.pubkeys = pubkeys
+        self.signatures = signatures
+        self.m = m
+        self.nodes = nodes
+        self.pubkeysOrder = pubkeysOrder
+    }
+}
+
+
+
+extension MultisigRedeemScriptType: Equatable, Hashable {
+    public static func ==(lhs: MultisigRedeemScriptType, rhs: MultisigRedeemScriptType) -> Bool {
+        if lhs.pubkeys != rhs.pubkeys {
+            return false
+        }
+        if lhs.signatures != rhs.signatures {
+            return false
+        }
+        if lhs.m != rhs.m {
+            return false
+        }
+        if lhs.nodes != rhs.nodes {
+            return false
+        }
+        if lhs.pubkeysOrder != rhs.pubkeysOrder {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(pubkeys)
+        hasher.combine(signatures)
+        hasher.combine(m)
+        hasher.combine(nodes)
+        hasher.combine(pubkeysOrder)
+    }
+}
+
+
+public struct FfiConverterTypeMultisigRedeemScriptType: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> MultisigRedeemScriptType {
+        return
+            try MultisigRedeemScriptType(
+                pubkeys: FfiConverterSequenceTypeHDNodePathType.read(from: &buf), 
+                signatures: FfiConverterSequenceString.read(from: &buf), 
+                m: FfiConverterUInt32.read(from: &buf), 
+                nodes: FfiConverterOptionSequenceTypeHDNodeType.read(from: &buf), 
+                pubkeysOrder: FfiConverterOptionUInt8.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: MultisigRedeemScriptType, into buf: inout [UInt8]) {
+        FfiConverterSequenceTypeHDNodePathType.write(value.pubkeys, into: &buf)
+        FfiConverterSequenceString.write(value.signatures, into: &buf)
+        FfiConverterUInt32.write(value.m, into: &buf)
+        FfiConverterOptionSequenceTypeHDNodeType.write(value.nodes, into: &buf)
+        FfiConverterOptionUInt8.write(value.pubkeysOrder, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeMultisigRedeemScriptType_lift(_ buf: RustBuffer) throws -> MultisigRedeemScriptType {
+    return try FfiConverterTypeMultisigRedeemScriptType.lift(buf)
+}
+
+public func FfiConverterTypeMultisigRedeemScriptType_lower(_ value: MultisigRedeemScriptType) -> RustBuffer {
+    return FfiConverterTypeMultisigRedeemScriptType.lower(value)
+}
+
+
 public struct OnChainInvoice {
     public var address: String
     public var amountSatoshis: UInt64
@@ -3585,6 +5080,462 @@ public func FfiConverterTypeOnchainActivity_lower(_ value: OnchainActivity) -> R
 }
 
 
+/**
+ * Payment request memo types
+ */
+public struct PaymentRequestMemo {
+    /**
+     * Text memo
+     */
+    public var textMemo: TextMemo?
+    /**
+     * Refund memo
+     */
+    public var refundMemo: RefundMemo?
+    /**
+     * Coin purchase memo
+     */
+    public var coinPurchaseMemo: CoinPurchaseMemo?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Text memo
+         */textMemo: TextMemo?, 
+        /**
+         * Refund memo
+         */refundMemo: RefundMemo?, 
+        /**
+         * Coin purchase memo
+         */coinPurchaseMemo: CoinPurchaseMemo?) {
+        self.textMemo = textMemo
+        self.refundMemo = refundMemo
+        self.coinPurchaseMemo = coinPurchaseMemo
+    }
+}
+
+
+
+extension PaymentRequestMemo: Equatable, Hashable {
+    public static func ==(lhs: PaymentRequestMemo, rhs: PaymentRequestMemo) -> Bool {
+        if lhs.textMemo != rhs.textMemo {
+            return false
+        }
+        if lhs.refundMemo != rhs.refundMemo {
+            return false
+        }
+        if lhs.coinPurchaseMemo != rhs.coinPurchaseMemo {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(textMemo)
+        hasher.combine(refundMemo)
+        hasher.combine(coinPurchaseMemo)
+    }
+}
+
+
+public struct FfiConverterTypePaymentRequestMemo: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PaymentRequestMemo {
+        return
+            try PaymentRequestMemo(
+                textMemo: FfiConverterOptionTypeTextMemo.read(from: &buf), 
+                refundMemo: FfiConverterOptionTypeRefundMemo.read(from: &buf), 
+                coinPurchaseMemo: FfiConverterOptionTypeCoinPurchaseMemo.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PaymentRequestMemo, into buf: inout [UInt8]) {
+        FfiConverterOptionTypeTextMemo.write(value.textMemo, into: &buf)
+        FfiConverterOptionTypeRefundMemo.write(value.refundMemo, into: &buf)
+        FfiConverterOptionTypeCoinPurchaseMemo.write(value.coinPurchaseMemo, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypePaymentRequestMemo_lift(_ buf: RustBuffer) throws -> PaymentRequestMemo {
+    return try FfiConverterTypePaymentRequestMemo.lift(buf)
+}
+
+public func FfiConverterTypePaymentRequestMemo_lower(_ value: PaymentRequestMemo) -> RustBuffer {
+    return FfiConverterTypePaymentRequestMemo.lower(value)
+}
+
+
+/**
+ * Precomposed transaction input
+ */
+public struct PrecomposedInput {
+    /**
+     * BIP32 derivation path
+     */
+    public var addressN: [UInt32]
+    /**
+     * Amount in satoshis
+     */
+    public var amount: String
+    /**
+     * Previous transaction hash
+     */
+    public var prevHash: String
+    /**
+     * Previous output index
+     */
+    public var prevIndex: UInt32
+    /**
+     * Script type
+     */
+    public var scriptType: ScriptType
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * BIP32 derivation path
+         */addressN: [UInt32], 
+        /**
+         * Amount in satoshis
+         */amount: String, 
+        /**
+         * Previous transaction hash
+         */prevHash: String, 
+        /**
+         * Previous output index
+         */prevIndex: UInt32, 
+        /**
+         * Script type
+         */scriptType: ScriptType) {
+        self.addressN = addressN
+        self.amount = amount
+        self.prevHash = prevHash
+        self.prevIndex = prevIndex
+        self.scriptType = scriptType
+    }
+}
+
+
+
+extension PrecomposedInput: Equatable, Hashable {
+    public static func ==(lhs: PrecomposedInput, rhs: PrecomposedInput) -> Bool {
+        if lhs.addressN != rhs.addressN {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.prevHash != rhs.prevHash {
+            return false
+        }
+        if lhs.prevIndex != rhs.prevIndex {
+            return false
+        }
+        if lhs.scriptType != rhs.scriptType {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(addressN)
+        hasher.combine(amount)
+        hasher.combine(prevHash)
+        hasher.combine(prevIndex)
+        hasher.combine(scriptType)
+    }
+}
+
+
+public struct FfiConverterTypePrecomposedInput: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PrecomposedInput {
+        return
+            try PrecomposedInput(
+                addressN: FfiConverterSequenceUInt32.read(from: &buf), 
+                amount: FfiConverterString.read(from: &buf), 
+                prevHash: FfiConverterString.read(from: &buf), 
+                prevIndex: FfiConverterUInt32.read(from: &buf), 
+                scriptType: FfiConverterTypeScriptType.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PrecomposedInput, into buf: inout [UInt8]) {
+        FfiConverterSequenceUInt32.write(value.addressN, into: &buf)
+        FfiConverterString.write(value.amount, into: &buf)
+        FfiConverterString.write(value.prevHash, into: &buf)
+        FfiConverterUInt32.write(value.prevIndex, into: &buf)
+        FfiConverterTypeScriptType.write(value.scriptType, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypePrecomposedInput_lift(_ buf: RustBuffer) throws -> PrecomposedInput {
+    return try FfiConverterTypePrecomposedInput.lift(buf)
+}
+
+public func FfiConverterTypePrecomposedInput_lower(_ value: PrecomposedInput) -> RustBuffer {
+    return FfiConverterTypePrecomposedInput.lower(value)
+}
+
+
+/**
+ * Precomposed transaction output
+ */
+public struct PrecomposedOutput {
+    /**
+     * BIP32 derivation path (for change outputs)
+     */
+    public var addressN: [UInt32]?
+    /**
+     * Amount in satoshis
+     */
+    public var amount: String
+    /**
+     * Address (for regular outputs)
+     */
+    public var address: String?
+    /**
+     * Script type
+     */
+    public var scriptType: ScriptType
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * BIP32 derivation path (for change outputs)
+         */addressN: [UInt32]?, 
+        /**
+         * Amount in satoshis
+         */amount: String, 
+        /**
+         * Address (for regular outputs)
+         */address: String?, 
+        /**
+         * Script type
+         */scriptType: ScriptType) {
+        self.addressN = addressN
+        self.amount = amount
+        self.address = address
+        self.scriptType = scriptType
+    }
+}
+
+
+
+extension PrecomposedOutput: Equatable, Hashable {
+    public static func ==(lhs: PrecomposedOutput, rhs: PrecomposedOutput) -> Bool {
+        if lhs.addressN != rhs.addressN {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.scriptType != rhs.scriptType {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(addressN)
+        hasher.combine(amount)
+        hasher.combine(address)
+        hasher.combine(scriptType)
+    }
+}
+
+
+public struct FfiConverterTypePrecomposedOutput: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PrecomposedOutput {
+        return
+            try PrecomposedOutput(
+                addressN: FfiConverterOptionSequenceUInt32.read(from: &buf), 
+                amount: FfiConverterString.read(from: &buf), 
+                address: FfiConverterOptionString.read(from: &buf), 
+                scriptType: FfiConverterTypeScriptType.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PrecomposedOutput, into buf: inout [UInt8]) {
+        FfiConverterOptionSequenceUInt32.write(value.addressN, into: &buf)
+        FfiConverterString.write(value.amount, into: &buf)
+        FfiConverterOptionString.write(value.address, into: &buf)
+        FfiConverterTypeScriptType.write(value.scriptType, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypePrecomposedOutput_lift(_ buf: RustBuffer) throws -> PrecomposedOutput {
+    return try FfiConverterTypePrecomposedOutput.lift(buf)
+}
+
+public func FfiConverterTypePrecomposedOutput_lower(_ value: PrecomposedOutput) -> RustBuffer {
+    return FfiConverterTypePrecomposedOutput.lower(value)
+}
+
+
+/**
+ * Precomposed transaction
+ */
+public struct PrecomposedTransaction {
+    /**
+     * Transaction type (usually "final" or "error")
+     */
+    public var txType: String
+    /**
+     * Total amount spent (including fee)
+     */
+    public var totalSpent: String?
+    /**
+     * Transaction fee
+     */
+    public var fee: String?
+    /**
+     * Fee per byte
+     */
+    public var feePerByte: String?
+    /**
+     * Transaction size in bytes
+     */
+    public var bytes: UInt32?
+    /**
+     * Transaction inputs
+     */
+    public var inputs: [PrecomposedInput]?
+    /**
+     * Transaction outputs
+     */
+    public var outputs: [PrecomposedOutput]?
+    /**
+     * Output permutation indices
+     */
+    public var outputsPermutation: [UInt32]?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Transaction type (usually "final" or "error")
+         */txType: String, 
+        /**
+         * Total amount spent (including fee)
+         */totalSpent: String?, 
+        /**
+         * Transaction fee
+         */fee: String?, 
+        /**
+         * Fee per byte
+         */feePerByte: String?, 
+        /**
+         * Transaction size in bytes
+         */bytes: UInt32?, 
+        /**
+         * Transaction inputs
+         */inputs: [PrecomposedInput]?, 
+        /**
+         * Transaction outputs
+         */outputs: [PrecomposedOutput]?, 
+        /**
+         * Output permutation indices
+         */outputsPermutation: [UInt32]?) {
+        self.txType = txType
+        self.totalSpent = totalSpent
+        self.fee = fee
+        self.feePerByte = feePerByte
+        self.bytes = bytes
+        self.inputs = inputs
+        self.outputs = outputs
+        self.outputsPermutation = outputsPermutation
+    }
+}
+
+
+
+extension PrecomposedTransaction: Equatable, Hashable {
+    public static func ==(lhs: PrecomposedTransaction, rhs: PrecomposedTransaction) -> Bool {
+        if lhs.txType != rhs.txType {
+            return false
+        }
+        if lhs.totalSpent != rhs.totalSpent {
+            return false
+        }
+        if lhs.fee != rhs.fee {
+            return false
+        }
+        if lhs.feePerByte != rhs.feePerByte {
+            return false
+        }
+        if lhs.bytes != rhs.bytes {
+            return false
+        }
+        if lhs.inputs != rhs.inputs {
+            return false
+        }
+        if lhs.outputs != rhs.outputs {
+            return false
+        }
+        if lhs.outputsPermutation != rhs.outputsPermutation {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(txType)
+        hasher.combine(totalSpent)
+        hasher.combine(fee)
+        hasher.combine(feePerByte)
+        hasher.combine(bytes)
+        hasher.combine(inputs)
+        hasher.combine(outputs)
+        hasher.combine(outputsPermutation)
+    }
+}
+
+
+public struct FfiConverterTypePrecomposedTransaction: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PrecomposedTransaction {
+        return
+            try PrecomposedTransaction(
+                txType: FfiConverterString.read(from: &buf), 
+                totalSpent: FfiConverterOptionString.read(from: &buf), 
+                fee: FfiConverterOptionString.read(from: &buf), 
+                feePerByte: FfiConverterOptionString.read(from: &buf), 
+                bytes: FfiConverterOptionUInt32.read(from: &buf), 
+                inputs: FfiConverterOptionSequenceTypePrecomposedInput.read(from: &buf), 
+                outputs: FfiConverterOptionSequenceTypePrecomposedOutput.read(from: &buf), 
+                outputsPermutation: FfiConverterOptionSequenceUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PrecomposedTransaction, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.txType, into: &buf)
+        FfiConverterOptionString.write(value.totalSpent, into: &buf)
+        FfiConverterOptionString.write(value.fee, into: &buf)
+        FfiConverterOptionString.write(value.feePerByte, into: &buf)
+        FfiConverterOptionUInt32.write(value.bytes, into: &buf)
+        FfiConverterOptionSequenceTypePrecomposedInput.write(value.inputs, into: &buf)
+        FfiConverterOptionSequenceTypePrecomposedOutput.write(value.outputs, into: &buf)
+        FfiConverterOptionSequenceUInt32.write(value.outputsPermutation, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypePrecomposedTransaction_lift(_ buf: RustBuffer) throws -> PrecomposedTransaction {
+    return try FfiConverterTypePrecomposedTransaction.lift(buf)
+}
+
+public func FfiConverterTypePrecomposedTransaction_lower(_ value: PrecomposedTransaction) -> RustBuffer {
+    return FfiConverterTypePrecomposedTransaction.lower(value)
+}
+
+
 public struct PubkyAuth {
     public var data: String
 
@@ -3631,6 +5582,1326 @@ public func FfiConverterTypePubkyAuth_lift(_ buf: RustBuffer) throws -> PubkyAut
 
 public func FfiConverterTypePubkyAuth_lower(_ value: PubkyAuth) -> RustBuffer {
     return FfiConverterTypePubkyAuth.lower(value)
+}
+
+
+/**
+ * Public key response containing the derived public key information
+ */
+public struct PublicKeyResponse {
+    public var path: [UInt32]
+    public var serializedPath: String
+    public var xpub: String
+    public var xpubSegwit: String?
+    public var chainCode: String
+    public var childNum: UInt32
+    public var publicKey: String
+    public var fingerprint: UInt32
+    public var depth: UInt32
+    public var descriptor: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(path: [UInt32], serializedPath: String, xpub: String, xpubSegwit: String?, chainCode: String, childNum: UInt32, publicKey: String, fingerprint: UInt32, depth: UInt32, descriptor: String?) {
+        self.path = path
+        self.serializedPath = serializedPath
+        self.xpub = xpub
+        self.xpubSegwit = xpubSegwit
+        self.chainCode = chainCode
+        self.childNum = childNum
+        self.publicKey = publicKey
+        self.fingerprint = fingerprint
+        self.depth = depth
+        self.descriptor = descriptor
+    }
+}
+
+
+
+extension PublicKeyResponse: Equatable, Hashable {
+    public static func ==(lhs: PublicKeyResponse, rhs: PublicKeyResponse) -> Bool {
+        if lhs.path != rhs.path {
+            return false
+        }
+        if lhs.serializedPath != rhs.serializedPath {
+            return false
+        }
+        if lhs.xpub != rhs.xpub {
+            return false
+        }
+        if lhs.xpubSegwit != rhs.xpubSegwit {
+            return false
+        }
+        if lhs.chainCode != rhs.chainCode {
+            return false
+        }
+        if lhs.childNum != rhs.childNum {
+            return false
+        }
+        if lhs.publicKey != rhs.publicKey {
+            return false
+        }
+        if lhs.fingerprint != rhs.fingerprint {
+            return false
+        }
+        if lhs.depth != rhs.depth {
+            return false
+        }
+        if lhs.descriptor != rhs.descriptor {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(path)
+        hasher.combine(serializedPath)
+        hasher.combine(xpub)
+        hasher.combine(xpubSegwit)
+        hasher.combine(chainCode)
+        hasher.combine(childNum)
+        hasher.combine(publicKey)
+        hasher.combine(fingerprint)
+        hasher.combine(depth)
+        hasher.combine(descriptor)
+    }
+}
+
+
+public struct FfiConverterTypePublicKeyResponse: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PublicKeyResponse {
+        return
+            try PublicKeyResponse(
+                path: FfiConverterSequenceUInt32.read(from: &buf), 
+                serializedPath: FfiConverterString.read(from: &buf), 
+                xpub: FfiConverterString.read(from: &buf), 
+                xpubSegwit: FfiConverterOptionString.read(from: &buf), 
+                chainCode: FfiConverterString.read(from: &buf), 
+                childNum: FfiConverterUInt32.read(from: &buf), 
+                publicKey: FfiConverterString.read(from: &buf), 
+                fingerprint: FfiConverterUInt32.read(from: &buf), 
+                depth: FfiConverterUInt32.read(from: &buf), 
+                descriptor: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PublicKeyResponse, into buf: inout [UInt8]) {
+        FfiConverterSequenceUInt32.write(value.path, into: &buf)
+        FfiConverterString.write(value.serializedPath, into: &buf)
+        FfiConverterString.write(value.xpub, into: &buf)
+        FfiConverterOptionString.write(value.xpubSegwit, into: &buf)
+        FfiConverterString.write(value.chainCode, into: &buf)
+        FfiConverterUInt32.write(value.childNum, into: &buf)
+        FfiConverterString.write(value.publicKey, into: &buf)
+        FfiConverterUInt32.write(value.fingerprint, into: &buf)
+        FfiConverterUInt32.write(value.depth, into: &buf)
+        FfiConverterOptionString.write(value.descriptor, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypePublicKeyResponse_lift(_ buf: RustBuffer) throws -> PublicKeyResponse {
+    return try FfiConverterTypePublicKeyResponse.lift(buf)
+}
+
+public func FfiConverterTypePublicKeyResponse_lower(_ value: PublicKeyResponse) -> RustBuffer {
+    return FfiConverterTypePublicKeyResponse.lower(value)
+}
+
+
+/**
+ * Reference transaction for transaction signing
+ */
+public struct RefTransaction {
+    /**
+     * Transaction hash
+     */
+    public var hash: String
+    /**
+     * Transaction version
+     */
+    public var version: UInt32?
+    /**
+     * Transaction inputs
+     */
+    public var inputs: [RefTxInput]
+    /**
+     * Transaction outputs (binary format)
+     */
+    public var binOutputs: [RefTxOutput]
+    /**
+     * Lock time
+     */
+    public var lockTime: UInt32?
+    /**
+     * Expiry (for Zcash/Decred)
+     */
+    public var expiry: UInt32?
+    /**
+     * Version group ID (for Zcash)
+     */
+    public var versionGroupId: UInt32?
+    /**
+     * Overwintered flag (for Zcash)
+     */
+    public var overwintered: Bool?
+    /**
+     * Timestamp (for Capricoin)
+     */
+    public var timestamp: UInt32?
+    /**
+     * Branch ID (for Zcash)
+     */
+    public var branchId: UInt32?
+    /**
+     * Extra data
+     */
+    public var extraData: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Transaction hash
+         */hash: String, 
+        /**
+         * Transaction version
+         */version: UInt32?, 
+        /**
+         * Transaction inputs
+         */inputs: [RefTxInput], 
+        /**
+         * Transaction outputs (binary format)
+         */binOutputs: [RefTxOutput], 
+        /**
+         * Lock time
+         */lockTime: UInt32?, 
+        /**
+         * Expiry (for Zcash/Decred)
+         */expiry: UInt32?, 
+        /**
+         * Version group ID (for Zcash)
+         */versionGroupId: UInt32?, 
+        /**
+         * Overwintered flag (for Zcash)
+         */overwintered: Bool?, 
+        /**
+         * Timestamp (for Capricoin)
+         */timestamp: UInt32?, 
+        /**
+         * Branch ID (for Zcash)
+         */branchId: UInt32?, 
+        /**
+         * Extra data
+         */extraData: String?) {
+        self.hash = hash
+        self.version = version
+        self.inputs = inputs
+        self.binOutputs = binOutputs
+        self.lockTime = lockTime
+        self.expiry = expiry
+        self.versionGroupId = versionGroupId
+        self.overwintered = overwintered
+        self.timestamp = timestamp
+        self.branchId = branchId
+        self.extraData = extraData
+    }
+}
+
+
+
+extension RefTransaction: Equatable, Hashable {
+    public static func ==(lhs: RefTransaction, rhs: RefTransaction) -> Bool {
+        if lhs.hash != rhs.hash {
+            return false
+        }
+        if lhs.version != rhs.version {
+            return false
+        }
+        if lhs.inputs != rhs.inputs {
+            return false
+        }
+        if lhs.binOutputs != rhs.binOutputs {
+            return false
+        }
+        if lhs.lockTime != rhs.lockTime {
+            return false
+        }
+        if lhs.expiry != rhs.expiry {
+            return false
+        }
+        if lhs.versionGroupId != rhs.versionGroupId {
+            return false
+        }
+        if lhs.overwintered != rhs.overwintered {
+            return false
+        }
+        if lhs.timestamp != rhs.timestamp {
+            return false
+        }
+        if lhs.branchId != rhs.branchId {
+            return false
+        }
+        if lhs.extraData != rhs.extraData {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(hash)
+        hasher.combine(version)
+        hasher.combine(inputs)
+        hasher.combine(binOutputs)
+        hasher.combine(lockTime)
+        hasher.combine(expiry)
+        hasher.combine(versionGroupId)
+        hasher.combine(overwintered)
+        hasher.combine(timestamp)
+        hasher.combine(branchId)
+        hasher.combine(extraData)
+    }
+}
+
+
+public struct FfiConverterTypeRefTransaction: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> RefTransaction {
+        return
+            try RefTransaction(
+                hash: FfiConverterString.read(from: &buf), 
+                version: FfiConverterOptionUInt32.read(from: &buf), 
+                inputs: FfiConverterSequenceTypeRefTxInput.read(from: &buf), 
+                binOutputs: FfiConverterSequenceTypeRefTxOutput.read(from: &buf), 
+                lockTime: FfiConverterOptionUInt32.read(from: &buf), 
+                expiry: FfiConverterOptionUInt32.read(from: &buf), 
+                versionGroupId: FfiConverterOptionUInt32.read(from: &buf), 
+                overwintered: FfiConverterOptionBool.read(from: &buf), 
+                timestamp: FfiConverterOptionUInt32.read(from: &buf), 
+                branchId: FfiConverterOptionUInt32.read(from: &buf), 
+                extraData: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: RefTransaction, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.hash, into: &buf)
+        FfiConverterOptionUInt32.write(value.version, into: &buf)
+        FfiConverterSequenceTypeRefTxInput.write(value.inputs, into: &buf)
+        FfiConverterSequenceTypeRefTxOutput.write(value.binOutputs, into: &buf)
+        FfiConverterOptionUInt32.write(value.lockTime, into: &buf)
+        FfiConverterOptionUInt32.write(value.expiry, into: &buf)
+        FfiConverterOptionUInt32.write(value.versionGroupId, into: &buf)
+        FfiConverterOptionBool.write(value.overwintered, into: &buf)
+        FfiConverterOptionUInt32.write(value.timestamp, into: &buf)
+        FfiConverterOptionUInt32.write(value.branchId, into: &buf)
+        FfiConverterOptionString.write(value.extraData, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeRefTransaction_lift(_ buf: RustBuffer) throws -> RefTransaction {
+    return try FfiConverterTypeRefTransaction.lift(buf)
+}
+
+public func FfiConverterTypeRefTransaction_lower(_ value: RefTransaction) -> RustBuffer {
+    return FfiConverterTypeRefTransaction.lower(value)
+}
+
+
+/**
+ * Reference transaction input
+ */
+public struct RefTxInput {
+    /**
+     * Previous transaction hash
+     */
+    public var prevHash: String
+    /**
+     * Previous transaction output index
+     */
+    public var prevIndex: UInt32
+    /**
+     * Script signature
+     */
+    public var scriptSig: String
+    /**
+     * Sequence number
+     */
+    public var sequence: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Previous transaction hash
+         */prevHash: String, 
+        /**
+         * Previous transaction output index
+         */prevIndex: UInt32, 
+        /**
+         * Script signature
+         */scriptSig: String, 
+        /**
+         * Sequence number
+         */sequence: UInt32) {
+        self.prevHash = prevHash
+        self.prevIndex = prevIndex
+        self.scriptSig = scriptSig
+        self.sequence = sequence
+    }
+}
+
+
+
+extension RefTxInput: Equatable, Hashable {
+    public static func ==(lhs: RefTxInput, rhs: RefTxInput) -> Bool {
+        if lhs.prevHash != rhs.prevHash {
+            return false
+        }
+        if lhs.prevIndex != rhs.prevIndex {
+            return false
+        }
+        if lhs.scriptSig != rhs.scriptSig {
+            return false
+        }
+        if lhs.sequence != rhs.sequence {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(prevHash)
+        hasher.combine(prevIndex)
+        hasher.combine(scriptSig)
+        hasher.combine(sequence)
+    }
+}
+
+
+public struct FfiConverterTypeRefTxInput: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> RefTxInput {
+        return
+            try RefTxInput(
+                prevHash: FfiConverterString.read(from: &buf), 
+                prevIndex: FfiConverterUInt32.read(from: &buf), 
+                scriptSig: FfiConverterString.read(from: &buf), 
+                sequence: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: RefTxInput, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.prevHash, into: &buf)
+        FfiConverterUInt32.write(value.prevIndex, into: &buf)
+        FfiConverterString.write(value.scriptSig, into: &buf)
+        FfiConverterUInt32.write(value.sequence, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeRefTxInput_lift(_ buf: RustBuffer) throws -> RefTxInput {
+    return try FfiConverterTypeRefTxInput.lift(buf)
+}
+
+public func FfiConverterTypeRefTxInput_lower(_ value: RefTxInput) -> RustBuffer {
+    return FfiConverterTypeRefTxInput.lower(value)
+}
+
+
+/**
+ * Reference transaction output (binary format)
+ */
+public struct RefTxOutput {
+    /**
+     * Amount in satoshis
+     */
+    public var amount: UInt64
+    /**
+     * Script public key (binary hex)
+     */
+    public var scriptPubkey: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Amount in satoshis
+         */amount: UInt64, 
+        /**
+         * Script public key (binary hex)
+         */scriptPubkey: String) {
+        self.amount = amount
+        self.scriptPubkey = scriptPubkey
+    }
+}
+
+
+
+extension RefTxOutput: Equatable, Hashable {
+    public static func ==(lhs: RefTxOutput, rhs: RefTxOutput) -> Bool {
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.scriptPubkey != rhs.scriptPubkey {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(amount)
+        hasher.combine(scriptPubkey)
+    }
+}
+
+
+public struct FfiConverterTypeRefTxOutput: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> RefTxOutput {
+        return
+            try RefTxOutput(
+                amount: FfiConverterUInt64.read(from: &buf), 
+                scriptPubkey: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: RefTxOutput, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.amount, into: &buf)
+        FfiConverterString.write(value.scriptPubkey, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeRefTxOutput_lift(_ buf: RustBuffer) throws -> RefTxOutput {
+    return try FfiConverterTypeRefTxOutput.lift(buf)
+}
+
+public func FfiConverterTypeRefTxOutput_lower(_ value: RefTxOutput) -> RustBuffer {
+    return FfiConverterTypeRefTxOutput.lower(value)
+}
+
+
+/**
+ * Refund memo
+ */
+public struct RefundMemo {
+    /**
+     * Refund address
+     */
+    public var address: String
+    /**
+     * MAC
+     */
+    public var mac: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Refund address
+         */address: String, 
+        /**
+         * MAC
+         */mac: String) {
+        self.address = address
+        self.mac = mac
+    }
+}
+
+
+
+extension RefundMemo: Equatable, Hashable {
+    public static func ==(lhs: RefundMemo, rhs: RefundMemo) -> Bool {
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.mac != rhs.mac {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(address)
+        hasher.combine(mac)
+    }
+}
+
+
+public struct FfiConverterTypeRefundMemo: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> RefundMemo {
+        return
+            try RefundMemo(
+                address: FfiConverterString.read(from: &buf), 
+                mac: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: RefundMemo, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.address, into: &buf)
+        FfiConverterString.write(value.mac, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeRefundMemo_lift(_ buf: RustBuffer) throws -> RefundMemo {
+    return try FfiConverterTypeRefundMemo.lift(buf)
+}
+
+public func FfiConverterTypeRefundMemo_lower(_ value: RefundMemo) -> RustBuffer {
+    return FfiConverterTypeRefundMemo.lower(value)
+}
+
+
+/**
+ * Signed transaction response
+ */
+public struct SignedTransactionResponse {
+    /**
+     * Array of signer signatures
+     */
+    public var signatures: [String]
+    /**
+     * Serialized transaction
+     */
+    public var serializedTx: String
+    /**
+     * Broadcasted transaction ID (if push was true)
+     */
+    public var txid: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Array of signer signatures
+         */signatures: [String], 
+        /**
+         * Serialized transaction
+         */serializedTx: String, 
+        /**
+         * Broadcasted transaction ID (if push was true)
+         */txid: String?) {
+        self.signatures = signatures
+        self.serializedTx = serializedTx
+        self.txid = txid
+    }
+}
+
+
+
+extension SignedTransactionResponse: Equatable, Hashable {
+    public static func ==(lhs: SignedTransactionResponse, rhs: SignedTransactionResponse) -> Bool {
+        if lhs.signatures != rhs.signatures {
+            return false
+        }
+        if lhs.serializedTx != rhs.serializedTx {
+            return false
+        }
+        if lhs.txid != rhs.txid {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(signatures)
+        hasher.combine(serializedTx)
+        hasher.combine(txid)
+    }
+}
+
+
+public struct FfiConverterTypeSignedTransactionResponse: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SignedTransactionResponse {
+        return
+            try SignedTransactionResponse(
+                signatures: FfiConverterSequenceString.read(from: &buf), 
+                serializedTx: FfiConverterString.read(from: &buf), 
+                txid: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SignedTransactionResponse, into buf: inout [UInt8]) {
+        FfiConverterSequenceString.write(value.signatures, into: &buf)
+        FfiConverterString.write(value.serializedTx, into: &buf)
+        FfiConverterOptionString.write(value.txid, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeSignedTransactionResponse_lift(_ buf: RustBuffer) throws -> SignedTransactionResponse {
+    return try FfiConverterTypeSignedTransactionResponse.lift(buf)
+}
+
+public func FfiConverterTypeSignedTransactionResponse_lower(_ value: SignedTransactionResponse) -> RustBuffer {
+    return FfiConverterTypeSignedTransactionResponse.lower(value)
+}
+
+
+/**
+ * Text memo
+ */
+public struct TextMemo {
+    /**
+     * Text content
+     */
+    public var text: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Text content
+         */text: String) {
+        self.text = text
+    }
+}
+
+
+
+extension TextMemo: Equatable, Hashable {
+    public static func ==(lhs: TextMemo, rhs: TextMemo) -> Bool {
+        if lhs.text != rhs.text {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(text)
+    }
+}
+
+
+public struct FfiConverterTypeTextMemo: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TextMemo {
+        return
+            try TextMemo(
+                text: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TextMemo, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.text, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeTextMemo_lift(_ buf: RustBuffer) throws -> TextMemo {
+    return try FfiConverterTypeTextMemo.lift(buf)
+}
+
+public func FfiConverterTypeTextMemo_lower(_ value: TextMemo) -> RustBuffer {
+    return FfiConverterTypeTextMemo.lower(value)
+}
+
+
+/**
+ * Payment request
+ */
+public struct TxAckPaymentRequest {
+    /**
+     * Nonce
+     */
+    public var nonce: String?
+    /**
+     * Recipient name
+     */
+    public var recipientName: String
+    /**
+     * Memos
+     */
+    public var memos: [PaymentRequestMemo]?
+    /**
+     * Amount
+     */
+    public var amount: UInt64?
+    /**
+     * Signature
+     */
+    public var signature: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Nonce
+         */nonce: String?, 
+        /**
+         * Recipient name
+         */recipientName: String, 
+        /**
+         * Memos
+         */memos: [PaymentRequestMemo]?, 
+        /**
+         * Amount
+         */amount: UInt64?, 
+        /**
+         * Signature
+         */signature: String) {
+        self.nonce = nonce
+        self.recipientName = recipientName
+        self.memos = memos
+        self.amount = amount
+        self.signature = signature
+    }
+}
+
+
+
+extension TxAckPaymentRequest: Equatable, Hashable {
+    public static func ==(lhs: TxAckPaymentRequest, rhs: TxAckPaymentRequest) -> Bool {
+        if lhs.nonce != rhs.nonce {
+            return false
+        }
+        if lhs.recipientName != rhs.recipientName {
+            return false
+        }
+        if lhs.memos != rhs.memos {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.signature != rhs.signature {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(nonce)
+        hasher.combine(recipientName)
+        hasher.combine(memos)
+        hasher.combine(amount)
+        hasher.combine(signature)
+    }
+}
+
+
+public struct FfiConverterTypeTxAckPaymentRequest: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TxAckPaymentRequest {
+        return
+            try TxAckPaymentRequest(
+                nonce: FfiConverterOptionString.read(from: &buf), 
+                recipientName: FfiConverterString.read(from: &buf), 
+                memos: FfiConverterOptionSequenceTypePaymentRequestMemo.read(from: &buf), 
+                amount: FfiConverterOptionUInt64.read(from: &buf), 
+                signature: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TxAckPaymentRequest, into buf: inout [UInt8]) {
+        FfiConverterOptionString.write(value.nonce, into: &buf)
+        FfiConverterString.write(value.recipientName, into: &buf)
+        FfiConverterOptionSequenceTypePaymentRequestMemo.write(value.memos, into: &buf)
+        FfiConverterOptionUInt64.write(value.amount, into: &buf)
+        FfiConverterString.write(value.signature, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeTxAckPaymentRequest_lift(_ buf: RustBuffer) throws -> TxAckPaymentRequest {
+    return try FfiConverterTypeTxAckPaymentRequest.lift(buf)
+}
+
+public func FfiConverterTypeTxAckPaymentRequest_lower(_ value: TxAckPaymentRequest) -> RustBuffer {
+    return FfiConverterTypeTxAckPaymentRequest.lower(value)
+}
+
+
+/**
+ * Transaction input type
+ */
+public struct TxInputType {
+    /**
+     * Previous transaction hash
+     */
+    public var prevHash: String
+    /**
+     * Previous transaction output index
+     */
+    public var prevIndex: UInt32
+    /**
+     * Amount in satoshis
+     */
+    public var amount: UInt64
+    /**
+     * Transaction sequence
+     */
+    public var sequence: UInt32?
+    /**
+     * BIP32 derivation path
+     */
+    public var addressN: [UInt32]?
+    /**
+     * Script type
+     */
+    public var scriptType: ScriptType?
+    /**
+     * Multisig information
+     */
+    public var multisig: MultisigRedeemScriptType?
+    /**
+     * Script public key (for external inputs)
+     */
+    public var scriptPubkey: String?
+    /**
+     * Script signature
+     */
+    public var scriptSig: String?
+    /**
+     * Witness data
+     */
+    public var witness: String?
+    /**
+     * Ownership proof
+     */
+    public var ownershipProof: String?
+    /**
+     * Commitment data
+     */
+    public var commitmentData: String?
+    /**
+     * Original hash for RBF
+     */
+    public var origHash: String?
+    /**
+     * Original index for RBF
+     */
+    public var origIndex: UInt32?
+    /**
+     * Coinjoin flags
+     */
+    public var coinjoinFlags: UInt32?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Previous transaction hash
+         */prevHash: String, 
+        /**
+         * Previous transaction output index
+         */prevIndex: UInt32, 
+        /**
+         * Amount in satoshis
+         */amount: UInt64, 
+        /**
+         * Transaction sequence
+         */sequence: UInt32?, 
+        /**
+         * BIP32 derivation path
+         */addressN: [UInt32]?, 
+        /**
+         * Script type
+         */scriptType: ScriptType?, 
+        /**
+         * Multisig information
+         */multisig: MultisigRedeemScriptType?, 
+        /**
+         * Script public key (for external inputs)
+         */scriptPubkey: String?, 
+        /**
+         * Script signature
+         */scriptSig: String?, 
+        /**
+         * Witness data
+         */witness: String?, 
+        /**
+         * Ownership proof
+         */ownershipProof: String?, 
+        /**
+         * Commitment data
+         */commitmentData: String?, 
+        /**
+         * Original hash for RBF
+         */origHash: String?, 
+        /**
+         * Original index for RBF
+         */origIndex: UInt32?, 
+        /**
+         * Coinjoin flags
+         */coinjoinFlags: UInt32?) {
+        self.prevHash = prevHash
+        self.prevIndex = prevIndex
+        self.amount = amount
+        self.sequence = sequence
+        self.addressN = addressN
+        self.scriptType = scriptType
+        self.multisig = multisig
+        self.scriptPubkey = scriptPubkey
+        self.scriptSig = scriptSig
+        self.witness = witness
+        self.ownershipProof = ownershipProof
+        self.commitmentData = commitmentData
+        self.origHash = origHash
+        self.origIndex = origIndex
+        self.coinjoinFlags = coinjoinFlags
+    }
+}
+
+
+
+extension TxInputType: Equatable, Hashable {
+    public static func ==(lhs: TxInputType, rhs: TxInputType) -> Bool {
+        if lhs.prevHash != rhs.prevHash {
+            return false
+        }
+        if lhs.prevIndex != rhs.prevIndex {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.sequence != rhs.sequence {
+            return false
+        }
+        if lhs.addressN != rhs.addressN {
+            return false
+        }
+        if lhs.scriptType != rhs.scriptType {
+            return false
+        }
+        if lhs.multisig != rhs.multisig {
+            return false
+        }
+        if lhs.scriptPubkey != rhs.scriptPubkey {
+            return false
+        }
+        if lhs.scriptSig != rhs.scriptSig {
+            return false
+        }
+        if lhs.witness != rhs.witness {
+            return false
+        }
+        if lhs.ownershipProof != rhs.ownershipProof {
+            return false
+        }
+        if lhs.commitmentData != rhs.commitmentData {
+            return false
+        }
+        if lhs.origHash != rhs.origHash {
+            return false
+        }
+        if lhs.origIndex != rhs.origIndex {
+            return false
+        }
+        if lhs.coinjoinFlags != rhs.coinjoinFlags {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(prevHash)
+        hasher.combine(prevIndex)
+        hasher.combine(amount)
+        hasher.combine(sequence)
+        hasher.combine(addressN)
+        hasher.combine(scriptType)
+        hasher.combine(multisig)
+        hasher.combine(scriptPubkey)
+        hasher.combine(scriptSig)
+        hasher.combine(witness)
+        hasher.combine(ownershipProof)
+        hasher.combine(commitmentData)
+        hasher.combine(origHash)
+        hasher.combine(origIndex)
+        hasher.combine(coinjoinFlags)
+    }
+}
+
+
+public struct FfiConverterTypeTxInputType: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TxInputType {
+        return
+            try TxInputType(
+                prevHash: FfiConverterString.read(from: &buf), 
+                prevIndex: FfiConverterUInt32.read(from: &buf), 
+                amount: FfiConverterUInt64.read(from: &buf), 
+                sequence: FfiConverterOptionUInt32.read(from: &buf), 
+                addressN: FfiConverterOptionSequenceUInt32.read(from: &buf), 
+                scriptType: FfiConverterOptionTypeScriptType.read(from: &buf), 
+                multisig: FfiConverterOptionTypeMultisigRedeemScriptType.read(from: &buf), 
+                scriptPubkey: FfiConverterOptionString.read(from: &buf), 
+                scriptSig: FfiConverterOptionString.read(from: &buf), 
+                witness: FfiConverterOptionString.read(from: &buf), 
+                ownershipProof: FfiConverterOptionString.read(from: &buf), 
+                commitmentData: FfiConverterOptionString.read(from: &buf), 
+                origHash: FfiConverterOptionString.read(from: &buf), 
+                origIndex: FfiConverterOptionUInt32.read(from: &buf), 
+                coinjoinFlags: FfiConverterOptionUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TxInputType, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.prevHash, into: &buf)
+        FfiConverterUInt32.write(value.prevIndex, into: &buf)
+        FfiConverterUInt64.write(value.amount, into: &buf)
+        FfiConverterOptionUInt32.write(value.sequence, into: &buf)
+        FfiConverterOptionSequenceUInt32.write(value.addressN, into: &buf)
+        FfiConverterOptionTypeScriptType.write(value.scriptType, into: &buf)
+        FfiConverterOptionTypeMultisigRedeemScriptType.write(value.multisig, into: &buf)
+        FfiConverterOptionString.write(value.scriptPubkey, into: &buf)
+        FfiConverterOptionString.write(value.scriptSig, into: &buf)
+        FfiConverterOptionString.write(value.witness, into: &buf)
+        FfiConverterOptionString.write(value.ownershipProof, into: &buf)
+        FfiConverterOptionString.write(value.commitmentData, into: &buf)
+        FfiConverterOptionString.write(value.origHash, into: &buf)
+        FfiConverterOptionUInt32.write(value.origIndex, into: &buf)
+        FfiConverterOptionUInt32.write(value.coinjoinFlags, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeTxInputType_lift(_ buf: RustBuffer) throws -> TxInputType {
+    return try FfiConverterTypeTxInputType.lift(buf)
+}
+
+public func FfiConverterTypeTxInputType_lower(_ value: TxInputType) -> RustBuffer {
+    return FfiConverterTypeTxInputType.lower(value)
+}
+
+
+/**
+ * Transaction output type
+ */
+public struct TxOutputType {
+    /**
+     * Output address (for address outputs)
+     */
+    public var address: String?
+    /**
+     * BIP32 derivation path (for change outputs)
+     */
+    public var addressN: [UInt32]?
+    /**
+     * Amount in satoshis
+     */
+    public var amount: UInt64
+    /**
+     * Script type
+     */
+    public var scriptType: ScriptType
+    /**
+     * Multisig information
+     */
+    public var multisig: MultisigRedeemScriptType?
+    /**
+     * OP_RETURN data
+     */
+    public var opReturnData: String?
+    /**
+     * Original hash for RBF
+     */
+    public var origHash: String?
+    /**
+     * Original index for RBF
+     */
+    public var origIndex: UInt32?
+    /**
+     * Payment request index
+     */
+    public var paymentReqIndex: UInt32?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Output address (for address outputs)
+         */address: String?, 
+        /**
+         * BIP32 derivation path (for change outputs)
+         */addressN: [UInt32]?, 
+        /**
+         * Amount in satoshis
+         */amount: UInt64, 
+        /**
+         * Script type
+         */scriptType: ScriptType, 
+        /**
+         * Multisig information
+         */multisig: MultisigRedeemScriptType?, 
+        /**
+         * OP_RETURN data
+         */opReturnData: String?, 
+        /**
+         * Original hash for RBF
+         */origHash: String?, 
+        /**
+         * Original index for RBF
+         */origIndex: UInt32?, 
+        /**
+         * Payment request index
+         */paymentReqIndex: UInt32?) {
+        self.address = address
+        self.addressN = addressN
+        self.amount = amount
+        self.scriptType = scriptType
+        self.multisig = multisig
+        self.opReturnData = opReturnData
+        self.origHash = origHash
+        self.origIndex = origIndex
+        self.paymentReqIndex = paymentReqIndex
+    }
+}
+
+
+
+extension TxOutputType: Equatable, Hashable {
+    public static func ==(lhs: TxOutputType, rhs: TxOutputType) -> Bool {
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.addressN != rhs.addressN {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.scriptType != rhs.scriptType {
+            return false
+        }
+        if lhs.multisig != rhs.multisig {
+            return false
+        }
+        if lhs.opReturnData != rhs.opReturnData {
+            return false
+        }
+        if lhs.origHash != rhs.origHash {
+            return false
+        }
+        if lhs.origIndex != rhs.origIndex {
+            return false
+        }
+        if lhs.paymentReqIndex != rhs.paymentReqIndex {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(address)
+        hasher.combine(addressN)
+        hasher.combine(amount)
+        hasher.combine(scriptType)
+        hasher.combine(multisig)
+        hasher.combine(opReturnData)
+        hasher.combine(origHash)
+        hasher.combine(origIndex)
+        hasher.combine(paymentReqIndex)
+    }
+}
+
+
+public struct FfiConverterTypeTxOutputType: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TxOutputType {
+        return
+            try TxOutputType(
+                address: FfiConverterOptionString.read(from: &buf), 
+                addressN: FfiConverterOptionSequenceUInt32.read(from: &buf), 
+                amount: FfiConverterUInt64.read(from: &buf), 
+                scriptType: FfiConverterTypeScriptType.read(from: &buf), 
+                multisig: FfiConverterOptionTypeMultisigRedeemScriptType.read(from: &buf), 
+                opReturnData: FfiConverterOptionString.read(from: &buf), 
+                origHash: FfiConverterOptionString.read(from: &buf), 
+                origIndex: FfiConverterOptionUInt32.read(from: &buf), 
+                paymentReqIndex: FfiConverterOptionUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TxOutputType, into buf: inout [UInt8]) {
+        FfiConverterOptionString.write(value.address, into: &buf)
+        FfiConverterOptionSequenceUInt32.write(value.addressN, into: &buf)
+        FfiConverterUInt64.write(value.amount, into: &buf)
+        FfiConverterTypeScriptType.write(value.scriptType, into: &buf)
+        FfiConverterOptionTypeMultisigRedeemScriptType.write(value.multisig, into: &buf)
+        FfiConverterOptionString.write(value.opReturnData, into: &buf)
+        FfiConverterOptionString.write(value.origHash, into: &buf)
+        FfiConverterOptionUInt32.write(value.origIndex, into: &buf)
+        FfiConverterOptionUInt32.write(value.paymentReqIndex, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeTxOutputType_lift(_ buf: RustBuffer) throws -> TxOutputType {
+    return try FfiConverterTypeTxOutputType.lift(buf)
+}
+
+public func FfiConverterTypeTxOutputType_lower(_ value: TxOutputType) -> RustBuffer {
+    return FfiConverterTypeTxOutputType.lower(value)
+}
+
+
+/**
+ * Unlock Path parameters
+ */
+public struct UnlockPath {
+    /**
+     * BIP32 derivation path
+     */
+    public var addressN: [UInt32]
+    /**
+     * MAC (optional)
+     */
+    public var mac: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * BIP32 derivation path
+         */addressN: [UInt32], 
+        /**
+         * MAC (optional)
+         */mac: String?) {
+        self.addressN = addressN
+        self.mac = mac
+    }
+}
+
+
+
+extension UnlockPath: Equatable, Hashable {
+    public static func ==(lhs: UnlockPath, rhs: UnlockPath) -> Bool {
+        if lhs.addressN != rhs.addressN {
+            return false
+        }
+        if lhs.mac != rhs.mac {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(addressN)
+        hasher.combine(mac)
+    }
+}
+
+
+public struct FfiConverterTypeUnlockPath: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UnlockPath {
+        return
+            try UnlockPath(
+                addressN: FfiConverterSequenceUInt32.read(from: &buf), 
+                mac: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: UnlockPath, into buf: inout [UInt8]) {
+        FfiConverterSequenceUInt32.write(value.addressN, into: &buf)
+        FfiConverterOptionString.write(value.mac, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeUnlockPath_lift(_ buf: RustBuffer) throws -> UnlockPath {
+    return try FfiConverterTypeUnlockPath.lift(buf)
+}
+
+public func FfiConverterTypeUnlockPath_lower(_ value: UnlockPath) -> RustBuffer {
+    return FfiConverterTypeUnlockPath.lower(value)
 }
 
 
@@ -3697,6 +6968,220 @@ public func FfiConverterTypeValidationResult_lift(_ buf: RustBuffer) throws -> V
 public func FfiConverterTypeValidationResult_lower(_ value: ValidationResult) -> RustBuffer {
     return FfiConverterTypeValidationResult.lower(value)
 }
+
+
+/**
+ * Verify message response
+ */
+public struct VerifyMessageResponse {
+    /**
+     * Verification result message
+     */
+    public var message: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Verification result message
+         */message: String) {
+        self.message = message
+    }
+}
+
+
+
+extension VerifyMessageResponse: Equatable, Hashable {
+    public static func ==(lhs: VerifyMessageResponse, rhs: VerifyMessageResponse) -> Bool {
+        if lhs.message != rhs.message {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(message)
+    }
+}
+
+
+public struct FfiConverterTypeVerifyMessageResponse: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> VerifyMessageResponse {
+        return
+            try VerifyMessageResponse(
+                message: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: VerifyMessageResponse, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.message, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeVerifyMessageResponse_lift(_ buf: RustBuffer) throws -> VerifyMessageResponse {
+    return try FfiConverterTypeVerifyMessageResponse.lift(buf)
+}
+
+public func FfiConverterTypeVerifyMessageResponse_lower(_ value: VerifyMessageResponse) -> RustBuffer {
+    return FfiConverterTypeVerifyMessageResponse.lower(value)
+}
+
+
+/**
+ * Marker object for XRP accounts
+ */
+public struct XrpMarker {
+    /**
+     * Ledger number
+     */
+    public var ledger: UInt64
+    /**
+     * Sequence number
+     */
+    public var seq: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Ledger number
+         */ledger: UInt64, 
+        /**
+         * Sequence number
+         */seq: UInt64) {
+        self.ledger = ledger
+        self.seq = seq
+    }
+}
+
+
+
+extension XrpMarker: Equatable, Hashable {
+    public static func ==(lhs: XrpMarker, rhs: XrpMarker) -> Bool {
+        if lhs.ledger != rhs.ledger {
+            return false
+        }
+        if lhs.seq != rhs.seq {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(ledger)
+        hasher.combine(seq)
+    }
+}
+
+
+public struct FfiConverterTypeXrpMarker: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> XrpMarker {
+        return
+            try XrpMarker(
+                ledger: FfiConverterUInt64.read(from: &buf), 
+                seq: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: XrpMarker, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.ledger, into: &buf)
+        FfiConverterUInt64.write(value.seq, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeXrpMarker_lift(_ buf: RustBuffer) throws -> XrpMarker {
+    return try FfiConverterTypeXrpMarker.lift(buf)
+}
+
+public func FfiConverterTypeXrpMarker_lower(_ value: XrpMarker) -> RustBuffer {
+    return FfiConverterTypeXrpMarker.lower(value)
+}
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Level of details to be returned by getAccountInfo
+ */
+
+public enum AccountInfoDetails {
+    
+    /**
+     * Return only account balances (default)
+     */
+    case basic
+    /**
+     * Return with derived addresses or ERC20 tokens
+     */
+    case tokens
+    /**
+     * Same as tokens with balances
+     */
+    case tokenBalances
+    /**
+     * TokenBalances + complete account transaction history
+     */
+    case txs
+}
+
+
+public struct FfiConverterTypeAccountInfoDetails: FfiConverterRustBuffer {
+    typealias SwiftType = AccountInfoDetails
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> AccountInfoDetails {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .basic
+        
+        case 2: return .tokens
+        
+        case 3: return .tokenBalances
+        
+        case 4: return .txs
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: AccountInfoDetails, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .basic:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .tokens:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .tokenBalances:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .txs:
+            writeInt(&buf, Int32(4))
+        
+        }
+    }
+}
+
+
+public func FfiConverterTypeAccountInfoDetails_lift(_ buf: RustBuffer) throws -> AccountInfoDetails {
+    return try FfiConverterTypeAccountInfoDetails.lift(buf)
+}
+
+public func FfiConverterTypeAccountInfoDetails_lower(_ value: AccountInfoDetails) -> RustBuffer {
+    return FfiConverterTypeAccountInfoDetails.lower(value)
+}
+
+
+
+extension AccountInfoDetails: Equatable, Hashable {}
+
+
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
@@ -4132,6 +7617,78 @@ public func FfiConverterTypeAddressType_lower(_ value: AddressType) -> RustBuffe
 
 
 extension AddressType: Equatable, Hashable {}
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Amount unit for display
+ */
+
+public enum AmountUnit {
+    
+    case bitcoin
+    case milliBitcoin
+    case microBitcoin
+    case satoshi
+}
+
+
+public struct FfiConverterTypeAmountUnit: FfiConverterRustBuffer {
+    typealias SwiftType = AmountUnit
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> AmountUnit {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .bitcoin
+        
+        case 2: return .milliBitcoin
+        
+        case 3: return .microBitcoin
+        
+        case 4: return .satoshi
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: AmountUnit, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .bitcoin:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .milliBitcoin:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .microBitcoin:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .satoshi:
+            writeInt(&buf, Int32(4))
+        
+        }
+    }
+}
+
+
+public func FfiConverterTypeAmountUnit_lift(_ buf: RustBuffer) throws -> AmountUnit {
+    return try FfiConverterTypeAmountUnit.lift(buf)
+}
+
+public func FfiConverterTypeAmountUnit_lower(_ value: AmountUnit) -> RustBuffer {
+    return FfiConverterTypeAmountUnit.lower(value)
+}
+
+
+
+extension AmountUnit: Equatable, Hashable {}
 
 
 
@@ -4940,6 +8497,198 @@ extension CJitStateEnum: Equatable, Hashable {}
 
 
 
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Output type for compose transaction
+ */
+
+public enum ComposeOutput {
+    
+    /**
+     * Regular output with amount and address
+     */
+    case regular(
+        /**
+         * Amount in satoshis
+         */amount: String, 
+        /**
+         * Recipient address
+         */address: String
+    )
+    /**
+     * Send max output
+     */
+    case sendMax(
+        /**
+         * Recipient address
+         */address: String
+    )
+    /**
+     * OP_RETURN output
+     */
+    case opReturn(
+        /**
+         * Hexadecimal string with arbitrary data
+         */dataHex: String
+    )
+    /**
+     * Payment without address (precompose only)
+     */
+    case paymentNoAddress(
+        /**
+         * Amount in satoshis
+         */amount: String
+    )
+    /**
+     * Send max without address (precompose only)
+     */
+    case sendMaxNoAddress
+}
+
+
+public struct FfiConverterTypeComposeOutput: FfiConverterRustBuffer {
+    typealias SwiftType = ComposeOutput
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ComposeOutput {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .regular(amount: try FfiConverterString.read(from: &buf), address: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 2: return .sendMax(address: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 3: return .opReturn(dataHex: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 4: return .paymentNoAddress(amount: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 5: return .sendMaxNoAddress
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: ComposeOutput, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case let .regular(amount,address):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(amount, into: &buf)
+            FfiConverterString.write(address, into: &buf)
+            
+        
+        case let .sendMax(address):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(address, into: &buf)
+            
+        
+        case let .opReturn(dataHex):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(dataHex, into: &buf)
+            
+        
+        case let .paymentNoAddress(amount):
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(amount, into: &buf)
+            
+        
+        case .sendMaxNoAddress:
+            writeInt(&buf, Int32(5))
+        
+        }
+    }
+}
+
+
+public func FfiConverterTypeComposeOutput_lift(_ buf: RustBuffer) throws -> ComposeOutput {
+    return try FfiConverterTypeComposeOutput.lift(buf)
+}
+
+public func FfiConverterTypeComposeOutput_lower(_ value: ComposeOutput) -> RustBuffer {
+    return FfiConverterTypeComposeOutput.lower(value)
+}
+
+
+
+extension ComposeOutput: Equatable, Hashable {}
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Compose transaction response
+ */
+
+public enum ComposeTransactionResponse {
+    
+    /**
+     * Signed transaction (payment mode)
+     */
+    case signedTransaction(SignedTransactionResponse
+    )
+    /**
+     * Precomposed transactions (precompose mode)
+     */
+    case precomposedTransactions([PrecomposedTransaction]
+    )
+}
+
+
+public struct FfiConverterTypeComposeTransactionResponse: FfiConverterRustBuffer {
+    typealias SwiftType = ComposeTransactionResponse
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ComposeTransactionResponse {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .signedTransaction(try FfiConverterTypeSignedTransactionResponse.read(from: &buf)
+        )
+        
+        case 2: return .precomposedTransactions(try FfiConverterSequenceTypePrecomposedTransaction.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: ComposeTransactionResponse, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case let .signedTransaction(v1):
+            writeInt(&buf, Int32(1))
+            FfiConverterTypeSignedTransactionResponse.write(v1, into: &buf)
+            
+        
+        case let .precomposedTransactions(v1):
+            writeInt(&buf, Int32(2))
+            FfiConverterSequenceTypePrecomposedTransaction.write(v1, into: &buf)
+            
+        }
+    }
+}
+
+
+public func FfiConverterTypeComposeTransactionResponse_lift(_ buf: RustBuffer) throws -> ComposeTransactionResponse {
+    return try FfiConverterTypeComposeTransactionResponse.lift(buf)
+}
+
+public func FfiConverterTypeComposeTransactionResponse_lower(_ value: ComposeTransactionResponse) -> RustBuffer {
+    return FfiConverterTypeComposeTransactionResponse.lower(value)
+}
+
+
+
+extension ComposeTransactionResponse: Equatable, Hashable {}
+
+
+
 
 public enum DbError {
 
@@ -5129,6 +8878,150 @@ public struct FfiConverterTypeDecodingError: FfiConverterRustBuffer {
 extension DecodingError: Equatable, Hashable {}
 
 extension DecodingError: Error { }
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Bitcoin account types for default display
+ */
+
+public enum DefaultAccountType {
+    
+    /**
+     * Normal account
+     */
+    case normal
+    /**
+     * SegWit account
+     */
+    case segwit
+    /**
+     * Legacy account
+     */
+    case legacy
+}
+
+
+public struct FfiConverterTypeDefaultAccountType: FfiConverterRustBuffer {
+    typealias SwiftType = DefaultAccountType
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> DefaultAccountType {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .normal
+        
+        case 2: return .segwit
+        
+        case 3: return .legacy
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: DefaultAccountType, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .normal:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .segwit:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .legacy:
+            writeInt(&buf, Int32(3))
+        
+        }
+    }
+}
+
+
+public func FfiConverterTypeDefaultAccountType_lift(_ buf: RustBuffer) throws -> DefaultAccountType {
+    return try FfiConverterTypeDefaultAccountType.lift(buf)
+}
+
+public func FfiConverterTypeDefaultAccountType_lower(_ value: DefaultAccountType) -> RustBuffer {
+    return FfiConverterTypeDefaultAccountType.lower(value)
+}
+
+
+
+extension DefaultAccountType: Equatable, Hashable {}
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Union type for HD Node (either a String or HDNodeType)
+ */
+
+public enum HdNodeTypeOrString {
+    
+    /**
+     * HD Node as a string
+     */
+    case string(String
+    )
+    /**
+     * HD Node as an object
+     */
+    case node(HdNodeType
+    )
+}
+
+
+public struct FfiConverterTypeHDNodeTypeOrString: FfiConverterRustBuffer {
+    typealias SwiftType = HdNodeTypeOrString
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> HdNodeTypeOrString {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .string(try FfiConverterString.read(from: &buf)
+        )
+        
+        case 2: return .node(try FfiConverterTypeHDNodeType.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: HdNodeTypeOrString, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case let .string(v1):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(v1, into: &buf)
+            
+        
+        case let .node(v1):
+            writeInt(&buf, Int32(2))
+            FfiConverterTypeHDNodeType.write(v1, into: &buf)
+            
+        }
+    }
+}
+
+
+public func FfiConverterTypeHDNodeTypeOrString_lift(_ buf: RustBuffer) throws -> HdNodeTypeOrString {
+    return try FfiConverterTypeHDNodeTypeOrString.lift(buf)
+}
+
+public func FfiConverterTypeHDNodeTypeOrString_lower(_ value: HdNodeTypeOrString) -> RustBuffer {
+    return FfiConverterTypeHDNodeTypeOrString.lower(value)
+}
+
+
+
+extension HdNodeTypeOrString: Equatable, Hashable {}
+
+
 
 
 public enum LnurlError {
@@ -5716,6 +9609,141 @@ extension Scanner: Equatable, Hashable {}
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Script type for inputs and outputs
+ */
+
+public enum ScriptType {
+    
+    case spendAddress
+    case spendMultisig
+    case spendWitness
+    case spendP2shWitness
+    case spendTaproot
+    case external
+    case payToAddress
+    case payToScriptHash
+    case payToMultisig
+    case payToWitness
+    case payToP2shWitness
+    case payToTaproot
+    case payToOpReturn
+}
+
+
+public struct FfiConverterTypeScriptType: FfiConverterRustBuffer {
+    typealias SwiftType = ScriptType
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ScriptType {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .spendAddress
+        
+        case 2: return .spendMultisig
+        
+        case 3: return .spendWitness
+        
+        case 4: return .spendP2shWitness
+        
+        case 5: return .spendTaproot
+        
+        case 6: return .external
+        
+        case 7: return .payToAddress
+        
+        case 8: return .payToScriptHash
+        
+        case 9: return .payToMultisig
+        
+        case 10: return .payToWitness
+        
+        case 11: return .payToP2shWitness
+        
+        case 12: return .payToTaproot
+        
+        case 13: return .payToOpReturn
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: ScriptType, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .spendAddress:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .spendMultisig:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .spendWitness:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .spendP2shWitness:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .spendTaproot:
+            writeInt(&buf, Int32(5))
+        
+        
+        case .external:
+            writeInt(&buf, Int32(6))
+        
+        
+        case .payToAddress:
+            writeInt(&buf, Int32(7))
+        
+        
+        case .payToScriptHash:
+            writeInt(&buf, Int32(8))
+        
+        
+        case .payToMultisig:
+            writeInt(&buf, Int32(9))
+        
+        
+        case .payToWitness:
+            writeInt(&buf, Int32(10))
+        
+        
+        case .payToP2shWitness:
+            writeInt(&buf, Int32(11))
+        
+        
+        case .payToTaproot:
+            writeInt(&buf, Int32(12))
+        
+        
+        case .payToOpReturn:
+            writeInt(&buf, Int32(13))
+        
+        }
+    }
+}
+
+
+public func FfiConverterTypeScriptType_lift(_ buf: RustBuffer) throws -> ScriptType {
+    return try FfiConverterTypeScriptType.lift(buf)
+}
+
+public func FfiConverterTypeScriptType_lower(_ value: ScriptType) -> RustBuffer {
+    return FfiConverterTypeScriptType.lower(value)
+}
+
+
+
+extension ScriptType: Equatable, Hashable {}
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
 public enum SortDirection {
     
@@ -5766,6 +9794,405 @@ public func FfiConverterTypeSortDirection_lower(_ value: SortDirection) -> RustB
 
 
 extension SortDirection: Equatable, Hashable {}
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Token filter options for getAccountInfo
+ */
+
+public enum TokenFilter {
+    
+    /**
+     * Return only addresses with nonzero balance (default)
+     */
+    case nonzero
+    /**
+     * Return addresses with at least one transaction
+     */
+    case used
+    /**
+     * Return all derived addresses
+     */
+    case derived
+}
+
+
+public struct FfiConverterTypeTokenFilter: FfiConverterRustBuffer {
+    typealias SwiftType = TokenFilter
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TokenFilter {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .nonzero
+        
+        case 2: return .used
+        
+        case 3: return .derived
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: TokenFilter, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .nonzero:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .used:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .derived:
+            writeInt(&buf, Int32(3))
+        
+        }
+    }
+}
+
+
+public func FfiConverterTypeTokenFilter_lift(_ buf: RustBuffer) throws -> TokenFilter {
+    return try FfiConverterTypeTokenFilter.lift(buf)
+}
+
+public func FfiConverterTypeTokenFilter_lower(_ value: TokenFilter) -> RustBuffer {
+    return FfiConverterTypeTokenFilter.lower(value)
+}
+
+
+
+extension TokenFilter: Equatable, Hashable {}
+
+
+
+
+/**
+ * Error types for Trezor Connect operations
+ */
+public enum TrezorConnectError {
+
+    
+    
+    /**
+     * Error during serialization/deserialization
+     */
+    case SerdeError(errorDetails: String
+    )
+    /**
+     * Error with URL parsing or formatting
+     */
+    case UrlError(errorDetails: String
+    )
+    /**
+     * Environment-related errors
+     */
+    case EnvironmentError(errorDetails: String
+    )
+    /**
+     * General errors
+     */
+    case Other(errorDetails: String
+    )
+    case ClientError(errorDetails: String
+    )
+}
+
+
+public struct FfiConverterTypeTrezorConnectError: FfiConverterRustBuffer {
+    typealias SwiftType = TrezorConnectError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorConnectError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .SerdeError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 2: return .UrlError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 3: return .EnvironmentError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 4: return .Other(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 5: return .ClientError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: TrezorConnectError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .SerdeError(errorDetails):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .UrlError(errorDetails):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .EnvironmentError(errorDetails):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .Other(errorDetails):
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .ClientError(errorDetails):
+            writeInt(&buf, Int32(5))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        }
+    }
+}
+
+
+extension TrezorConnectError: Equatable, Hashable {}
+
+extension TrezorConnectError: Error { }
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Environment options for Trezor deep linking
+ */
+
+public enum TrezorEnvironment {
+    
+    /**
+     * Production environment (currently unavailable according to docs)
+     */
+    case production
+    /**
+     * Development environment
+     */
+    case development
+    /**
+     * Local environment
+     */
+    case local
+}
+
+
+public struct FfiConverterTypeTrezorEnvironment: FfiConverterRustBuffer {
+    typealias SwiftType = TrezorEnvironment
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorEnvironment {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .production
+        
+        case 2: return .development
+        
+        case 3: return .local
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: TrezorEnvironment, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .production:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .development:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .local:
+            writeInt(&buf, Int32(3))
+        
+        }
+    }
+}
+
+
+public func FfiConverterTypeTrezorEnvironment_lift(_ buf: RustBuffer) throws -> TrezorEnvironment {
+    return try FfiConverterTypeTrezorEnvironment.lift(buf)
+}
+
+public func FfiConverterTypeTrezorEnvironment_lower(_ value: TrezorEnvironment) -> RustBuffer {
+    return FfiConverterTypeTrezorEnvironment.lower(value)
+}
+
+
+
+extension TrezorEnvironment: Equatable, Hashable {}
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Enum representing the different types of Trezor responses
+ */
+
+public enum TrezorResponsePayload {
+    
+    /**
+     * Response from getFeatures method
+     */
+    case features(FeatureResponse
+    )
+    /**
+     * Response from getAddress method
+     */
+    case address(AddressResponse
+    )
+    /**
+     * Response from getPublicKey method
+     */
+    case publicKey(PublicKeyResponse
+    )
+    /**
+     * Response from getAccountInfo method
+     */
+    case accountInfo(AccountInfoResponse
+    )
+    /**
+     * Response from composeTransaction method
+     */
+    case composeTransaction(ComposeTransactionResponse
+    )
+    /**
+     * Response from verifyMessage method
+     */
+    case verifyMessage(VerifyMessageResponse
+    )
+    /**
+     * Response from signMessage method
+     */
+    case messageSignature(MessageSignatureResponse
+    )
+    /**
+     * Response from signTransaction method
+     */
+    case signedTransaction(SignedTransactionResponse
+    )
+}
+
+
+public struct FfiConverterTypeTrezorResponsePayload: FfiConverterRustBuffer {
+    typealias SwiftType = TrezorResponsePayload
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorResponsePayload {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .features(try FfiConverterTypeFeatureResponse.read(from: &buf)
+        )
+        
+        case 2: return .address(try FfiConverterTypeAddressResponse.read(from: &buf)
+        )
+        
+        case 3: return .publicKey(try FfiConverterTypePublicKeyResponse.read(from: &buf)
+        )
+        
+        case 4: return .accountInfo(try FfiConverterTypeAccountInfoResponse.read(from: &buf)
+        )
+        
+        case 5: return .composeTransaction(try FfiConverterTypeComposeTransactionResponse.read(from: &buf)
+        )
+        
+        case 6: return .verifyMessage(try FfiConverterTypeVerifyMessageResponse.read(from: &buf)
+        )
+        
+        case 7: return .messageSignature(try FfiConverterTypeMessageSignatureResponse.read(from: &buf)
+        )
+        
+        case 8: return .signedTransaction(try FfiConverterTypeSignedTransactionResponse.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: TrezorResponsePayload, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case let .features(v1):
+            writeInt(&buf, Int32(1))
+            FfiConverterTypeFeatureResponse.write(v1, into: &buf)
+            
+        
+        case let .address(v1):
+            writeInt(&buf, Int32(2))
+            FfiConverterTypeAddressResponse.write(v1, into: &buf)
+            
+        
+        case let .publicKey(v1):
+            writeInt(&buf, Int32(3))
+            FfiConverterTypePublicKeyResponse.write(v1, into: &buf)
+            
+        
+        case let .accountInfo(v1):
+            writeInt(&buf, Int32(4))
+            FfiConverterTypeAccountInfoResponse.write(v1, into: &buf)
+            
+        
+        case let .composeTransaction(v1):
+            writeInt(&buf, Int32(5))
+            FfiConverterTypeComposeTransactionResponse.write(v1, into: &buf)
+            
+        
+        case let .verifyMessage(v1):
+            writeInt(&buf, Int32(6))
+            FfiConverterTypeVerifyMessageResponse.write(v1, into: &buf)
+            
+        
+        case let .messageSignature(v1):
+            writeInt(&buf, Int32(7))
+            FfiConverterTypeMessageSignatureResponse.write(v1, into: &buf)
+            
+        
+        case let .signedTransaction(v1):
+            writeInt(&buf, Int32(8))
+            FfiConverterTypeSignedTransactionResponse.write(v1, into: &buf)
+            
+        }
+    }
+}
+
+
+public func FfiConverterTypeTrezorResponsePayload_lift(_ buf: RustBuffer) throws -> TrezorResponsePayload {
+    return try FfiConverterTypeTrezorResponsePayload.lift(buf)
+}
+
+public func FfiConverterTypeTrezorResponsePayload_lower(_ value: TrezorResponsePayload) -> RustBuffer {
+    return FfiConverterTypeTrezorResponsePayload.lower(value)
+}
+
+
+
+extension TrezorResponsePayload: Equatable, Hashable {}
 
 
 
@@ -5859,6 +10286,27 @@ public func FfiConverterTypeWordCount_lower(_ value: WordCount) -> RustBuffer {
 extension WordCount: Equatable, Hashable {}
 
 
+
+fileprivate struct FfiConverterOptionUInt8: FfiConverterRustBuffer {
+    typealias SwiftType = UInt8?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterUInt8.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterUInt8.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
 
 fileprivate struct FfiConverterOptionUInt32: FfiConverterRustBuffer {
     typealias SwiftType = UInt32?
@@ -5965,6 +10413,69 @@ fileprivate struct FfiConverterOptionData: FfiConverterRustBuffer {
     }
 }
 
+fileprivate struct FfiConverterOptionTypeCoinPurchaseMemo: FfiConverterRustBuffer {
+    typealias SwiftType = CoinPurchaseMemo?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeCoinPurchaseMemo.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeCoinPurchaseMemo.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeCommonParams: FfiConverterRustBuffer {
+    typealias SwiftType = CommonParams?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeCommonParams.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeCommonParams.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeComposeAccount: FfiConverterRustBuffer {
+    typealias SwiftType = ComposeAccount?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeComposeAccount.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeComposeAccount.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
 fileprivate struct FfiConverterOptionTypeCreateCjitOptions: FfiConverterRustBuffer {
     typealias SwiftType = CreateCjitOptions?
 
@@ -6002,6 +10513,27 @@ fileprivate struct FfiConverterOptionTypeCreateOrderOptions: FfiConverterRustBuf
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeCreateOrderOptions.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeDeviceParams: FfiConverterRustBuffer {
+    typealias SwiftType = DeviceParams?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeDeviceParams.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeDeviceParams.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6091,6 +10623,132 @@ fileprivate struct FfiConverterOptionTypeIDiscount: FfiConverterRustBuffer {
     }
 }
 
+fileprivate struct FfiConverterOptionTypeMultisigRedeemScriptType: FfiConverterRustBuffer {
+    typealias SwiftType = MultisigRedeemScriptType?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeMultisigRedeemScriptType.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeMultisigRedeemScriptType.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeRefundMemo: FfiConverterRustBuffer {
+    typealias SwiftType = RefundMemo?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeRefundMemo.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeRefundMemo.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeTextMemo: FfiConverterRustBuffer {
+    typealias SwiftType = TextMemo?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeTextMemo.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeTextMemo.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeUnlockPath: FfiConverterRustBuffer {
+    typealias SwiftType = UnlockPath?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeUnlockPath.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeUnlockPath.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeXrpMarker: FfiConverterRustBuffer {
+    typealias SwiftType = XrpMarker?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeXrpMarker.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeXrpMarker.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeAccountInfoDetails: FfiConverterRustBuffer {
+    typealias SwiftType = AccountInfoDetails?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeAccountInfoDetails.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeAccountInfoDetails.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
 fileprivate struct FfiConverterOptionTypeActivity: FfiConverterRustBuffer {
     typealias SwiftType = Activity?
 
@@ -6128,6 +10786,27 @@ fileprivate struct FfiConverterOptionTypeActivityFilter: FfiConverterRustBuffer 
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeActivityFilter.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeAmountUnit: FfiConverterRustBuffer {
+    typealias SwiftType = AmountUnit?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeAmountUnit.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeAmountUnit.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6175,6 +10854,27 @@ fileprivate struct FfiConverterOptionTypeCJitStateEnum: FfiConverterRustBuffer {
     }
 }
 
+fileprivate struct FfiConverterOptionTypeDefaultAccountType: FfiConverterRustBuffer {
+    typealias SwiftType = DefaultAccountType?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeDefaultAccountType.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeDefaultAccountType.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
 fileprivate struct FfiConverterOptionTypeNetwork: FfiConverterRustBuffer {
     typealias SwiftType = Network?
 
@@ -6217,6 +10917,27 @@ fileprivate struct FfiConverterOptionTypePaymentType: FfiConverterRustBuffer {
     }
 }
 
+fileprivate struct FfiConverterOptionTypeScriptType: FfiConverterRustBuffer {
+    typealias SwiftType = ScriptType?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeScriptType.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeScriptType.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
 fileprivate struct FfiConverterOptionTypeSortDirection: FfiConverterRustBuffer {
     typealias SwiftType = SortDirection?
 
@@ -6233,6 +10954,48 @@ fileprivate struct FfiConverterOptionTypeSortDirection: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeSortDirection.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeTokenFilter: FfiConverterRustBuffer {
+    typealias SwiftType = TokenFilter?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeTokenFilter.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeTokenFilter.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeTrezorEnvironment: FfiConverterRustBuffer {
+    typealias SwiftType = TrezorEnvironment?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeTrezorEnvironment.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeTrezorEnvironment.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6259,6 +11022,27 @@ fileprivate struct FfiConverterOptionTypeWordCount: FfiConverterRustBuffer {
     }
 }
 
+fileprivate struct FfiConverterOptionSequenceUInt32: FfiConverterRustBuffer {
+    typealias SwiftType = [UInt32]?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterSequenceUInt32.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterSequenceUInt32.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
 fileprivate struct FfiConverterOptionSequenceString: FfiConverterRustBuffer {
     typealias SwiftType = [String]?
 
@@ -6275,6 +11059,48 @@ fileprivate struct FfiConverterOptionSequenceString: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterSequenceString.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionSequenceTypeFeeLevel: FfiConverterRustBuffer {
+    typealias SwiftType = [FeeLevel]?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterSequenceTypeFeeLevel.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterSequenceTypeFeeLevel.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionSequenceTypeHDNodeType: FfiConverterRustBuffer {
+    typealias SwiftType = [HdNodeType]?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterSequenceTypeHDNodeType.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterSequenceTypeHDNodeType.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -6301,6 +11127,111 @@ fileprivate struct FfiConverterOptionSequenceTypeIManualRefund: FfiConverterRust
     }
 }
 
+fileprivate struct FfiConverterOptionSequenceTypePaymentRequestMemo: FfiConverterRustBuffer {
+    typealias SwiftType = [PaymentRequestMemo]?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterSequenceTypePaymentRequestMemo.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterSequenceTypePaymentRequestMemo.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionSequenceTypePrecomposedInput: FfiConverterRustBuffer {
+    typealias SwiftType = [PrecomposedInput]?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterSequenceTypePrecomposedInput.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterSequenceTypePrecomposedInput.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionSequenceTypePrecomposedOutput: FfiConverterRustBuffer {
+    typealias SwiftType = [PrecomposedOutput]?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterSequenceTypePrecomposedOutput.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterSequenceTypePrecomposedOutput.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionSequenceTypeRefTransaction: FfiConverterRustBuffer {
+    typealias SwiftType = [RefTransaction]?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterSequenceTypeRefTransaction.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterSequenceTypeRefTransaction.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionSequenceTypeTxAckPaymentRequest: FfiConverterRustBuffer {
+    typealias SwiftType = [TxAckPaymentRequest]?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterSequenceTypeTxAckPaymentRequest.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterSequenceTypeTxAckPaymentRequest.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
 fileprivate struct FfiConverterOptionDictionaryStringString: FfiConverterRustBuffer {
     typealias SwiftType = [String: String]?
 
@@ -6319,6 +11250,28 @@ fileprivate struct FfiConverterOptionDictionaryStringString: FfiConverterRustBuf
         case 1: return try FfiConverterDictionaryStringString.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
+    }
+}
+
+fileprivate struct FfiConverterSequenceUInt32: FfiConverterRustBuffer {
+    typealias SwiftType = [UInt32]
+
+    public static func write(_ value: [UInt32], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterUInt32.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [UInt32] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [UInt32]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterUInt32.read(from: &buf))
+        }
+        return seq
     }
 }
 
@@ -6344,6 +11297,72 @@ fileprivate struct FfiConverterSequenceString: FfiConverterRustBuffer {
     }
 }
 
+fileprivate struct FfiConverterSequenceTypeAccountUtxo: FfiConverterRustBuffer {
+    typealias SwiftType = [AccountUtxo]
+
+    public static func write(_ value: [AccountUtxo], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeAccountUtxo.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [AccountUtxo] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [AccountUtxo]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeAccountUtxo.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypeAddressInfo: FfiConverterRustBuffer {
+    typealias SwiftType = [AddressInfo]
+
+    public static func write(_ value: [AddressInfo], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeAddressInfo.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [AddressInfo] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [AddressInfo]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeAddressInfo.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypeFeeLevel: FfiConverterRustBuffer {
+    typealias SwiftType = [FeeLevel]
+
+    public static func write(_ value: [FeeLevel], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeFeeLevel.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [FeeLevel] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [FeeLevel]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeFeeLevel.read(from: &buf))
+        }
+        return seq
+    }
+}
+
 fileprivate struct FfiConverterSequenceTypeGetAddressResponse: FfiConverterRustBuffer {
     typealias SwiftType = [GetAddressResponse]
 
@@ -6361,6 +11380,50 @@ fileprivate struct FfiConverterSequenceTypeGetAddressResponse: FfiConverterRustB
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeGetAddressResponse.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypeHDNodePathType: FfiConverterRustBuffer {
+    typealias SwiftType = [HdNodePathType]
+
+    public static func write(_ value: [HdNodePathType], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeHDNodePathType.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [HdNodePathType] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [HdNodePathType]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeHDNodePathType.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypeHDNodeType: FfiConverterRustBuffer {
+    typealias SwiftType = [HdNodeType]
+
+    public static func write(_ value: [HdNodeType], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeHDNodeType.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [HdNodeType] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [HdNodeType]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeHDNodeType.read(from: &buf))
         }
         return seq
     }
@@ -6476,6 +11539,226 @@ fileprivate struct FfiConverterSequenceTypeIManualRefund: FfiConverterRustBuffer
     }
 }
 
+fileprivate struct FfiConverterSequenceTypePaymentRequestMemo: FfiConverterRustBuffer {
+    typealias SwiftType = [PaymentRequestMemo]
+
+    public static func write(_ value: [PaymentRequestMemo], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypePaymentRequestMemo.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PaymentRequestMemo] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [PaymentRequestMemo]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypePaymentRequestMemo.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypePrecomposedInput: FfiConverterRustBuffer {
+    typealias SwiftType = [PrecomposedInput]
+
+    public static func write(_ value: [PrecomposedInput], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypePrecomposedInput.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PrecomposedInput] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [PrecomposedInput]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypePrecomposedInput.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypePrecomposedOutput: FfiConverterRustBuffer {
+    typealias SwiftType = [PrecomposedOutput]
+
+    public static func write(_ value: [PrecomposedOutput], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypePrecomposedOutput.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PrecomposedOutput] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [PrecomposedOutput]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypePrecomposedOutput.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypePrecomposedTransaction: FfiConverterRustBuffer {
+    typealias SwiftType = [PrecomposedTransaction]
+
+    public static func write(_ value: [PrecomposedTransaction], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypePrecomposedTransaction.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PrecomposedTransaction] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [PrecomposedTransaction]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypePrecomposedTransaction.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypeRefTransaction: FfiConverterRustBuffer {
+    typealias SwiftType = [RefTransaction]
+
+    public static func write(_ value: [RefTransaction], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeRefTransaction.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [RefTransaction] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [RefTransaction]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeRefTransaction.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypeRefTxInput: FfiConverterRustBuffer {
+    typealias SwiftType = [RefTxInput]
+
+    public static func write(_ value: [RefTxInput], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeRefTxInput.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [RefTxInput] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [RefTxInput]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeRefTxInput.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypeRefTxOutput: FfiConverterRustBuffer {
+    typealias SwiftType = [RefTxOutput]
+
+    public static func write(_ value: [RefTxOutput], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeRefTxOutput.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [RefTxOutput] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [RefTxOutput]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeRefTxOutput.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypeTxAckPaymentRequest: FfiConverterRustBuffer {
+    typealias SwiftType = [TxAckPaymentRequest]
+
+    public static func write(_ value: [TxAckPaymentRequest], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTxAckPaymentRequest.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TxAckPaymentRequest] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TxAckPaymentRequest]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTxAckPaymentRequest.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypeTxInputType: FfiConverterRustBuffer {
+    typealias SwiftType = [TxInputType]
+
+    public static func write(_ value: [TxInputType], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTxInputType.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TxInputType] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TxInputType]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTxInputType.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypeTxOutputType: FfiConverterRustBuffer {
+    typealias SwiftType = [TxOutputType]
+
+    public static func write(_ value: [TxOutputType], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTxOutputType.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TxOutputType] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TxOutputType]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTxOutputType.read(from: &buf))
+        }
+        return seq
+    }
+}
+
 fileprivate struct FfiConverterSequenceTypeActivity: FfiConverterRustBuffer {
     typealias SwiftType = [Activity]
 
@@ -6493,6 +11776,28 @@ fileprivate struct FfiConverterSequenceTypeActivity: FfiConverterRustBuffer {
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeActivity.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+fileprivate struct FfiConverterSequenceTypeComposeOutput: FfiConverterRustBuffer {
+    typealias SwiftType = [ComposeOutput]
+
+    public static func write(_ value: [ComposeOutput], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeComposeOutput.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ComposeOutput] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ComposeOutput]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeComposeOutput.read(from: &buf))
         }
         return seq
     }
@@ -6969,6 +12274,140 @@ public func testNotification(deviceToken: String, secretMessage: String, notific
             errorHandler: FfiConverterTypeBlocktankError.lift
         )
 }
+public func trezorComposeTransaction(outputs: [ComposeOutput], coin: String, callbackUrl: String, requestId: String?, trezorEnvironment: TrezorEnvironment?, push: Bool?, sequence: UInt32?, account: ComposeAccount?, feeLevels: [FeeLevel]?, skipPermutation: Bool?, common: CommonParams?)throws  -> DeepLinkResult {
+    return try  FfiConverterTypeDeepLinkResult.lift(try rustCallWithError(FfiConverterTypeTrezorConnectError.lift) {
+    uniffi_bitkitcore_fn_func_trezor_compose_transaction(
+        FfiConverterSequenceTypeComposeOutput.lower(outputs),
+        FfiConverterString.lower(coin),
+        FfiConverterString.lower(callbackUrl),
+        FfiConverterOptionString.lower(requestId),
+        FfiConverterOptionTypeTrezorEnvironment.lower(trezorEnvironment),
+        FfiConverterOptionBool.lower(push),
+        FfiConverterOptionUInt32.lower(sequence),
+        FfiConverterOptionTypeComposeAccount.lower(account),
+        FfiConverterOptionSequenceTypeFeeLevel.lower(feeLevels),
+        FfiConverterOptionBool.lower(skipPermutation),
+        FfiConverterOptionTypeCommonParams.lower(common),$0
+    )
+})
+}
+public func trezorGetAccountInfo(coin: String, callbackUrl: String, requestId: String?, trezorEnvironment: TrezorEnvironment?, path: String?, descriptor: String?, details: AccountInfoDetails?, tokens: TokenFilter?, page: UInt32?, pageSize: UInt32?, from: UInt32?, to: UInt32?, gap: UInt32?, contractFilter: String?, marker: XrpMarker?, defaultAccountType: DefaultAccountType?, suppressBackupWarning: Bool?, common: CommonParams?)throws  -> DeepLinkResult {
+    return try  FfiConverterTypeDeepLinkResult.lift(try rustCallWithError(FfiConverterTypeTrezorConnectError.lift) {
+    uniffi_bitkitcore_fn_func_trezor_get_account_info(
+        FfiConverterString.lower(coin),
+        FfiConverterString.lower(callbackUrl),
+        FfiConverterOptionString.lower(requestId),
+        FfiConverterOptionTypeTrezorEnvironment.lower(trezorEnvironment),
+        FfiConverterOptionString.lower(path),
+        FfiConverterOptionString.lower(descriptor),
+        FfiConverterOptionTypeAccountInfoDetails.lower(details),
+        FfiConverterOptionTypeTokenFilter.lower(tokens),
+        FfiConverterOptionUInt32.lower(page),
+        FfiConverterOptionUInt32.lower(pageSize),
+        FfiConverterOptionUInt32.lower(from),
+        FfiConverterOptionUInt32.lower(to),
+        FfiConverterOptionUInt32.lower(gap),
+        FfiConverterOptionString.lower(contractFilter),
+        FfiConverterOptionTypeXrpMarker.lower(marker),
+        FfiConverterOptionTypeDefaultAccountType.lower(defaultAccountType),
+        FfiConverterOptionBool.lower(suppressBackupWarning),
+        FfiConverterOptionTypeCommonParams.lower(common),$0
+    )
+})
+}
+public func trezorGetAddress(path: String, callbackUrl: String, requestId: String?, trezorEnvironment: TrezorEnvironment?, address: String?, showOnTrezor: Bool?, chunkify: Bool?, useEventListener: Bool?, coin: String?, crossChain: Bool?, multisig: MultisigRedeemScriptType?, scriptType: String?, unlockPath: UnlockPath?, common: CommonParams?)throws  -> DeepLinkResult {
+    return try  FfiConverterTypeDeepLinkResult.lift(try rustCallWithError(FfiConverterTypeTrezorConnectError.lift) {
+    uniffi_bitkitcore_fn_func_trezor_get_address(
+        FfiConverterString.lower(path),
+        FfiConverterString.lower(callbackUrl),
+        FfiConverterOptionString.lower(requestId),
+        FfiConverterOptionTypeTrezorEnvironment.lower(trezorEnvironment),
+        FfiConverterOptionString.lower(address),
+        FfiConverterOptionBool.lower(showOnTrezor),
+        FfiConverterOptionBool.lower(chunkify),
+        FfiConverterOptionBool.lower(useEventListener),
+        FfiConverterOptionString.lower(coin),
+        FfiConverterOptionBool.lower(crossChain),
+        FfiConverterOptionTypeMultisigRedeemScriptType.lower(multisig),
+        FfiConverterOptionString.lower(scriptType),
+        FfiConverterOptionTypeUnlockPath.lower(unlockPath),
+        FfiConverterOptionTypeCommonParams.lower(common),$0
+    )
+})
+}
+public func trezorGetFeatures(callbackUrl: String, requestId: String?, trezorEnvironment: TrezorEnvironment?)throws  -> DeepLinkResult {
+    return try  FfiConverterTypeDeepLinkResult.lift(try rustCallWithError(FfiConverterTypeTrezorConnectError.lift) {
+    uniffi_bitkitcore_fn_func_trezor_get_features(
+        FfiConverterString.lower(callbackUrl),
+        FfiConverterOptionString.lower(requestId),
+        FfiConverterOptionTypeTrezorEnvironment.lower(trezorEnvironment),$0
+    )
+})
+}
+public func trezorHandleDeepLink(callbackUrl: String)throws  -> TrezorResponsePayload {
+    return try  FfiConverterTypeTrezorResponsePayload.lift(try rustCallWithError(FfiConverterTypeTrezorConnectError.lift) {
+    uniffi_bitkitcore_fn_func_trezor_handle_deep_link(
+        FfiConverterString.lower(callbackUrl),$0
+    )
+})
+}
+public func trezorSignMessage(path: String, message: String, callbackUrl: String, requestId: String?, trezorEnvironment: TrezorEnvironment?, coin: String?, hex: Bool?, noScriptType: Bool?, common: CommonParams?)throws  -> DeepLinkResult {
+    return try  FfiConverterTypeDeepLinkResult.lift(try rustCallWithError(FfiConverterTypeTrezorConnectError.lift) {
+    uniffi_bitkitcore_fn_func_trezor_sign_message(
+        FfiConverterString.lower(path),
+        FfiConverterString.lower(message),
+        FfiConverterString.lower(callbackUrl),
+        FfiConverterOptionString.lower(requestId),
+        FfiConverterOptionTypeTrezorEnvironment.lower(trezorEnvironment),
+        FfiConverterOptionString.lower(coin),
+        FfiConverterOptionBool.lower(hex),
+        FfiConverterOptionBool.lower(noScriptType),
+        FfiConverterOptionTypeCommonParams.lower(common),$0
+    )
+})
+}
+public func trezorSignTransaction(coin: String, inputs: [TxInputType], outputs: [TxOutputType], callbackUrl: String, requestId: String?, trezorEnvironment: TrezorEnvironment?, refTxs: [RefTransaction]?, paymentRequests: [TxAckPaymentRequest]?, locktime: UInt32?, version: UInt32?, expiry: UInt32?, versionGroupId: UInt32?, overwintered: Bool?, timestamp: UInt32?, branchId: UInt32?, push: Bool?, amountUnit: AmountUnit?, unlockPath: UnlockPath?, serialize: Bool?, chunkify: Bool?, common: CommonParams?)throws  -> DeepLinkResult {
+    return try  FfiConverterTypeDeepLinkResult.lift(try rustCallWithError(FfiConverterTypeTrezorConnectError.lift) {
+    uniffi_bitkitcore_fn_func_trezor_sign_transaction(
+        FfiConverterString.lower(coin),
+        FfiConverterSequenceTypeTxInputType.lower(inputs),
+        FfiConverterSequenceTypeTxOutputType.lower(outputs),
+        FfiConverterString.lower(callbackUrl),
+        FfiConverterOptionString.lower(requestId),
+        FfiConverterOptionTypeTrezorEnvironment.lower(trezorEnvironment),
+        FfiConverterOptionSequenceTypeRefTransaction.lower(refTxs),
+        FfiConverterOptionSequenceTypeTxAckPaymentRequest.lower(paymentRequests),
+        FfiConverterOptionUInt32.lower(locktime),
+        FfiConverterOptionUInt32.lower(version),
+        FfiConverterOptionUInt32.lower(expiry),
+        FfiConverterOptionUInt32.lower(versionGroupId),
+        FfiConverterOptionBool.lower(overwintered),
+        FfiConverterOptionUInt32.lower(timestamp),
+        FfiConverterOptionUInt32.lower(branchId),
+        FfiConverterOptionBool.lower(push),
+        FfiConverterOptionTypeAmountUnit.lower(amountUnit),
+        FfiConverterOptionTypeUnlockPath.lower(unlockPath),
+        FfiConverterOptionBool.lower(serialize),
+        FfiConverterOptionBool.lower(chunkify),
+        FfiConverterOptionTypeCommonParams.lower(common),$0
+    )
+})
+}
+public func trezorVerifyMessage(address: String, signature: String, message: String, coin: String, callbackUrl: String, requestId: String?, trezorEnvironment: TrezorEnvironment?, hex: Bool?, common: CommonParams?)throws  -> DeepLinkResult {
+    return try  FfiConverterTypeDeepLinkResult.lift(try rustCallWithError(FfiConverterTypeTrezorConnectError.lift) {
+    uniffi_bitkitcore_fn_func_trezor_verify_message(
+        FfiConverterString.lower(address),
+        FfiConverterString.lower(signature),
+        FfiConverterString.lower(message),
+        FfiConverterString.lower(coin),
+        FfiConverterString.lower(callbackUrl),
+        FfiConverterOptionString.lower(requestId),
+        FfiConverterOptionTypeTrezorEnvironment.lower(trezorEnvironment),
+        FfiConverterOptionBool.lower(hex),
+        FfiConverterOptionTypeCommonParams.lower(common),$0
+    )
+})
+}
 public func updateActivity(activityId: String, activity: Activity)throws  {try rustCallWithError(FfiConverterTypeActivityError.lift) {
     uniffi_bitkitcore_fn_func_update_activity(
         FfiConverterString.lower(activityId),
@@ -7119,6 +12558,30 @@ private var initializationResult: InitializationResult {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_test_notification() != 32857) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_trezor_compose_transaction() != 25990) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_trezor_get_account_info() != 14813) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_trezor_get_address() != 42202) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_trezor_get_features() != 52582) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_trezor_handle_deep_link() != 32721) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_trezor_sign_message() != 18023) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_trezor_sign_transaction() != 59932) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_trezor_verify_message() != 44040) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_update_activity() != 42510) {

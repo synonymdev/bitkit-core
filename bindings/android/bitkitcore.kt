@@ -773,6 +773,22 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -856,6 +872,22 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_bitkitcore_fn_func_test_notification(`deviceToken`: RustBuffer.ByValue,`secretMessage`: RustBuffer.ByValue,`notificationType`: RustBuffer.ByValue,`customUrl`: RustBuffer.ByValue,
     ): Long
+    fun uniffi_bitkitcore_fn_func_trezor_compose_transaction(`outputs`: RustBuffer.ByValue,`coin`: RustBuffer.ByValue,`callbackUrl`: RustBuffer.ByValue,`requestId`: RustBuffer.ByValue,`trezorEnvironment`: RustBuffer.ByValue,`push`: RustBuffer.ByValue,`sequence`: RustBuffer.ByValue,`account`: RustBuffer.ByValue,`feeLevels`: RustBuffer.ByValue,`skipPermutation`: RustBuffer.ByValue,`common`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_trezor_get_account_info(`coin`: RustBuffer.ByValue,`callbackUrl`: RustBuffer.ByValue,`requestId`: RustBuffer.ByValue,`trezorEnvironment`: RustBuffer.ByValue,`path`: RustBuffer.ByValue,`descriptor`: RustBuffer.ByValue,`details`: RustBuffer.ByValue,`tokens`: RustBuffer.ByValue,`page`: RustBuffer.ByValue,`pageSize`: RustBuffer.ByValue,`from`: RustBuffer.ByValue,`to`: RustBuffer.ByValue,`gap`: RustBuffer.ByValue,`contractFilter`: RustBuffer.ByValue,`marker`: RustBuffer.ByValue,`defaultAccountType`: RustBuffer.ByValue,`suppressBackupWarning`: RustBuffer.ByValue,`common`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_trezor_get_address(`path`: RustBuffer.ByValue,`callbackUrl`: RustBuffer.ByValue,`requestId`: RustBuffer.ByValue,`trezorEnvironment`: RustBuffer.ByValue,`address`: RustBuffer.ByValue,`showOnTrezor`: RustBuffer.ByValue,`chunkify`: RustBuffer.ByValue,`useEventListener`: RustBuffer.ByValue,`coin`: RustBuffer.ByValue,`crossChain`: RustBuffer.ByValue,`multisig`: RustBuffer.ByValue,`scriptType`: RustBuffer.ByValue,`unlockPath`: RustBuffer.ByValue,`common`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_trezor_get_features(`callbackUrl`: RustBuffer.ByValue,`requestId`: RustBuffer.ByValue,`trezorEnvironment`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_trezor_handle_deep_link(`callbackUrl`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_trezor_sign_message(`path`: RustBuffer.ByValue,`message`: RustBuffer.ByValue,`callbackUrl`: RustBuffer.ByValue,`requestId`: RustBuffer.ByValue,`trezorEnvironment`: RustBuffer.ByValue,`coin`: RustBuffer.ByValue,`hex`: RustBuffer.ByValue,`noScriptType`: RustBuffer.ByValue,`common`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_trezor_sign_transaction(`coin`: RustBuffer.ByValue,`inputs`: RustBuffer.ByValue,`outputs`: RustBuffer.ByValue,`callbackUrl`: RustBuffer.ByValue,`requestId`: RustBuffer.ByValue,`trezorEnvironment`: RustBuffer.ByValue,`refTxs`: RustBuffer.ByValue,`paymentRequests`: RustBuffer.ByValue,`locktime`: RustBuffer.ByValue,`version`: RustBuffer.ByValue,`expiry`: RustBuffer.ByValue,`versionGroupId`: RustBuffer.ByValue,`overwintered`: RustBuffer.ByValue,`timestamp`: RustBuffer.ByValue,`branchId`: RustBuffer.ByValue,`push`: RustBuffer.ByValue,`amountUnit`: RustBuffer.ByValue,`unlockPath`: RustBuffer.ByValue,`serialize`: RustBuffer.ByValue,`chunkify`: RustBuffer.ByValue,`common`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_trezor_verify_message(`address`: RustBuffer.ByValue,`signature`: RustBuffer.ByValue,`message`: RustBuffer.ByValue,`coin`: RustBuffer.ByValue,`callbackUrl`: RustBuffer.ByValue,`requestId`: RustBuffer.ByValue,`trezorEnvironment`: RustBuffer.ByValue,`hex`: RustBuffer.ByValue,`common`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_update_activity(`activityId`: RustBuffer.ByValue,`activity`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_bitkitcore_fn_func_update_blocktank_url(`newUrl`: RustBuffer.ByValue,
@@ -1044,6 +1076,22 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_bitkitcore_checksum_func_test_notification(
     ): Short
+    fun uniffi_bitkitcore_checksum_func_trezor_compose_transaction(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_trezor_get_account_info(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_trezor_get_address(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_trezor_get_features(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_trezor_handle_deep_link(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_trezor_sign_message(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_trezor_sign_transaction(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_trezor_verify_message(
+    ): Short
     fun uniffi_bitkitcore_checksum_func_update_activity(
     ): Short
     fun uniffi_bitkitcore_checksum_func_update_blocktank_url(
@@ -1171,6 +1219,30 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_bitkitcore_checksum_func_test_notification() != 32857.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_bitkitcore_checksum_func_trezor_compose_transaction() != 25990.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_trezor_get_account_info() != 14813.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_trezor_get_address() != 42202.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_trezor_get_features() != 52582.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_trezor_handle_deep_link() != 32721.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_trezor_sign_message() != 18023.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_trezor_sign_transaction() != 59932.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_trezor_verify_message() != 44040.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_bitkitcore_checksum_func_update_activity() != 42510.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -1262,6 +1334,26 @@ inline fun <T : Disposable?, R> T.use(block: (T) -> R) =
 
 /** Used to instantiate an interface without an actual pointer, for fakes in tests, mostly. */
 object NoPointer
+
+public object FfiConverterUByte: FfiConverter<UByte, Byte> {
+    override fun lift(value: Byte): UByte {
+        return value.toUByte()
+    }
+
+    override fun read(buf: ByteBuffer): UByte {
+        return lift(buf.get())
+    }
+
+    override fun lower(value: UByte): Byte {
+        return value.toByte()
+    }
+
+    override fun allocationSize(value: UByte) = 1UL
+
+    override fun write(value: UByte, buf: ByteBuffer) {
+        buf.put(value.toByte())
+    }
+}
 
 public object FfiConverterUInt: FfiConverter<UInt, Int> {
     override fun lift(value: Int): UInt {
@@ -1415,6 +1507,402 @@ public object FfiConverterByteArray: FfiConverterRustBuffer<ByteArray> {
 
 
 
+/**
+ * Account addresses
+ */
+data class AccountAddresses (
+    /**
+     * Used addresses
+     */
+    var `used`: List<AddressInfo>, 
+    /**
+     * Unused addresses
+     */
+    var `unused`: List<AddressInfo>, 
+    /**
+     * Change addresses
+     */
+    var `change`: List<AddressInfo>
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeAccountAddresses: FfiConverterRustBuffer<AccountAddresses> {
+    override fun read(buf: ByteBuffer): AccountAddresses {
+        return AccountAddresses(
+            FfiConverterSequenceTypeAddressInfo.read(buf),
+            FfiConverterSequenceTypeAddressInfo.read(buf),
+            FfiConverterSequenceTypeAddressInfo.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: AccountAddresses) = (
+            FfiConverterSequenceTypeAddressInfo.allocationSize(value.`used`) +
+            FfiConverterSequenceTypeAddressInfo.allocationSize(value.`unused`) +
+            FfiConverterSequenceTypeAddressInfo.allocationSize(value.`change`)
+    )
+
+    override fun write(value: AccountAddresses, buf: ByteBuffer) {
+            FfiConverterSequenceTypeAddressInfo.write(value.`used`, buf)
+            FfiConverterSequenceTypeAddressInfo.write(value.`unused`, buf)
+            FfiConverterSequenceTypeAddressInfo.write(value.`change`, buf)
+    }
+}
+
+
+
+/**
+ * Account info response
+ */
+data class AccountInfoResponse (
+    var `id`: kotlin.UInt, 
+    var `path`: kotlin.String, 
+    var `descriptor`: kotlin.String, 
+    var `legacyXpub`: kotlin.String?, 
+    var `balance`: kotlin.String, 
+    var `availableBalance`: kotlin.String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeAccountInfoResponse: FfiConverterRustBuffer<AccountInfoResponse> {
+    override fun read(buf: ByteBuffer): AccountInfoResponse {
+        return AccountInfoResponse(
+            FfiConverterUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: AccountInfoResponse) = (
+            FfiConverterUInt.allocationSize(value.`id`) +
+            FfiConverterString.allocationSize(value.`path`) +
+            FfiConverterString.allocationSize(value.`descriptor`) +
+            FfiConverterOptionalString.allocationSize(value.`legacyXpub`) +
+            FfiConverterString.allocationSize(value.`balance`) +
+            FfiConverterString.allocationSize(value.`availableBalance`)
+    )
+
+    override fun write(value: AccountInfoResponse, buf: ByteBuffer) {
+            FfiConverterUInt.write(value.`id`, buf)
+            FfiConverterString.write(value.`path`, buf)
+            FfiConverterString.write(value.`descriptor`, buf)
+            FfiConverterOptionalString.write(value.`legacyXpub`, buf)
+            FfiConverterString.write(value.`balance`, buf)
+            FfiConverterString.write(value.`availableBalance`, buf)
+    }
+}
+
+
+
+/**
+ * UTXO information for account
+ */
+data class AccountUtxo (
+    /**
+     * Transaction ID
+     */
+    var `txid`: kotlin.String, 
+    /**
+     * Output index
+     */
+    var `vout`: kotlin.UInt, 
+    /**
+     * Amount in satoshis
+     */
+    var `amount`: kotlin.String, 
+    /**
+     * Block height
+     */
+    var `blockHeight`: kotlin.UInt?, 
+    /**
+     * Address
+     */
+    var `address`: kotlin.String, 
+    /**
+     * Derivation path
+     */
+    var `path`: kotlin.String, 
+    /**
+     * Number of confirmations
+     */
+    var `confirmations`: kotlin.UInt?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeAccountUtxo: FfiConverterRustBuffer<AccountUtxo> {
+    override fun read(buf: ByteBuffer): AccountUtxo {
+        return AccountUtxo(
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: AccountUtxo) = (
+            FfiConverterString.allocationSize(value.`txid`) +
+            FfiConverterUInt.allocationSize(value.`vout`) +
+            FfiConverterString.allocationSize(value.`amount`) +
+            FfiConverterOptionalUInt.allocationSize(value.`blockHeight`) +
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterString.allocationSize(value.`path`) +
+            FfiConverterOptionalUInt.allocationSize(value.`confirmations`)
+    )
+
+    override fun write(value: AccountUtxo, buf: ByteBuffer) {
+            FfiConverterString.write(value.`txid`, buf)
+            FfiConverterUInt.write(value.`vout`, buf)
+            FfiConverterString.write(value.`amount`, buf)
+            FfiConverterOptionalUInt.write(value.`blockHeight`, buf)
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterString.write(value.`path`, buf)
+            FfiConverterOptionalUInt.write(value.`confirmations`, buf)
+    }
+}
+
+
+
+/**
+ * Address information
+ */
+data class AddressInfo (
+    /**
+     * Address string
+     */
+    var `address`: kotlin.String, 
+    /**
+     * Derivation path
+     */
+    var `path`: kotlin.String, 
+    /**
+     * Number of transfers
+     */
+    var `transfers`: kotlin.UInt
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeAddressInfo: FfiConverterRustBuffer<AddressInfo> {
+    override fun read(buf: ByteBuffer): AddressInfo {
+        return AddressInfo(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: AddressInfo) = (
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterString.allocationSize(value.`path`) +
+            FfiConverterUInt.allocationSize(value.`transfers`)
+    )
+
+    override fun write(value: AddressInfo, buf: ByteBuffer) {
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterString.write(value.`path`, buf)
+            FfiConverterUInt.write(value.`transfers`, buf)
+    }
+}
+
+
+
+/**
+ * Address response containing the derived address information
+ */
+data class AddressResponse (
+    var `address`: kotlin.String, 
+    var `path`: List<kotlin.UInt>, 
+    var `serializedPath`: kotlin.String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeAddressResponse: FfiConverterRustBuffer<AddressResponse> {
+    override fun read(buf: ByteBuffer): AddressResponse {
+        return AddressResponse(
+            FfiConverterString.read(buf),
+            FfiConverterSequenceUInt.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: AddressResponse) = (
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterSequenceUInt.allocationSize(value.`path`) +
+            FfiConverterString.allocationSize(value.`serializedPath`)
+    )
+
+    override fun write(value: AddressResponse, buf: ByteBuffer) {
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterSequenceUInt.write(value.`path`, buf)
+            FfiConverterString.write(value.`serializedPath`, buf)
+    }
+}
+
+
+
+/**
+ * Coin purchase memo
+ */
+data class CoinPurchaseMemo (
+    /**
+     * Coin type
+     */
+    var `coinType`: kotlin.UInt, 
+    /**
+     * Amount
+     */
+    var `amount`: kotlin.ULong, 
+    /**
+     * Address
+     */
+    var `address`: kotlin.String, 
+    /**
+     * MAC
+     */
+    var `mac`: kotlin.String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeCoinPurchaseMemo: FfiConverterRustBuffer<CoinPurchaseMemo> {
+    override fun read(buf: ByteBuffer): CoinPurchaseMemo {
+        return CoinPurchaseMemo(
+            FfiConverterUInt.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: CoinPurchaseMemo) = (
+            FfiConverterUInt.allocationSize(value.`coinType`) +
+            FfiConverterULong.allocationSize(value.`amount`) +
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterString.allocationSize(value.`mac`)
+    )
+
+    override fun write(value: CoinPurchaseMemo, buf: ByteBuffer) {
+            FfiConverterUInt.write(value.`coinType`, buf)
+            FfiConverterULong.write(value.`amount`, buf)
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterString.write(value.`mac`, buf)
+    }
+}
+
+
+
+/**
+ * Common parameters for all Trezor Connect methods
+ */
+data class CommonParams (
+    /**
+     * Specific device instance to use
+     */
+    var `device`: DeviceParams?, 
+    /**
+     * Set to true if method should use empty passphrase
+     */
+    var `useEmptyPassphrase`: kotlin.Boolean?, 
+    /**
+     * Allow seedless device
+     */
+    var `allowSeedlessDevice`: kotlin.Boolean?, 
+    /**
+     * Skip final reload
+     */
+    var `skipFinalReload`: kotlin.Boolean?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeCommonParams: FfiConverterRustBuffer<CommonParams> {
+    override fun read(buf: ByteBuffer): CommonParams {
+        return CommonParams(
+            FfiConverterOptionalTypeDeviceParams.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: CommonParams) = (
+            FfiConverterOptionalTypeDeviceParams.allocationSize(value.`device`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`useEmptyPassphrase`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`allowSeedlessDevice`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`skipFinalReload`)
+    )
+
+    override fun write(value: CommonParams, buf: ByteBuffer) {
+            FfiConverterOptionalTypeDeviceParams.write(value.`device`, buf)
+            FfiConverterOptionalBoolean.write(value.`useEmptyPassphrase`, buf)
+            FfiConverterOptionalBoolean.write(value.`allowSeedlessDevice`, buf)
+            FfiConverterOptionalBoolean.write(value.`skipFinalReload`, buf)
+    }
+}
+
+
+
+/**
+ * Account information for compose transaction
+ */
+data class ComposeAccount (
+    /**
+     * Derivation path
+     */
+    var `path`: kotlin.String, 
+    /**
+     * Account addresses
+     */
+    var `addresses`: AccountAddresses, 
+    /**
+     * UTXOs
+     */
+    var `utxo`: List<AccountUtxo>
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeComposeAccount: FfiConverterRustBuffer<ComposeAccount> {
+    override fun read(buf: ByteBuffer): ComposeAccount {
+        return ComposeAccount(
+            FfiConverterString.read(buf),
+            FfiConverterTypeAccountAddresses.read(buf),
+            FfiConverterSequenceTypeAccountUtxo.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ComposeAccount) = (
+            FfiConverterString.allocationSize(value.`path`) +
+            FfiConverterTypeAccountAddresses.allocationSize(value.`addresses`) +
+            FfiConverterSequenceTypeAccountUtxo.allocationSize(value.`utxo`)
+    )
+
+    override fun write(value: ComposeAccount, buf: ByteBuffer) {
+            FfiConverterString.write(value.`path`, buf)
+            FfiConverterTypeAccountAddresses.write(value.`addresses`, buf)
+            FfiConverterSequenceTypeAccountUtxo.write(value.`utxo`, buf)
+    }
+}
+
+
+
 data class CreateCjitOptions (
     var `source`: kotlin.String?, 
     var `discountCode`: kotlin.String?
@@ -1517,6 +2005,82 @@ public object FfiConverterTypeCreateOrderOptions: FfiConverterRustBuffer<CreateO
 
 
 
+/**
+ * Result type for deep link generation, including the URL and the ID used
+ */
+data class DeepLinkResult (
+    /**
+     * The generated deep link URL
+     */
+    var `url`: kotlin.String, 
+    /**
+     * The request ID used (either provided or auto-generated)
+     */
+    var `requestId`: kotlin.String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeDeepLinkResult: FfiConverterRustBuffer<DeepLinkResult> {
+    override fun read(buf: ByteBuffer): DeepLinkResult {
+        return DeepLinkResult(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: DeepLinkResult) = (
+            FfiConverterString.allocationSize(value.`url`) +
+            FfiConverterString.allocationSize(value.`requestId`)
+    )
+
+    override fun write(value: DeepLinkResult, buf: ByteBuffer) {
+            FfiConverterString.write(value.`url`, buf)
+            FfiConverterString.write(value.`requestId`, buf)
+    }
+}
+
+
+
+/**
+ * Parameters for specifying a particular device
+ */
+data class DeviceParams (
+    /**
+     * Device instance path
+     */
+    var `path`: kotlin.String?, 
+    /**
+     * Device instance ID
+     */
+    var `instance`: kotlin.UInt?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeDeviceParams: FfiConverterRustBuffer<DeviceParams> {
+    override fun read(buf: ByteBuffer): DeviceParams {
+        return DeviceParams(
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: DeviceParams) = (
+            FfiConverterOptionalString.allocationSize(value.`path`) +
+            FfiConverterOptionalUInt.allocationSize(value.`instance`)
+    )
+
+    override fun write(value: DeviceParams, buf: ByteBuffer) {
+            FfiConverterOptionalString.write(value.`path`, buf)
+            FfiConverterOptionalUInt.write(value.`instance`, buf)
+    }
+}
+
+
+
 data class ErrorData (
     var `errorDetails`: kotlin.String
 ) {
@@ -1537,6 +2101,99 @@ public object FfiConverterTypeErrorData: FfiConverterRustBuffer<ErrorData> {
 
     override fun write(value: ErrorData, buf: ByteBuffer) {
             FfiConverterString.write(value.`errorDetails`, buf)
+    }
+}
+
+
+
+/**
+ * Feature response containing device capabilities and information
+ */
+data class FeatureResponse (
+    var `vendor`: kotlin.String, 
+    var `majorVersion`: kotlin.UInt, 
+    var `minorVersion`: kotlin.UInt, 
+    var `patchVersion`: kotlin.UInt, 
+    var `deviceId`: kotlin.String, 
+    var `capabilities`: List<kotlin.String>?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeFeatureResponse: FfiConverterRustBuffer<FeatureResponse> {
+    override fun read(buf: ByteBuffer): FeatureResponse {
+        return FeatureResponse(
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalSequenceString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FeatureResponse) = (
+            FfiConverterString.allocationSize(value.`vendor`) +
+            FfiConverterUInt.allocationSize(value.`majorVersion`) +
+            FfiConverterUInt.allocationSize(value.`minorVersion`) +
+            FfiConverterUInt.allocationSize(value.`patchVersion`) +
+            FfiConverterString.allocationSize(value.`deviceId`) +
+            FfiConverterOptionalSequenceString.allocationSize(value.`capabilities`)
+    )
+
+    override fun write(value: FeatureResponse, buf: ByteBuffer) {
+            FfiConverterString.write(value.`vendor`, buf)
+            FfiConverterUInt.write(value.`majorVersion`, buf)
+            FfiConverterUInt.write(value.`minorVersion`, buf)
+            FfiConverterUInt.write(value.`patchVersion`, buf)
+            FfiConverterString.write(value.`deviceId`, buf)
+            FfiConverterOptionalSequenceString.write(value.`capabilities`, buf)
+    }
+}
+
+
+
+/**
+ * Fee level for compose transaction
+ */
+data class FeeLevel (
+    /**
+     * Fee per unit (satoshi/byte or satoshi/vbyte)
+     */
+    var `feePerUnit`: kotlin.String, 
+    /**
+     * Base fee in satoshi (optional, used in RBF and DOGE)
+     */
+    var `baseFee`: kotlin.UInt?, 
+    /**
+     * Floor base fee (optional, used in DOGE)
+     */
+    var `floorBaseFee`: kotlin.Boolean?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeFeeLevel: FfiConverterRustBuffer<FeeLevel> {
+    override fun read(buf: ByteBuffer): FeeLevel {
+        return FeeLevel(
+            FfiConverterString.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FeeLevel) = (
+            FfiConverterString.allocationSize(value.`feePerUnit`) +
+            FfiConverterOptionalUInt.allocationSize(value.`baseFee`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`floorBaseFee`)
+    )
+
+    override fun write(value: FeeLevel, buf: ByteBuffer) {
+            FfiConverterString.write(value.`feePerUnit`, buf)
+            FfiConverterOptionalUInt.write(value.`baseFee`, buf)
+            FfiConverterOptionalBoolean.write(value.`floorBaseFee`, buf)
     }
 }
 
@@ -1669,6 +2326,117 @@ public object FfiConverterTypeGetAddressesResponse: FfiConverterRustBuffer<GetAd
 
     override fun write(value: GetAddressesResponse, buf: ByteBuffer) {
             FfiConverterSequenceTypeGetAddressResponse.write(value.`addresses`, buf)
+    }
+}
+
+
+
+/**
+ * HD Node Path Type
+ */
+data class HdNodePathType (
+    /**
+     * Node data (can be String or HDNodeType)
+     */
+    var `node`: HdNodeTypeOrString, 
+    /**
+     * BIP32 derivation path
+     */
+    var `addressN`: List<kotlin.UInt>
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeHDNodePathType: FfiConverterRustBuffer<HdNodePathType> {
+    override fun read(buf: ByteBuffer): HdNodePathType {
+        return HdNodePathType(
+            FfiConverterTypeHDNodeTypeOrString.read(buf),
+            FfiConverterSequenceUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: HdNodePathType) = (
+            FfiConverterTypeHDNodeTypeOrString.allocationSize(value.`node`) +
+            FfiConverterSequenceUInt.allocationSize(value.`addressN`)
+    )
+
+    override fun write(value: HdNodePathType, buf: ByteBuffer) {
+            FfiConverterTypeHDNodeTypeOrString.write(value.`node`, buf)
+            FfiConverterSequenceUInt.write(value.`addressN`, buf)
+    }
+}
+
+
+
+/**
+ * HD Node Type
+ */
+data class HdNodeType (
+    /**
+     * Depth
+     */
+    var `depth`: kotlin.UInt, 
+    /**
+     * Fingerprint
+     */
+    var `fingerprint`: kotlin.UInt, 
+    /**
+     * Child number
+     */
+    var `childNum`: kotlin.UInt, 
+    /**
+     * Chain code
+     */
+    var `chainCode`: kotlin.String, 
+    /**
+     * Public key
+     */
+    var `publicKey`: kotlin.String, 
+    /**
+     * Private key (optional)
+     */
+    var `privateKey`: kotlin.String?, 
+    /**
+     * BIP32 derivation path (optional)
+     */
+    var `addressN`: List<kotlin.UInt>?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeHDNodeType: FfiConverterRustBuffer<HdNodeType> {
+    override fun read(buf: ByteBuffer): HdNodeType {
+        return HdNodeType(
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalSequenceUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: HdNodeType) = (
+            FfiConverterUInt.allocationSize(value.`depth`) +
+            FfiConverterUInt.allocationSize(value.`fingerprint`) +
+            FfiConverterUInt.allocationSize(value.`childNum`) +
+            FfiConverterString.allocationSize(value.`chainCode`) +
+            FfiConverterString.allocationSize(value.`publicKey`) +
+            FfiConverterOptionalString.allocationSize(value.`privateKey`) +
+            FfiConverterOptionalSequenceUInt.allocationSize(value.`addressN`)
+    )
+
+    override fun write(value: HdNodeType, buf: ByteBuffer) {
+            FfiConverterUInt.write(value.`depth`, buf)
+            FfiConverterUInt.write(value.`fingerprint`, buf)
+            FfiConverterUInt.write(value.`childNum`, buf)
+            FfiConverterString.write(value.`chainCode`, buf)
+            FfiConverterString.write(value.`publicKey`, buf)
+            FfiConverterOptionalString.write(value.`privateKey`, buf)
+            FfiConverterOptionalSequenceUInt.write(value.`addressN`, buf)
     }
 }
 
@@ -2847,6 +3615,103 @@ public object FfiConverterTypeLnurlWithdrawData: FfiConverterRustBuffer<LnurlWit
 
 
 
+/**
+ * Message signature response
+ */
+data class MessageSignatureResponse (
+    /**
+     * Signer address
+     */
+    var `address`: kotlin.String, 
+    /**
+     * Signature in base64 format
+     */
+    var `signature`: kotlin.String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeMessageSignatureResponse: FfiConverterRustBuffer<MessageSignatureResponse> {
+    override fun read(buf: ByteBuffer): MessageSignatureResponse {
+        return MessageSignatureResponse(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: MessageSignatureResponse) = (
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterString.allocationSize(value.`signature`)
+    )
+
+    override fun write(value: MessageSignatureResponse, buf: ByteBuffer) {
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterString.write(value.`signature`, buf)
+    }
+}
+
+
+
+/**
+ * Multisig Redeem Script Type
+ */
+data class MultisigRedeemScriptType (
+    /**
+     * Public keys
+     */
+    var `pubkeys`: List<HdNodePathType>, 
+    /**
+     * Signatures
+     */
+    var `signatures`: List<kotlin.String>, 
+    /**
+     * M-of-N threshold
+     */
+    var `m`: kotlin.UInt, 
+    /**
+     * Nodes (optional)
+     */
+    var `nodes`: List<HdNodeType>?, 
+    /**
+     * Pubkeys order (optional): 0 for PRESERVED, 1 for LEXICOGRAPHIC
+     */
+    var `pubkeysOrder`: kotlin.UByte?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeMultisigRedeemScriptType: FfiConverterRustBuffer<MultisigRedeemScriptType> {
+    override fun read(buf: ByteBuffer): MultisigRedeemScriptType {
+        return MultisigRedeemScriptType(
+            FfiConverterSequenceTypeHDNodePathType.read(buf),
+            FfiConverterSequenceString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterOptionalSequenceTypeHDNodeType.read(buf),
+            FfiConverterOptionalUByte.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: MultisigRedeemScriptType) = (
+            FfiConverterSequenceTypeHDNodePathType.allocationSize(value.`pubkeys`) +
+            FfiConverterSequenceString.allocationSize(value.`signatures`) +
+            FfiConverterUInt.allocationSize(value.`m`) +
+            FfiConverterOptionalSequenceTypeHDNodeType.allocationSize(value.`nodes`) +
+            FfiConverterOptionalUByte.allocationSize(value.`pubkeysOrder`)
+    )
+
+    override fun write(value: MultisigRedeemScriptType, buf: ByteBuffer) {
+            FfiConverterSequenceTypeHDNodePathType.write(value.`pubkeys`, buf)
+            FfiConverterSequenceString.write(value.`signatures`, buf)
+            FfiConverterUInt.write(value.`m`, buf)
+            FfiConverterOptionalSequenceTypeHDNodeType.write(value.`nodes`, buf)
+            FfiConverterOptionalUByte.write(value.`pubkeysOrder`, buf)
+    }
+}
+
+
+
 data class OnChainInvoice (
     var `address`: kotlin.String, 
     var `amountSatoshis`: kotlin.ULong, 
@@ -2977,6 +3842,242 @@ public object FfiConverterTypeOnchainActivity: FfiConverterRustBuffer<OnchainAct
 
 
 
+/**
+ * Payment request memo types
+ */
+data class PaymentRequestMemo (
+    /**
+     * Text memo
+     */
+    var `textMemo`: TextMemo?, 
+    /**
+     * Refund memo
+     */
+    var `refundMemo`: RefundMemo?, 
+    /**
+     * Coin purchase memo
+     */
+    var `coinPurchaseMemo`: CoinPurchaseMemo?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypePaymentRequestMemo: FfiConverterRustBuffer<PaymentRequestMemo> {
+    override fun read(buf: ByteBuffer): PaymentRequestMemo {
+        return PaymentRequestMemo(
+            FfiConverterOptionalTypeTextMemo.read(buf),
+            FfiConverterOptionalTypeRefundMemo.read(buf),
+            FfiConverterOptionalTypeCoinPurchaseMemo.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PaymentRequestMemo) = (
+            FfiConverterOptionalTypeTextMemo.allocationSize(value.`textMemo`) +
+            FfiConverterOptionalTypeRefundMemo.allocationSize(value.`refundMemo`) +
+            FfiConverterOptionalTypeCoinPurchaseMemo.allocationSize(value.`coinPurchaseMemo`)
+    )
+
+    override fun write(value: PaymentRequestMemo, buf: ByteBuffer) {
+            FfiConverterOptionalTypeTextMemo.write(value.`textMemo`, buf)
+            FfiConverterOptionalTypeRefundMemo.write(value.`refundMemo`, buf)
+            FfiConverterOptionalTypeCoinPurchaseMemo.write(value.`coinPurchaseMemo`, buf)
+    }
+}
+
+
+
+/**
+ * Precomposed transaction input
+ */
+data class PrecomposedInput (
+    /**
+     * BIP32 derivation path
+     */
+    var `addressN`: List<kotlin.UInt>, 
+    /**
+     * Amount in satoshis
+     */
+    var `amount`: kotlin.String, 
+    /**
+     * Previous transaction hash
+     */
+    var `prevHash`: kotlin.String, 
+    /**
+     * Previous output index
+     */
+    var `prevIndex`: kotlin.UInt, 
+    /**
+     * Script type
+     */
+    var `scriptType`: ScriptType
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypePrecomposedInput: FfiConverterRustBuffer<PrecomposedInput> {
+    override fun read(buf: ByteBuffer): PrecomposedInput {
+        return PrecomposedInput(
+            FfiConverterSequenceUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterTypeScriptType.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PrecomposedInput) = (
+            FfiConverterSequenceUInt.allocationSize(value.`addressN`) +
+            FfiConverterString.allocationSize(value.`amount`) +
+            FfiConverterString.allocationSize(value.`prevHash`) +
+            FfiConverterUInt.allocationSize(value.`prevIndex`) +
+            FfiConverterTypeScriptType.allocationSize(value.`scriptType`)
+    )
+
+    override fun write(value: PrecomposedInput, buf: ByteBuffer) {
+            FfiConverterSequenceUInt.write(value.`addressN`, buf)
+            FfiConverterString.write(value.`amount`, buf)
+            FfiConverterString.write(value.`prevHash`, buf)
+            FfiConverterUInt.write(value.`prevIndex`, buf)
+            FfiConverterTypeScriptType.write(value.`scriptType`, buf)
+    }
+}
+
+
+
+/**
+ * Precomposed transaction output
+ */
+data class PrecomposedOutput (
+    /**
+     * BIP32 derivation path (for change outputs)
+     */
+    var `addressN`: List<kotlin.UInt>?, 
+    /**
+     * Amount in satoshis
+     */
+    var `amount`: kotlin.String, 
+    /**
+     * Address (for regular outputs)
+     */
+    var `address`: kotlin.String?, 
+    /**
+     * Script type
+     */
+    var `scriptType`: ScriptType
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypePrecomposedOutput: FfiConverterRustBuffer<PrecomposedOutput> {
+    override fun read(buf: ByteBuffer): PrecomposedOutput {
+        return PrecomposedOutput(
+            FfiConverterOptionalSequenceUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterTypeScriptType.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PrecomposedOutput) = (
+            FfiConverterOptionalSequenceUInt.allocationSize(value.`addressN`) +
+            FfiConverterString.allocationSize(value.`amount`) +
+            FfiConverterOptionalString.allocationSize(value.`address`) +
+            FfiConverterTypeScriptType.allocationSize(value.`scriptType`)
+    )
+
+    override fun write(value: PrecomposedOutput, buf: ByteBuffer) {
+            FfiConverterOptionalSequenceUInt.write(value.`addressN`, buf)
+            FfiConverterString.write(value.`amount`, buf)
+            FfiConverterOptionalString.write(value.`address`, buf)
+            FfiConverterTypeScriptType.write(value.`scriptType`, buf)
+    }
+}
+
+
+
+/**
+ * Precomposed transaction
+ */
+data class PrecomposedTransaction (
+    /**
+     * Transaction type (usually "final" or "error")
+     */
+    var `txType`: kotlin.String, 
+    /**
+     * Total amount spent (including fee)
+     */
+    var `totalSpent`: kotlin.String?, 
+    /**
+     * Transaction fee
+     */
+    var `fee`: kotlin.String?, 
+    /**
+     * Fee per byte
+     */
+    var `feePerByte`: kotlin.String?, 
+    /**
+     * Transaction size in bytes
+     */
+    var `bytes`: kotlin.UInt?, 
+    /**
+     * Transaction inputs
+     */
+    var `inputs`: List<PrecomposedInput>?, 
+    /**
+     * Transaction outputs
+     */
+    var `outputs`: List<PrecomposedOutput>?, 
+    /**
+     * Output permutation indices
+     */
+    var `outputsPermutation`: List<kotlin.UInt>?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypePrecomposedTransaction: FfiConverterRustBuffer<PrecomposedTransaction> {
+    override fun read(buf: ByteBuffer): PrecomposedTransaction {
+        return PrecomposedTransaction(
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalSequenceTypePrecomposedInput.read(buf),
+            FfiConverterOptionalSequenceTypePrecomposedOutput.read(buf),
+            FfiConverterOptionalSequenceUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PrecomposedTransaction) = (
+            FfiConverterString.allocationSize(value.`txType`) +
+            FfiConverterOptionalString.allocationSize(value.`totalSpent`) +
+            FfiConverterOptionalString.allocationSize(value.`fee`) +
+            FfiConverterOptionalString.allocationSize(value.`feePerByte`) +
+            FfiConverterOptionalUInt.allocationSize(value.`bytes`) +
+            FfiConverterOptionalSequenceTypePrecomposedInput.allocationSize(value.`inputs`) +
+            FfiConverterOptionalSequenceTypePrecomposedOutput.allocationSize(value.`outputs`) +
+            FfiConverterOptionalSequenceUInt.allocationSize(value.`outputsPermutation`)
+    )
+
+    override fun write(value: PrecomposedTransaction, buf: ByteBuffer) {
+            FfiConverterString.write(value.`txType`, buf)
+            FfiConverterOptionalString.write(value.`totalSpent`, buf)
+            FfiConverterOptionalString.write(value.`fee`, buf)
+            FfiConverterOptionalString.write(value.`feePerByte`, buf)
+            FfiConverterOptionalUInt.write(value.`bytes`, buf)
+            FfiConverterOptionalSequenceTypePrecomposedInput.write(value.`inputs`, buf)
+            FfiConverterOptionalSequenceTypePrecomposedOutput.write(value.`outputs`, buf)
+            FfiConverterOptionalSequenceUInt.write(value.`outputsPermutation`, buf)
+    }
+}
+
+
+
 data class PubkyAuth (
     var `data`: kotlin.String
 ) {
@@ -2997,6 +4098,688 @@ public object FfiConverterTypePubkyAuth: FfiConverterRustBuffer<PubkyAuth> {
 
     override fun write(value: PubkyAuth, buf: ByteBuffer) {
             FfiConverterString.write(value.`data`, buf)
+    }
+}
+
+
+
+/**
+ * Public key response containing the derived public key information
+ */
+data class PublicKeyResponse (
+    var `path`: List<kotlin.UInt>, 
+    var `serializedPath`: kotlin.String, 
+    var `xpub`: kotlin.String, 
+    var `xpubSegwit`: kotlin.String?, 
+    var `chainCode`: kotlin.String, 
+    var `childNum`: kotlin.UInt, 
+    var `publicKey`: kotlin.String, 
+    var `fingerprint`: kotlin.UInt, 
+    var `depth`: kotlin.UInt, 
+    var `descriptor`: kotlin.String?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypePublicKeyResponse: FfiConverterRustBuffer<PublicKeyResponse> {
+    override fun read(buf: ByteBuffer): PublicKeyResponse {
+        return PublicKeyResponse(
+            FfiConverterSequenceUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PublicKeyResponse) = (
+            FfiConverterSequenceUInt.allocationSize(value.`path`) +
+            FfiConverterString.allocationSize(value.`serializedPath`) +
+            FfiConverterString.allocationSize(value.`xpub`) +
+            FfiConverterOptionalString.allocationSize(value.`xpubSegwit`) +
+            FfiConverterString.allocationSize(value.`chainCode`) +
+            FfiConverterUInt.allocationSize(value.`childNum`) +
+            FfiConverterString.allocationSize(value.`publicKey`) +
+            FfiConverterUInt.allocationSize(value.`fingerprint`) +
+            FfiConverterUInt.allocationSize(value.`depth`) +
+            FfiConverterOptionalString.allocationSize(value.`descriptor`)
+    )
+
+    override fun write(value: PublicKeyResponse, buf: ByteBuffer) {
+            FfiConverterSequenceUInt.write(value.`path`, buf)
+            FfiConverterString.write(value.`serializedPath`, buf)
+            FfiConverterString.write(value.`xpub`, buf)
+            FfiConverterOptionalString.write(value.`xpubSegwit`, buf)
+            FfiConverterString.write(value.`chainCode`, buf)
+            FfiConverterUInt.write(value.`childNum`, buf)
+            FfiConverterString.write(value.`publicKey`, buf)
+            FfiConverterUInt.write(value.`fingerprint`, buf)
+            FfiConverterUInt.write(value.`depth`, buf)
+            FfiConverterOptionalString.write(value.`descriptor`, buf)
+    }
+}
+
+
+
+/**
+ * Reference transaction for transaction signing
+ */
+data class RefTransaction (
+    /**
+     * Transaction hash
+     */
+    var `hash`: kotlin.String, 
+    /**
+     * Transaction version
+     */
+    var `version`: kotlin.UInt?, 
+    /**
+     * Transaction inputs
+     */
+    var `inputs`: List<RefTxInput>, 
+    /**
+     * Transaction outputs (binary format)
+     */
+    var `binOutputs`: List<RefTxOutput>, 
+    /**
+     * Lock time
+     */
+    var `lockTime`: kotlin.UInt?, 
+    /**
+     * Expiry (for Zcash/Decred)
+     */
+    var `expiry`: kotlin.UInt?, 
+    /**
+     * Version group ID (for Zcash)
+     */
+    var `versionGroupId`: kotlin.UInt?, 
+    /**
+     * Overwintered flag (for Zcash)
+     */
+    var `overwintered`: kotlin.Boolean?, 
+    /**
+     * Timestamp (for Capricoin)
+     */
+    var `timestamp`: kotlin.UInt?, 
+    /**
+     * Branch ID (for Zcash)
+     */
+    var `branchId`: kotlin.UInt?, 
+    /**
+     * Extra data
+     */
+    var `extraData`: kotlin.String?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeRefTransaction: FfiConverterRustBuffer<RefTransaction> {
+    override fun read(buf: ByteBuffer): RefTransaction {
+        return RefTransaction(
+            FfiConverterString.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterSequenceTypeRefTxInput.read(buf),
+            FfiConverterSequenceTypeRefTxOutput.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: RefTransaction) = (
+            FfiConverterString.allocationSize(value.`hash`) +
+            FfiConverterOptionalUInt.allocationSize(value.`version`) +
+            FfiConverterSequenceTypeRefTxInput.allocationSize(value.`inputs`) +
+            FfiConverterSequenceTypeRefTxOutput.allocationSize(value.`binOutputs`) +
+            FfiConverterOptionalUInt.allocationSize(value.`lockTime`) +
+            FfiConverterOptionalUInt.allocationSize(value.`expiry`) +
+            FfiConverterOptionalUInt.allocationSize(value.`versionGroupId`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`overwintered`) +
+            FfiConverterOptionalUInt.allocationSize(value.`timestamp`) +
+            FfiConverterOptionalUInt.allocationSize(value.`branchId`) +
+            FfiConverterOptionalString.allocationSize(value.`extraData`)
+    )
+
+    override fun write(value: RefTransaction, buf: ByteBuffer) {
+            FfiConverterString.write(value.`hash`, buf)
+            FfiConverterOptionalUInt.write(value.`version`, buf)
+            FfiConverterSequenceTypeRefTxInput.write(value.`inputs`, buf)
+            FfiConverterSequenceTypeRefTxOutput.write(value.`binOutputs`, buf)
+            FfiConverterOptionalUInt.write(value.`lockTime`, buf)
+            FfiConverterOptionalUInt.write(value.`expiry`, buf)
+            FfiConverterOptionalUInt.write(value.`versionGroupId`, buf)
+            FfiConverterOptionalBoolean.write(value.`overwintered`, buf)
+            FfiConverterOptionalUInt.write(value.`timestamp`, buf)
+            FfiConverterOptionalUInt.write(value.`branchId`, buf)
+            FfiConverterOptionalString.write(value.`extraData`, buf)
+    }
+}
+
+
+
+/**
+ * Reference transaction input
+ */
+data class RefTxInput (
+    /**
+     * Previous transaction hash
+     */
+    var `prevHash`: kotlin.String, 
+    /**
+     * Previous transaction output index
+     */
+    var `prevIndex`: kotlin.UInt, 
+    /**
+     * Script signature
+     */
+    var `scriptSig`: kotlin.String, 
+    /**
+     * Sequence number
+     */
+    var `sequence`: kotlin.UInt
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeRefTxInput: FfiConverterRustBuffer<RefTxInput> {
+    override fun read(buf: ByteBuffer): RefTxInput {
+        return RefTxInput(
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: RefTxInput) = (
+            FfiConverterString.allocationSize(value.`prevHash`) +
+            FfiConverterUInt.allocationSize(value.`prevIndex`) +
+            FfiConverterString.allocationSize(value.`scriptSig`) +
+            FfiConverterUInt.allocationSize(value.`sequence`)
+    )
+
+    override fun write(value: RefTxInput, buf: ByteBuffer) {
+            FfiConverterString.write(value.`prevHash`, buf)
+            FfiConverterUInt.write(value.`prevIndex`, buf)
+            FfiConverterString.write(value.`scriptSig`, buf)
+            FfiConverterUInt.write(value.`sequence`, buf)
+    }
+}
+
+
+
+/**
+ * Reference transaction output (binary format)
+ */
+data class RefTxOutput (
+    /**
+     * Amount in satoshis
+     */
+    var `amount`: kotlin.ULong, 
+    /**
+     * Script public key (binary hex)
+     */
+    var `scriptPubkey`: kotlin.String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeRefTxOutput: FfiConverterRustBuffer<RefTxOutput> {
+    override fun read(buf: ByteBuffer): RefTxOutput {
+        return RefTxOutput(
+            FfiConverterULong.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: RefTxOutput) = (
+            FfiConverterULong.allocationSize(value.`amount`) +
+            FfiConverterString.allocationSize(value.`scriptPubkey`)
+    )
+
+    override fun write(value: RefTxOutput, buf: ByteBuffer) {
+            FfiConverterULong.write(value.`amount`, buf)
+            FfiConverterString.write(value.`scriptPubkey`, buf)
+    }
+}
+
+
+
+/**
+ * Refund memo
+ */
+data class RefundMemo (
+    /**
+     * Refund address
+     */
+    var `address`: kotlin.String, 
+    /**
+     * MAC
+     */
+    var `mac`: kotlin.String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeRefundMemo: FfiConverterRustBuffer<RefundMemo> {
+    override fun read(buf: ByteBuffer): RefundMemo {
+        return RefundMemo(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: RefundMemo) = (
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterString.allocationSize(value.`mac`)
+    )
+
+    override fun write(value: RefundMemo, buf: ByteBuffer) {
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterString.write(value.`mac`, buf)
+    }
+}
+
+
+
+/**
+ * Signed transaction response
+ */
+data class SignedTransactionResponse (
+    /**
+     * Array of signer signatures
+     */
+    var `signatures`: List<kotlin.String>, 
+    /**
+     * Serialized transaction
+     */
+    var `serializedTx`: kotlin.String, 
+    /**
+     * Broadcasted transaction ID (if push was true)
+     */
+    var `txid`: kotlin.String?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeSignedTransactionResponse: FfiConverterRustBuffer<SignedTransactionResponse> {
+    override fun read(buf: ByteBuffer): SignedTransactionResponse {
+        return SignedTransactionResponse(
+            FfiConverterSequenceString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: SignedTransactionResponse) = (
+            FfiConverterSequenceString.allocationSize(value.`signatures`) +
+            FfiConverterString.allocationSize(value.`serializedTx`) +
+            FfiConverterOptionalString.allocationSize(value.`txid`)
+    )
+
+    override fun write(value: SignedTransactionResponse, buf: ByteBuffer) {
+            FfiConverterSequenceString.write(value.`signatures`, buf)
+            FfiConverterString.write(value.`serializedTx`, buf)
+            FfiConverterOptionalString.write(value.`txid`, buf)
+    }
+}
+
+
+
+/**
+ * Text memo
+ */
+data class TextMemo (
+    /**
+     * Text content
+     */
+    var `text`: kotlin.String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeTextMemo: FfiConverterRustBuffer<TextMemo> {
+    override fun read(buf: ByteBuffer): TextMemo {
+        return TextMemo(
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: TextMemo) = (
+            FfiConverterString.allocationSize(value.`text`)
+    )
+
+    override fun write(value: TextMemo, buf: ByteBuffer) {
+            FfiConverterString.write(value.`text`, buf)
+    }
+}
+
+
+
+/**
+ * Payment request
+ */
+data class TxAckPaymentRequest (
+    /**
+     * Nonce
+     */
+    var `nonce`: kotlin.String?, 
+    /**
+     * Recipient name
+     */
+    var `recipientName`: kotlin.String, 
+    /**
+     * Memos
+     */
+    var `memos`: List<PaymentRequestMemo>?, 
+    /**
+     * Amount
+     */
+    var `amount`: kotlin.ULong?, 
+    /**
+     * Signature
+     */
+    var `signature`: kotlin.String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeTxAckPaymentRequest: FfiConverterRustBuffer<TxAckPaymentRequest> {
+    override fun read(buf: ByteBuffer): TxAckPaymentRequest {
+        return TxAckPaymentRequest(
+            FfiConverterOptionalString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalSequenceTypePaymentRequestMemo.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: TxAckPaymentRequest) = (
+            FfiConverterOptionalString.allocationSize(value.`nonce`) +
+            FfiConverterString.allocationSize(value.`recipientName`) +
+            FfiConverterOptionalSequenceTypePaymentRequestMemo.allocationSize(value.`memos`) +
+            FfiConverterOptionalULong.allocationSize(value.`amount`) +
+            FfiConverterString.allocationSize(value.`signature`)
+    )
+
+    override fun write(value: TxAckPaymentRequest, buf: ByteBuffer) {
+            FfiConverterOptionalString.write(value.`nonce`, buf)
+            FfiConverterString.write(value.`recipientName`, buf)
+            FfiConverterOptionalSequenceTypePaymentRequestMemo.write(value.`memos`, buf)
+            FfiConverterOptionalULong.write(value.`amount`, buf)
+            FfiConverterString.write(value.`signature`, buf)
+    }
+}
+
+
+
+/**
+ * Transaction input type
+ */
+data class TxInputType (
+    /**
+     * Previous transaction hash
+     */
+    var `prevHash`: kotlin.String, 
+    /**
+     * Previous transaction output index
+     */
+    var `prevIndex`: kotlin.UInt, 
+    /**
+     * Amount in satoshis
+     */
+    var `amount`: kotlin.ULong, 
+    /**
+     * Transaction sequence
+     */
+    var `sequence`: kotlin.UInt?, 
+    /**
+     * BIP32 derivation path
+     */
+    var `addressN`: List<kotlin.UInt>?, 
+    /**
+     * Script type
+     */
+    var `scriptType`: ScriptType?, 
+    /**
+     * Multisig information
+     */
+    var `multisig`: MultisigRedeemScriptType?, 
+    /**
+     * Script public key (for external inputs)
+     */
+    var `scriptPubkey`: kotlin.String?, 
+    /**
+     * Script signature
+     */
+    var `scriptSig`: kotlin.String?, 
+    /**
+     * Witness data
+     */
+    var `witness`: kotlin.String?, 
+    /**
+     * Ownership proof
+     */
+    var `ownershipProof`: kotlin.String?, 
+    /**
+     * Commitment data
+     */
+    var `commitmentData`: kotlin.String?, 
+    /**
+     * Original hash for RBF
+     */
+    var `origHash`: kotlin.String?, 
+    /**
+     * Original index for RBF
+     */
+    var `origIndex`: kotlin.UInt?, 
+    /**
+     * Coinjoin flags
+     */
+    var `coinjoinFlags`: kotlin.UInt?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeTxInputType: FfiConverterRustBuffer<TxInputType> {
+    override fun read(buf: ByteBuffer): TxInputType {
+        return TxInputType(
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalSequenceUInt.read(buf),
+            FfiConverterOptionalTypeScriptType.read(buf),
+            FfiConverterOptionalTypeMultisigRedeemScriptType.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: TxInputType) = (
+            FfiConverterString.allocationSize(value.`prevHash`) +
+            FfiConverterUInt.allocationSize(value.`prevIndex`) +
+            FfiConverterULong.allocationSize(value.`amount`) +
+            FfiConverterOptionalUInt.allocationSize(value.`sequence`) +
+            FfiConverterOptionalSequenceUInt.allocationSize(value.`addressN`) +
+            FfiConverterOptionalTypeScriptType.allocationSize(value.`scriptType`) +
+            FfiConverterOptionalTypeMultisigRedeemScriptType.allocationSize(value.`multisig`) +
+            FfiConverterOptionalString.allocationSize(value.`scriptPubkey`) +
+            FfiConverterOptionalString.allocationSize(value.`scriptSig`) +
+            FfiConverterOptionalString.allocationSize(value.`witness`) +
+            FfiConverterOptionalString.allocationSize(value.`ownershipProof`) +
+            FfiConverterOptionalString.allocationSize(value.`commitmentData`) +
+            FfiConverterOptionalString.allocationSize(value.`origHash`) +
+            FfiConverterOptionalUInt.allocationSize(value.`origIndex`) +
+            FfiConverterOptionalUInt.allocationSize(value.`coinjoinFlags`)
+    )
+
+    override fun write(value: TxInputType, buf: ByteBuffer) {
+            FfiConverterString.write(value.`prevHash`, buf)
+            FfiConverterUInt.write(value.`prevIndex`, buf)
+            FfiConverterULong.write(value.`amount`, buf)
+            FfiConverterOptionalUInt.write(value.`sequence`, buf)
+            FfiConverterOptionalSequenceUInt.write(value.`addressN`, buf)
+            FfiConverterOptionalTypeScriptType.write(value.`scriptType`, buf)
+            FfiConverterOptionalTypeMultisigRedeemScriptType.write(value.`multisig`, buf)
+            FfiConverterOptionalString.write(value.`scriptPubkey`, buf)
+            FfiConverterOptionalString.write(value.`scriptSig`, buf)
+            FfiConverterOptionalString.write(value.`witness`, buf)
+            FfiConverterOptionalString.write(value.`ownershipProof`, buf)
+            FfiConverterOptionalString.write(value.`commitmentData`, buf)
+            FfiConverterOptionalString.write(value.`origHash`, buf)
+            FfiConverterOptionalUInt.write(value.`origIndex`, buf)
+            FfiConverterOptionalUInt.write(value.`coinjoinFlags`, buf)
+    }
+}
+
+
+
+/**
+ * Transaction output type
+ */
+data class TxOutputType (
+    /**
+     * Output address (for address outputs)
+     */
+    var `address`: kotlin.String?, 
+    /**
+     * BIP32 derivation path (for change outputs)
+     */
+    var `addressN`: List<kotlin.UInt>?, 
+    /**
+     * Amount in satoshis
+     */
+    var `amount`: kotlin.ULong, 
+    /**
+     * Script type
+     */
+    var `scriptType`: ScriptType, 
+    /**
+     * Multisig information
+     */
+    var `multisig`: MultisigRedeemScriptType?, 
+    /**
+     * OP_RETURN data
+     */
+    var `opReturnData`: kotlin.String?, 
+    /**
+     * Original hash for RBF
+     */
+    var `origHash`: kotlin.String?, 
+    /**
+     * Original index for RBF
+     */
+    var `origIndex`: kotlin.UInt?, 
+    /**
+     * Payment request index
+     */
+    var `paymentReqIndex`: kotlin.UInt?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeTxOutputType: FfiConverterRustBuffer<TxOutputType> {
+    override fun read(buf: ByteBuffer): TxOutputType {
+        return TxOutputType(
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalSequenceUInt.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterTypeScriptType.read(buf),
+            FfiConverterOptionalTypeMultisigRedeemScriptType.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: TxOutputType) = (
+            FfiConverterOptionalString.allocationSize(value.`address`) +
+            FfiConverterOptionalSequenceUInt.allocationSize(value.`addressN`) +
+            FfiConverterULong.allocationSize(value.`amount`) +
+            FfiConverterTypeScriptType.allocationSize(value.`scriptType`) +
+            FfiConverterOptionalTypeMultisigRedeemScriptType.allocationSize(value.`multisig`) +
+            FfiConverterOptionalString.allocationSize(value.`opReturnData`) +
+            FfiConverterOptionalString.allocationSize(value.`origHash`) +
+            FfiConverterOptionalUInt.allocationSize(value.`origIndex`) +
+            FfiConverterOptionalUInt.allocationSize(value.`paymentReqIndex`)
+    )
+
+    override fun write(value: TxOutputType, buf: ByteBuffer) {
+            FfiConverterOptionalString.write(value.`address`, buf)
+            FfiConverterOptionalSequenceUInt.write(value.`addressN`, buf)
+            FfiConverterULong.write(value.`amount`, buf)
+            FfiConverterTypeScriptType.write(value.`scriptType`, buf)
+            FfiConverterOptionalTypeMultisigRedeemScriptType.write(value.`multisig`, buf)
+            FfiConverterOptionalString.write(value.`opReturnData`, buf)
+            FfiConverterOptionalString.write(value.`origHash`, buf)
+            FfiConverterOptionalUInt.write(value.`origIndex`, buf)
+            FfiConverterOptionalUInt.write(value.`paymentReqIndex`, buf)
+    }
+}
+
+
+
+/**
+ * Unlock Path parameters
+ */
+data class UnlockPath (
+    /**
+     * BIP32 derivation path
+     */
+    var `addressN`: List<kotlin.UInt>, 
+    /**
+     * MAC (optional)
+     */
+    var `mac`: kotlin.String?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeUnlockPath: FfiConverterRustBuffer<UnlockPath> {
+    override fun read(buf: ByteBuffer): UnlockPath {
+        return UnlockPath(
+            FfiConverterSequenceUInt.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: UnlockPath) = (
+            FfiConverterSequenceUInt.allocationSize(value.`addressN`) +
+            FfiConverterOptionalString.allocationSize(value.`mac`)
+    )
+
+    override fun write(value: UnlockPath, buf: ByteBuffer) {
+            FfiConverterSequenceUInt.write(value.`addressN`, buf)
+            FfiConverterOptionalString.write(value.`mac`, buf)
     }
 }
 
@@ -3032,6 +4815,119 @@ public object FfiConverterTypeValidationResult: FfiConverterRustBuffer<Validatio
             FfiConverterTypeAddressType.write(value.`addressType`, buf)
     }
 }
+
+
+
+/**
+ * Verify message response
+ */
+data class VerifyMessageResponse (
+    /**
+     * Verification result message
+     */
+    var `message`: kotlin.String
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeVerifyMessageResponse: FfiConverterRustBuffer<VerifyMessageResponse> {
+    override fun read(buf: ByteBuffer): VerifyMessageResponse {
+        return VerifyMessageResponse(
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: VerifyMessageResponse) = (
+            FfiConverterString.allocationSize(value.`message`)
+    )
+
+    override fun write(value: VerifyMessageResponse, buf: ByteBuffer) {
+            FfiConverterString.write(value.`message`, buf)
+    }
+}
+
+
+
+/**
+ * Marker object for XRP accounts
+ */
+data class XrpMarker (
+    /**
+     * Ledger number
+     */
+    var `ledger`: kotlin.ULong, 
+    /**
+     * Sequence number
+     */
+    var `seq`: kotlin.ULong
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeXrpMarker: FfiConverterRustBuffer<XrpMarker> {
+    override fun read(buf: ByteBuffer): XrpMarker {
+        return XrpMarker(
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: XrpMarker) = (
+            FfiConverterULong.allocationSize(value.`ledger`) +
+            FfiConverterULong.allocationSize(value.`seq`)
+    )
+
+    override fun write(value: XrpMarker, buf: ByteBuffer) {
+            FfiConverterULong.write(value.`ledger`, buf)
+            FfiConverterULong.write(value.`seq`, buf)
+    }
+}
+
+
+
+/**
+ * Level of details to be returned by getAccountInfo
+ */
+
+enum class AccountInfoDetails {
+    
+    /**
+     * Return only account balances (default)
+     */
+    BASIC,
+    /**
+     * Return with derived addresses or ERC20 tokens
+     */
+    TOKENS,
+    /**
+     * Same as tokens with balances
+     */
+    TOKEN_BALANCES,
+    /**
+     * TokenBalances + complete account transaction history
+     */
+    TXS;
+    companion object
+}
+
+
+public object FfiConverterTypeAccountInfoDetails: FfiConverterRustBuffer<AccountInfoDetails> {
+    override fun read(buf: ByteBuffer) = try {
+        AccountInfoDetails.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: AccountInfoDetails) = 4UL
+
+    override fun write(value: AccountInfoDetails, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
 
 
 
@@ -3472,6 +5368,38 @@ public object FfiConverterTypeAddressType: FfiConverterRustBuffer<AddressType> {
     override fun allocationSize(value: AddressType) = 4UL
 
     override fun write(value: AddressType, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+/**
+ * Amount unit for display
+ */
+
+enum class AmountUnit {
+    
+    BITCOIN,
+    MILLI_BITCOIN,
+    MICRO_BITCOIN,
+    SATOSHI;
+    companion object
+}
+
+
+public object FfiConverterTypeAmountUnit: FfiConverterRustBuffer<AmountUnit> {
+    override fun read(buf: ByteBuffer) = try {
+        AmountUnit.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: AmountUnit) = 4UL
+
+    override fun write(value: AmountUnit, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
@@ -4056,6 +5984,240 @@ public object FfiConverterTypeCJitStateEnum: FfiConverterRustBuffer<CJitStateEnu
 
 
 
+/**
+ * Output type for compose transaction
+ */
+sealed class ComposeOutput {
+    
+    /**
+     * Regular output with amount and address
+     */
+    data class Regular(
+        /**
+         * Amount in satoshis
+         */
+        val `amount`: kotlin.String, 
+        /**
+         * Recipient address
+         */
+        val `address`: kotlin.String) : ComposeOutput() {
+        companion object
+    }
+    
+    /**
+     * Send max output
+     */
+    data class SendMax(
+        /**
+         * Recipient address
+         */
+        val `address`: kotlin.String) : ComposeOutput() {
+        companion object
+    }
+    
+    /**
+     * OP_RETURN output
+     */
+    data class OpReturn(
+        /**
+         * Hexadecimal string with arbitrary data
+         */
+        val `dataHex`: kotlin.String) : ComposeOutput() {
+        companion object
+    }
+    
+    /**
+     * Payment without address (precompose only)
+     */
+    data class PaymentNoAddress(
+        /**
+         * Amount in satoshis
+         */
+        val `amount`: kotlin.String) : ComposeOutput() {
+        companion object
+    }
+    
+    /**
+     * Send max without address (precompose only)
+     */
+    object SendMaxNoAddress : ComposeOutput()
+    
+    
+
+    
+    companion object
+}
+
+public object FfiConverterTypeComposeOutput : FfiConverterRustBuffer<ComposeOutput>{
+    override fun read(buf: ByteBuffer): ComposeOutput {
+        return when(buf.getInt()) {
+            1 -> ComposeOutput.Regular(
+                FfiConverterString.read(buf),
+                FfiConverterString.read(buf),
+                )
+            2 -> ComposeOutput.SendMax(
+                FfiConverterString.read(buf),
+                )
+            3 -> ComposeOutput.OpReturn(
+                FfiConverterString.read(buf),
+                )
+            4 -> ComposeOutput.PaymentNoAddress(
+                FfiConverterString.read(buf),
+                )
+            5 -> ComposeOutput.SendMaxNoAddress
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: ComposeOutput) = when(value) {
+        is ComposeOutput.Regular -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`amount`)
+                + FfiConverterString.allocationSize(value.`address`)
+            )
+        }
+        is ComposeOutput.SendMax -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`address`)
+            )
+        }
+        is ComposeOutput.OpReturn -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`dataHex`)
+            )
+        }
+        is ComposeOutput.PaymentNoAddress -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`amount`)
+            )
+        }
+        is ComposeOutput.SendMaxNoAddress -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+    }
+
+    override fun write(value: ComposeOutput, buf: ByteBuffer) {
+        when(value) {
+            is ComposeOutput.Regular -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`amount`, buf)
+                FfiConverterString.write(value.`address`, buf)
+                Unit
+            }
+            is ComposeOutput.SendMax -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`address`, buf)
+                Unit
+            }
+            is ComposeOutput.OpReturn -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`dataHex`, buf)
+                Unit
+            }
+            is ComposeOutput.PaymentNoAddress -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`amount`, buf)
+                Unit
+            }
+            is ComposeOutput.SendMaxNoAddress -> {
+                buf.putInt(5)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+/**
+ * Compose transaction response
+ */
+sealed class ComposeTransactionResponse {
+    
+    /**
+     * Signed transaction (payment mode)
+     */
+    data class SignedTransaction(
+        val v1: SignedTransactionResponse) : ComposeTransactionResponse() {
+        companion object
+    }
+    
+    /**
+     * Precomposed transactions (precompose mode)
+     */
+    data class PrecomposedTransactions(
+        val v1: List<PrecomposedTransaction>) : ComposeTransactionResponse() {
+        companion object
+    }
+    
+
+    
+    companion object
+}
+
+public object FfiConverterTypeComposeTransactionResponse : FfiConverterRustBuffer<ComposeTransactionResponse>{
+    override fun read(buf: ByteBuffer): ComposeTransactionResponse {
+        return when(buf.getInt()) {
+            1 -> ComposeTransactionResponse.SignedTransaction(
+                FfiConverterTypeSignedTransactionResponse.read(buf),
+                )
+            2 -> ComposeTransactionResponse.PrecomposedTransactions(
+                FfiConverterSequenceTypePrecomposedTransaction.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: ComposeTransactionResponse) = when(value) {
+        is ComposeTransactionResponse.SignedTransaction -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypeSignedTransactionResponse.allocationSize(value.v1)
+            )
+        }
+        is ComposeTransactionResponse.PrecomposedTransactions -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterSequenceTypePrecomposedTransaction.allocationSize(value.v1)
+            )
+        }
+    }
+
+    override fun write(value: ComposeTransactionResponse, buf: ByteBuffer) {
+        when(value) {
+            is ComposeTransactionResponse.SignedTransaction -> {
+                buf.putInt(1)
+                FfiConverterTypeSignedTransactionResponse.write(value.v1, buf)
+                Unit
+            }
+            is ComposeTransactionResponse.PrecomposedTransactions -> {
+                buf.putInt(2)
+                FfiConverterSequenceTypePrecomposedTransaction.write(value.v1, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
 
 
 sealed class DbException: Exception() {
@@ -4388,6 +6550,122 @@ public object FfiConverterTypeDecodingError : FfiConverterRustBuffer<DecodingExc
     }
 
 }
+
+
+
+/**
+ * Bitcoin account types for default display
+ */
+
+enum class DefaultAccountType {
+    
+    /**
+     * Normal account
+     */
+    NORMAL,
+    /**
+     * SegWit account
+     */
+    SEGWIT,
+    /**
+     * Legacy account
+     */
+    LEGACY;
+    companion object
+}
+
+
+public object FfiConverterTypeDefaultAccountType: FfiConverterRustBuffer<DefaultAccountType> {
+    override fun read(buf: ByteBuffer) = try {
+        DefaultAccountType.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: DefaultAccountType) = 4UL
+
+    override fun write(value: DefaultAccountType, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+/**
+ * Union type for HD Node (either a String or HDNodeType)
+ */
+sealed class HdNodeTypeOrString {
+    
+    /**
+     * HD Node as a string
+     */
+    data class String(
+        val v1: kotlin.String) : HdNodeTypeOrString() {
+        companion object
+    }
+    
+    /**
+     * HD Node as an object
+     */
+    data class Node(
+        val v1: HdNodeType) : HdNodeTypeOrString() {
+        companion object
+    }
+    
+
+    
+    companion object
+}
+
+public object FfiConverterTypeHDNodeTypeOrString : FfiConverterRustBuffer<HdNodeTypeOrString>{
+    override fun read(buf: ByteBuffer): HdNodeTypeOrString {
+        return when(buf.getInt()) {
+            1 -> HdNodeTypeOrString.String(
+                FfiConverterString.read(buf),
+                )
+            2 -> HdNodeTypeOrString.Node(
+                FfiConverterTypeHDNodeType.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: HdNodeTypeOrString) = when(value) {
+        is HdNodeTypeOrString.String -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.v1)
+            )
+        }
+        is HdNodeTypeOrString.Node -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypeHDNodeType.allocationSize(value.v1)
+            )
+        }
+    }
+
+    override fun write(value: HdNodeTypeOrString, buf: ByteBuffer) {
+        when(value) {
+            is HdNodeTypeOrString.String -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.v1, buf)
+                Unit
+            }
+            is HdNodeTypeOrString.Node -> {
+                buf.putInt(2)
+                FfiConverterTypeHDNodeType.write(value.v1, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
 
 
 
@@ -4947,6 +7225,47 @@ public object FfiConverterTypeScanner : FfiConverterRustBuffer<Scanner>{
 
 
 
+/**
+ * Script type for inputs and outputs
+ */
+
+enum class ScriptType {
+    
+    SPEND_ADDRESS,
+    SPEND_MULTISIG,
+    SPEND_WITNESS,
+    SPEND_P2SH_WITNESS,
+    SPEND_TAPROOT,
+    EXTERNAL,
+    PAY_TO_ADDRESS,
+    PAY_TO_SCRIPT_HASH,
+    PAY_TO_MULTISIG,
+    PAY_TO_WITNESS,
+    PAY_TO_P2SH_WITNESS,
+    PAY_TO_TAPROOT,
+    PAY_TO_OP_RETURN;
+    companion object
+}
+
+
+public object FfiConverterTypeScriptType: FfiConverterRustBuffer<ScriptType> {
+    override fun read(buf: ByteBuffer) = try {
+        ScriptType.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: ScriptType) = 4UL
+
+    override fun write(value: ScriptType, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
 
 enum class SortDirection {
     
@@ -4967,6 +7286,455 @@ public object FfiConverterTypeSortDirection: FfiConverterRustBuffer<SortDirectio
 
     override fun write(value: SortDirection, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+/**
+ * Token filter options for getAccountInfo
+ */
+
+enum class TokenFilter {
+    
+    /**
+     * Return only addresses with nonzero balance (default)
+     */
+    NONZERO,
+    /**
+     * Return addresses with at least one transaction
+     */
+    USED,
+    /**
+     * Return all derived addresses
+     */
+    DERIVED;
+    companion object
+}
+
+
+public object FfiConverterTypeTokenFilter: FfiConverterRustBuffer<TokenFilter> {
+    override fun read(buf: ByteBuffer) = try {
+        TokenFilter.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: TokenFilter) = 4UL
+
+    override fun write(value: TokenFilter, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+
+
+/**
+ * Error types for Trezor Connect operations
+ */
+sealed class TrezorConnectException: Exception() {
+    
+    /**
+     * Error during serialization/deserialization
+     */
+    class SerdeException(
+        
+        val `errorDetails`: kotlin.String
+        ) : TrezorConnectException() {
+        override val message
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * Error with URL parsing or formatting
+     */
+    class UrlException(
+        
+        val `errorDetails`: kotlin.String
+        ) : TrezorConnectException() {
+        override val message
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * Environment-related errors
+     */
+    class EnvironmentException(
+        
+        val `errorDetails`: kotlin.String
+        ) : TrezorConnectException() {
+        override val message
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * General errors
+     */
+    class Other(
+        
+        val `errorDetails`: kotlin.String
+        ) : TrezorConnectException() {
+        override val message
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    class ClientException(
+        
+        val `errorDetails`: kotlin.String
+        ) : TrezorConnectException() {
+        override val message
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+
+    companion object ErrorHandler : UniffiRustCallStatusErrorHandler<TrezorConnectException> {
+        override fun lift(error_buf: RustBuffer.ByValue): TrezorConnectException = FfiConverterTypeTrezorConnectError.lift(error_buf)
+    }
+
+    
+}
+
+public object FfiConverterTypeTrezorConnectError : FfiConverterRustBuffer<TrezorConnectException> {
+    override fun read(buf: ByteBuffer): TrezorConnectException {
+        
+
+        return when(buf.getInt()) {
+            1 -> TrezorConnectException.SerdeException(
+                FfiConverterString.read(buf),
+                )
+            2 -> TrezorConnectException.UrlException(
+                FfiConverterString.read(buf),
+                )
+            3 -> TrezorConnectException.EnvironmentException(
+                FfiConverterString.read(buf),
+                )
+            4 -> TrezorConnectException.Other(
+                FfiConverterString.read(buf),
+                )
+            5 -> TrezorConnectException.ClientException(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: TrezorConnectException): ULong {
+        return when(value) {
+            is TrezorConnectException.SerdeException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is TrezorConnectException.UrlException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is TrezorConnectException.EnvironmentException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is TrezorConnectException.Other -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is TrezorConnectException.ClientException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+        }
+    }
+
+    override fun write(value: TrezorConnectException, buf: ByteBuffer) {
+        when(value) {
+            is TrezorConnectException.SerdeException -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is TrezorConnectException.UrlException -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is TrezorConnectException.EnvironmentException -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is TrezorConnectException.Other -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is TrezorConnectException.ClientException -> {
+                buf.putInt(5)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+
+}
+
+
+
+/**
+ * Environment options for Trezor deep linking
+ */
+
+enum class TrezorEnvironment {
+    
+    /**
+     * Production environment (currently unavailable according to docs)
+     */
+    PRODUCTION,
+    /**
+     * Development environment
+     */
+    DEVELOPMENT,
+    /**
+     * Local environment
+     */
+    LOCAL;
+    companion object
+}
+
+
+public object FfiConverterTypeTrezorEnvironment: FfiConverterRustBuffer<TrezorEnvironment> {
+    override fun read(buf: ByteBuffer) = try {
+        TrezorEnvironment.values()[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: TrezorEnvironment) = 4UL
+
+    override fun write(value: TrezorEnvironment, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+/**
+ * Enum representing the different types of Trezor responses
+ */
+sealed class TrezorResponsePayload {
+    
+    /**
+     * Response from getFeatures method
+     */
+    data class Features(
+        val v1: FeatureResponse) : TrezorResponsePayload() {
+        companion object
+    }
+    
+    /**
+     * Response from getAddress method
+     */
+    data class Address(
+        val v1: AddressResponse) : TrezorResponsePayload() {
+        companion object
+    }
+    
+    /**
+     * Response from getPublicKey method
+     */
+    data class PublicKey(
+        val v1: PublicKeyResponse) : TrezorResponsePayload() {
+        companion object
+    }
+    
+    /**
+     * Response from getAccountInfo method
+     */
+    data class AccountInfo(
+        val v1: AccountInfoResponse) : TrezorResponsePayload() {
+        companion object
+    }
+    
+    /**
+     * Response from composeTransaction method
+     */
+    data class ComposeTransaction(
+        val v1: ComposeTransactionResponse) : TrezorResponsePayload() {
+        companion object
+    }
+    
+    /**
+     * Response from verifyMessage method
+     */
+    data class VerifyMessage(
+        val v1: VerifyMessageResponse) : TrezorResponsePayload() {
+        companion object
+    }
+    
+    /**
+     * Response from signMessage method
+     */
+    data class MessageSignature(
+        val v1: MessageSignatureResponse) : TrezorResponsePayload() {
+        companion object
+    }
+    
+    /**
+     * Response from signTransaction method
+     */
+    data class SignedTransaction(
+        val v1: SignedTransactionResponse) : TrezorResponsePayload() {
+        companion object
+    }
+    
+
+    
+    companion object
+}
+
+public object FfiConverterTypeTrezorResponsePayload : FfiConverterRustBuffer<TrezorResponsePayload>{
+    override fun read(buf: ByteBuffer): TrezorResponsePayload {
+        return when(buf.getInt()) {
+            1 -> TrezorResponsePayload.Features(
+                FfiConverterTypeFeatureResponse.read(buf),
+                )
+            2 -> TrezorResponsePayload.Address(
+                FfiConverterTypeAddressResponse.read(buf),
+                )
+            3 -> TrezorResponsePayload.PublicKey(
+                FfiConverterTypePublicKeyResponse.read(buf),
+                )
+            4 -> TrezorResponsePayload.AccountInfo(
+                FfiConverterTypeAccountInfoResponse.read(buf),
+                )
+            5 -> TrezorResponsePayload.ComposeTransaction(
+                FfiConverterTypeComposeTransactionResponse.read(buf),
+                )
+            6 -> TrezorResponsePayload.VerifyMessage(
+                FfiConverterTypeVerifyMessageResponse.read(buf),
+                )
+            7 -> TrezorResponsePayload.MessageSignature(
+                FfiConverterTypeMessageSignatureResponse.read(buf),
+                )
+            8 -> TrezorResponsePayload.SignedTransaction(
+                FfiConverterTypeSignedTransactionResponse.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: TrezorResponsePayload) = when(value) {
+        is TrezorResponsePayload.Features -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypeFeatureResponse.allocationSize(value.v1)
+            )
+        }
+        is TrezorResponsePayload.Address -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypeAddressResponse.allocationSize(value.v1)
+            )
+        }
+        is TrezorResponsePayload.PublicKey -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypePublicKeyResponse.allocationSize(value.v1)
+            )
+        }
+        is TrezorResponsePayload.AccountInfo -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypeAccountInfoResponse.allocationSize(value.v1)
+            )
+        }
+        is TrezorResponsePayload.ComposeTransaction -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypeComposeTransactionResponse.allocationSize(value.v1)
+            )
+        }
+        is TrezorResponsePayload.VerifyMessage -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypeVerifyMessageResponse.allocationSize(value.v1)
+            )
+        }
+        is TrezorResponsePayload.MessageSignature -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypeMessageSignatureResponse.allocationSize(value.v1)
+            )
+        }
+        is TrezorResponsePayload.SignedTransaction -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypeSignedTransactionResponse.allocationSize(value.v1)
+            )
+        }
+    }
+
+    override fun write(value: TrezorResponsePayload, buf: ByteBuffer) {
+        when(value) {
+            is TrezorResponsePayload.Features -> {
+                buf.putInt(1)
+                FfiConverterTypeFeatureResponse.write(value.v1, buf)
+                Unit
+            }
+            is TrezorResponsePayload.Address -> {
+                buf.putInt(2)
+                FfiConverterTypeAddressResponse.write(value.v1, buf)
+                Unit
+            }
+            is TrezorResponsePayload.PublicKey -> {
+                buf.putInt(3)
+                FfiConverterTypePublicKeyResponse.write(value.v1, buf)
+                Unit
+            }
+            is TrezorResponsePayload.AccountInfo -> {
+                buf.putInt(4)
+                FfiConverterTypeAccountInfoResponse.write(value.v1, buf)
+                Unit
+            }
+            is TrezorResponsePayload.ComposeTransaction -> {
+                buf.putInt(5)
+                FfiConverterTypeComposeTransactionResponse.write(value.v1, buf)
+                Unit
+            }
+            is TrezorResponsePayload.VerifyMessage -> {
+                buf.putInt(6)
+                FfiConverterTypeVerifyMessageResponse.write(value.v1, buf)
+                Unit
+            }
+            is TrezorResponsePayload.MessageSignature -> {
+                buf.putInt(7)
+                FfiConverterTypeMessageSignatureResponse.write(value.v1, buf)
+                Unit
+            }
+            is TrezorResponsePayload.SignedTransaction -> {
+                buf.putInt(8)
+                FfiConverterTypeSignedTransactionResponse.write(value.v1, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
 }
 
@@ -5016,6 +7784,35 @@ public object FfiConverterTypeWordCount: FfiConverterRustBuffer<WordCount> {
 }
 
 
+
+
+
+
+public object FfiConverterOptionalUByte: FfiConverterRustBuffer<kotlin.UByte?> {
+    override fun read(buf: ByteBuffer): kotlin.UByte? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterUByte.read(buf)
+    }
+
+    override fun allocationSize(value: kotlin.UByte?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterUByte.allocationSize(value)
+        }
+    }
+
+    override fun write(value: kotlin.UByte?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterUByte.write(value, buf)
+        }
+    }
+}
 
 
 
@@ -5165,6 +7962,93 @@ public object FfiConverterOptionalByteArray: FfiConverterRustBuffer<kotlin.ByteA
 
 
 
+public object FfiConverterOptionalTypeCoinPurchaseMemo: FfiConverterRustBuffer<CoinPurchaseMemo?> {
+    override fun read(buf: ByteBuffer): CoinPurchaseMemo? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeCoinPurchaseMemo.read(buf)
+    }
+
+    override fun allocationSize(value: CoinPurchaseMemo?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeCoinPurchaseMemo.allocationSize(value)
+        }
+    }
+
+    override fun write(value: CoinPurchaseMemo?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeCoinPurchaseMemo.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeCommonParams: FfiConverterRustBuffer<CommonParams?> {
+    override fun read(buf: ByteBuffer): CommonParams? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeCommonParams.read(buf)
+    }
+
+    override fun allocationSize(value: CommonParams?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeCommonParams.allocationSize(value)
+        }
+    }
+
+    override fun write(value: CommonParams?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeCommonParams.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeComposeAccount: FfiConverterRustBuffer<ComposeAccount?> {
+    override fun read(buf: ByteBuffer): ComposeAccount? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeComposeAccount.read(buf)
+    }
+
+    override fun allocationSize(value: ComposeAccount?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeComposeAccount.allocationSize(value)
+        }
+    }
+
+    override fun write(value: ComposeAccount?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeComposeAccount.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeCreateCjitOptions: FfiConverterRustBuffer<CreateCjitOptions?> {
     override fun read(buf: ByteBuffer): CreateCjitOptions? {
         if (buf.get().toInt() == 0) {
@@ -5216,6 +8100,35 @@ public object FfiConverterOptionalTypeCreateOrderOptions: FfiConverterRustBuffer
         } else {
             buf.put(1)
             FfiConverterTypeCreateOrderOptions.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeDeviceParams: FfiConverterRustBuffer<DeviceParams?> {
+    override fun read(buf: ByteBuffer): DeviceParams? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeDeviceParams.read(buf)
+    }
+
+    override fun allocationSize(value: DeviceParams?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeDeviceParams.allocationSize(value)
+        }
+    }
+
+    override fun write(value: DeviceParams?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeDeviceParams.write(value, buf)
         }
     }
 }
@@ -5339,6 +8252,180 @@ public object FfiConverterOptionalTypeIDiscount: FfiConverterRustBuffer<IDiscoun
 
 
 
+public object FfiConverterOptionalTypeMultisigRedeemScriptType: FfiConverterRustBuffer<MultisigRedeemScriptType?> {
+    override fun read(buf: ByteBuffer): MultisigRedeemScriptType? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeMultisigRedeemScriptType.read(buf)
+    }
+
+    override fun allocationSize(value: MultisigRedeemScriptType?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeMultisigRedeemScriptType.allocationSize(value)
+        }
+    }
+
+    override fun write(value: MultisigRedeemScriptType?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeMultisigRedeemScriptType.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeRefundMemo: FfiConverterRustBuffer<RefundMemo?> {
+    override fun read(buf: ByteBuffer): RefundMemo? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeRefundMemo.read(buf)
+    }
+
+    override fun allocationSize(value: RefundMemo?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeRefundMemo.allocationSize(value)
+        }
+    }
+
+    override fun write(value: RefundMemo?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeRefundMemo.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeTextMemo: FfiConverterRustBuffer<TextMemo?> {
+    override fun read(buf: ByteBuffer): TextMemo? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeTextMemo.read(buf)
+    }
+
+    override fun allocationSize(value: TextMemo?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeTextMemo.allocationSize(value)
+        }
+    }
+
+    override fun write(value: TextMemo?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeTextMemo.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeUnlockPath: FfiConverterRustBuffer<UnlockPath?> {
+    override fun read(buf: ByteBuffer): UnlockPath? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeUnlockPath.read(buf)
+    }
+
+    override fun allocationSize(value: UnlockPath?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeUnlockPath.allocationSize(value)
+        }
+    }
+
+    override fun write(value: UnlockPath?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeUnlockPath.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeXrpMarker: FfiConverterRustBuffer<XrpMarker?> {
+    override fun read(buf: ByteBuffer): XrpMarker? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeXrpMarker.read(buf)
+    }
+
+    override fun allocationSize(value: XrpMarker?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeXrpMarker.allocationSize(value)
+        }
+    }
+
+    override fun write(value: XrpMarker?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeXrpMarker.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeAccountInfoDetails: FfiConverterRustBuffer<AccountInfoDetails?> {
+    override fun read(buf: ByteBuffer): AccountInfoDetails? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeAccountInfoDetails.read(buf)
+    }
+
+    override fun allocationSize(value: AccountInfoDetails?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeAccountInfoDetails.allocationSize(value)
+        }
+    }
+
+    override fun write(value: AccountInfoDetails?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeAccountInfoDetails.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeActivity: FfiConverterRustBuffer<Activity?> {
     override fun read(buf: ByteBuffer): Activity? {
         if (buf.get().toInt() == 0) {
@@ -5390,6 +8477,35 @@ public object FfiConverterOptionalTypeActivityFilter: FfiConverterRustBuffer<Act
         } else {
             buf.put(1)
             FfiConverterTypeActivityFilter.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeAmountUnit: FfiConverterRustBuffer<AmountUnit?> {
+    override fun read(buf: ByteBuffer): AmountUnit? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeAmountUnit.read(buf)
+    }
+
+    override fun allocationSize(value: AmountUnit?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeAmountUnit.allocationSize(value)
+        }
+    }
+
+    override fun write(value: AmountUnit?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeAmountUnit.write(value, buf)
         }
     }
 }
@@ -5455,6 +8571,35 @@ public object FfiConverterOptionalTypeCJitStateEnum: FfiConverterRustBuffer<CJit
 
 
 
+public object FfiConverterOptionalTypeDefaultAccountType: FfiConverterRustBuffer<DefaultAccountType?> {
+    override fun read(buf: ByteBuffer): DefaultAccountType? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeDefaultAccountType.read(buf)
+    }
+
+    override fun allocationSize(value: DefaultAccountType?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeDefaultAccountType.allocationSize(value)
+        }
+    }
+
+    override fun write(value: DefaultAccountType?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeDefaultAccountType.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeNetwork: FfiConverterRustBuffer<Network?> {
     override fun read(buf: ByteBuffer): Network? {
         if (buf.get().toInt() == 0) {
@@ -5513,6 +8658,35 @@ public object FfiConverterOptionalTypePaymentType: FfiConverterRustBuffer<Paymen
 
 
 
+public object FfiConverterOptionalTypeScriptType: FfiConverterRustBuffer<ScriptType?> {
+    override fun read(buf: ByteBuffer): ScriptType? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeScriptType.read(buf)
+    }
+
+    override fun allocationSize(value: ScriptType?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeScriptType.allocationSize(value)
+        }
+    }
+
+    override fun write(value: ScriptType?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeScriptType.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeSortDirection: FfiConverterRustBuffer<SortDirection?> {
     override fun read(buf: ByteBuffer): SortDirection? {
         if (buf.get().toInt() == 0) {
@@ -5535,6 +8709,64 @@ public object FfiConverterOptionalTypeSortDirection: FfiConverterRustBuffer<Sort
         } else {
             buf.put(1)
             FfiConverterTypeSortDirection.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeTokenFilter: FfiConverterRustBuffer<TokenFilter?> {
+    override fun read(buf: ByteBuffer): TokenFilter? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeTokenFilter.read(buf)
+    }
+
+    override fun allocationSize(value: TokenFilter?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeTokenFilter.allocationSize(value)
+        }
+    }
+
+    override fun write(value: TokenFilter?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeTokenFilter.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeTrezorEnvironment: FfiConverterRustBuffer<TrezorEnvironment?> {
+    override fun read(buf: ByteBuffer): TrezorEnvironment? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeTrezorEnvironment.read(buf)
+    }
+
+    override fun allocationSize(value: TrezorEnvironment?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeTrezorEnvironment.allocationSize(value)
+        }
+    }
+
+    override fun write(value: TrezorEnvironment?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeTrezorEnvironment.write(value, buf)
         }
     }
 }
@@ -5571,6 +8803,35 @@ public object FfiConverterOptionalTypeWordCount: FfiConverterRustBuffer<WordCoun
 
 
 
+public object FfiConverterOptionalSequenceUInt: FfiConverterRustBuffer<List<kotlin.UInt>?> {
+    override fun read(buf: ByteBuffer): List<kotlin.UInt>? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterSequenceUInt.read(buf)
+    }
+
+    override fun allocationSize(value: List<kotlin.UInt>?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterSequenceUInt.allocationSize(value)
+        }
+    }
+
+    override fun write(value: List<kotlin.UInt>?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterSequenceUInt.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalSequenceString: FfiConverterRustBuffer<List<kotlin.String>?> {
     override fun read(buf: ByteBuffer): List<kotlin.String>? {
         if (buf.get().toInt() == 0) {
@@ -5593,6 +8854,64 @@ public object FfiConverterOptionalSequenceString: FfiConverterRustBuffer<List<ko
         } else {
             buf.put(1)
             FfiConverterSequenceString.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalSequenceTypeFeeLevel: FfiConverterRustBuffer<List<FeeLevel>?> {
+    override fun read(buf: ByteBuffer): List<FeeLevel>? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterSequenceTypeFeeLevel.read(buf)
+    }
+
+    override fun allocationSize(value: List<FeeLevel>?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterSequenceTypeFeeLevel.allocationSize(value)
+        }
+    }
+
+    override fun write(value: List<FeeLevel>?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterSequenceTypeFeeLevel.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalSequenceTypeHDNodeType: FfiConverterRustBuffer<List<HdNodeType>?> {
+    override fun read(buf: ByteBuffer): List<HdNodeType>? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterSequenceTypeHDNodeType.read(buf)
+    }
+
+    override fun allocationSize(value: List<HdNodeType>?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterSequenceTypeHDNodeType.allocationSize(value)
+        }
+    }
+
+    override fun write(value: List<HdNodeType>?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterSequenceTypeHDNodeType.write(value, buf)
         }
     }
 }
@@ -5629,6 +8948,151 @@ public object FfiConverterOptionalSequenceTypeIManualRefund: FfiConverterRustBuf
 
 
 
+public object FfiConverterOptionalSequenceTypePaymentRequestMemo: FfiConverterRustBuffer<List<PaymentRequestMemo>?> {
+    override fun read(buf: ByteBuffer): List<PaymentRequestMemo>? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterSequenceTypePaymentRequestMemo.read(buf)
+    }
+
+    override fun allocationSize(value: List<PaymentRequestMemo>?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterSequenceTypePaymentRequestMemo.allocationSize(value)
+        }
+    }
+
+    override fun write(value: List<PaymentRequestMemo>?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterSequenceTypePaymentRequestMemo.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalSequenceTypePrecomposedInput: FfiConverterRustBuffer<List<PrecomposedInput>?> {
+    override fun read(buf: ByteBuffer): List<PrecomposedInput>? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterSequenceTypePrecomposedInput.read(buf)
+    }
+
+    override fun allocationSize(value: List<PrecomposedInput>?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterSequenceTypePrecomposedInput.allocationSize(value)
+        }
+    }
+
+    override fun write(value: List<PrecomposedInput>?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterSequenceTypePrecomposedInput.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalSequenceTypePrecomposedOutput: FfiConverterRustBuffer<List<PrecomposedOutput>?> {
+    override fun read(buf: ByteBuffer): List<PrecomposedOutput>? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterSequenceTypePrecomposedOutput.read(buf)
+    }
+
+    override fun allocationSize(value: List<PrecomposedOutput>?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterSequenceTypePrecomposedOutput.allocationSize(value)
+        }
+    }
+
+    override fun write(value: List<PrecomposedOutput>?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterSequenceTypePrecomposedOutput.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalSequenceTypeRefTransaction: FfiConverterRustBuffer<List<RefTransaction>?> {
+    override fun read(buf: ByteBuffer): List<RefTransaction>? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterSequenceTypeRefTransaction.read(buf)
+    }
+
+    override fun allocationSize(value: List<RefTransaction>?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterSequenceTypeRefTransaction.allocationSize(value)
+        }
+    }
+
+    override fun write(value: List<RefTransaction>?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterSequenceTypeRefTransaction.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalSequenceTypeTxAckPaymentRequest: FfiConverterRustBuffer<List<TxAckPaymentRequest>?> {
+    override fun read(buf: ByteBuffer): List<TxAckPaymentRequest>? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterSequenceTypeTxAckPaymentRequest.read(buf)
+    }
+
+    override fun allocationSize(value: List<TxAckPaymentRequest>?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterSequenceTypeTxAckPaymentRequest.allocationSize(value)
+        }
+    }
+
+    override fun write(value: List<TxAckPaymentRequest>?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterSequenceTypeTxAckPaymentRequest.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalMapStringString: FfiConverterRustBuffer<Map<kotlin.String, kotlin.String>?> {
     override fun read(buf: ByteBuffer): Map<kotlin.String, kotlin.String>? {
         if (buf.get().toInt() == 0) {
@@ -5651,6 +9115,31 @@ public object FfiConverterOptionalMapStringString: FfiConverterRustBuffer<Map<ko
         } else {
             buf.put(1)
             FfiConverterMapStringString.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceUInt: FfiConverterRustBuffer<List<kotlin.UInt>> {
+    override fun read(buf: ByteBuffer): List<kotlin.UInt> {
+        val len = buf.getInt()
+        return List<kotlin.UInt>(len) {
+            FfiConverterUInt.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<kotlin.UInt>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterUInt.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<kotlin.UInt>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterUInt.write(it, buf)
         }
     }
 }
@@ -5683,6 +9172,81 @@ public object FfiConverterSequenceString: FfiConverterRustBuffer<List<kotlin.Str
 
 
 
+public object FfiConverterSequenceTypeAccountUtxo: FfiConverterRustBuffer<List<AccountUtxo>> {
+    override fun read(buf: ByteBuffer): List<AccountUtxo> {
+        val len = buf.getInt()
+        return List<AccountUtxo>(len) {
+            FfiConverterTypeAccountUtxo.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<AccountUtxo>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeAccountUtxo.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<AccountUtxo>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeAccountUtxo.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeAddressInfo: FfiConverterRustBuffer<List<AddressInfo>> {
+    override fun read(buf: ByteBuffer): List<AddressInfo> {
+        val len = buf.getInt()
+        return List<AddressInfo>(len) {
+            FfiConverterTypeAddressInfo.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<AddressInfo>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeAddressInfo.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<AddressInfo>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeAddressInfo.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeFeeLevel: FfiConverterRustBuffer<List<FeeLevel>> {
+    override fun read(buf: ByteBuffer): List<FeeLevel> {
+        val len = buf.getInt()
+        return List<FeeLevel>(len) {
+            FfiConverterTypeFeeLevel.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<FeeLevel>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeFeeLevel.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<FeeLevel>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeFeeLevel.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceTypeGetAddressResponse: FfiConverterRustBuffer<List<GetAddressResponse>> {
     override fun read(buf: ByteBuffer): List<GetAddressResponse> {
         val len = buf.getInt()
@@ -5701,6 +9265,56 @@ public object FfiConverterSequenceTypeGetAddressResponse: FfiConverterRustBuffer
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeGetAddressResponse.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeHDNodePathType: FfiConverterRustBuffer<List<HdNodePathType>> {
+    override fun read(buf: ByteBuffer): List<HdNodePathType> {
+        val len = buf.getInt()
+        return List<HdNodePathType>(len) {
+            FfiConverterTypeHDNodePathType.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<HdNodePathType>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeHDNodePathType.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<HdNodePathType>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeHDNodePathType.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeHDNodeType: FfiConverterRustBuffer<List<HdNodeType>> {
+    override fun read(buf: ByteBuffer): List<HdNodeType> {
+        val len = buf.getInt()
+        return List<HdNodeType>(len) {
+            FfiConverterTypeHDNodeType.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<HdNodeType>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeHDNodeType.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<HdNodeType>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeHDNodeType.write(it, buf)
         }
     }
 }
@@ -5833,6 +9447,256 @@ public object FfiConverterSequenceTypeIManualRefund: FfiConverterRustBuffer<List
 
 
 
+public object FfiConverterSequenceTypePaymentRequestMemo: FfiConverterRustBuffer<List<PaymentRequestMemo>> {
+    override fun read(buf: ByteBuffer): List<PaymentRequestMemo> {
+        val len = buf.getInt()
+        return List<PaymentRequestMemo>(len) {
+            FfiConverterTypePaymentRequestMemo.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<PaymentRequestMemo>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypePaymentRequestMemo.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<PaymentRequestMemo>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypePaymentRequestMemo.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypePrecomposedInput: FfiConverterRustBuffer<List<PrecomposedInput>> {
+    override fun read(buf: ByteBuffer): List<PrecomposedInput> {
+        val len = buf.getInt()
+        return List<PrecomposedInput>(len) {
+            FfiConverterTypePrecomposedInput.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<PrecomposedInput>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypePrecomposedInput.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<PrecomposedInput>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypePrecomposedInput.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypePrecomposedOutput: FfiConverterRustBuffer<List<PrecomposedOutput>> {
+    override fun read(buf: ByteBuffer): List<PrecomposedOutput> {
+        val len = buf.getInt()
+        return List<PrecomposedOutput>(len) {
+            FfiConverterTypePrecomposedOutput.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<PrecomposedOutput>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypePrecomposedOutput.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<PrecomposedOutput>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypePrecomposedOutput.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypePrecomposedTransaction: FfiConverterRustBuffer<List<PrecomposedTransaction>> {
+    override fun read(buf: ByteBuffer): List<PrecomposedTransaction> {
+        val len = buf.getInt()
+        return List<PrecomposedTransaction>(len) {
+            FfiConverterTypePrecomposedTransaction.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<PrecomposedTransaction>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypePrecomposedTransaction.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<PrecomposedTransaction>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypePrecomposedTransaction.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeRefTransaction: FfiConverterRustBuffer<List<RefTransaction>> {
+    override fun read(buf: ByteBuffer): List<RefTransaction> {
+        val len = buf.getInt()
+        return List<RefTransaction>(len) {
+            FfiConverterTypeRefTransaction.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<RefTransaction>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeRefTransaction.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<RefTransaction>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeRefTransaction.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeRefTxInput: FfiConverterRustBuffer<List<RefTxInput>> {
+    override fun read(buf: ByteBuffer): List<RefTxInput> {
+        val len = buf.getInt()
+        return List<RefTxInput>(len) {
+            FfiConverterTypeRefTxInput.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<RefTxInput>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeRefTxInput.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<RefTxInput>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeRefTxInput.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeRefTxOutput: FfiConverterRustBuffer<List<RefTxOutput>> {
+    override fun read(buf: ByteBuffer): List<RefTxOutput> {
+        val len = buf.getInt()
+        return List<RefTxOutput>(len) {
+            FfiConverterTypeRefTxOutput.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<RefTxOutput>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeRefTxOutput.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<RefTxOutput>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeRefTxOutput.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeTxAckPaymentRequest: FfiConverterRustBuffer<List<TxAckPaymentRequest>> {
+    override fun read(buf: ByteBuffer): List<TxAckPaymentRequest> {
+        val len = buf.getInt()
+        return List<TxAckPaymentRequest>(len) {
+            FfiConverterTypeTxAckPaymentRequest.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<TxAckPaymentRequest>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeTxAckPaymentRequest.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<TxAckPaymentRequest>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeTxAckPaymentRequest.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeTxInputType: FfiConverterRustBuffer<List<TxInputType>> {
+    override fun read(buf: ByteBuffer): List<TxInputType> {
+        val len = buf.getInt()
+        return List<TxInputType>(len) {
+            FfiConverterTypeTxInputType.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<TxInputType>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeTxInputType.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<TxInputType>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeTxInputType.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeTxOutputType: FfiConverterRustBuffer<List<TxOutputType>> {
+    override fun read(buf: ByteBuffer): List<TxOutputType> {
+        val len = buf.getInt()
+        return List<TxOutputType>(len) {
+            FfiConverterTypeTxOutputType.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<TxOutputType>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeTxOutputType.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<TxOutputType>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeTxOutputType.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceTypeActivity: FfiConverterRustBuffer<List<Activity>> {
     override fun read(buf: ByteBuffer): List<Activity> {
         val len = buf.getInt()
@@ -5851,6 +9715,31 @@ public object FfiConverterSequenceTypeActivity: FfiConverterRustBuffer<List<Acti
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeActivity.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeComposeOutput: FfiConverterRustBuffer<List<ComposeOutput>> {
+    override fun read(buf: ByteBuffer): List<ComposeOutput> {
+        val len = buf.getInt()
+        return List<ComposeOutput>(len) {
+            FfiConverterTypeComposeOutput.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<ComposeOutput>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeComposeOutput.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<ComposeOutput>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeComposeOutput.write(it, buf)
         }
     }
 }
@@ -6340,6 +10229,86 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
         BlocktankException.ErrorHandler,
     )
     }
+
+    @Throws(TrezorConnectException::class) fun `trezorComposeTransaction`(`outputs`: List<ComposeOutput>, `coin`: kotlin.String, `callbackUrl`: kotlin.String, `requestId`: kotlin.String?, `trezorEnvironment`: TrezorEnvironment?, `push`: kotlin.Boolean?, `sequence`: kotlin.UInt?, `account`: ComposeAccount?, `feeLevels`: List<FeeLevel>?, `skipPermutation`: kotlin.Boolean?, `common`: CommonParams?): DeepLinkResult {
+            return FfiConverterTypeDeepLinkResult.lift(
+    uniffiRustCallWithError(TrezorConnectException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_trezor_compose_transaction(
+        FfiConverterSequenceTypeComposeOutput.lower(`outputs`),FfiConverterString.lower(`coin`),FfiConverterString.lower(`callbackUrl`),FfiConverterOptionalString.lower(`requestId`),FfiConverterOptionalTypeTrezorEnvironment.lower(`trezorEnvironment`),FfiConverterOptionalBoolean.lower(`push`),FfiConverterOptionalUInt.lower(`sequence`),FfiConverterOptionalTypeComposeAccount.lower(`account`),FfiConverterOptionalSequenceTypeFeeLevel.lower(`feeLevels`),FfiConverterOptionalBoolean.lower(`skipPermutation`),FfiConverterOptionalTypeCommonParams.lower(`common`),_status)
+}
+    )
+    }
+    
+
+    @Throws(TrezorConnectException::class) fun `trezorGetAccountInfo`(`coin`: kotlin.String, `callbackUrl`: kotlin.String, `requestId`: kotlin.String?, `trezorEnvironment`: TrezorEnvironment?, `path`: kotlin.String?, `descriptor`: kotlin.String?, `details`: AccountInfoDetails?, `tokens`: TokenFilter?, `page`: kotlin.UInt?, `pageSize`: kotlin.UInt?, `from`: kotlin.UInt?, `to`: kotlin.UInt?, `gap`: kotlin.UInt?, `contractFilter`: kotlin.String?, `marker`: XrpMarker?, `defaultAccountType`: DefaultAccountType?, `suppressBackupWarning`: kotlin.Boolean?, `common`: CommonParams?): DeepLinkResult {
+            return FfiConverterTypeDeepLinkResult.lift(
+    uniffiRustCallWithError(TrezorConnectException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_trezor_get_account_info(
+        FfiConverterString.lower(`coin`),FfiConverterString.lower(`callbackUrl`),FfiConverterOptionalString.lower(`requestId`),FfiConverterOptionalTypeTrezorEnvironment.lower(`trezorEnvironment`),FfiConverterOptionalString.lower(`path`),FfiConverterOptionalString.lower(`descriptor`),FfiConverterOptionalTypeAccountInfoDetails.lower(`details`),FfiConverterOptionalTypeTokenFilter.lower(`tokens`),FfiConverterOptionalUInt.lower(`page`),FfiConverterOptionalUInt.lower(`pageSize`),FfiConverterOptionalUInt.lower(`from`),FfiConverterOptionalUInt.lower(`to`),FfiConverterOptionalUInt.lower(`gap`),FfiConverterOptionalString.lower(`contractFilter`),FfiConverterOptionalTypeXrpMarker.lower(`marker`),FfiConverterOptionalTypeDefaultAccountType.lower(`defaultAccountType`),FfiConverterOptionalBoolean.lower(`suppressBackupWarning`),FfiConverterOptionalTypeCommonParams.lower(`common`),_status)
+}
+    )
+    }
+    
+
+    @Throws(TrezorConnectException::class) fun `trezorGetAddress`(`path`: kotlin.String, `callbackUrl`: kotlin.String, `requestId`: kotlin.String?, `trezorEnvironment`: TrezorEnvironment?, `address`: kotlin.String?, `showOnTrezor`: kotlin.Boolean?, `chunkify`: kotlin.Boolean?, `useEventListener`: kotlin.Boolean?, `coin`: kotlin.String?, `crossChain`: kotlin.Boolean?, `multisig`: MultisigRedeemScriptType?, `scriptType`: kotlin.String?, `unlockPath`: UnlockPath?, `common`: CommonParams?): DeepLinkResult {
+            return FfiConverterTypeDeepLinkResult.lift(
+    uniffiRustCallWithError(TrezorConnectException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_trezor_get_address(
+        FfiConverterString.lower(`path`),FfiConverterString.lower(`callbackUrl`),FfiConverterOptionalString.lower(`requestId`),FfiConverterOptionalTypeTrezorEnvironment.lower(`trezorEnvironment`),FfiConverterOptionalString.lower(`address`),FfiConverterOptionalBoolean.lower(`showOnTrezor`),FfiConverterOptionalBoolean.lower(`chunkify`),FfiConverterOptionalBoolean.lower(`useEventListener`),FfiConverterOptionalString.lower(`coin`),FfiConverterOptionalBoolean.lower(`crossChain`),FfiConverterOptionalTypeMultisigRedeemScriptType.lower(`multisig`),FfiConverterOptionalString.lower(`scriptType`),FfiConverterOptionalTypeUnlockPath.lower(`unlockPath`),FfiConverterOptionalTypeCommonParams.lower(`common`),_status)
+}
+    )
+    }
+    
+
+    @Throws(TrezorConnectException::class) fun `trezorGetFeatures`(`callbackUrl`: kotlin.String, `requestId`: kotlin.String?, `trezorEnvironment`: TrezorEnvironment?): DeepLinkResult {
+            return FfiConverterTypeDeepLinkResult.lift(
+    uniffiRustCallWithError(TrezorConnectException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_trezor_get_features(
+        FfiConverterString.lower(`callbackUrl`),FfiConverterOptionalString.lower(`requestId`),FfiConverterOptionalTypeTrezorEnvironment.lower(`trezorEnvironment`),_status)
+}
+    )
+    }
+    
+
+    @Throws(TrezorConnectException::class) fun `trezorHandleDeepLink`(`callbackUrl`: kotlin.String): TrezorResponsePayload {
+            return FfiConverterTypeTrezorResponsePayload.lift(
+    uniffiRustCallWithError(TrezorConnectException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_trezor_handle_deep_link(
+        FfiConverterString.lower(`callbackUrl`),_status)
+}
+    )
+    }
+    
+
+    @Throws(TrezorConnectException::class) fun `trezorSignMessage`(`path`: kotlin.String, `message`: kotlin.String, `callbackUrl`: kotlin.String, `requestId`: kotlin.String?, `trezorEnvironment`: TrezorEnvironment?, `coin`: kotlin.String?, `hex`: kotlin.Boolean?, `noScriptType`: kotlin.Boolean?, `common`: CommonParams?): DeepLinkResult {
+            return FfiConverterTypeDeepLinkResult.lift(
+    uniffiRustCallWithError(TrezorConnectException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_trezor_sign_message(
+        FfiConverterString.lower(`path`),FfiConverterString.lower(`message`),FfiConverterString.lower(`callbackUrl`),FfiConverterOptionalString.lower(`requestId`),FfiConverterOptionalTypeTrezorEnvironment.lower(`trezorEnvironment`),FfiConverterOptionalString.lower(`coin`),FfiConverterOptionalBoolean.lower(`hex`),FfiConverterOptionalBoolean.lower(`noScriptType`),FfiConverterOptionalTypeCommonParams.lower(`common`),_status)
+}
+    )
+    }
+    
+
+    @Throws(TrezorConnectException::class) fun `trezorSignTransaction`(`coin`: kotlin.String, `inputs`: List<TxInputType>, `outputs`: List<TxOutputType>, `callbackUrl`: kotlin.String, `requestId`: kotlin.String?, `trezorEnvironment`: TrezorEnvironment?, `refTxs`: List<RefTransaction>?, `paymentRequests`: List<TxAckPaymentRequest>?, `locktime`: kotlin.UInt?, `version`: kotlin.UInt?, `expiry`: kotlin.UInt?, `versionGroupId`: kotlin.UInt?, `overwintered`: kotlin.Boolean?, `timestamp`: kotlin.UInt?, `branchId`: kotlin.UInt?, `push`: kotlin.Boolean?, `amountUnit`: AmountUnit?, `unlockPath`: UnlockPath?, `serialize`: kotlin.Boolean?, `chunkify`: kotlin.Boolean?, `common`: CommonParams?): DeepLinkResult {
+            return FfiConverterTypeDeepLinkResult.lift(
+    uniffiRustCallWithError(TrezorConnectException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_trezor_sign_transaction(
+        FfiConverterString.lower(`coin`),FfiConverterSequenceTypeTxInputType.lower(`inputs`),FfiConverterSequenceTypeTxOutputType.lower(`outputs`),FfiConverterString.lower(`callbackUrl`),FfiConverterOptionalString.lower(`requestId`),FfiConverterOptionalTypeTrezorEnvironment.lower(`trezorEnvironment`),FfiConverterOptionalSequenceTypeRefTransaction.lower(`refTxs`),FfiConverterOptionalSequenceTypeTxAckPaymentRequest.lower(`paymentRequests`),FfiConverterOptionalUInt.lower(`locktime`),FfiConverterOptionalUInt.lower(`version`),FfiConverterOptionalUInt.lower(`expiry`),FfiConverterOptionalUInt.lower(`versionGroupId`),FfiConverterOptionalBoolean.lower(`overwintered`),FfiConverterOptionalUInt.lower(`timestamp`),FfiConverterOptionalUInt.lower(`branchId`),FfiConverterOptionalBoolean.lower(`push`),FfiConverterOptionalTypeAmountUnit.lower(`amountUnit`),FfiConverterOptionalTypeUnlockPath.lower(`unlockPath`),FfiConverterOptionalBoolean.lower(`serialize`),FfiConverterOptionalBoolean.lower(`chunkify`),FfiConverterOptionalTypeCommonParams.lower(`common`),_status)
+}
+    )
+    }
+    
+
+    @Throws(TrezorConnectException::class) fun `trezorVerifyMessage`(`address`: kotlin.String, `signature`: kotlin.String, `message`: kotlin.String, `coin`: kotlin.String, `callbackUrl`: kotlin.String, `requestId`: kotlin.String?, `trezorEnvironment`: TrezorEnvironment?, `hex`: kotlin.Boolean?, `common`: CommonParams?): DeepLinkResult {
+            return FfiConverterTypeDeepLinkResult.lift(
+    uniffiRustCallWithError(TrezorConnectException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_trezor_verify_message(
+        FfiConverterString.lower(`address`),FfiConverterString.lower(`signature`),FfiConverterString.lower(`message`),FfiConverterString.lower(`coin`),FfiConverterString.lower(`callbackUrl`),FfiConverterOptionalString.lower(`requestId`),FfiConverterOptionalTypeTrezorEnvironment.lower(`trezorEnvironment`),FfiConverterOptionalBoolean.lower(`hex`),FfiConverterOptionalTypeCommonParams.lower(`common`),_status)
+}
+    )
+    }
+    
 
     @Throws(ActivityException::class) fun `updateActivity`(`activityId`: kotlin.String, `activity`: Activity)
         = 

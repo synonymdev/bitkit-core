@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use crate::modules::trezor::{handle_deep_link, AccountInfoDetails, DefaultAccountType, GetAccountInfoParams, GetAddressParams, GetPublicKeyParams, TokenFilter, TrezorConnectClient, TrezorConnectError, TrezorEnvironment, TrezorResponsePayload};
+    use crate::modules::trezor::{handle_deep_link, AccountAddresses, AccountInfoDetails, AccountUtxo, AddressInfo, ComposeAccount, ComposeOutput, ComposeTransactionParams, ComposeTransactionResponse, DefaultAccountType, FeeLevel, GetAccountInfoParams, GetAddressParams, GetPublicKeyParams, RefTransaction, RefTxInput, RefTxOutput, ScriptType, SignMessageParams, SignTransactionParams, TokenFilter, TrezorConnectClient, TrezorConnectError, TrezorEnvironment, TrezorResponsePayload, TxInputType, TxOutputType, VerifyMessageParams};
     use super::*;
 
     #[test]
@@ -584,34 +584,34 @@ mod tests {
         }
     }
 
-        #[test]
-        fn test_error_display() {
+    #[test]
+    fn test_error_display() {
         // Test the display implementation for TrezorConnectError
         let error = TrezorConnectError::SerdeError {
-        error_details: "test serde error".to_string()
+            error_details: "test serde error".to_string()
         };
         assert_eq!(format!("{}", error), "Serialization error: test serde error");
 
         let error = TrezorConnectError::UrlError {
-        error_details: "test url error".to_string()
+            error_details: "test url error".to_string()
         };
         assert_eq!(format!("{}", error), "URL error: test url error");
 
         let error = TrezorConnectError::EnvironmentError {
-        error_details: "test environment error".to_string()
+            error_details: "test environment error".to_string()
         };
         assert_eq!(format!("{}", error), "Environment error: test environment error");
 
         let error = TrezorConnectError::Other {
-        error_details: "test other error".to_string()
+            error_details: "test other error".to_string()
         };
         assert_eq!(format!("{}", error), "Error: test other error");
 
         let error = TrezorConnectError::ClientError {
-        error_details: "test client error".to_string()
+            error_details: "test client error".to_string()
         };
         assert_eq!(format!("{}", error), "Unable to create client: test client error");
-        }
+    }
 
     #[test]
     fn test_chained_error_conversion() {
@@ -625,5 +625,761 @@ mod tests {
         // Check that the error message contains the expected fragments
         assert!(format!("{}", trezor_error).contains("URL parsing failed"));
         assert!(format!("{}", trezor_error).contains("relative URL without a base"));
+    }
+
+    #[test]
+    fn test_sign_transaction_basic() {
+        let client = TrezorConnectClient::new(
+            TrezorEnvironment::Local,
+            "exampleapp://trezor-callback"
+        ).unwrap();
+
+        let inputs = vec![
+            TxInputType {
+                prev_hash: "b035d89d4543ce5713c553d69431698116a822c57c03ddacf3f04b763d1999ac".to_string(),
+                prev_index: 0,
+                amount: 3431747,
+                sequence: None,
+                address_n: Some(vec![
+                    44 | 0x80000000u32,
+                    0 | 0x80000000u32,
+                    2 | 0x80000000u32,
+                    1,
+                    0,
+                ]),
+                script_type: Some(ScriptType::SpendAddress),
+                multisig: None,
+                script_pubkey: None,
+                script_sig: None,
+                witness: None,
+                ownership_proof: None,
+                commitment_data: None,
+                orig_hash: None,
+                orig_index: None,
+                coinjoin_flags: None,
+            }
+        ];
+
+        let outputs = vec![
+            TxOutputType {
+                address: None,
+                address_n: Some(vec![
+                    44 | 0x80000000u32,
+                    0 | 0x80000000u32,
+                    2 | 0x80000000u32,
+                    1,
+                    1,
+                ]),
+                amount: 3181747,
+                script_type: ScriptType::PayToAddress,
+                multisig: None,
+                op_return_data: None,
+                orig_hash: None,
+                orig_index: None,
+                payment_req_index: None,
+            },
+            TxOutputType {
+                address: Some("18WL2iZKmpDYWk1oFavJapdLALxwSjcSk2".to_string()),
+                address_n: None,
+                amount: 200000,
+                script_type: ScriptType::PayToAddress,
+                multisig: None,
+                op_return_data: None,
+                orig_hash: None,
+                orig_index: None,
+                payment_req_index: None,
+            }
+        ];
+
+        let params = SignTransactionParams {
+            coin: "btc".to_string(),
+            inputs,
+            outputs,
+            refTxs: None,
+            paymentRequests: None,
+            locktime: None,
+            version: None,
+            expiry: None,
+            versionGroupId: None,
+            overwintered: None,
+            timestamp: None,
+            branchId: None,
+            push: None,
+            amountUnit: None,
+            unlockPath: None,
+            serialize: None,
+            chunkify: None,
+            common: None,
+        };
+
+        let result = client.sign_transaction(params, Some("sign123".to_string())).unwrap();
+        assert!(result.url.starts_with("trezorsuitelite://connect/1/"));
+        assert!(result.url.contains("method=signTransaction"));
+        assert!(result.url.contains("coin"));
+        assert!(result.url.contains("inputs"));
+        assert!(result.url.contains("outputs"));
+        assert!(result.url.contains("callback=exampleapp%3A%2F%2Ftrezor-callback%3Fid%3Dsign123"));
+        assert_eq!(result.request_id, "sign123");
+    }
+
+    #[test]
+    fn test_sign_transaction_with_reftxs() {
+        let client = TrezorConnectClient::new(
+            TrezorEnvironment::Local,
+            "exampleapp://trezor-callback"
+        ).unwrap();
+
+        let inputs = vec![
+            TxInputType {
+                prev_hash: "b035d89d4543ce5713c553d69431698116a822c57c03ddacf3f04b763d1999ac".to_string(),
+                prev_index: 0,
+                amount: 3431747,
+                sequence: None,
+                address_n: Some(vec![
+                    44 | 0x80000000u32,
+                    0 | 0x80000000u32,
+                    2 | 0x80000000u32,
+                    1,
+                    0,
+                ]),
+                script_type: Some(ScriptType::SpendAddress),
+                multisig: None,
+                script_pubkey: None,
+                script_sig: None,
+                witness: None,
+                ownership_proof: None,
+                commitment_data: None,
+                orig_hash: None,
+                orig_index: None,
+                coinjoin_flags: None,
+            }
+        ];
+
+        let outputs = vec![
+            TxOutputType {
+                address: Some("18WL2iZKmpDYWk1oFavJapdLALxwSjcSk2".to_string()),
+                address_n: None,
+                amount: 200000,
+                script_type: ScriptType::PayToAddress,
+                multisig: None,
+                op_return_data: None,
+                orig_hash: None,
+                orig_index: None,
+                payment_req_index: None,
+            }
+        ];
+
+        let ref_txs = vec![
+            RefTransaction {
+                hash: "b035d89d4543ce5713c553d69431698116a822c57c03ddacf3f04b763d1999ac".to_string(),
+                version: Some(1),
+                inputs: vec![
+                    RefTxInput {
+                        prev_hash: "448946a44f1ef514601ccf9b22cc3e638c69ea3900b67b87517ea673eb0293dc".to_string(),
+                        prev_index: 0,
+                        script_sig: "47304402202872cb8459eed053dcec0f353c7e293611fe77615862bfadb4d35a5d8807a4cf022015057aa0aaf72ab342b5f8939f86f193ad87b539931911a72e77148a1233e022012103f66bbe3c721f119bb4b8a1e6c1832b98f2cf625d9f59242008411dd92aab8d94".to_string(),
+                        sequence: 4294967295,
+                    }
+                ],
+                bin_outputs: vec![
+                    RefTxOutput {
+                        amount: 3431747,
+                        script_pubkey: "76a91441352a84436847a7b660d5e76518f6ebb718dedc88ac".to_string(),
+                    },
+                    RefTxOutput {
+                        amount: 10000,
+                        script_pubkey: "76a9141403b451c79d34e6a7f6e36806683308085467ac88ac".to_string(),
+                    }
+                ],
+                lock_time: Some(0),
+                expiry: None,
+                version_group_id: None,
+                overwintered: None,
+                timestamp: None,
+                branch_id: None,
+                extra_data: None,
+            }
+        ];
+
+        let params = SignTransactionParams {
+            coin: "btc".to_string(),
+            inputs,
+            outputs,
+            refTxs: Some(ref_txs),
+            paymentRequests: None,
+            locktime: None,
+            version: None,
+            expiry: None,
+            versionGroupId: None,
+            overwintered: None,
+            timestamp: None,
+            branchId: None,
+            push: None,
+            amountUnit: None,
+            unlockPath: None,
+            serialize: None,
+            chunkify: None,
+            common: None,
+        };
+
+        let result = client.sign_transaction(params, Some("sign456".to_string())).unwrap();
+        assert!(result.url.starts_with("trezorsuitelite://connect/1/"));
+        assert!(result.url.contains("method=signTransaction"));
+        assert!(result.url.contains("refTxs"));
+        assert!(result.url.contains("callback=exampleapp%3A%2F%2Ftrezor-callback%3Fid%3Dsign456"));
+        assert_eq!(result.request_id, "sign456");
+    }
+
+    #[test]
+    fn test_handle_deep_link_signed_transaction() {
+        // Create a mock response URL that would come from a signTransaction call
+        let signed_tx_json = json!({
+        "signatures": [
+            "304402202872cb8459eed053dcec0f353c7e293611fe77615862bfadb4d35a5d8807a4cf022015057aa0aaf72ab342b5f8939f86f193ad87b539931911a72e77148a1233e022"
+        ],
+        "serializedTx": "0100000001ac99193d764bf0f3acdd037cc522a8168169316963d553c51357ce43459dd835b0000000006a47304402202872cb8459eed053dcec0f353c7e293611fe77615862bfadb4d35a5d8807a4cf022015057aa0aaf72ab342b5f8939f86f193ad87b539931911a72e77148a1233e022012103f66bbe3c721f119bb4b8a1e6c1832b98f2cf625d9f59242008411dd92aab8d94ffffffff02b3893000000000001976a91441352a84436847a7b660d5e76518f6ebb718dedc88ac400d030000000000a914b7536c788d8cfbac33b0d3fb0b9cb4b34bb2bb1087000000"
+    });
+
+        let response_json = json!({
+        "success": true,
+        "payload": signed_tx_json
+    });
+
+        let callback_url = format!(
+            "exampleapp://trezor-callback?id=sign123&method=signTransaction&response={}",
+            url::form_urlencoded::byte_serialize(response_json.to_string().as_bytes()).collect::<String>()
+        );
+
+        let result = handle_deep_link(callback_url).unwrap();
+        match result {
+            TrezorResponsePayload::SignedTransaction(signed_tx) => {
+                assert_eq!(signed_tx.signatures.len(), 1);
+                assert_eq!(signed_tx.signatures[0], "304402202872cb8459eed053dcec0f353c7e293611fe77615862bfadb4d35a5d8807a4cf022015057aa0aaf72ab342b5f8939f86f193ad87b539931911a72e77148a1233e022");
+                assert!(signed_tx.serializedTx.starts_with("0100000001"));
+                assert!(signed_tx.txid.is_none()); // No txid since push was not true
+            },
+            _ => panic!("Expected SignedTransaction payload, but got something else"),
+        }
+    }
+
+    #[test]
+    fn test_handle_deep_link_signed_transaction_with_txid() {
+        // Create a mock response URL with txid (when push=true)
+        let signed_tx_json = json!({
+        "signatures": [
+            "304402202872cb8459eed053dcec0f353c7e293611fe77615862bfadb4d35a5d8807a4cf022015057aa0aaf72ab342b5f8939f86f193ad87b539931911a72e77148a1233e022"
+        ],
+        "serializedTx": "0100000001ac99193d764bf0f3acdd037cc522a8168169316963d553c51357ce43459dd835b0000000006a47304402202872cb8459eed053dcec0f353c7e293611fe77615862bfadb4d35a5d8807a4cf022015057aa0aaf72ab342b5f8939f86f193ad87b539931911a72e77148a1233e022012103f66bbe3c721f119bb4b8a1e6c1832b98f2cf625d9f59242008411dd92aab8d94ffffffff02b3893000000000001976a91441352a84436847a7b660d5e76518f6ebb718dedc88ac400d030000000000a914b7536c788d8cfbac33b0d3fb0b9cb4b34bb2bb1087000000",
+        "txid": "a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890"
+    });
+
+        let response_json = json!({
+        "success": true,
+        "payload": signed_tx_json
+    });
+
+        let callback_url = format!(
+            "exampleapp://trezor-callback?id=sign456&method=signTransaction&response={}",
+            url::form_urlencoded::byte_serialize(response_json.to_string().as_bytes()).collect::<String>()
+        );
+
+        let result = handle_deep_link(callback_url).unwrap();
+        match result {
+            TrezorResponsePayload::SignedTransaction(signed_tx) => {
+                assert_eq!(signed_tx.signatures.len(), 1);
+                assert!(signed_tx.serializedTx.starts_with("0100000001"));
+                assert!(signed_tx.txid.is_some());
+                assert_eq!(signed_tx.txid.unwrap(), "a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890");
+            },
+            _ => panic!("Expected SignedTransaction payload, but got something else"),
+        }
+    }
+    #[test]
+    fn test_sign_message_basic() {
+        let client = TrezorConnectClient::new(
+            TrezorEnvironment::Local,
+            "exampleapp://trezor-callback"
+        ).unwrap();
+
+        let params = SignMessageParams {
+            path: "m/44'/0'/0'".to_string(),
+            coin: None,
+            message: "Hello World!".to_string(),
+            hex: None,
+            no_script_type: None,
+            common: None,
+        };
+
+        let result = client.sign_message(params, Some("message123".to_string())).unwrap();
+        assert!(result.url.starts_with("trezorsuitelite://connect/1/"));
+        assert!(result.url.contains("method=signMessage"));
+        assert!(result.url.contains("path"));
+        assert!(result.url.contains("message"));
+        assert!(result.url.contains("callback=exampleapp%3A%2F%2Ftrezor-callback%3Fid%3Dmessage123"));
+        assert_eq!(result.request_id, "message123");
+    }
+
+    #[test]
+    fn test_sign_message_with_coin() {
+        let client = TrezorConnectClient::new(
+            TrezorEnvironment::Local,
+            "exampleapp://trezor-callback"
+        ).unwrap();
+
+        let params = SignMessageParams {
+            path: "m/44'/0'/0'".to_string(),
+            coin: Some("btc".to_string()),
+            message: "Example message".to_string(),
+            hex: Some(false),
+            no_script_type: Some(false),
+            common: None,
+        };
+
+        let result = client.sign_message(params, Some("message456".to_string())).unwrap();
+        assert!(result.url.starts_with("trezorsuitelite://connect/1/"));
+        assert!(result.url.contains("method=signMessage"));
+        assert!(result.url.contains("coin"));
+        assert!(result.url.contains("hex"));
+        assert!(result.url.contains("no_script_type"));
+        assert!(result.url.contains("callback=exampleapp%3A%2F%2Ftrezor-callback%3Fid%3Dmessage456"));
+        assert_eq!(result.request_id, "message456");
+    }
+
+    #[test]
+    fn test_sign_message_hex() {
+        let client = TrezorConnectClient::new(
+            TrezorEnvironment::Local,
+            "exampleapp://trezor-callback"
+        ).unwrap();
+
+        let params = SignMessageParams {
+            path: "m/44'/0'/0'".to_string(),
+            coin: Some("btc".to_string()),
+            message: "48656c6c6f20576f726c6421".to_string(), // "Hello World!" in hex
+            hex: Some(true),
+            no_script_type: None,
+            common: None,
+        };
+
+        let result = client.sign_message(params, Some("hex789".to_string())).unwrap();
+        assert!(result.url.starts_with("trezorsuitelite://connect/1/"));
+        assert!(result.url.contains("method=signMessage"));
+        assert!(result.url.contains("hex"));
+        assert!(result.url.contains("callback=exampleapp%3A%2F%2Ftrezor-callback%3Fid%3Dhex789"));
+        assert_eq!(result.request_id, "hex789");
+    }
+
+    #[test]
+    fn test_handle_deep_link_message_signature() {
+        // Create a mock response URL that would come from a signMessage call
+        let message_signature_json = json!({
+        "address": "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH",
+        "signature": "IDKn5wGhOsGWWkOJ1gD4nXR14VJ/2Rg3A6P9XwRPjZQWjCYJvFNFKKQ5CLjy8oLKlhVIzF7UWNEqVx7lp5Rrffw="
+    });
+
+        let response_json = json!({
+        "success": true,
+        "payload": message_signature_json
+    });
+
+        let callback_url = format!(
+            "exampleapp://trezor-callback?id=message123&method=signMessage&response={}",
+            url::form_urlencoded::byte_serialize(response_json.to_string().as_bytes()).collect::<String>()
+        );
+
+        let result = handle_deep_link(callback_url).unwrap();
+        match result {
+            TrezorResponsePayload::MessageSignature(msg_sig) => {
+                assert_eq!(msg_sig.address, "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH");
+                assert_eq!(msg_sig.signature, "IDKn5wGhOsGWWkOJ1gD4nXR14VJ/2Rg3A6P9XwRPjZQWjCYJvFNFKKQ5CLjy8oLKlhVIzF7UWNEqVx7lp5Rrffw=");
+            },
+            _ => panic!("Expected MessageSignature payload, but got something else"),
+        }
+    }
+    #[test]
+    fn test_verify_message_basic() {
+        let client = TrezorConnectClient::new(
+            TrezorEnvironment::Local,
+            "exampleapp://trezor-callback"
+        ).unwrap();
+
+        let params = VerifyMessageParams {
+            address: "3BD8TL6iShVzizQzvo789SuynEKGpLTms9".to_string(),
+            signature: "JO7vL3tOB1qQyfSeIVLvdEw9G1tCvL+lNj78XDAVM4t6UptADs3kXDTO2+2ZeEOLFL4/+wm+BBdSpo3kb3Cnsas=".to_string(),
+            message: "example message".to_string(),
+            coin: "btc".to_string(),
+            hex: None,
+            common: None,
+        };
+
+        let result = client.verify_message(params, Some("verify123".to_string())).unwrap();
+        assert!(result.url.starts_with("trezorsuitelite://connect/1/"));
+        assert!(result.url.contains("method=verifyMessage"));
+        assert!(result.url.contains("address"));
+        assert!(result.url.contains("signature"));
+        assert!(result.url.contains("message"));
+        assert!(result.url.contains("coin"));
+        assert!(result.url.contains("callback=exampleapp%3A%2F%2Ftrezor-callback%3Fid%3Dverify123"));
+        assert_eq!(result.request_id, "verify123");
+    }
+
+    #[test]
+    fn test_verify_message_with_hex() {
+        let client = TrezorConnectClient::new(
+            TrezorEnvironment::Local,
+            "exampleapp://trezor-callback"
+        ).unwrap();
+
+        let params = VerifyMessageParams {
+            address: "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH".to_string(),
+            signature: "IDKn5wGhOsGWWkOJ1gD4nXR14VJ/2Rg3A6P9XwRPjZQWjCYJvFNFKKQ5CLjy8oLKlhVIzF7UWNEqVx7lp5Rrffw=".to_string(),
+            message: "48656c6c6f20576f726c6421".to_string(), // "Hello World!" in hex
+            coin: "btc".to_string(),
+            hex: Some(true),
+            common: None,
+        };
+
+        let result = client.verify_message(params, Some("verify456".to_string())).unwrap();
+        assert!(result.url.starts_with("trezorsuitelite://connect/1/"));
+        assert!(result.url.contains("method=verifyMessage"));
+        assert!(result.url.contains("hex"));
+        assert!(result.url.contains("callback=exampleapp%3A%2F%2Ftrezor-callback%3Fid%3Dverify456"));
+        assert_eq!(result.request_id, "verify456");
+    }
+
+    #[test]
+    fn test_handle_deep_link_verify_message() {
+        // Create a mock response URL that would come from a verifyMessage call
+        let verify_message_json = json!({
+        "message": "Message verified"
+    });
+
+        let response_json = json!({
+        "success": true,
+        "payload": verify_message_json
+    });
+
+        let callback_url = format!(
+            "exampleapp://trezor-callback?id=verify123&method=verifyMessage&response={}",
+            url::form_urlencoded::byte_serialize(response_json.to_string().as_bytes()).collect::<String>()
+        );
+
+        let result = handle_deep_link(callback_url).unwrap();
+        match result {
+            TrezorResponsePayload::VerifyMessage(verify_msg) => {
+                assert_eq!(verify_msg.message, "Message verified");
+            },
+            _ => panic!("Expected VerifyMessage payload, but got something else"),
+        }
+    }
+
+    #[test]
+    fn test_handle_deep_link_verify_message_error() {
+        // Create a mock error response URL from verifyMessage call
+        let response_json = json!({
+        "success": false,
+        "error": "Invalid signature"
+    });
+
+        let callback_url = format!(
+            "exampleapp://trezor-callback?id=verify456&method=verifyMessage&response={}",
+            url::form_urlencoded::byte_serialize(response_json.to_string().as_bytes()).collect::<String>()
+        );
+
+        let result = handle_deep_link(callback_url);
+        assert!(result.is_err());
+        match result {
+            Err(TrezorConnectError::Other { error_details }) => {
+                assert_eq!(error_details, "Invalid signature");
+            },
+            _ => panic!("Expected TrezorConnectError::Other but got something else"),
+        }
+    }
+    #[test]
+    fn test_compose_transaction_payment() {
+        let client = TrezorConnectClient::new(
+            TrezorEnvironment::Local,
+            "exampleapp://trezor-callback"
+        ).unwrap();
+
+        let outputs = vec![
+            ComposeOutput::Regular {
+                amount: "200000".to_string(),
+                address: "18WL2iZKmpDYWk1oFavJapdLALxwSjcSk2".to_string(),
+            }
+        ];
+
+        let params = ComposeTransactionParams {
+            outputs,
+            coin: "btc".to_string(),
+            push: Some(true),
+            sequence: None,
+            account: None,
+            fee_levels: None,
+            skip_permutation: None,
+            common: None,
+        };
+
+        let result = client.compose_transaction(params, Some("compose123".to_string())).unwrap();
+        assert!(result.url.starts_with("trezorsuitelite://connect/1/"));
+        assert!(result.url.contains("method=composeTransaction"));
+        assert!(result.url.contains("coin"));
+        assert!(result.url.contains("outputs"));
+        assert!(result.url.contains("push"));
+        assert!(result.url.contains("callback=exampleapp%3A%2F%2Ftrezor-callback%3Fid%3Dcompose123"));
+        assert_eq!(result.request_id, "compose123");
+    }
+
+    #[test]
+    fn test_compose_transaction_precompose() {
+        let client = TrezorConnectClient::new(
+            TrezorEnvironment::Local,
+            "exampleapp://trezor-callback"
+        ).unwrap();
+
+        let outputs = vec![
+            ComposeOutput::Regular {
+                amount: "200000".to_string(),
+                address: "tb1q9l0rk0gkgn73d0gc57qn3t3cwvucaj3h8wtrlu".to_string(),
+            }
+        ];
+
+        let account = ComposeAccount {
+            path: "m/84'/0'/0'".to_string(),
+            addresses: AccountAddresses {
+                used: vec![AddressInfo {
+                    address: "bc1qannfxke2tfd4l7vhepehpvt05y83v3qsf6nfkk".to_string(),
+                    path: "m/84'/0'/0'/0/0".to_string(),
+                    transfers: 1,
+                }],
+                unused: vec![AddressInfo {
+                    address: "".to_string(),
+                    path: "m/84'/0'/0'/0/1".to_string(),
+                    transfers: 0,
+                }],
+                change: vec![AddressInfo {
+                    address: "bc1qktmhrsmsenepnnfst8x6j27l0uqv7ggrg8x38q".to_string(),
+                    path: "m/84'/0'/0'/1/0".to_string(),
+                    transfers: 0,
+                }],
+            },
+            utxo: vec![AccountUtxo {
+                txid: "86a6e02943dcd057cfbe349f2c2274478a3a1be908eb788606a6950e727a0d36".to_string(),
+                vout: 0,
+                amount: "300000".to_string(),
+                block_height: Some(590093),
+                address: "bc1qannfxke2tfd4l7vhepehpvt05y83v3qsf6nfkk".to_string(),
+                path: "m/84'/0'/0'/0/0".to_string(),
+                confirmations: Some(100),
+            }],
+        };
+
+        let fee_levels = vec![
+            FeeLevel {
+                fee_per_unit: "1".to_string(),
+                base_fee: None,
+                floor_base_fee: None,
+            },
+            FeeLevel {
+                fee_per_unit: "5".to_string(),
+                base_fee: None,
+                floor_base_fee: None,
+            },
+            FeeLevel {
+                fee_per_unit: "30".to_string(),
+                base_fee: None,
+                floor_base_fee: None,
+            },
+        ];
+
+        let params = ComposeTransactionParams {
+            outputs,
+            coin: "btc".to_string(),
+            push: None,
+            sequence: None,
+            account: Some(account),
+            fee_levels: Some(fee_levels),
+            skip_permutation: None,
+            common: None,
+        };
+
+        let result = client.compose_transaction(params, Some("precompose456".to_string())).unwrap();
+        assert!(result.url.starts_with("trezorsuitelite://connect/1/"));
+        assert!(result.url.contains("method=composeTransaction"));
+        assert!(result.url.contains("account"));
+        assert!(result.url.contains("fee_levels"));
+        assert!(result.url.contains("callback=exampleapp%3A%2F%2Ftrezor-callback%3Fid%3Dprecompose456"));
+        assert_eq!(result.request_id, "precompose456");
+    }
+
+    #[test]
+    fn test_compose_transaction_send_max() {
+        let client = TrezorConnectClient::new(
+            TrezorEnvironment::Local,
+            "exampleapp://trezor-callback"
+        ).unwrap();
+
+        let outputs = vec![
+            ComposeOutput::SendMax {
+                address: "18WL2iZKmpDYWk1oFavJapdLALxwSjcSk2".to_string(),
+            }
+        ];
+
+        let params = ComposeTransactionParams {
+            outputs,
+            coin: "btc".to_string(),
+            push: Some(false),
+            sequence: None,
+            account: None,
+            fee_levels: None,
+            skip_permutation: None,
+            common: None,
+        };
+
+        let result = client.compose_transaction(params, Some("sendmax789".to_string())).unwrap();
+        assert!(result.url.starts_with("trezorsuitelite://connect/1/"));
+        assert!(result.url.contains("method=composeTransaction"));
+        assert!(result.url.contains("send-max"));
+        assert!(result.url.contains("callback=exampleapp%3A%2F%2Ftrezor-callback%3Fid%3Dsendmax789"));
+        assert_eq!(result.request_id, "sendmax789");
+    }
+
+    #[test]
+    fn test_compose_transaction_op_return() {
+        let client = TrezorConnectClient::new(
+            TrezorEnvironment::Local,
+            "exampleapp://trezor-callback"
+        ).unwrap();
+
+        let outputs = vec![
+            ComposeOutput::Regular {
+                amount: "100000".to_string(),
+                address: "18WL2iZKmpDYWk1oFavJapdLALxwSjcSk2".to_string(),
+            },
+            ComposeOutput::OpReturn {
+                data_hex: "48656c6c6f20576f726c6421".to_string(), // "Hello World!" in hex
+            },
+        ];
+
+        let params = ComposeTransactionParams {
+            outputs,
+            coin: "btc".to_string(),
+            push: None,
+            sequence: None,
+            account: None,
+            fee_levels: None,
+            skip_permutation: None,
+            common: None,
+        };
+
+        let result = client.compose_transaction(params, Some("opreturn123".to_string())).unwrap();
+        assert!(result.url.starts_with("trezorsuitelite://connect/1/"));
+        assert!(result.url.contains("method=composeTransaction"));
+        assert!(result.url.contains("opreturn"));
+        assert!(result.url.contains("dataHex"));
+        assert!(result.url.contains("callback=exampleapp%3A%2F%2Ftrezor-callback%3Fid%3Dopreturn123"));
+        assert_eq!(result.request_id, "opreturn123");
+    }
+
+    #[test]
+    fn test_handle_deep_link_compose_transaction_payment() {
+        // Create a mock response URL that would come from a composeTransaction call (payment mode)
+        let signed_tx_json = json!({
+        "signatures": [
+            "304402202872cb8459eed053dcec0f353c7e293611fe77615862bfadb4d35a5d8807a4cf022015057aa0aaf72ab342b5f8939f86f193ad87b539931911a72e77148a1233e022"
+        ],
+        "serializedTx": "0100000001ac99193d764bf0f3acdd037cc522a8168169316963d553c51357ce43459dd835b0000000006a47304402202872cb8459eed053dcec0f353c7e293611fe77615862bfadb4d35a5d8807a4cf022015057aa0aaf72ab342b5f8939f86f193ad87b539931911a72e77148a1233e022012103f66bbe3c721f119bb4b8a1e6c1832b98f2cf625d9f59242008411dd92aab8d94ffffffff02b3893000000000001976a91441352a84436847a7b660d5e76518f6ebb718dedc88ac400d030000000000a914b7536c788d8cfbac33b0d3fb0b9cb4b34bb2bb1087000000",
+        "txid": "a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890"
+    });
+
+        let response_json = json!({
+        "success": true,
+        "payload": signed_tx_json
+    });
+
+        let callback_url = format!(
+            "exampleapp://trezor-callback?id=compose123&method=composeTransaction&response={}",
+            url::form_urlencoded::byte_serialize(response_json.to_string().as_bytes()).collect::<String>()
+        );
+
+        let result = handle_deep_link(callback_url).unwrap();
+        match result {
+            TrezorResponsePayload::ComposeTransaction(ComposeTransactionResponse::SignedTransaction(signed_tx)) => {
+                assert_eq!(signed_tx.signatures.len(), 1);
+                assert!(signed_tx.serializedTx.starts_with("0100000001"));
+                assert!(signed_tx.txid.is_some());
+                assert_eq!(signed_tx.txid.unwrap(), "a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890");
+            },
+            _ => panic!("Expected ComposeTransaction SignedTransaction payload, but got something else"),
+        }
+    }
+
+    #[test]
+    fn test_handle_deep_link_compose_transaction_precompose() {
+        // Create a mock response URL that would come from a composeTransaction call (precompose mode)
+        let precomposed_txs_json = json!([
+        {
+            "type": "final",
+            "totalSpent": "200167",
+            "fee": "167",
+            "feePerByte": "1",
+            "bytes": 167,
+            "inputs": [
+                {
+                    "address_n": [2147483732u32, 2147483648u32, 2147483648u32, 0u32, 0u32],
+                    "amount": "300000",
+                    "prev_hash": "86a6e02943dcd057cfbe349f2c2274478a3a1be908eb788606a6950e727a0d36",
+                    "prev_index": 0,
+                    "script_type": "SPENDWITNESS"
+                }
+            ],
+            "outputs": [
+                {
+                    "address_n": [2147483732u32, 2147483648u32, 2147483649u32, 0u32],
+                    "amount": "99833",
+                    "script_type": "PAYTOWITNESS"
+                },
+                {
+                    "address": "tb1q9l0rk0gkgn73d0gc57qn3t3cwvucaj3h8wtrlu",
+                    "amount": "200000",
+                    "script_type": "PAYTOADDRESS"
+                }
+            ],
+            "outputsPermutation": [1, 0]
+        },
+        {
+            "type": "final",
+            "totalSpent": "200835",
+            "fee": "835",
+            "feePerByte": "5",
+            "bytes": 167
+        },
+        {
+            "type": "error"
+        }
+    ]);
+
+        let response_json = json!({
+        "success": true,
+        "payload": precomposed_txs_json
+    });
+
+        let callback_url = format!(
+            "exampleapp://trezor-callback?id=precompose456&method=composeTransaction&response={}",
+            url::form_urlencoded::byte_serialize(response_json.to_string().as_bytes()).collect::<String>()
+        );
+
+        let result = handle_deep_link(callback_url).unwrap();
+        match result {
+            TrezorResponsePayload::ComposeTransaction(ComposeTransactionResponse::PrecomposedTransactions(precomposed_txs)) => {
+                assert_eq!(precomposed_txs.len(), 3);
+                assert_eq!(precomposed_txs[0].tx_type, "final");
+                assert_eq!(precomposed_txs[0].total_spent, Some("200167".to_string()));
+                assert_eq!(precomposed_txs[0].fee, Some("167".to_string()));
+                assert_eq!(precomposed_txs[1].tx_type, "final");
+                assert_eq!(precomposed_txs[2].tx_type, "error");
+            },
+            _ => panic!("Expected ComposeTransaction PrecomposedTransactions payload, but got something else"),
+        }
     }
 }

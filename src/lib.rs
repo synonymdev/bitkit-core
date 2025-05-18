@@ -20,7 +20,7 @@ use std::sync::Mutex as StdMutex;
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex as TokioMutex;
 use crate::modules::trezor;
-use crate::modules::trezor::{AccountInfoDetails, CommonParams, DeepLinkResult, DefaultAccountType, GetAccountInfoParams, GetAddressParams, MultisigRedeemScriptType, TokenFilter, TrezorConnectError, TrezorEnvironment, TrezorResponsePayload, UnlockPath, XrpMarker};
+use crate::modules::trezor::{AccountInfoDetails, AmountUnit, CommonParams, ComposeAccount, ComposeOutput, ComposeTransactionParams, DeepLinkResult, DefaultAccountType, FeeLevel, GetAccountInfoParams, GetAddressParams, MultisigRedeemScriptType, RefTransaction, SignMessageParams, SignTransactionParams, TokenFilter, TrezorConnectError, TrezorEnvironment, TrezorResponsePayload, TxAckPaymentRequest, TxInputType, TxOutputType, UnlockPath, VerifyMessageParams, XrpMarker};
 
 pub struct DatabaseConnections {
     activity_db: Option<ActivityDB>,
@@ -882,6 +882,166 @@ pub fn trezor_handle_deep_link(
     callback_url: String,
 ) -> Result<TrezorResponsePayload, TrezorConnectError> {
     match trezor::handle_deep_link(callback_url) {
+        Ok(result) => Ok(result),
+        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    }
+}
+
+#[uniffi::export]
+pub fn trezor_verify_message(
+    address: String,
+    signature: String,
+    message: String,
+    coin: String,
+    callback_url: String,
+    request_id: Option<String>,
+    trezor_environment: Option<TrezorEnvironment>,
+    hex: Option<bool>,
+    common: Option<CommonParams>,
+) -> Result<DeepLinkResult, TrezorConnectError> {
+    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
+    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
+        Ok(client) => client,
+        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    };
+
+    let params = VerifyMessageParams {
+        address,
+        signature,
+        message,
+        coin,
+        hex,
+        common,
+    };
+
+    match trezor_client.verify_message(params, request_id) {
+        Ok(result) => Ok(result),
+        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    }
+}
+
+#[uniffi::export]
+pub fn trezor_sign_message(
+    path: String,
+    message: String,
+    callback_url: String,
+    request_id: Option<String>,
+    trezor_environment: Option<TrezorEnvironment>,
+    coin: Option<String>,
+    hex: Option<bool>,
+    no_script_type: Option<bool>,
+    common: Option<CommonParams>,
+) -> Result<DeepLinkResult, TrezorConnectError> {
+    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
+    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
+        Ok(client) => client,
+        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    };
+
+    let params = SignMessageParams {
+        path,
+        coin,
+        message,
+        hex,
+        no_script_type,
+        common,
+    };
+
+    match trezor_client.sign_message(params, request_id) {
+        Ok(result) => Ok(result),
+        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    }
+}
+
+#[uniffi::export]
+pub fn trezor_sign_transaction(
+    coin: String,
+    inputs: Vec<TxInputType>,
+    outputs: Vec<TxOutputType>,
+    callback_url: String,
+    request_id: Option<String>,
+    trezor_environment: Option<TrezorEnvironment>,
+    ref_txs: Option<Vec<RefTransaction>>,
+    payment_requests: Option<Vec<TxAckPaymentRequest>>,
+    locktime: Option<u32>,
+    version: Option<u32>,
+    expiry: Option<u32>,
+    version_group_id: Option<u32>,
+    overwintered: Option<bool>,
+    timestamp: Option<u32>,
+    branch_id: Option<u32>,
+    push: Option<bool>,
+    amount_unit: Option<AmountUnit>,
+    unlock_path: Option<UnlockPath>,
+    serialize: Option<bool>,
+    chunkify: Option<bool>,
+    common: Option<CommonParams>,
+) -> Result<DeepLinkResult, TrezorConnectError> {
+    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
+    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
+        Ok(client) => client,
+        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    };
+
+    let params = SignTransactionParams {
+        coin,
+        inputs,
+        outputs,
+        refTxs: ref_txs,
+        paymentRequests: payment_requests,
+        locktime,
+        version,
+        expiry,
+        versionGroupId: version_group_id,
+        overwintered,
+        timestamp,
+        branchId: branch_id,
+        push,
+        amountUnit: amount_unit,
+        unlockPath: unlock_path,
+        serialize,
+        chunkify,
+        common,
+    };
+
+    match trezor_client.sign_transaction(params, request_id) {
+        Ok(result) => Ok(result),
+        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    }
+}
+
+#[uniffi::export]
+pub fn trezor_compose_transaction(
+    outputs: Vec<ComposeOutput>,
+    coin: String,
+    callback_url: String,
+    request_id: Option<String>,
+    trezor_environment: Option<TrezorEnvironment>,
+    push: Option<bool>,
+    sequence: Option<u32>,
+    account: Option<ComposeAccount>,
+    fee_levels: Option<Vec<FeeLevel>>,
+    skip_permutation: Option<bool>,
+    common: Option<CommonParams>,
+) -> Result<DeepLinkResult, TrezorConnectError> {
+    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
+    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
+        Ok(client) => client,
+        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
+    };
+
+    let params = ComposeTransactionParams {
+        outputs,
+        coin,
+        push,
+        sequence,
+        account,
+        fee_levels,
+        skip_permutation,
+        common,
+    };
+
+    match trezor_client.compose_transaction(params, request_id) {
         Ok(result) => Ok(result),
         Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
     }

@@ -3,12 +3,11 @@
 //! A Rust library for generating Trezor Connect deep links according to the
 //! Trezor Suite Lite deep linking specification.
 
-use std::fmt::format;
 use serde::{Serialize};
 use serde_json;
 use url::Url;
 use uuid::Uuid;
-use crate::modules::trezor::{AccountInfoResponse, AddressResponse, DeepLinkResult, FeatureResponse, GetAccountInfoParams, GetAddressParams, GetPublicKeyParams, PublicKeyResponse, TrezorConnectClient, TrezorConnectError, TrezorConnectResult, TrezorResponse, TrezorResponsePayload};
+use crate::modules::trezor::{AccountInfoResponse, AddressResponse, ComposeTransactionParams, ComposeTransactionResponse, DeepLinkResult, FeatureResponse, GetAccountInfoParams, GetAddressParams, GetPublicKeyParams, MessageSignatureResponse, PublicKeyResponse, SignedTransactionResponse, SignMessageParams, SignTransactionParams, TrezorConnectClient, TrezorConnectError, TrezorConnectResult, TrezorResponse, TrezorResponsePayload, VerifyMessageParams, VerifyMessageResponse};
 use crate::modules::trezor::types::{TrezorEnvironment, Empty};
 
 impl TrezorEnvironment {
@@ -102,6 +101,39 @@ impl TrezorConnectClient {
 
         self.generate_deep_link("getAccountInfo", params, request_id)
     }
+
+    /// Compose transaction for Bitcoin and Bitcoin-like coins
+    ///
+    /// This method works in two modes:
+    /// 1. Payment mode: Requests payment to outputs with account discovery and fee selection
+    /// 2. Precompose mode: Prepares transaction variants with provided account and fee levels
+    pub fn compose_transaction(&self, params: ComposeTransactionParams, request_id: Option<String>) -> TrezorConnectResult<DeepLinkResult> {
+        self.generate_deep_link("composeTransaction", params, request_id)
+    }
+
+    /// Verify message using the signer address and signature
+    ///
+    /// This method asks the device to verify a message using the provided signer address and signature.
+    /// The device will verify that the signature was created by the private key corresponding to the given address.
+    pub fn verify_message(&self, params: VerifyMessageParams, request_id: Option<String>) -> TrezorConnectResult<DeepLinkResult> {
+        self.generate_deep_link("verifyMessage", params, request_id)
+    }
+
+    /// Sign message using the private key derived by given BIP32 path
+    ///
+    /// This method asks the device to sign a message using the private key derived by the given BIP32 path.
+    /// The user is asked to confirm the message signing on the Trezor device.
+    pub fn sign_message(&self, params: SignMessageParams, request_id: Option<String>) -> TrezorConnectResult<DeepLinkResult> {
+        self.generate_deep_link("signMessage", params, request_id)
+    }
+
+    /// Sign transaction with the specified parameters
+    ///
+    /// This method asks the device to sign given inputs and outputs of a pre-composed transaction.
+    /// The user is asked to confirm all transaction details on the Trezor device.
+    pub fn sign_transaction(&self, params: SignTransactionParams, request_id: Option<String>) -> TrezorConnectResult<DeepLinkResult> {
+        self.generate_deep_link("signTransaction", params, request_id)
+    }
 }
 
 /// Handle a callback URL from Trezor
@@ -189,6 +221,34 @@ pub fn handle_deep_link<S: AsRef<str>>(callback_url: S) -> TrezorConnectResult<T
                     error_details: format!("Failed to parse AccountInfo response: {}", e)
                 })?;
             Ok(TrezorResponsePayload::AccountInfo(account_info))
+        },
+        Some("composeTransaction") => {
+            let compose_tx: ComposeTransactionResponse = serde_json::from_value(payload)
+                .map_err(|e| TrezorConnectError::SerdeError {
+                    error_details: format!("Failed to parse ComposeTransaction response: {}", e)
+                })?;
+            Ok(TrezorResponsePayload::ComposeTransaction(compose_tx))
+        },
+        Some("verifyMessage") => {
+            let verify_message: VerifyMessageResponse = serde_json::from_value(payload)
+                .map_err(|e| TrezorConnectError::SerdeError {
+                    error_details: format!("Failed to parse VerifyMessage response: {}", e)
+                })?;
+            Ok(TrezorResponsePayload::VerifyMessage(verify_message))
+        },
+        Some("signMessage") => {
+            let message_signature: MessageSignatureResponse = serde_json::from_value(payload)
+                .map_err(|e| TrezorConnectError::SerdeError {
+                    error_details: format!("Failed to parse MessageSignature response: {}", e)
+                })?;
+            Ok(TrezorResponsePayload::MessageSignature(message_signature))
+        },
+        Some("signTransaction") => {
+            let signed_tx: SignedTransactionResponse = serde_json::from_value(payload)
+                .map_err(|e| TrezorConnectError::SerdeError {
+                    error_details: format!("Failed to parse SignedTransaction response: {}", e)
+                })?;
+            Ok(TrezorResponsePayload::SignedTransaction(signed_tx))
         },
         _ => {
             Err(TrezorConnectError::Other {

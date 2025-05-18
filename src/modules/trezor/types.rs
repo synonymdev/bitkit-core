@@ -35,7 +35,6 @@ pub struct TrezorConnectClient {
     pub(crate) callback_base: Url,
 }
 
-
 /// Common parameters for all Trezor Connect methods
 #[derive(Serialize, Deserialize, Debug, Default, Clone, uniffi::Record)]
 pub struct CommonParams {
@@ -130,6 +129,541 @@ pub struct UnlockPath {
     /// MAC (optional)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mac: Option<String>,
+}
+
+/// Script type for inputs and outputs
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Enum)]
+pub enum ScriptType {
+    #[serde(rename = "SPENDADDRESS")]
+    SpendAddress,
+    #[serde(rename = "SPENDMULTISIG")]
+    SpendMultisig,
+    #[serde(rename = "SPENDWITNESS")]
+    SpendWitness,
+    #[serde(rename = "SPENDP2SHWITNESS")]
+    SpendP2SHWitness,
+    #[serde(rename = "SPENDTAPROOT")]
+    SpendTaproot,
+    #[serde(rename = "EXTERNAL")]
+    External,
+    #[serde(rename = "PAYTOADDRESS")]
+    PayToAddress,
+    #[serde(rename = "PAYTOSCRIPTHASH")]
+    PayToScriptHash,
+    #[serde(rename = "PAYTOMULTISIG")]
+    PayToMultisig,
+    #[serde(rename = "PAYTOWITNESS")]
+    PayToWitness,
+    #[serde(rename = "PAYTOP2SHWITNESS")]
+    PayToP2SHWitness,
+    #[serde(rename = "PAYTOTAPROOT")]
+    PayToTaproot,
+    #[serde(rename = "PAYTOOPRETURN")]
+    PayToOpReturn,
+}
+
+/// Transaction input type
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct TxInputType {
+    /// Previous transaction hash
+    pub prev_hash: String,
+    /// Previous transaction output index
+    pub prev_index: u32,
+    /// Amount in satoshis
+    pub amount: u64,
+    /// Transaction sequence
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sequence: Option<u32>,
+    /// BIP32 derivation path
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub address_n: Option<Vec<u32>>,
+    /// Script type
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub script_type: Option<ScriptType>,
+    /// Multisig information
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multisig: Option<MultisigRedeemScriptType>,
+    /// Script public key (for external inputs)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub script_pubkey: Option<String>,
+    /// Script signature
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub script_sig: Option<String>,
+    /// Witness data
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub witness: Option<String>,
+    /// Ownership proof
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ownership_proof: Option<String>,
+    /// Commitment data
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub commitment_data: Option<String>,
+    /// Original hash for RBF
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub orig_hash: Option<String>,
+    /// Original index for RBF
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub orig_index: Option<u32>,
+    /// Coinjoin flags
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub coinjoin_flags: Option<u32>,
+}
+
+/// Transaction output type
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct TxOutputType {
+    /// Output address (for address outputs)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub address: Option<String>,
+    /// BIP32 derivation path (for change outputs)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub address_n: Option<Vec<u32>>,
+    /// Amount in satoshis
+    pub amount: u64,
+    /// Script type
+    pub script_type: ScriptType,
+    /// Multisig information
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multisig: Option<MultisigRedeemScriptType>,
+    /// OP_RETURN data
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub op_return_data: Option<String>,
+    /// Original hash for RBF
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub orig_hash: Option<String>,
+    /// Original index for RBF
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub orig_index: Option<u32>,
+    /// Payment request index
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payment_req_index: Option<u32>,
+}
+
+/// Reference transaction for transaction signing
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct RefTransaction {
+    /// Transaction hash
+    pub hash: String,
+    /// Transaction version
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<u32>,
+    /// Transaction inputs
+    pub inputs: Vec<RefTxInput>,
+    /// Transaction outputs (binary format)
+    pub bin_outputs: Vec<RefTxOutput>,
+    /// Lock time
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lock_time: Option<u32>,
+    /// Expiry (for Zcash/Decred)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expiry: Option<u32>,
+    /// Version group ID (for Zcash)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version_group_id: Option<u32>,
+    /// Overwintered flag (for Zcash)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub overwintered: Option<bool>,
+    /// Timestamp (for Capricoin)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timestamp: Option<u32>,
+    /// Branch ID (for Zcash)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branch_id: Option<u32>,
+    /// Extra data
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extra_data: Option<String>,
+}
+
+/// Reference transaction input
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct RefTxInput {
+    /// Previous transaction hash
+    pub prev_hash: String,
+    /// Previous transaction output index
+    pub prev_index: u32,
+    /// Script signature
+    pub script_sig: String,
+    /// Sequence number
+    pub sequence: u32,
+}
+
+/// Reference transaction output (binary format)
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct RefTxOutput {
+    /// Amount in satoshis
+    pub amount: u64,
+    /// Script public key (binary hex)
+    pub script_pubkey: String,
+}
+
+/// Amount unit for display
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Enum)]
+pub enum AmountUnit {
+    #[serde(rename = "BITCOIN")]
+    Bitcoin,
+    #[serde(rename = "MILLIBITCOIN")]
+    MilliBitcoin,
+    #[serde(rename = "MICROBITCOIN")]
+    MicroBitcoin,
+    #[serde(rename = "SATOSHI")]
+    Satoshi,
+}
+
+/// Payment request memo types
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct PaymentRequestMemo {
+    /// Text memo
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text_memo: Option<TextMemo>,
+    /// Refund memo
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub refund_memo: Option<RefundMemo>,
+    /// Coin purchase memo
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub coin_purchase_memo: Option<CoinPurchaseMemo>,
+}
+
+/// Text memo
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct TextMemo {
+    /// Text content
+    pub text: String,
+}
+
+/// Refund memo
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct RefundMemo {
+    /// Refund address
+    pub address: String,
+    /// MAC
+    pub mac: String,
+}
+
+/// Coin purchase memo
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct CoinPurchaseMemo {
+    /// Coin type
+    pub coin_type: u32,
+    /// Amount
+    pub amount: u64,
+    /// Address
+    pub address: String,
+    /// MAC
+    pub mac: String,
+}
+
+/// Payment request
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct TxAckPaymentRequest {
+    /// Nonce
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub nonce: Option<String>,
+    /// Recipient name
+    pub recipient_name: String,
+    /// Memos
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub memos: Option<Vec<PaymentRequestMemo>>,
+    /// Amount
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub amount: Option<u64>,
+    /// Signature
+    pub signature: String,
+}
+
+/// Output type for compose transaction
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Enum)]
+#[serde(tag = "type")]
+pub enum ComposeOutput {
+    /// Regular output with amount and address
+    #[serde(rename = "regular")]
+    Regular {
+        /// Amount in satoshis
+        amount: String,
+        /// Recipient address
+        address: String,
+    },
+    /// Send max output
+    #[serde(rename = "send-max")]
+    SendMax {
+        /// Recipient address
+        address: String,
+    },
+    /// OP_RETURN output
+    #[serde(rename = "opreturn")]
+    OpReturn {
+        /// Hexadecimal string with arbitrary data
+        #[serde(rename = "dataHex")]
+        data_hex: String,
+    },
+    /// Payment without address (precompose only)
+    #[serde(rename = "payment-noaddress")]
+    PaymentNoAddress {
+        /// Amount in satoshis
+        amount: String,
+    },
+    /// Send max without address (precompose only)
+    #[serde(rename = "send-max-noaddress")]
+    SendMaxNoAddress,
+}
+
+/// UTXO information for account
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct AccountUtxo {
+    /// Transaction ID
+    pub txid: String,
+    /// Output index
+    pub vout: u32,
+    /// Amount in satoshis
+    pub amount: String,
+    /// Block height
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub block_height: Option<u32>,
+    /// Address
+    pub address: String,
+    /// Derivation path
+    pub path: String,
+    /// Number of confirmations
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub confirmations: Option<u32>,
+}
+
+/// Address information
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct AddressInfo {
+    /// Address string
+    pub address: String,
+    /// Derivation path
+    pub path: String,
+    /// Number of transfers
+    pub transfers: u32,
+}
+
+/// Account addresses
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct AccountAddresses {
+    /// Used addresses
+    pub used: Vec<AddressInfo>,
+    /// Unused addresses
+    pub unused: Vec<AddressInfo>,
+    /// Change addresses
+    pub change: Vec<AddressInfo>,
+}
+
+/// Account information for compose transaction
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct ComposeAccount {
+    /// Derivation path
+    pub path: String,
+    /// Account addresses
+    pub addresses: AccountAddresses,
+    /// UTXOs
+    pub utxo: Vec<AccountUtxo>,
+}
+
+/// Fee level for compose transaction
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct FeeLevel {
+    /// Fee per unit (satoshi/byte or satoshi/vbyte)
+    #[serde(rename = "feePerUnit")]
+    pub fee_per_unit: String,
+    /// Base fee in satoshi (optional, used in RBF and DOGE)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_fee: Option<u32>,
+    /// Floor base fee (optional, used in DOGE)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub floor_base_fee: Option<bool>,
+}
+
+/// Parameters for composeTransaction method
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ComposeTransactionParams {
+    /// Array of output objects
+    pub outputs: Vec<ComposeOutput>,
+    /// Coin name/type (required)
+    pub coin: String,
+    /// Push transaction to blockchain (payment mode only)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub push: Option<bool>,
+    /// Transaction sequence (for RBF or locktime)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sequence: Option<u32>,
+    /// Account info (precompose mode only)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub account: Option<ComposeAccount>,
+    /// Fee levels (precompose mode only)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fee_levels: Option<Vec<FeeLevel>>,
+    /// Skip input/output permutation (optional)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub skip_permutation: Option<bool>,
+    /// Additional common parameters
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub common: Option<CommonParams>,
+}
+
+/// Precomposed transaction input
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct PrecomposedInput {
+    /// BIP32 derivation path
+    pub address_n: Vec<u32>,
+    /// Amount in satoshis
+    pub amount: String,
+    /// Previous transaction hash
+    pub prev_hash: String,
+    /// Previous output index
+    pub prev_index: u32,
+    /// Script type
+    pub script_type: ScriptType,
+}
+
+/// Precomposed transaction output
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct PrecomposedOutput {
+    /// BIP32 derivation path (for change outputs)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub address_n: Option<Vec<u32>>,
+    /// Amount in satoshis
+    pub amount: String,
+    /// Address (for regular outputs)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub address: Option<String>,
+    /// Script type
+    pub script_type: ScriptType,
+}
+
+/// Precomposed transaction
+#[derive(Serialize, Deserialize, Debug, Clone, uniffi::Record)]
+pub struct PrecomposedTransaction {
+    /// Transaction type (usually "final" or "error")
+    #[serde(rename = "type")]
+    pub tx_type: String,
+    /// Total amount spent (including fee)
+    #[serde(rename = "totalSpent", skip_serializing_if = "Option::is_none")]
+    pub total_spent: Option<String>,
+    /// Transaction fee
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fee: Option<String>,
+    /// Fee per byte
+    #[serde(rename = "feePerByte", skip_serializing_if = "Option::is_none")]
+    pub fee_per_byte: Option<String>,
+    /// Transaction size in bytes
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bytes: Option<u32>,
+    /// Transaction inputs
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inputs: Option<Vec<PrecomposedInput>>,
+    /// Transaction outputs
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub outputs: Option<Vec<PrecomposedOutput>>,
+    /// Output permutation indices
+    #[serde(rename = "outputsPermutation", skip_serializing_if = "Option::is_none")]
+    pub outputs_permutation: Option<Vec<u32>>,
+}
+
+/// Compose transaction response
+#[derive(Debug, Clone, Deserialize, Serialize, uniffi::Enum)]
+#[serde(untagged)]
+pub enum ComposeTransactionResponse {
+    /// Signed transaction (payment mode)
+    SignedTransaction(SignedTransactionResponse),
+    /// Precomposed transactions (precompose mode)
+    PrecomposedTransactions(Vec<PrecomposedTransaction>),
+}
+
+/// Parameters for verifyMessage method
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct VerifyMessageParams {
+    /// Signer address
+    pub address: String,
+    /// Signature in base64 format
+    pub signature: String,
+    /// Signed message
+    pub message: String,
+    /// Coin name/type (required)
+    pub coin: String,
+    /// Convert message from hex
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hex: Option<bool>,
+    /// Additional common parameters
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub common: Option<CommonParams>,
+}
+
+/// Parameters for signMessage method
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SignMessageParams {
+    /// BIP-32 path as string or array of numbers
+    pub path: String,
+    /// Coin name/type (optional)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub coin: Option<String>,
+    /// Message to sign
+    pub message: String,
+    /// Convert message from hex
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hex: Option<bool>,
+    /// No script type
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub no_script_type: Option<bool>,
+    /// Additional common parameters
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub common: Option<CommonParams>,
+}
+
+/// Parameters for signTransaction method
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SignTransactionParams {
+    /// Coin name/type
+    pub coin: String,
+    /// Transaction inputs
+    pub inputs: Vec<TxInputType>,
+    /// Transaction outputs
+    pub outputs: Vec<TxOutputType>,
+    /// Reference transactions
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub refTxs: Option<Vec<RefTransaction>>,
+    /// Payment requests (SLIP-24)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub paymentRequests: Option<Vec<TxAckPaymentRequest>>,
+    /// Lock time
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub locktime: Option<u32>,
+    /// Transaction version
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<u32>,
+    /// Expiry (for Zcash/Decred)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expiry: Option<u32>,
+    /// Version group ID (for Zcash)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub versionGroupId: Option<u32>,
+    /// Overwintered flag (for Zcash)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub overwintered: Option<bool>,
+    /// Timestamp (for Capricoin)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timestamp: Option<u32>,
+    /// Branch ID (for Zcash)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub branchId: Option<u32>,
+    /// Broadcast transaction
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub push: Option<bool>,
+    /// Amount unit for display
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub amountUnit: Option<AmountUnit>,
+    /// Unlock path
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unlockPath: Option<UnlockPath>,
+    /// Serialize full transaction
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub serialize: Option<bool>,
+    /// Display address in chunks
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub chunkify: Option<bool>,
+    /// Additional common parameters
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub common: Option<CommonParams>,
 }
 
 /// Parameters for getAddress method
@@ -348,7 +882,6 @@ pub struct GetAccountInfoParams {
     pub common: Option<CommonParams>,
 }
 
-
 /// Type alias for TrezorConnectResult
 pub type TrezorConnectResult<T> = Result<T, TrezorConnectError>;
 
@@ -367,6 +900,18 @@ pub enum TrezorResponsePayload {
 
     /// Response from getAccountInfo method
     AccountInfo(AccountInfoResponse),
+
+    /// Response from composeTransaction method
+    ComposeTransaction(ComposeTransactionResponse),
+
+    /// Response from verifyMessage method
+    VerifyMessage(VerifyMessageResponse),
+
+    /// Response from signMessage method
+    MessageSignature(MessageSignatureResponse),
+
+    /// Response from signTransaction method
+    SignedTransaction(SignedTransactionResponse),
 }
 
 /// Feature response containing device capabilities and information
@@ -420,6 +965,34 @@ pub struct AccountInfoResponse {
     pub balance: String,
     pub availableBalance: String,
     // Add other fields as needed
+}
+
+/// Verify message response
+#[derive(Debug, Clone, Deserialize, Serialize, uniffi::Record)]
+pub struct VerifyMessageResponse {
+    /// Verification result message
+    pub message: String,
+}
+
+/// Message signature response
+#[derive(Debug, Clone, Deserialize, Serialize, uniffi::Record)]
+pub struct MessageSignatureResponse {
+    /// Signer address
+    pub address: String,
+    /// Signature in base64 format
+    pub signature: String,
+}
+
+/// Signed transaction response
+#[derive(Debug, Clone, Deserialize, Serialize, uniffi::Record)]
+pub struct SignedTransactionResponse {
+    /// Array of signer signatures
+    pub signatures: Vec<String>,
+    /// Serialized transaction
+    pub serializedTx: String,
+    /// Broadcasted transaction ID (if push was true)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub txid: Option<String>,
 }
 
 /// Common response wrapper for all Trezor responses
