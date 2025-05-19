@@ -319,6 +319,89 @@
         callback_url: String,
     ) -> Result<TrezorResponsePayload, TrezorConnectError>
     ```
+  - [trezor_sign_message](src/modules/trezor/README.md#usage-examples): Sign message using BIP32 derived private key
+    ```rust
+    fn trezor_sign_message(
+        path: String,
+        message: String,
+        callback_url: String,
+        request_id: Option<String>,
+        trezor_environment: Option<TrezorEnvironment>,
+        coin: Option<String>,
+        hex: Option<bool>,
+        no_script_type: Option<bool>,
+        common: Option<CommonParams>,
+    ) -> Result<DeepLinkResult, TrezorConnectError>
+    ```
+  - [trezor_verify_message](src/modules/trezor/README.md#usage-examples): Verify message signature using address and signature
+    ```rust
+    fn trezor_verify_message(
+        address: String,
+        signature: String,
+        message: String,
+        coin: String,
+        callback_url: String,
+        request_id: Option<String>,
+        trezor_environment: Option<TrezorEnvironment>,
+        hex: Option<bool>,
+        common: Option<CommonParams>,
+    ) -> Result<DeepLinkResult, TrezorConnectError>
+    ```
+  - [trezor_compose_transaction](src/modules/trezor/README.md#usage-examples): Compose Bitcoin transactions (payment and precompose modes)
+    ```rust
+    fn trezor_compose_transaction(
+        outputs: Vec<ComposeOutput>,
+        coin: String,
+        callback_url: String,
+        request_id: Option<String>,
+        trezor_environment: Option<TrezorEnvironment>,
+        push: Option<bool>,
+        sequence: Option<u32>,
+        account: Option<ComposeAccount>,
+        fee_levels: Option<Vec<FeeLevel>>,
+        skip_permutation: Option<bool>,
+        common: Option<CommonParams>,
+    ) -> Result<DeepLinkResult, TrezorConnectError>
+    ```
+    - [trezor_sign_transaction](src/modules/trezor/README.md#usage-examples): Sign Bitcoin transaction with inputs/outputs
+    ```rust
+    fn trezor_sign_transaction(
+        coin: String,
+        inputs: Vec<TxInputType>,
+        outputs: Vec<TxOutputType>,
+        callback_url: String,
+        request_id: Option<String>,
+        trezor_environment: Option<TrezorEnvironment>,
+        ref_txs: Option<Vec<RefTransaction>>,
+        payment_requests: Option<Vec<TxAckPaymentRequest>>,
+        locktime: Option<u32>,
+        version: Option<u32>,
+        expiry: Option<u32>,
+        version_group_id: Option<u32>,
+        overwintered: Option<bool>,
+        timestamp: Option<u32>,
+        branch_id: Option<u32>,
+        push: Option<bool>,
+        amount_unit: Option<AmountUnit>,
+        unlock_path: Option<UnlockPath>,
+        serialize: Option<bool>,
+        chunkify: Option<bool>,
+        common: Option<CommonParams>,
+    ) -> Result<DeepLinkResult, TrezorConnectError>
+    ```
+
+  - [trezor_push_transaction](src/modules/trezor/README.md#usage-examples): Push (broadcast) transaction to blockchain network
+    ```rust
+    fn trezor_push_transaction(
+        tx: String,
+        coin: String,
+        callback_url: String,
+        request_id: Option<String>,
+        trezor_environment: Option<TrezorEnvironment>,
+        identity: Option<String>,
+        common: Option<CommonParams>,
+    ) -> Result<DeepLinkResult, TrezorConnectError>
+    ```
 
 ## Building the Bindings
 

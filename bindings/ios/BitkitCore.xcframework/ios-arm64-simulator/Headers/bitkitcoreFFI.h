@@ -424,6 +424,46 @@ void uniffi_bitkitcore_fn_func_remove_tags(RustBuffer activity_id, RustBuffer ta
 uint64_t uniffi_bitkitcore_fn_func_test_notification(RustBuffer device_token, RustBuffer secret_message, RustBuffer notification_type, RustBuffer custom_url
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_COMPOSE_TRANSACTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_COMPOSE_TRANSACTION
+RustBuffer uniffi_bitkitcore_fn_func_trezor_compose_transaction(RustBuffer outputs, RustBuffer coin, RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustBuffer push, RustBuffer sequence, RustBuffer account, RustBuffer fee_levels, RustBuffer skip_permutation, RustBuffer common, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_ACCOUNT_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_ACCOUNT_INFO
+RustBuffer uniffi_bitkitcore_fn_func_trezor_get_account_info(RustBuffer coin, RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustBuffer path, RustBuffer descriptor, RustBuffer details, RustBuffer tokens, RustBuffer page, RustBuffer pageSize, RustBuffer from, RustBuffer to, RustBuffer gap, RustBuffer contractFilter, RustBuffer marker, RustBuffer defaultAccountType, RustBuffer suppressBackupWarning, RustBuffer common, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_ADDRESS
+RustBuffer uniffi_bitkitcore_fn_func_trezor_get_address(RustBuffer path, RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustBuffer address, RustBuffer showOnTrezor, RustBuffer chunkify, RustBuffer useEventListener, RustBuffer coin, RustBuffer crossChain, RustBuffer multisig, RustBuffer scriptType, RustBuffer unlockPath, RustBuffer common, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_FEATURES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_FEATURES
+RustBuffer uniffi_bitkitcore_fn_func_trezor_get_features(RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_HANDLE_DEEP_LINK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_HANDLE_DEEP_LINK
+RustBuffer uniffi_bitkitcore_fn_func_trezor_handle_deep_link(RustBuffer callback_url, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_MESSAGE
+RustBuffer uniffi_bitkitcore_fn_func_trezor_sign_message(RustBuffer path, RustBuffer message, RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustBuffer coin, RustBuffer hex, RustBuffer no_script_type, RustBuffer common, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_TRANSACTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_TRANSACTION
+RustBuffer uniffi_bitkitcore_fn_func_trezor_sign_transaction(RustBuffer coin, RustBuffer inputs, RustBuffer outputs, RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustBuffer ref_txs, RustBuffer payment_requests, RustBuffer locktime, RustBuffer version, RustBuffer expiry, RustBuffer version_group_id, RustBuffer overwintered, RustBuffer timestamp, RustBuffer branch_id, RustBuffer push, RustBuffer amount_unit, RustBuffer unlock_path, RustBuffer serialize, RustBuffer chunkify, RustBuffer common, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_VERIFY_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_VERIFY_MESSAGE
+RustBuffer uniffi_bitkitcore_fn_func_trezor_verify_message(RustBuffer address, RustBuffer signature, RustBuffer message, RustBuffer coin, RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustBuffer hex, RustBuffer common, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPDATE_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPDATE_ACTIVITY
 void uniffi_bitkitcore_fn_func_update_activity(RustBuffer activity_id, RustBuffer activity, RustCallStatus *_Nonnull out_status
@@ -925,6 +965,54 @@ uint16_t uniffi_bitkitcore_checksum_func_remove_tags(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TEST_NOTIFICATION
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TEST_NOTIFICATION
 uint16_t uniffi_bitkitcore_checksum_func_test_notification(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_COMPOSE_TRANSACTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_COMPOSE_TRANSACTION
+uint16_t uniffi_bitkitcore_checksum_func_trezor_compose_transaction(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_ACCOUNT_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_ACCOUNT_INFO
+uint16_t uniffi_bitkitcore_checksum_func_trezor_get_account_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_ADDRESS
+uint16_t uniffi_bitkitcore_checksum_func_trezor_get_address(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_FEATURES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_FEATURES
+uint16_t uniffi_bitkitcore_checksum_func_trezor_get_features(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_HANDLE_DEEP_LINK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_HANDLE_DEEP_LINK
+uint16_t uniffi_bitkitcore_checksum_func_trezor_handle_deep_link(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_MESSAGE
+uint16_t uniffi_bitkitcore_checksum_func_trezor_sign_message(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TRANSACTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TRANSACTION
+uint16_t uniffi_bitkitcore_checksum_func_trezor_sign_transaction(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_VERIFY_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_VERIFY_MESSAGE
+uint16_t uniffi_bitkitcore_checksum_func_trezor_verify_message(void
     
 );
 #endif
