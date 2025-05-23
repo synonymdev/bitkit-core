@@ -220,6 +220,7 @@
           node_id: String,
           iso_timestamp: String,
           signature: String,
+          is_production: Option<bool>,
           custom_url: Option<String>
         ) -> Result<String, BlocktankError>
         ```

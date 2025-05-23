@@ -611,6 +611,7 @@ pub async fn register_device(
     node_id: String,
     iso_timestamp: String,
     signature: String,
+    is_production: Option<bool>,
     custom_url: Option<String>
 ) -> Result<String, BlocktankError> {
     let rt = ensure_runtime();
@@ -630,6 +631,7 @@ pub async fn register_device(
             &node_id,
             &iso_timestamp,
             &signature,
+            is_production,
             custom_url.as_deref()
         ).await
     }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {

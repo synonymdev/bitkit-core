@@ -273,6 +273,7 @@ impl BlocktankDB {
         node_id: &str,
         iso_timestamp: &str,
         signature: &str,
+        is_production: Option<bool>,
         custom_url: Option<&str>,
     ) -> Result<String, BlocktankError> {
         self.client.register_device(
@@ -282,6 +283,7 @@ impl BlocktankDB {
             node_id,
             iso_timestamp,
             signature,
+            is_production,
             custom_url
         )
             .await
