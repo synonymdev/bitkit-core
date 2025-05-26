@@ -513,7 +513,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_refresh_active_orders() != 50661:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_register_device() != 54847:
+    if lib.uniffi_bitkitcore_checksum_func_register_device() != 14576:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_regtest_close_channel() != 48652:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -813,6 +813,7 @@ _UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_orders.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_orders.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_register_device.argtypes = (
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -12597,7 +12598,7 @@ async def refresh_active_orders() -> "typing.List[IBtOrder]":
 _UniffiConverterTypeBlocktankError,
 
     )
-async def register_device(device_token: "str",public_key: "str",features: "typing.List[str]",node_id: "str",iso_timestamp: "str",signature: "str",custom_url: "typing.Optional[str]") -> "str":
+async def register_device(device_token: "str",public_key: "str",features: "typing.List[str]",node_id: "str",iso_timestamp: "str",signature: "str",is_production: "typing.Optional[bool]",custom_url: "typing.Optional[str]") -> "str":
 
     _UniffiConverterString.check_lower(device_token)
     
@@ -12611,6 +12612,8 @@ async def register_device(device_token: "str",public_key: "str",features: "typin
     
     _UniffiConverterString.check_lower(signature)
     
+    _UniffiConverterOptionalBool.check_lower(is_production)
+    
     _UniffiConverterOptionalString.check_lower(custom_url)
     
     return await _uniffi_rust_call_async(
@@ -12621,6 +12624,7 @@ async def register_device(device_token: "str",public_key: "str",features: "typin
         _UniffiConverterString.lower(node_id),
         _UniffiConverterString.lower(iso_timestamp),
         _UniffiConverterString.lower(signature),
+        _UniffiConverterOptionalBool.lower(is_production),
         _UniffiConverterOptionalString.lower(custom_url)),
         _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
         _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,

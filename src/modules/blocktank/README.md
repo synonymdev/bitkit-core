@@ -84,6 +84,7 @@ async fn register_device(
     node_id: String,
     iso_timestamp: String,
     signature: String,
+    is_production: Option<bool>,
     custom_url: Option<String>
 ) -> Result<String, BlocktankError>
 
@@ -188,7 +189,9 @@ func manageBlocktank() async {
             features: features,
             nodeId: nodeId,
             isoTimestamp: timestamp,
-            signature: signature
+            signature: signature,
+            isProduction: true,
+            customUrl: nil
         )
         print("Device registration result: \(registrationResult)")
         
@@ -291,7 +294,9 @@ suspend fun manageBlocktank() {
             features = features,
             nodeId = nodeId,
             isoTimestamp = timestamp,
-            signature = signature
+            signature = signature,
+            isProduction = true,
+            customUrl = null
         )
         println("Device registration result: $registrationResult")
         
@@ -395,7 +400,9 @@ async def manage_blocktank():
             features=features,
             node_id=node_id,
             iso_timestamp=timestamp,
-            signature=signature
+            signature=signature,
+            is_production=True,
+            custom_url=None
         )
         print(f"Device registration result: {registration_result}")
         

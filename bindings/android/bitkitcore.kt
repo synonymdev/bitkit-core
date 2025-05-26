@@ -856,7 +856,7 @@ internal interface UniffiLib : Library {
     ): Long
     fun uniffi_bitkitcore_fn_func_refresh_active_orders(
     ): Long
-    fun uniffi_bitkitcore_fn_func_register_device(`deviceToken`: RustBuffer.ByValue,`publicKey`: RustBuffer.ByValue,`features`: RustBuffer.ByValue,`nodeId`: RustBuffer.ByValue,`isoTimestamp`: RustBuffer.ByValue,`signature`: RustBuffer.ByValue,`customUrl`: RustBuffer.ByValue,
+    fun uniffi_bitkitcore_fn_func_register_device(`deviceToken`: RustBuffer.ByValue,`publicKey`: RustBuffer.ByValue,`features`: RustBuffer.ByValue,`nodeId`: RustBuffer.ByValue,`isoTimestamp`: RustBuffer.ByValue,`signature`: RustBuffer.ByValue,`isProduction`: RustBuffer.ByValue,`customUrl`: RustBuffer.ByValue,
     ): Long
     fun uniffi_bitkitcore_fn_func_regtest_close_channel(`fundingTxId`: RustBuffer.ByValue,`vout`: Int,`forceCloseAfterS`: RustBuffer.ByValue,
     ): Long
@@ -1195,7 +1195,7 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_bitkitcore_checksum_func_refresh_active_orders() != 50661.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_register_device() != 54847.toShort()) {
+    if (lib.uniffi_bitkitcore_checksum_func_register_device() != 14576.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_regtest_close_channel() != 48652.toShort()) {
@@ -10117,9 +10117,9 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
 
     @Throws(BlocktankException::class)
     @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-     suspend fun `registerDevice`(`deviceToken`: kotlin.String, `publicKey`: kotlin.String, `features`: List<kotlin.String>, `nodeId`: kotlin.String, `isoTimestamp`: kotlin.String, `signature`: kotlin.String, `customUrl`: kotlin.String?) : kotlin.String {
+     suspend fun `registerDevice`(`deviceToken`: kotlin.String, `publicKey`: kotlin.String, `features`: List<kotlin.String>, `nodeId`: kotlin.String, `isoTimestamp`: kotlin.String, `signature`: kotlin.String, `isProduction`: kotlin.Boolean?, `customUrl`: kotlin.String?) : kotlin.String {
         return uniffiRustCallAsync(
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_register_device(FfiConverterString.lower(`deviceToken`),FfiConverterString.lower(`publicKey`),FfiConverterSequenceString.lower(`features`),FfiConverterString.lower(`nodeId`),FfiConverterString.lower(`isoTimestamp`),FfiConverterString.lower(`signature`),FfiConverterOptionalString.lower(`customUrl`),),
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_register_device(FfiConverterString.lower(`deviceToken`),FfiConverterString.lower(`publicKey`),FfiConverterSequenceString.lower(`features`),FfiConverterString.lower(`nodeId`),FfiConverterString.lower(`isoTimestamp`),FfiConverterString.lower(`signature`),FfiConverterOptionalBoolean.lower(`isProduction`),FfiConverterOptionalString.lower(`customUrl`),),
         { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
         { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_rust_buffer(future) },

@@ -12169,11 +12169,11 @@ public func refreshActiveOrders()async throws  -> [IBtOrder] {
             errorHandler: FfiConverterTypeBlocktankError.lift
         )
 }
-public func registerDevice(deviceToken: String, publicKey: String, features: [String], nodeId: String, isoTimestamp: String, signature: String, customUrl: String?)async throws  -> String {
+public func registerDevice(deviceToken: String, publicKey: String, features: [String], nodeId: String, isoTimestamp: String, signature: String, isProduction: Bool?, customUrl: String?)async throws  -> String {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_register_device(FfiConverterString.lower(deviceToken),FfiConverterString.lower(publicKey),FfiConverterSequenceString.lower(features),FfiConverterString.lower(nodeId),FfiConverterString.lower(isoTimestamp),FfiConverterString.lower(signature),FfiConverterOptionString.lower(customUrl)
+                uniffi_bitkitcore_fn_func_register_device(FfiConverterString.lower(deviceToken),FfiConverterString.lower(publicKey),FfiConverterSequenceString.lower(features),FfiConverterString.lower(nodeId),FfiConverterString.lower(isoTimestamp),FfiConverterString.lower(signature),FfiConverterOptionBool.lower(isProduction),FfiConverterOptionString.lower(customUrl)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
@@ -12536,7 +12536,7 @@ private var initializationResult: InitializationResult {
     if (uniffi_bitkitcore_checksum_func_refresh_active_orders() != 50661) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_register_device() != 54847) {
+    if (uniffi_bitkitcore_checksum_func_register_device() != 14576) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_regtest_close_channel() != 48652) {

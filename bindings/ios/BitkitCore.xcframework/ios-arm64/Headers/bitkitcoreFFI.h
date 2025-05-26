@@ -386,7 +386,7 @@ uint64_t uniffi_bitkitcore_fn_func_refresh_active_orders(void
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REGISTER_DEVICE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REGISTER_DEVICE
-uint64_t uniffi_bitkitcore_fn_func_register_device(RustBuffer device_token, RustBuffer public_key, RustBuffer features, RustBuffer node_id, RustBuffer iso_timestamp, RustBuffer signature, RustBuffer custom_url
+uint64_t uniffi_bitkitcore_fn_func_register_device(RustBuffer device_token, RustBuffer public_key, RustBuffer features, RustBuffer node_id, RustBuffer iso_timestamp, RustBuffer signature, RustBuffer is_production, RustBuffer custom_url
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REGTEST_CLOSE_CHANNEL
