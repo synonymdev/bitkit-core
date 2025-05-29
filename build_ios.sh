@@ -99,5 +99,9 @@ echo "Computing checksum..."
 CHECKSUM=`swift package compute-checksum ./bindings/ios/BitkitCore.xcframework.zip` || { echo "Failed to compute checksum"; exit 1; }
 echo "New checksum: $CHECKSUM"
 
+# Update Package.swift with the new checksum
+echo "Updating Package.swift with new checksum..."
+sed -i '' "s/let checksum = \".*\"/let checksum = \"$CHECKSUM\"/" ./Package.swift || { echo "Failed to update Package.swift"; exit 1; }
+
 echo "iOS build process completed successfully!"
-echo "Update Package.swift with the new checksum: $CHECKSUM"
+echo "Package.swift has been updated with the new checksum: $CHECKSUM"
