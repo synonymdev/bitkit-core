@@ -89,4 +89,15 @@ echo "Cleaning up temporary directories..."
 rm -rf "bindings/ios/ios-arm64"
 rm -rf "bindings/ios/ios-arm64-sim"
 
+# Create zip file for distribution and checksum calculation
+echo "Creating XCFramework zip file..."
+rm -f ./bindings/ios/BitkitCore.xcframework.zip
+ditto -c -k --sequesterRsrc --keepParent ./bindings/ios/BitkitCore.xcframework ./bindings/ios/BitkitCore.xcframework.zip || { echo "Failed to create zip file"; exit 1; }
+
+# Compute checksum
+echo "Computing checksum..."
+CHECKSUM=`swift package compute-checksum ./bindings/ios/BitkitCore.xcframework.zip` || { echo "Failed to compute checksum"; exit 1; }
+echo "New checksum: $CHECKSUM"
+
 echo "iOS build process completed successfully!"
+echo "Update Package.swift with the new checksum: $CHECKSUM"
