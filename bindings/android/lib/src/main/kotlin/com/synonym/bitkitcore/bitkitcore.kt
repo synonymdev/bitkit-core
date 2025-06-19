@@ -3,7 +3,7 @@
 
 @file:Suppress("NAME_SHADOWING")
 
-package uniffi.bitkitcore;
+package com.synonym.bitkitcore;
 
 // Common helper code.
 //
