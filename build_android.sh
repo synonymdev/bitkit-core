@@ -61,8 +61,9 @@ export OPENSSL_STATIC=1
 export OPENSSL_NO_VENDOR=0
 
 # Define output directories
-BASE_DIR="./bindings/android"
-JNILIBS_DIR="$BASE_DIR/jniLibs"
+ANDROID_LIB_DIR="./bindings/android"
+BASE_DIR="$ANDROID_LIB_DIR/lib/src/main/kotlin/com/synonym/bitkitcore"
+JNILIBS_DIR="$ANDROID_LIB_DIR/lib/src/main/jniLibs"
 
 # Create output directories
 mkdir -p "$BASE_DIR"
@@ -70,7 +71,8 @@ mkdir -p "$JNILIBS_DIR"
 
 # Remove previous build
 echo "Removing previous build..."
-rm -rf bindings/android/
+rm -rf "$BASE_DIR"/*
+rm -rf "$JNILIBS_DIR"/*
 
 # Cargo Build
 echo "Building Rust libraries..."
@@ -128,6 +130,7 @@ TMP_DIR=$(mktemp -d)
 cargo run --bin uniffi-bindgen generate \
     --library "$LIBRARY_PATH" \
     --language kotlin \
+    --config uniffi.toml \
     --out-dir "$TMP_DIR"
 
 # Move the Kotlin file from the nested directory to the final location
@@ -146,5 +149,15 @@ if [ ! -f "$BASE_DIR/bitkitcore.kt" ]; then
     ls -la "$BASE_DIR"
     exit 1
 fi
+
+# Sync version
+echo "Syncing version from Cargo.toml..."
+CARGO_VERSION=$(grep '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/' | head -1)
+sed -i.bak "s/^libraryVersion=.*/libraryVersion=$CARGO_VERSION/" "$ANDROID_LIB_DIR/gradle.properties"
+rm -f "$ANDROID_LIB_DIR/gradle.properties.bak"
+
+# Verify android library publish
+echo "Testing android library publish to Maven Local..."
+"$ANDROID_LIB_DIR"/gradlew --project-dir "$ANDROID_LIB_DIR" clean publishToMavenLocal
 
 echo "Android build process completed successfully!"
