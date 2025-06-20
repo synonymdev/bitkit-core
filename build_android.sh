@@ -71,7 +71,7 @@ mkdir -p "$JNILIBS_DIR"
 
 # Remove previous build
 echo "Removing previous build..."
-rm -f "$BASE_DIR/bitkitcore.kt"
+rm -rf "$BASE_DIR"/*
 rm -rf "$JNILIBS_DIR"/*
 
 # Cargo Build
@@ -157,7 +157,7 @@ sed -i.bak "s/^libraryVersion=.*/libraryVersion=$CARGO_VERSION/" "$ANDROID_LIB_D
 rm -f "$ANDROID_LIB_DIR/gradle.properties.bak"
 
 # Verify android library publish
-echo "Testing android library publish to to Maven Local..."
+echo "Testing android library publish to Maven Local..."
 "$ANDROID_LIB_DIR"/gradlew --project-dir "$ANDROID_LIB_DIR" clean publishToMavenLocal
 
 echo "Android build process completed successfully!"
