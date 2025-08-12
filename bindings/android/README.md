@@ -15,13 +15,12 @@ Create a GitHub PAT (Personal Access Token):
 
 Set env vars:
 ```sh
-export GITHUB_ACTOR="your_pat_with_read"
+export GITHUB_ACTOR="your_github_username"
 export GITHUB_TOKEN="your_pat_with_read:packages"
 ```
 
 Or add to `~/.gradle/gradle.properties`:
 ```properties
-# ~/.gradle/gradle.properties
 gpr.user=<your_github_username>
 gpr.key=<your_pat_with_read:packages>
 ```
@@ -31,7 +30,6 @@ gpr.key=<your_pat_with_read:packages>
 ```kotlin
 // settings.gradle.kts
 dependencyResolutionManagement {
-  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
   repositories {
     google()
     mavenCentral()
@@ -56,6 +54,7 @@ dependencies {
   // implementation("com.synonym:bitkit-core-android:0.1.0")
 }
 ```
+
 ### Maven Local (development)
 
 ```kotlin

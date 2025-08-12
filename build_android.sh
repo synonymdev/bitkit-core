@@ -139,7 +139,7 @@ find "$TMP_DIR" -name "bitkitcore.kt" -exec mv {} "$BASE_DIR/" \;
 # Clean up temp directory and any remaining uniffi directories
 echo "Cleaning up temporary files..."
 rm -rf "$TMP_DIR"
-rm -rf "$BASE_DIR/uniffi"
+rm -rf "$ANDROID_LIB_DIR/uniffi"
 
 # Verify the file was moved correctly
 if [ ! -f "$BASE_DIR/bitkitcore.kt" ]; then

@@ -6,6 +6,11 @@ name: Gradle Package
 on:
   release:
     types: [created]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g., v0.1.0)"
+        required: true
 
 jobs:
   publish:
@@ -27,9 +32,15 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
-    - name: Extract version from tag
+    - name: Extract version from input or tag
       id: version
-      run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+      shell: bash
+      run: |
+        VERSION="${{ inputs.version }}"
+        if [[ -z "$VERSION" ]]; then
+          VERSION="$GITHUB_REF_NAME"
+        fi
+        echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
 
     - name: Build with Gradle
       working-directory: bindings/android
@@ -40,6 +51,6 @@ jobs:
       working-directory: bindings/android
       env:
         GITHUB_ACTOR: ${{ github.actor }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.ORG_PACKAGES_TOKEN }}
         GITHUB_REPO: ${{ github.repository }}
       run: ./gradlew publish -Pversion=${{ steps.version.outputs.version }}
