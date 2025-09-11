@@ -270,7 +270,7 @@ impl BlocktankDB {
         stmt.execute(rusqlite::params![
         order.id,
         format!("{:?}", order.state),
-        format!("{:?}", order.state2),
+        order.state2.as_ref().map(|s| format!("{:?}", s)).unwrap_or_else(|| "".to_string()),
         order.fee_sat,
         order.network_fee_sat,
         order.service_fee_sat,
@@ -384,7 +384,14 @@ impl BlocktankDB {
                 Ok(IBtOrder {
                     id: row.get(0)?,
                     state: row.get::<_, String>(1)?.parse().unwrap(),
-                    state2: row.get::<_, String>(2)?.parse().unwrap(),
+                    state2: {
+                        let state2_str: String = row.get(2)?;
+                        if state2_str.is_empty() {
+                            None
+                        } else {
+                            Some(state2_str.parse().unwrap())
+                        }
+                    },
                     fee_sat: row.get(3)?,
                     network_fee_sat: row.get(4)?,
                     service_fee_sat: row.get(5)?,
@@ -486,7 +493,14 @@ impl BlocktankDB {
                 Ok(IBtOrder {
                     id: row.get(0)?,
                     state: row.get::<_, String>(1)?.parse().unwrap(),
-                    state2: row.get::<_, String>(2)?.parse().unwrap(),
+                    state2: {
+                        let state2_str: String = row.get(2)?;
+                        if state2_str.is_empty() {
+                            None
+                        } else {
+                            Some(state2_str.parse().unwrap())
+                        }
+                    },
                     fee_sat: row.get(3)?,
                     network_fee_sat: row.get(4)?,
                     service_fee_sat: row.get(5)?,

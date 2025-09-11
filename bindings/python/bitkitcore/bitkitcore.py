@@ -3545,7 +3545,7 @@ class _UniffiConverterTypeIBtOnchainTransactions(_UniffiConverterRustBuffer):
 class IBtOrder:
     id: "str"
     state: "BtOrderState"
-    state2: "BtOrderState2"
+    state2: "typing.Optional[BtOrderState2]"
     fee_sat: "int"
     network_fee_sat: "int"
     service_fee_sat: "int"
@@ -3567,7 +3567,7 @@ class IBtOrder:
     updated_at: "str"
     created_at: "str"
     @typing.no_type_check
-    def __init__(self, *, id: "str", state: "BtOrderState", state2: "BtOrderState2", fee_sat: "int", network_fee_sat: "int", service_fee_sat: "int", lsp_balance_sat: "int", client_balance_sat: "int", zero_conf: "bool", zero_reserve: "bool", client_node_id: "typing.Optional[str]", channel_expiry_weeks: "int", channel_expires_at: "str", order_expires_at: "str", channel: "typing.Optional[IBtChannel]", lsp_node: "ILspNode", lnurl: "typing.Optional[str]", payment: "IBtPayment", coupon_code: "typing.Optional[str]", source: "typing.Optional[str]", discount: "typing.Optional[IDiscount]", updated_at: "str", created_at: "str"):
+    def __init__(self, *, id: "str", state: "BtOrderState", state2: "typing.Optional[BtOrderState2]", fee_sat: "int", network_fee_sat: "int", service_fee_sat: "int", lsp_balance_sat: "int", client_balance_sat: "int", zero_conf: "bool", zero_reserve: "bool", client_node_id: "typing.Optional[str]", channel_expiry_weeks: "int", channel_expires_at: "str", order_expires_at: "str", channel: "typing.Optional[IBtChannel]", lsp_node: "ILspNode", lnurl: "typing.Optional[str]", payment: "IBtPayment", coupon_code: "typing.Optional[str]", source: "typing.Optional[str]", discount: "typing.Optional[IDiscount]", updated_at: "str", created_at: "str"):
         self.id = id
         self.state = state
         self.state2 = state2
@@ -3650,7 +3650,7 @@ class _UniffiConverterTypeIBtOrder(_UniffiConverterRustBuffer):
         return IBtOrder(
             id=_UniffiConverterString.read(buf),
             state=_UniffiConverterTypeBtOrderState.read(buf),
-            state2=_UniffiConverterTypeBtOrderState2.read(buf),
+            state2=_UniffiConverterOptionalTypeBtOrderState2.read(buf),
             fee_sat=_UniffiConverterUInt64.read(buf),
             network_fee_sat=_UniffiConverterUInt64.read(buf),
             service_fee_sat=_UniffiConverterUInt64.read(buf),
@@ -3677,7 +3677,7 @@ class _UniffiConverterTypeIBtOrder(_UniffiConverterRustBuffer):
     def check_lower(value):
         _UniffiConverterString.check_lower(value.id)
         _UniffiConverterTypeBtOrderState.check_lower(value.state)
-        _UniffiConverterTypeBtOrderState2.check_lower(value.state2)
+        _UniffiConverterOptionalTypeBtOrderState2.check_lower(value.state2)
         _UniffiConverterUInt64.check_lower(value.fee_sat)
         _UniffiConverterUInt64.check_lower(value.network_fee_sat)
         _UniffiConverterUInt64.check_lower(value.service_fee_sat)
@@ -3703,7 +3703,7 @@ class _UniffiConverterTypeIBtOrder(_UniffiConverterRustBuffer):
     def write(value, buf):
         _UniffiConverterString.write(value.id, buf)
         _UniffiConverterTypeBtOrderState.write(value.state, buf)
-        _UniffiConverterTypeBtOrderState2.write(value.state2, buf)
+        _UniffiConverterOptionalTypeBtOrderState2.write(value.state2, buf)
         _UniffiConverterUInt64.write(value.fee_sat, buf)
         _UniffiConverterUInt64.write(value.network_fee_sat, buf)
         _UniffiConverterUInt64.write(value.service_fee_sat, buf)
@@ -3728,14 +3728,14 @@ class _UniffiConverterTypeIBtOrder(_UniffiConverterRustBuffer):
 
 class IBtPayment:
     state: "BtPaymentState"
-    state2: "BtPaymentState2"
+    state2: "typing.Optional[BtPaymentState2]"
     paid_sat: "int"
     bolt11_invoice: "IBtBolt11Invoice"
     onchain: "IBtOnchainTransactions"
     is_manually_paid: "typing.Optional[bool]"
     manual_refunds: "typing.Optional[typing.List[IManualRefund]]"
     @typing.no_type_check
-    def __init__(self, *, state: "BtPaymentState", state2: "BtPaymentState2", paid_sat: "int", bolt11_invoice: "IBtBolt11Invoice", onchain: "IBtOnchainTransactions", is_manually_paid: "typing.Optional[bool]", manual_refunds: "typing.Optional[typing.List[IManualRefund]]"):
+    def __init__(self, *, state: "BtPaymentState", state2: "typing.Optional[BtPaymentState2]", paid_sat: "int", bolt11_invoice: "IBtBolt11Invoice", onchain: "IBtOnchainTransactions", is_manually_paid: "typing.Optional[bool]", manual_refunds: "typing.Optional[typing.List[IManualRefund]]"):
         self.state = state
         self.state2 = state2
         self.paid_sat = paid_sat
@@ -3769,7 +3769,7 @@ class _UniffiConverterTypeIBtPayment(_UniffiConverterRustBuffer):
     def read(buf):
         return IBtPayment(
             state=_UniffiConverterTypeBtPaymentState.read(buf),
-            state2=_UniffiConverterTypeBtPaymentState2.read(buf),
+            state2=_UniffiConverterOptionalTypeBtPaymentState2.read(buf),
             paid_sat=_UniffiConverterUInt64.read(buf),
             bolt11_invoice=_UniffiConverterTypeIBtBolt11Invoice.read(buf),
             onchain=_UniffiConverterTypeIBtOnchainTransactions.read(buf),
@@ -3780,7 +3780,7 @@ class _UniffiConverterTypeIBtPayment(_UniffiConverterRustBuffer):
     @staticmethod
     def check_lower(value):
         _UniffiConverterTypeBtPaymentState.check_lower(value.state)
-        _UniffiConverterTypeBtPaymentState2.check_lower(value.state2)
+        _UniffiConverterOptionalTypeBtPaymentState2.check_lower(value.state2)
         _UniffiConverterUInt64.check_lower(value.paid_sat)
         _UniffiConverterTypeIBtBolt11Invoice.check_lower(value.bolt11_invoice)
         _UniffiConverterTypeIBtOnchainTransactions.check_lower(value.onchain)
@@ -3790,7 +3790,7 @@ class _UniffiConverterTypeIBtPayment(_UniffiConverterRustBuffer):
     @staticmethod
     def write(value, buf):
         _UniffiConverterTypeBtPaymentState.write(value.state, buf)
-        _UniffiConverterTypeBtPaymentState2.write(value.state2, buf)
+        _UniffiConverterOptionalTypeBtPaymentState2.write(value.state2, buf)
         _UniffiConverterUInt64.write(value.paid_sat, buf)
         _UniffiConverterTypeIBtBolt11Invoice.write(value.bolt11_invoice, buf)
         _UniffiConverterTypeIBtOnchainTransactions.write(value.onchain, buf)
@@ -11178,6 +11178,33 @@ class _UniffiConverterOptionalTypeBtOrderState2(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterTypeBtOrderState2.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeBtPaymentState2(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeBtPaymentState2.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeBtPaymentState2.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeBtPaymentState2.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 

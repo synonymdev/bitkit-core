@@ -698,7 +698,7 @@ impl From<IBtOnchainTransactions> for ExternalIBtOnchainTransactions {
 #[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtPayment {
     pub state: BtPaymentState,
-    pub state2: BtPaymentState2,
+    pub state2: Option<BtPaymentState2>,
     pub paid_sat: u64,
     pub bolt11_invoice: IBtBolt11Invoice,
     pub onchain: IBtOnchainTransactions,
@@ -710,7 +710,7 @@ impl From<ExternalIBtPayment> for IBtPayment {
     fn from(other: ExternalIBtPayment) -> Self {
         Self {
             state: other.state.into(),
-            state2: other.state2.into(),
+            state2: other.state2.map(|s| s.into()),
             paid_sat: other.paid_sat,
             bolt11_invoice: other.bolt11_invoice.into(),
             onchain: other.onchain.into(),
@@ -726,7 +726,7 @@ impl From<IBtPayment> for ExternalIBtPayment {
     fn from(other: IBtPayment) -> Self {
         Self {
             state: other.state.into(),
-            state2: other.state2.into(),
+            state2: other.state2.map(|s| s.into()),
             paid_sat: other.paid_sat,
             bolt11_invoice: other.bolt11_invoice.into(),
             onchain: other.onchain.into(),
@@ -766,7 +766,7 @@ impl From<IBt0ConfMinTxFeeWindow> for ExternalIBt0ConfMinTxFeeWindow {
 pub struct IBtOrder {
     pub id: String,
     pub state: BtOrderState,
-    pub state2: BtOrderState2,
+    pub state2: Option<BtOrderState2>,
     pub fee_sat: u64,
     pub network_fee_sat: u64,
     pub service_fee_sat: u64,
@@ -794,7 +794,7 @@ impl From<ExternalIBtOrder> for IBtOrder {
         Self {
             id: other.id,
             state: other.state.into(),
-            state2: other.state2.into(),
+            state2: other.state2.map(|s| s.into()),
             fee_sat: other.fee_sat,
             network_fee_sat: other.network_fee_sat,
             service_fee_sat: other.service_fee_sat,
@@ -824,7 +824,7 @@ impl From<IBtOrder> for ExternalIBtOrder {
         Self {
             id: other.id,
             state: other.state.into(),
-            state2: other.state2.into(),
+            state2: other.state2.map(|s| s.into()),
             fee_sat: other.fee_sat,
             network_fee_sat: other.network_fee_sat,
             service_fee_sat: other.service_fee_sat,

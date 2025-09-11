@@ -3242,7 +3242,7 @@ public func FfiConverterTypeIBtOnchainTransactions_lower(_ value: IBtOnchainTran
 public struct IBtOrder {
     public var id: String
     public var state: BtOrderState
-    public var state2: BtOrderState2
+    public var state2: BtOrderState2?
     public var feeSat: UInt64
     public var networkFeeSat: UInt64
     public var serviceFeeSat: UInt64
@@ -3266,7 +3266,7 @@ public struct IBtOrder {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, state: BtOrderState, state2: BtOrderState2, feeSat: UInt64, networkFeeSat: UInt64, serviceFeeSat: UInt64, lspBalanceSat: UInt64, clientBalanceSat: UInt64, zeroConf: Bool, zeroReserve: Bool, clientNodeId: String?, channelExpiryWeeks: UInt32, channelExpiresAt: String, orderExpiresAt: String, channel: IBtChannel?, lspNode: ILspNode, lnurl: String?, payment: IBtPayment, couponCode: String?, source: String?, discount: IDiscount?, updatedAt: String, createdAt: String) {
+    public init(id: String, state: BtOrderState, state2: BtOrderState2?, feeSat: UInt64, networkFeeSat: UInt64, serviceFeeSat: UInt64, lspBalanceSat: UInt64, clientBalanceSat: UInt64, zeroConf: Bool, zeroReserve: Bool, clientNodeId: String?, channelExpiryWeeks: UInt32, channelExpiresAt: String, orderExpiresAt: String, channel: IBtChannel?, lspNode: ILspNode, lnurl: String?, payment: IBtPayment, couponCode: String?, source: String?, discount: IDiscount?, updatedAt: String, createdAt: String) {
         self.id = id
         self.state = state
         self.state2 = state2
@@ -3403,7 +3403,7 @@ public struct FfiConverterTypeIBtOrder: FfiConverterRustBuffer {
             try IBtOrder(
                 id: FfiConverterString.read(from: &buf), 
                 state: FfiConverterTypeBtOrderState.read(from: &buf), 
-                state2: FfiConverterTypeBtOrderState2.read(from: &buf), 
+                state2: FfiConverterOptionTypeBtOrderState2.read(from: &buf), 
                 feeSat: FfiConverterUInt64.read(from: &buf), 
                 networkFeeSat: FfiConverterUInt64.read(from: &buf), 
                 serviceFeeSat: FfiConverterUInt64.read(from: &buf), 
@@ -3430,7 +3430,7 @@ public struct FfiConverterTypeIBtOrder: FfiConverterRustBuffer {
     public static func write(_ value: IBtOrder, into buf: inout [UInt8]) {
         FfiConverterString.write(value.id, into: &buf)
         FfiConverterTypeBtOrderState.write(value.state, into: &buf)
-        FfiConverterTypeBtOrderState2.write(value.state2, into: &buf)
+        FfiConverterOptionTypeBtOrderState2.write(value.state2, into: &buf)
         FfiConverterUInt64.write(value.feeSat, into: &buf)
         FfiConverterUInt64.write(value.networkFeeSat, into: &buf)
         FfiConverterUInt64.write(value.serviceFeeSat, into: &buf)
@@ -3466,7 +3466,7 @@ public func FfiConverterTypeIBtOrder_lower(_ value: IBtOrder) -> RustBuffer {
 
 public struct IBtPayment {
     public var state: BtPaymentState
-    public var state2: BtPaymentState2
+    public var state2: BtPaymentState2?
     public var paidSat: UInt64
     public var bolt11Invoice: IBtBolt11Invoice
     public var onchain: IBtOnchainTransactions
@@ -3475,7 +3475,7 @@ public struct IBtPayment {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(state: BtPaymentState, state2: BtPaymentState2, paidSat: UInt64, bolt11Invoice: IBtBolt11Invoice, onchain: IBtOnchainTransactions, isManuallyPaid: Bool?, manualRefunds: [IManualRefund]?) {
+    public init(state: BtPaymentState, state2: BtPaymentState2?, paidSat: UInt64, bolt11Invoice: IBtBolt11Invoice, onchain: IBtOnchainTransactions, isManuallyPaid: Bool?, manualRefunds: [IManualRefund]?) {
         self.state = state
         self.state2 = state2
         self.paidSat = paidSat
@@ -3531,7 +3531,7 @@ public struct FfiConverterTypeIBtPayment: FfiConverterRustBuffer {
         return
             try IBtPayment(
                 state: FfiConverterTypeBtPaymentState.read(from: &buf), 
-                state2: FfiConverterTypeBtPaymentState2.read(from: &buf), 
+                state2: FfiConverterOptionTypeBtPaymentState2.read(from: &buf), 
                 paidSat: FfiConverterUInt64.read(from: &buf), 
                 bolt11Invoice: FfiConverterTypeIBtBolt11Invoice.read(from: &buf), 
                 onchain: FfiConverterTypeIBtOnchainTransactions.read(from: &buf), 
@@ -3542,7 +3542,7 @@ public struct FfiConverterTypeIBtPayment: FfiConverterRustBuffer {
 
     public static func write(_ value: IBtPayment, into buf: inout [UInt8]) {
         FfiConverterTypeBtPaymentState.write(value.state, into: &buf)
-        FfiConverterTypeBtPaymentState2.write(value.state2, into: &buf)
+        FfiConverterOptionTypeBtPaymentState2.write(value.state2, into: &buf)
         FfiConverterUInt64.write(value.paidSat, into: &buf)
         FfiConverterTypeIBtBolt11Invoice.write(value.bolt11Invoice, into: &buf)
         FfiConverterTypeIBtOnchainTransactions.write(value.onchain, into: &buf)
@@ -11058,6 +11058,27 @@ fileprivate struct FfiConverterOptionTypeBtOrderState2: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeBtOrderState2.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeBtPaymentState2: FfiConverterRustBuffer {
+    typealias SwiftType = BtPaymentState2?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeBtPaymentState2.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeBtPaymentState2.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }

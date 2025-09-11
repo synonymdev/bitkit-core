@@ -2976,7 +2976,7 @@ public object FfiConverterTypeIBtOnchainTransactions: FfiConverterRustBuffer<IBt
 data class IBtOrder (
     var `id`: kotlin.String, 
     var `state`: BtOrderState, 
-    var `state2`: BtOrderState2, 
+    var `state2`: BtOrderState2?, 
     var `feeSat`: kotlin.ULong, 
     var `networkFeeSat`: kotlin.ULong, 
     var `serviceFeeSat`: kotlin.ULong, 
@@ -3007,7 +3007,7 @@ public object FfiConverterTypeIBtOrder: FfiConverterRustBuffer<IBtOrder> {
         return IBtOrder(
             FfiConverterString.read(buf),
             FfiConverterTypeBtOrderState.read(buf),
-            FfiConverterTypeBtOrderState2.read(buf),
+            FfiConverterOptionalTypeBtOrderState2.read(buf),
             FfiConverterULong.read(buf),
             FfiConverterULong.read(buf),
             FfiConverterULong.read(buf),
@@ -3034,7 +3034,7 @@ public object FfiConverterTypeIBtOrder: FfiConverterRustBuffer<IBtOrder> {
     override fun allocationSize(value: IBtOrder) = (
             FfiConverterString.allocationSize(value.`id`) +
             FfiConverterTypeBtOrderState.allocationSize(value.`state`) +
-            FfiConverterTypeBtOrderState2.allocationSize(value.`state2`) +
+            FfiConverterOptionalTypeBtOrderState2.allocationSize(value.`state2`) +
             FfiConverterULong.allocationSize(value.`feeSat`) +
             FfiConverterULong.allocationSize(value.`networkFeeSat`) +
             FfiConverterULong.allocationSize(value.`serviceFeeSat`) +
@@ -3060,7 +3060,7 @@ public object FfiConverterTypeIBtOrder: FfiConverterRustBuffer<IBtOrder> {
     override fun write(value: IBtOrder, buf: ByteBuffer) {
             FfiConverterString.write(value.`id`, buf)
             FfiConverterTypeBtOrderState.write(value.`state`, buf)
-            FfiConverterTypeBtOrderState2.write(value.`state2`, buf)
+            FfiConverterOptionalTypeBtOrderState2.write(value.`state2`, buf)
             FfiConverterULong.write(value.`feeSat`, buf)
             FfiConverterULong.write(value.`networkFeeSat`, buf)
             FfiConverterULong.write(value.`serviceFeeSat`, buf)
@@ -3088,7 +3088,7 @@ public object FfiConverterTypeIBtOrder: FfiConverterRustBuffer<IBtOrder> {
 
 data class IBtPayment (
     var `state`: BtPaymentState, 
-    var `state2`: BtPaymentState2, 
+    var `state2`: BtPaymentState2?, 
     var `paidSat`: kotlin.ULong, 
     var `bolt11Invoice`: IBtBolt11Invoice, 
     var `onchain`: IBtOnchainTransactions, 
@@ -3103,7 +3103,7 @@ public object FfiConverterTypeIBtPayment: FfiConverterRustBuffer<IBtPayment> {
     override fun read(buf: ByteBuffer): IBtPayment {
         return IBtPayment(
             FfiConverterTypeBtPaymentState.read(buf),
-            FfiConverterTypeBtPaymentState2.read(buf),
+            FfiConverterOptionalTypeBtPaymentState2.read(buf),
             FfiConverterULong.read(buf),
             FfiConverterTypeIBtBolt11Invoice.read(buf),
             FfiConverterTypeIBtOnchainTransactions.read(buf),
@@ -3114,7 +3114,7 @@ public object FfiConverterTypeIBtPayment: FfiConverterRustBuffer<IBtPayment> {
 
     override fun allocationSize(value: IBtPayment) = (
             FfiConverterTypeBtPaymentState.allocationSize(value.`state`) +
-            FfiConverterTypeBtPaymentState2.allocationSize(value.`state2`) +
+            FfiConverterOptionalTypeBtPaymentState2.allocationSize(value.`state2`) +
             FfiConverterULong.allocationSize(value.`paidSat`) +
             FfiConverterTypeIBtBolt11Invoice.allocationSize(value.`bolt11Invoice`) +
             FfiConverterTypeIBtOnchainTransactions.allocationSize(value.`onchain`) +
@@ -3124,7 +3124,7 @@ public object FfiConverterTypeIBtPayment: FfiConverterRustBuffer<IBtPayment> {
 
     override fun write(value: IBtPayment, buf: ByteBuffer) {
             FfiConverterTypeBtPaymentState.write(value.`state`, buf)
-            FfiConverterTypeBtPaymentState2.write(value.`state2`, buf)
+            FfiConverterOptionalTypeBtPaymentState2.write(value.`state2`, buf)
             FfiConverterULong.write(value.`paidSat`, buf)
             FfiConverterTypeIBtBolt11Invoice.write(value.`bolt11Invoice`, buf)
             FfiConverterTypeIBtOnchainTransactions.write(value.`onchain`, buf)
@@ -8770,6 +8770,35 @@ public object FfiConverterOptionalTypeBtOrderState2: FfiConverterRustBuffer<BtOr
         } else {
             buf.put(1)
             FfiConverterTypeBtOrderState2.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeBtPaymentState2: FfiConverterRustBuffer<BtPaymentState2?> {
+    override fun read(buf: ByteBuffer): BtPaymentState2? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeBtPaymentState2.read(buf)
+    }
+
+    override fun allocationSize(value: BtPaymentState2?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeBtPaymentState2.allocationSize(value)
+        }
+    }
+
+    override fun write(value: BtPaymentState2?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeBtPaymentState2.write(value, buf)
         }
     }
 }
