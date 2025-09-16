@@ -3558,16 +3558,16 @@ class IBtOrder:
     channel_expires_at: "str"
     order_expires_at: "str"
     channel: "typing.Optional[IBtChannel]"
-    lsp_node: "ILspNode"
+    lsp_node: "typing.Optional[ILspNode]"
     lnurl: "typing.Optional[str]"
-    payment: "IBtPayment"
+    payment: "typing.Optional[IBtPayment]"
     coupon_code: "typing.Optional[str]"
     source: "typing.Optional[str]"
     discount: "typing.Optional[IDiscount]"
     updated_at: "str"
     created_at: "str"
     @typing.no_type_check
-    def __init__(self, *, id: "str", state: "BtOrderState", state2: "typing.Optional[BtOrderState2]", fee_sat: "int", network_fee_sat: "int", service_fee_sat: "int", lsp_balance_sat: "int", client_balance_sat: "int", zero_conf: "bool", zero_reserve: "bool", client_node_id: "typing.Optional[str]", channel_expiry_weeks: "int", channel_expires_at: "str", order_expires_at: "str", channel: "typing.Optional[IBtChannel]", lsp_node: "ILspNode", lnurl: "typing.Optional[str]", payment: "IBtPayment", coupon_code: "typing.Optional[str]", source: "typing.Optional[str]", discount: "typing.Optional[IDiscount]", updated_at: "str", created_at: "str"):
+    def __init__(self, *, id: "str", state: "BtOrderState", state2: "typing.Optional[BtOrderState2]", fee_sat: "int", network_fee_sat: "int", service_fee_sat: "int", lsp_balance_sat: "int", client_balance_sat: "int", zero_conf: "bool", zero_reserve: "bool", client_node_id: "typing.Optional[str]", channel_expiry_weeks: "int", channel_expires_at: "str", order_expires_at: "str", channel: "typing.Optional[IBtChannel]", lsp_node: "typing.Optional[ILspNode]", lnurl: "typing.Optional[str]", payment: "typing.Optional[IBtPayment]", coupon_code: "typing.Optional[str]", source: "typing.Optional[str]", discount: "typing.Optional[IDiscount]", updated_at: "str", created_at: "str"):
         self.id = id
         self.state = state
         self.state2 = state2
@@ -3663,9 +3663,9 @@ class _UniffiConverterTypeIBtOrder(_UniffiConverterRustBuffer):
             channel_expires_at=_UniffiConverterString.read(buf),
             order_expires_at=_UniffiConverterString.read(buf),
             channel=_UniffiConverterOptionalTypeIBtChannel.read(buf),
-            lsp_node=_UniffiConverterTypeILspNode.read(buf),
+            lsp_node=_UniffiConverterOptionalTypeILspNode.read(buf),
             lnurl=_UniffiConverterOptionalString.read(buf),
-            payment=_UniffiConverterTypeIBtPayment.read(buf),
+            payment=_UniffiConverterOptionalTypeIBtPayment.read(buf),
             coupon_code=_UniffiConverterOptionalString.read(buf),
             source=_UniffiConverterOptionalString.read(buf),
             discount=_UniffiConverterOptionalTypeIDiscount.read(buf),
@@ -3690,9 +3690,9 @@ class _UniffiConverterTypeIBtOrder(_UniffiConverterRustBuffer):
         _UniffiConverterString.check_lower(value.channel_expires_at)
         _UniffiConverterString.check_lower(value.order_expires_at)
         _UniffiConverterOptionalTypeIBtChannel.check_lower(value.channel)
-        _UniffiConverterTypeILspNode.check_lower(value.lsp_node)
+        _UniffiConverterOptionalTypeILspNode.check_lower(value.lsp_node)
         _UniffiConverterOptionalString.check_lower(value.lnurl)
-        _UniffiConverterTypeIBtPayment.check_lower(value.payment)
+        _UniffiConverterOptionalTypeIBtPayment.check_lower(value.payment)
         _UniffiConverterOptionalString.check_lower(value.coupon_code)
         _UniffiConverterOptionalString.check_lower(value.source)
         _UniffiConverterOptionalTypeIDiscount.check_lower(value.discount)
@@ -3716,9 +3716,9 @@ class _UniffiConverterTypeIBtOrder(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.channel_expires_at, buf)
         _UniffiConverterString.write(value.order_expires_at, buf)
         _UniffiConverterOptionalTypeIBtChannel.write(value.channel, buf)
-        _UniffiConverterTypeILspNode.write(value.lsp_node, buf)
+        _UniffiConverterOptionalTypeILspNode.write(value.lsp_node, buf)
         _UniffiConverterOptionalString.write(value.lnurl, buf)
-        _UniffiConverterTypeIBtPayment.write(value.payment, buf)
+        _UniffiConverterOptionalTypeIBtPayment.write(value.payment, buf)
         _UniffiConverterOptionalString.write(value.coupon_code, buf)
         _UniffiConverterOptionalString.write(value.source, buf)
         _UniffiConverterOptionalTypeIDiscount.write(value.discount, buf)
@@ -3730,12 +3730,12 @@ class IBtPayment:
     state: "BtPaymentState"
     state2: "typing.Optional[BtPaymentState2]"
     paid_sat: "int"
-    bolt11_invoice: "IBtBolt11Invoice"
-    onchain: "IBtOnchainTransactions"
+    bolt11_invoice: "typing.Optional[IBtBolt11Invoice]"
+    onchain: "typing.Optional[IBtOnchainTransactions]"
     is_manually_paid: "typing.Optional[bool]"
     manual_refunds: "typing.Optional[typing.List[IManualRefund]]"
     @typing.no_type_check
-    def __init__(self, *, state: "BtPaymentState", state2: "typing.Optional[BtPaymentState2]", paid_sat: "int", bolt11_invoice: "IBtBolt11Invoice", onchain: "IBtOnchainTransactions", is_manually_paid: "typing.Optional[bool]", manual_refunds: "typing.Optional[typing.List[IManualRefund]]"):
+    def __init__(self, *, state: "BtPaymentState", state2: "typing.Optional[BtPaymentState2]", paid_sat: "int", bolt11_invoice: "typing.Optional[IBtBolt11Invoice]", onchain: "typing.Optional[IBtOnchainTransactions]", is_manually_paid: "typing.Optional[bool]", manual_refunds: "typing.Optional[typing.List[IManualRefund]]"):
         self.state = state
         self.state2 = state2
         self.paid_sat = paid_sat
@@ -3771,8 +3771,8 @@ class _UniffiConverterTypeIBtPayment(_UniffiConverterRustBuffer):
             state=_UniffiConverterTypeBtPaymentState.read(buf),
             state2=_UniffiConverterOptionalTypeBtPaymentState2.read(buf),
             paid_sat=_UniffiConverterUInt64.read(buf),
-            bolt11_invoice=_UniffiConverterTypeIBtBolt11Invoice.read(buf),
-            onchain=_UniffiConverterTypeIBtOnchainTransactions.read(buf),
+            bolt11_invoice=_UniffiConverterOptionalTypeIBtBolt11Invoice.read(buf),
+            onchain=_UniffiConverterOptionalTypeIBtOnchainTransactions.read(buf),
             is_manually_paid=_UniffiConverterOptionalBool.read(buf),
             manual_refunds=_UniffiConverterOptionalSequenceTypeIManualRefund.read(buf),
         )
@@ -3782,8 +3782,8 @@ class _UniffiConverterTypeIBtPayment(_UniffiConverterRustBuffer):
         _UniffiConverterTypeBtPaymentState.check_lower(value.state)
         _UniffiConverterOptionalTypeBtPaymentState2.check_lower(value.state2)
         _UniffiConverterUInt64.check_lower(value.paid_sat)
-        _UniffiConverterTypeIBtBolt11Invoice.check_lower(value.bolt11_invoice)
-        _UniffiConverterTypeIBtOnchainTransactions.check_lower(value.onchain)
+        _UniffiConverterOptionalTypeIBtBolt11Invoice.check_lower(value.bolt11_invoice)
+        _UniffiConverterOptionalTypeIBtOnchainTransactions.check_lower(value.onchain)
         _UniffiConverterOptionalBool.check_lower(value.is_manually_paid)
         _UniffiConverterOptionalSequenceTypeIManualRefund.check_lower(value.manual_refunds)
 
@@ -3792,8 +3792,8 @@ class _UniffiConverterTypeIBtPayment(_UniffiConverterRustBuffer):
         _UniffiConverterTypeBtPaymentState.write(value.state, buf)
         _UniffiConverterOptionalTypeBtPaymentState2.write(value.state2, buf)
         _UniffiConverterUInt64.write(value.paid_sat, buf)
-        _UniffiConverterTypeIBtBolt11Invoice.write(value.bolt11_invoice, buf)
-        _UniffiConverterTypeIBtOnchainTransactions.write(value.onchain, buf)
+        _UniffiConverterOptionalTypeIBtBolt11Invoice.write(value.bolt11_invoice, buf)
+        _UniffiConverterOptionalTypeIBtOnchainTransactions.write(value.onchain, buf)
         _UniffiConverterOptionalBool.write(value.is_manually_paid, buf)
         _UniffiConverterOptionalSequenceTypeIManualRefund.write(value.manual_refunds, buf)
 
@@ -4002,13 +4002,15 @@ class IGift:
     id: "str"
     node_id: "str"
     order_id: "typing.Optional[str]"
-    order: "typing.Optional[IBtOrder]"
+    order: "typing.Optional[IGiftOrder]"
     bolt11_payment_id: "typing.Optional[str]"
-    bolt11_payment: "typing.Optional[IBtPayment]"
-    applied_gift_code_id: "str"
+    bolt11_payment: "typing.Optional[IGiftPayment]"
+    applied_gift_code_id: "typing.Optional[str]"
     applied_gift_code: "typing.Optional[IGiftCode]"
+    created_at: "str"
+    updated_at: "str"
     @typing.no_type_check
-    def __init__(self, *, id: "str", node_id: "str", order_id: "typing.Optional[str]", order: "typing.Optional[IBtOrder]", bolt11_payment_id: "typing.Optional[str]", bolt11_payment: "typing.Optional[IBtPayment]", applied_gift_code_id: "str", applied_gift_code: "typing.Optional[IGiftCode]"):
+    def __init__(self, *, id: "str", node_id: "str", order_id: "typing.Optional[str]", order: "typing.Optional[IGiftOrder]", bolt11_payment_id: "typing.Optional[str]", bolt11_payment: "typing.Optional[IGiftPayment]", applied_gift_code_id: "typing.Optional[str]", applied_gift_code: "typing.Optional[IGiftCode]", created_at: "str", updated_at: "str"):
         self.id = id
         self.node_id = node_id
         self.order_id = order_id
@@ -4017,9 +4019,11 @@ class IGift:
         self.bolt11_payment = bolt11_payment
         self.applied_gift_code_id = applied_gift_code_id
         self.applied_gift_code = applied_gift_code
+        self.created_at = created_at
+        self.updated_at = updated_at
 
     def __str__(self):
-        return "IGift(id={}, node_id={}, order_id={}, order={}, bolt11_payment_id={}, bolt11_payment={}, applied_gift_code_id={}, applied_gift_code={})".format(self.id, self.node_id, self.order_id, self.order, self.bolt11_payment_id, self.bolt11_payment, self.applied_gift_code_id, self.applied_gift_code)
+        return "IGift(id={}, node_id={}, order_id={}, order={}, bolt11_payment_id={}, bolt11_payment={}, applied_gift_code_id={}, applied_gift_code={}, created_at={}, updated_at={})".format(self.id, self.node_id, self.order_id, self.order, self.bolt11_payment_id, self.bolt11_payment, self.applied_gift_code_id, self.applied_gift_code, self.created_at, self.updated_at)
 
     def __eq__(self, other):
         if self.id != other.id:
@@ -4038,6 +4042,10 @@ class IGift:
             return False
         if self.applied_gift_code != other.applied_gift_code:
             return False
+        if self.created_at != other.created_at:
+            return False
+        if self.updated_at != other.updated_at:
+            return False
         return True
 
 class _UniffiConverterTypeIGift(_UniffiConverterRustBuffer):
@@ -4047,11 +4055,13 @@ class _UniffiConverterTypeIGift(_UniffiConverterRustBuffer):
             id=_UniffiConverterString.read(buf),
             node_id=_UniffiConverterString.read(buf),
             order_id=_UniffiConverterOptionalString.read(buf),
-            order=_UniffiConverterOptionalTypeIBtOrder.read(buf),
+            order=_UniffiConverterOptionalTypeIGiftOrder.read(buf),
             bolt11_payment_id=_UniffiConverterOptionalString.read(buf),
-            bolt11_payment=_UniffiConverterOptionalTypeIBtPayment.read(buf),
-            applied_gift_code_id=_UniffiConverterString.read(buf),
+            bolt11_payment=_UniffiConverterOptionalTypeIGiftPayment.read(buf),
+            applied_gift_code_id=_UniffiConverterOptionalString.read(buf),
             applied_gift_code=_UniffiConverterOptionalTypeIGiftCode.read(buf),
+            created_at=_UniffiConverterString.read(buf),
+            updated_at=_UniffiConverterString.read(buf),
         )
 
     @staticmethod
@@ -4059,39 +4069,253 @@ class _UniffiConverterTypeIGift(_UniffiConverterRustBuffer):
         _UniffiConverterString.check_lower(value.id)
         _UniffiConverterString.check_lower(value.node_id)
         _UniffiConverterOptionalString.check_lower(value.order_id)
-        _UniffiConverterOptionalTypeIBtOrder.check_lower(value.order)
+        _UniffiConverterOptionalTypeIGiftOrder.check_lower(value.order)
         _UniffiConverterOptionalString.check_lower(value.bolt11_payment_id)
-        _UniffiConverterOptionalTypeIBtPayment.check_lower(value.bolt11_payment)
-        _UniffiConverterString.check_lower(value.applied_gift_code_id)
+        _UniffiConverterOptionalTypeIGiftPayment.check_lower(value.bolt11_payment)
+        _UniffiConverterOptionalString.check_lower(value.applied_gift_code_id)
         _UniffiConverterOptionalTypeIGiftCode.check_lower(value.applied_gift_code)
+        _UniffiConverterString.check_lower(value.created_at)
+        _UniffiConverterString.check_lower(value.updated_at)
 
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.id, buf)
         _UniffiConverterString.write(value.node_id, buf)
         _UniffiConverterOptionalString.write(value.order_id, buf)
-        _UniffiConverterOptionalTypeIBtOrder.write(value.order, buf)
+        _UniffiConverterOptionalTypeIGiftOrder.write(value.order, buf)
         _UniffiConverterOptionalString.write(value.bolt11_payment_id, buf)
-        _UniffiConverterOptionalTypeIBtPayment.write(value.bolt11_payment, buf)
-        _UniffiConverterString.write(value.applied_gift_code_id, buf)
+        _UniffiConverterOptionalTypeIGiftPayment.write(value.bolt11_payment, buf)
+        _UniffiConverterOptionalString.write(value.applied_gift_code_id, buf)
         _UniffiConverterOptionalTypeIGiftCode.write(value.applied_gift_code, buf)
+        _UniffiConverterString.write(value.created_at, buf)
+        _UniffiConverterString.write(value.updated_at, buf)
+
+
+class IGiftBolt11Invoice:
+    id: "str"
+    request: "str"
+    state: "str"
+    is_hodl_invoice: "typing.Optional[bool]"
+    payment_hash: "typing.Optional[str]"
+    amount_sat: "typing.Optional[int]"
+    amount_msat: "typing.Optional[str]"
+    internal_node_pubkey: "typing.Optional[str]"
+    updated_at: "typing.Optional[str]"
+    created_at: "typing.Optional[str]"
+    expires_at: "typing.Optional[str]"
+    @typing.no_type_check
+    def __init__(self, *, id: "str", request: "str", state: "str", is_hodl_invoice: "typing.Optional[bool]", payment_hash: "typing.Optional[str]", amount_sat: "typing.Optional[int]", amount_msat: "typing.Optional[str]", internal_node_pubkey: "typing.Optional[str]", updated_at: "typing.Optional[str]", created_at: "typing.Optional[str]", expires_at: "typing.Optional[str]"):
+        self.id = id
+        self.request = request
+        self.state = state
+        self.is_hodl_invoice = is_hodl_invoice
+        self.payment_hash = payment_hash
+        self.amount_sat = amount_sat
+        self.amount_msat = amount_msat
+        self.internal_node_pubkey = internal_node_pubkey
+        self.updated_at = updated_at
+        self.created_at = created_at
+        self.expires_at = expires_at
+
+    def __str__(self):
+        return "IGiftBolt11Invoice(id={}, request={}, state={}, is_hodl_invoice={}, payment_hash={}, amount_sat={}, amount_msat={}, internal_node_pubkey={}, updated_at={}, created_at={}, expires_at={})".format(self.id, self.request, self.state, self.is_hodl_invoice, self.payment_hash, self.amount_sat, self.amount_msat, self.internal_node_pubkey, self.updated_at, self.created_at, self.expires_at)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.request != other.request:
+            return False
+        if self.state != other.state:
+            return False
+        if self.is_hodl_invoice != other.is_hodl_invoice:
+            return False
+        if self.payment_hash != other.payment_hash:
+            return False
+        if self.amount_sat != other.amount_sat:
+            return False
+        if self.amount_msat != other.amount_msat:
+            return False
+        if self.internal_node_pubkey != other.internal_node_pubkey:
+            return False
+        if self.updated_at != other.updated_at:
+            return False
+        if self.created_at != other.created_at:
+            return False
+        if self.expires_at != other.expires_at:
+            return False
+        return True
+
+class _UniffiConverterTypeIGiftBolt11Invoice(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IGiftBolt11Invoice(
+            id=_UniffiConverterString.read(buf),
+            request=_UniffiConverterString.read(buf),
+            state=_UniffiConverterString.read(buf),
+            is_hodl_invoice=_UniffiConverterOptionalBool.read(buf),
+            payment_hash=_UniffiConverterOptionalString.read(buf),
+            amount_sat=_UniffiConverterOptionalUInt64.read(buf),
+            amount_msat=_UniffiConverterOptionalString.read(buf),
+            internal_node_pubkey=_UniffiConverterOptionalString.read(buf),
+            updated_at=_UniffiConverterOptionalString.read(buf),
+            created_at=_UniffiConverterOptionalString.read(buf),
+            expires_at=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterString.check_lower(value.request)
+        _UniffiConverterString.check_lower(value.state)
+        _UniffiConverterOptionalBool.check_lower(value.is_hodl_invoice)
+        _UniffiConverterOptionalString.check_lower(value.payment_hash)
+        _UniffiConverterOptionalUInt64.check_lower(value.amount_sat)
+        _UniffiConverterOptionalString.check_lower(value.amount_msat)
+        _UniffiConverterOptionalString.check_lower(value.internal_node_pubkey)
+        _UniffiConverterOptionalString.check_lower(value.updated_at)
+        _UniffiConverterOptionalString.check_lower(value.created_at)
+        _UniffiConverterOptionalString.check_lower(value.expires_at)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterString.write(value.request, buf)
+        _UniffiConverterString.write(value.state, buf)
+        _UniffiConverterOptionalBool.write(value.is_hodl_invoice, buf)
+        _UniffiConverterOptionalString.write(value.payment_hash, buf)
+        _UniffiConverterOptionalUInt64.write(value.amount_sat, buf)
+        _UniffiConverterOptionalString.write(value.amount_msat, buf)
+        _UniffiConverterOptionalString.write(value.internal_node_pubkey, buf)
+        _UniffiConverterOptionalString.write(value.updated_at, buf)
+        _UniffiConverterOptionalString.write(value.created_at, buf)
+        _UniffiConverterOptionalString.write(value.expires_at, buf)
+
+
+class IGiftBtcAddress:
+    id: "str"
+    address: "str"
+    transactions: "typing.List[str]"
+    all_transactions: "typing.List[str]"
+    is_blacklisted: "typing.Optional[bool]"
+    watch_until: "typing.Optional[str]"
+    watch_for_block_confirmations: "typing.Optional[int]"
+    updated_at: "typing.Optional[str]"
+    created_at: "typing.Optional[str]"
+    @typing.no_type_check
+    def __init__(self, *, id: "str", address: "str", transactions: "typing.List[str]", all_transactions: "typing.List[str]", is_blacklisted: "typing.Optional[bool]", watch_until: "typing.Optional[str]", watch_for_block_confirmations: "typing.Optional[int]", updated_at: "typing.Optional[str]", created_at: "typing.Optional[str]"):
+        self.id = id
+        self.address = address
+        self.transactions = transactions
+        self.all_transactions = all_transactions
+        self.is_blacklisted = is_blacklisted
+        self.watch_until = watch_until
+        self.watch_for_block_confirmations = watch_for_block_confirmations
+        self.updated_at = updated_at
+        self.created_at = created_at
+
+    def __str__(self):
+        return "IGiftBtcAddress(id={}, address={}, transactions={}, all_transactions={}, is_blacklisted={}, watch_until={}, watch_for_block_confirmations={}, updated_at={}, created_at={})".format(self.id, self.address, self.transactions, self.all_transactions, self.is_blacklisted, self.watch_until, self.watch_for_block_confirmations, self.updated_at, self.created_at)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.address != other.address:
+            return False
+        if self.transactions != other.transactions:
+            return False
+        if self.all_transactions != other.all_transactions:
+            return False
+        if self.is_blacklisted != other.is_blacklisted:
+            return False
+        if self.watch_until != other.watch_until:
+            return False
+        if self.watch_for_block_confirmations != other.watch_for_block_confirmations:
+            return False
+        if self.updated_at != other.updated_at:
+            return False
+        if self.created_at != other.created_at:
+            return False
+        return True
+
+class _UniffiConverterTypeIGiftBtcAddress(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IGiftBtcAddress(
+            id=_UniffiConverterString.read(buf),
+            address=_UniffiConverterString.read(buf),
+            transactions=_UniffiConverterSequenceString.read(buf),
+            all_transactions=_UniffiConverterSequenceString.read(buf),
+            is_blacklisted=_UniffiConverterOptionalBool.read(buf),
+            watch_until=_UniffiConverterOptionalString.read(buf),
+            watch_for_block_confirmations=_UniffiConverterOptionalUInt32.read(buf),
+            updated_at=_UniffiConverterOptionalString.read(buf),
+            created_at=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterString.check_lower(value.address)
+        _UniffiConverterSequenceString.check_lower(value.transactions)
+        _UniffiConverterSequenceString.check_lower(value.all_transactions)
+        _UniffiConverterOptionalBool.check_lower(value.is_blacklisted)
+        _UniffiConverterOptionalString.check_lower(value.watch_until)
+        _UniffiConverterOptionalUInt32.check_lower(value.watch_for_block_confirmations)
+        _UniffiConverterOptionalString.check_lower(value.updated_at)
+        _UniffiConverterOptionalString.check_lower(value.created_at)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterString.write(value.address, buf)
+        _UniffiConverterSequenceString.write(value.transactions, buf)
+        _UniffiConverterSequenceString.write(value.all_transactions, buf)
+        _UniffiConverterOptionalBool.write(value.is_blacklisted, buf)
+        _UniffiConverterOptionalString.write(value.watch_until, buf)
+        _UniffiConverterOptionalUInt32.write(value.watch_for_block_confirmations, buf)
+        _UniffiConverterOptionalString.write(value.updated_at, buf)
+        _UniffiConverterOptionalString.write(value.created_at, buf)
 
 
 class IGiftCode:
     id: "str"
     code: "str"
+    created_at: "str"
+    updated_at: "str"
+    expires_at: "str"
+    gift_sat: "typing.Optional[int]"
+    scope: "typing.Optional[str]"
+    max_count: "typing.Optional[int]"
     @typing.no_type_check
-    def __init__(self, *, id: "str", code: "str"):
+    def __init__(self, *, id: "str", code: "str", created_at: "str", updated_at: "str", expires_at: "str", gift_sat: "typing.Optional[int]", scope: "typing.Optional[str]", max_count: "typing.Optional[int]"):
         self.id = id
         self.code = code
+        self.created_at = created_at
+        self.updated_at = updated_at
+        self.expires_at = expires_at
+        self.gift_sat = gift_sat
+        self.scope = scope
+        self.max_count = max_count
 
     def __str__(self):
-        return "IGiftCode(id={}, code={})".format(self.id, self.code)
+        return "IGiftCode(id={}, code={}, created_at={}, updated_at={}, expires_at={}, gift_sat={}, scope={}, max_count={})".format(self.id, self.code, self.created_at, self.updated_at, self.expires_at, self.gift_sat, self.scope, self.max_count)
 
     def __eq__(self, other):
         if self.id != other.id:
             return False
         if self.code != other.code:
+            return False
+        if self.created_at != other.created_at:
+            return False
+        if self.updated_at != other.updated_at:
+            return False
+        if self.expires_at != other.expires_at:
+            return False
+        if self.gift_sat != other.gift_sat:
+            return False
+        if self.scope != other.scope:
+            return False
+        if self.max_count != other.max_count:
             return False
         return True
 
@@ -4101,17 +4325,419 @@ class _UniffiConverterTypeIGiftCode(_UniffiConverterRustBuffer):
         return IGiftCode(
             id=_UniffiConverterString.read(buf),
             code=_UniffiConverterString.read(buf),
+            created_at=_UniffiConverterString.read(buf),
+            updated_at=_UniffiConverterString.read(buf),
+            expires_at=_UniffiConverterString.read(buf),
+            gift_sat=_UniffiConverterOptionalUInt64.read(buf),
+            scope=_UniffiConverterOptionalString.read(buf),
+            max_count=_UniffiConverterOptionalUInt32.read(buf),
         )
 
     @staticmethod
     def check_lower(value):
         _UniffiConverterString.check_lower(value.id)
         _UniffiConverterString.check_lower(value.code)
+        _UniffiConverterString.check_lower(value.created_at)
+        _UniffiConverterString.check_lower(value.updated_at)
+        _UniffiConverterString.check_lower(value.expires_at)
+        _UniffiConverterOptionalUInt64.check_lower(value.gift_sat)
+        _UniffiConverterOptionalString.check_lower(value.scope)
+        _UniffiConverterOptionalUInt32.check_lower(value.max_count)
 
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.id, buf)
         _UniffiConverterString.write(value.code, buf)
+        _UniffiConverterString.write(value.created_at, buf)
+        _UniffiConverterString.write(value.updated_at, buf)
+        _UniffiConverterString.write(value.expires_at, buf)
+        _UniffiConverterOptionalUInt64.write(value.gift_sat, buf)
+        _UniffiConverterOptionalString.write(value.scope, buf)
+        _UniffiConverterOptionalUInt32.write(value.max_count, buf)
+
+
+class IGiftLspNode:
+    alias: "str"
+    pubkey: "str"
+    connection_strings: "typing.List[str]"
+    @typing.no_type_check
+    def __init__(self, *, alias: "str", pubkey: "str", connection_strings: "typing.List[str]"):
+        self.alias = alias
+        self.pubkey = pubkey
+        self.connection_strings = connection_strings
+
+    def __str__(self):
+        return "IGiftLspNode(alias={}, pubkey={}, connection_strings={})".format(self.alias, self.pubkey, self.connection_strings)
+
+    def __eq__(self, other):
+        if self.alias != other.alias:
+            return False
+        if self.pubkey != other.pubkey:
+            return False
+        if self.connection_strings != other.connection_strings:
+            return False
+        return True
+
+class _UniffiConverterTypeIGiftLspNode(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IGiftLspNode(
+            alias=_UniffiConverterString.read(buf),
+            pubkey=_UniffiConverterString.read(buf),
+            connection_strings=_UniffiConverterSequenceString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.alias)
+        _UniffiConverterString.check_lower(value.pubkey)
+        _UniffiConverterSequenceString.check_lower(value.connection_strings)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.alias, buf)
+        _UniffiConverterString.write(value.pubkey, buf)
+        _UniffiConverterSequenceString.write(value.connection_strings, buf)
+
+
+class IGiftOrder:
+    id: "str"
+    state: "str"
+    old_state: "typing.Optional[str]"
+    is_channel_expired: "typing.Optional[bool]"
+    is_order_expired: "typing.Optional[bool]"
+    lsp_balance_sat: "typing.Optional[int]"
+    client_balance_sat: "typing.Optional[int]"
+    channel_expiry_weeks: "typing.Optional[int]"
+    zero_conf: "typing.Optional[bool]"
+    zero_reserve: "typing.Optional[bool]"
+    announced: "typing.Optional[bool]"
+    client_node_id: "typing.Optional[str]"
+    channel_expires_at: "typing.Optional[str]"
+    order_expires_at: "typing.Optional[str]"
+    fee_sat: "typing.Optional[int]"
+    network_fee_sat: "typing.Optional[int]"
+    service_fee_sat: "typing.Optional[int]"
+    payment: "typing.Optional[IGiftPayment]"
+    lsp_node: "typing.Optional[IGiftLspNode]"
+    updated_at: "typing.Optional[str]"
+    created_at: "typing.Optional[str]"
+    node_id_verified: "typing.Optional[bool]"
+    @typing.no_type_check
+    def __init__(self, *, id: "str", state: "str", old_state: "typing.Optional[str]", is_channel_expired: "typing.Optional[bool]", is_order_expired: "typing.Optional[bool]", lsp_balance_sat: "typing.Optional[int]", client_balance_sat: "typing.Optional[int]", channel_expiry_weeks: "typing.Optional[int]", zero_conf: "typing.Optional[bool]", zero_reserve: "typing.Optional[bool]", announced: "typing.Optional[bool]", client_node_id: "typing.Optional[str]", channel_expires_at: "typing.Optional[str]", order_expires_at: "typing.Optional[str]", fee_sat: "typing.Optional[int]", network_fee_sat: "typing.Optional[int]", service_fee_sat: "typing.Optional[int]", payment: "typing.Optional[IGiftPayment]", lsp_node: "typing.Optional[IGiftLspNode]", updated_at: "typing.Optional[str]", created_at: "typing.Optional[str]", node_id_verified: "typing.Optional[bool]"):
+        self.id = id
+        self.state = state
+        self.old_state = old_state
+        self.is_channel_expired = is_channel_expired
+        self.is_order_expired = is_order_expired
+        self.lsp_balance_sat = lsp_balance_sat
+        self.client_balance_sat = client_balance_sat
+        self.channel_expiry_weeks = channel_expiry_weeks
+        self.zero_conf = zero_conf
+        self.zero_reserve = zero_reserve
+        self.announced = announced
+        self.client_node_id = client_node_id
+        self.channel_expires_at = channel_expires_at
+        self.order_expires_at = order_expires_at
+        self.fee_sat = fee_sat
+        self.network_fee_sat = network_fee_sat
+        self.service_fee_sat = service_fee_sat
+        self.payment = payment
+        self.lsp_node = lsp_node
+        self.updated_at = updated_at
+        self.created_at = created_at
+        self.node_id_verified = node_id_verified
+
+    def __str__(self):
+        return "IGiftOrder(id={}, state={}, old_state={}, is_channel_expired={}, is_order_expired={}, lsp_balance_sat={}, client_balance_sat={}, channel_expiry_weeks={}, zero_conf={}, zero_reserve={}, announced={}, client_node_id={}, channel_expires_at={}, order_expires_at={}, fee_sat={}, network_fee_sat={}, service_fee_sat={}, payment={}, lsp_node={}, updated_at={}, created_at={}, node_id_verified={})".format(self.id, self.state, self.old_state, self.is_channel_expired, self.is_order_expired, self.lsp_balance_sat, self.client_balance_sat, self.channel_expiry_weeks, self.zero_conf, self.zero_reserve, self.announced, self.client_node_id, self.channel_expires_at, self.order_expires_at, self.fee_sat, self.network_fee_sat, self.service_fee_sat, self.payment, self.lsp_node, self.updated_at, self.created_at, self.node_id_verified)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.state != other.state:
+            return False
+        if self.old_state != other.old_state:
+            return False
+        if self.is_channel_expired != other.is_channel_expired:
+            return False
+        if self.is_order_expired != other.is_order_expired:
+            return False
+        if self.lsp_balance_sat != other.lsp_balance_sat:
+            return False
+        if self.client_balance_sat != other.client_balance_sat:
+            return False
+        if self.channel_expiry_weeks != other.channel_expiry_weeks:
+            return False
+        if self.zero_conf != other.zero_conf:
+            return False
+        if self.zero_reserve != other.zero_reserve:
+            return False
+        if self.announced != other.announced:
+            return False
+        if self.client_node_id != other.client_node_id:
+            return False
+        if self.channel_expires_at != other.channel_expires_at:
+            return False
+        if self.order_expires_at != other.order_expires_at:
+            return False
+        if self.fee_sat != other.fee_sat:
+            return False
+        if self.network_fee_sat != other.network_fee_sat:
+            return False
+        if self.service_fee_sat != other.service_fee_sat:
+            return False
+        if self.payment != other.payment:
+            return False
+        if self.lsp_node != other.lsp_node:
+            return False
+        if self.updated_at != other.updated_at:
+            return False
+        if self.created_at != other.created_at:
+            return False
+        if self.node_id_verified != other.node_id_verified:
+            return False
+        return True
+
+class _UniffiConverterTypeIGiftOrder(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IGiftOrder(
+            id=_UniffiConverterString.read(buf),
+            state=_UniffiConverterString.read(buf),
+            old_state=_UniffiConverterOptionalString.read(buf),
+            is_channel_expired=_UniffiConverterOptionalBool.read(buf),
+            is_order_expired=_UniffiConverterOptionalBool.read(buf),
+            lsp_balance_sat=_UniffiConverterOptionalUInt64.read(buf),
+            client_balance_sat=_UniffiConverterOptionalUInt64.read(buf),
+            channel_expiry_weeks=_UniffiConverterOptionalUInt32.read(buf),
+            zero_conf=_UniffiConverterOptionalBool.read(buf),
+            zero_reserve=_UniffiConverterOptionalBool.read(buf),
+            announced=_UniffiConverterOptionalBool.read(buf),
+            client_node_id=_UniffiConverterOptionalString.read(buf),
+            channel_expires_at=_UniffiConverterOptionalString.read(buf),
+            order_expires_at=_UniffiConverterOptionalString.read(buf),
+            fee_sat=_UniffiConverterOptionalUInt64.read(buf),
+            network_fee_sat=_UniffiConverterOptionalUInt64.read(buf),
+            service_fee_sat=_UniffiConverterOptionalUInt64.read(buf),
+            payment=_UniffiConverterOptionalTypeIGiftPayment.read(buf),
+            lsp_node=_UniffiConverterOptionalTypeIGiftLspNode.read(buf),
+            updated_at=_UniffiConverterOptionalString.read(buf),
+            created_at=_UniffiConverterOptionalString.read(buf),
+            node_id_verified=_UniffiConverterOptionalBool.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterString.check_lower(value.state)
+        _UniffiConverterOptionalString.check_lower(value.old_state)
+        _UniffiConverterOptionalBool.check_lower(value.is_channel_expired)
+        _UniffiConverterOptionalBool.check_lower(value.is_order_expired)
+        _UniffiConverterOptionalUInt64.check_lower(value.lsp_balance_sat)
+        _UniffiConverterOptionalUInt64.check_lower(value.client_balance_sat)
+        _UniffiConverterOptionalUInt32.check_lower(value.channel_expiry_weeks)
+        _UniffiConverterOptionalBool.check_lower(value.zero_conf)
+        _UniffiConverterOptionalBool.check_lower(value.zero_reserve)
+        _UniffiConverterOptionalBool.check_lower(value.announced)
+        _UniffiConverterOptionalString.check_lower(value.client_node_id)
+        _UniffiConverterOptionalString.check_lower(value.channel_expires_at)
+        _UniffiConverterOptionalString.check_lower(value.order_expires_at)
+        _UniffiConverterOptionalUInt64.check_lower(value.fee_sat)
+        _UniffiConverterOptionalUInt64.check_lower(value.network_fee_sat)
+        _UniffiConverterOptionalUInt64.check_lower(value.service_fee_sat)
+        _UniffiConverterOptionalTypeIGiftPayment.check_lower(value.payment)
+        _UniffiConverterOptionalTypeIGiftLspNode.check_lower(value.lsp_node)
+        _UniffiConverterOptionalString.check_lower(value.updated_at)
+        _UniffiConverterOptionalString.check_lower(value.created_at)
+        _UniffiConverterOptionalBool.check_lower(value.node_id_verified)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterString.write(value.state, buf)
+        _UniffiConverterOptionalString.write(value.old_state, buf)
+        _UniffiConverterOptionalBool.write(value.is_channel_expired, buf)
+        _UniffiConverterOptionalBool.write(value.is_order_expired, buf)
+        _UniffiConverterOptionalUInt64.write(value.lsp_balance_sat, buf)
+        _UniffiConverterOptionalUInt64.write(value.client_balance_sat, buf)
+        _UniffiConverterOptionalUInt32.write(value.channel_expiry_weeks, buf)
+        _UniffiConverterOptionalBool.write(value.zero_conf, buf)
+        _UniffiConverterOptionalBool.write(value.zero_reserve, buf)
+        _UniffiConverterOptionalBool.write(value.announced, buf)
+        _UniffiConverterOptionalString.write(value.client_node_id, buf)
+        _UniffiConverterOptionalString.write(value.channel_expires_at, buf)
+        _UniffiConverterOptionalString.write(value.order_expires_at, buf)
+        _UniffiConverterOptionalUInt64.write(value.fee_sat, buf)
+        _UniffiConverterOptionalUInt64.write(value.network_fee_sat, buf)
+        _UniffiConverterOptionalUInt64.write(value.service_fee_sat, buf)
+        _UniffiConverterOptionalTypeIGiftPayment.write(value.payment, buf)
+        _UniffiConverterOptionalTypeIGiftLspNode.write(value.lsp_node, buf)
+        _UniffiConverterOptionalString.write(value.updated_at, buf)
+        _UniffiConverterOptionalString.write(value.created_at, buf)
+        _UniffiConverterOptionalBool.write(value.node_id_verified, buf)
+
+
+class IGiftPayment:
+    id: "str"
+    state: "str"
+    old_state: "typing.Optional[str]"
+    onchain_state: "typing.Optional[str]"
+    ln_state: "typing.Optional[str]"
+    paid_onchain_sat: "typing.Optional[int]"
+    paid_ln_sat: "typing.Optional[int]"
+    paid_sat: "typing.Optional[int]"
+    is_overpaid: "typing.Optional[bool]"
+    is_refunded: "typing.Optional[bool]"
+    overpaid_amount_sat: "typing.Optional[int]"
+    required_onchain_confirmations: "typing.Optional[int]"
+    settlement_state: "typing.Optional[str]"
+    expected_amount_sat: "typing.Optional[int]"
+    is_manually_paid: "typing.Optional[bool]"
+    btc_address: "typing.Optional[IGiftBtcAddress]"
+    btc_address_id: "typing.Optional[str]"
+    bolt11_invoice: "typing.Optional[IGiftBolt11Invoice]"
+    bolt11_invoice_id: "typing.Optional[str]"
+    manual_refunds: "typing.List[str]"
+    @typing.no_type_check
+    def __init__(self, *, id: "str", state: "str", old_state: "typing.Optional[str]", onchain_state: "typing.Optional[str]", ln_state: "typing.Optional[str]", paid_onchain_sat: "typing.Optional[int]", paid_ln_sat: "typing.Optional[int]", paid_sat: "typing.Optional[int]", is_overpaid: "typing.Optional[bool]", is_refunded: "typing.Optional[bool]", overpaid_amount_sat: "typing.Optional[int]", required_onchain_confirmations: "typing.Optional[int]", settlement_state: "typing.Optional[str]", expected_amount_sat: "typing.Optional[int]", is_manually_paid: "typing.Optional[bool]", btc_address: "typing.Optional[IGiftBtcAddress]", btc_address_id: "typing.Optional[str]", bolt11_invoice: "typing.Optional[IGiftBolt11Invoice]", bolt11_invoice_id: "typing.Optional[str]", manual_refunds: "typing.List[str]"):
+        self.id = id
+        self.state = state
+        self.old_state = old_state
+        self.onchain_state = onchain_state
+        self.ln_state = ln_state
+        self.paid_onchain_sat = paid_onchain_sat
+        self.paid_ln_sat = paid_ln_sat
+        self.paid_sat = paid_sat
+        self.is_overpaid = is_overpaid
+        self.is_refunded = is_refunded
+        self.overpaid_amount_sat = overpaid_amount_sat
+        self.required_onchain_confirmations = required_onchain_confirmations
+        self.settlement_state = settlement_state
+        self.expected_amount_sat = expected_amount_sat
+        self.is_manually_paid = is_manually_paid
+        self.btc_address = btc_address
+        self.btc_address_id = btc_address_id
+        self.bolt11_invoice = bolt11_invoice
+        self.bolt11_invoice_id = bolt11_invoice_id
+        self.manual_refunds = manual_refunds
+
+    def __str__(self):
+        return "IGiftPayment(id={}, state={}, old_state={}, onchain_state={}, ln_state={}, paid_onchain_sat={}, paid_ln_sat={}, paid_sat={}, is_overpaid={}, is_refunded={}, overpaid_amount_sat={}, required_onchain_confirmations={}, settlement_state={}, expected_amount_sat={}, is_manually_paid={}, btc_address={}, btc_address_id={}, bolt11_invoice={}, bolt11_invoice_id={}, manual_refunds={})".format(self.id, self.state, self.old_state, self.onchain_state, self.ln_state, self.paid_onchain_sat, self.paid_ln_sat, self.paid_sat, self.is_overpaid, self.is_refunded, self.overpaid_amount_sat, self.required_onchain_confirmations, self.settlement_state, self.expected_amount_sat, self.is_manually_paid, self.btc_address, self.btc_address_id, self.bolt11_invoice, self.bolt11_invoice_id, self.manual_refunds)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.state != other.state:
+            return False
+        if self.old_state != other.old_state:
+            return False
+        if self.onchain_state != other.onchain_state:
+            return False
+        if self.ln_state != other.ln_state:
+            return False
+        if self.paid_onchain_sat != other.paid_onchain_sat:
+            return False
+        if self.paid_ln_sat != other.paid_ln_sat:
+            return False
+        if self.paid_sat != other.paid_sat:
+            return False
+        if self.is_overpaid != other.is_overpaid:
+            return False
+        if self.is_refunded != other.is_refunded:
+            return False
+        if self.overpaid_amount_sat != other.overpaid_amount_sat:
+            return False
+        if self.required_onchain_confirmations != other.required_onchain_confirmations:
+            return False
+        if self.settlement_state != other.settlement_state:
+            return False
+        if self.expected_amount_sat != other.expected_amount_sat:
+            return False
+        if self.is_manually_paid != other.is_manually_paid:
+            return False
+        if self.btc_address != other.btc_address:
+            return False
+        if self.btc_address_id != other.btc_address_id:
+            return False
+        if self.bolt11_invoice != other.bolt11_invoice:
+            return False
+        if self.bolt11_invoice_id != other.bolt11_invoice_id:
+            return False
+        if self.manual_refunds != other.manual_refunds:
+            return False
+        return True
+
+class _UniffiConverterTypeIGiftPayment(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return IGiftPayment(
+            id=_UniffiConverterString.read(buf),
+            state=_UniffiConverterString.read(buf),
+            old_state=_UniffiConverterOptionalString.read(buf),
+            onchain_state=_UniffiConverterOptionalString.read(buf),
+            ln_state=_UniffiConverterOptionalString.read(buf),
+            paid_onchain_sat=_UniffiConverterOptionalUInt64.read(buf),
+            paid_ln_sat=_UniffiConverterOptionalUInt64.read(buf),
+            paid_sat=_UniffiConverterOptionalUInt64.read(buf),
+            is_overpaid=_UniffiConverterOptionalBool.read(buf),
+            is_refunded=_UniffiConverterOptionalBool.read(buf),
+            overpaid_amount_sat=_UniffiConverterOptionalUInt64.read(buf),
+            required_onchain_confirmations=_UniffiConverterOptionalUInt32.read(buf),
+            settlement_state=_UniffiConverterOptionalString.read(buf),
+            expected_amount_sat=_UniffiConverterOptionalUInt64.read(buf),
+            is_manually_paid=_UniffiConverterOptionalBool.read(buf),
+            btc_address=_UniffiConverterOptionalTypeIGiftBtcAddress.read(buf),
+            btc_address_id=_UniffiConverterOptionalString.read(buf),
+            bolt11_invoice=_UniffiConverterOptionalTypeIGiftBolt11Invoice.read(buf),
+            bolt11_invoice_id=_UniffiConverterOptionalString.read(buf),
+            manual_refunds=_UniffiConverterSequenceString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterString.check_lower(value.state)
+        _UniffiConverterOptionalString.check_lower(value.old_state)
+        _UniffiConverterOptionalString.check_lower(value.onchain_state)
+        _UniffiConverterOptionalString.check_lower(value.ln_state)
+        _UniffiConverterOptionalUInt64.check_lower(value.paid_onchain_sat)
+        _UniffiConverterOptionalUInt64.check_lower(value.paid_ln_sat)
+        _UniffiConverterOptionalUInt64.check_lower(value.paid_sat)
+        _UniffiConverterOptionalBool.check_lower(value.is_overpaid)
+        _UniffiConverterOptionalBool.check_lower(value.is_refunded)
+        _UniffiConverterOptionalUInt64.check_lower(value.overpaid_amount_sat)
+        _UniffiConverterOptionalUInt32.check_lower(value.required_onchain_confirmations)
+        _UniffiConverterOptionalString.check_lower(value.settlement_state)
+        _UniffiConverterOptionalUInt64.check_lower(value.expected_amount_sat)
+        _UniffiConverterOptionalBool.check_lower(value.is_manually_paid)
+        _UniffiConverterOptionalTypeIGiftBtcAddress.check_lower(value.btc_address)
+        _UniffiConverterOptionalString.check_lower(value.btc_address_id)
+        _UniffiConverterOptionalTypeIGiftBolt11Invoice.check_lower(value.bolt11_invoice)
+        _UniffiConverterOptionalString.check_lower(value.bolt11_invoice_id)
+        _UniffiConverterSequenceString.check_lower(value.manual_refunds)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterString.write(value.state, buf)
+        _UniffiConverterOptionalString.write(value.old_state, buf)
+        _UniffiConverterOptionalString.write(value.onchain_state, buf)
+        _UniffiConverterOptionalString.write(value.ln_state, buf)
+        _UniffiConverterOptionalUInt64.write(value.paid_onchain_sat, buf)
+        _UniffiConverterOptionalUInt64.write(value.paid_ln_sat, buf)
+        _UniffiConverterOptionalUInt64.write(value.paid_sat, buf)
+        _UniffiConverterOptionalBool.write(value.is_overpaid, buf)
+        _UniffiConverterOptionalBool.write(value.is_refunded, buf)
+        _UniffiConverterOptionalUInt64.write(value.overpaid_amount_sat, buf)
+        _UniffiConverterOptionalUInt32.write(value.required_onchain_confirmations, buf)
+        _UniffiConverterOptionalString.write(value.settlement_state, buf)
+        _UniffiConverterOptionalUInt64.write(value.expected_amount_sat, buf)
+        _UniffiConverterOptionalBool.write(value.is_manually_paid, buf)
+        _UniffiConverterOptionalTypeIGiftBtcAddress.write(value.btc_address, buf)
+        _UniffiConverterOptionalString.write(value.btc_address_id, buf)
+        _UniffiConverterOptionalTypeIGiftBolt11Invoice.write(value.bolt11_invoice, buf)
+        _UniffiConverterOptionalString.write(value.bolt11_invoice_id, buf)
+        _UniffiConverterSequenceString.write(value.manual_refunds, buf)
 
 
 class ILspNode:
@@ -10724,6 +11350,33 @@ class _UniffiConverterOptionalTypeDeviceParams(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypeIBtBolt11Invoice(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeIBtBolt11Invoice.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeIBtBolt11Invoice.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeIBtBolt11Invoice.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypeIBtChannel(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -10805,11 +11458,11 @@ class _UniffiConverterOptionalTypeIBtInfo(_UniffiConverterRustBuffer):
 
 
 
-class _UniffiConverterOptionalTypeIBtOrder(_UniffiConverterRustBuffer):
+class _UniffiConverterOptionalTypeIBtOnchainTransactions(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
         if value is not None:
-            _UniffiConverterTypeIBtOrder.check_lower(value)
+            _UniffiConverterTypeIBtOnchainTransactions.check_lower(value)
 
     @classmethod
     def write(cls, value, buf):
@@ -10818,7 +11471,7 @@ class _UniffiConverterOptionalTypeIBtOrder(_UniffiConverterRustBuffer):
             return
 
         buf.write_u8(1)
-        _UniffiConverterTypeIBtOrder.write(value, buf)
+        _UniffiConverterTypeIBtOnchainTransactions.write(value, buf)
 
     @classmethod
     def read(cls, buf):
@@ -10826,7 +11479,7 @@ class _UniffiConverterOptionalTypeIBtOrder(_UniffiConverterRustBuffer):
         if flag == 0:
             return None
         elif flag == 1:
-            return _UniffiConverterTypeIBtOrder.read(buf)
+            return _UniffiConverterTypeIBtOnchainTransactions.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -10886,6 +11539,60 @@ class _UniffiConverterOptionalTypeIDiscount(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypeIGiftBolt11Invoice(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeIGiftBolt11Invoice.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeIGiftBolt11Invoice.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeIGiftBolt11Invoice.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeIGiftBtcAddress(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeIGiftBtcAddress.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeIGiftBtcAddress.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeIGiftBtcAddress.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypeIGiftCode(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -10908,6 +11615,114 @@ class _UniffiConverterOptionalTypeIGiftCode(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterTypeIGiftCode.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeIGiftLspNode(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeIGiftLspNode.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeIGiftLspNode.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeIGiftLspNode.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeIGiftOrder(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeIGiftOrder.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeIGiftOrder.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeIGiftOrder.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeIGiftPayment(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeIGiftPayment.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeIGiftPayment.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeIGiftPayment.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeILspNode(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeILspNode.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeILspNode.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeILspNode.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -13615,7 +14430,12 @@ __all__ = [
     "IcJitEntry",
     "IDiscount",
     "IGift",
+    "IGiftBolt11Invoice",
+    "IGiftBtcAddress",
     "IGiftCode",
+    "IGiftLspNode",
+    "IGiftOrder",
+    "IGiftPayment",
     "ILspNode",
     "IManualRefund",
     "LightningActivity",
