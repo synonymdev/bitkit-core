@@ -238,7 +238,7 @@ mod tests {
         let test_order = IBtOrder {
             id: "test_order_1".to_string(),
             state: BtOrderState::Created,
-            state2: BtOrderState2::Created,
+            state2: Some(BtOrderState2::Created),
             fee_sat: 1000,
             network_fee_sat: 500,
             service_fee_sat: 500,
@@ -260,7 +260,7 @@ mod tests {
             lnurl: None,
             payment: IBtPayment {
                 state: BtPaymentState::Created,
-                state2: BtPaymentState2::Created,
+                state2: Some(BtPaymentState2::Created),
                 paid_sat: 0,
                 bolt11_invoice: IBtBolt11Invoice {
                     request: "lnbc...".to_string(),
@@ -470,7 +470,7 @@ mod tests {
         let test_order1 = IBtOrder {
             id: "test_order_1".to_string(),
             state: BtOrderState::Created,
-            state2: BtOrderState2::Created,
+            state2: Some(BtOrderState2::Created),
             fee_sat: 1000,
             network_fee_sat: 500,
             service_fee_sat: 500,
@@ -492,7 +492,7 @@ mod tests {
             lnurl: None,
             payment: IBtPayment {
                 state: BtPaymentState::Created,
-                state2: BtPaymentState2::Created,
+                state2: Some(BtPaymentState2::Created),
                 paid_sat: 0,
                 bolt11_invoice: IBtBolt11Invoice {
                     request: "lnbc...".to_string(),
@@ -519,13 +519,13 @@ mod tests {
         let mut test_order2 = test_order1.clone();
         test_order2.id = "test_order_2".to_string();
         test_order2.state = BtOrderState::Open;
-        test_order2.state2 = BtOrderState2::Executed;
+        test_order2.state2 = Some(BtOrderState2::Executed);
         test_order2.fee_sat = 2000;
 
         let mut test_order3 = test_order1.clone();
         test_order3.id = "test_order_3".to_string();
         test_order3.state = BtOrderState::Closed;
-        test_order3.state2 = BtOrderState2::Paid;
+        test_order3.state2 = Some(BtOrderState2::Paid);
         test_order3.fee_sat = 3000;
 
         // Insert test orders
@@ -582,7 +582,7 @@ mod tests {
         let test_order1 = IBtOrder {
             id: "test_order_1".to_string(),
             state: BtOrderState::Created,
-            state2: BtOrderState2::Created,  // This should be included in active orders
+            state2: Some(BtOrderState2::Created),  // This should be included in active orders
             fee_sat: 1000,
             network_fee_sat: 500,
             service_fee_sat: 500,
@@ -604,7 +604,7 @@ mod tests {
             lnurl: None,
             payment: IBtPayment {
                 state: BtPaymentState::Created,
-                state2: BtPaymentState2::Created,
+                state2: Some(BtPaymentState2::Created),
                 paid_sat: 0,
                 bolt11_invoice: IBtBolt11Invoice {
                     request: "lnbc...".to_string(),
@@ -631,19 +631,19 @@ mod tests {
         let mut test_order2 = test_order1.clone();
         test_order2.id = "test_order_2".to_string();
         test_order2.state = BtOrderState::Open;
-        test_order2.state2 = BtOrderState2::Paid;  // This should be included in active orders
+        test_order2.state2 = Some(BtOrderState2::Paid);  // This should be included in active orders
         test_order2.fee_sat = 2000;
 
         let mut test_order3 = test_order1.clone();
         test_order3.id = "test_order_3".to_string();
         test_order3.state = BtOrderState::Closed;
-        test_order3.state2 = BtOrderState2::Expired;  // This should NOT be included
+        test_order3.state2 = Some(BtOrderState2::Expired);  // This should NOT be included
         test_order3.fee_sat = 3000;
 
         let mut test_order4 = test_order1.clone();
         test_order4.id = "test_order_4".to_string();
         test_order4.state = BtOrderState::Closed;
-        test_order4.state2 = BtOrderState2::Executed;  // This should NOT be included
+        test_order4.state2 = Some(BtOrderState2::Executed);  // This should NOT be included
         test_order4.fee_sat = 4000;
 
         // Insert all test orders
@@ -669,7 +669,7 @@ mod tests {
         // Verify the orders are in the correct state
         for order in active_orders {
             assert!(
-                matches!(order.state2, BtOrderState2::Created | BtOrderState2::Paid),
+                matches!(order.state2, Some(BtOrderState2::Created) | Some(BtOrderState2::Paid)),
                 "Order {} should be in Created or Paid state, but was in {:?} state",
                 order.id,
                 order.state2
@@ -677,10 +677,10 @@ mod tests {
 
             // Verify other fields are correctly loaded
             if order.id == test_order1.id {
-                assert_eq!(order.state2, BtOrderState2::Created);
+                assert_eq!(order.state2, Some(BtOrderState2::Created));
                 assert_eq!(order.fee_sat, 1000);
             } else if order.id == test_order2.id {
-                assert_eq!(order.state2, BtOrderState2::Paid);
+                assert_eq!(order.state2, Some(BtOrderState2::Paid));
                 assert_eq!(order.fee_sat, 2000);
             }
         }
@@ -737,7 +737,7 @@ mod tests {
                         found_order1 = true;
                         assert_eq!(order.lsp_balance_sat, 100000);
                         assert_eq!(order.client_balance_sat, 0);
-                        assert!(matches!(order.state2, BtOrderState2::Created));
+                        assert!(matches!(order.state2, Some(BtOrderState2::Created)));
                     } else if order.id == order2.id {
                         found_order2 = true;
                         assert_eq!(order.lsp_balance_sat, 150000);
@@ -746,7 +746,7 @@ mod tests {
 
                     // Verify order is in an active state
                     assert!(
-                        matches!(order.state2, BtOrderState2::Created | BtOrderState2::Paid),
+                        matches!(order.state2, Some(BtOrderState2::Created) | Some(BtOrderState2::Paid)),
                         "Order should be in Created or Paid state"
                     );
                 }

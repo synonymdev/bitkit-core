@@ -3242,7 +3242,7 @@ public func FfiConverterTypeIBtOnchainTransactions_lower(_ value: IBtOnchainTran
 public struct IBtOrder {
     public var id: String
     public var state: BtOrderState
-    public var state2: BtOrderState2
+    public var state2: BtOrderState2?
     public var feeSat: UInt64
     public var networkFeeSat: UInt64
     public var serviceFeeSat: UInt64
@@ -3255,9 +3255,9 @@ public struct IBtOrder {
     public var channelExpiresAt: String
     public var orderExpiresAt: String
     public var channel: IBtChannel?
-    public var lspNode: ILspNode
+    public var lspNode: ILspNode?
     public var lnurl: String?
-    public var payment: IBtPayment
+    public var payment: IBtPayment?
     public var couponCode: String?
     public var source: String?
     public var discount: IDiscount?
@@ -3266,7 +3266,7 @@ public struct IBtOrder {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, state: BtOrderState, state2: BtOrderState2, feeSat: UInt64, networkFeeSat: UInt64, serviceFeeSat: UInt64, lspBalanceSat: UInt64, clientBalanceSat: UInt64, zeroConf: Bool, zeroReserve: Bool, clientNodeId: String?, channelExpiryWeeks: UInt32, channelExpiresAt: String, orderExpiresAt: String, channel: IBtChannel?, lspNode: ILspNode, lnurl: String?, payment: IBtPayment, couponCode: String?, source: String?, discount: IDiscount?, updatedAt: String, createdAt: String) {
+    public init(id: String, state: BtOrderState, state2: BtOrderState2?, feeSat: UInt64, networkFeeSat: UInt64, serviceFeeSat: UInt64, lspBalanceSat: UInt64, clientBalanceSat: UInt64, zeroConf: Bool, zeroReserve: Bool, clientNodeId: String?, channelExpiryWeeks: UInt32, channelExpiresAt: String, orderExpiresAt: String, channel: IBtChannel?, lspNode: ILspNode?, lnurl: String?, payment: IBtPayment?, couponCode: String?, source: String?, discount: IDiscount?, updatedAt: String, createdAt: String) {
         self.id = id
         self.state = state
         self.state2 = state2
@@ -3403,7 +3403,7 @@ public struct FfiConverterTypeIBtOrder: FfiConverterRustBuffer {
             try IBtOrder(
                 id: FfiConverterString.read(from: &buf), 
                 state: FfiConverterTypeBtOrderState.read(from: &buf), 
-                state2: FfiConverterTypeBtOrderState2.read(from: &buf), 
+                state2: FfiConverterOptionTypeBtOrderState2.read(from: &buf), 
                 feeSat: FfiConverterUInt64.read(from: &buf), 
                 networkFeeSat: FfiConverterUInt64.read(from: &buf), 
                 serviceFeeSat: FfiConverterUInt64.read(from: &buf), 
@@ -3416,9 +3416,9 @@ public struct FfiConverterTypeIBtOrder: FfiConverterRustBuffer {
                 channelExpiresAt: FfiConverterString.read(from: &buf), 
                 orderExpiresAt: FfiConverterString.read(from: &buf), 
                 channel: FfiConverterOptionTypeIBtChannel.read(from: &buf), 
-                lspNode: FfiConverterTypeILspNode.read(from: &buf), 
+                lspNode: FfiConverterOptionTypeILspNode.read(from: &buf), 
                 lnurl: FfiConverterOptionString.read(from: &buf), 
-                payment: FfiConverterTypeIBtPayment.read(from: &buf), 
+                payment: FfiConverterOptionTypeIBtPayment.read(from: &buf), 
                 couponCode: FfiConverterOptionString.read(from: &buf), 
                 source: FfiConverterOptionString.read(from: &buf), 
                 discount: FfiConverterOptionTypeIDiscount.read(from: &buf), 
@@ -3430,7 +3430,7 @@ public struct FfiConverterTypeIBtOrder: FfiConverterRustBuffer {
     public static func write(_ value: IBtOrder, into buf: inout [UInt8]) {
         FfiConverterString.write(value.id, into: &buf)
         FfiConverterTypeBtOrderState.write(value.state, into: &buf)
-        FfiConverterTypeBtOrderState2.write(value.state2, into: &buf)
+        FfiConverterOptionTypeBtOrderState2.write(value.state2, into: &buf)
         FfiConverterUInt64.write(value.feeSat, into: &buf)
         FfiConverterUInt64.write(value.networkFeeSat, into: &buf)
         FfiConverterUInt64.write(value.serviceFeeSat, into: &buf)
@@ -3443,9 +3443,9 @@ public struct FfiConverterTypeIBtOrder: FfiConverterRustBuffer {
         FfiConverterString.write(value.channelExpiresAt, into: &buf)
         FfiConverterString.write(value.orderExpiresAt, into: &buf)
         FfiConverterOptionTypeIBtChannel.write(value.channel, into: &buf)
-        FfiConverterTypeILspNode.write(value.lspNode, into: &buf)
+        FfiConverterOptionTypeILspNode.write(value.lspNode, into: &buf)
         FfiConverterOptionString.write(value.lnurl, into: &buf)
-        FfiConverterTypeIBtPayment.write(value.payment, into: &buf)
+        FfiConverterOptionTypeIBtPayment.write(value.payment, into: &buf)
         FfiConverterOptionString.write(value.couponCode, into: &buf)
         FfiConverterOptionString.write(value.source, into: &buf)
         FfiConverterOptionTypeIDiscount.write(value.discount, into: &buf)
@@ -3466,16 +3466,16 @@ public func FfiConverterTypeIBtOrder_lower(_ value: IBtOrder) -> RustBuffer {
 
 public struct IBtPayment {
     public var state: BtPaymentState
-    public var state2: BtPaymentState2
+    public var state2: BtPaymentState2?
     public var paidSat: UInt64
-    public var bolt11Invoice: IBtBolt11Invoice
-    public var onchain: IBtOnchainTransactions
+    public var bolt11Invoice: IBtBolt11Invoice?
+    public var onchain: IBtOnchainTransactions?
     public var isManuallyPaid: Bool?
     public var manualRefunds: [IManualRefund]?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(state: BtPaymentState, state2: BtPaymentState2, paidSat: UInt64, bolt11Invoice: IBtBolt11Invoice, onchain: IBtOnchainTransactions, isManuallyPaid: Bool?, manualRefunds: [IManualRefund]?) {
+    public init(state: BtPaymentState, state2: BtPaymentState2?, paidSat: UInt64, bolt11Invoice: IBtBolt11Invoice?, onchain: IBtOnchainTransactions?, isManuallyPaid: Bool?, manualRefunds: [IManualRefund]?) {
         self.state = state
         self.state2 = state2
         self.paidSat = paidSat
@@ -3531,10 +3531,10 @@ public struct FfiConverterTypeIBtPayment: FfiConverterRustBuffer {
         return
             try IBtPayment(
                 state: FfiConverterTypeBtPaymentState.read(from: &buf), 
-                state2: FfiConverterTypeBtPaymentState2.read(from: &buf), 
+                state2: FfiConverterOptionTypeBtPaymentState2.read(from: &buf), 
                 paidSat: FfiConverterUInt64.read(from: &buf), 
-                bolt11Invoice: FfiConverterTypeIBtBolt11Invoice.read(from: &buf), 
-                onchain: FfiConverterTypeIBtOnchainTransactions.read(from: &buf), 
+                bolt11Invoice: FfiConverterOptionTypeIBtBolt11Invoice.read(from: &buf), 
+                onchain: FfiConverterOptionTypeIBtOnchainTransactions.read(from: &buf), 
                 isManuallyPaid: FfiConverterOptionBool.read(from: &buf), 
                 manualRefunds: FfiConverterOptionSequenceTypeIManualRefund.read(from: &buf)
         )
@@ -3542,10 +3542,10 @@ public struct FfiConverterTypeIBtPayment: FfiConverterRustBuffer {
 
     public static func write(_ value: IBtPayment, into buf: inout [UInt8]) {
         FfiConverterTypeBtPaymentState.write(value.state, into: &buf)
-        FfiConverterTypeBtPaymentState2.write(value.state2, into: &buf)
+        FfiConverterOptionTypeBtPaymentState2.write(value.state2, into: &buf)
         FfiConverterUInt64.write(value.paidSat, into: &buf)
-        FfiConverterTypeIBtBolt11Invoice.write(value.bolt11Invoice, into: &buf)
-        FfiConverterTypeIBtOnchainTransactions.write(value.onchain, into: &buf)
+        FfiConverterOptionTypeIBtBolt11Invoice.write(value.bolt11Invoice, into: &buf)
+        FfiConverterOptionTypeIBtOnchainTransactions.write(value.onchain, into: &buf)
         FfiConverterOptionBool.write(value.isManuallyPaid, into: &buf)
         FfiConverterOptionSequenceTypeIManualRefund.write(value.manualRefunds, into: &buf)
     }
@@ -3823,15 +3823,17 @@ public struct IGift {
     public var id: String
     public var nodeId: String
     public var orderId: String?
-    public var order: IBtOrder?
+    public var order: IGiftOrder?
     public var bolt11PaymentId: String?
-    public var bolt11Payment: IBtPayment?
-    public var appliedGiftCodeId: String
+    public var bolt11Payment: IGiftPayment?
+    public var appliedGiftCodeId: String?
     public var appliedGiftCode: IGiftCode?
+    public var createdAt: String
+    public var updatedAt: String
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, nodeId: String, orderId: String?, order: IBtOrder?, bolt11PaymentId: String?, bolt11Payment: IBtPayment?, appliedGiftCodeId: String, appliedGiftCode: IGiftCode?) {
+    public init(id: String, nodeId: String, orderId: String?, order: IGiftOrder?, bolt11PaymentId: String?, bolt11Payment: IGiftPayment?, appliedGiftCodeId: String?, appliedGiftCode: IGiftCode?, createdAt: String, updatedAt: String) {
         self.id = id
         self.nodeId = nodeId
         self.orderId = orderId
@@ -3840,6 +3842,8 @@ public struct IGift {
         self.bolt11Payment = bolt11Payment
         self.appliedGiftCodeId = appliedGiftCodeId
         self.appliedGiftCode = appliedGiftCode
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
     }
 }
 
@@ -3871,6 +3875,12 @@ extension IGift: Equatable, Hashable {
         if lhs.appliedGiftCode != rhs.appliedGiftCode {
             return false
         }
+        if lhs.createdAt != rhs.createdAt {
+            return false
+        }
+        if lhs.updatedAt != rhs.updatedAt {
+            return false
+        }
         return true
     }
 
@@ -3883,6 +3893,8 @@ extension IGift: Equatable, Hashable {
         hasher.combine(bolt11Payment)
         hasher.combine(appliedGiftCodeId)
         hasher.combine(appliedGiftCode)
+        hasher.combine(createdAt)
+        hasher.combine(updatedAt)
     }
 }
 
@@ -3894,11 +3906,13 @@ public struct FfiConverterTypeIGift: FfiConverterRustBuffer {
                 id: FfiConverterString.read(from: &buf), 
                 nodeId: FfiConverterString.read(from: &buf), 
                 orderId: FfiConverterOptionString.read(from: &buf), 
-                order: FfiConverterOptionTypeIBtOrder.read(from: &buf), 
+                order: FfiConverterOptionTypeIGiftOrder.read(from: &buf), 
                 bolt11PaymentId: FfiConverterOptionString.read(from: &buf), 
-                bolt11Payment: FfiConverterOptionTypeIBtPayment.read(from: &buf), 
-                appliedGiftCodeId: FfiConverterString.read(from: &buf), 
-                appliedGiftCode: FfiConverterOptionTypeIGiftCode.read(from: &buf)
+                bolt11Payment: FfiConverterOptionTypeIGiftPayment.read(from: &buf), 
+                appliedGiftCodeId: FfiConverterOptionString.read(from: &buf), 
+                appliedGiftCode: FfiConverterOptionTypeIGiftCode.read(from: &buf), 
+                createdAt: FfiConverterString.read(from: &buf), 
+                updatedAt: FfiConverterString.read(from: &buf)
         )
     }
 
@@ -3906,11 +3920,13 @@ public struct FfiConverterTypeIGift: FfiConverterRustBuffer {
         FfiConverterString.write(value.id, into: &buf)
         FfiConverterString.write(value.nodeId, into: &buf)
         FfiConverterOptionString.write(value.orderId, into: &buf)
-        FfiConverterOptionTypeIBtOrder.write(value.order, into: &buf)
+        FfiConverterOptionTypeIGiftOrder.write(value.order, into: &buf)
         FfiConverterOptionString.write(value.bolt11PaymentId, into: &buf)
-        FfiConverterOptionTypeIBtPayment.write(value.bolt11Payment, into: &buf)
-        FfiConverterString.write(value.appliedGiftCodeId, into: &buf)
+        FfiConverterOptionTypeIGiftPayment.write(value.bolt11Payment, into: &buf)
+        FfiConverterOptionString.write(value.appliedGiftCodeId, into: &buf)
         FfiConverterOptionTypeIGiftCode.write(value.appliedGiftCode, into: &buf)
+        FfiConverterString.write(value.createdAt, into: &buf)
+        FfiConverterString.write(value.updatedAt, into: &buf)
     }
 }
 
@@ -3924,15 +3940,269 @@ public func FfiConverterTypeIGift_lower(_ value: IGift) -> RustBuffer {
 }
 
 
-public struct IGiftCode {
+public struct IGiftBolt11Invoice {
     public var id: String
-    public var code: String
+    public var request: String
+    public var state: String
+    public var isHodlInvoice: Bool?
+    public var paymentHash: String?
+    public var amountSat: UInt64?
+    public var amountMsat: String?
+    public var internalNodePubkey: String?
+    public var updatedAt: String?
+    public var createdAt: String?
+    public var expiresAt: String?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, code: String) {
+    public init(id: String, request: String, state: String, isHodlInvoice: Bool?, paymentHash: String?, amountSat: UInt64?, amountMsat: String?, internalNodePubkey: String?, updatedAt: String?, createdAt: String?, expiresAt: String?) {
+        self.id = id
+        self.request = request
+        self.state = state
+        self.isHodlInvoice = isHodlInvoice
+        self.paymentHash = paymentHash
+        self.amountSat = amountSat
+        self.amountMsat = amountMsat
+        self.internalNodePubkey = internalNodePubkey
+        self.updatedAt = updatedAt
+        self.createdAt = createdAt
+        self.expiresAt = expiresAt
+    }
+}
+
+
+
+extension IGiftBolt11Invoice: Equatable, Hashable {
+    public static func ==(lhs: IGiftBolt11Invoice, rhs: IGiftBolt11Invoice) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.request != rhs.request {
+            return false
+        }
+        if lhs.state != rhs.state {
+            return false
+        }
+        if lhs.isHodlInvoice != rhs.isHodlInvoice {
+            return false
+        }
+        if lhs.paymentHash != rhs.paymentHash {
+            return false
+        }
+        if lhs.amountSat != rhs.amountSat {
+            return false
+        }
+        if lhs.amountMsat != rhs.amountMsat {
+            return false
+        }
+        if lhs.internalNodePubkey != rhs.internalNodePubkey {
+            return false
+        }
+        if lhs.updatedAt != rhs.updatedAt {
+            return false
+        }
+        if lhs.createdAt != rhs.createdAt {
+            return false
+        }
+        if lhs.expiresAt != rhs.expiresAt {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(request)
+        hasher.combine(state)
+        hasher.combine(isHodlInvoice)
+        hasher.combine(paymentHash)
+        hasher.combine(amountSat)
+        hasher.combine(amountMsat)
+        hasher.combine(internalNodePubkey)
+        hasher.combine(updatedAt)
+        hasher.combine(createdAt)
+        hasher.combine(expiresAt)
+    }
+}
+
+
+public struct FfiConverterTypeIGiftBolt11Invoice: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> IGiftBolt11Invoice {
+        return
+            try IGiftBolt11Invoice(
+                id: FfiConverterString.read(from: &buf), 
+                request: FfiConverterString.read(from: &buf), 
+                state: FfiConverterString.read(from: &buf), 
+                isHodlInvoice: FfiConverterOptionBool.read(from: &buf), 
+                paymentHash: FfiConverterOptionString.read(from: &buf), 
+                amountSat: FfiConverterOptionUInt64.read(from: &buf), 
+                amountMsat: FfiConverterOptionString.read(from: &buf), 
+                internalNodePubkey: FfiConverterOptionString.read(from: &buf), 
+                updatedAt: FfiConverterOptionString.read(from: &buf), 
+                createdAt: FfiConverterOptionString.read(from: &buf), 
+                expiresAt: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: IGiftBolt11Invoice, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.request, into: &buf)
+        FfiConverterString.write(value.state, into: &buf)
+        FfiConverterOptionBool.write(value.isHodlInvoice, into: &buf)
+        FfiConverterOptionString.write(value.paymentHash, into: &buf)
+        FfiConverterOptionUInt64.write(value.amountSat, into: &buf)
+        FfiConverterOptionString.write(value.amountMsat, into: &buf)
+        FfiConverterOptionString.write(value.internalNodePubkey, into: &buf)
+        FfiConverterOptionString.write(value.updatedAt, into: &buf)
+        FfiConverterOptionString.write(value.createdAt, into: &buf)
+        FfiConverterOptionString.write(value.expiresAt, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeIGiftBolt11Invoice_lift(_ buf: RustBuffer) throws -> IGiftBolt11Invoice {
+    return try FfiConverterTypeIGiftBolt11Invoice.lift(buf)
+}
+
+public func FfiConverterTypeIGiftBolt11Invoice_lower(_ value: IGiftBolt11Invoice) -> RustBuffer {
+    return FfiConverterTypeIGiftBolt11Invoice.lower(value)
+}
+
+
+public struct IGiftBtcAddress {
+    public var id: String
+    public var address: String
+    public var transactions: [String]
+    public var allTransactions: [String]
+    public var isBlacklisted: Bool?
+    public var watchUntil: String?
+    public var watchForBlockConfirmations: UInt32?
+    public var updatedAt: String?
+    public var createdAt: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, address: String, transactions: [String], allTransactions: [String], isBlacklisted: Bool?, watchUntil: String?, watchForBlockConfirmations: UInt32?, updatedAt: String?, createdAt: String?) {
+        self.id = id
+        self.address = address
+        self.transactions = transactions
+        self.allTransactions = allTransactions
+        self.isBlacklisted = isBlacklisted
+        self.watchUntil = watchUntil
+        self.watchForBlockConfirmations = watchForBlockConfirmations
+        self.updatedAt = updatedAt
+        self.createdAt = createdAt
+    }
+}
+
+
+
+extension IGiftBtcAddress: Equatable, Hashable {
+    public static func ==(lhs: IGiftBtcAddress, rhs: IGiftBtcAddress) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.transactions != rhs.transactions {
+            return false
+        }
+        if lhs.allTransactions != rhs.allTransactions {
+            return false
+        }
+        if lhs.isBlacklisted != rhs.isBlacklisted {
+            return false
+        }
+        if lhs.watchUntil != rhs.watchUntil {
+            return false
+        }
+        if lhs.watchForBlockConfirmations != rhs.watchForBlockConfirmations {
+            return false
+        }
+        if lhs.updatedAt != rhs.updatedAt {
+            return false
+        }
+        if lhs.createdAt != rhs.createdAt {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(address)
+        hasher.combine(transactions)
+        hasher.combine(allTransactions)
+        hasher.combine(isBlacklisted)
+        hasher.combine(watchUntil)
+        hasher.combine(watchForBlockConfirmations)
+        hasher.combine(updatedAt)
+        hasher.combine(createdAt)
+    }
+}
+
+
+public struct FfiConverterTypeIGiftBtcAddress: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> IGiftBtcAddress {
+        return
+            try IGiftBtcAddress(
+                id: FfiConverterString.read(from: &buf), 
+                address: FfiConverterString.read(from: &buf), 
+                transactions: FfiConverterSequenceString.read(from: &buf), 
+                allTransactions: FfiConverterSequenceString.read(from: &buf), 
+                isBlacklisted: FfiConverterOptionBool.read(from: &buf), 
+                watchUntil: FfiConverterOptionString.read(from: &buf), 
+                watchForBlockConfirmations: FfiConverterOptionUInt32.read(from: &buf), 
+                updatedAt: FfiConverterOptionString.read(from: &buf), 
+                createdAt: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: IGiftBtcAddress, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.address, into: &buf)
+        FfiConverterSequenceString.write(value.transactions, into: &buf)
+        FfiConverterSequenceString.write(value.allTransactions, into: &buf)
+        FfiConverterOptionBool.write(value.isBlacklisted, into: &buf)
+        FfiConverterOptionString.write(value.watchUntil, into: &buf)
+        FfiConverterOptionUInt32.write(value.watchForBlockConfirmations, into: &buf)
+        FfiConverterOptionString.write(value.updatedAt, into: &buf)
+        FfiConverterOptionString.write(value.createdAt, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeIGiftBtcAddress_lift(_ buf: RustBuffer) throws -> IGiftBtcAddress {
+    return try FfiConverterTypeIGiftBtcAddress.lift(buf)
+}
+
+public func FfiConverterTypeIGiftBtcAddress_lower(_ value: IGiftBtcAddress) -> RustBuffer {
+    return FfiConverterTypeIGiftBtcAddress.lower(value)
+}
+
+
+public struct IGiftCode {
+    public var id: String
+    public var code: String
+    public var createdAt: String
+    public var updatedAt: String
+    public var expiresAt: String
+    public var giftSat: UInt64?
+    public var scope: String?
+    public var maxCount: UInt32?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, code: String, createdAt: String, updatedAt: String, expiresAt: String, giftSat: UInt64?, scope: String?, maxCount: UInt32?) {
         self.id = id
         self.code = code
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.expiresAt = expiresAt
+        self.giftSat = giftSat
+        self.scope = scope
+        self.maxCount = maxCount
     }
 }
 
@@ -3946,12 +4216,36 @@ extension IGiftCode: Equatable, Hashable {
         if lhs.code != rhs.code {
             return false
         }
+        if lhs.createdAt != rhs.createdAt {
+            return false
+        }
+        if lhs.updatedAt != rhs.updatedAt {
+            return false
+        }
+        if lhs.expiresAt != rhs.expiresAt {
+            return false
+        }
+        if lhs.giftSat != rhs.giftSat {
+            return false
+        }
+        if lhs.scope != rhs.scope {
+            return false
+        }
+        if lhs.maxCount != rhs.maxCount {
+            return false
+        }
         return true
     }
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(code)
+        hasher.combine(createdAt)
+        hasher.combine(updatedAt)
+        hasher.combine(expiresAt)
+        hasher.combine(giftSat)
+        hasher.combine(scope)
+        hasher.combine(maxCount)
     }
 }
 
@@ -3961,13 +4255,25 @@ public struct FfiConverterTypeIGiftCode: FfiConverterRustBuffer {
         return
             try IGiftCode(
                 id: FfiConverterString.read(from: &buf), 
-                code: FfiConverterString.read(from: &buf)
+                code: FfiConverterString.read(from: &buf), 
+                createdAt: FfiConverterString.read(from: &buf), 
+                updatedAt: FfiConverterString.read(from: &buf), 
+                expiresAt: FfiConverterString.read(from: &buf), 
+                giftSat: FfiConverterOptionUInt64.read(from: &buf), 
+                scope: FfiConverterOptionString.read(from: &buf), 
+                maxCount: FfiConverterOptionUInt32.read(from: &buf)
         )
     }
 
     public static func write(_ value: IGiftCode, into buf: inout [UInt8]) {
         FfiConverterString.write(value.id, into: &buf)
         FfiConverterString.write(value.code, into: &buf)
+        FfiConverterString.write(value.createdAt, into: &buf)
+        FfiConverterString.write(value.updatedAt, into: &buf)
+        FfiConverterString.write(value.expiresAt, into: &buf)
+        FfiConverterOptionUInt64.write(value.giftSat, into: &buf)
+        FfiConverterOptionString.write(value.scope, into: &buf)
+        FfiConverterOptionUInt32.write(value.maxCount, into: &buf)
     }
 }
 
@@ -3978,6 +4284,489 @@ public func FfiConverterTypeIGiftCode_lift(_ buf: RustBuffer) throws -> IGiftCod
 
 public func FfiConverterTypeIGiftCode_lower(_ value: IGiftCode) -> RustBuffer {
     return FfiConverterTypeIGiftCode.lower(value)
+}
+
+
+public struct IGiftLspNode {
+    public var alias: String
+    public var pubkey: String
+    public var connectionStrings: [String]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(alias: String, pubkey: String, connectionStrings: [String]) {
+        self.alias = alias
+        self.pubkey = pubkey
+        self.connectionStrings = connectionStrings
+    }
+}
+
+
+
+extension IGiftLspNode: Equatable, Hashable {
+    public static func ==(lhs: IGiftLspNode, rhs: IGiftLspNode) -> Bool {
+        if lhs.alias != rhs.alias {
+            return false
+        }
+        if lhs.pubkey != rhs.pubkey {
+            return false
+        }
+        if lhs.connectionStrings != rhs.connectionStrings {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(alias)
+        hasher.combine(pubkey)
+        hasher.combine(connectionStrings)
+    }
+}
+
+
+public struct FfiConverterTypeIGiftLspNode: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> IGiftLspNode {
+        return
+            try IGiftLspNode(
+                alias: FfiConverterString.read(from: &buf), 
+                pubkey: FfiConverterString.read(from: &buf), 
+                connectionStrings: FfiConverterSequenceString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: IGiftLspNode, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.alias, into: &buf)
+        FfiConverterString.write(value.pubkey, into: &buf)
+        FfiConverterSequenceString.write(value.connectionStrings, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeIGiftLspNode_lift(_ buf: RustBuffer) throws -> IGiftLspNode {
+    return try FfiConverterTypeIGiftLspNode.lift(buf)
+}
+
+public func FfiConverterTypeIGiftLspNode_lower(_ value: IGiftLspNode) -> RustBuffer {
+    return FfiConverterTypeIGiftLspNode.lower(value)
+}
+
+
+public struct IGiftOrder {
+    public var id: String
+    public var state: String
+    public var oldState: String?
+    public var isChannelExpired: Bool?
+    public var isOrderExpired: Bool?
+    public var lspBalanceSat: UInt64?
+    public var clientBalanceSat: UInt64?
+    public var channelExpiryWeeks: UInt32?
+    public var zeroConf: Bool?
+    public var zeroReserve: Bool?
+    public var announced: Bool?
+    public var clientNodeId: String?
+    public var channelExpiresAt: String?
+    public var orderExpiresAt: String?
+    public var feeSat: UInt64?
+    public var networkFeeSat: UInt64?
+    public var serviceFeeSat: UInt64?
+    public var payment: IGiftPayment?
+    public var lspNode: IGiftLspNode?
+    public var updatedAt: String?
+    public var createdAt: String?
+    public var nodeIdVerified: Bool?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, state: String, oldState: String?, isChannelExpired: Bool?, isOrderExpired: Bool?, lspBalanceSat: UInt64?, clientBalanceSat: UInt64?, channelExpiryWeeks: UInt32?, zeroConf: Bool?, zeroReserve: Bool?, announced: Bool?, clientNodeId: String?, channelExpiresAt: String?, orderExpiresAt: String?, feeSat: UInt64?, networkFeeSat: UInt64?, serviceFeeSat: UInt64?, payment: IGiftPayment?, lspNode: IGiftLspNode?, updatedAt: String?, createdAt: String?, nodeIdVerified: Bool?) {
+        self.id = id
+        self.state = state
+        self.oldState = oldState
+        self.isChannelExpired = isChannelExpired
+        self.isOrderExpired = isOrderExpired
+        self.lspBalanceSat = lspBalanceSat
+        self.clientBalanceSat = clientBalanceSat
+        self.channelExpiryWeeks = channelExpiryWeeks
+        self.zeroConf = zeroConf
+        self.zeroReserve = zeroReserve
+        self.announced = announced
+        self.clientNodeId = clientNodeId
+        self.channelExpiresAt = channelExpiresAt
+        self.orderExpiresAt = orderExpiresAt
+        self.feeSat = feeSat
+        self.networkFeeSat = networkFeeSat
+        self.serviceFeeSat = serviceFeeSat
+        self.payment = payment
+        self.lspNode = lspNode
+        self.updatedAt = updatedAt
+        self.createdAt = createdAt
+        self.nodeIdVerified = nodeIdVerified
+    }
+}
+
+
+
+extension IGiftOrder: Equatable, Hashable {
+    public static func ==(lhs: IGiftOrder, rhs: IGiftOrder) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.state != rhs.state {
+            return false
+        }
+        if lhs.oldState != rhs.oldState {
+            return false
+        }
+        if lhs.isChannelExpired != rhs.isChannelExpired {
+            return false
+        }
+        if lhs.isOrderExpired != rhs.isOrderExpired {
+            return false
+        }
+        if lhs.lspBalanceSat != rhs.lspBalanceSat {
+            return false
+        }
+        if lhs.clientBalanceSat != rhs.clientBalanceSat {
+            return false
+        }
+        if lhs.channelExpiryWeeks != rhs.channelExpiryWeeks {
+            return false
+        }
+        if lhs.zeroConf != rhs.zeroConf {
+            return false
+        }
+        if lhs.zeroReserve != rhs.zeroReserve {
+            return false
+        }
+        if lhs.announced != rhs.announced {
+            return false
+        }
+        if lhs.clientNodeId != rhs.clientNodeId {
+            return false
+        }
+        if lhs.channelExpiresAt != rhs.channelExpiresAt {
+            return false
+        }
+        if lhs.orderExpiresAt != rhs.orderExpiresAt {
+            return false
+        }
+        if lhs.feeSat != rhs.feeSat {
+            return false
+        }
+        if lhs.networkFeeSat != rhs.networkFeeSat {
+            return false
+        }
+        if lhs.serviceFeeSat != rhs.serviceFeeSat {
+            return false
+        }
+        if lhs.payment != rhs.payment {
+            return false
+        }
+        if lhs.lspNode != rhs.lspNode {
+            return false
+        }
+        if lhs.updatedAt != rhs.updatedAt {
+            return false
+        }
+        if lhs.createdAt != rhs.createdAt {
+            return false
+        }
+        if lhs.nodeIdVerified != rhs.nodeIdVerified {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(state)
+        hasher.combine(oldState)
+        hasher.combine(isChannelExpired)
+        hasher.combine(isOrderExpired)
+        hasher.combine(lspBalanceSat)
+        hasher.combine(clientBalanceSat)
+        hasher.combine(channelExpiryWeeks)
+        hasher.combine(zeroConf)
+        hasher.combine(zeroReserve)
+        hasher.combine(announced)
+        hasher.combine(clientNodeId)
+        hasher.combine(channelExpiresAt)
+        hasher.combine(orderExpiresAt)
+        hasher.combine(feeSat)
+        hasher.combine(networkFeeSat)
+        hasher.combine(serviceFeeSat)
+        hasher.combine(payment)
+        hasher.combine(lspNode)
+        hasher.combine(updatedAt)
+        hasher.combine(createdAt)
+        hasher.combine(nodeIdVerified)
+    }
+}
+
+
+public struct FfiConverterTypeIGiftOrder: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> IGiftOrder {
+        return
+            try IGiftOrder(
+                id: FfiConverterString.read(from: &buf), 
+                state: FfiConverterString.read(from: &buf), 
+                oldState: FfiConverterOptionString.read(from: &buf), 
+                isChannelExpired: FfiConverterOptionBool.read(from: &buf), 
+                isOrderExpired: FfiConverterOptionBool.read(from: &buf), 
+                lspBalanceSat: FfiConverterOptionUInt64.read(from: &buf), 
+                clientBalanceSat: FfiConverterOptionUInt64.read(from: &buf), 
+                channelExpiryWeeks: FfiConverterOptionUInt32.read(from: &buf), 
+                zeroConf: FfiConverterOptionBool.read(from: &buf), 
+                zeroReserve: FfiConverterOptionBool.read(from: &buf), 
+                announced: FfiConverterOptionBool.read(from: &buf), 
+                clientNodeId: FfiConverterOptionString.read(from: &buf), 
+                channelExpiresAt: FfiConverterOptionString.read(from: &buf), 
+                orderExpiresAt: FfiConverterOptionString.read(from: &buf), 
+                feeSat: FfiConverterOptionUInt64.read(from: &buf), 
+                networkFeeSat: FfiConverterOptionUInt64.read(from: &buf), 
+                serviceFeeSat: FfiConverterOptionUInt64.read(from: &buf), 
+                payment: FfiConverterOptionTypeIGiftPayment.read(from: &buf), 
+                lspNode: FfiConverterOptionTypeIGiftLspNode.read(from: &buf), 
+                updatedAt: FfiConverterOptionString.read(from: &buf), 
+                createdAt: FfiConverterOptionString.read(from: &buf), 
+                nodeIdVerified: FfiConverterOptionBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: IGiftOrder, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.state, into: &buf)
+        FfiConverterOptionString.write(value.oldState, into: &buf)
+        FfiConverterOptionBool.write(value.isChannelExpired, into: &buf)
+        FfiConverterOptionBool.write(value.isOrderExpired, into: &buf)
+        FfiConverterOptionUInt64.write(value.lspBalanceSat, into: &buf)
+        FfiConverterOptionUInt64.write(value.clientBalanceSat, into: &buf)
+        FfiConverterOptionUInt32.write(value.channelExpiryWeeks, into: &buf)
+        FfiConverterOptionBool.write(value.zeroConf, into: &buf)
+        FfiConverterOptionBool.write(value.zeroReserve, into: &buf)
+        FfiConverterOptionBool.write(value.announced, into: &buf)
+        FfiConverterOptionString.write(value.clientNodeId, into: &buf)
+        FfiConverterOptionString.write(value.channelExpiresAt, into: &buf)
+        FfiConverterOptionString.write(value.orderExpiresAt, into: &buf)
+        FfiConverterOptionUInt64.write(value.feeSat, into: &buf)
+        FfiConverterOptionUInt64.write(value.networkFeeSat, into: &buf)
+        FfiConverterOptionUInt64.write(value.serviceFeeSat, into: &buf)
+        FfiConverterOptionTypeIGiftPayment.write(value.payment, into: &buf)
+        FfiConverterOptionTypeIGiftLspNode.write(value.lspNode, into: &buf)
+        FfiConverterOptionString.write(value.updatedAt, into: &buf)
+        FfiConverterOptionString.write(value.createdAt, into: &buf)
+        FfiConverterOptionBool.write(value.nodeIdVerified, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeIGiftOrder_lift(_ buf: RustBuffer) throws -> IGiftOrder {
+    return try FfiConverterTypeIGiftOrder.lift(buf)
+}
+
+public func FfiConverterTypeIGiftOrder_lower(_ value: IGiftOrder) -> RustBuffer {
+    return FfiConverterTypeIGiftOrder.lower(value)
+}
+
+
+public struct IGiftPayment {
+    public var id: String
+    public var state: String
+    public var oldState: String?
+    public var onchainState: String?
+    public var lnState: String?
+    public var paidOnchainSat: UInt64?
+    public var paidLnSat: UInt64?
+    public var paidSat: UInt64?
+    public var isOverpaid: Bool?
+    public var isRefunded: Bool?
+    public var overpaidAmountSat: UInt64?
+    public var requiredOnchainConfirmations: UInt32?
+    public var settlementState: String?
+    public var expectedAmountSat: UInt64?
+    public var isManuallyPaid: Bool?
+    public var btcAddress: IGiftBtcAddress?
+    public var btcAddressId: String?
+    public var bolt11Invoice: IGiftBolt11Invoice?
+    public var bolt11InvoiceId: String?
+    public var manualRefunds: [String]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, state: String, oldState: String?, onchainState: String?, lnState: String?, paidOnchainSat: UInt64?, paidLnSat: UInt64?, paidSat: UInt64?, isOverpaid: Bool?, isRefunded: Bool?, overpaidAmountSat: UInt64?, requiredOnchainConfirmations: UInt32?, settlementState: String?, expectedAmountSat: UInt64?, isManuallyPaid: Bool?, btcAddress: IGiftBtcAddress?, btcAddressId: String?, bolt11Invoice: IGiftBolt11Invoice?, bolt11InvoiceId: String?, manualRefunds: [String]) {
+        self.id = id
+        self.state = state
+        self.oldState = oldState
+        self.onchainState = onchainState
+        self.lnState = lnState
+        self.paidOnchainSat = paidOnchainSat
+        self.paidLnSat = paidLnSat
+        self.paidSat = paidSat
+        self.isOverpaid = isOverpaid
+        self.isRefunded = isRefunded
+        self.overpaidAmountSat = overpaidAmountSat
+        self.requiredOnchainConfirmations = requiredOnchainConfirmations
+        self.settlementState = settlementState
+        self.expectedAmountSat = expectedAmountSat
+        self.isManuallyPaid = isManuallyPaid
+        self.btcAddress = btcAddress
+        self.btcAddressId = btcAddressId
+        self.bolt11Invoice = bolt11Invoice
+        self.bolt11InvoiceId = bolt11InvoiceId
+        self.manualRefunds = manualRefunds
+    }
+}
+
+
+
+extension IGiftPayment: Equatable, Hashable {
+    public static func ==(lhs: IGiftPayment, rhs: IGiftPayment) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.state != rhs.state {
+            return false
+        }
+        if lhs.oldState != rhs.oldState {
+            return false
+        }
+        if lhs.onchainState != rhs.onchainState {
+            return false
+        }
+        if lhs.lnState != rhs.lnState {
+            return false
+        }
+        if lhs.paidOnchainSat != rhs.paidOnchainSat {
+            return false
+        }
+        if lhs.paidLnSat != rhs.paidLnSat {
+            return false
+        }
+        if lhs.paidSat != rhs.paidSat {
+            return false
+        }
+        if lhs.isOverpaid != rhs.isOverpaid {
+            return false
+        }
+        if lhs.isRefunded != rhs.isRefunded {
+            return false
+        }
+        if lhs.overpaidAmountSat != rhs.overpaidAmountSat {
+            return false
+        }
+        if lhs.requiredOnchainConfirmations != rhs.requiredOnchainConfirmations {
+            return false
+        }
+        if lhs.settlementState != rhs.settlementState {
+            return false
+        }
+        if lhs.expectedAmountSat != rhs.expectedAmountSat {
+            return false
+        }
+        if lhs.isManuallyPaid != rhs.isManuallyPaid {
+            return false
+        }
+        if lhs.btcAddress != rhs.btcAddress {
+            return false
+        }
+        if lhs.btcAddressId != rhs.btcAddressId {
+            return false
+        }
+        if lhs.bolt11Invoice != rhs.bolt11Invoice {
+            return false
+        }
+        if lhs.bolt11InvoiceId != rhs.bolt11InvoiceId {
+            return false
+        }
+        if lhs.manualRefunds != rhs.manualRefunds {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(state)
+        hasher.combine(oldState)
+        hasher.combine(onchainState)
+        hasher.combine(lnState)
+        hasher.combine(paidOnchainSat)
+        hasher.combine(paidLnSat)
+        hasher.combine(paidSat)
+        hasher.combine(isOverpaid)
+        hasher.combine(isRefunded)
+        hasher.combine(overpaidAmountSat)
+        hasher.combine(requiredOnchainConfirmations)
+        hasher.combine(settlementState)
+        hasher.combine(expectedAmountSat)
+        hasher.combine(isManuallyPaid)
+        hasher.combine(btcAddress)
+        hasher.combine(btcAddressId)
+        hasher.combine(bolt11Invoice)
+        hasher.combine(bolt11InvoiceId)
+        hasher.combine(manualRefunds)
+    }
+}
+
+
+public struct FfiConverterTypeIGiftPayment: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> IGiftPayment {
+        return
+            try IGiftPayment(
+                id: FfiConverterString.read(from: &buf), 
+                state: FfiConverterString.read(from: &buf), 
+                oldState: FfiConverterOptionString.read(from: &buf), 
+                onchainState: FfiConverterOptionString.read(from: &buf), 
+                lnState: FfiConverterOptionString.read(from: &buf), 
+                paidOnchainSat: FfiConverterOptionUInt64.read(from: &buf), 
+                paidLnSat: FfiConverterOptionUInt64.read(from: &buf), 
+                paidSat: FfiConverterOptionUInt64.read(from: &buf), 
+                isOverpaid: FfiConverterOptionBool.read(from: &buf), 
+                isRefunded: FfiConverterOptionBool.read(from: &buf), 
+                overpaidAmountSat: FfiConverterOptionUInt64.read(from: &buf), 
+                requiredOnchainConfirmations: FfiConverterOptionUInt32.read(from: &buf), 
+                settlementState: FfiConverterOptionString.read(from: &buf), 
+                expectedAmountSat: FfiConverterOptionUInt64.read(from: &buf), 
+                isManuallyPaid: FfiConverterOptionBool.read(from: &buf), 
+                btcAddress: FfiConverterOptionTypeIGiftBtcAddress.read(from: &buf), 
+                btcAddressId: FfiConverterOptionString.read(from: &buf), 
+                bolt11Invoice: FfiConverterOptionTypeIGiftBolt11Invoice.read(from: &buf), 
+                bolt11InvoiceId: FfiConverterOptionString.read(from: &buf), 
+                manualRefunds: FfiConverterSequenceString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: IGiftPayment, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.state, into: &buf)
+        FfiConverterOptionString.write(value.oldState, into: &buf)
+        FfiConverterOptionString.write(value.onchainState, into: &buf)
+        FfiConverterOptionString.write(value.lnState, into: &buf)
+        FfiConverterOptionUInt64.write(value.paidOnchainSat, into: &buf)
+        FfiConverterOptionUInt64.write(value.paidLnSat, into: &buf)
+        FfiConverterOptionUInt64.write(value.paidSat, into: &buf)
+        FfiConverterOptionBool.write(value.isOverpaid, into: &buf)
+        FfiConverterOptionBool.write(value.isRefunded, into: &buf)
+        FfiConverterOptionUInt64.write(value.overpaidAmountSat, into: &buf)
+        FfiConverterOptionUInt32.write(value.requiredOnchainConfirmations, into: &buf)
+        FfiConverterOptionString.write(value.settlementState, into: &buf)
+        FfiConverterOptionUInt64.write(value.expectedAmountSat, into: &buf)
+        FfiConverterOptionBool.write(value.isManuallyPaid, into: &buf)
+        FfiConverterOptionTypeIGiftBtcAddress.write(value.btcAddress, into: &buf)
+        FfiConverterOptionString.write(value.btcAddressId, into: &buf)
+        FfiConverterOptionTypeIGiftBolt11Invoice.write(value.bolt11Invoice, into: &buf)
+        FfiConverterOptionString.write(value.bolt11InvoiceId, into: &buf)
+        FfiConverterSequenceString.write(value.manualRefunds, into: &buf)
+    }
+}
+
+
+public func FfiConverterTypeIGiftPayment_lift(_ buf: RustBuffer) throws -> IGiftPayment {
+    return try FfiConverterTypeIGiftPayment.lift(buf)
+}
+
+public func FfiConverterTypeIGiftPayment_lower(_ value: IGiftPayment) -> RustBuffer {
+    return FfiConverterTypeIGiftPayment.lower(value)
 }
 
 
@@ -10706,6 +11495,27 @@ fileprivate struct FfiConverterOptionTypeDeviceParams: FfiConverterRustBuffer {
     }
 }
 
+fileprivate struct FfiConverterOptionTypeIBtBolt11Invoice: FfiConverterRustBuffer {
+    typealias SwiftType = IBtBolt11Invoice?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeIBtBolt11Invoice.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeIBtBolt11Invoice.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
 fileprivate struct FfiConverterOptionTypeIBtChannel: FfiConverterRustBuffer {
     typealias SwiftType = IBtChannel?
 
@@ -10769,8 +11579,8 @@ fileprivate struct FfiConverterOptionTypeIBtInfo: FfiConverterRustBuffer {
     }
 }
 
-fileprivate struct FfiConverterOptionTypeIBtOrder: FfiConverterRustBuffer {
-    typealias SwiftType = IBtOrder?
+fileprivate struct FfiConverterOptionTypeIBtOnchainTransactions: FfiConverterRustBuffer {
+    typealias SwiftType = IBtOnchainTransactions?
 
     public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
@@ -10778,13 +11588,13 @@ fileprivate struct FfiConverterOptionTypeIBtOrder: FfiConverterRustBuffer {
             return
         }
         writeInt(&buf, Int8(1))
-        FfiConverterTypeIBtOrder.write(value, into: &buf)
+        FfiConverterTypeIBtOnchainTransactions.write(value, into: &buf)
     }
 
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
-        case 1: return try FfiConverterTypeIBtOrder.read(from: &buf)
+        case 1: return try FfiConverterTypeIBtOnchainTransactions.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -10832,6 +11642,48 @@ fileprivate struct FfiConverterOptionTypeIDiscount: FfiConverterRustBuffer {
     }
 }
 
+fileprivate struct FfiConverterOptionTypeIGiftBolt11Invoice: FfiConverterRustBuffer {
+    typealias SwiftType = IGiftBolt11Invoice?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeIGiftBolt11Invoice.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeIGiftBolt11Invoice.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeIGiftBtcAddress: FfiConverterRustBuffer {
+    typealias SwiftType = IGiftBtcAddress?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeIGiftBtcAddress.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeIGiftBtcAddress.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
 fileprivate struct FfiConverterOptionTypeIGiftCode: FfiConverterRustBuffer {
     typealias SwiftType = IGiftCode?
 
@@ -10848,6 +11700,90 @@ fileprivate struct FfiConverterOptionTypeIGiftCode: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIGiftCode.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeIGiftLspNode: FfiConverterRustBuffer {
+    typealias SwiftType = IGiftLspNode?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeIGiftLspNode.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeIGiftLspNode.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeIGiftOrder: FfiConverterRustBuffer {
+    typealias SwiftType = IGiftOrder?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeIGiftOrder.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeIGiftOrder.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeIGiftPayment: FfiConverterRustBuffer {
+    typealias SwiftType = IGiftPayment?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeIGiftPayment.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeIGiftPayment.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeILspNode: FfiConverterRustBuffer {
+    typealias SwiftType = ILspNode?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeILspNode.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeILspNode.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -11058,6 +11994,27 @@ fileprivate struct FfiConverterOptionTypeBtOrderState2: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeBtOrderState2.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+fileprivate struct FfiConverterOptionTypeBtPaymentState2: FfiConverterRustBuffer {
+    typealias SwiftType = BtPaymentState2?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeBtPaymentState2.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeBtPaymentState2.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }

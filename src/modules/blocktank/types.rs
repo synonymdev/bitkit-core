@@ -33,6 +33,11 @@ use rust_blocktank_client::{
     CreateCjitOptions as ExternalCreateCjitOptions,
     IGift as ExternalIGift,
     IGiftCode as ExternalIGiftCode,
+    IGiftOrder as ExternalIGiftOrder,
+    IGiftLspNode as ExternalIGiftLspNode,
+    IGiftPayment as ExternalIGiftPayment,
+    IGiftBolt11Invoice as ExternalIGiftBolt11Invoice,
+    IGiftBtcAddress as ExternalIGiftBtcAddress,
 };
 use serde::{Deserialize, Serialize};
 
@@ -698,10 +703,10 @@ impl From<IBtOnchainTransactions> for ExternalIBtOnchainTransactions {
 #[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtPayment {
     pub state: BtPaymentState,
-    pub state2: BtPaymentState2,
+    pub state2: Option<BtPaymentState2>,
     pub paid_sat: u64,
-    pub bolt11_invoice: IBtBolt11Invoice,
-    pub onchain: IBtOnchainTransactions,
+    pub bolt11_invoice: Option<IBtBolt11Invoice>,
+    pub onchain: Option<IBtOnchainTransactions>,
     pub is_manually_paid: Option<bool>,
     pub manual_refunds: Option<Vec<IManualRefund>>,
 }
@@ -710,10 +715,10 @@ impl From<ExternalIBtPayment> for IBtPayment {
     fn from(other: ExternalIBtPayment) -> Self {
         Self {
             state: other.state.into(),
-            state2: other.state2.into(),
+            state2: other.state2.map(|s| s.into()),
             paid_sat: other.paid_sat,
-            bolt11_invoice: other.bolt11_invoice.into(),
-            onchain: other.onchain.into(),
+            bolt11_invoice: other.bolt11_invoice.map(|b| b.into()),
+            onchain: other.onchain.map(|o| o.into()),
             is_manually_paid: other.is_manually_paid,
             manual_refunds: other.manual_refunds.map(|refunds| {
                 refunds.into_iter().map(|refund| refund.into()).collect()
@@ -726,10 +731,10 @@ impl From<IBtPayment> for ExternalIBtPayment {
     fn from(other: IBtPayment) -> Self {
         Self {
             state: other.state.into(),
-            state2: other.state2.into(),
+            state2: other.state2.map(|s| s.into()),
             paid_sat: other.paid_sat,
-            bolt11_invoice: other.bolt11_invoice.into(),
-            onchain: other.onchain.into(),
+            bolt11_invoice: other.bolt11_invoice.map(|b| b.into()),
+            onchain: other.onchain.map(|o| o.into()),
             is_manually_paid: other.is_manually_paid,
             manual_refunds: other.manual_refunds.map(|refunds| {
                 refunds.into_iter().map(|refund| refund.into()).collect()
@@ -766,7 +771,7 @@ impl From<IBt0ConfMinTxFeeWindow> for ExternalIBt0ConfMinTxFeeWindow {
 pub struct IBtOrder {
     pub id: String,
     pub state: BtOrderState,
-    pub state2: BtOrderState2,
+    pub state2: Option<BtOrderState2>,
     pub fee_sat: u64,
     pub network_fee_sat: u64,
     pub service_fee_sat: u64,
@@ -779,9 +784,9 @@ pub struct IBtOrder {
     pub channel_expires_at: String,
     pub order_expires_at: String,
     pub channel: Option<IBtChannel>,
-    pub lsp_node: ILspNode,
+    pub lsp_node: Option<ILspNode>,
     pub lnurl: Option<String>,
-    pub payment: IBtPayment,
+    pub payment: Option<IBtPayment>,
     pub coupon_code: Option<String>,
     pub source: Option<String>,
     pub discount: Option<IDiscount>,
@@ -794,7 +799,7 @@ impl From<ExternalIBtOrder> for IBtOrder {
         Self {
             id: other.id,
             state: other.state.into(),
-            state2: other.state2.into(),
+            state2: other.state2.map(|s| s.into()),
             fee_sat: other.fee_sat,
             network_fee_sat: other.network_fee_sat,
             service_fee_sat: other.service_fee_sat,
@@ -807,9 +812,9 @@ impl From<ExternalIBtOrder> for IBtOrder {
             channel_expires_at: other.channel_expires_at,
             order_expires_at: other.order_expires_at,
             channel: other.channel.map(|c| c.into()),
-            lsp_node: other.lsp_node.into(),
+            lsp_node: other.lsp_node.map(|l| l.into()),
             lnurl: other.lnurl,
-            payment: other.payment.into(),
+            payment: other.payment.map(|p| p.into()),
             coupon_code: other.coupon_code,
             source: other.source,
             discount: other.discount.map(|d| d.into()),
@@ -824,7 +829,7 @@ impl From<IBtOrder> for ExternalIBtOrder {
         Self {
             id: other.id,
             state: other.state.into(),
-            state2: other.state2.into(),
+            state2: other.state2.map(|s| s.into()),
             fee_sat: other.fee_sat,
             network_fee_sat: other.network_fee_sat,
             service_fee_sat: other.service_fee_sat,
@@ -837,9 +842,9 @@ impl From<IBtOrder> for ExternalIBtOrder {
             channel_expires_at: other.channel_expires_at,
             order_expires_at: other.order_expires_at,
             channel: other.channel.map(|c| c.into()),
-            lsp_node: other.lsp_node.into(),
+            lsp_node: other.lsp_node.map(|l| l.into()),
             lnurl: other.lnurl,
-            payment: other.payment.into(),
+            payment: other.payment.map(|p| p.into()),
             coupon_code: other.coupon_code,
             source: other.source,
             discount: other.discount.map(|d| d.into()),
@@ -1166,9 +1171,300 @@ impl From<CreateCjitOptions> for ExternalCreateCjitOptions {
 }
 
 #[derive(uniffi::Record, Deserialize, Serialize)]
+pub struct IGiftBtcAddress {
+    pub id: String,
+    pub address: String,
+    pub transactions: Vec<String>, // Simplified from serde_json::Value
+    pub all_transactions: Vec<String>, // Simplified from serde_json::Value
+    pub is_blacklisted: Option<bool>,
+    pub watch_until: Option<String>,
+    pub watch_for_block_confirmations: Option<u32>,
+    pub updated_at: Option<String>,
+    pub created_at: Option<String>,
+}
+
+impl From<ExternalIGiftBtcAddress> for IGiftBtcAddress {
+    fn from(other: ExternalIGiftBtcAddress) -> Self {
+        Self {
+            id: other.id,
+            address: other.address,
+            transactions: other.transactions.iter().map(|_| "".to_string()).collect(), // Simplified
+            all_transactions: other.all_transactions.iter().map(|_| "".to_string()).collect(), // Simplified
+            is_blacklisted: other.is_blacklisted,
+            watch_until: other.watch_until,
+            watch_for_block_confirmations: other.watch_for_block_confirmations,
+            updated_at: other.updated_at,
+            created_at: other.created_at,
+        }
+    }
+}
+
+impl From<IGiftBtcAddress> for ExternalIGiftBtcAddress {
+    fn from(other: IGiftBtcAddress) -> Self {
+        Self {
+            id: other.id,
+            address: other.address,
+            transactions: vec![], // Simplified
+            all_transactions: vec![], // Simplified
+            is_blacklisted: other.is_blacklisted,
+            watch_until: other.watch_until,
+            watch_for_block_confirmations: other.watch_for_block_confirmations,
+            updated_at: other.updated_at,
+            created_at: other.created_at,
+        }
+    }
+}
+
+#[derive(uniffi::Record, Deserialize, Serialize)]
+pub struct IGiftBolt11Invoice {
+    pub id: String,
+    pub request: String,
+    pub state: String, // String instead of enum for gift types
+    pub is_hodl_invoice: Option<bool>,
+    pub payment_hash: Option<String>,
+    pub amount_sat: Option<u64>,
+    pub amount_msat: Option<String>,
+    pub internal_node_pubkey: Option<String>,
+    pub updated_at: Option<String>,
+    pub created_at: Option<String>,
+    pub expires_at: Option<String>,
+}
+
+impl From<ExternalIGiftBolt11Invoice> for IGiftBolt11Invoice {
+    fn from(other: ExternalIGiftBolt11Invoice) -> Self {
+        Self {
+            id: other.id,
+            request: other.request,
+            state: other.state,
+            is_hodl_invoice: other.is_hodl_invoice,
+            payment_hash: other.payment_hash,
+            amount_sat: other.amount_sat,
+            amount_msat: other.amount_msat,
+            internal_node_pubkey: other.internal_node_pubkey,
+            updated_at: other.updated_at,
+            created_at: other.created_at,
+            expires_at: other.expires_at,
+        }
+    }
+}
+
+impl From<IGiftBolt11Invoice> for ExternalIGiftBolt11Invoice {
+    fn from(other: IGiftBolt11Invoice) -> Self {
+        Self {
+            id: other.id,
+            request: other.request,
+            state: other.state,
+            is_hodl_invoice: other.is_hodl_invoice,
+            payment_hash: other.payment_hash,
+            amount_sat: other.amount_sat,
+            amount_msat: other.amount_msat,
+            internal_node_pubkey: other.internal_node_pubkey,
+            updated_at: other.updated_at,
+            created_at: other.created_at,
+            expires_at: other.expires_at,
+        }
+    }
+}
+
+#[derive(uniffi::Record, Deserialize, Serialize)]
+pub struct IGiftLspNode {
+    pub alias: String,
+    pub pubkey: String,
+    pub connection_strings: Vec<String>,
+}
+
+impl From<ExternalIGiftLspNode> for IGiftLspNode {
+    fn from(other: ExternalIGiftLspNode) -> Self {
+        Self {
+            alias: other.alias,
+            pubkey: other.pubkey,
+            connection_strings: other.connection_strings,
+        }
+    }
+}
+
+impl From<IGiftLspNode> for ExternalIGiftLspNode {
+    fn from(other: IGiftLspNode) -> Self {
+        Self {
+            alias: other.alias,
+            pubkey: other.pubkey,
+            connection_strings: other.connection_strings,
+        }
+    }
+}
+
+#[derive(uniffi::Record, Deserialize, Serialize)]
+pub struct IGiftPayment {
+    pub id: String,
+    pub state: String, // String instead of enum
+    pub old_state: Option<String>,
+    pub onchain_state: Option<String>,
+    pub ln_state: Option<String>,
+    pub paid_onchain_sat: Option<u64>,
+    pub paid_ln_sat: Option<u64>,
+    pub paid_sat: Option<u64>,
+    pub is_overpaid: Option<bool>,
+    pub is_refunded: Option<bool>,
+    pub overpaid_amount_sat: Option<u64>,
+    pub required_onchain_confirmations: Option<u32>,
+    pub settlement_state: Option<String>,
+    pub expected_amount_sat: Option<u64>,
+    pub is_manually_paid: Option<bool>,
+    pub btc_address: Option<IGiftBtcAddress>,
+    pub btc_address_id: Option<String>,
+    pub bolt11_invoice: Option<IGiftBolt11Invoice>,
+    pub bolt11_invoice_id: Option<String>,
+    pub manual_refunds: Vec<String>, // Simplified from serde_json::Value
+}
+
+impl From<ExternalIGiftPayment> for IGiftPayment {
+    fn from(other: ExternalIGiftPayment) -> Self {
+        Self {
+            id: other.id,
+            state: other.state,
+            old_state: other.old_state,
+            onchain_state: other.onchain_state,
+            ln_state: other.ln_state,
+            paid_onchain_sat: other.paid_onchain_sat,
+            paid_ln_sat: other.paid_ln_sat,
+            paid_sat: other.paid_sat,
+            is_overpaid: other.is_overpaid,
+            is_refunded: other.is_refunded,
+            overpaid_amount_sat: other.overpaid_amount_sat,
+            required_onchain_confirmations: other.required_onchain_confirmations,
+            settlement_state: other.settlement_state,
+            expected_amount_sat: other.expected_amount_sat,
+            is_manually_paid: other.is_manually_paid,
+            btc_address: other.btc_address.map(|b| b.into()),
+            btc_address_id: other.btc_address_id,
+            bolt11_invoice: other.bolt11_invoice.map(|b| b.into()),
+            bolt11_invoice_id: other.bolt11_invoice_id,
+            manual_refunds: other.manual_refunds.iter().map(|_| "".to_string()).collect(), // Simplified
+        }
+    }
+}
+
+impl From<IGiftPayment> for ExternalIGiftPayment {
+    fn from(other: IGiftPayment) -> Self {
+        Self {
+            id: other.id,
+            state: other.state,
+            old_state: other.old_state,
+            onchain_state: other.onchain_state,
+            ln_state: other.ln_state,
+            paid_onchain_sat: other.paid_onchain_sat,
+            paid_ln_sat: other.paid_ln_sat,
+            paid_sat: other.paid_sat,
+            is_overpaid: other.is_overpaid,
+            is_refunded: other.is_refunded,
+            overpaid_amount_sat: other.overpaid_amount_sat,
+            required_onchain_confirmations: other.required_onchain_confirmations,
+            settlement_state: other.settlement_state,
+            expected_amount_sat: other.expected_amount_sat,
+            is_manually_paid: other.is_manually_paid,
+            btc_address: other.btc_address.map(|b| b.into()),
+            btc_address_id: other.btc_address_id,
+            bolt11_invoice: other.bolt11_invoice.map(|b| b.into()),
+            bolt11_invoice_id: other.bolt11_invoice_id,
+            manual_refunds: vec![], // Simplified
+        }
+    }
+}
+
+#[derive(uniffi::Record, Deserialize, Serialize)]
+pub struct IGiftOrder {
+    pub id: String,
+    pub state: String, // String instead of enum
+    pub old_state: Option<String>,
+    pub is_channel_expired: Option<bool>,
+    pub is_order_expired: Option<bool>,
+    pub lsp_balance_sat: Option<u64>,
+    pub client_balance_sat: Option<u64>,
+    pub channel_expiry_weeks: Option<u32>,
+    pub zero_conf: Option<bool>,
+    pub zero_reserve: Option<bool>,
+    pub announced: Option<bool>,
+    pub client_node_id: Option<String>,
+    pub channel_expires_at: Option<String>,
+    pub order_expires_at: Option<String>,
+    pub fee_sat: Option<u64>,
+    pub network_fee_sat: Option<u64>,
+    pub service_fee_sat: Option<u64>,
+    pub payment: Option<IGiftPayment>,
+    pub lsp_node: Option<IGiftLspNode>,
+    pub updated_at: Option<String>,
+    pub created_at: Option<String>,
+    pub node_id_verified: Option<bool>,
+}
+
+impl From<ExternalIGiftOrder> for IGiftOrder {
+    fn from(other: ExternalIGiftOrder) -> Self {
+        Self {
+            id: other.id,
+            state: other.state,
+            old_state: other.old_state,
+            is_channel_expired: other.is_channel_expired,
+            is_order_expired: other.is_order_expired,
+            lsp_balance_sat: other.lsp_balance_sat,
+            client_balance_sat: other.client_balance_sat,
+            channel_expiry_weeks: other.channel_expiry_weeks,
+            zero_conf: other.zero_conf,
+            zero_reserve: other.zero_reserve,
+            announced: other.announced,
+            client_node_id: other.client_node_id,
+            channel_expires_at: other.channel_expires_at,
+            order_expires_at: other.order_expires_at,
+            fee_sat: other.fee_sat,
+            network_fee_sat: other.network_fee_sat,
+            service_fee_sat: other.service_fee_sat,
+            payment: other.payment.map(|p| p.into()),
+            lsp_node: other.lsp_node.map(|l| l.into()),
+            updated_at: other.updated_at,
+            created_at: other.created_at,
+            node_id_verified: other.node_id_verified,
+        }
+    }
+}
+
+impl From<IGiftOrder> for ExternalIGiftOrder {
+    fn from(other: IGiftOrder) -> Self {
+        Self {
+            id: other.id,
+            state: other.state,
+            old_state: other.old_state,
+            is_channel_expired: other.is_channel_expired,
+            is_order_expired: other.is_order_expired,
+            lsp_balance_sat: other.lsp_balance_sat,
+            client_balance_sat: other.client_balance_sat,
+            channel_expiry_weeks: other.channel_expiry_weeks,
+            zero_conf: other.zero_conf,
+            zero_reserve: other.zero_reserve,
+            announced: other.announced,
+            client_node_id: other.client_node_id,
+            channel_expires_at: other.channel_expires_at,
+            order_expires_at: other.order_expires_at,
+            fee_sat: other.fee_sat,
+            network_fee_sat: other.network_fee_sat,
+            service_fee_sat: other.service_fee_sat,
+            payment: other.payment.map(|p| p.into()),
+            lsp_node: other.lsp_node.map(|l| l.into()),
+            updated_at: other.updated_at,
+            created_at: other.created_at,
+            node_id_verified: other.node_id_verified,
+        }
+    }
+}
+
+#[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IGiftCode {
     pub id: String,
     pub code: String,
+    pub created_at: String,
+    pub updated_at: String,
+    pub expires_at: String,
+    pub gift_sat: Option<u64>,
+    pub scope: Option<String>,
+    pub max_count: Option<u32>,
 }
 
 impl From<ExternalIGiftCode> for IGiftCode {
@@ -1176,6 +1472,12 @@ impl From<ExternalIGiftCode> for IGiftCode {
         Self {
             id: other.id,
             code: other.code,
+            created_at: other.created_at.unwrap_or_default(),
+            updated_at: other.updated_at.unwrap_or_default(),
+            expires_at: other.expires_at.unwrap_or_default(),
+            gift_sat: other.gift_sat,
+            scope: other.scope,
+            max_count: other.max_count,
         }
     }
 }
@@ -1185,6 +1487,12 @@ impl From<IGiftCode> for ExternalIGiftCode {
         Self {
             id: other.id,
             code: other.code,
+            created_at: Some(other.created_at),
+            updated_at: Some(other.updated_at),
+            expires_at: Some(other.expires_at),
+            gift_sat: other.gift_sat,
+            scope: other.scope,
+            max_count: other.max_count,
         }
     }
 }
@@ -1194,11 +1502,13 @@ pub struct IGift {
     pub id: String,
     pub node_id: String,
     pub order_id: Option<String>,
-    pub order: Option<IBtOrder>,
+    pub order: Option<IGiftOrder>,
     pub bolt11_payment_id: Option<String>,
-    pub bolt11_payment: Option<IBtPayment>,
-    pub applied_gift_code_id: String,
+    pub bolt11_payment: Option<IGiftPayment>,
+    pub applied_gift_code_id: Option<String>,
     pub applied_gift_code: Option<IGiftCode>,
+    pub created_at: String,
+    pub updated_at: String,
 }
 
 impl From<ExternalIGift> for IGift {
@@ -1212,6 +1522,8 @@ impl From<ExternalIGift> for IGift {
             bolt11_payment: other.bolt11_payment.map(|p| p.into()),
             applied_gift_code_id: other.applied_gift_code_id,
             applied_gift_code: other.applied_gift_code.map(|c| c.into()),
+            created_at: other.created_at.unwrap_or_default(),
+            updated_at: other.updated_at.unwrap_or_default(),
         }
     }
 }
@@ -1227,6 +1539,8 @@ impl From<IGift> for ExternalIGift {
             bolt11_payment: other.bolt11_payment.map(|p| p.into()),
             applied_gift_code_id: other.applied_gift_code_id,
             applied_gift_code: other.applied_gift_code.map(|c| c.into()),
+            created_at: Some(other.created_at),
+            updated_at: Some(other.updated_at),
         }
     }
 }

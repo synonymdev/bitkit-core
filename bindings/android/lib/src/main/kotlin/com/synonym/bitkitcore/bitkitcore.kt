@@ -2976,7 +2976,7 @@ public object FfiConverterTypeIBtOnchainTransactions: FfiConverterRustBuffer<IBt
 data class IBtOrder (
     var `id`: kotlin.String, 
     var `state`: BtOrderState, 
-    var `state2`: BtOrderState2, 
+    var `state2`: BtOrderState2?, 
     var `feeSat`: kotlin.ULong, 
     var `networkFeeSat`: kotlin.ULong, 
     var `serviceFeeSat`: kotlin.ULong, 
@@ -2989,9 +2989,9 @@ data class IBtOrder (
     var `channelExpiresAt`: kotlin.String, 
     var `orderExpiresAt`: kotlin.String, 
     var `channel`: IBtChannel?, 
-    var `lspNode`: ILspNode, 
+    var `lspNode`: ILspNode?, 
     var `lnurl`: kotlin.String?, 
-    var `payment`: IBtPayment, 
+    var `payment`: IBtPayment?, 
     var `couponCode`: kotlin.String?, 
     var `source`: kotlin.String?, 
     var `discount`: IDiscount?, 
@@ -3007,7 +3007,7 @@ public object FfiConverterTypeIBtOrder: FfiConverterRustBuffer<IBtOrder> {
         return IBtOrder(
             FfiConverterString.read(buf),
             FfiConverterTypeBtOrderState.read(buf),
-            FfiConverterTypeBtOrderState2.read(buf),
+            FfiConverterOptionalTypeBtOrderState2.read(buf),
             FfiConverterULong.read(buf),
             FfiConverterULong.read(buf),
             FfiConverterULong.read(buf),
@@ -3020,9 +3020,9 @@ public object FfiConverterTypeIBtOrder: FfiConverterRustBuffer<IBtOrder> {
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterOptionalTypeIBtChannel.read(buf),
-            FfiConverterTypeILspNode.read(buf),
+            FfiConverterOptionalTypeILspNode.read(buf),
             FfiConverterOptionalString.read(buf),
-            FfiConverterTypeIBtPayment.read(buf),
+            FfiConverterOptionalTypeIBtPayment.read(buf),
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalTypeIDiscount.read(buf),
@@ -3034,7 +3034,7 @@ public object FfiConverterTypeIBtOrder: FfiConverterRustBuffer<IBtOrder> {
     override fun allocationSize(value: IBtOrder) = (
             FfiConverterString.allocationSize(value.`id`) +
             FfiConverterTypeBtOrderState.allocationSize(value.`state`) +
-            FfiConverterTypeBtOrderState2.allocationSize(value.`state2`) +
+            FfiConverterOptionalTypeBtOrderState2.allocationSize(value.`state2`) +
             FfiConverterULong.allocationSize(value.`feeSat`) +
             FfiConverterULong.allocationSize(value.`networkFeeSat`) +
             FfiConverterULong.allocationSize(value.`serviceFeeSat`) +
@@ -3047,9 +3047,9 @@ public object FfiConverterTypeIBtOrder: FfiConverterRustBuffer<IBtOrder> {
             FfiConverterString.allocationSize(value.`channelExpiresAt`) +
             FfiConverterString.allocationSize(value.`orderExpiresAt`) +
             FfiConverterOptionalTypeIBtChannel.allocationSize(value.`channel`) +
-            FfiConverterTypeILspNode.allocationSize(value.`lspNode`) +
+            FfiConverterOptionalTypeILspNode.allocationSize(value.`lspNode`) +
             FfiConverterOptionalString.allocationSize(value.`lnurl`) +
-            FfiConverterTypeIBtPayment.allocationSize(value.`payment`) +
+            FfiConverterOptionalTypeIBtPayment.allocationSize(value.`payment`) +
             FfiConverterOptionalString.allocationSize(value.`couponCode`) +
             FfiConverterOptionalString.allocationSize(value.`source`) +
             FfiConverterOptionalTypeIDiscount.allocationSize(value.`discount`) +
@@ -3060,7 +3060,7 @@ public object FfiConverterTypeIBtOrder: FfiConverterRustBuffer<IBtOrder> {
     override fun write(value: IBtOrder, buf: ByteBuffer) {
             FfiConverterString.write(value.`id`, buf)
             FfiConverterTypeBtOrderState.write(value.`state`, buf)
-            FfiConverterTypeBtOrderState2.write(value.`state2`, buf)
+            FfiConverterOptionalTypeBtOrderState2.write(value.`state2`, buf)
             FfiConverterULong.write(value.`feeSat`, buf)
             FfiConverterULong.write(value.`networkFeeSat`, buf)
             FfiConverterULong.write(value.`serviceFeeSat`, buf)
@@ -3073,9 +3073,9 @@ public object FfiConverterTypeIBtOrder: FfiConverterRustBuffer<IBtOrder> {
             FfiConverterString.write(value.`channelExpiresAt`, buf)
             FfiConverterString.write(value.`orderExpiresAt`, buf)
             FfiConverterOptionalTypeIBtChannel.write(value.`channel`, buf)
-            FfiConverterTypeILspNode.write(value.`lspNode`, buf)
+            FfiConverterOptionalTypeILspNode.write(value.`lspNode`, buf)
             FfiConverterOptionalString.write(value.`lnurl`, buf)
-            FfiConverterTypeIBtPayment.write(value.`payment`, buf)
+            FfiConverterOptionalTypeIBtPayment.write(value.`payment`, buf)
             FfiConverterOptionalString.write(value.`couponCode`, buf)
             FfiConverterOptionalString.write(value.`source`, buf)
             FfiConverterOptionalTypeIDiscount.write(value.`discount`, buf)
@@ -3088,10 +3088,10 @@ public object FfiConverterTypeIBtOrder: FfiConverterRustBuffer<IBtOrder> {
 
 data class IBtPayment (
     var `state`: BtPaymentState, 
-    var `state2`: BtPaymentState2, 
+    var `state2`: BtPaymentState2?, 
     var `paidSat`: kotlin.ULong, 
-    var `bolt11Invoice`: IBtBolt11Invoice, 
-    var `onchain`: IBtOnchainTransactions, 
+    var `bolt11Invoice`: IBtBolt11Invoice?, 
+    var `onchain`: IBtOnchainTransactions?, 
     var `isManuallyPaid`: kotlin.Boolean?, 
     var `manualRefunds`: List<IManualRefund>?
 ) {
@@ -3103,10 +3103,10 @@ public object FfiConverterTypeIBtPayment: FfiConverterRustBuffer<IBtPayment> {
     override fun read(buf: ByteBuffer): IBtPayment {
         return IBtPayment(
             FfiConverterTypeBtPaymentState.read(buf),
-            FfiConverterTypeBtPaymentState2.read(buf),
+            FfiConverterOptionalTypeBtPaymentState2.read(buf),
             FfiConverterULong.read(buf),
-            FfiConverterTypeIBtBolt11Invoice.read(buf),
-            FfiConverterTypeIBtOnchainTransactions.read(buf),
+            FfiConverterOptionalTypeIBtBolt11Invoice.read(buf),
+            FfiConverterOptionalTypeIBtOnchainTransactions.read(buf),
             FfiConverterOptionalBoolean.read(buf),
             FfiConverterOptionalSequenceTypeIManualRefund.read(buf),
         )
@@ -3114,20 +3114,20 @@ public object FfiConverterTypeIBtPayment: FfiConverterRustBuffer<IBtPayment> {
 
     override fun allocationSize(value: IBtPayment) = (
             FfiConverterTypeBtPaymentState.allocationSize(value.`state`) +
-            FfiConverterTypeBtPaymentState2.allocationSize(value.`state2`) +
+            FfiConverterOptionalTypeBtPaymentState2.allocationSize(value.`state2`) +
             FfiConverterULong.allocationSize(value.`paidSat`) +
-            FfiConverterTypeIBtBolt11Invoice.allocationSize(value.`bolt11Invoice`) +
-            FfiConverterTypeIBtOnchainTransactions.allocationSize(value.`onchain`) +
+            FfiConverterOptionalTypeIBtBolt11Invoice.allocationSize(value.`bolt11Invoice`) +
+            FfiConverterOptionalTypeIBtOnchainTransactions.allocationSize(value.`onchain`) +
             FfiConverterOptionalBoolean.allocationSize(value.`isManuallyPaid`) +
             FfiConverterOptionalSequenceTypeIManualRefund.allocationSize(value.`manualRefunds`)
     )
 
     override fun write(value: IBtPayment, buf: ByteBuffer) {
             FfiConverterTypeBtPaymentState.write(value.`state`, buf)
-            FfiConverterTypeBtPaymentState2.write(value.`state2`, buf)
+            FfiConverterOptionalTypeBtPaymentState2.write(value.`state2`, buf)
             FfiConverterULong.write(value.`paidSat`, buf)
-            FfiConverterTypeIBtBolt11Invoice.write(value.`bolt11Invoice`, buf)
-            FfiConverterTypeIBtOnchainTransactions.write(value.`onchain`, buf)
+            FfiConverterOptionalTypeIBtBolt11Invoice.write(value.`bolt11Invoice`, buf)
+            FfiConverterOptionalTypeIBtOnchainTransactions.write(value.`onchain`, buf)
             FfiConverterOptionalBoolean.write(value.`isManuallyPaid`, buf)
             FfiConverterOptionalSequenceTypeIManualRefund.write(value.`manualRefunds`, buf)
     }
@@ -3269,11 +3269,13 @@ data class IGift (
     var `id`: kotlin.String, 
     var `nodeId`: kotlin.String, 
     var `orderId`: kotlin.String?, 
-    var `order`: IBtOrder?, 
+    var `order`: IGiftOrder?, 
     var `bolt11PaymentId`: kotlin.String?, 
-    var `bolt11Payment`: IBtPayment?, 
-    var `appliedGiftCodeId`: kotlin.String, 
-    var `appliedGiftCode`: IGiftCode?
+    var `bolt11Payment`: IGiftPayment?, 
+    var `appliedGiftCodeId`: kotlin.String?, 
+    var `appliedGiftCode`: IGiftCode?, 
+    var `createdAt`: kotlin.String, 
+    var `updatedAt`: kotlin.String
 ) {
     
     companion object
@@ -3285,11 +3287,13 @@ public object FfiConverterTypeIGift: FfiConverterRustBuffer<IGift> {
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterOptionalString.read(buf),
-            FfiConverterOptionalTypeIBtOrder.read(buf),
+            FfiConverterOptionalTypeIGiftOrder.read(buf),
             FfiConverterOptionalString.read(buf),
-            FfiConverterOptionalTypeIBtPayment.read(buf),
-            FfiConverterString.read(buf),
+            FfiConverterOptionalTypeIGiftPayment.read(buf),
+            FfiConverterOptionalString.read(buf),
             FfiConverterOptionalTypeIGiftCode.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
         )
     }
 
@@ -3297,22 +3301,148 @@ public object FfiConverterTypeIGift: FfiConverterRustBuffer<IGift> {
             FfiConverterString.allocationSize(value.`id`) +
             FfiConverterString.allocationSize(value.`nodeId`) +
             FfiConverterOptionalString.allocationSize(value.`orderId`) +
-            FfiConverterOptionalTypeIBtOrder.allocationSize(value.`order`) +
+            FfiConverterOptionalTypeIGiftOrder.allocationSize(value.`order`) +
             FfiConverterOptionalString.allocationSize(value.`bolt11PaymentId`) +
-            FfiConverterOptionalTypeIBtPayment.allocationSize(value.`bolt11Payment`) +
-            FfiConverterString.allocationSize(value.`appliedGiftCodeId`) +
-            FfiConverterOptionalTypeIGiftCode.allocationSize(value.`appliedGiftCode`)
+            FfiConverterOptionalTypeIGiftPayment.allocationSize(value.`bolt11Payment`) +
+            FfiConverterOptionalString.allocationSize(value.`appliedGiftCodeId`) +
+            FfiConverterOptionalTypeIGiftCode.allocationSize(value.`appliedGiftCode`) +
+            FfiConverterString.allocationSize(value.`createdAt`) +
+            FfiConverterString.allocationSize(value.`updatedAt`)
     )
 
     override fun write(value: IGift, buf: ByteBuffer) {
             FfiConverterString.write(value.`id`, buf)
             FfiConverterString.write(value.`nodeId`, buf)
             FfiConverterOptionalString.write(value.`orderId`, buf)
-            FfiConverterOptionalTypeIBtOrder.write(value.`order`, buf)
+            FfiConverterOptionalTypeIGiftOrder.write(value.`order`, buf)
             FfiConverterOptionalString.write(value.`bolt11PaymentId`, buf)
-            FfiConverterOptionalTypeIBtPayment.write(value.`bolt11Payment`, buf)
-            FfiConverterString.write(value.`appliedGiftCodeId`, buf)
+            FfiConverterOptionalTypeIGiftPayment.write(value.`bolt11Payment`, buf)
+            FfiConverterOptionalString.write(value.`appliedGiftCodeId`, buf)
             FfiConverterOptionalTypeIGiftCode.write(value.`appliedGiftCode`, buf)
+            FfiConverterString.write(value.`createdAt`, buf)
+            FfiConverterString.write(value.`updatedAt`, buf)
+    }
+}
+
+
+
+data class IGiftBolt11Invoice (
+    var `id`: kotlin.String, 
+    var `request`: kotlin.String, 
+    var `state`: kotlin.String, 
+    var `isHodlInvoice`: kotlin.Boolean?, 
+    var `paymentHash`: kotlin.String?, 
+    var `amountSat`: kotlin.ULong?, 
+    var `amountMsat`: kotlin.String?, 
+    var `internalNodePubkey`: kotlin.String?, 
+    var `updatedAt`: kotlin.String?, 
+    var `createdAt`: kotlin.String?, 
+    var `expiresAt`: kotlin.String?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeIGiftBolt11Invoice: FfiConverterRustBuffer<IGiftBolt11Invoice> {
+    override fun read(buf: ByteBuffer): IGiftBolt11Invoice {
+        return IGiftBolt11Invoice(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: IGiftBolt11Invoice) = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterString.allocationSize(value.`request`) +
+            FfiConverterString.allocationSize(value.`state`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`isHodlInvoice`) +
+            FfiConverterOptionalString.allocationSize(value.`paymentHash`) +
+            FfiConverterOptionalULong.allocationSize(value.`amountSat`) +
+            FfiConverterOptionalString.allocationSize(value.`amountMsat`) +
+            FfiConverterOptionalString.allocationSize(value.`internalNodePubkey`) +
+            FfiConverterOptionalString.allocationSize(value.`updatedAt`) +
+            FfiConverterOptionalString.allocationSize(value.`createdAt`) +
+            FfiConverterOptionalString.allocationSize(value.`expiresAt`)
+    )
+
+    override fun write(value: IGiftBolt11Invoice, buf: ByteBuffer) {
+            FfiConverterString.write(value.`id`, buf)
+            FfiConverterString.write(value.`request`, buf)
+            FfiConverterString.write(value.`state`, buf)
+            FfiConverterOptionalBoolean.write(value.`isHodlInvoice`, buf)
+            FfiConverterOptionalString.write(value.`paymentHash`, buf)
+            FfiConverterOptionalULong.write(value.`amountSat`, buf)
+            FfiConverterOptionalString.write(value.`amountMsat`, buf)
+            FfiConverterOptionalString.write(value.`internalNodePubkey`, buf)
+            FfiConverterOptionalString.write(value.`updatedAt`, buf)
+            FfiConverterOptionalString.write(value.`createdAt`, buf)
+            FfiConverterOptionalString.write(value.`expiresAt`, buf)
+    }
+}
+
+
+
+data class IGiftBtcAddress (
+    var `id`: kotlin.String, 
+    var `address`: kotlin.String, 
+    var `transactions`: List<kotlin.String>, 
+    var `allTransactions`: List<kotlin.String>, 
+    var `isBlacklisted`: kotlin.Boolean?, 
+    var `watchUntil`: kotlin.String?, 
+    var `watchForBlockConfirmations`: kotlin.UInt?, 
+    var `updatedAt`: kotlin.String?, 
+    var `createdAt`: kotlin.String?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeIGiftBtcAddress: FfiConverterRustBuffer<IGiftBtcAddress> {
+    override fun read(buf: ByteBuffer): IGiftBtcAddress {
+        return IGiftBtcAddress(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterSequenceString.read(buf),
+            FfiConverterSequenceString.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: IGiftBtcAddress) = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterSequenceString.allocationSize(value.`transactions`) +
+            FfiConverterSequenceString.allocationSize(value.`allTransactions`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`isBlacklisted`) +
+            FfiConverterOptionalString.allocationSize(value.`watchUntil`) +
+            FfiConverterOptionalUInt.allocationSize(value.`watchForBlockConfirmations`) +
+            FfiConverterOptionalString.allocationSize(value.`updatedAt`) +
+            FfiConverterOptionalString.allocationSize(value.`createdAt`)
+    )
+
+    override fun write(value: IGiftBtcAddress, buf: ByteBuffer) {
+            FfiConverterString.write(value.`id`, buf)
+            FfiConverterString.write(value.`address`, buf)
+            FfiConverterSequenceString.write(value.`transactions`, buf)
+            FfiConverterSequenceString.write(value.`allTransactions`, buf)
+            FfiConverterOptionalBoolean.write(value.`isBlacklisted`, buf)
+            FfiConverterOptionalString.write(value.`watchUntil`, buf)
+            FfiConverterOptionalUInt.write(value.`watchForBlockConfirmations`, buf)
+            FfiConverterOptionalString.write(value.`updatedAt`, buf)
+            FfiConverterOptionalString.write(value.`createdAt`, buf)
     }
 }
 
@@ -3320,7 +3450,13 @@ public object FfiConverterTypeIGift: FfiConverterRustBuffer<IGift> {
 
 data class IGiftCode (
     var `id`: kotlin.String, 
-    var `code`: kotlin.String
+    var `code`: kotlin.String, 
+    var `createdAt`: kotlin.String, 
+    var `updatedAt`: kotlin.String, 
+    var `expiresAt`: kotlin.String, 
+    var `giftSat`: kotlin.ULong?, 
+    var `scope`: kotlin.String?, 
+    var `maxCount`: kotlin.UInt?
 ) {
     
     companion object
@@ -3331,17 +3467,278 @@ public object FfiConverterTypeIGiftCode: FfiConverterRustBuffer<IGiftCode> {
         return IGiftCode(
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalUInt.read(buf),
         )
     }
 
     override fun allocationSize(value: IGiftCode) = (
             FfiConverterString.allocationSize(value.`id`) +
-            FfiConverterString.allocationSize(value.`code`)
+            FfiConverterString.allocationSize(value.`code`) +
+            FfiConverterString.allocationSize(value.`createdAt`) +
+            FfiConverterString.allocationSize(value.`updatedAt`) +
+            FfiConverterString.allocationSize(value.`expiresAt`) +
+            FfiConverterOptionalULong.allocationSize(value.`giftSat`) +
+            FfiConverterOptionalString.allocationSize(value.`scope`) +
+            FfiConverterOptionalUInt.allocationSize(value.`maxCount`)
     )
 
     override fun write(value: IGiftCode, buf: ByteBuffer) {
             FfiConverterString.write(value.`id`, buf)
             FfiConverterString.write(value.`code`, buf)
+            FfiConverterString.write(value.`createdAt`, buf)
+            FfiConverterString.write(value.`updatedAt`, buf)
+            FfiConverterString.write(value.`expiresAt`, buf)
+            FfiConverterOptionalULong.write(value.`giftSat`, buf)
+            FfiConverterOptionalString.write(value.`scope`, buf)
+            FfiConverterOptionalUInt.write(value.`maxCount`, buf)
+    }
+}
+
+
+
+data class IGiftLspNode (
+    var `alias`: kotlin.String, 
+    var `pubkey`: kotlin.String, 
+    var `connectionStrings`: List<kotlin.String>
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeIGiftLspNode: FfiConverterRustBuffer<IGiftLspNode> {
+    override fun read(buf: ByteBuffer): IGiftLspNode {
+        return IGiftLspNode(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterSequenceString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: IGiftLspNode) = (
+            FfiConverterString.allocationSize(value.`alias`) +
+            FfiConverterString.allocationSize(value.`pubkey`) +
+            FfiConverterSequenceString.allocationSize(value.`connectionStrings`)
+    )
+
+    override fun write(value: IGiftLspNode, buf: ByteBuffer) {
+            FfiConverterString.write(value.`alias`, buf)
+            FfiConverterString.write(value.`pubkey`, buf)
+            FfiConverterSequenceString.write(value.`connectionStrings`, buf)
+    }
+}
+
+
+
+data class IGiftOrder (
+    var `id`: kotlin.String, 
+    var `state`: kotlin.String, 
+    var `oldState`: kotlin.String?, 
+    var `isChannelExpired`: kotlin.Boolean?, 
+    var `isOrderExpired`: kotlin.Boolean?, 
+    var `lspBalanceSat`: kotlin.ULong?, 
+    var `clientBalanceSat`: kotlin.ULong?, 
+    var `channelExpiryWeeks`: kotlin.UInt?, 
+    var `zeroConf`: kotlin.Boolean?, 
+    var `zeroReserve`: kotlin.Boolean?, 
+    var `announced`: kotlin.Boolean?, 
+    var `clientNodeId`: kotlin.String?, 
+    var `channelExpiresAt`: kotlin.String?, 
+    var `orderExpiresAt`: kotlin.String?, 
+    var `feeSat`: kotlin.ULong?, 
+    var `networkFeeSat`: kotlin.ULong?, 
+    var `serviceFeeSat`: kotlin.ULong?, 
+    var `payment`: IGiftPayment?, 
+    var `lspNode`: IGiftLspNode?, 
+    var `updatedAt`: kotlin.String?, 
+    var `createdAt`: kotlin.String?, 
+    var `nodeIdVerified`: kotlin.Boolean?
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeIGiftOrder: FfiConverterRustBuffer<IGiftOrder> {
+    override fun read(buf: ByteBuffer): IGiftOrder {
+        return IGiftOrder(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalTypeIGiftPayment.read(buf),
+            FfiConverterOptionalTypeIGiftLspNode.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: IGiftOrder) = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterString.allocationSize(value.`state`) +
+            FfiConverterOptionalString.allocationSize(value.`oldState`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`isChannelExpired`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`isOrderExpired`) +
+            FfiConverterOptionalULong.allocationSize(value.`lspBalanceSat`) +
+            FfiConverterOptionalULong.allocationSize(value.`clientBalanceSat`) +
+            FfiConverterOptionalUInt.allocationSize(value.`channelExpiryWeeks`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`zeroConf`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`zeroReserve`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`announced`) +
+            FfiConverterOptionalString.allocationSize(value.`clientNodeId`) +
+            FfiConverterOptionalString.allocationSize(value.`channelExpiresAt`) +
+            FfiConverterOptionalString.allocationSize(value.`orderExpiresAt`) +
+            FfiConverterOptionalULong.allocationSize(value.`feeSat`) +
+            FfiConverterOptionalULong.allocationSize(value.`networkFeeSat`) +
+            FfiConverterOptionalULong.allocationSize(value.`serviceFeeSat`) +
+            FfiConverterOptionalTypeIGiftPayment.allocationSize(value.`payment`) +
+            FfiConverterOptionalTypeIGiftLspNode.allocationSize(value.`lspNode`) +
+            FfiConverterOptionalString.allocationSize(value.`updatedAt`) +
+            FfiConverterOptionalString.allocationSize(value.`createdAt`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`nodeIdVerified`)
+    )
+
+    override fun write(value: IGiftOrder, buf: ByteBuffer) {
+            FfiConverterString.write(value.`id`, buf)
+            FfiConverterString.write(value.`state`, buf)
+            FfiConverterOptionalString.write(value.`oldState`, buf)
+            FfiConverterOptionalBoolean.write(value.`isChannelExpired`, buf)
+            FfiConverterOptionalBoolean.write(value.`isOrderExpired`, buf)
+            FfiConverterOptionalULong.write(value.`lspBalanceSat`, buf)
+            FfiConverterOptionalULong.write(value.`clientBalanceSat`, buf)
+            FfiConverterOptionalUInt.write(value.`channelExpiryWeeks`, buf)
+            FfiConverterOptionalBoolean.write(value.`zeroConf`, buf)
+            FfiConverterOptionalBoolean.write(value.`zeroReserve`, buf)
+            FfiConverterOptionalBoolean.write(value.`announced`, buf)
+            FfiConverterOptionalString.write(value.`clientNodeId`, buf)
+            FfiConverterOptionalString.write(value.`channelExpiresAt`, buf)
+            FfiConverterOptionalString.write(value.`orderExpiresAt`, buf)
+            FfiConverterOptionalULong.write(value.`feeSat`, buf)
+            FfiConverterOptionalULong.write(value.`networkFeeSat`, buf)
+            FfiConverterOptionalULong.write(value.`serviceFeeSat`, buf)
+            FfiConverterOptionalTypeIGiftPayment.write(value.`payment`, buf)
+            FfiConverterOptionalTypeIGiftLspNode.write(value.`lspNode`, buf)
+            FfiConverterOptionalString.write(value.`updatedAt`, buf)
+            FfiConverterOptionalString.write(value.`createdAt`, buf)
+            FfiConverterOptionalBoolean.write(value.`nodeIdVerified`, buf)
+    }
+}
+
+
+
+data class IGiftPayment (
+    var `id`: kotlin.String, 
+    var `state`: kotlin.String, 
+    var `oldState`: kotlin.String?, 
+    var `onchainState`: kotlin.String?, 
+    var `lnState`: kotlin.String?, 
+    var `paidOnchainSat`: kotlin.ULong?, 
+    var `paidLnSat`: kotlin.ULong?, 
+    var `paidSat`: kotlin.ULong?, 
+    var `isOverpaid`: kotlin.Boolean?, 
+    var `isRefunded`: kotlin.Boolean?, 
+    var `overpaidAmountSat`: kotlin.ULong?, 
+    var `requiredOnchainConfirmations`: kotlin.UInt?, 
+    var `settlementState`: kotlin.String?, 
+    var `expectedAmountSat`: kotlin.ULong?, 
+    var `isManuallyPaid`: kotlin.Boolean?, 
+    var `btcAddress`: IGiftBtcAddress?, 
+    var `btcAddressId`: kotlin.String?, 
+    var `bolt11Invoice`: IGiftBolt11Invoice?, 
+    var `bolt11InvoiceId`: kotlin.String?, 
+    var `manualRefunds`: List<kotlin.String>
+) {
+    
+    companion object
+}
+
+public object FfiConverterTypeIGiftPayment: FfiConverterRustBuffer<IGiftPayment> {
+    override fun read(buf: ByteBuffer): IGiftPayment {
+        return IGiftPayment(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalTypeIGiftBtcAddress.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalTypeIGiftBolt11Invoice.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterSequenceString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: IGiftPayment) = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterString.allocationSize(value.`state`) +
+            FfiConverterOptionalString.allocationSize(value.`oldState`) +
+            FfiConverterOptionalString.allocationSize(value.`onchainState`) +
+            FfiConverterOptionalString.allocationSize(value.`lnState`) +
+            FfiConverterOptionalULong.allocationSize(value.`paidOnchainSat`) +
+            FfiConverterOptionalULong.allocationSize(value.`paidLnSat`) +
+            FfiConverterOptionalULong.allocationSize(value.`paidSat`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`isOverpaid`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`isRefunded`) +
+            FfiConverterOptionalULong.allocationSize(value.`overpaidAmountSat`) +
+            FfiConverterOptionalUInt.allocationSize(value.`requiredOnchainConfirmations`) +
+            FfiConverterOptionalString.allocationSize(value.`settlementState`) +
+            FfiConverterOptionalULong.allocationSize(value.`expectedAmountSat`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`isManuallyPaid`) +
+            FfiConverterOptionalTypeIGiftBtcAddress.allocationSize(value.`btcAddress`) +
+            FfiConverterOptionalString.allocationSize(value.`btcAddressId`) +
+            FfiConverterOptionalTypeIGiftBolt11Invoice.allocationSize(value.`bolt11Invoice`) +
+            FfiConverterOptionalString.allocationSize(value.`bolt11InvoiceId`) +
+            FfiConverterSequenceString.allocationSize(value.`manualRefunds`)
+    )
+
+    override fun write(value: IGiftPayment, buf: ByteBuffer) {
+            FfiConverterString.write(value.`id`, buf)
+            FfiConverterString.write(value.`state`, buf)
+            FfiConverterOptionalString.write(value.`oldState`, buf)
+            FfiConverterOptionalString.write(value.`onchainState`, buf)
+            FfiConverterOptionalString.write(value.`lnState`, buf)
+            FfiConverterOptionalULong.write(value.`paidOnchainSat`, buf)
+            FfiConverterOptionalULong.write(value.`paidLnSat`, buf)
+            FfiConverterOptionalULong.write(value.`paidSat`, buf)
+            FfiConverterOptionalBoolean.write(value.`isOverpaid`, buf)
+            FfiConverterOptionalBoolean.write(value.`isRefunded`, buf)
+            FfiConverterOptionalULong.write(value.`overpaidAmountSat`, buf)
+            FfiConverterOptionalUInt.write(value.`requiredOnchainConfirmations`, buf)
+            FfiConverterOptionalString.write(value.`settlementState`, buf)
+            FfiConverterOptionalULong.write(value.`expectedAmountSat`, buf)
+            FfiConverterOptionalBoolean.write(value.`isManuallyPaid`, buf)
+            FfiConverterOptionalTypeIGiftBtcAddress.write(value.`btcAddress`, buf)
+            FfiConverterOptionalString.write(value.`btcAddressId`, buf)
+            FfiConverterOptionalTypeIGiftBolt11Invoice.write(value.`bolt11Invoice`, buf)
+            FfiConverterOptionalString.write(value.`bolt11InvoiceId`, buf)
+            FfiConverterSequenceString.write(value.`manualRefunds`, buf)
     }
 }
 
@@ -8284,6 +8681,35 @@ public object FfiConverterOptionalTypeDeviceParams: FfiConverterRustBuffer<Devic
 
 
 
+public object FfiConverterOptionalTypeIBtBolt11Invoice: FfiConverterRustBuffer<IBtBolt11Invoice?> {
+    override fun read(buf: ByteBuffer): IBtBolt11Invoice? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeIBtBolt11Invoice.read(buf)
+    }
+
+    override fun allocationSize(value: IBtBolt11Invoice?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeIBtBolt11Invoice.allocationSize(value)
+        }
+    }
+
+    override fun write(value: IBtBolt11Invoice?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeIBtBolt11Invoice.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeIBtChannel: FfiConverterRustBuffer<IBtChannel?> {
     override fun read(buf: ByteBuffer): IBtChannel? {
         if (buf.get().toInt() == 0) {
@@ -8371,28 +8797,28 @@ public object FfiConverterOptionalTypeIBtInfo: FfiConverterRustBuffer<IBtInfo?> 
 
 
 
-public object FfiConverterOptionalTypeIBtOrder: FfiConverterRustBuffer<IBtOrder?> {
-    override fun read(buf: ByteBuffer): IBtOrder? {
+public object FfiConverterOptionalTypeIBtOnchainTransactions: FfiConverterRustBuffer<IBtOnchainTransactions?> {
+    override fun read(buf: ByteBuffer): IBtOnchainTransactions? {
         if (buf.get().toInt() == 0) {
             return null
         }
-        return FfiConverterTypeIBtOrder.read(buf)
+        return FfiConverterTypeIBtOnchainTransactions.read(buf)
     }
 
-    override fun allocationSize(value: IBtOrder?): ULong {
+    override fun allocationSize(value: IBtOnchainTransactions?): ULong {
         if (value == null) {
             return 1UL
         } else {
-            return 1UL + FfiConverterTypeIBtOrder.allocationSize(value)
+            return 1UL + FfiConverterTypeIBtOnchainTransactions.allocationSize(value)
         }
     }
 
-    override fun write(value: IBtOrder?, buf: ByteBuffer) {
+    override fun write(value: IBtOnchainTransactions?, buf: ByteBuffer) {
         if (value == null) {
             buf.put(0)
         } else {
             buf.put(1)
-            FfiConverterTypeIBtOrder.write(value, buf)
+            FfiConverterTypeIBtOnchainTransactions.write(value, buf)
         }
     }
 }
@@ -8458,6 +8884,64 @@ public object FfiConverterOptionalTypeIDiscount: FfiConverterRustBuffer<IDiscoun
 
 
 
+public object FfiConverterOptionalTypeIGiftBolt11Invoice: FfiConverterRustBuffer<IGiftBolt11Invoice?> {
+    override fun read(buf: ByteBuffer): IGiftBolt11Invoice? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeIGiftBolt11Invoice.read(buf)
+    }
+
+    override fun allocationSize(value: IGiftBolt11Invoice?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeIGiftBolt11Invoice.allocationSize(value)
+        }
+    }
+
+    override fun write(value: IGiftBolt11Invoice?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeIGiftBolt11Invoice.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeIGiftBtcAddress: FfiConverterRustBuffer<IGiftBtcAddress?> {
+    override fun read(buf: ByteBuffer): IGiftBtcAddress? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeIGiftBtcAddress.read(buf)
+    }
+
+    override fun allocationSize(value: IGiftBtcAddress?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeIGiftBtcAddress.allocationSize(value)
+        }
+    }
+
+    override fun write(value: IGiftBtcAddress?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeIGiftBtcAddress.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeIGiftCode: FfiConverterRustBuffer<IGiftCode?> {
     override fun read(buf: ByteBuffer): IGiftCode? {
         if (buf.get().toInt() == 0) {
@@ -8480,6 +8964,122 @@ public object FfiConverterOptionalTypeIGiftCode: FfiConverterRustBuffer<IGiftCod
         } else {
             buf.put(1)
             FfiConverterTypeIGiftCode.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeIGiftLspNode: FfiConverterRustBuffer<IGiftLspNode?> {
+    override fun read(buf: ByteBuffer): IGiftLspNode? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeIGiftLspNode.read(buf)
+    }
+
+    override fun allocationSize(value: IGiftLspNode?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeIGiftLspNode.allocationSize(value)
+        }
+    }
+
+    override fun write(value: IGiftLspNode?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeIGiftLspNode.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeIGiftOrder: FfiConverterRustBuffer<IGiftOrder?> {
+    override fun read(buf: ByteBuffer): IGiftOrder? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeIGiftOrder.read(buf)
+    }
+
+    override fun allocationSize(value: IGiftOrder?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeIGiftOrder.allocationSize(value)
+        }
+    }
+
+    override fun write(value: IGiftOrder?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeIGiftOrder.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeIGiftPayment: FfiConverterRustBuffer<IGiftPayment?> {
+    override fun read(buf: ByteBuffer): IGiftPayment? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeIGiftPayment.read(buf)
+    }
+
+    override fun allocationSize(value: IGiftPayment?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeIGiftPayment.allocationSize(value)
+        }
+    }
+
+    override fun write(value: IGiftPayment?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeIGiftPayment.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeILspNode: FfiConverterRustBuffer<ILspNode?> {
+    override fun read(buf: ByteBuffer): ILspNode? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeILspNode.read(buf)
+    }
+
+    override fun allocationSize(value: ILspNode?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeILspNode.allocationSize(value)
+        }
+    }
+
+    override fun write(value: ILspNode?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeILspNode.write(value, buf)
         }
     }
 }
@@ -8770,6 +9370,35 @@ public object FfiConverterOptionalTypeBtOrderState2: FfiConverterRustBuffer<BtOr
         } else {
             buf.put(1)
             FfiConverterTypeBtOrderState2.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeBtPaymentState2: FfiConverterRustBuffer<BtPaymentState2?> {
+    override fun read(buf: ByteBuffer): BtPaymentState2? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeBtPaymentState2.read(buf)
+    }
+
+    override fun allocationSize(value: BtPaymentState2?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeBtPaymentState2.allocationSize(value)
+        }
+    }
+
+    override fun write(value: BtPaymentState2?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeBtPaymentState2.write(value, buf)
         }
     }
 }
