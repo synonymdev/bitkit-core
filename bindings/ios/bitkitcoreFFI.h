@@ -301,6 +301,11 @@ RustBuffer uniffi_bitkitcore_fn_func_derive_bitcoin_addresses(RustBuffer mnemoni
 RustBuffer uniffi_bitkitcore_fn_func_derive_private_key(RustBuffer mnemonic_phrase, RustBuffer derivation_path_str, RustBuffer network, RustBuffer bip39_passphrase, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ENTROPY_TO_MNEMONIC
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ENTROPY_TO_MNEMONIC
+RustBuffer uniffi_bitkitcore_fn_func_entropy_to_mnemonic(RustBuffer entropy, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ESTIMATE_ORDER_FEE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ESTIMATE_ORDER_FEE
 uint64_t uniffi_bitkitcore_fn_func_estimate_order_fee(uint64_t lsp_balance_sat, uint32_t channel_expiry_weeks, RustBuffer options
@@ -334,6 +339,17 @@ RustBuffer uniffi_bitkitcore_fn_func_get_activity_by_id(RustBuffer activity_id, 
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_UNIQUE_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_UNIQUE_TAGS
 RustBuffer uniffi_bitkitcore_fn_func_get_all_unique_tags(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_BIP39_SUGGESTIONS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_BIP39_SUGGESTIONS
+RustBuffer uniffi_bitkitcore_fn_func_get_bip39_suggestions(RustBuffer partial_word, uint32_t limit, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_BIP39_WORDLIST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_BIP39_WORDLIST
+RustBuffer uniffi_bitkitcore_fn_func_get_bip39_wordlist(RustCallStatus *_Nonnull out_status
     
 );
 #endif
@@ -397,9 +413,24 @@ RustBuffer uniffi_bitkitcore_fn_func_init_db(RustBuffer base_path, RustCallStatu
 void uniffi_bitkitcore_fn_func_insert_activity(RustBuffer activity, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_IS_VALID_BIP39_WORD
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_IS_VALID_BIP39_WORD
+int8_t uniffi_bitkitcore_fn_func_is_valid_bip39_word(RustBuffer word, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_LNURL_AUTH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_LNURL_AUTH
 uint64_t uniffi_bitkitcore_fn_func_lnurl_auth(RustBuffer domain, RustBuffer k1, RustBuffer callback, RustBuffer bip32_mnemonic, RustBuffer network, RustBuffer bip39_passphrase
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_MNEMONIC_TO_ENTROPY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_MNEMONIC_TO_ENTROPY
+RustBuffer uniffi_bitkitcore_fn_func_mnemonic_to_entropy(RustBuffer mnemonic_phrase, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_MNEMONIC_TO_SEED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_MNEMONIC_TO_SEED
+RustBuffer uniffi_bitkitcore_fn_func_mnemonic_to_seed(RustBuffer mnemonic_phrase, RustBuffer passphrase, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_OPEN_CHANNEL
@@ -517,6 +548,11 @@ void uniffi_bitkitcore_fn_func_upsert_activity(RustBuffer activity, RustCallStat
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_BITCOIN_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_BITCOIN_ADDRESS
 RustBuffer uniffi_bitkitcore_fn_func_validate_bitcoin_address(RustBuffer address, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_MNEMONIC
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_MNEMONIC
+void uniffi_bitkitcore_fn_func_validate_mnemonic(RustBuffer mnemonic_phrase, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_FFI_BITKITCORE_RUSTBUFFER_ALLOC
@@ -859,6 +895,12 @@ uint16_t uniffi_bitkitcore_checksum_func_derive_private_key(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ENTROPY_TO_MNEMONIC
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ENTROPY_TO_MNEMONIC
+uint16_t uniffi_bitkitcore_checksum_func_entropy_to_mnemonic(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ESTIMATE_ORDER_FEE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ESTIMATE_ORDER_FEE
 uint16_t uniffi_bitkitcore_checksum_func_estimate_order_fee(void
@@ -898,6 +940,18 @@ uint16_t uniffi_bitkitcore_checksum_func_get_activity_by_id(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_UNIQUE_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_UNIQUE_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_get_all_unique_tags(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_BIP39_SUGGESTIONS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_BIP39_SUGGESTIONS
+uint16_t uniffi_bitkitcore_checksum_func_get_bip39_suggestions(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_BIP39_WORDLIST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_BIP39_WORDLIST
+uint16_t uniffi_bitkitcore_checksum_func_get_bip39_wordlist(void
     
 );
 #endif
@@ -973,9 +1027,27 @@ uint16_t uniffi_bitkitcore_checksum_func_insert_activity(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_IS_VALID_BIP39_WORD
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_IS_VALID_BIP39_WORD
+uint16_t uniffi_bitkitcore_checksum_func_is_valid_bip39_word(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_LNURL_AUTH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_LNURL_AUTH
 uint16_t uniffi_bitkitcore_checksum_func_lnurl_auth(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_MNEMONIC_TO_ENTROPY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_MNEMONIC_TO_ENTROPY
+uint16_t uniffi_bitkitcore_checksum_func_mnemonic_to_entropy(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_MNEMONIC_TO_SEED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_MNEMONIC_TO_SEED
+uint16_t uniffi_bitkitcore_checksum_func_mnemonic_to_seed(void
     
 );
 #endif
@@ -1114,6 +1186,12 @@ uint16_t uniffi_bitkitcore_checksum_func_upsert_activity(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 uint16_t uniffi_bitkitcore_checksum_func_validate_bitcoin_address(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_MNEMONIC
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_MNEMONIC
+uint16_t uniffi_bitkitcore_checksum_func_validate_mnemonic(void
     
 );
 #endif

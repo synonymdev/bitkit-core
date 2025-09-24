@@ -1,6 +1,6 @@
 [package]
 name = "bitkitcore"
-version = "0.1.15"
+version = "0.1.16"
 edition = "2021"
 
 [lib]
@@ -30,7 +30,7 @@ rust-blocktank-client = { version = "0.0.16", features = ["rustls-tls"] }
 reqwest = { version = "0.12.12", features = ["json", "rustls-tls", "rustls-tls-native-roots"], default-features = false }
 r2d2 = "0.8.10"
 r2d2_sqlite = "0.25.0"
-bitcoin-address-generator = "0.1.1"
+bitcoin-address-generator = "0.2.0"
 uuid = { version = "1.16.0", features = ["v4"] }
 hex = "0.4.3"
 bip39 = "2.0"

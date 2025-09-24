@@ -320,9 +320,9 @@ dependencies = [
 
 [[package]]
 name = "bitcoin-address-generator"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f140c62854cf8e6a885dc6ba18e8a85486f6694b20c2a256dfba4a686536e2af"
+checksum = "1d59480a0145d7695f784675d7414830e12e95f0f71010ca41ec93617c5d3171"
 dependencies = [
  "bip32",
  "bip39",
@@ -395,7 +395,7 @@ checksum = "2261d10cca569e4643e526d8dc2e62e433cc8aba21ab764233731f8d369bf394"
 
 [[package]]
 name = "bitkitcore"
-version = "0.1.15"
+version = "0.1.16"
 dependencies = [
  "async-trait",
  "bip39",

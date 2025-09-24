@@ -8437,6 +8437,7 @@ public enum AddressError {
     case InvalidNetwork
     case MnemonicGenerationFailed
     case InvalidMnemonic
+    case InvalidEntropy
     case AddressDerivationFailed
 }
 
@@ -8455,7 +8456,8 @@ public struct FfiConverterTypeAddressError: FfiConverterRustBuffer {
         case 2: return .InvalidNetwork
         case 3: return .MnemonicGenerationFailed
         case 4: return .InvalidMnemonic
-        case 5: return .AddressDerivationFailed
+        case 5: return .InvalidEntropy
+        case 6: return .AddressDerivationFailed
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -8484,8 +8486,12 @@ public struct FfiConverterTypeAddressError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(4))
         
         
-        case .AddressDerivationFailed:
+        case .InvalidEntropy:
             writeInt(&buf, Int32(5))
+        
+        
+        case .AddressDerivationFailed:
+            writeInt(&buf, Int32(6))
         
         }
     }
@@ -13167,6 +13173,13 @@ public func derivePrivateKey(mnemonicPhrase: String, derivationPathStr: String?,
     )
 })
 }
+public func entropyToMnemonic(entropy: Data)throws  -> String {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeAddressError.lift) {
+    uniffi_bitkitcore_fn_func_entropy_to_mnemonic(
+        FfiConverterData.lower(entropy),$0
+    )
+})
+}
 public func estimateOrderFee(lspBalanceSat: UInt64, channelExpiryWeeks: UInt32, options: CreateOrderOptions?)async throws  -> IBtEstimateFeeResponse {
     return
         try  await uniffiRustCallAsync(
@@ -13235,6 +13248,20 @@ public func getActivityById(activityId: String)throws  -> Activity? {
 public func getAllUniqueTags()throws  -> [String] {
     return try  FfiConverterSequenceString.lift(try rustCallWithError(FfiConverterTypeActivityError.lift) {
     uniffi_bitkitcore_fn_func_get_all_unique_tags($0
+    )
+})
+}
+public func getBip39Suggestions(partialWord: String, limit: UInt32) -> [String] {
+    return try!  FfiConverterSequenceString.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_get_bip39_suggestions(
+        FfiConverterString.lower(partialWord),
+        FfiConverterUInt32.lower(limit),$0
+    )
+})
+}
+public func getBip39Wordlist() -> [String] {
+    return try!  FfiConverterSequenceString.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_get_bip39_wordlist($0
     )
 })
 }
@@ -13384,6 +13411,13 @@ public func insertActivity(activity: Activity)throws  {try rustCallWithError(Ffi
     )
 }
 }
+public func isValidBip39Word(word: String) -> Bool {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_is_valid_bip39_word(
+        FfiConverterString.lower(word),$0
+    )
+})
+}
 public func lnurlAuth(domain: String, k1: String, callback: String, bip32Mnemonic: String, network: Network?, bip39Passphrase: String?)async throws  -> String {
     return
         try  await uniffiRustCallAsync(
@@ -13397,6 +13431,21 @@ public func lnurlAuth(domain: String, k1: String, callback: String, bip32Mnemoni
             liftFunc: FfiConverterString.lift,
             errorHandler: FfiConverterTypeLnurlError.lift
         )
+}
+public func mnemonicToEntropy(mnemonicPhrase: String)throws  -> Data {
+    return try  FfiConverterData.lift(try rustCallWithError(FfiConverterTypeAddressError.lift) {
+    uniffi_bitkitcore_fn_func_mnemonic_to_entropy(
+        FfiConverterString.lower(mnemonicPhrase),$0
+    )
+})
+}
+public func mnemonicToSeed(mnemonicPhrase: String, passphrase: String?)throws  -> Data {
+    return try  FfiConverterData.lift(try rustCallWithError(FfiConverterTypeAddressError.lift) {
+    uniffi_bitkitcore_fn_func_mnemonic_to_seed(
+        FfiConverterString.lower(mnemonicPhrase),
+        FfiConverterOptionString.lower(passphrase),$0
+    )
+})
 }
 public func openChannel(orderId: String, connectionString: String)async throws  -> IBtOrder {
     return
@@ -13719,6 +13768,12 @@ public func validateBitcoinAddress(address: String)throws  -> ValidationResult {
     )
 })
 }
+public func validateMnemonic(mnemonicPhrase: String)throws  {try rustCallWithError(FfiConverterTypeAddressError.lift) {
+    uniffi_bitkitcore_fn_func_validate_mnemonic(
+        FfiConverterString.lower(mnemonicPhrase),$0
+    )
+}
+}
 
 private enum InitializationResult {
     case ok
@@ -13765,6 +13820,9 @@ private var initializationResult: InitializationResult {
     if (uniffi_bitkitcore_checksum_func_derive_private_key() != 25155) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_estimate_order_fee() != 9548) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -13784,6 +13842,12 @@ private var initializationResult: InitializationResult {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_bip39_suggestions() != 20658) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_bip39_wordlist() != 30814) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_cjit_entries() != 29342) {
@@ -13822,7 +13886,16 @@ private var initializationResult: InitializationResult {
     if (uniffi_bitkitcore_checksum_func_insert_activity() != 1510) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_mnemonic_to_entropy() != 36669) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_mnemonic_to_seed() != 40039) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_open_channel() != 21402) {
@@ -13892,6 +13965,9 @@ private var initializationResult: InitializationResult {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005) {
         return InitializationResult.apiChecksumMismatch
     }
 

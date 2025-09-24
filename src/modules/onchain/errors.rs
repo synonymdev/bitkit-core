@@ -11,6 +11,8 @@ pub enum AddressError {
     MnemonicGenerationFailed,
     #[error("Invalid mnemonic format")]
     InvalidMnemonic,
+    #[error("Invalid entropy")]
+    InvalidEntropy,
     #[error("Address derivation failed")]
     AddressDerivationFailed,
 }

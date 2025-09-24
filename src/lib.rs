@@ -14,7 +14,8 @@ pub use modules::onchain;
 pub use modules::activity;
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift};
-use crate::onchain::{AddressError, ValidationResult, WordCount, GetAddressResponse, Network, GetAddressesResponse};
+use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse};
+pub use crate::onchain::WordCount;
 
 use std::sync::Mutex as StdMutex;
 use tokio::runtime::Runtime;
@@ -199,6 +200,41 @@ pub fn derive_private_key(
         network.map(|n| n.into()),
         bip39_passphrase.as_deref(),
     )
+}
+
+#[uniffi::export]
+pub fn validate_mnemonic(mnemonic_phrase: String) -> Result<(), AddressError> {
+    onchain::BitcoinAddressValidator::validate_mnemonic(&mnemonic_phrase)
+}
+
+#[uniffi::export]
+pub fn is_valid_bip39_word(word: String) -> bool {
+    onchain::BitcoinAddressValidator::is_valid_bip39_word(&word)
+}
+
+#[uniffi::export]
+pub fn get_bip39_suggestions(partial_word: String, limit: u32) -> Vec<String> {
+    onchain::BitcoinAddressValidator::get_bip39_suggestions(&partial_word, limit as usize)
+}
+
+#[uniffi::export]
+pub fn get_bip39_wordlist() -> Vec<String> {
+    onchain::BitcoinAddressValidator::get_bip39_wordlist()
+}
+
+#[uniffi::export]
+pub fn mnemonic_to_entropy(mnemonic_phrase: String) -> Result<Vec<u8>, AddressError> {
+    onchain::BitcoinAddressValidator::mnemonic_to_entropy(&mnemonic_phrase)
+}
+
+#[uniffi::export]
+pub fn entropy_to_mnemonic(entropy: Vec<u8>) -> Result<String, AddressError> {
+    onchain::BitcoinAddressValidator::entropy_to_mnemonic(&entropy)
+}
+
+#[uniffi::export]
+pub fn mnemonic_to_seed(mnemonic_phrase: String, passphrase: Option<String>) -> Result<Vec<u8>, AddressError> {
+    onchain::BitcoinAddressValidator::mnemonic_to_seed(&mnemonic_phrase, passphrase.as_deref())
 }
 
 #[uniffi::export]

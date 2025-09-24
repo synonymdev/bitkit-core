@@ -481,6 +481,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_derive_private_key() != 25155:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_estimate_order_fee() != 9548:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361:
@@ -494,6 +496,10 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_bip39_suggestions() != 20658:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_bip39_wordlist() != 30814:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_cjit_entries() != 29342:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -519,7 +525,13 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_insert_activity() != 1510:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_mnemonic_to_entropy() != 36669:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_mnemonic_to_seed() != 40039:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_open_channel() != 21402:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -566,6 +578,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_upsert_activity() != 32175:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
 
 # A ctypes library to expose the extern-C FFI definitions.
@@ -746,6 +760,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_derive_private_key.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_derive_private_key.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_entropy_to_mnemonic.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_entropy_to_mnemonic.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee.argtypes = (
     ctypes.c_uint64,
     ctypes.c_uint32,
@@ -791,6 +810,16 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_bip39_suggestions.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.c_uint32,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_bip39_suggestions.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_bip39_wordlist.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_bip39_wordlist.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_cjit_entries.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -848,6 +877,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_is_valid_bip39_word.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_is_valid_bip39_word.restype = ctypes.c_int8
 _UniffiLib.uniffi_bitkitcore_fn_func_lnurl_auth.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -857,6 +891,17 @@ _UniffiLib.uniffi_bitkitcore_fn_func_lnurl_auth.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_lnurl_auth.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_mnemonic_to_entropy.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_mnemonic_to_entropy.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_mnemonic_to_seed.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_mnemonic_to_seed.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_open_channel.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1054,6 +1099,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_validate_bitcoin_address.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_validate_bitcoin_address.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic.restype = None
 _UniffiLib.ffi_bitkitcore_rustbuffer_alloc.argtypes = (
     ctypes.c_uint64,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1352,6 +1402,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses.restype = ct
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_private_key.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_private_key.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee.restype = ctypes.c_uint16
@@ -1373,6 +1426,12 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.restype = ctypes.c
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_unique_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_unique_tags.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_bip39_suggestions.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_bip39_suggestions.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_bip39_wordlist.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_bip39_wordlist.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_cjit_entries.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_cjit_entries.restype = ctypes.c_uint16
@@ -1409,9 +1468,18 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_init_db.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_lnurl_auth.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_lnurl_auth.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_mnemonic_to_entropy.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_mnemonic_to_entropy.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_mnemonic_to_seed.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_mnemonic_to_seed.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.restype = ctypes.c_uint16
@@ -1481,6 +1549,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_activity.restype = ctypes.c_ui
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_validate_mnemonic.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_validate_mnemonic.restype = ctypes.c_uint16
 _UniffiLib.ffi_bitkitcore_uniffi_contract_version.argtypes = (
 )
 _UniffiLib.ffi_bitkitcore_uniffi_contract_version.restype = ctypes.c_uint32
@@ -7594,6 +7665,13 @@ class AddressError:  # type: ignore
         def __repr__(self):
             return "AddressError.InvalidMnemonic({})".format(str(self))
     _UniffiTempAddressError.InvalidMnemonic = InvalidMnemonic # type: ignore
+    class InvalidEntropy(_UniffiTempAddressError):
+
+        def __init__(self):
+            pass
+        def __repr__(self):
+            return "AddressError.InvalidEntropy({})".format(str(self))
+    _UniffiTempAddressError.InvalidEntropy = InvalidEntropy # type: ignore
     class AddressDerivationFailed(_UniffiTempAddressError):
 
         def __init__(self):
@@ -7623,6 +7701,9 @@ class _UniffiConverterTypeAddressError(_UniffiConverterRustBuffer):
             return AddressError.InvalidMnemonic(
             )
         if variant == 5:
+            return AddressError.InvalidEntropy(
+            )
+        if variant == 6:
             return AddressError.AddressDerivationFailed(
             )
         raise InternalError("Raw enum value doesn't match any cases")
@@ -7637,6 +7718,8 @@ class _UniffiConverterTypeAddressError(_UniffiConverterRustBuffer):
             return
         if isinstance(value, AddressError.InvalidMnemonic):
             return
+        if isinstance(value, AddressError.InvalidEntropy):
+            return
         if isinstance(value, AddressError.AddressDerivationFailed):
             return
 
@@ -7650,8 +7733,10 @@ class _UniffiConverterTypeAddressError(_UniffiConverterRustBuffer):
             buf.write_i32(3)
         if isinstance(value, AddressError.InvalidMnemonic):
             buf.write_i32(4)
-        if isinstance(value, AddressError.AddressDerivationFailed):
+        if isinstance(value, AddressError.InvalidEntropy):
             buf.write_i32(5)
+        if isinstance(value, AddressError.AddressDerivationFailed):
+            buf.write_i32(6)
 
 
 
@@ -13462,6 +13547,13 @@ def derive_private_key(mnemonic_phrase: "str",derivation_path_str: "typing.Optio
         _UniffiConverterOptionalTypeNetwork.lower(network),
         _UniffiConverterOptionalString.lower(bip39_passphrase)))
 
+
+def entropy_to_mnemonic(entropy: "bytes") -> "str":
+    _UniffiConverterBytes.check_lower(entropy)
+    
+    return _UniffiConverterString.lift(_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_entropy_to_mnemonic,
+        _UniffiConverterBytes.lower(entropy)))
+
 async def estimate_order_fee(lsp_balance_sat: "int",channel_expiry_weeks: "int",options: "typing.Optional[CreateOrderOptions]") -> "IBtEstimateFeeResponse":
 
     _UniffiConverterUInt64.check_lower(lsp_balance_sat)
@@ -13566,6 +13658,20 @@ def get_activity_by_id(activity_id: "str") -> "typing.Optional[Activity]":
 
 def get_all_unique_tags() -> "typing.List[str]":
     return _UniffiConverterSequenceString.lift(_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags,))
+
+
+def get_bip39_suggestions(partial_word: "str",limit: "int") -> "typing.List[str]":
+    _UniffiConverterString.check_lower(partial_word)
+    
+    _UniffiConverterUInt32.check_lower(limit)
+    
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_get_bip39_suggestions,
+        _UniffiConverterString.lower(partial_word),
+        _UniffiConverterUInt32.lower(limit)))
+
+
+def get_bip39_wordlist() -> "typing.List[str]":
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_get_bip39_wordlist,))
 
 async def get_cjit_entries(entry_ids: "typing.Optional[typing.List[str]]",filter: "typing.Optional[CJitStateEnum]",refresh: "bool") -> "typing.List[IcJitEntry]":
 
@@ -13759,6 +13865,13 @@ def insert_activity(activity: "Activity") -> None:
     _rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_insert_activity,
         _UniffiConverterTypeActivity.lower(activity))
 
+
+def is_valid_bip39_word(word: "str") -> "bool":
+    _UniffiConverterString.check_lower(word)
+    
+    return _UniffiConverterBool.lift(_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_is_valid_bip39_word,
+        _UniffiConverterString.lower(word)))
+
 async def lnurl_auth(domain: "str",k1: "str",callback: "str",bip32_mnemonic: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]") -> "str":
 
     _UniffiConverterString.check_lower(domain)
@@ -13791,6 +13904,23 @@ async def lnurl_auth(domain: "str",k1: "str",callback: "str",bip32_mnemonic: "st
 _UniffiConverterTypeLnurlError,
 
     )
+
+def mnemonic_to_entropy(mnemonic_phrase: "str") -> "bytes":
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+    
+    return _UniffiConverterBytes.lift(_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_mnemonic_to_entropy,
+        _UniffiConverterString.lower(mnemonic_phrase)))
+
+
+def mnemonic_to_seed(mnemonic_phrase: "str",passphrase: "typing.Optional[str]") -> "bytes":
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+    
+    _UniffiConverterOptionalString.check_lower(passphrase)
+    
+    return _UniffiConverterBytes.lift(_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_mnemonic_to_seed,
+        _UniffiConverterString.lower(mnemonic_phrase),
+        _UniffiConverterOptionalString.lower(passphrase)))
+
 async def open_channel(order_id: "str",connection_string: "str") -> "IBtOrder":
 
     _UniffiConverterString.check_lower(order_id)
@@ -14352,6 +14482,13 @@ def validate_bitcoin_address(address: "str") -> "ValidationResult":
         _UniffiConverterString.lower(address)))
 
 
+def validate_mnemonic(mnemonic_phrase: "str") -> None:
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+    
+    _rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic,
+        _UniffiConverterString.lower(mnemonic_phrase))
+
+
 __all__ = [
     "InternalError",
     "AccountInfoDetails",
@@ -14478,6 +14615,7 @@ __all__ = [
     "derive_bitcoin_address",
     "derive_bitcoin_addresses",
     "derive_private_key",
+    "entropy_to_mnemonic",
     "estimate_order_fee",
     "estimate_order_fee_full",
     "generate_mnemonic",
@@ -14485,6 +14623,8 @@ __all__ = [
     "get_activities_by_tag",
     "get_activity_by_id",
     "get_all_unique_tags",
+    "get_bip39_suggestions",
+    "get_bip39_wordlist",
     "get_cjit_entries",
     "get_gift",
     "get_info",
@@ -14497,7 +14637,10 @@ __all__ = [
     "gift_pay",
     "init_db",
     "insert_activity",
+    "is_valid_bip39_word",
     "lnurl_auth",
+    "mnemonic_to_entropy",
+    "mnemonic_to_seed",
     "open_channel",
     "refresh_active_cjit_entries",
     "refresh_active_orders",
@@ -14521,6 +14664,7 @@ __all__ = [
     "update_blocktank_url",
     "upsert_activity",
     "validate_bitcoin_address",
+    "validate_mnemonic",
     "uniffi_set_event_loop",
 ]
 

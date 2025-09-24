@@ -5,6 +5,7 @@ use crate::onchain::AddressError;
 use bitcoin::Network;
 use crate::onchain::types::{GetAddressResponse, GetAddressesResponse, WordCount};
 use super::types::{AddressType, ValidationResult};
+use bitcoin_address_generator;
 
 pub struct BitcoinAddressValidator;
 
@@ -116,6 +117,47 @@ impl BitcoinAddressValidator {
             })?;
 
         Ok(private_key)
+    }
+
+    // BIP39 Mnemonic validation and utilities
+
+    /// Validate a BIP39 mnemonic phrase
+    pub fn validate_mnemonic(mnemonic_phrase: &str) -> Result<(), AddressError> {
+        bitcoin_address_generator::validate_mnemonic(mnemonic_phrase)
+            .map_err(|_| AddressError::InvalidMnemonic)
+    }
+
+    /// Check if a word is valid BIP39 word
+    pub fn is_valid_bip39_word(word: &str) -> bool {
+        bitcoin_address_generator::is_valid_bip39_word(word, None)
+    }
+
+    /// Get word suggestions for partial input
+    pub fn get_bip39_suggestions(partial_word: &str, limit: usize) -> Vec<String> {
+        bitcoin_address_generator::get_bip39_suggestions(partial_word, limit, None)
+    }
+
+    /// Get the full BIP39 English wordlist
+    pub fn get_bip39_wordlist() -> Vec<String> {
+        bitcoin_address_generator::get_bip39_wordlist(None)
+    }
+
+    /// Convert mnemonic to entropy bytes
+    pub fn mnemonic_to_entropy(mnemonic_phrase: &str) -> Result<Vec<u8>, AddressError> {
+        bitcoin_address_generator::mnemonic_to_entropy(mnemonic_phrase)
+            .map_err(|_| AddressError::InvalidMnemonic)
+    }
+
+    /// Convert entropy bytes to mnemonic
+    pub fn entropy_to_mnemonic(entropy: &[u8]) -> Result<String, AddressError> {
+        bitcoin_address_generator::entropy_to_mnemonic(entropy, None)
+            .map_err(|_| AddressError::InvalidEntropy)
+    }
+
+    /// Convert mnemonic to seed (with optional passphrase)
+    pub fn mnemonic_to_seed(mnemonic_phrase: &str, passphrase: Option<&str>) -> Result<Vec<u8>, AddressError> {
+        bitcoin_address_generator::mnemonic_to_seed(mnemonic_phrase, passphrase)
+            .map_err(|_| AddressError::InvalidMnemonic)
     }
 }
 
