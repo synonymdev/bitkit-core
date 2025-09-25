@@ -803,6 +803,20 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -838,6 +852,8 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_derive_private_key(`mnemonicPhrase`: RustBuffer.ByValue,`derivationPathStr`: RustBuffer.ByValue,`network`: RustBuffer.ByValue,`bip39Passphrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_entropy_to_mnemonic(`entropy`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_estimate_order_fee(`lspBalanceSat`: Long,`channelExpiryWeeks`: Int,`options`: RustBuffer.ByValue,
     ): Long
     fun uniffi_bitkitcore_fn_func_estimate_order_fee_full(`lspBalanceSat`: Long,`channelExpiryWeeks`: Int,`options`: RustBuffer.ByValue,
@@ -851,6 +867,10 @@ internal interface UniffiLib : Library {
     fun uniffi_bitkitcore_fn_func_get_activity_by_id(`activityId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_get_all_unique_tags(uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_get_bip39_suggestions(`partialWord`: RustBuffer.ByValue,`limit`: Int,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_get_bip39_wordlist(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_get_cjit_entries(`entryIds`: RustBuffer.ByValue,`filter`: RustBuffer.ByValue,`refresh`: Byte,
     ): Long
@@ -876,8 +896,14 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_insert_activity(`activity`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_bitkitcore_fn_func_is_valid_bip39_word(`word`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Byte
     fun uniffi_bitkitcore_fn_func_lnurl_auth(`domain`: RustBuffer.ByValue,`k1`: RustBuffer.ByValue,`callback`: RustBuffer.ByValue,`bip32Mnemonic`: RustBuffer.ByValue,`network`: RustBuffer.ByValue,`bip39Passphrase`: RustBuffer.ByValue,
     ): Long
+    fun uniffi_bitkitcore_fn_func_mnemonic_to_entropy(`mnemonicPhrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_mnemonic_to_seed(`mnemonicPhrase`: RustBuffer.ByValue,`passphrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_bitkitcore_fn_func_open_channel(`orderId`: RustBuffer.ByValue,`connectionString`: RustBuffer.ByValue,
     ): Long
     fun uniffi_bitkitcore_fn_func_refresh_active_cjit_entries(
@@ -924,6 +950,8 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_bitkitcore_fn_func_validate_bitcoin_address(`address`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_bitkitcore_fn_func_validate_mnemonic(`mnemonicPhrase`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun ffi_bitkitcore_rustbuffer_alloc(`size`: Long,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun ffi_bitkitcore_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -1056,6 +1084,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_bitkitcore_checksum_func_derive_private_key(
     ): Short
+    fun uniffi_bitkitcore_checksum_func_entropy_to_mnemonic(
+    ): Short
     fun uniffi_bitkitcore_checksum_func_estimate_order_fee(
     ): Short
     fun uniffi_bitkitcore_checksum_func_estimate_order_fee_full(
@@ -1069,6 +1099,10 @@ internal interface UniffiLib : Library {
     fun uniffi_bitkitcore_checksum_func_get_activity_by_id(
     ): Short
     fun uniffi_bitkitcore_checksum_func_get_all_unique_tags(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_get_bip39_suggestions(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_get_bip39_wordlist(
     ): Short
     fun uniffi_bitkitcore_checksum_func_get_cjit_entries(
     ): Short
@@ -1094,7 +1128,13 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_bitkitcore_checksum_func_insert_activity(
     ): Short
+    fun uniffi_bitkitcore_checksum_func_is_valid_bip39_word(
+    ): Short
     fun uniffi_bitkitcore_checksum_func_lnurl_auth(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_mnemonic_to_entropy(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_mnemonic_to_seed(
     ): Short
     fun uniffi_bitkitcore_checksum_func_open_channel(
     ): Short
@@ -1141,6 +1181,8 @@ internal interface UniffiLib : Library {
     fun uniffi_bitkitcore_checksum_func_upsert_activity(
     ): Short
     fun uniffi_bitkitcore_checksum_func_validate_bitcoin_address(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_validate_mnemonic(
     ): Short
     fun ffi_bitkitcore_uniffi_contract_version(
     ): Int
@@ -1189,6 +1231,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_bitkitcore_checksum_func_derive_private_key() != 25155.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_bitkitcore_checksum_func_estimate_order_fee() != 9548.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -1208,6 +1253,12 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_get_bip39_suggestions() != 20658.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_get_bip39_wordlist() != 30814.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_get_cjit_entries() != 29342.toShort()) {
@@ -1246,7 +1297,16 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_bitkitcore_checksum_func_insert_activity() != 1510.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_mnemonic_to_entropy() != 36669.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_mnemonic_to_seed() != 40039.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_open_channel() != 21402.toShort()) {
@@ -1316,6 +1376,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
@@ -3274,8 +3337,8 @@ data class IGift (
     var `bolt11Payment`: IGiftPayment?, 
     var `appliedGiftCodeId`: kotlin.String?, 
     var `appliedGiftCode`: IGiftCode?, 
-    var `createdAt`: kotlin.String, 
-    var `updatedAt`: kotlin.String
+    var `createdAt`: kotlin.String?, 
+    var `updatedAt`: kotlin.String?
 ) {
     
     companion object
@@ -3292,8 +3355,8 @@ public object FfiConverterTypeIGift: FfiConverterRustBuffer<IGift> {
             FfiConverterOptionalTypeIGiftPayment.read(buf),
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalTypeIGiftCode.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
         )
     }
 
@@ -3306,8 +3369,8 @@ public object FfiConverterTypeIGift: FfiConverterRustBuffer<IGift> {
             FfiConverterOptionalTypeIGiftPayment.allocationSize(value.`bolt11Payment`) +
             FfiConverterOptionalString.allocationSize(value.`appliedGiftCodeId`) +
             FfiConverterOptionalTypeIGiftCode.allocationSize(value.`appliedGiftCode`) +
-            FfiConverterString.allocationSize(value.`createdAt`) +
-            FfiConverterString.allocationSize(value.`updatedAt`)
+            FfiConverterOptionalString.allocationSize(value.`createdAt`) +
+            FfiConverterOptionalString.allocationSize(value.`updatedAt`)
     )
 
     override fun write(value: IGift, buf: ByteBuffer) {
@@ -3319,8 +3382,8 @@ public object FfiConverterTypeIGift: FfiConverterRustBuffer<IGift> {
             FfiConverterOptionalTypeIGiftPayment.write(value.`bolt11Payment`, buf)
             FfiConverterOptionalString.write(value.`appliedGiftCodeId`, buf)
             FfiConverterOptionalTypeIGiftCode.write(value.`appliedGiftCode`, buf)
-            FfiConverterString.write(value.`createdAt`, buf)
-            FfiConverterString.write(value.`updatedAt`, buf)
+            FfiConverterOptionalString.write(value.`createdAt`, buf)
+            FfiConverterOptionalString.write(value.`updatedAt`, buf)
     }
 }
 
@@ -5809,6 +5872,12 @@ sealed class AddressException: Exception() {
             get() = ""
     }
     
+    class InvalidEntropy(
+        ) : AddressException() {
+        override val message
+            get() = ""
+    }
+    
     class AddressDerivationFailed(
         ) : AddressException() {
         override val message
@@ -5832,7 +5901,8 @@ public object FfiConverterTypeAddressError : FfiConverterRustBuffer<AddressExcep
             2 -> AddressException.InvalidNetwork()
             3 -> AddressException.MnemonicGenerationFailed()
             4 -> AddressException.InvalidMnemonic()
-            5 -> AddressException.AddressDerivationFailed()
+            5 -> AddressException.InvalidEntropy()
+            6 -> AddressException.AddressDerivationFailed()
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
@@ -5852,6 +5922,10 @@ public object FfiConverterTypeAddressError : FfiConverterRustBuffer<AddressExcep
                 4UL
             )
             is AddressException.InvalidMnemonic -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is AddressException.InvalidEntropy -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
             )
@@ -5880,8 +5954,12 @@ public object FfiConverterTypeAddressError : FfiConverterRustBuffer<AddressExcep
                 buf.putInt(4)
                 Unit
             }
-            is AddressException.AddressDerivationFailed -> {
+            is AddressException.InvalidEntropy -> {
                 buf.putInt(5)
+                Unit
+            }
+            is AddressException.AddressDerivationFailed -> {
+                buf.putInt(6)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -10764,6 +10842,16 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
     }
     
 
+    @Throws(AddressException::class) fun `entropyToMnemonic`(`entropy`: kotlin.ByteArray): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCallWithError(AddressException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_entropy_to_mnemonic(
+        FfiConverterByteArray.lower(`entropy`),_status)
+}
+    )
+    }
+    
+
     @Throws(BlocktankException::class)
     @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
      suspend fun `estimateOrderFee`(`lspBalanceSat`: kotlin.ULong, `channelExpiryWeeks`: kotlin.UInt, `options`: CreateOrderOptions?) : IBtEstimateFeeResponse {
@@ -10838,6 +10926,24 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
             return FfiConverterSequenceString.lift(
     uniffiRustCallWithError(ActivityException) { _status ->
     UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_all_unique_tags(
+        _status)
+}
+    )
+    }
+    
+ fun `getBip39Suggestions`(`partialWord`: kotlin.String, `limit`: kotlin.UInt): List<kotlin.String> {
+            return FfiConverterSequenceString.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_bip39_suggestions(
+        FfiConverterString.lower(`partialWord`),FfiConverterUInt.lower(`limit`),_status)
+}
+    )
+    }
+    
+ fun `getBip39Wordlist`(): List<kotlin.String> {
+            return FfiConverterSequenceString.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_bip39_wordlist(
         _status)
 }
     )
@@ -11007,6 +11113,15 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
 }
     
     
+ fun `isValidBip39Word`(`word`: kotlin.String): kotlin.Boolean {
+            return FfiConverterBoolean.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_is_valid_bip39_word(
+        FfiConverterString.lower(`word`),_status)
+}
+    )
+    }
+    
 
     @Throws(LnurlException::class)
     @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
@@ -11022,6 +11137,26 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
         LnurlException.ErrorHandler,
     )
     }
+
+    @Throws(AddressException::class) fun `mnemonicToEntropy`(`mnemonicPhrase`: kotlin.String): kotlin.ByteArray {
+            return FfiConverterByteArray.lift(
+    uniffiRustCallWithError(AddressException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_mnemonic_to_entropy(
+        FfiConverterString.lower(`mnemonicPhrase`),_status)
+}
+    )
+    }
+    
+
+    @Throws(AddressException::class) fun `mnemonicToSeed`(`mnemonicPhrase`: kotlin.String, `passphrase`: kotlin.String?): kotlin.ByteArray {
+            return FfiConverterByteArray.lift(
+    uniffiRustCallWithError(AddressException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_mnemonic_to_seed(
+        FfiConverterString.lower(`mnemonicPhrase`),FfiConverterOptionalString.lower(`passphrase`),_status)
+}
+    )
+    }
+    
 
     @Throws(BlocktankException::class)
     @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
@@ -11311,6 +11446,15 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
 }
     )
     }
+    
+
+    @Throws(AddressException::class) fun `validateMnemonic`(`mnemonicPhrase`: kotlin.String)
+        = 
+    uniffiRustCallWithError(AddressException) { _status ->
+    UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_validate_mnemonic(
+        FfiConverterString.lower(`mnemonicPhrase`),_status)
+}
+    
     
 
 

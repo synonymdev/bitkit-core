@@ -203,4 +203,59 @@ mod tests {
 
         assert_eq!(private_key, "L4p2b9VAf8k5aUahF1JCJUzZkgNEAqLfq8DDdQiyAprQAKSbu8hf");
     }
+
+    #[test]
+    fn test_validate_mnemonic() {
+        let valid_mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        assert!(BitcoinAddressValidator::validate_mnemonic(valid_mnemonic).is_ok());
+
+        let invalid_mnemonic = "invalid word sequence that is not valid";
+        assert!(BitcoinAddressValidator::validate_mnemonic(invalid_mnemonic).is_err());
+    }
+
+    #[test]
+    fn test_is_valid_bip39_word() {
+        assert!(BitcoinAddressValidator::is_valid_bip39_word("abandon"));
+        assert!(BitcoinAddressValidator::is_valid_bip39_word("ABANDON"));
+        assert!(!BitcoinAddressValidator::is_valid_bip39_word("notaword"));
+    }
+
+    #[test]
+    fn test_get_bip39_suggestions() {
+        let suggestions = BitcoinAddressValidator::get_bip39_suggestions("ab", 5);
+        assert!(!suggestions.is_empty());
+        assert!(suggestions.contains(&"abandon".to_string()));
+        assert!(suggestions.len() <= 5);
+    }
+
+    #[test]
+    fn test_get_bip39_wordlist() {
+        let wordlist = BitcoinAddressValidator::get_bip39_wordlist();
+        assert_eq!(wordlist.len(), 2048);
+        assert!(wordlist.contains(&"abandon".to_string()));
+        assert!(wordlist.contains(&"zoo".to_string()));
+    }
+
+    #[test]
+    fn test_mnemonic_entropy_conversion() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let entropy = BitcoinAddressValidator::mnemonic_to_entropy(mnemonic).unwrap();
+        assert_eq!(entropy.len(), 16);
+
+        let recovered_mnemonic = BitcoinAddressValidator::entropy_to_mnemonic(&entropy).unwrap();
+        assert_eq!(mnemonic, recovered_mnemonic);
+    }
+
+    #[test]
+    fn test_mnemonic_to_seed() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+
+        let seed1 = BitcoinAddressValidator::mnemonic_to_seed(mnemonic, None).unwrap();
+        assert_eq!(seed1.len(), 64);
+
+        let seed2 = BitcoinAddressValidator::mnemonic_to_seed(mnemonic, Some("passphrase")).unwrap();
+        assert_eq!(seed2.len(), 64);
+
+        assert_ne!(seed1, seed2);
+    }
 }

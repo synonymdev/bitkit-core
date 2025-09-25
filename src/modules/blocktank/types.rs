@@ -1507,8 +1507,8 @@ pub struct IGift {
     pub bolt11_payment: Option<IGiftPayment>,
     pub applied_gift_code_id: Option<String>,
     pub applied_gift_code: Option<IGiftCode>,
-    pub created_at: String,
-    pub updated_at: String,
+    pub created_at: Option<String>,
+    pub updated_at: Option<String>,
 }
 
 impl From<ExternalIGift> for IGift {
@@ -1522,8 +1522,8 @@ impl From<ExternalIGift> for IGift {
             bolt11_payment: other.bolt11_payment.map(|p| p.into()),
             applied_gift_code_id: other.applied_gift_code_id,
             applied_gift_code: other.applied_gift_code.map(|c| c.into()),
-            created_at: other.created_at.unwrap_or_default(),
-            updated_at: other.updated_at.unwrap_or_default(),
+            created_at: other.created_at,
+            updated_at: other.updated_at,
         }
     }
 }
@@ -1539,8 +1539,8 @@ impl From<IGift> for ExternalIGift {
             bolt11_payment: other.bolt11_payment.map(|p| p.into()),
             applied_gift_code_id: other.applied_gift_code_id,
             applied_gift_code: other.applied_gift_code.map(|c| c.into()),
-            created_at: Some(other.created_at),
-            updated_at: Some(other.updated_at),
+            created_at: other.created_at,
+            updated_at: other.updated_at,
         }
     }
 }
