@@ -4078,10 +4078,10 @@ class IGift:
     bolt11_payment: "typing.Optional[IGiftPayment]"
     applied_gift_code_id: "typing.Optional[str]"
     applied_gift_code: "typing.Optional[IGiftCode]"
-    created_at: "str"
-    updated_at: "str"
+    created_at: "typing.Optional[str]"
+    updated_at: "typing.Optional[str]"
     @typing.no_type_check
-    def __init__(self, *, id: "str", node_id: "str", order_id: "typing.Optional[str]", order: "typing.Optional[IGiftOrder]", bolt11_payment_id: "typing.Optional[str]", bolt11_payment: "typing.Optional[IGiftPayment]", applied_gift_code_id: "typing.Optional[str]", applied_gift_code: "typing.Optional[IGiftCode]", created_at: "str", updated_at: "str"):
+    def __init__(self, *, id: "str", node_id: "str", order_id: "typing.Optional[str]", order: "typing.Optional[IGiftOrder]", bolt11_payment_id: "typing.Optional[str]", bolt11_payment: "typing.Optional[IGiftPayment]", applied_gift_code_id: "typing.Optional[str]", applied_gift_code: "typing.Optional[IGiftCode]", created_at: "typing.Optional[str]", updated_at: "typing.Optional[str]"):
         self.id = id
         self.node_id = node_id
         self.order_id = order_id
@@ -4131,8 +4131,8 @@ class _UniffiConverterTypeIGift(_UniffiConverterRustBuffer):
             bolt11_payment=_UniffiConverterOptionalTypeIGiftPayment.read(buf),
             applied_gift_code_id=_UniffiConverterOptionalString.read(buf),
             applied_gift_code=_UniffiConverterOptionalTypeIGiftCode.read(buf),
-            created_at=_UniffiConverterString.read(buf),
-            updated_at=_UniffiConverterString.read(buf),
+            created_at=_UniffiConverterOptionalString.read(buf),
+            updated_at=_UniffiConverterOptionalString.read(buf),
         )
 
     @staticmethod
@@ -4145,8 +4145,8 @@ class _UniffiConverterTypeIGift(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalTypeIGiftPayment.check_lower(value.bolt11_payment)
         _UniffiConverterOptionalString.check_lower(value.applied_gift_code_id)
         _UniffiConverterOptionalTypeIGiftCode.check_lower(value.applied_gift_code)
-        _UniffiConverterString.check_lower(value.created_at)
-        _UniffiConverterString.check_lower(value.updated_at)
+        _UniffiConverterOptionalString.check_lower(value.created_at)
+        _UniffiConverterOptionalString.check_lower(value.updated_at)
 
     @staticmethod
     def write(value, buf):
@@ -4158,8 +4158,8 @@ class _UniffiConverterTypeIGift(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalTypeIGiftPayment.write(value.bolt11_payment, buf)
         _UniffiConverterOptionalString.write(value.applied_gift_code_id, buf)
         _UniffiConverterOptionalTypeIGiftCode.write(value.applied_gift_code, buf)
-        _UniffiConverterString.write(value.created_at, buf)
-        _UniffiConverterString.write(value.updated_at, buf)
+        _UniffiConverterOptionalString.write(value.created_at, buf)
+        _UniffiConverterOptionalString.write(value.updated_at, buf)
 
 
 class IGiftBolt11Invoice:

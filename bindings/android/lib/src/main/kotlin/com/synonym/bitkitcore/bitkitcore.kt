@@ -3337,8 +3337,8 @@ data class IGift (
     var `bolt11Payment`: IGiftPayment?, 
     var `appliedGiftCodeId`: kotlin.String?, 
     var `appliedGiftCode`: IGiftCode?, 
-    var `createdAt`: kotlin.String, 
-    var `updatedAt`: kotlin.String
+    var `createdAt`: kotlin.String?, 
+    var `updatedAt`: kotlin.String?
 ) {
     
     companion object
@@ -3355,8 +3355,8 @@ public object FfiConverterTypeIGift: FfiConverterRustBuffer<IGift> {
             FfiConverterOptionalTypeIGiftPayment.read(buf),
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalTypeIGiftCode.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
         )
     }
 
@@ -3369,8 +3369,8 @@ public object FfiConverterTypeIGift: FfiConverterRustBuffer<IGift> {
             FfiConverterOptionalTypeIGiftPayment.allocationSize(value.`bolt11Payment`) +
             FfiConverterOptionalString.allocationSize(value.`appliedGiftCodeId`) +
             FfiConverterOptionalTypeIGiftCode.allocationSize(value.`appliedGiftCode`) +
-            FfiConverterString.allocationSize(value.`createdAt`) +
-            FfiConverterString.allocationSize(value.`updatedAt`)
+            FfiConverterOptionalString.allocationSize(value.`createdAt`) +
+            FfiConverterOptionalString.allocationSize(value.`updatedAt`)
     )
 
     override fun write(value: IGift, buf: ByteBuffer) {
@@ -3382,8 +3382,8 @@ public object FfiConverterTypeIGift: FfiConverterRustBuffer<IGift> {
             FfiConverterOptionalTypeIGiftPayment.write(value.`bolt11Payment`, buf)
             FfiConverterOptionalString.write(value.`appliedGiftCodeId`, buf)
             FfiConverterOptionalTypeIGiftCode.write(value.`appliedGiftCode`, buf)
-            FfiConverterString.write(value.`createdAt`, buf)
-            FfiConverterString.write(value.`updatedAt`, buf)
+            FfiConverterOptionalString.write(value.`createdAt`, buf)
+            FfiConverterOptionalString.write(value.`updatedAt`, buf)
     }
 }
 
