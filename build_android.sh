@@ -34,6 +34,10 @@ set -e  # Exit immediately if a command exits with a non-zero status.
 
 echo "Starting Android build process..."
 
+# Install gobley-uniffi-bindgen from fork with patched version
+echo "Installing gobley-uniffi-bindgen fork..."
+cargo install --git https://github.com/ovitrif/gobley.git --branch fix-v0.2.0 gobley-uniffi-bindgen --force
+
 #TODO: Remove this section when example/main.rs builds successfully
 # Store example/main.rs content in memory and remove the file
 if [ -f "example/main.rs" ]; then
@@ -126,28 +130,29 @@ fi
 TMP_DIR=$(mktemp -d)
 
 # Generate the bindings to temp directory first
-cargo run --bin uniffi-bindgen generate \
-    --library "$LIBRARY_PATH" \
-    --language kotlin \
-    --config uniffi.toml \
+gobley-uniffi-bindgen --library "$LIBRARY_PATH" \
+    --config uniffi-android.toml \
     --out-dir "$TMP_DIR"
 
-# Move the Kotlin file from the nested directory to the final location
-echo "Moving Kotlin file to final location..."
-find "$TMP_DIR" -name "bitkitcore.kt" -exec mv {} "$BASE_DIR/" \;
+# Move the Kotlin files from the nested directory to the final location
+echo "Moving Kotlin files to final location..."
+mv "$TMP_DIR"/main/kotlin/com/synonym/bitkitcore/*.kt "$BASE_DIR/"
 
 # Clean up temp directory and any remaining uniffi directories
 echo "Cleaning up temporary files..."
 rm -rf "$TMP_DIR"
 rm -rf "$ANDROID_LIB_DIR/uniffi"
 
-# Verify the file was moved correctly
-if [ ! -f "$BASE_DIR/bitkitcore.kt" ]; then
+# Verify the files were moved correctly
+if [ ! -f "$BASE_DIR/bitkitcore.android.kt" ] || [ ! -f "$BASE_DIR/bitkitcore.common.kt" ]; then
     echo "Error: Kotlin bindings were not moved correctly"
     echo "Contents of $BASE_DIR:"
     ls -la "$BASE_DIR"
     exit 1
 fi
+
+echo "Generated Kotlin bindings:"
+ls -la "$BASE_DIR"
 
 # Sync version
 echo "Syncing version from Cargo.toml..."
