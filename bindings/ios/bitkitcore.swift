@@ -226,7 +226,7 @@ private enum UniffiInternalError: LocalizedError {
     case unexpectedStaleHandle
     case rustPanic(_ message: String)
 
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .bufferOverflow: return "Reading the requested value would read past the end of the buffer"
         case .incompleteData: return "The buffer still has data after lifting its containing value"
@@ -402,11 +402,11 @@ private struct FfiConverterUInt8: FfiConverterPrimitive {
     typealias FfiType = UInt8
     typealias SwiftType = UInt8
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UInt8 {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UInt8 {
         return try lift(readInt(&buf))
     }
 
-    public static func write(_ value: UInt8, into buf: inout [UInt8]) {
+    static func write(_ value: UInt8, into buf: inout [UInt8]) {
         writeInt(&buf, lower(value))
     }
 }
@@ -418,11 +418,11 @@ private struct FfiConverterUInt32: FfiConverterPrimitive {
     typealias FfiType = UInt32
     typealias SwiftType = UInt32
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UInt32 {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UInt32 {
         return try lift(readInt(&buf))
     }
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         writeInt(&buf, lower(value))
     }
 }
@@ -434,11 +434,11 @@ private struct FfiConverterUInt64: FfiConverterPrimitive {
     typealias FfiType = UInt64
     typealias SwiftType = UInt64
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UInt64 {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UInt64 {
         return try lift(readInt(&buf))
     }
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         writeInt(&buf, lower(value))
     }
 }
@@ -450,11 +450,11 @@ private struct FfiConverterDouble: FfiConverterPrimitive {
     typealias FfiType = Double
     typealias SwiftType = Double
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Double {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Double {
         return try lift(readDouble(&buf))
     }
 
-    public static func write(_ value: Double, into buf: inout [UInt8]) {
+    static func write(_ value: Double, into buf: inout [UInt8]) {
         writeDouble(&buf, lower(value))
     }
 }
@@ -466,19 +466,19 @@ private struct FfiConverterBool: FfiConverter {
     typealias FfiType = Int8
     typealias SwiftType = Bool
 
-    public static func lift(_ value: Int8) throws -> Bool {
+    static func lift(_ value: Int8) throws -> Bool {
         return value != 0
     }
 
-    public static func lower(_ value: Bool) -> Int8 {
+    static func lower(_ value: Bool) -> Int8 {
         return value ? 1 : 0
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Bool {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Bool {
         return try lift(readInt(&buf))
     }
 
-    public static func write(_ value: Bool, into buf: inout [UInt8]) {
+    static func write(_ value: Bool, into buf: inout [UInt8]) {
         writeInt(&buf, lower(value))
     }
 }
@@ -490,7 +490,7 @@ private struct FfiConverterString: FfiConverter {
     typealias SwiftType = String
     typealias FfiType = RustBuffer
 
-    public static func lift(_ value: RustBuffer) throws -> String {
+    static func lift(_ value: RustBuffer) throws -> String {
         defer {
             value.deallocate()
         }
@@ -501,7 +501,7 @@ private struct FfiConverterString: FfiConverter {
         return String(bytes: bytes, encoding: String.Encoding.utf8)!
     }
 
-    public static func lower(_ value: String) -> RustBuffer {
+    static func lower(_ value: String) -> RustBuffer {
         return value.utf8CString.withUnsafeBufferPointer { ptr in
             // The swift string gives us int8_t, we want uint8_t.
             ptr.withMemoryRebound(to: UInt8.self) { ptr in
@@ -512,12 +512,12 @@ private struct FfiConverterString: FfiConverter {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> String {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> String {
         let len: Int32 = try readInt(&buf)
         return try String(bytes: readBytes(&buf, count: Int(len)), encoding: String.Encoding.utf8)!
     }
 
-    public static func write(_ value: String, into buf: inout [UInt8]) {
+    static func write(_ value: String, into buf: inout [UInt8]) {
         let len = Int32(value.utf8.count)
         writeInt(&buf, len)
         writeBytes(&buf, value.utf8)
@@ -530,12 +530,12 @@ private struct FfiConverterString: FfiConverter {
 private struct FfiConverterData: FfiConverterRustBuffer {
     typealias SwiftType = Data
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Data {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Data {
         let len: Int32 = try readInt(&buf)
         return try Data(readBytes(&buf, count: Int(len)))
     }
 
-    public static func write(_ value: Data, into buf: inout [UInt8]) {
+    static func write(_ value: Data, into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         writeBytes(&buf, value)
@@ -11337,7 +11337,7 @@ extension WordCount: Equatable, Hashable {}
 private struct FfiConverterOptionUInt8: FfiConverterRustBuffer {
     typealias SwiftType = UInt8?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11346,7 +11346,7 @@ private struct FfiConverterOptionUInt8: FfiConverterRustBuffer {
         FfiConverterUInt8.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterUInt8.read(from: &buf)
@@ -11361,7 +11361,7 @@ private struct FfiConverterOptionUInt8: FfiConverterRustBuffer {
 private struct FfiConverterOptionUInt32: FfiConverterRustBuffer {
     typealias SwiftType = UInt32?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11370,7 +11370,7 @@ private struct FfiConverterOptionUInt32: FfiConverterRustBuffer {
         FfiConverterUInt32.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterUInt32.read(from: &buf)
@@ -11385,7 +11385,7 @@ private struct FfiConverterOptionUInt32: FfiConverterRustBuffer {
 private struct FfiConverterOptionUInt64: FfiConverterRustBuffer {
     typealias SwiftType = UInt64?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11394,7 +11394,7 @@ private struct FfiConverterOptionUInt64: FfiConverterRustBuffer {
         FfiConverterUInt64.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterUInt64.read(from: &buf)
@@ -11409,7 +11409,7 @@ private struct FfiConverterOptionUInt64: FfiConverterRustBuffer {
 private struct FfiConverterOptionBool: FfiConverterRustBuffer {
     typealias SwiftType = Bool?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11418,7 +11418,7 @@ private struct FfiConverterOptionBool: FfiConverterRustBuffer {
         FfiConverterBool.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterBool.read(from: &buf)
@@ -11433,7 +11433,7 @@ private struct FfiConverterOptionBool: FfiConverterRustBuffer {
 private struct FfiConverterOptionString: FfiConverterRustBuffer {
     typealias SwiftType = String?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11442,7 +11442,7 @@ private struct FfiConverterOptionString: FfiConverterRustBuffer {
         FfiConverterString.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterString.read(from: &buf)
@@ -11457,7 +11457,7 @@ private struct FfiConverterOptionString: FfiConverterRustBuffer {
 private struct FfiConverterOptionData: FfiConverterRustBuffer {
     typealias SwiftType = Data?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11466,7 +11466,7 @@ private struct FfiConverterOptionData: FfiConverterRustBuffer {
         FfiConverterData.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterData.read(from: &buf)
@@ -11481,7 +11481,7 @@ private struct FfiConverterOptionData: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeCoinPurchaseMemo: FfiConverterRustBuffer {
     typealias SwiftType = CoinPurchaseMemo?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11490,7 +11490,7 @@ private struct FfiConverterOptionTypeCoinPurchaseMemo: FfiConverterRustBuffer {
         FfiConverterTypeCoinPurchaseMemo.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeCoinPurchaseMemo.read(from: &buf)
@@ -11505,7 +11505,7 @@ private struct FfiConverterOptionTypeCoinPurchaseMemo: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeCommonParams: FfiConverterRustBuffer {
     typealias SwiftType = CommonParams?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11514,7 +11514,7 @@ private struct FfiConverterOptionTypeCommonParams: FfiConverterRustBuffer {
         FfiConverterTypeCommonParams.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeCommonParams.read(from: &buf)
@@ -11529,7 +11529,7 @@ private struct FfiConverterOptionTypeCommonParams: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeComposeAccount: FfiConverterRustBuffer {
     typealias SwiftType = ComposeAccount?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11538,7 +11538,7 @@ private struct FfiConverterOptionTypeComposeAccount: FfiConverterRustBuffer {
         FfiConverterTypeComposeAccount.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeComposeAccount.read(from: &buf)
@@ -11553,7 +11553,7 @@ private struct FfiConverterOptionTypeComposeAccount: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeCreateCjitOptions: FfiConverterRustBuffer {
     typealias SwiftType = CreateCjitOptions?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11562,7 +11562,7 @@ private struct FfiConverterOptionTypeCreateCjitOptions: FfiConverterRustBuffer {
         FfiConverterTypeCreateCjitOptions.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeCreateCjitOptions.read(from: &buf)
@@ -11577,7 +11577,7 @@ private struct FfiConverterOptionTypeCreateCjitOptions: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeCreateOrderOptions: FfiConverterRustBuffer {
     typealias SwiftType = CreateOrderOptions?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11586,7 +11586,7 @@ private struct FfiConverterOptionTypeCreateOrderOptions: FfiConverterRustBuffer 
         FfiConverterTypeCreateOrderOptions.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeCreateOrderOptions.read(from: &buf)
@@ -11601,7 +11601,7 @@ private struct FfiConverterOptionTypeCreateOrderOptions: FfiConverterRustBuffer 
 private struct FfiConverterOptionTypeDeviceParams: FfiConverterRustBuffer {
     typealias SwiftType = DeviceParams?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11610,7 +11610,7 @@ private struct FfiConverterOptionTypeDeviceParams: FfiConverterRustBuffer {
         FfiConverterTypeDeviceParams.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeDeviceParams.read(from: &buf)
@@ -11625,7 +11625,7 @@ private struct FfiConverterOptionTypeDeviceParams: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeIBtBolt11Invoice: FfiConverterRustBuffer {
     typealias SwiftType = IBtBolt11Invoice?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11634,7 +11634,7 @@ private struct FfiConverterOptionTypeIBtBolt11Invoice: FfiConverterRustBuffer {
         FfiConverterTypeIBtBolt11Invoice.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIBtBolt11Invoice.read(from: &buf)
@@ -11649,7 +11649,7 @@ private struct FfiConverterOptionTypeIBtBolt11Invoice: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeIBtChannel: FfiConverterRustBuffer {
     typealias SwiftType = IBtChannel?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11658,7 +11658,7 @@ private struct FfiConverterOptionTypeIBtChannel: FfiConverterRustBuffer {
         FfiConverterTypeIBtChannel.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIBtChannel.read(from: &buf)
@@ -11673,7 +11673,7 @@ private struct FfiConverterOptionTypeIBtChannel: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeIBtChannelClose: FfiConverterRustBuffer {
     typealias SwiftType = IBtChannelClose?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11682,7 +11682,7 @@ private struct FfiConverterOptionTypeIBtChannelClose: FfiConverterRustBuffer {
         FfiConverterTypeIBtChannelClose.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIBtChannelClose.read(from: &buf)
@@ -11697,7 +11697,7 @@ private struct FfiConverterOptionTypeIBtChannelClose: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeIBtInfo: FfiConverterRustBuffer {
     typealias SwiftType = IBtInfo?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11706,7 +11706,7 @@ private struct FfiConverterOptionTypeIBtInfo: FfiConverterRustBuffer {
         FfiConverterTypeIBtInfo.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIBtInfo.read(from: &buf)
@@ -11721,7 +11721,7 @@ private struct FfiConverterOptionTypeIBtInfo: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeIBtOnchainTransactions: FfiConverterRustBuffer {
     typealias SwiftType = IBtOnchainTransactions?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11730,7 +11730,7 @@ private struct FfiConverterOptionTypeIBtOnchainTransactions: FfiConverterRustBuf
         FfiConverterTypeIBtOnchainTransactions.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIBtOnchainTransactions.read(from: &buf)
@@ -11745,7 +11745,7 @@ private struct FfiConverterOptionTypeIBtOnchainTransactions: FfiConverterRustBuf
 private struct FfiConverterOptionTypeIBtPayment: FfiConverterRustBuffer {
     typealias SwiftType = IBtPayment?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11754,7 +11754,7 @@ private struct FfiConverterOptionTypeIBtPayment: FfiConverterRustBuffer {
         FfiConverterTypeIBtPayment.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIBtPayment.read(from: &buf)
@@ -11769,7 +11769,7 @@ private struct FfiConverterOptionTypeIBtPayment: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeIDiscount: FfiConverterRustBuffer {
     typealias SwiftType = IDiscount?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11778,7 +11778,7 @@ private struct FfiConverterOptionTypeIDiscount: FfiConverterRustBuffer {
         FfiConverterTypeIDiscount.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIDiscount.read(from: &buf)
@@ -11793,7 +11793,7 @@ private struct FfiConverterOptionTypeIDiscount: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeIGiftBolt11Invoice: FfiConverterRustBuffer {
     typealias SwiftType = IGiftBolt11Invoice?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11802,7 +11802,7 @@ private struct FfiConverterOptionTypeIGiftBolt11Invoice: FfiConverterRustBuffer 
         FfiConverterTypeIGiftBolt11Invoice.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIGiftBolt11Invoice.read(from: &buf)
@@ -11817,7 +11817,7 @@ private struct FfiConverterOptionTypeIGiftBolt11Invoice: FfiConverterRustBuffer 
 private struct FfiConverterOptionTypeIGiftBtcAddress: FfiConverterRustBuffer {
     typealias SwiftType = IGiftBtcAddress?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11826,7 +11826,7 @@ private struct FfiConverterOptionTypeIGiftBtcAddress: FfiConverterRustBuffer {
         FfiConverterTypeIGiftBtcAddress.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIGiftBtcAddress.read(from: &buf)
@@ -11841,7 +11841,7 @@ private struct FfiConverterOptionTypeIGiftBtcAddress: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeIGiftCode: FfiConverterRustBuffer {
     typealias SwiftType = IGiftCode?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11850,7 +11850,7 @@ private struct FfiConverterOptionTypeIGiftCode: FfiConverterRustBuffer {
         FfiConverterTypeIGiftCode.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIGiftCode.read(from: &buf)
@@ -11865,7 +11865,7 @@ private struct FfiConverterOptionTypeIGiftCode: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeIGiftLspNode: FfiConverterRustBuffer {
     typealias SwiftType = IGiftLspNode?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11874,7 +11874,7 @@ private struct FfiConverterOptionTypeIGiftLspNode: FfiConverterRustBuffer {
         FfiConverterTypeIGiftLspNode.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIGiftLspNode.read(from: &buf)
@@ -11889,7 +11889,7 @@ private struct FfiConverterOptionTypeIGiftLspNode: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeIGiftOrder: FfiConverterRustBuffer {
     typealias SwiftType = IGiftOrder?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11898,7 +11898,7 @@ private struct FfiConverterOptionTypeIGiftOrder: FfiConverterRustBuffer {
         FfiConverterTypeIGiftOrder.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIGiftOrder.read(from: &buf)
@@ -11913,7 +11913,7 @@ private struct FfiConverterOptionTypeIGiftOrder: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeIGiftPayment: FfiConverterRustBuffer {
     typealias SwiftType = IGiftPayment?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11922,7 +11922,7 @@ private struct FfiConverterOptionTypeIGiftPayment: FfiConverterRustBuffer {
         FfiConverterTypeIGiftPayment.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeIGiftPayment.read(from: &buf)
@@ -11937,7 +11937,7 @@ private struct FfiConverterOptionTypeIGiftPayment: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeILspNode: FfiConverterRustBuffer {
     typealias SwiftType = ILspNode?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11946,7 +11946,7 @@ private struct FfiConverterOptionTypeILspNode: FfiConverterRustBuffer {
         FfiConverterTypeILspNode.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeILspNode.read(from: &buf)
@@ -11961,7 +11961,7 @@ private struct FfiConverterOptionTypeILspNode: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeMultisigRedeemScriptType: FfiConverterRustBuffer {
     typealias SwiftType = MultisigRedeemScriptType?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11970,7 +11970,7 @@ private struct FfiConverterOptionTypeMultisigRedeemScriptType: FfiConverterRustB
         FfiConverterTypeMultisigRedeemScriptType.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeMultisigRedeemScriptType.read(from: &buf)
@@ -11985,7 +11985,7 @@ private struct FfiConverterOptionTypeMultisigRedeemScriptType: FfiConverterRustB
 private struct FfiConverterOptionTypeRefundMemo: FfiConverterRustBuffer {
     typealias SwiftType = RefundMemo?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -11994,7 +11994,7 @@ private struct FfiConverterOptionTypeRefundMemo: FfiConverterRustBuffer {
         FfiConverterTypeRefundMemo.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeRefundMemo.read(from: &buf)
@@ -12009,7 +12009,7 @@ private struct FfiConverterOptionTypeRefundMemo: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeTextMemo: FfiConverterRustBuffer {
     typealias SwiftType = TextMemo?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12018,7 +12018,7 @@ private struct FfiConverterOptionTypeTextMemo: FfiConverterRustBuffer {
         FfiConverterTypeTextMemo.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeTextMemo.read(from: &buf)
@@ -12033,7 +12033,7 @@ private struct FfiConverterOptionTypeTextMemo: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeUnlockPath: FfiConverterRustBuffer {
     typealias SwiftType = UnlockPath?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12042,7 +12042,7 @@ private struct FfiConverterOptionTypeUnlockPath: FfiConverterRustBuffer {
         FfiConverterTypeUnlockPath.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeUnlockPath.read(from: &buf)
@@ -12057,7 +12057,7 @@ private struct FfiConverterOptionTypeUnlockPath: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeXrpMarker: FfiConverterRustBuffer {
     typealias SwiftType = XrpMarker?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12066,7 +12066,7 @@ private struct FfiConverterOptionTypeXrpMarker: FfiConverterRustBuffer {
         FfiConverterTypeXrpMarker.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeXrpMarker.read(from: &buf)
@@ -12081,7 +12081,7 @@ private struct FfiConverterOptionTypeXrpMarker: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeAccountInfoDetails: FfiConverterRustBuffer {
     typealias SwiftType = AccountInfoDetails?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12090,7 +12090,7 @@ private struct FfiConverterOptionTypeAccountInfoDetails: FfiConverterRustBuffer 
         FfiConverterTypeAccountInfoDetails.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeAccountInfoDetails.read(from: &buf)
@@ -12105,7 +12105,7 @@ private struct FfiConverterOptionTypeAccountInfoDetails: FfiConverterRustBuffer 
 private struct FfiConverterOptionTypeActivity: FfiConverterRustBuffer {
     typealias SwiftType = Activity?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12114,7 +12114,7 @@ private struct FfiConverterOptionTypeActivity: FfiConverterRustBuffer {
         FfiConverterTypeActivity.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeActivity.read(from: &buf)
@@ -12129,7 +12129,7 @@ private struct FfiConverterOptionTypeActivity: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeActivityFilter: FfiConverterRustBuffer {
     typealias SwiftType = ActivityFilter?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12138,7 +12138,7 @@ private struct FfiConverterOptionTypeActivityFilter: FfiConverterRustBuffer {
         FfiConverterTypeActivityFilter.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeActivityFilter.read(from: &buf)
@@ -12153,7 +12153,7 @@ private struct FfiConverterOptionTypeActivityFilter: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeAmountUnit: FfiConverterRustBuffer {
     typealias SwiftType = AmountUnit?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12162,7 +12162,7 @@ private struct FfiConverterOptionTypeAmountUnit: FfiConverterRustBuffer {
         FfiConverterTypeAmountUnit.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeAmountUnit.read(from: &buf)
@@ -12177,7 +12177,7 @@ private struct FfiConverterOptionTypeAmountUnit: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeBtOrderState2: FfiConverterRustBuffer {
     typealias SwiftType = BtOrderState2?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12186,7 +12186,7 @@ private struct FfiConverterOptionTypeBtOrderState2: FfiConverterRustBuffer {
         FfiConverterTypeBtOrderState2.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeBtOrderState2.read(from: &buf)
@@ -12201,7 +12201,7 @@ private struct FfiConverterOptionTypeBtOrderState2: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeBtPaymentState2: FfiConverterRustBuffer {
     typealias SwiftType = BtPaymentState2?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12210,7 +12210,7 @@ private struct FfiConverterOptionTypeBtPaymentState2: FfiConverterRustBuffer {
         FfiConverterTypeBtPaymentState2.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeBtPaymentState2.read(from: &buf)
@@ -12225,7 +12225,7 @@ private struct FfiConverterOptionTypeBtPaymentState2: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeCJitStateEnum: FfiConverterRustBuffer {
     typealias SwiftType = CJitStateEnum?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12234,7 +12234,7 @@ private struct FfiConverterOptionTypeCJitStateEnum: FfiConverterRustBuffer {
         FfiConverterTypeCJitStateEnum.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeCJitStateEnum.read(from: &buf)
@@ -12249,7 +12249,7 @@ private struct FfiConverterOptionTypeCJitStateEnum: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeDefaultAccountType: FfiConverterRustBuffer {
     typealias SwiftType = DefaultAccountType?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12258,7 +12258,7 @@ private struct FfiConverterOptionTypeDefaultAccountType: FfiConverterRustBuffer 
         FfiConverterTypeDefaultAccountType.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeDefaultAccountType.read(from: &buf)
@@ -12273,7 +12273,7 @@ private struct FfiConverterOptionTypeDefaultAccountType: FfiConverterRustBuffer 
 private struct FfiConverterOptionTypeNetwork: FfiConverterRustBuffer {
     typealias SwiftType = Network?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12282,7 +12282,7 @@ private struct FfiConverterOptionTypeNetwork: FfiConverterRustBuffer {
         FfiConverterTypeNetwork.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeNetwork.read(from: &buf)
@@ -12297,7 +12297,7 @@ private struct FfiConverterOptionTypeNetwork: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypePaymentType: FfiConverterRustBuffer {
     typealias SwiftType = PaymentType?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12306,7 +12306,7 @@ private struct FfiConverterOptionTypePaymentType: FfiConverterRustBuffer {
         FfiConverterTypePaymentType.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypePaymentType.read(from: &buf)
@@ -12321,7 +12321,7 @@ private struct FfiConverterOptionTypePaymentType: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeScriptType: FfiConverterRustBuffer {
     typealias SwiftType = ScriptType?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12330,7 +12330,7 @@ private struct FfiConverterOptionTypeScriptType: FfiConverterRustBuffer {
         FfiConverterTypeScriptType.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeScriptType.read(from: &buf)
@@ -12345,7 +12345,7 @@ private struct FfiConverterOptionTypeScriptType: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeSortDirection: FfiConverterRustBuffer {
     typealias SwiftType = SortDirection?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12354,7 +12354,7 @@ private struct FfiConverterOptionTypeSortDirection: FfiConverterRustBuffer {
         FfiConverterTypeSortDirection.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeSortDirection.read(from: &buf)
@@ -12369,7 +12369,7 @@ private struct FfiConverterOptionTypeSortDirection: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeTokenFilter: FfiConverterRustBuffer {
     typealias SwiftType = TokenFilter?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12378,7 +12378,7 @@ private struct FfiConverterOptionTypeTokenFilter: FfiConverterRustBuffer {
         FfiConverterTypeTokenFilter.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeTokenFilter.read(from: &buf)
@@ -12393,7 +12393,7 @@ private struct FfiConverterOptionTypeTokenFilter: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeTrezorEnvironment: FfiConverterRustBuffer {
     typealias SwiftType = TrezorEnvironment?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12402,7 +12402,7 @@ private struct FfiConverterOptionTypeTrezorEnvironment: FfiConverterRustBuffer {
         FfiConverterTypeTrezorEnvironment.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeTrezorEnvironment.read(from: &buf)
@@ -12417,7 +12417,7 @@ private struct FfiConverterOptionTypeTrezorEnvironment: FfiConverterRustBuffer {
 private struct FfiConverterOptionTypeWordCount: FfiConverterRustBuffer {
     typealias SwiftType = WordCount?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12426,7 +12426,7 @@ private struct FfiConverterOptionTypeWordCount: FfiConverterRustBuffer {
         FfiConverterTypeWordCount.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeWordCount.read(from: &buf)
@@ -12441,7 +12441,7 @@ private struct FfiConverterOptionTypeWordCount: FfiConverterRustBuffer {
 private struct FfiConverterOptionSequenceUInt32: FfiConverterRustBuffer {
     typealias SwiftType = [UInt32]?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12450,7 +12450,7 @@ private struct FfiConverterOptionSequenceUInt32: FfiConverterRustBuffer {
         FfiConverterSequenceUInt32.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterSequenceUInt32.read(from: &buf)
@@ -12465,7 +12465,7 @@ private struct FfiConverterOptionSequenceUInt32: FfiConverterRustBuffer {
 private struct FfiConverterOptionSequenceString: FfiConverterRustBuffer {
     typealias SwiftType = [String]?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12474,7 +12474,7 @@ private struct FfiConverterOptionSequenceString: FfiConverterRustBuffer {
         FfiConverterSequenceString.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterSequenceString.read(from: &buf)
@@ -12489,7 +12489,7 @@ private struct FfiConverterOptionSequenceString: FfiConverterRustBuffer {
 private struct FfiConverterOptionSequenceTypeFeeLevel: FfiConverterRustBuffer {
     typealias SwiftType = [FeeLevel]?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12498,7 +12498,7 @@ private struct FfiConverterOptionSequenceTypeFeeLevel: FfiConverterRustBuffer {
         FfiConverterSequenceTypeFeeLevel.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterSequenceTypeFeeLevel.read(from: &buf)
@@ -12513,7 +12513,7 @@ private struct FfiConverterOptionSequenceTypeFeeLevel: FfiConverterRustBuffer {
 private struct FfiConverterOptionSequenceTypeHDNodeType: FfiConverterRustBuffer {
     typealias SwiftType = [HdNodeType]?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12522,7 +12522,7 @@ private struct FfiConverterOptionSequenceTypeHDNodeType: FfiConverterRustBuffer 
         FfiConverterSequenceTypeHDNodeType.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterSequenceTypeHDNodeType.read(from: &buf)
@@ -12537,7 +12537,7 @@ private struct FfiConverterOptionSequenceTypeHDNodeType: FfiConverterRustBuffer 
 private struct FfiConverterOptionSequenceTypeIManualRefund: FfiConverterRustBuffer {
     typealias SwiftType = [IManualRefund]?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12546,7 +12546,7 @@ private struct FfiConverterOptionSequenceTypeIManualRefund: FfiConverterRustBuff
         FfiConverterSequenceTypeIManualRefund.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterSequenceTypeIManualRefund.read(from: &buf)
@@ -12561,7 +12561,7 @@ private struct FfiConverterOptionSequenceTypeIManualRefund: FfiConverterRustBuff
 private struct FfiConverterOptionSequenceTypePaymentRequestMemo: FfiConverterRustBuffer {
     typealias SwiftType = [PaymentRequestMemo]?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12570,7 +12570,7 @@ private struct FfiConverterOptionSequenceTypePaymentRequestMemo: FfiConverterRus
         FfiConverterSequenceTypePaymentRequestMemo.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterSequenceTypePaymentRequestMemo.read(from: &buf)
@@ -12585,7 +12585,7 @@ private struct FfiConverterOptionSequenceTypePaymentRequestMemo: FfiConverterRus
 private struct FfiConverterOptionSequenceTypePrecomposedInput: FfiConverterRustBuffer {
     typealias SwiftType = [PrecomposedInput]?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12594,7 +12594,7 @@ private struct FfiConverterOptionSequenceTypePrecomposedInput: FfiConverterRustB
         FfiConverterSequenceTypePrecomposedInput.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterSequenceTypePrecomposedInput.read(from: &buf)
@@ -12609,7 +12609,7 @@ private struct FfiConverterOptionSequenceTypePrecomposedInput: FfiConverterRustB
 private struct FfiConverterOptionSequenceTypePrecomposedOutput: FfiConverterRustBuffer {
     typealias SwiftType = [PrecomposedOutput]?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12618,7 +12618,7 @@ private struct FfiConverterOptionSequenceTypePrecomposedOutput: FfiConverterRust
         FfiConverterSequenceTypePrecomposedOutput.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterSequenceTypePrecomposedOutput.read(from: &buf)
@@ -12633,7 +12633,7 @@ private struct FfiConverterOptionSequenceTypePrecomposedOutput: FfiConverterRust
 private struct FfiConverterOptionSequenceTypeRefTransaction: FfiConverterRustBuffer {
     typealias SwiftType = [RefTransaction]?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12642,7 +12642,7 @@ private struct FfiConverterOptionSequenceTypeRefTransaction: FfiConverterRustBuf
         FfiConverterSequenceTypeRefTransaction.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterSequenceTypeRefTransaction.read(from: &buf)
@@ -12657,7 +12657,7 @@ private struct FfiConverterOptionSequenceTypeRefTransaction: FfiConverterRustBuf
 private struct FfiConverterOptionSequenceTypeTxAckPaymentRequest: FfiConverterRustBuffer {
     typealias SwiftType = [TxAckPaymentRequest]?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12666,7 +12666,7 @@ private struct FfiConverterOptionSequenceTypeTxAckPaymentRequest: FfiConverterRu
         FfiConverterSequenceTypeTxAckPaymentRequest.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterSequenceTypeTxAckPaymentRequest.read(from: &buf)
@@ -12681,7 +12681,7 @@ private struct FfiConverterOptionSequenceTypeTxAckPaymentRequest: FfiConverterRu
 private struct FfiConverterOptionDictionaryStringString: FfiConverterRustBuffer {
     typealias SwiftType = [String: String]?
 
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+    static func write(_ value: SwiftType, into buf: inout [UInt8]) {
         guard let value = value else {
             writeInt(&buf, Int8(0))
             return
@@ -12690,7 +12690,7 @@ private struct FfiConverterOptionDictionaryStringString: FfiConverterRustBuffer 
         FfiConverterDictionaryStringString.write(value, into: &buf)
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterDictionaryStringString.read(from: &buf)
@@ -12705,7 +12705,7 @@ private struct FfiConverterOptionDictionaryStringString: FfiConverterRustBuffer 
 private struct FfiConverterSequenceUInt32: FfiConverterRustBuffer {
     typealias SwiftType = [UInt32]
 
-    public static func write(_ value: [UInt32], into buf: inout [UInt8]) {
+    static func write(_ value: [UInt32], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -12713,7 +12713,7 @@ private struct FfiConverterSequenceUInt32: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [UInt32] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [UInt32] {
         let len: Int32 = try readInt(&buf)
         var seq = [UInt32]()
         seq.reserveCapacity(Int(len))
@@ -12730,7 +12730,7 @@ private struct FfiConverterSequenceUInt32: FfiConverterRustBuffer {
 private struct FfiConverterSequenceString: FfiConverterRustBuffer {
     typealias SwiftType = [String]
 
-    public static func write(_ value: [String], into buf: inout [UInt8]) {
+    static func write(_ value: [String], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -12738,7 +12738,7 @@ private struct FfiConverterSequenceString: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [String] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [String] {
         let len: Int32 = try readInt(&buf)
         var seq = [String]()
         seq.reserveCapacity(Int(len))
@@ -12755,7 +12755,7 @@ private struct FfiConverterSequenceString: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeAccountUtxo: FfiConverterRustBuffer {
     typealias SwiftType = [AccountUtxo]
 
-    public static func write(_ value: [AccountUtxo], into buf: inout [UInt8]) {
+    static func write(_ value: [AccountUtxo], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -12763,7 +12763,7 @@ private struct FfiConverterSequenceTypeAccountUtxo: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [AccountUtxo] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [AccountUtxo] {
         let len: Int32 = try readInt(&buf)
         var seq = [AccountUtxo]()
         seq.reserveCapacity(Int(len))
@@ -12780,7 +12780,7 @@ private struct FfiConverterSequenceTypeAccountUtxo: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeAddressInfo: FfiConverterRustBuffer {
     typealias SwiftType = [AddressInfo]
 
-    public static func write(_ value: [AddressInfo], into buf: inout [UInt8]) {
+    static func write(_ value: [AddressInfo], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -12788,7 +12788,7 @@ private struct FfiConverterSequenceTypeAddressInfo: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [AddressInfo] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [AddressInfo] {
         let len: Int32 = try readInt(&buf)
         var seq = [AddressInfo]()
         seq.reserveCapacity(Int(len))
@@ -12805,7 +12805,7 @@ private struct FfiConverterSequenceTypeAddressInfo: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeFeeLevel: FfiConverterRustBuffer {
     typealias SwiftType = [FeeLevel]
 
-    public static func write(_ value: [FeeLevel], into buf: inout [UInt8]) {
+    static func write(_ value: [FeeLevel], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -12813,7 +12813,7 @@ private struct FfiConverterSequenceTypeFeeLevel: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [FeeLevel] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [FeeLevel] {
         let len: Int32 = try readInt(&buf)
         var seq = [FeeLevel]()
         seq.reserveCapacity(Int(len))
@@ -12830,7 +12830,7 @@ private struct FfiConverterSequenceTypeFeeLevel: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeGetAddressResponse: FfiConverterRustBuffer {
     typealias SwiftType = [GetAddressResponse]
 
-    public static func write(_ value: [GetAddressResponse], into buf: inout [UInt8]) {
+    static func write(_ value: [GetAddressResponse], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -12838,7 +12838,7 @@ private struct FfiConverterSequenceTypeGetAddressResponse: FfiConverterRustBuffe
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [GetAddressResponse] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [GetAddressResponse] {
         let len: Int32 = try readInt(&buf)
         var seq = [GetAddressResponse]()
         seq.reserveCapacity(Int(len))
@@ -12855,7 +12855,7 @@ private struct FfiConverterSequenceTypeGetAddressResponse: FfiConverterRustBuffe
 private struct FfiConverterSequenceTypeHDNodePathType: FfiConverterRustBuffer {
     typealias SwiftType = [HdNodePathType]
 
-    public static func write(_ value: [HdNodePathType], into buf: inout [UInt8]) {
+    static func write(_ value: [HdNodePathType], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -12863,7 +12863,7 @@ private struct FfiConverterSequenceTypeHDNodePathType: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [HdNodePathType] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [HdNodePathType] {
         let len: Int32 = try readInt(&buf)
         var seq = [HdNodePathType]()
         seq.reserveCapacity(Int(len))
@@ -12880,7 +12880,7 @@ private struct FfiConverterSequenceTypeHDNodePathType: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeHDNodeType: FfiConverterRustBuffer {
     typealias SwiftType = [HdNodeType]
 
-    public static func write(_ value: [HdNodeType], into buf: inout [UInt8]) {
+    static func write(_ value: [HdNodeType], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -12888,7 +12888,7 @@ private struct FfiConverterSequenceTypeHDNodeType: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [HdNodeType] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [HdNodeType] {
         let len: Int32 = try readInt(&buf)
         var seq = [HdNodeType]()
         seq.reserveCapacity(Int(len))
@@ -12905,7 +12905,7 @@ private struct FfiConverterSequenceTypeHDNodeType: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeIBtOnchainTransaction: FfiConverterRustBuffer {
     typealias SwiftType = [IBtOnchainTransaction]
 
-    public static func write(_ value: [IBtOnchainTransaction], into buf: inout [UInt8]) {
+    static func write(_ value: [IBtOnchainTransaction], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -12913,7 +12913,7 @@ private struct FfiConverterSequenceTypeIBtOnchainTransaction: FfiConverterRustBu
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [IBtOnchainTransaction] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [IBtOnchainTransaction] {
         let len: Int32 = try readInt(&buf)
         var seq = [IBtOnchainTransaction]()
         seq.reserveCapacity(Int(len))
@@ -12930,7 +12930,7 @@ private struct FfiConverterSequenceTypeIBtOnchainTransaction: FfiConverterRustBu
 private struct FfiConverterSequenceTypeIBtOrder: FfiConverterRustBuffer {
     typealias SwiftType = [IBtOrder]
 
-    public static func write(_ value: [IBtOrder], into buf: inout [UInt8]) {
+    static func write(_ value: [IBtOrder], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -12938,7 +12938,7 @@ private struct FfiConverterSequenceTypeIBtOrder: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [IBtOrder] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [IBtOrder] {
         let len: Int32 = try readInt(&buf)
         var seq = [IBtOrder]()
         seq.reserveCapacity(Int(len))
@@ -12955,7 +12955,7 @@ private struct FfiConverterSequenceTypeIBtOrder: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeICJitEntry: FfiConverterRustBuffer {
     typealias SwiftType = [IcJitEntry]
 
-    public static func write(_ value: [IcJitEntry], into buf: inout [UInt8]) {
+    static func write(_ value: [IcJitEntry], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -12963,7 +12963,7 @@ private struct FfiConverterSequenceTypeICJitEntry: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [IcJitEntry] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [IcJitEntry] {
         let len: Int32 = try readInt(&buf)
         var seq = [IcJitEntry]()
         seq.reserveCapacity(Int(len))
@@ -12980,7 +12980,7 @@ private struct FfiConverterSequenceTypeICJitEntry: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeILspNode: FfiConverterRustBuffer {
     typealias SwiftType = [ILspNode]
 
-    public static func write(_ value: [ILspNode], into buf: inout [UInt8]) {
+    static func write(_ value: [ILspNode], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -12988,7 +12988,7 @@ private struct FfiConverterSequenceTypeILspNode: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ILspNode] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ILspNode] {
         let len: Int32 = try readInt(&buf)
         var seq = [ILspNode]()
         seq.reserveCapacity(Int(len))
@@ -13005,7 +13005,7 @@ private struct FfiConverterSequenceTypeILspNode: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeIManualRefund: FfiConverterRustBuffer {
     typealias SwiftType = [IManualRefund]
 
-    public static func write(_ value: [IManualRefund], into buf: inout [UInt8]) {
+    static func write(_ value: [IManualRefund], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -13013,7 +13013,7 @@ private struct FfiConverterSequenceTypeIManualRefund: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [IManualRefund] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [IManualRefund] {
         let len: Int32 = try readInt(&buf)
         var seq = [IManualRefund]()
         seq.reserveCapacity(Int(len))
@@ -13030,7 +13030,7 @@ private struct FfiConverterSequenceTypeIManualRefund: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypePaymentRequestMemo: FfiConverterRustBuffer {
     typealias SwiftType = [PaymentRequestMemo]
 
-    public static func write(_ value: [PaymentRequestMemo], into buf: inout [UInt8]) {
+    static func write(_ value: [PaymentRequestMemo], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -13038,7 +13038,7 @@ private struct FfiConverterSequenceTypePaymentRequestMemo: FfiConverterRustBuffe
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PaymentRequestMemo] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PaymentRequestMemo] {
         let len: Int32 = try readInt(&buf)
         var seq = [PaymentRequestMemo]()
         seq.reserveCapacity(Int(len))
@@ -13055,7 +13055,7 @@ private struct FfiConverterSequenceTypePaymentRequestMemo: FfiConverterRustBuffe
 private struct FfiConverterSequenceTypePrecomposedInput: FfiConverterRustBuffer {
     typealias SwiftType = [PrecomposedInput]
 
-    public static func write(_ value: [PrecomposedInput], into buf: inout [UInt8]) {
+    static func write(_ value: [PrecomposedInput], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -13063,7 +13063,7 @@ private struct FfiConverterSequenceTypePrecomposedInput: FfiConverterRustBuffer 
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PrecomposedInput] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PrecomposedInput] {
         let len: Int32 = try readInt(&buf)
         var seq = [PrecomposedInput]()
         seq.reserveCapacity(Int(len))
@@ -13080,7 +13080,7 @@ private struct FfiConverterSequenceTypePrecomposedInput: FfiConverterRustBuffer 
 private struct FfiConverterSequenceTypePrecomposedOutput: FfiConverterRustBuffer {
     typealias SwiftType = [PrecomposedOutput]
 
-    public static func write(_ value: [PrecomposedOutput], into buf: inout [UInt8]) {
+    static func write(_ value: [PrecomposedOutput], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -13088,7 +13088,7 @@ private struct FfiConverterSequenceTypePrecomposedOutput: FfiConverterRustBuffer
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PrecomposedOutput] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PrecomposedOutput] {
         let len: Int32 = try readInt(&buf)
         var seq = [PrecomposedOutput]()
         seq.reserveCapacity(Int(len))
@@ -13105,7 +13105,7 @@ private struct FfiConverterSequenceTypePrecomposedOutput: FfiConverterRustBuffer
 private struct FfiConverterSequenceTypePrecomposedTransaction: FfiConverterRustBuffer {
     typealias SwiftType = [PrecomposedTransaction]
 
-    public static func write(_ value: [PrecomposedTransaction], into buf: inout [UInt8]) {
+    static func write(_ value: [PrecomposedTransaction], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -13113,7 +13113,7 @@ private struct FfiConverterSequenceTypePrecomposedTransaction: FfiConverterRustB
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PrecomposedTransaction] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PrecomposedTransaction] {
         let len: Int32 = try readInt(&buf)
         var seq = [PrecomposedTransaction]()
         seq.reserveCapacity(Int(len))
@@ -13130,7 +13130,7 @@ private struct FfiConverterSequenceTypePrecomposedTransaction: FfiConverterRustB
 private struct FfiConverterSequenceTypeRefTransaction: FfiConverterRustBuffer {
     typealias SwiftType = [RefTransaction]
 
-    public static func write(_ value: [RefTransaction], into buf: inout [UInt8]) {
+    static func write(_ value: [RefTransaction], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -13138,7 +13138,7 @@ private struct FfiConverterSequenceTypeRefTransaction: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [RefTransaction] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [RefTransaction] {
         let len: Int32 = try readInt(&buf)
         var seq = [RefTransaction]()
         seq.reserveCapacity(Int(len))
@@ -13155,7 +13155,7 @@ private struct FfiConverterSequenceTypeRefTransaction: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeRefTxInput: FfiConverterRustBuffer {
     typealias SwiftType = [RefTxInput]
 
-    public static func write(_ value: [RefTxInput], into buf: inout [UInt8]) {
+    static func write(_ value: [RefTxInput], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -13163,7 +13163,7 @@ private struct FfiConverterSequenceTypeRefTxInput: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [RefTxInput] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [RefTxInput] {
         let len: Int32 = try readInt(&buf)
         var seq = [RefTxInput]()
         seq.reserveCapacity(Int(len))
@@ -13180,7 +13180,7 @@ private struct FfiConverterSequenceTypeRefTxInput: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeRefTxOutput: FfiConverterRustBuffer {
     typealias SwiftType = [RefTxOutput]
 
-    public static func write(_ value: [RefTxOutput], into buf: inout [UInt8]) {
+    static func write(_ value: [RefTxOutput], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -13188,7 +13188,7 @@ private struct FfiConverterSequenceTypeRefTxOutput: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [RefTxOutput] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [RefTxOutput] {
         let len: Int32 = try readInt(&buf)
         var seq = [RefTxOutput]()
         seq.reserveCapacity(Int(len))
@@ -13205,7 +13205,7 @@ private struct FfiConverterSequenceTypeRefTxOutput: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeTxAckPaymentRequest: FfiConverterRustBuffer {
     typealias SwiftType = [TxAckPaymentRequest]
 
-    public static func write(_ value: [TxAckPaymentRequest], into buf: inout [UInt8]) {
+    static func write(_ value: [TxAckPaymentRequest], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -13213,7 +13213,7 @@ private struct FfiConverterSequenceTypeTxAckPaymentRequest: FfiConverterRustBuff
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TxAckPaymentRequest] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TxAckPaymentRequest] {
         let len: Int32 = try readInt(&buf)
         var seq = [TxAckPaymentRequest]()
         seq.reserveCapacity(Int(len))
@@ -13230,7 +13230,7 @@ private struct FfiConverterSequenceTypeTxAckPaymentRequest: FfiConverterRustBuff
 private struct FfiConverterSequenceTypeTxInputType: FfiConverterRustBuffer {
     typealias SwiftType = [TxInputType]
 
-    public static func write(_ value: [TxInputType], into buf: inout [UInt8]) {
+    static func write(_ value: [TxInputType], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -13238,7 +13238,7 @@ private struct FfiConverterSequenceTypeTxInputType: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TxInputType] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TxInputType] {
         let len: Int32 = try readInt(&buf)
         var seq = [TxInputType]()
         seq.reserveCapacity(Int(len))
@@ -13255,7 +13255,7 @@ private struct FfiConverterSequenceTypeTxInputType: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeTxOutputType: FfiConverterRustBuffer {
     typealias SwiftType = [TxOutputType]
 
-    public static func write(_ value: [TxOutputType], into buf: inout [UInt8]) {
+    static func write(_ value: [TxOutputType], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -13263,7 +13263,7 @@ private struct FfiConverterSequenceTypeTxOutputType: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TxOutputType] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TxOutputType] {
         let len: Int32 = try readInt(&buf)
         var seq = [TxOutputType]()
         seq.reserveCapacity(Int(len))
@@ -13280,7 +13280,7 @@ private struct FfiConverterSequenceTypeTxOutputType: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeActivity: FfiConverterRustBuffer {
     typealias SwiftType = [Activity]
 
-    public static func write(_ value: [Activity], into buf: inout [UInt8]) {
+    static func write(_ value: [Activity], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -13288,7 +13288,7 @@ private struct FfiConverterSequenceTypeActivity: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [Activity] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [Activity] {
         let len: Int32 = try readInt(&buf)
         var seq = [Activity]()
         seq.reserveCapacity(Int(len))
@@ -13305,7 +13305,7 @@ private struct FfiConverterSequenceTypeActivity: FfiConverterRustBuffer {
 private struct FfiConverterSequenceTypeComposeOutput: FfiConverterRustBuffer {
     typealias SwiftType = [ComposeOutput]
 
-    public static func write(_ value: [ComposeOutput], into buf: inout [UInt8]) {
+    static func write(_ value: [ComposeOutput], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
@@ -13313,7 +13313,7 @@ private struct FfiConverterSequenceTypeComposeOutput: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ComposeOutput] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ComposeOutput] {
         let len: Int32 = try readInt(&buf)
         var seq = [ComposeOutput]()
         seq.reserveCapacity(Int(len))
@@ -13328,7 +13328,7 @@ private struct FfiConverterSequenceTypeComposeOutput: FfiConverterRustBuffer {
     @_documentation(visibility: private)
 #endif
 private struct FfiConverterDictionaryStringString: FfiConverterRustBuffer {
-    public static func write(_ value: [String: String], into buf: inout [UInt8]) {
+    static func write(_ value: [String: String], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for (key, value) in value {
@@ -13337,7 +13337,7 @@ private struct FfiConverterDictionaryStringString: FfiConverterRustBuffer {
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [String: String] {
+    static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [String: String] {
         let len: Int32 = try readInt(&buf)
         var dict = [String: String]()
         dict.reserveCapacity(Int(len))
@@ -13397,12 +13397,63 @@ private func uniffiFutureContinuationCallback(handle: UInt64, pollResult: Int8) 
     }
 }
 
+public func activityWipeAll() throws { try rustCallWithError(FfiConverterTypeActivityError.lift) {
+    uniffi_bitkitcore_fn_func_activity_wipe_all($0
+    )
+}
+}
+
 public func addTags(activityId: String, tags: [String]) throws { try rustCallWithError(FfiConverterTypeActivityError.lift) {
     uniffi_bitkitcore_fn_func_add_tags(
         FfiConverterString.lower(activityId),
         FfiConverterSequenceString.lower(tags), $0
     )
 }
+}
+
+public func blocktankRemoveAllCjitEntries() async throws {
+    return
+        try await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_blocktank_remove_all_cjit_entries(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
+
+public func blocktankRemoveAllOrders() async throws {
+    return
+        try await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_blocktank_remove_all_orders(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
+}
+
+public func blocktankWipeAll() async throws {
+    return
+        try await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_blocktank_wipe_all(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeBlocktankError.lift
+        )
 }
 
 public func createChannelRequestUrl(k1: String, callback: String, localNodeId: String, isPrivate: Bool, cancel: Bool) throws -> String {
@@ -14152,6 +14203,21 @@ public func validateMnemonic(mnemonicPhrase: String) throws { try rustCallWithEr
 }
 }
 
+public func wipeAllDatabases() async throws -> String {
+    return
+        try await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_wipe_all_databases(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeDbError.lift
+        )
+}
+
 private enum InitializationResult {
     case ok
     case contractVersionMismatch
@@ -14168,7 +14234,19 @@ private var initializationResult: InitializationResult = {
     if bindings_contract_version != scaffolding_contract_version {
         return InitializationResult.contractVersionMismatch
     }
+    if uniffi_bitkitcore_checksum_func_activity_wipe_all() != 19332 {
+        return InitializationResult.apiChecksumMismatch
+    }
     if uniffi_bitkitcore_checksum_func_add_tags() != 63739 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries() != 40127 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders() != 38913 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797 {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305 {
@@ -14346,6 +14424,9 @@ private var initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005 {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605 {
         return InitializationResult.apiChecksumMismatch
     }
 
