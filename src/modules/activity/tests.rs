@@ -1280,4 +1280,127 @@ mod tests {
 
         cleanup(&db_path);
     }
+
+    #[test]
+    fn test_remove_all() {
+        let (mut db, db_path) = setup();
+
+        // Insert multiple activities
+        let activity1 = create_test_onchain_activity();
+        let mut activity2 = create_test_lightning_activity();
+        activity2.id = "test_lightning_2".to_string();
+        let mut activity3 = create_test_onchain_activity();
+        activity3.id = "test_onchain_3".to_string();
+
+        db.insert_onchain_activity(&activity1).unwrap();
+        db.insert_lightning_activity(&activity2).unwrap();
+        db.insert_onchain_activity(&activity3).unwrap();
+
+        // Add tags to verify cascade deletion
+        db.add_tags(&activity1.id, &["tag1".to_string(), "tag2".to_string()]).unwrap();
+        db.add_tags(&activity2.id, &["tag3".to_string()]).unwrap();
+
+        // Verify activities exist
+        let activities = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
+        assert_eq!(activities.len(), 3);
+
+        // Verify tags exist
+        let tags = db.get_all_unique_tags().unwrap();
+        assert_eq!(tags.len(), 3);
+
+        // Remove all activities
+        db.remove_all().unwrap();
+
+        // Verify all activities are deleted
+        let activities_after = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
+        assert_eq!(activities_after.len(), 0);
+
+        // Verify tags are also deleted (cascade)
+        let tags_after = db.get_all_unique_tags().unwrap();
+        assert_eq!(tags_after.len(), 0);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_remove_all_tags() {
+        let (mut db, db_path) = setup();
+
+        // Insert activities
+        let activity1 = create_test_onchain_activity();
+        let mut activity2 = create_test_lightning_activity();
+        activity2.id = "test_lightning_2".to_string();
+
+        db.insert_onchain_activity(&activity1).unwrap();
+        db.insert_lightning_activity(&activity2).unwrap();
+
+        // Add multiple tags
+        db.add_tags(&activity1.id, &["tag1".to_string(), "tag2".to_string(), "tag3".to_string()]).unwrap();
+        db.add_tags(&activity2.id, &["tag4".to_string(), "tag5".to_string()]).unwrap();
+
+        // Verify tags exist
+        let tags = db.get_all_unique_tags().unwrap();
+        assert_eq!(tags.len(), 5);
+
+        // Remove all tags
+        db.remove_all_tags().unwrap();
+
+        // Verify all tags are deleted
+        let tags_after = db.get_all_unique_tags().unwrap();
+        assert_eq!(tags_after.len(), 0);
+
+        // Verify activities still exist
+        let activities = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
+        assert_eq!(activities.len(), 2);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_wipe_all() {
+        let (mut db, db_path) = setup();
+
+        // Insert various activities
+        let activity1 = create_test_onchain_activity();
+        let mut activity2 = create_test_lightning_activity();
+        activity2.id = "test_lightning_2".to_string();
+        let mut activity3 = create_test_onchain_activity();
+        activity3.id = "test_onchain_3".to_string();
+        let mut activity4 = create_test_lightning_activity();
+        activity4.id = "test_lightning_4".to_string();
+
+        db.insert_onchain_activity(&activity1).unwrap();
+        db.insert_lightning_activity(&activity2).unwrap();
+        db.insert_onchain_activity(&activity3).unwrap();
+        db.insert_lightning_activity(&activity4).unwrap();
+
+        // Add tags
+        db.add_tags(&activity1.id, &["payment".to_string()]).unwrap();
+        db.add_tags(&activity2.id, &["invoice".to_string()]).unwrap();
+        db.add_tags(&activity3.id, &["transfer".to_string()]).unwrap();
+        db.add_tags(&activity4.id, &["payment".to_string(), "invoice".to_string()]).unwrap();
+
+        // Verify data exists
+        let activities = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
+        assert_eq!(activities.len(), 4);
+        let tags = db.get_all_unique_tags().unwrap();
+        assert_eq!(tags.len(), 3);
+
+        // Wipe all data
+        db.wipe_all().unwrap();
+
+        // Verify everything is deleted
+        let activities_after = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
+        assert_eq!(activities_after.len(), 0);
+        let tags_after = db.get_all_unique_tags().unwrap();
+        assert_eq!(tags_after.len(), 0);
+
+        // Verify we can still insert new data after wipe
+        let new_activity = create_test_onchain_activity();
+        db.insert_onchain_activity(&new_activity).unwrap();
+        let activities_new = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
+        assert_eq!(activities_new.len(), 1);
+
+        cleanup(&db_path);
+    }
 }

@@ -1245,3 +1245,94 @@ pub fn trezor_compose_transaction(
         Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
     }
 }
+
+#[uniffi::export]
+pub fn activity_wipe_all() -> Result<(), ActivityError> {
+    let cell = DB.get().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    let mut guard = cell.lock().unwrap();
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.wipe_all()
+}
+
+#[uniffi::export]
+pub async fn blocktank_remove_all_orders() -> Result<(), BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        db.remove_all_orders().await
+    }).await.unwrap()
+}
+
+#[uniffi::export]
+pub async fn blocktank_remove_all_cjit_entries() -> Result<(), BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        db.remove_all_cjit_entries().await
+    }).await.unwrap()
+}
+
+#[uniffi::export]
+pub async fn blocktank_wipe_all() -> Result<(), BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        db.wipe_all().await
+    }).await.unwrap()
+}
+
+#[uniffi::export]
+pub async fn wipe_all_databases() -> Result<String, DbError> {
+    let rt = ensure_runtime();
+
+    // Wipe activity database
+    {
+        let cell = DB.get().ok_or(DbError::InitializationError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let mut guard = cell.lock().unwrap();
+        if let Some(db) = guard.activity_db.as_mut() {
+            db.wipe_all().map_err(|e| DbError::InitializationError {
+                error_details: format!("Failed to wipe activity database: {}", e)
+            })?;
+        }
+    }
+
+    // Wipe blocktank database
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(DbError::InitializationError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        if let Some(db) = guard.blocktank_db.as_ref() {
+            db.wipe_all().await.map_err(|e| DbError::InitializationError {
+                error_details: format!("Failed to wipe blocktank database: {}", e)
+            })?;
+        }
+        Ok::<(), DbError>(())
+    }).await.unwrap()?;
+
+    Ok("All databases wiped successfully".to_string())
+}
