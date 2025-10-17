@@ -55,6 +55,9 @@ fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
 fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
 fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError>
 fn get_all_unique_tags() -> Result<Vec<String>, ActivityError>
+
+// Database wipe
+fn activity_wipe_all() -> Result<(), ActivityError>
 ```
 
 ## Usage Examples
@@ -141,7 +144,10 @@ func manageActivities() {
         
         // Delete activity
         let deleted = try deleteActivityById(activityId: "tx123")
-        
+
+        // Wipe all activity data (use with caution!)
+        try activityWipeAll()
+
     } catch {
         print("Error: \(error)")
     }
@@ -245,7 +251,10 @@ fun manageActivities() {
         
         // Delete activity
         val deleted = deleteActivityById(activityId = "ln456")
-        
+
+        // Wipe all activity data (use with caution!)
+        activityWipeAll()
+
     } catch (e: Exception) {
         println("Error: $e")
     }
@@ -353,7 +362,10 @@ try:
 
     # Delete activity
     deleted = delete_activity_by_id("tx123")
-    
+
+    # Wipe all activity data (use with caution!)
+    activity_wipe_all()
+
 except Exception as e:
     print(f"Error: {e}")
 ```
