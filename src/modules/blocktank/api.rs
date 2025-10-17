@@ -36,7 +36,7 @@ impl BlocktankDB {
             options
         ).await;
 
-        println!("Raw API response: {:#?}", response);
+        crate::log_debug!(crate::logger::get_logger(), "Raw API response: {:#?}", response);
 
         let order = response.map_err(|e| BlocktankError::DataError {
             error_details: format!("Failed to create order with Blocktank client: {}", e)

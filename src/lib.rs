@@ -1,10 +1,11 @@
 uniffi::setup_scaffolding!();
 
+mod logger;
 mod modules;
 
 use once_cell::sync::OnceCell;
-use std::sync::Mutex;
-use thiserror::Error;
+use std::sync::Arc;
+
 pub use modules::scanner::{
     Scanner,
     DecodingError
@@ -12,10 +13,11 @@ pub use modules::scanner::{
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
-use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError};
+use crate::activity::{ActivityError, ActivityDB, Activity, ActivityFilter, SortDirection, PaymentType, DbError};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift};
 use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse};
 pub use crate::onchain::WordCount;
+pub use logger::{LogLevel, LogRecord, LogWriter};
 
 use std::sync::Mutex as StdMutex;
 use tokio::runtime::Runtime;
@@ -46,11 +48,24 @@ fn ensure_runtime() -> &'static Runtime {
 }
 
 #[uniffi::export]
+pub fn set_custom_logger(log_writer: Arc<dyn LogWriter>) {
+    logger::set_logger(log_writer);
+}
+
+#[uniffi::export]
 pub async fn decode(invoice: String) -> Result<Scanner, DecodingError> {
+    log_debug!(logger::get_logger(), "Decoding invoice: {}", invoice);
     let rt = ensure_runtime();
-    rt.spawn(async move {
+    let result = rt.spawn(async move {
         Scanner::decode(invoice).await
-    }).await.unwrap()
+    }).await.unwrap();
+
+    match &result {
+        Ok(scanner) => log_info!(logger::get_logger(), "Successfully decoded invoice: {:?}", scanner),
+        Err(e) => log_error!(logger::get_logger(), "Failed to decode invoice: {:?}", e),
+    }
+
+    result
 }
 
 #[uniffi::export]
@@ -104,7 +119,7 @@ pub async fn lnurl_auth(
 ) -> Result<String, lnurl::LnurlError> {
     let mnemonic = Mnemonic::parse(&bip32_mnemonic)
         .map_err(|_| lnurl::LnurlError::AuthenticationFailed)?;
-    
+
     let bitcoin_network = match network.unwrap_or(Network::Bitcoin) {
         Network::Bitcoin => BitcoinNetwork::Bitcoin,
         Network::Testnet => BitcoinNetwork::Testnet,
@@ -112,28 +127,28 @@ pub async fn lnurl_auth(
         Network::Signet => BitcoinNetwork::Signet,
         Network::Regtest => BitcoinNetwork::Regtest,
     };
-    
+
     let seed = mnemonic.to_seed(bip39_passphrase.as_deref().unwrap_or(""));
     let root = Xpriv::new_master(bitcoin_network, &seed)
         .map_err(|_| lnurl::LnurlError::AuthenticationFailed)?;
-    
+
     // Derive hashing key using m/138'/0 path (as per LUD-05)
     let hashing_path = bitcoin::bip32::DerivationPath::from_str("m/138'/0")
         .map_err(|_| lnurl::LnurlError::AuthenticationFailed)?;
-    
+
     let secp = bitcoin::secp256k1::Secp256k1::new();
     let hashing_key_xpriv = root.derive_priv(&secp, &hashing_path)
         .map_err(|_| lnurl::LnurlError::AuthenticationFailed)?;
-    
+
     let hashing_key_bytes = hashing_key_xpriv.private_key.secret_bytes();
-    
+
     let params = lnurl::LnurlAuthParams {
         domain,
         k1,
         callback,
         hashing_key: hashing_key_bytes,
     };
-    
+
     let rt = ensure_runtime();
     rt.spawn(async move {
         lnurl::lnurl_auth(params).await

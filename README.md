@@ -30,6 +30,9 @@
   - Derive addresses for specified paths
   - Retrieve account information
   - Handle responses from Trezor devices
+- Logging
+  - Callback-based logging allowing Kotlin/Swift to intercept Rust logs
+  - Multiple log levels (Trace, Debug, Info, Warn, Error)
 
 ## Available Modules: Methods
 - Scanner
@@ -436,6 +439,72 @@
         common: Option<CommonParams>,
     ) -> Result<DeepLinkResult, TrezorConnectError>
     ```
+
+- Logging
+  - [set_custom_logger](#logging-usage): Register a custom logger for library consumers
+    ```rust
+    fn set_custom_logger(log_writer: Arc<dyn LogWriter>)
+    ```
+
+## Logging Usage
+
+The logging module allows Kotlin/Swift code to intercept and handle logs from Rust. This enables routing Rust logs to platform-specific destinations like Android Logcat or iOS Console.
+
+### Setup (Kotlin)
+
+```kotlin
+import com.synonym.bitkitcore.*
+import android.util.Log
+
+// 1. Implement LogWriter interface
+class AndroidLogWriter : LogWriter {
+    override fun log(record: LogRecord) {
+        val tag = "BitkitCore::${record.modulePath}"
+        when (record.level) {
+            LogLevel.TRACE -> Log.v(tag, record.message)
+            LogLevel.DEBUG -> Log.d(tag, record.message)
+            LogLevel.INFO -> Log.i(tag, record.message)
+            LogLevel.WARN -> Log.w(tag, record.message)
+            LogLevel.ERROR -> Log.e(tag, record.message)
+        }
+    }
+}
+
+// 2. Register the logger
+setCustomLogger(AndroidLogWriter())
+```
+
+### Setup (Swift)
+
+```swift
+import bitkitcore
+
+// 1. Implement LogWriter protocol
+class ConsoleLogWriter: LogWriter {
+    func log(record: LogRecord) {
+        let message = "[\(record.level)] \(record.modulePath):\(record.line) - \(record.message)"
+        switch record.level {
+        case .error:
+            NSLog("❌ %@", message)
+        case .warn:
+            NSLog("⚠️ %@", message)
+        default:
+            NSLog("%@", message)
+        }
+    }
+}
+
+// 2. Register the logger
+setCustomLogger(logWriter: ConsoleLogWriter())
+```
+
+### Log Levels
+
+- `TRACE`: Most verbose, detailed diagnostic information
+- `DEBUG`: Debug information for development
+- `INFO`: General informational messages
+- `WARN`: Warnings about potentially problematic situations
+- `ERROR`: Error messages for failures
 
 ## Building the Bindings
 
