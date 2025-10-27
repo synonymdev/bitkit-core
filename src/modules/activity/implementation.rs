@@ -24,6 +24,7 @@ const CREATE_ONCHAIN_TABLE: &str = "
         fee INTEGER NOT NULL CHECK (fee >= 0),
         fee_rate INTEGER NOT NULL CHECK (fee_rate >= 0),
         is_boosted BOOLEAN NOT NULL,
+        boost_tx_ids TEXT NOT NULL,
         is_transfer BOOLEAN NOT NULL,
         does_exist BOOLEAN NOT NULL,
         confirm_timestamp INTEGER CHECK (
@@ -260,11 +261,13 @@ impl ActivityDB {
         let onchain_sql = "
             INSERT INTO onchain_activity (
                 id, tx_id, address, confirmed, value, fee, fee_rate, is_boosted,
-                is_transfer, does_exist, confirm_timestamp,
+                boost_tx_ids, is_transfer, does_exist, confirm_timestamp,
                 channel_id, transfer_tx_id
             ) VALUES (
-                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13
+                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14
             )";
+
+        let boost_tx_ids_str = activity.boost_tx_ids.join(",");
 
         tx.execute(
             onchain_sql,
@@ -277,6 +280,7 @@ impl ActivityDB {
                 activity.fee,
                 activity.fee_rate,
                 activity.is_boosted,
+                &boost_tx_ids_str,
                 activity.is_transfer,
                 activity.does_exist,
                 activity.confirm_timestamp,
@@ -440,6 +444,7 @@ impl ActivityDB {
             o.address AS onchain_address,
             o.confirmed AS onchain_confirmed,
             o.is_boosted AS onchain_is_boosted,
+            o.boost_tx_ids AS onchain_boost_tx_ids,
             o.is_transfer AS onchain_is_transfer,
             o.does_exist AS onchain_does_exist,
             o.confirm_timestamp AS onchain_confirm_timestamp,
@@ -480,7 +485,13 @@ impl ActivityDB {
                     let value: i64 = row.get(7)?;
                     let fee: i64 = row.get(8)?;
                     let fee_rate: i64 = row.get(9)?;
-                    let confirm_timestamp: Option<i64> = row.get(15)?;
+                    let confirm_timestamp: Option<i64> = row.get(16)?;
+                    let boost_tx_ids_str: String = row.get(13)?;
+                    let boost_tx_ids: Vec<String> = if boost_tx_ids_str.is_empty() {
+                        Vec::new()
+                    } else {
+                        boost_tx_ids_str.split(',').map(|s| s.to_string()).collect()
+                    };
 
                     Ok(Activity::Onchain(OnchainActivity {
                         id: row.get(0)?,
@@ -495,19 +506,20 @@ impl ActivityDB {
                         address: row.get(10)?,
                         confirmed: row.get(11)?,
                         is_boosted: row.get(12)?,
-                        is_transfer: row.get(13)?,
-                        does_exist: row.get(14)?,
+                        boost_tx_ids,
+                        is_transfer: row.get(14)?,
+                        does_exist: row.get(15)?,
                         confirm_timestamp: confirm_timestamp.map(|t| t as u64),
-                        channel_id: row.get(16)?,
-                        transfer_tx_id: row.get(17)?,
+                        channel_id: row.get(17)?,
+                        transfer_tx_id: row.get(18)?,
                     }))
                 }
                 "lightning" => {
                     let timestamp: i64 = row.get(3)?;
                     let created_at: Option<i64> = row.get(4)?;
                     let updated_at: Option<i64> = row.get(5)?;
-                    let value: i64 = row.get(19)?;
-                    let fee: Option<i64> = row.get(21)?;
+                    let value: i64 = row.get(20)?;
+                    let fee: Option<i64> = row.get(22)?;
 
                     Ok(Activity::Lightning(LightningActivity {
                         id: row.get(0)?,
@@ -515,12 +527,12 @@ impl ActivityDB {
                         timestamp: timestamp as u64,
                         created_at: created_at.map(|t| t as u64),
                         updated_at: updated_at.map(|t| t as u64),
-                        invoice: row.get(18)?,
+                        invoice: row.get(19)?,
                         value: value as u64,
-                        status: Self::parse_payment_state(row, 20)?,
+                        status: Self::parse_payment_state(row, 21)?,
                         fee: fee.map(|f| f as u64),
-                        message: row.get(22)?,
-                        preimage: row.get(23)?,
+                        message: row.get(23)?,
+                        preimage: row.get(24)?,
                     }))
                 }
                 _ => Err(rusqlite::Error::InvalidColumnType(
@@ -564,7 +576,7 @@ impl ActivityDB {
                 SELECT
                     a.id, a.tx_type, o.tx_id, o.value, o.fee, o.fee_rate,
                     o.address, o.confirmed, a.timestamp, o.is_boosted,
-                    o.is_transfer, o.does_exist, o.confirm_timestamp,
+                    o.boost_tx_ids, o.is_transfer, o.does_exist, o.confirm_timestamp,
                     o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at
                 FROM activities a
                 JOIN onchain_activity o ON a.id = o.id
@@ -579,9 +591,15 @@ impl ActivityDB {
                 let fee: i64 = row.get(4)?;
                 let fee_rate: i64 = row.get(5)?;
                 let timestamp: i64 = row.get(8)?;
-                let confirm_timestamp: Option<i64> = row.get(12)?;
-                let created_at: Option<i64> = row.get(15)?;
-                let updated_at: Option<i64> = row.get(16)?;
+                let confirm_timestamp: Option<i64> = row.get(13)?;
+                let created_at: Option<i64> = row.get(16)?;
+                let updated_at: Option<i64> = row.get(17)?;
+                let boost_tx_ids_str: String = row.get(10)?;
+                let boost_tx_ids: Vec<String> = if boost_tx_ids_str.is_empty() {
+                    Vec::new()
+                } else {
+                    boost_tx_ids_str.split(',').map(|s| s.to_string()).collect()
+                };
 
                 Ok(Activity::Onchain(OnchainActivity {
                     id: row.get(0)?,
@@ -594,11 +612,12 @@ impl ActivityDB {
                     confirmed: row.get(7)?,
                     timestamp: timestamp as u64,
                     is_boosted: row.get(9)?,
-                    is_transfer: row.get(10)?,
-                    does_exist: row.get(11)?,
+                    boost_tx_ids,
+                    is_transfer: row.get(11)?,
+                    does_exist: row.get(12)?,
                     confirm_timestamp: confirm_timestamp.map(|t| t as u64),
-                    channel_id: row.get(13)?,
-                    transfer_tx_id: row.get(14)?,
+                    channel_id: row.get(14)?,
+                    transfer_tx_id: row.get(15)?,
                     created_at: created_at.map(|t| t as u64),
                     updated_at: updated_at.map(|t| t as u64),
                 }))
@@ -693,12 +712,15 @@ impl ActivityDB {
                 fee = ?5,
                 fee_rate = ?6,
                 is_boosted = ?7,
-                is_transfer = ?8,
-                does_exist = ?9,
-                confirm_timestamp = ?10,
-                channel_id = ?11,
-                transfer_tx_id = ?12
-            WHERE id = ?13";
+                boost_tx_ids = ?8,
+                is_transfer = ?9,
+                does_exist = ?10,
+                confirm_timestamp = ?11,
+                channel_id = ?12,
+                transfer_tx_id = ?13
+            WHERE id = ?14";
+
+        let boost_tx_ids_str = activity.boost_tx_ids.join(",");
 
         tx.execute(
             onchain_sql,
@@ -710,6 +732,7 @@ impl ActivityDB {
                 activity.fee,
                 activity.fee_rate,
                 activity.is_boosted,
+                &boost_tx_ids_str,
                 activity.is_transfer,
                 activity.does_exist,
                 activity.confirm_timestamp,

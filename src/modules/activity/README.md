@@ -80,6 +80,7 @@ func manageActivities() {
             confirmed: true,
             timestamp: 1234567890,
             is_boosted: false,
+            boost_tx_ids: [],
             is_transfer: false,
             does_exist: true,
             confirm_timestamp: 1234568890,
@@ -272,6 +273,7 @@ try:
         confirmed=True,
         timestamp=1234567890,
         is_boosted=False,
+        boost_tx_ids=[],
         is_transfer=False,
         does_exist=True,
         confirm_timestamp=1234568890,
@@ -384,6 +386,7 @@ except Exception as e:
 - `confirmed`: bool - Confirmation status
 - `timestamp`: u64 - Transaction timestamp in seconds since epoch
 - `is_boosted`: bool - RBF status
+- `boost_tx_ids`: Vec<String> - List of boost transaction IDs for boosted transactions (empty if not boosted)
 - `is_transfer`: bool - Internal transfer flag
 - `does_exist`: bool - Transaction existence flag
 - `confirm_timestamp`: Option<u64> - Confirmation timestamp (optional)
