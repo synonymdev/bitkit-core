@@ -26,6 +26,7 @@ mod tests {
             confirmed: true,
             timestamp: 1234567890,
             is_boosted: false,
+            boost_tx_ids: vec![],
             is_transfer: false,
             does_exist: true,
             confirm_timestamp: Some(1234568890),

@@ -86,6 +86,7 @@ pub struct OnchainActivity {
     pub confirmed: bool,
     pub timestamp: u64,
     pub is_boosted: bool,
+    pub boost_tx_ids: Vec<String>,
     pub is_transfer: bool,
     pub does_exist: bool,
     pub confirm_timestamp: Option<u64>,
