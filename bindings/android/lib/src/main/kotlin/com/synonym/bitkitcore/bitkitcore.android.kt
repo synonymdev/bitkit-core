@@ -24,6 +24,7 @@ import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -1109,6 +1110,16 @@ internal interface UniffiForeignFutureCompleteVoid: com.sun.jna.Callback {
 
 
 
+
+
+
+
+
+
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1139,11 +1150,20 @@ internal interface UniffiLib : Library {
         
     }
 
+    fun uniffi_bitkitcore_fn_func_activity_wipe_all(
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
     fun uniffi_bitkitcore_fn_func_add_tags(
         `activityId`: RustBufferByValue,
         `tags`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
+    fun uniffi_bitkitcore_fn_func_blocktank_remove_all_cjit_entries(
+    ): Long
+    fun uniffi_bitkitcore_fn_func_blocktank_remove_all_orders(
+    ): Long
+    fun uniffi_bitkitcore_fn_func_blocktank_wipe_all(
+    ): Long
     fun uniffi_bitkitcore_fn_func_create_channel_request_url(
         `k1`: RustBufferByValue,
         `callback`: RustBufferByValue,
@@ -1496,6 +1516,8 @@ internal interface UniffiLib : Library {
         `mnemonicPhrase`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
+    fun uniffi_bitkitcore_fn_func_wipe_all_databases(
+    ): Long
     fun ffi_bitkitcore_rustbuffer_alloc(
         `size`: Long,
         uniffiCallStatus: UniffiRustCallStatus,
@@ -1708,7 +1730,15 @@ internal interface UniffiLib : Library {
         `handle`: Long,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
+    fun uniffi_bitkitcore_checksum_func_activity_wipe_all(
+    ): Short
     fun uniffi_bitkitcore_checksum_func_add_tags(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_blocktank_wipe_all(
     ): Short
     fun uniffi_bitkitcore_checksum_func_create_channel_request_url(
     ): Short
@@ -1828,6 +1858,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_bitkitcore_checksum_func_validate_mnemonic(
     ): Short
+    fun uniffi_bitkitcore_checksum_func_wipe_all_databases(
+    ): Short
     fun ffi_bitkitcore_uniffi_contract_version(
     ): Int
     
@@ -1845,7 +1877,19 @@ private fun uniffiCheckContractApiVersion(lib: UniffiLib) {
 
 
 private fun uniffiCheckApiChecksums(lib: UniffiLib) {
+    if (lib.uniffi_bitkitcore_checksum_func_activity_wipe_all() != 19332.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_bitkitcore_checksum_func_add_tags() != 63739.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries() != 40127.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders() != 38913.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305.toShort()) {
@@ -2023,6 +2067,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
@@ -8881,6 +8928,16 @@ object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.String, ko
 
 
 
+
+@Throws(ActivityException::class)
+fun `activityWipeAll`() {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_activity_wipe_all(
+            uniffiRustCallStatus,
+        )
+    }
+}
+
 @Throws(ActivityException::class)
 fun `addTags`(`activityId`: kotlin.String, `tags`: List<kotlin.String>) {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
@@ -8890,6 +8947,57 @@ fun `addTags`(`activityId`: kotlin.String, `tags`: List<kotlin.String>) {
             uniffiRustCallStatus,
         )
     }
+}
+
+@Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
+suspend fun `blocktankRemoveAllCjitEntries`() {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_blocktank_remove_all_cjit_entries(
+        ),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        BlocktankExceptionErrorHandler,
+    )
+}
+
+@Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
+suspend fun `blocktankRemoveAllOrders`() {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_blocktank_remove_all_orders(
+        ),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        BlocktankExceptionErrorHandler,
+    )
+}
+
+@Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
+suspend fun `blocktankWipeAll`() {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_blocktank_wipe_all(
+        ),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        BlocktankExceptionErrorHandler,
+    )
 }
 
 @Throws(LnurlException::class)
@@ -9809,6 +9917,22 @@ fun `validateMnemonic`(`mnemonicPhrase`: kotlin.String) {
             uniffiRustCallStatus,
         )
     }
+}
+
+@Throws(DbException::class, kotlin.coroutines.cancellation.CancellationException::class)
+suspend fun `wipeAllDatabases`(): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_wipe_all_databases(
+        ),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
+        // Error FFI converter
+        DbExceptionErrorHandler,
+    )
 }
 
 

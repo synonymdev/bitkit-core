@@ -45,6 +45,14 @@ fn ensure_runtime() -> &'static Runtime {
     })
 }
 
+/// Helper function to get a reference to the activity database connections
+fn get_activity_db() -> Result<std::sync::MutexGuard<'static, DatabaseConnections>, ActivityError> {
+    let cell = DB.get().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    Ok(cell.lock().unwrap())
+}
+
 #[uniffi::export]
 pub async fn decode(invoice: String) -> Result<Scanner, DecodingError> {
     let rt = ensure_runtime();
@@ -290,10 +298,7 @@ pub fn get_activities(
     limit: Option<u32>,
     sort_direction: Option<SortDirection>
 ) -> Result<Vec<Activity>, ActivityError> {
-    let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    let guard = cell.lock().unwrap();
+    let guard = get_activity_db()?;
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -302,10 +307,7 @@ pub fn get_activities(
 
 #[uniffi::export]
 pub fn upsert_activity(activity: Activity) -> Result<(), ActivityError> {
-    let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    let mut guard = cell.lock().unwrap();
+    let mut guard = get_activity_db()?;
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -314,10 +316,7 @@ pub fn upsert_activity(activity: Activity) -> Result<(), ActivityError> {
 
 #[uniffi::export]
 pub fn insert_activity(activity: Activity) -> Result<(), ActivityError> {
-    let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    let mut guard = cell.lock().unwrap();
+    let mut guard = get_activity_db()?;
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -329,10 +328,7 @@ pub fn insert_activity(activity: Activity) -> Result<(), ActivityError> {
 
 #[uniffi::export]
 pub fn update_activity(activity_id: String, activity: Activity) -> Result<(), ActivityError> {
-    let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    let mut guard = cell.lock().unwrap();
+    let mut guard = get_activity_db()?;
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -344,10 +340,7 @@ pub fn update_activity(activity_id: String, activity: Activity) -> Result<(), Ac
 
 #[uniffi::export]
 pub fn get_activity_by_id(activity_id: String) -> Result<Option<Activity>, ActivityError> {
-    let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    let guard = cell.lock().unwrap();
+    let guard = get_activity_db()?;
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -356,10 +349,7 @@ pub fn get_activity_by_id(activity_id: String) -> Result<Option<Activity>, Activ
 
 #[uniffi::export]
 pub fn delete_activity_by_id(activity_id: String) -> Result<bool, ActivityError> {
-    let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    let mut guard = cell.lock().unwrap();
+    let mut guard = get_activity_db()?;
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -368,10 +358,7 @@ pub fn delete_activity_by_id(activity_id: String) -> Result<bool, ActivityError>
 
 #[uniffi::export]
 pub fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
-    let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    let mut guard = cell.lock().unwrap();
+    let mut guard = get_activity_db()?;
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -380,10 +367,7 @@ pub fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityEr
 
 #[uniffi::export]
 pub fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
-    let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    let mut guard = cell.lock().unwrap();
+    let mut guard = get_activity_db()?;
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -392,10 +376,7 @@ pub fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), Activit
 
 #[uniffi::export]
 pub fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError> {
-    let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    let guard = cell.lock().unwrap();
+    let guard = get_activity_db()?;
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -404,10 +385,7 @@ pub fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError> {
 
 #[uniffi::export]
 pub fn get_activities_by_tag(tag: String, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError> {
-    let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    let guard = cell.lock().unwrap();
+    let guard = get_activity_db()?;
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -416,10 +394,7 @@ pub fn get_activities_by_tag(tag: String, limit: Option<u32>, sort_direction: Op
 
 #[uniffi::export]
 pub fn get_all_unique_tags() -> Result<Vec<String>, ActivityError> {
-    let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    let guard = cell.lock().unwrap();
+    let guard = get_activity_db()?;
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
@@ -1244,4 +1219,94 @@ pub fn trezor_compose_transaction(
         Ok(result) => Ok(result),
         Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
     }
+}
+
+#[uniffi::export]
+pub fn activity_wipe_all() -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.wipe_all()
+}
+
+#[uniffi::export]
+pub async fn blocktank_remove_all_orders() -> Result<(), BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        db.remove_all_orders().await
+    }).await.unwrap()
+}
+
+#[uniffi::export]
+pub async fn blocktank_remove_all_cjit_entries() -> Result<(), BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        db.remove_all_cjit_entries().await
+    }).await.unwrap()
+}
+
+#[uniffi::export]
+pub async fn blocktank_wipe_all() -> Result<(), BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        db.wipe_all().await
+    }).await.unwrap()
+}
+
+#[uniffi::export]
+pub async fn wipe_all_databases() -> Result<String, DbError> {
+    let rt = ensure_runtime();
+
+    // Wipe activity database - require it to be initialized
+    {
+        let cell = DB.get().ok_or(DbError::InitializationError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let mut guard = cell.lock().unwrap();
+        let db = guard.activity_db.as_mut().ok_or(DbError::InitializationError {
+            error_details: "Activity database not initialized. Call init_db first.".to_string()
+        })?;
+        db.wipe_all().map_err(|e| DbError::InitializationError {
+            error_details: format!("Failed to wipe activity database: {}", e)
+        })?;
+    }
+
+    // Wipe blocktank database - require it to be initialized
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(DbError::InitializationError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(DbError::InitializationError {
+            error_details: "Blocktank database not initialized. Call init_db first.".to_string()
+        })?;
+        db.wipe_all().await.map_err(|e| DbError::InitializationError {
+            error_details: format!("Failed to wipe blocktank database: {}", e)
+        })?;
+        Ok::<(), DbError>(())
+    }).await.unwrap()?;
+
+    Ok("All databases wiped successfully".to_string())
 }

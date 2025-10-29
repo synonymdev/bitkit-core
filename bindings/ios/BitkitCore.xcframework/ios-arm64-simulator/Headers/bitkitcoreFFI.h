@@ -251,9 +251,33 @@ typedef void (*UniffiForeignFutureCompleteVoid)(uint64_t, UniffiForeignFutureStr
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITY_WIPE_ALL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITY_WIPE_ALL
+void uniffi_bitkitcore_fn_func_activity_wipe_all(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_TAGS
 void uniffi_bitkitcore_fn_func_add_tags(RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
+uint64_t uniffi_bitkitcore_fn_func_blocktank_remove_all_cjit_entries(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_REMOVE_ALL_ORDERS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_REMOVE_ALL_ORDERS
+uint64_t uniffi_bitkitcore_fn_func_blocktank_remove_all_orders(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_WIPE_ALL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_WIPE_ALL
+uint64_t uniffi_bitkitcore_fn_func_blocktank_wipe_all(void
+    
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CREATE_CHANNEL_REQUEST_URL
@@ -555,6 +579,12 @@ RustBuffer uniffi_bitkitcore_fn_func_validate_bitcoin_address(RustBuffer address
 void uniffi_bitkitcore_fn_func_validate_mnemonic(RustBuffer mnemonic_phrase, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_DATABASES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_DATABASES
+uint64_t uniffi_bitkitcore_fn_func_wipe_all_databases(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_FFI_BITKITCORE_RUSTBUFFER_ALLOC
 #define UNIFFI_FFIDEF_FFI_BITKITCORE_RUSTBUFFER_ALLOC
 RustBuffer ffi_bitkitcore_rustbuffer_alloc(uint64_t size, RustCallStatus *_Nonnull out_status
@@ -835,9 +865,33 @@ void ffi_bitkitcore_rust_future_free_void(uint64_t handle
 void ffi_bitkitcore_rust_future_complete_void(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ACTIVITY_WIPE_ALL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ACTIVITY_WIPE_ALL
+uint16_t uniffi_bitkitcore_checksum_func_activity_wipe_all(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_add_tags(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
+uint16_t uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_REMOVE_ALL_ORDERS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_REMOVE_ALL_ORDERS
+uint16_t uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_WIPE_ALL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_WIPE_ALL
+uint16_t uniffi_bitkitcore_checksum_func_blocktank_wipe_all(void
     
 );
 #endif
@@ -1192,6 +1246,12 @@ uint16_t uniffi_bitkitcore_checksum_func_validate_bitcoin_address(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_MNEMONIC
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_MNEMONIC
 uint16_t uniffi_bitkitcore_checksum_func_validate_mnemonic(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_DATABASES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_DATABASES
+uint16_t uniffi_bitkitcore_checksum_func_wipe_all_databases(void
     
 );
 #endif

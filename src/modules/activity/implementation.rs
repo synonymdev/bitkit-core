@@ -1019,4 +1019,24 @@ impl ActivityDB {
             SortDirection::Desc => "DESC"
         }
     }
+
+    /// Wipes all activity data from the database
+    /// This deletes all activities, which cascades to delete all tags due to foreign key constraints
+    pub fn wipe_all(&mut self) -> Result<(), ActivityError> {
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        // Delete from activities table (this will cascade to other tables due to foreign key constraints)
+        tx.execute("DELETE FROM activities", [])
+            .map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to delete all activities: {}", e),
+            })?;
+
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
+
+        Ok(())
+    }
 }

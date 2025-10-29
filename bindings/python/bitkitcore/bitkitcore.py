@@ -461,7 +461,15 @@ def _uniffi_check_contract_api_version(lib):
         raise InternalError("UniFFI contract version mismatch: try cleaning and rebuilding your project")
 
 def _uniffi_check_api_checksums(lib):
+    if lib.uniffi_bitkitcore_checksum_func_activity_wipe_all() != 19332:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_add_tags() != 63739:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries() != 40127:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders() != 38913:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -581,6 +589,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
 
 # A ctypes library to expose the extern-C FFI definitions.
 # This is an implementation detail which will be called internally by the public API.
@@ -687,12 +697,25 @@ class _UniffiForeignFutureStructVoid(ctypes.Structure):
     ]
 _UNIFFI_FOREIGN_FUTURE_COMPLETE_VOID = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiForeignFutureStructVoid,
 )
+_UniffiLib.uniffi_bitkitcore_fn_func_activity_wipe_all.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_activity_wipe_all.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_add_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_add_tags.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_blocktank_remove_all_cjit_entries.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_blocktank_remove_all_cjit_entries.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_blocktank_remove_all_orders.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_blocktank_remove_all_orders.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_blocktank_wipe_all.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_blocktank_wipe_all.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_create_channel_request_url.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1104,6 +1127,9 @@ _UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_databases.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_databases.restype = ctypes.c_uint64
 _UniffiLib.ffi_bitkitcore_rustbuffer_alloc.argtypes = (
     ctypes.c_uint64,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1372,9 +1398,21 @@ _UniffiLib.ffi_bitkitcore_rust_future_complete_void.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.ffi_bitkitcore_rust_future_complete_void.restype = None
+_UniffiLib.uniffi_bitkitcore_checksum_func_activity_wipe_all.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_activity_wipe_all.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_add_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_add_tags.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_channel_request_url.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_channel_request_url.restype = ctypes.c_uint16
@@ -1552,6 +1590,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.restype = ct
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_mnemonic.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_mnemonic.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_databases.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_databases.restype = ctypes.c_uint16
 _UniffiLib.ffi_bitkitcore_uniffi_contract_version.argtypes = (
 )
 _UniffiLib.ffi_bitkitcore_uniffi_contract_version.restype = ctypes.c_uint32
@@ -13283,6 +13324,10 @@ async def _uniffi_rust_call_async(rust_future, ffi_poll, ffi_complete, ffi_free,
     finally:
         ffi_free(rust_future)
 
+def activity_wipe_all() -> None:
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_activity_wipe_all,)
+
+
 def add_tags(activity_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(activity_id)
     
@@ -13292,6 +13337,51 @@ def add_tags(activity_id: "str",tags: "typing.List[str]") -> None:
         _UniffiConverterString.lower(activity_id),
         _UniffiConverterSequenceString.lower(tags))
 
+async def blocktank_remove_all_cjit_entries() -> None:
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_remove_all_cjit_entries(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+async def blocktank_remove_all_orders() -> None:
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_remove_all_orders(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+async def blocktank_wipe_all() -> None:
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_wipe_all(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
 
 def create_channel_request_url(k1: "str",callback: "str",local_node_id: "str",is_private: "bool",cancel: "bool") -> "str":
     _UniffiConverterString.check_lower(k1)
@@ -14401,6 +14491,20 @@ def validate_mnemonic(mnemonic_phrase: "str") -> None:
     _uniffi_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic,
         _UniffiConverterString.lower(mnemonic_phrase))
 
+async def wipe_all_databases() -> "str":
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_databases(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeDbError,
+
+    )
 
 __all__ = [
     "InternalError",
@@ -14518,7 +14622,11 @@ __all__ = [
     "ValidationResult",
     "VerifyMessageResponse",
     "XrpMarker",
+    "activity_wipe_all",
     "add_tags",
+    "blocktank_remove_all_cjit_entries",
+    "blocktank_remove_all_orders",
+    "blocktank_wipe_all",
     "create_channel_request_url",
     "create_cjit_entry",
     "create_order",
@@ -14578,5 +14686,6 @@ __all__ = [
     "upsert_activity",
     "validate_bitcoin_address",
     "validate_mnemonic",
+    "wipe_all_databases",
 ]
 

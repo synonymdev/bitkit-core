@@ -251,32 +251,32 @@ mod tests {
             channel_expires_at: future.to_rfc3339(),  // Changed from integer to ISO string
             order_expires_at: future.to_rfc3339(),    // Changed from integer to ISO string
             channel: None,
-            lsp_node: ILspNode {
+            lsp_node: Some(ILspNode {
                 alias: "test_node".to_string(),
                 pubkey: "test_pubkey".to_string(),
                 connection_strings: vec!["test_connection".to_string()],
                 readonly: None,
-            },
+            }),
             lnurl: None,
-            payment: IBtPayment {
+            payment: Some(IBtPayment {
                 state: BtPaymentState::Created,
                 state2: Some(BtPaymentState2::Created),
                 paid_sat: 0,
-                bolt11_invoice: IBtBolt11Invoice {
+                bolt11_invoice: Some(IBtBolt11Invoice {
                     request: "lnbc...".to_string(),
                     state: BtBolt11InvoiceState::Pending,
                     expires_at: future.to_rfc3339(),   // Changed from integer to ISO string
                     updated_at: now.to_rfc3339(),      // Changed from integer to ISO string
-                },
-                onchain: IBtOnchainTransactions {
+                }),
+                onchain: Some(IBtOnchainTransactions {
                     address: "bc1...".to_string(),
                     confirmed_sat: 0,
                     required_confirmations: 3,
                     transactions: vec![],
-                },
+                }),
                 is_manually_paid: None,
                 manual_refunds: None,
-            },
+            }),
             coupon_code: None,
             source: None,
             discount: None,
@@ -309,8 +309,8 @@ mod tests {
             ).unwrap();
 
             let stored_lsp_node: ILspNode = serde_json::from_str(&lsp_node_json).unwrap();
-            assert_eq!(stored_lsp_node.alias, test_order.lsp_node.alias);
-            assert_eq!(stored_lsp_node.pubkey, test_order.lsp_node.pubkey);
+            assert_eq!(stored_lsp_node.alias, test_order.lsp_node.as_ref().unwrap().alias.clone());
+            assert_eq!(stored_lsp_node.pubkey, test_order.lsp_node.as_ref().unwrap().pubkey.clone());
         }
 
         // Test update
@@ -483,32 +483,32 @@ mod tests {
             channel_expires_at: future_unix.to_string(),
             order_expires_at: future_unix.to_string(),
             channel: None,
-            lsp_node: ILspNode {
+            lsp_node: Some(ILspNode {
                 alias: "test_node".to_string(),
                 pubkey: "test_pubkey".to_string(),
                 connection_strings: vec!["test_connection".to_string()],
                 readonly: None,
-            },
+            }),
             lnurl: None,
-            payment: IBtPayment {
+            payment: Some(IBtPayment {
                 state: BtPaymentState::Created,
                 state2: Some(BtPaymentState2::Created),
                 paid_sat: 0,
-                bolt11_invoice: IBtBolt11Invoice {
+                bolt11_invoice: Some(IBtBolt11Invoice {
                     request: "lnbc...".to_string(),
                     state: BtBolt11InvoiceState::Pending,
                     expires_at: future_unix.to_string(),
                     updated_at: now_unix.to_string(),
-                },
-                onchain: IBtOnchainTransactions {
+                }),
+                onchain: Some(IBtOnchainTransactions {
                     address: "bc1...".to_string(),
                     confirmed_sat: 0,
                     required_confirmations: 3,
                     transactions: vec![],
-                },
+                }),
                 is_manually_paid: None,
                 manual_refunds: None,
-            },
+            }),
             coupon_code: None,
             source: None,
             discount: None,
@@ -553,9 +553,9 @@ mod tests {
 
         // Test 4: Verify complex fields deserialization
         let order = &all_orders[0];
-        assert!(!order.lsp_node.connection_strings.is_empty());
-        assert_eq!(order.payment.state, test_order1.payment.state);
-        assert_eq!(order.payment.bolt11_invoice.state, test_order1.payment.bolt11_invoice.state);
+        assert!(!order.lsp_node.as_ref().unwrap().connection_strings.is_empty());
+        assert_eq!(order.payment.as_ref().unwrap().state, test_order1.payment.as_ref().unwrap().state);
+        assert_eq!(order.payment.as_ref().unwrap().bolt11_invoice.as_ref().unwrap().state, test_order1.payment.as_ref().unwrap().bolt11_invoice.as_ref().unwrap().state);
 
         // Test 5: Test with non-existent order IDs
         let non_existent = db.get_orders(
@@ -595,32 +595,32 @@ mod tests {
             channel_expires_at: future.to_rfc3339(),
             order_expires_at: future.to_rfc3339(),
             channel: None,
-            lsp_node: ILspNode {
+            lsp_node: Some(ILspNode {
                 alias: "test_node".to_string(),
                 pubkey: "test_pubkey".to_string(),
                 connection_strings: vec!["test_connection".to_string()],
                 readonly: None,
-            },
+            }),
             lnurl: None,
-            payment: IBtPayment {
+            payment: Some(IBtPayment {
                 state: BtPaymentState::Created,
                 state2: Some(BtPaymentState2::Created),
                 paid_sat: 0,
-                bolt11_invoice: IBtBolt11Invoice {
+                bolt11_invoice: Some(IBtBolt11Invoice {
                     request: "lnbc...".to_string(),
                     state: BtBolt11InvoiceState::Pending,
                     expires_at: future.to_rfc3339(),
                     updated_at: now.to_rfc3339(),
-                },
-                onchain: IBtOnchainTransactions {
+                }),
+                onchain: Some(IBtOnchainTransactions {
                     address: "bc1...".to_string(),
                     confirmed_sat: 0,
                     required_confirmations: 3,
                     transactions: vec![],
-                },
+                }),
                 is_manually_paid: None,
                 manual_refunds: None,
-            },
+            }),
             coupon_code: None,
             source: None,
             discount: None,
@@ -1460,6 +1460,252 @@ mod tests {
                     panic!("API call to regtest_deposit failed with unexpected error: {:?}", err);
                 }
             }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_remove_all_orders() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create temp directory");
+        let db_path = format!("{}/test_blocktank.db", temp_dir.path().display());
+
+        let db = BlocktankDB::new(&db_path, None).await
+            .expect("Failed to create BlocktankDB");
+
+        // Create and insert test orders
+        let order1 = create_test_order("order_1");
+        let order2 = create_test_order("order_2");
+        let order3 = create_test_order("order_3");
+
+        db.upsert_order(&order1).await.expect("Failed to insert order1");
+        db.upsert_order(&order2).await.expect("Failed to insert order2");
+        db.upsert_order(&order3).await.expect("Failed to insert order3");
+
+        // Verify orders exist
+        let orders = db.get_orders(None, None).await.expect("Failed to get orders");
+        assert_eq!(orders.len(), 3);
+
+        // Remove all orders
+        db.remove_all_orders().await.expect("Failed to remove all orders");
+
+        // Verify all orders are deleted
+        let orders_after = db.get_orders(None, None).await.expect("Failed to get orders");
+        assert_eq!(orders_after.len(), 0);
+
+        // Verify we can still insert new orders after wipe
+        let new_order = create_test_order("new_order");
+        db.upsert_order(&new_order).await.expect("Failed to insert new order");
+        let orders_new = db.get_orders(None, None).await.expect("Failed to get orders");
+        assert_eq!(orders_new.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_remove_all_cjit_entries() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create temp directory");
+        let db_path = format!("{}/test_blocktank.db", temp_dir.path().display());
+
+        let db = BlocktankDB::new(&db_path, None).await
+            .expect("Failed to create BlocktankDB");
+
+        // Create and insert test CJIT entries
+        let entry1 = create_test_cjit_entry("cjit_1");
+        let entry2 = create_test_cjit_entry("cjit_2");
+        let entry3 = create_test_cjit_entry("cjit_3");
+
+        db.upsert_cjit_entry(&entry1).await.expect("Failed to insert entry1");
+        db.upsert_cjit_entry(&entry2).await.expect("Failed to insert entry2");
+        db.upsert_cjit_entry(&entry3).await.expect("Failed to insert entry3");
+
+        // Verify entries exist
+        let entries = db.get_cjit_entries(None, None).await.expect("Failed to get entries");
+        assert_eq!(entries.len(), 3);
+
+        // Remove all CJIT entries
+        db.remove_all_cjit_entries().await.expect("Failed to remove all CJIT entries");
+
+        // Verify all entries are deleted
+        let entries_after = db.get_cjit_entries(None, None).await.expect("Failed to get entries");
+        assert_eq!(entries_after.len(), 0);
+
+        // Verify we can still insert new entries after wipe
+        let new_entry = create_test_cjit_entry("new_cjit");
+        db.upsert_cjit_entry(&new_entry).await.expect("Failed to insert new entry");
+        let entries_new = db.get_cjit_entries(None, None).await.expect("Failed to get entries");
+        assert_eq!(entries_new.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_wipe_all() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create temp directory");
+        let db_path = format!("{}/test_blocktank.db", temp_dir.path().display());
+
+        let db = BlocktankDB::new(&db_path, None).await
+            .expect("Failed to create BlocktankDB");
+
+        // Insert various types of data
+        let order1 = create_test_order("order_1");
+        let order2 = create_test_order("order_2");
+        db.upsert_order(&order1).await.expect("Failed to insert order");
+        db.upsert_order(&order2).await.expect("Failed to insert order");
+
+        let entry1 = create_test_cjit_entry("cjit_1");
+        let entry2 = create_test_cjit_entry("cjit_2");
+        db.upsert_cjit_entry(&entry1).await.expect("Failed to insert entry");
+        db.upsert_cjit_entry(&entry2).await.expect("Failed to insert entry");
+
+        let info = create_test_info();
+        db.upsert_info(&info).await.expect("Failed to insert info");
+
+        // Verify all data exists
+        let orders = db.get_orders(None, None).await.expect("Failed to get orders");
+        assert_eq!(orders.len(), 2);
+        let entries = db.get_cjit_entries(None, None).await.expect("Failed to get entries");
+        assert_eq!(entries.len(), 2);
+        let info_check = db.get_info().await.expect("Failed to get info");
+        assert!(info_check.is_some());
+
+        // Wipe all data
+        db.wipe_all().await.expect("Failed to wipe all");
+
+        // Verify everything is deleted
+        let orders_after = db.get_orders(None, None).await.expect("Failed to get orders");
+        assert_eq!(orders_after.len(), 0);
+        let entries_after = db.get_cjit_entries(None, None).await.expect("Failed to get entries");
+        assert_eq!(entries_after.len(), 0);
+        let info_after = db.get_info().await.expect("Failed to get info");
+        assert!(info_after.is_none());
+
+        // Verify we can still insert new data after wipe
+        let new_order = create_test_order("new_order");
+        db.upsert_order(&new_order).await.expect("Failed to insert new order");
+        let orders_new = db.get_orders(None, None).await.expect("Failed to get orders");
+        assert_eq!(orders_new.len(), 1);
+    }
+
+    // Helper function to create test orders
+    fn create_test_order(id: &str) -> IBtOrder {
+        let now = chrono::Utc::now();
+        let future = now + chrono::Duration::days(7);
+
+        IBtOrder {
+            id: id.to_string(),
+            state: BtOrderState::Created,
+            state2: Some(BtOrderState2::Created),
+            fee_sat: 1000,
+            network_fee_sat: 500,
+            service_fee_sat: 500,
+            lsp_balance_sat: 100000,
+            client_balance_sat: 50000,
+            zero_conf: true,
+            zero_reserve: false,
+            client_node_id: Some("test_node_id".to_string()),
+            channel_expiry_weeks: 4,
+            channel_expires_at: future.to_rfc3339(),
+            order_expires_at: future.to_rfc3339(),
+            channel: None,
+            lsp_node: Some(ILspNode {
+                alias: "test_node".to_string(),
+                pubkey: "test_pubkey".to_string(),
+                connection_strings: vec!["test_connection".to_string()],
+                readonly: None,
+            }),
+            lnurl: None,
+            payment: Some(IBtPayment {
+                state: BtPaymentState::Created,
+                state2: Some(BtPaymentState2::Created),
+                paid_sat: 0,
+                bolt11_invoice: Some(IBtBolt11Invoice {
+                    request: "lnbc...".to_string(),
+                    state: BtBolt11InvoiceState::Pending,
+                    expires_at: future.to_rfc3339(),
+                    updated_at: now.to_rfc3339(),
+                }),
+                onchain: Some(IBtOnchainTransactions {
+                    address: "bc1...".to_string(),
+                    confirmed_sat: 0,
+                    required_confirmations: 3,
+                    transactions: vec![],
+                }),
+                is_manually_paid: None,
+                manual_refunds: None,
+            }),
+            coupon_code: None,
+            source: Some("test".to_string()),
+            discount: None,
+            updated_at: now.to_rfc3339(),
+            created_at: now.to_rfc3339(),
+        }
+    }
+
+    // Helper function to create test CJIT entries
+    fn create_test_cjit_entry(id: &str) -> ICJitEntry {
+        let now = chrono::Utc::now();
+        let future = now + chrono::Duration::days(1);
+
+        ICJitEntry {
+            id: id.to_string(),
+            state: CJitStateEnum::Created,
+            fee_sat: 1000,
+            network_fee_sat: 500,
+            service_fee_sat: 500,
+            channel_size_sat: 150000,
+            channel_expiry_weeks: 4,
+            channel_open_error: None,
+            node_id: "test_node_id".to_string(),
+            coupon_code: "test_coupon".to_string(),
+            source: Some("test".to_string()),
+            expires_at: future.to_rfc3339(),
+            invoice: IBtBolt11Invoice {
+                request: "lnbc...".to_string(),
+                state: BtBolt11InvoiceState::Pending,
+                expires_at: future.to_rfc3339(),
+                updated_at: now.to_rfc3339(),
+            },
+            channel: None,
+            lsp_node: ILspNode {
+                alias: "test_node".to_string(),
+                pubkey: "test_pubkey".to_string(),
+                connection_strings: vec!["test_connection".to_string()],
+                readonly: None,
+            },
+            discount: None,
+            updated_at: now.to_rfc3339(),
+            created_at: now.to_rfc3339(),
+        }
+    }
+
+    // Helper function to create test info
+    fn create_test_info() -> IBtInfo {
+        IBtInfo {
+            version: 1,
+            nodes: vec![ILspNode {
+                alias: "test_node".to_string(),
+                pubkey: "test_pubkey".to_string(),
+                connection_strings: vec!["test_connection".to_string()],
+                readonly: None,
+            }],
+            options: IBtInfoOptions {
+                min_channel_size_sat: 10000,
+                max_channel_size_sat: 10000000,
+                min_expiry_weeks: 1,
+                max_expiry_weeks: 52,
+                min_payment_confirmations: 1,
+                min_high_risk_payment_confirmations: 3,
+                max_0_conf_client_balance_sat: 100000,
+                max_client_balance_sat: 1000000,
+            },
+            versions: IBtInfoVersions {
+                http: "1.0.0".to_string(),
+                btc: "2.0.0".to_string(),
+                ln2: "3.0.0".to_string(),
+            },
+            onchain: IBtInfoOnchain {
+                network: BitcoinNetworkEnum::Mainnet,
+                fee_rates: FeeRates {
+                    fast: 10,
+                    mid: 5,
+                    slow: 2,
+                },
+            },
         }
     }
 }

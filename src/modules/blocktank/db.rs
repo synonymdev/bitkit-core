@@ -821,4 +821,66 @@ impl BlocktankDB {
 
         Ok(entries)
     }
+
+    /// Removes all orders from the database
+    pub async fn remove_all_orders(&self) -> Result<(), BlocktankError> {
+        let conn = self.conn.lock().await;
+
+        conn.execute("DELETE FROM orders", [])
+            .map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to delete all orders: {}", e),
+            })?;
+
+        Ok(())
+    }
+
+    /// Removes all CJIT entries from the database
+    pub async fn remove_all_cjit_entries(&self) -> Result<(), BlocktankError> {
+        let conn = self.conn.lock().await;
+
+        conn.execute("DELETE FROM cjit_entries", [])
+            .map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to delete all CJIT entries: {}", e),
+            })?;
+
+        Ok(())
+    }
+
+    /// Removes all data from all Blocktank tables
+    ///
+    /// This wipes:
+    /// - All orders
+    /// - All CJIT entries
+    /// - All info entries
+    ///
+    /// Note: This does NOT delete the enum state tables (order_states, payment_states, cjit_states)
+    /// as these contain static reference data that should persist across wipes.
+    pub async fn wipe_all(&self) -> Result<(), BlocktankError> {
+        let mut conn = self.conn.lock().await;
+
+        let tx = conn.transaction().map_err(|e| BlocktankError::DatabaseError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        tx.execute("DELETE FROM orders", [])
+            .map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to delete orders: {}", e),
+            })?;
+
+        tx.execute("DELETE FROM cjit_entries", [])
+            .map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to delete CJIT entries: {}", e),
+            })?;
+
+        tx.execute("DELETE FROM info", [])
+            .map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to delete info entries: {}", e),
+            })?;
+
+        tx.commit().map_err(|e| BlocktankError::DatabaseError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
+
+        Ok(())
+    }
 }

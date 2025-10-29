@@ -131,6 +131,11 @@ async fn get_gift(gift_id: String) -> Result<IGift, BlocktankError>
 
 // Get payment information
 async fn get_payment(payment_id: String) -> Result<IBtBolt11Invoice, BlocktankError>
+
+// Database management
+async fn blocktank_remove_all_orders() -> Result<(), BlocktankError>
+async fn blocktank_remove_all_cjit_entries() -> Result<(), BlocktankError>
+async fn blocktank_wipe_all() -> Result<(), BlocktankError>
 ```
 
 ## Usage Examples
@@ -259,7 +264,14 @@ func manageBlocktank() async {
             let payment = try await getPayment(paymentId: paymentId)
             print("Payment state: \(payment.state)")
         }
-        
+
+        // Database management - remove specific blocktank data
+        try await blocktankRemoveAllOrders()
+        try await blocktankRemoveAllCjitEntries()
+
+        // Or wipe all blocktank data at once (use with caution!)
+        try await blocktankWipeAll()
+
     } catch {
         print("Error: \(error)")
     }
@@ -385,7 +397,14 @@ suspend fun manageBlocktank() {
             val payment = getPayment(paymentId = paymentId)
             println("Payment state: ${payment.state}")
         }
-        
+
+        // Database management - remove specific blocktank data
+        blocktankRemoveAllOrders()
+        blocktankRemoveAllCjitEntries()
+
+        // Or wipe all blocktank data at once (use with caution!)
+        blocktankWipeAll()
+
     } catch (e: Exception) {
         println("Error: $e")
     }
@@ -511,7 +530,14 @@ async def manage_blocktank():
         if gift.bolt11_payment_id:
             payment = await get_payment(payment_id=gift.bolt11_payment_id)
             print(f"Payment state: {payment.state}")
-        
+
+        # Database management - remove specific blocktank data
+        await blocktank_remove_all_orders()
+        await blocktank_remove_all_cjit_entries()
+
+        # Or wipe all blocktank data at once (use with caution!)
+        await blocktank_wipe_all()
+
     except Exception as e:
         print(f"Error: {e}")
 
