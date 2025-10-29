@@ -1534,36 +1534,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_remove_all_info() {
-        let temp_dir = tempfile::tempdir().expect("Failed to create temp directory");
-        let db_path = format!("{}/test_blocktank.db", temp_dir.path().display());
-
-        let db = BlocktankDB::new(&db_path, None).await
-            .expect("Failed to create BlocktankDB");
-
-        // Create and insert test info
-        let info = create_test_info();
-        db.upsert_info(&info).await.expect("Failed to insert info");
-
-        // Verify info exists
-        let retrieved_info = db.get_info().await.expect("Failed to get info");
-        assert!(retrieved_info.is_some());
-
-        // Remove all info
-        db.remove_all_info().await.expect("Failed to remove all info");
-
-        // Verify info is deleted
-        let info_after = db.get_info().await.expect("Failed to get info");
-        assert!(info_after.is_none());
-
-        // Verify we can still insert new info after wipe
-        let new_info = create_test_info();
-        db.upsert_info(&new_info).await.expect("Failed to insert new info");
-        let info_new = db.get_info().await.expect("Failed to get info");
-        assert!(info_new.is_some());
-    }
-
-    #[tokio::test]
     async fn test_wipe_all() {
         let temp_dir = tempfile::tempdir().expect("Failed to create temp directory");
         let db_path = format!("{}/test_blocktank.db", temp_dir.path().display());

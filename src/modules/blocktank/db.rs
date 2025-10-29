@@ -846,19 +846,15 @@ impl BlocktankDB {
         Ok(())
     }
 
-    /// Removes all info entries from the database
-    pub async fn remove_all_info(&self) -> Result<(), BlocktankError> {
-        let conn = self.conn.lock().await;
-
-        conn.execute("DELETE FROM info", [])
-            .map_err(|e| BlocktankError::DatabaseError {
-                error_details: format!("Failed to delete all info entries: {}", e),
-            })?;
-
-        Ok(())
-    }
-
     /// Removes all data from all Blocktank tables
+    ///
+    /// This wipes:
+    /// - All orders
+    /// - All CJIT entries
+    /// - All info entries
+    ///
+    /// Note: This does NOT delete the enum state tables (order_states, payment_states, cjit_states)
+    /// as these contain static reference data that should persist across wipes.
     pub async fn wipe_all(&self) -> Result<(), BlocktankError> {
         let mut conn = self.conn.lock().await;
 

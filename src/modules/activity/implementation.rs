@@ -1020,8 +1020,9 @@ impl ActivityDB {
         }
     }
 
-    /// Removes all activities from the database
-    pub fn remove_all(&mut self) -> Result<(), ActivityError> {
+    /// Wipes all activity data from the database
+    /// This deletes all activities, which cascades to delete all tags due to foreign key constraints
+    pub fn wipe_all(&mut self) -> Result<(), ActivityError> {
         let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to start transaction: {}", e),
         })?;
@@ -1037,20 +1038,5 @@ impl ActivityDB {
         })?;
 
         Ok(())
-    }
-
-    /// Removes all tags from the database
-    pub fn remove_all_tags(&mut self) -> Result<(), ActivityError> {
-        self.conn.execute("DELETE FROM activity_tags", [])
-            .map_err(|e| ActivityError::DataError {
-                error_details: format!("Failed to delete all tags: {}", e),
-            })?;
-
-        Ok(())
-    }
-
-    /// Wipes all activity data from the database
-    pub fn wipe_all(&mut self) -> Result<(), ActivityError> {
-        self.remove_all()
     }
 }
