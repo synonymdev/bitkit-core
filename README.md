@@ -451,6 +451,16 @@
 ./build.sh python   # Python only
 ```
 
+### Release Builds (with version bump)
+The `-r/--release` flag bumps versions in `Cargo.toml`, `Package.swift`, and `gradle.properties`, then builds.
+Defaults to patch version bump; use `--major`/`-M` or `--minor`/`-m` for other increments.
+
+```
+./build.sh -r ios              # Bump patch (default) and build iOS
+./build.sh -r --minor android  # Bump minor and build Android
+./build.sh -r -M all           # Bump major and build all platforms
+```
+
 ### Run examples
 ```
 cargo run --bin example
