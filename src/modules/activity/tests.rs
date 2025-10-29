@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::activity::{ActivityDB, OnchainActivity, LightningActivity, PaymentType, PaymentState, Activity, ActivityFilter, SortDirection};
+    use crate::activity::{ActivityDB, OnchainActivity, LightningActivity, PaymentType, PaymentState, Activity, ActivityFilter, SortDirection, ClosedChannelDetails};
     use std::fs;
     use rand::random;
 
@@ -50,6 +50,25 @@ mod tests {
             preimage: Some("preimage123".to_string()),
             created_at: None,
             updated_at: None,
+        }
+    }
+
+    fn create_test_closed_channel() -> ClosedChannelDetails {
+        ClosedChannelDetails {
+            channel_id: "channel123".to_string(),
+            counterparty_node_id: "03abc123...".to_string(),
+            funding_txo_txid: "funding_tx_id_123".to_string(),
+            funding_txo_index: 0,
+            channel_value_sats: 1000000,
+            closed_at: 1234567890,
+            outbound_capacity_msat: 500000000,
+            inbound_capacity_msat: 500000000,
+            counterparty_unspendable_punishment_reserve: 10000000,
+            unspendable_punishment_reserve: 10000000,
+            forwarding_fee_proportional_millionths: 1,
+            forwarding_fee_base_msat: 10,
+            channel_name: "Test Channel".to_string(),
+            channel_closure_reason: "CooperativeClose".to_string(),
         }
     }
 
@@ -1307,11 +1326,21 @@ mod tests {
         db.add_tags(&activity3.id, &["transfer".to_string()]).unwrap();
         db.add_tags(&activity4.id, &["payment".to_string(), "invoice".to_string()]).unwrap();
 
+        // Insert closed channels
+        let mut channel1 = create_test_closed_channel();
+        channel1.channel_id = "channel1".to_string();
+        let mut channel2 = create_test_closed_channel();
+        channel2.channel_id = "channel2".to_string();
+        db.insert_closed_channel(&channel1).unwrap();
+        db.insert_closed_channel(&channel2).unwrap();
+
         // Verify data exists
         let activities = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
         assert_eq!(activities.len(), 4);
         let tags = db.get_all_unique_tags().unwrap();
         assert_eq!(tags.len(), 3);
+        let channels = db.get_all_closed_channels(None).unwrap();
+        assert_eq!(channels.len(), 2);
 
         // Wipe all data
         db.wipe_all().unwrap();
@@ -1321,12 +1350,167 @@ mod tests {
         assert_eq!(activities_after.len(), 0);
         let tags_after = db.get_all_unique_tags().unwrap();
         assert_eq!(tags_after.len(), 0);
+        let channels_after = db.get_all_closed_channels(None).unwrap();
+        assert_eq!(channels_after.len(), 0);
 
         // Verify we can still insert new data after wipe
         let new_activity = create_test_onchain_activity();
         db.insert_onchain_activity(&new_activity).unwrap();
         let activities_new = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
         assert_eq!(activities_new.len(), 1);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_insert_and_retrieve_closed_channel() {
+        let (mut db, db_path) = setup();
+        let channel = create_test_closed_channel();
+        
+        // Insert closed channel
+        assert!(db.insert_closed_channel(&channel).is_ok());
+
+        // Retrieve by ID
+        let retrieved = db.get_closed_channel_by_id(&channel.channel_id).unwrap();
+        assert!(retrieved.is_some());
+        let retrieved_channel = retrieved.unwrap();
+        
+        assert_eq!(retrieved_channel.channel_id, channel.channel_id);
+        assert_eq!(retrieved_channel.counterparty_node_id, channel.counterparty_node_id);
+        assert_eq!(retrieved_channel.funding_txo_txid, channel.funding_txo_txid);
+        assert_eq!(retrieved_channel.funding_txo_index, channel.funding_txo_index);
+        assert_eq!(retrieved_channel.channel_value_sats, channel.channel_value_sats);
+        assert_eq!(retrieved_channel.closed_at, channel.closed_at);
+        assert_eq!(retrieved_channel.outbound_capacity_msat, channel.outbound_capacity_msat);
+        assert_eq!(retrieved_channel.inbound_capacity_msat, channel.inbound_capacity_msat);
+        assert_eq!(retrieved_channel.counterparty_unspendable_punishment_reserve, channel.counterparty_unspendable_punishment_reserve);
+        assert_eq!(retrieved_channel.unspendable_punishment_reserve, channel.unspendable_punishment_reserve);
+        assert_eq!(retrieved_channel.forwarding_fee_proportional_millionths, channel.forwarding_fee_proportional_millionths);
+        assert_eq!(retrieved_channel.forwarding_fee_base_msat, channel.forwarding_fee_base_msat);
+        assert_eq!(retrieved_channel.channel_name, channel.channel_name);
+        assert_eq!(retrieved_channel.channel_closure_reason, channel.channel_closure_reason);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_all_closed_channels() {
+        let (mut db, db_path) = setup();
+
+        // Insert multiple closed channels with different closed_at timestamps
+        let mut channel1 = create_test_closed_channel();
+        channel1.channel_id = "channel1".to_string();
+        channel1.closed_at = 1000;
+
+        let mut channel2 = create_test_closed_channel();
+        channel2.channel_id = "channel2".to_string();
+        channel2.closed_at = 2000;
+
+        let mut channel3 = create_test_closed_channel();
+        channel3.channel_id = "channel3".to_string();
+        channel3.closed_at = 1500;
+
+        db.insert_closed_channel(&channel1).unwrap();
+        db.insert_closed_channel(&channel2).unwrap();
+        db.insert_closed_channel(&channel3).unwrap();
+
+        // Get all channels, default sort (descending - most recent first)
+        let all_channels = db.get_all_closed_channels(None).unwrap();
+        assert_eq!(all_channels.len(), 3);
+        assert_eq!(all_channels[0].channel_id, "channel2"); // Most recent (2000)
+        assert_eq!(all_channels[1].channel_id, "channel3"); // Middle (1500)
+        assert_eq!(all_channels[2].channel_id, "channel1"); // Oldest (1000)
+
+        // Get all channels, ascending sort
+        let all_channels_asc = db.get_all_closed_channels(Some(SortDirection::Asc)).unwrap();
+        assert_eq!(all_channels_asc.len(), 3);
+        assert_eq!(all_channels_asc[0].channel_id, "channel1"); // Oldest first
+        assert_eq!(all_channels_asc[1].channel_id, "channel3");
+        assert_eq!(all_channels_asc[2].channel_id, "channel2"); // Most recent last
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_closed_channel_not_found() {
+        let (db, db_path) = setup();
+
+        let result = db.get_closed_channel_by_id("nonexistent_channel").unwrap();
+        assert!(result.is_none());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_insert_closed_channel_empty_id() {
+        let (mut db, db_path) = setup();
+        let mut channel = create_test_closed_channel();
+        channel.channel_id = "".to_string();
+
+        let result = db.insert_closed_channel(&channel);
+        assert!(result.is_err());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_remove_closed_channel_by_id() {
+        let (mut db, db_path) = setup();
+        let channel = create_test_closed_channel();
+        
+        db.insert_closed_channel(&channel).unwrap();
+        
+        // Verify it exists
+        let retrieved = db.get_closed_channel_by_id(&channel.channel_id).unwrap();
+        assert!(retrieved.is_some());
+
+        // Delete it
+        let deleted = db.remove_closed_channel_by_id(&channel.channel_id).unwrap();
+        assert!(deleted);
+
+        // Verify it's gone
+        let retrieved_after = db.get_closed_channel_by_id(&channel.channel_id).unwrap();
+        assert!(retrieved_after.is_none());
+
+        // Try to delete again (should return false)
+        let deleted_again = db.remove_closed_channel_by_id(&channel.channel_id).unwrap();
+        assert!(!deleted_again);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_wipe_all_closed_channels() {
+        let (mut db, db_path) = setup();
+
+        // Insert multiple closed channels
+        let mut channel1 = create_test_closed_channel();
+        channel1.channel_id = "channel1".to_string();
+        let mut channel2 = create_test_closed_channel();
+        channel2.channel_id = "channel2".to_string();
+        let mut channel3 = create_test_closed_channel();
+        channel3.channel_id = "channel3".to_string();
+
+        db.insert_closed_channel(&channel1).unwrap();
+        db.insert_closed_channel(&channel2).unwrap();
+        db.insert_closed_channel(&channel3).unwrap();
+
+        // Verify they exist
+        let all_channels = db.get_all_closed_channels(None).unwrap();
+        assert_eq!(all_channels.len(), 3);
+
+        // Wipe all closed channels
+        db.wipe_all_closed_channels().unwrap();
+
+        // Verify they're all gone
+        let all_channels_after = db.get_all_closed_channels(None).unwrap();
+        assert_eq!(all_channels_after.len(), 0);
+
+        // Verify we can still insert new channels after wipe
+        let new_channel = create_test_closed_channel();
+        db.insert_closed_channel(&new_channel).unwrap();
+        let all_channels_new = db.get_all_closed_channels(None).unwrap();
+        assert_eq!(all_channels_new.len(), 1);
 
         cleanup(&db_path);
     }

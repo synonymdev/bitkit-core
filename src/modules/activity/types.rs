@@ -115,6 +115,24 @@ pub struct LightningActivity {
     pub updated_at: Option<u64>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, uniffi::Record)]
+pub struct ClosedChannelDetails {
+    pub channel_id: String,
+    pub counterparty_node_id: String,
+    pub funding_txo_txid: String,
+    pub funding_txo_index: u32,
+    pub channel_value_sats: u64,
+    pub closed_at: u64,
+    pub outbound_capacity_msat: u64,
+    pub inbound_capacity_msat: u64,
+    pub counterparty_unspendable_punishment_reserve: u64,
+    pub unspendable_punishment_reserve: u64,
+    pub forwarding_fee_proportional_millionths: u32,
+    pub forwarding_fee_base_msat: u32,
+    pub channel_name: String,
+    pub channel_closure_reason: String,
+}
+
 impl Default for SortDirection {
     fn default() -> Self {
         SortDirection::Desc
