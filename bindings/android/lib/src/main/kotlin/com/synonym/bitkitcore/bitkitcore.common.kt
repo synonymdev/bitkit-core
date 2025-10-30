@@ -217,6 +217,28 @@ data class AddressResponse (
 
 
 
+@kotlinx.serialization.Serializable
+data class ClosedChannelDetails (
+    val `channelId`: kotlin.String, 
+    val `counterpartyNodeId`: kotlin.String, 
+    val `fundingTxoTxid`: kotlin.String, 
+    val `fundingTxoIndex`: kotlin.UInt, 
+    val `channelValueSats`: kotlin.ULong, 
+    val `closedAt`: kotlin.ULong, 
+    val `outboundCapacityMsat`: kotlin.ULong, 
+    val `inboundCapacityMsat`: kotlin.ULong, 
+    val `counterpartyUnspendablePunishmentReserve`: kotlin.ULong, 
+    val `unspendablePunishmentReserve`: kotlin.ULong, 
+    val `forwardingFeeProportionalMillionths`: kotlin.UInt, 
+    val `forwardingFeeBaseMsat`: kotlin.UInt, 
+    val `channelName`: kotlin.String, 
+    val `channelClosureReason`: kotlin.String
+) {
+    companion object
+}
+
+
+
 /**
  * Coin purchase memo
  */
@@ -1162,6 +1184,7 @@ data class OnchainActivity (
     val `confirmed`: kotlin.Boolean, 
     val `timestamp`: kotlin.ULong, 
     val `isBoosted`: kotlin.Boolean, 
+    val `boostTxIds`: List<kotlin.String>, 
     val `isTransfer`: kotlin.Boolean, 
     val `doesExist`: kotlin.Boolean, 
     val `confirmTimestamp`: kotlin.ULong?, 
@@ -2897,6 +2920,10 @@ enum class WordCount {
     WORDS24;
     companion object
 }
+
+
+
+
 
 
 

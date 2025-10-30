@@ -503,6 +503,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_all_closed_channels() != 16828:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_bip39_suggestions() != 20658:
@@ -510,6 +512,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_get_bip39_wordlist() != 30814:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_cjit_entries() != 29342:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_gift() != 386:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -532,6 +536,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_init_db() != 9643:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_insert_activity() != 1510:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_insert_closed_channel() != 43559:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -558,6 +564,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_regtest_mine() != 58685:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_regtest_pay() != 48342:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_remove_tags() != 58873:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -588,6 +596,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels() != 41511:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -829,6 +839,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_all_closed_channels.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_all_closed_channels.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -849,6 +864,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_cjit_entries.argtypes = (
     ctypes.c_int8,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_cjit_entries.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_gift.argtypes = (
     _UniffiRustBuffer,
 )
@@ -900,6 +920,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_insert_closed_channel.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_insert_closed_channel.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_is_valid_bip39_word.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -971,6 +996,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_regtest_pay.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_regtest_pay.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_remove_closed_channel_by_id.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_remove_closed_channel_by_id.restype = ctypes.c_int8
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1127,6 +1157,10 @@ _UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_closed_channels.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_closed_channels.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_databases.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_databases.restype = ctypes.c_uint64
@@ -1461,6 +1495,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_by_tag.restype = ctype
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_all_closed_channels.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_all_closed_channels.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_unique_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_unique_tags.restype = ctypes.c_uint16
@@ -1473,6 +1510,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_bip39_wordlist.restype = ctypes.c
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_cjit_entries.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_cjit_entries.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_closed_channel_by_id.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_closed_channel_by_id.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_gift.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_gift.restype = ctypes.c_uint16
@@ -1506,6 +1546,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_init_db.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_insert_closed_channel.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_insert_closed_channel.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word.restype = ctypes.c_uint16
@@ -1545,6 +1588,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_regtest_mine.restype = ctypes.c_uint1
 _UniffiLib.uniffi_bitkitcore_checksum_func_regtest_pay.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_regtest_pay.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_tags.restype = ctypes.c_uint16
@@ -1590,6 +1636,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.restype = ct
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_mnemonic.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_mnemonic.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_databases.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_databases.restype = ctypes.c_uint16
@@ -2059,6 +2108,126 @@ class _UniffiConverterTypeAddressResponse(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.address, buf)
         _UniffiConverterSequenceUInt32.write(value.path, buf)
         _UniffiConverterString.write(value.serialized_path, buf)
+
+
+class ClosedChannelDetails:
+    channel_id: "str"
+    counterparty_node_id: "str"
+    funding_txo_txid: "str"
+    funding_txo_index: "int"
+    channel_value_sats: "int"
+    closed_at: "int"
+    outbound_capacity_msat: "int"
+    inbound_capacity_msat: "int"
+    counterparty_unspendable_punishment_reserve: "int"
+    unspendable_punishment_reserve: "int"
+    forwarding_fee_proportional_millionths: "int"
+    forwarding_fee_base_msat: "int"
+    channel_name: "str"
+    channel_closure_reason: "str"
+    def __init__(self, *, channel_id: "str", counterparty_node_id: "str", funding_txo_txid: "str", funding_txo_index: "int", channel_value_sats: "int", closed_at: "int", outbound_capacity_msat: "int", inbound_capacity_msat: "int", counterparty_unspendable_punishment_reserve: "int", unspendable_punishment_reserve: "int", forwarding_fee_proportional_millionths: "int", forwarding_fee_base_msat: "int", channel_name: "str", channel_closure_reason: "str"):
+        self.channel_id = channel_id
+        self.counterparty_node_id = counterparty_node_id
+        self.funding_txo_txid = funding_txo_txid
+        self.funding_txo_index = funding_txo_index
+        self.channel_value_sats = channel_value_sats
+        self.closed_at = closed_at
+        self.outbound_capacity_msat = outbound_capacity_msat
+        self.inbound_capacity_msat = inbound_capacity_msat
+        self.counterparty_unspendable_punishment_reserve = counterparty_unspendable_punishment_reserve
+        self.unspendable_punishment_reserve = unspendable_punishment_reserve
+        self.forwarding_fee_proportional_millionths = forwarding_fee_proportional_millionths
+        self.forwarding_fee_base_msat = forwarding_fee_base_msat
+        self.channel_name = channel_name
+        self.channel_closure_reason = channel_closure_reason
+
+    def __str__(self):
+        return "ClosedChannelDetails(channel_id={}, counterparty_node_id={}, funding_txo_txid={}, funding_txo_index={}, channel_value_sats={}, closed_at={}, outbound_capacity_msat={}, inbound_capacity_msat={}, counterparty_unspendable_punishment_reserve={}, unspendable_punishment_reserve={}, forwarding_fee_proportional_millionths={}, forwarding_fee_base_msat={}, channel_name={}, channel_closure_reason={})".format(self.channel_id, self.counterparty_node_id, self.funding_txo_txid, self.funding_txo_index, self.channel_value_sats, self.closed_at, self.outbound_capacity_msat, self.inbound_capacity_msat, self.counterparty_unspendable_punishment_reserve, self.unspendable_punishment_reserve, self.forwarding_fee_proportional_millionths, self.forwarding_fee_base_msat, self.channel_name, self.channel_closure_reason)
+
+    def __eq__(self, other):
+        if self.channel_id != other.channel_id:
+            return False
+        if self.counterparty_node_id != other.counterparty_node_id:
+            return False
+        if self.funding_txo_txid != other.funding_txo_txid:
+            return False
+        if self.funding_txo_index != other.funding_txo_index:
+            return False
+        if self.channel_value_sats != other.channel_value_sats:
+            return False
+        if self.closed_at != other.closed_at:
+            return False
+        if self.outbound_capacity_msat != other.outbound_capacity_msat:
+            return False
+        if self.inbound_capacity_msat != other.inbound_capacity_msat:
+            return False
+        if self.counterparty_unspendable_punishment_reserve != other.counterparty_unspendable_punishment_reserve:
+            return False
+        if self.unspendable_punishment_reserve != other.unspendable_punishment_reserve:
+            return False
+        if self.forwarding_fee_proportional_millionths != other.forwarding_fee_proportional_millionths:
+            return False
+        if self.forwarding_fee_base_msat != other.forwarding_fee_base_msat:
+            return False
+        if self.channel_name != other.channel_name:
+            return False
+        if self.channel_closure_reason != other.channel_closure_reason:
+            return False
+        return True
+
+class _UniffiConverterTypeClosedChannelDetails(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return ClosedChannelDetails(
+            channel_id=_UniffiConverterString.read(buf),
+            counterparty_node_id=_UniffiConverterString.read(buf),
+            funding_txo_txid=_UniffiConverterString.read(buf),
+            funding_txo_index=_UniffiConverterUInt32.read(buf),
+            channel_value_sats=_UniffiConverterUInt64.read(buf),
+            closed_at=_UniffiConverterUInt64.read(buf),
+            outbound_capacity_msat=_UniffiConverterUInt64.read(buf),
+            inbound_capacity_msat=_UniffiConverterUInt64.read(buf),
+            counterparty_unspendable_punishment_reserve=_UniffiConverterUInt64.read(buf),
+            unspendable_punishment_reserve=_UniffiConverterUInt64.read(buf),
+            forwarding_fee_proportional_millionths=_UniffiConverterUInt32.read(buf),
+            forwarding_fee_base_msat=_UniffiConverterUInt32.read(buf),
+            channel_name=_UniffiConverterString.read(buf),
+            channel_closure_reason=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.channel_id)
+        _UniffiConverterString.check_lower(value.counterparty_node_id)
+        _UniffiConverterString.check_lower(value.funding_txo_txid)
+        _UniffiConverterUInt32.check_lower(value.funding_txo_index)
+        _UniffiConverterUInt64.check_lower(value.channel_value_sats)
+        _UniffiConverterUInt64.check_lower(value.closed_at)
+        _UniffiConverterUInt64.check_lower(value.outbound_capacity_msat)
+        _UniffiConverterUInt64.check_lower(value.inbound_capacity_msat)
+        _UniffiConverterUInt64.check_lower(value.counterparty_unspendable_punishment_reserve)
+        _UniffiConverterUInt64.check_lower(value.unspendable_punishment_reserve)
+        _UniffiConverterUInt32.check_lower(value.forwarding_fee_proportional_millionths)
+        _UniffiConverterUInt32.check_lower(value.forwarding_fee_base_msat)
+        _UniffiConverterString.check_lower(value.channel_name)
+        _UniffiConverterString.check_lower(value.channel_closure_reason)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.channel_id, buf)
+        _UniffiConverterString.write(value.counterparty_node_id, buf)
+        _UniffiConverterString.write(value.funding_txo_txid, buf)
+        _UniffiConverterUInt32.write(value.funding_txo_index, buf)
+        _UniffiConverterUInt64.write(value.channel_value_sats, buf)
+        _UniffiConverterUInt64.write(value.closed_at, buf)
+        _UniffiConverterUInt64.write(value.outbound_capacity_msat, buf)
+        _UniffiConverterUInt64.write(value.inbound_capacity_msat, buf)
+        _UniffiConverterUInt64.write(value.counterparty_unspendable_punishment_reserve, buf)
+        _UniffiConverterUInt64.write(value.unspendable_punishment_reserve, buf)
+        _UniffiConverterUInt32.write(value.forwarding_fee_proportional_millionths, buf)
+        _UniffiConverterUInt32.write(value.forwarding_fee_base_msat, buf)
+        _UniffiConverterString.write(value.channel_name, buf)
+        _UniffiConverterString.write(value.channel_closure_reason, buf)
 
 
 class CoinPurchaseMemo:
@@ -5602,6 +5771,7 @@ class OnchainActivity:
     confirmed: "bool"
     timestamp: "int"
     is_boosted: "bool"
+    boost_tx_ids: "typing.List[str]"
     is_transfer: "bool"
     does_exist: "bool"
     confirm_timestamp: "typing.Optional[int]"
@@ -5609,7 +5779,7 @@ class OnchainActivity:
     transfer_tx_id: "typing.Optional[str]"
     created_at: "typing.Optional[int]"
     updated_at: "typing.Optional[int]"
-    def __init__(self, *, id: "str", tx_type: "PaymentType", tx_id: "str", value: "int", fee: "int", fee_rate: "int", address: "str", confirmed: "bool", timestamp: "int", is_boosted: "bool", is_transfer: "bool", does_exist: "bool", confirm_timestamp: "typing.Optional[int]", channel_id: "typing.Optional[str]", transfer_tx_id: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]"):
+    def __init__(self, *, id: "str", tx_type: "PaymentType", tx_id: "str", value: "int", fee: "int", fee_rate: "int", address: "str", confirmed: "bool", timestamp: "int", is_boosted: "bool", boost_tx_ids: "typing.List[str]", is_transfer: "bool", does_exist: "bool", confirm_timestamp: "typing.Optional[int]", channel_id: "typing.Optional[str]", transfer_tx_id: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]"):
         self.id = id
         self.tx_type = tx_type
         self.tx_id = tx_id
@@ -5620,6 +5790,7 @@ class OnchainActivity:
         self.confirmed = confirmed
         self.timestamp = timestamp
         self.is_boosted = is_boosted
+        self.boost_tx_ids = boost_tx_ids
         self.is_transfer = is_transfer
         self.does_exist = does_exist
         self.confirm_timestamp = confirm_timestamp
@@ -5629,7 +5800,7 @@ class OnchainActivity:
         self.updated_at = updated_at
 
     def __str__(self):
-        return "OnchainActivity(id={}, tx_type={}, tx_id={}, value={}, fee={}, fee_rate={}, address={}, confirmed={}, timestamp={}, is_boosted={}, is_transfer={}, does_exist={}, confirm_timestamp={}, channel_id={}, transfer_tx_id={}, created_at={}, updated_at={})".format(self.id, self.tx_type, self.tx_id, self.value, self.fee, self.fee_rate, self.address, self.confirmed, self.timestamp, self.is_boosted, self.is_transfer, self.does_exist, self.confirm_timestamp, self.channel_id, self.transfer_tx_id, self.created_at, self.updated_at)
+        return "OnchainActivity(id={}, tx_type={}, tx_id={}, value={}, fee={}, fee_rate={}, address={}, confirmed={}, timestamp={}, is_boosted={}, boost_tx_ids={}, is_transfer={}, does_exist={}, confirm_timestamp={}, channel_id={}, transfer_tx_id={}, created_at={}, updated_at={})".format(self.id, self.tx_type, self.tx_id, self.value, self.fee, self.fee_rate, self.address, self.confirmed, self.timestamp, self.is_boosted, self.boost_tx_ids, self.is_transfer, self.does_exist, self.confirm_timestamp, self.channel_id, self.transfer_tx_id, self.created_at, self.updated_at)
 
     def __eq__(self, other):
         if self.id != other.id:
@@ -5651,6 +5822,8 @@ class OnchainActivity:
         if self.timestamp != other.timestamp:
             return False
         if self.is_boosted != other.is_boosted:
+            return False
+        if self.boost_tx_ids != other.boost_tx_ids:
             return False
         if self.is_transfer != other.is_transfer:
             return False
@@ -5682,6 +5855,7 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
             confirmed=_UniffiConverterBool.read(buf),
             timestamp=_UniffiConverterUInt64.read(buf),
             is_boosted=_UniffiConverterBool.read(buf),
+            boost_tx_ids=_UniffiConverterSequenceString.read(buf),
             is_transfer=_UniffiConverterBool.read(buf),
             does_exist=_UniffiConverterBool.read(buf),
             confirm_timestamp=_UniffiConverterOptionalUInt64.read(buf),
@@ -5703,6 +5877,7 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
         _UniffiConverterBool.check_lower(value.confirmed)
         _UniffiConverterUInt64.check_lower(value.timestamp)
         _UniffiConverterBool.check_lower(value.is_boosted)
+        _UniffiConverterSequenceString.check_lower(value.boost_tx_ids)
         _UniffiConverterBool.check_lower(value.is_transfer)
         _UniffiConverterBool.check_lower(value.does_exist)
         _UniffiConverterOptionalUInt64.check_lower(value.confirm_timestamp)
@@ -5723,6 +5898,7 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
         _UniffiConverterBool.write(value.confirmed, buf)
         _UniffiConverterUInt64.write(value.timestamp, buf)
         _UniffiConverterBool.write(value.is_boosted, buf)
+        _UniffiConverterSequenceString.write(value.boost_tx_ids, buf)
         _UniffiConverterBool.write(value.is_transfer, buf)
         _UniffiConverterBool.write(value.does_exist, buf)
         _UniffiConverterOptionalUInt64.write(value.confirm_timestamp, buf)
@@ -11227,6 +11403,33 @@ class _UniffiConverterOptionalBytes(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypeClosedChannelDetails(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeClosedChannelDetails.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeClosedChannelDetails.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeClosedChannelDetails.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypeCoinPurchaseMemo(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -12704,6 +12907,31 @@ class _UniffiConverterSequenceTypeAddressInfo(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterSequenceTypeClosedChannelDetails(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeClosedChannelDetails.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeClosedChannelDetails.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeClosedChannelDetails.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypeFeeLevel(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -13659,6 +13887,13 @@ def get_activity_by_id(activity_id: "str") -> "typing.Optional[Activity]":
         _UniffiConverterString.lower(activity_id)))
 
 
+def get_all_closed_channels(sort_direction: "typing.Optional[SortDirection]") -> "typing.List[ClosedChannelDetails]":
+    _UniffiConverterOptionalTypeSortDirection.check_lower(sort_direction)
+    
+    return _UniffiConverterSequenceTypeClosedChannelDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_closed_channels,
+        _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)))
+
+
 def get_all_unique_tags() -> "typing.List[str]":
     return _UniffiConverterSequenceString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags,))
 
@@ -13699,6 +13934,13 @@ async def get_cjit_entries(entry_ids: "typing.Optional[typing.List[str]]",filter
 _UniffiConverterTypeBlocktankError,
 
     )
+
+def get_closed_channel_by_id(channel_id: "str") -> "typing.Optional[ClosedChannelDetails]":
+    _UniffiConverterString.check_lower(channel_id)
+    
+    return _UniffiConverterOptionalTypeClosedChannelDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id,
+        _UniffiConverterString.lower(channel_id)))
+
 async def get_gift(gift_id: "str") -> "IGift":
 
     _UniffiConverterString.check_lower(gift_id)
@@ -13867,6 +14109,13 @@ def insert_activity(activity: "Activity") -> None:
     
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_insert_activity,
         _UniffiConverterTypeActivity.lower(activity))
+
+
+def insert_closed_channel(channel: "ClosedChannelDetails") -> None:
+    _UniffiConverterTypeClosedChannelDetails.check_lower(channel)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_insert_closed_channel,
+        _UniffiConverterTypeClosedChannelDetails.lower(channel))
 
 
 def is_valid_bip39_word(word: "str") -> "bool":
@@ -14116,6 +14365,13 @@ async def regtest_pay(invoice: "str",amount_sat: "typing.Optional[int]") -> "str
 _UniffiConverterTypeBlocktankError,
 
     )
+
+def remove_closed_channel_by_id(channel_id: "str") -> "bool":
+    _UniffiConverterString.check_lower(channel_id)
+    
+    return _UniffiConverterBool.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_remove_closed_channel_by_id,
+        _UniffiConverterString.lower(channel_id)))
+
 
 def remove_tags(activity_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(activity_id)
@@ -14491,6 +14747,10 @@ def validate_mnemonic(mnemonic_phrase: "str") -> None:
     _uniffi_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic,
         _UniffiConverterString.lower(mnemonic_phrase))
 
+
+def wipe_all_closed_channels() -> None:
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_closed_channels,)
+
 async def wipe_all_databases() -> "str":
 
     return await _uniffi_rust_call_async(
@@ -14551,6 +14811,7 @@ __all__ = [
     "AccountUtxo",
     "AddressInfo",
     "AddressResponse",
+    "ClosedChannelDetails",
     "CoinPurchaseMemo",
     "CommonParams",
     "ComposeAccount",
@@ -14643,10 +14904,12 @@ __all__ = [
     "get_activities",
     "get_activities_by_tag",
     "get_activity_by_id",
+    "get_all_closed_channels",
     "get_all_unique_tags",
     "get_bip39_suggestions",
     "get_bip39_wordlist",
     "get_cjit_entries",
+    "get_closed_channel_by_id",
     "get_gift",
     "get_info",
     "get_lnurl_invoice",
@@ -14658,6 +14921,7 @@ __all__ = [
     "gift_pay",
     "init_db",
     "insert_activity",
+    "insert_closed_channel",
     "is_valid_bip39_word",
     "lnurl_auth",
     "mnemonic_to_entropy",
@@ -14671,6 +14935,7 @@ __all__ = [
     "regtest_get_payment",
     "regtest_mine",
     "regtest_pay",
+    "remove_closed_channel_by_id",
     "remove_tags",
     "test_notification",
     "trezor_compose_transaction",
@@ -14686,6 +14951,7 @@ __all__ = [
     "upsert_activity",
     "validate_bitcoin_address",
     "validate_mnemonic",
+    "wipe_all_closed_channels",
     "wipe_all_databases",
 ]
 

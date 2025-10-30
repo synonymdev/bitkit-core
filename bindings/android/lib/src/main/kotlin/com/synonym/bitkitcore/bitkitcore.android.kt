@@ -1120,6 +1120,16 @@ internal interface UniffiForeignFutureCompleteVoid: com.sun.jna.Callback {
 
 
 
+
+
+
+
+
+
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1261,6 +1271,10 @@ internal interface UniffiLib : Library {
         `activityId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
+    fun uniffi_bitkitcore_fn_func_get_all_closed_channels(
+        `sortDirection`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
     fun uniffi_bitkitcore_fn_func_get_all_unique_tags(
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
@@ -1277,6 +1291,10 @@ internal interface UniffiLib : Library {
         `filter`: RustBufferByValue,
         `refresh`: Byte,
     ): Long
+    fun uniffi_bitkitcore_fn_func_get_closed_channel_by_id(
+        `channelId`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
     fun uniffi_bitkitcore_fn_func_get_gift(
         `giftId`: RustBufferByValue,
     ): Long
@@ -1315,6 +1333,10 @@ internal interface UniffiLib : Library {
     ): RustBufferByValue
     fun uniffi_bitkitcore_fn_func_insert_activity(
         `activity`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    fun uniffi_bitkitcore_fn_func_insert_closed_channel(
+        `channel`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
     fun uniffi_bitkitcore_fn_func_is_valid_bip39_word(
@@ -1375,6 +1397,10 @@ internal interface UniffiLib : Library {
         `invoice`: RustBufferByValue,
         `amountSat`: RustBufferByValue,
     ): Long
+    fun uniffi_bitkitcore_fn_func_remove_closed_channel_by_id(
+        `channelId`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Byte
     fun uniffi_bitkitcore_fn_func_remove_tags(
         `activityId`: RustBufferByValue,
         `tags`: RustBufferByValue,
@@ -1514,6 +1540,9 @@ internal interface UniffiLib : Library {
     ): RustBufferByValue
     fun uniffi_bitkitcore_fn_func_validate_mnemonic(
         `mnemonicPhrase`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    fun uniffi_bitkitcore_fn_func_wipe_all_closed_channels(
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
     fun uniffi_bitkitcore_fn_func_wipe_all_databases(
@@ -1772,6 +1801,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_bitkitcore_checksum_func_get_activity_by_id(
     ): Short
+    fun uniffi_bitkitcore_checksum_func_get_all_closed_channels(
+    ): Short
     fun uniffi_bitkitcore_checksum_func_get_all_unique_tags(
     ): Short
     fun uniffi_bitkitcore_checksum_func_get_bip39_suggestions(
@@ -1779,6 +1810,8 @@ internal interface UniffiLib : Library {
     fun uniffi_bitkitcore_checksum_func_get_bip39_wordlist(
     ): Short
     fun uniffi_bitkitcore_checksum_func_get_cjit_entries(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_get_closed_channel_by_id(
     ): Short
     fun uniffi_bitkitcore_checksum_func_get_gift(
     ): Short
@@ -1801,6 +1834,8 @@ internal interface UniffiLib : Library {
     fun uniffi_bitkitcore_checksum_func_init_db(
     ): Short
     fun uniffi_bitkitcore_checksum_func_insert_activity(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_insert_closed_channel(
     ): Short
     fun uniffi_bitkitcore_checksum_func_is_valid_bip39_word(
     ): Short
@@ -1827,6 +1862,8 @@ internal interface UniffiLib : Library {
     fun uniffi_bitkitcore_checksum_func_regtest_mine(
     ): Short
     fun uniffi_bitkitcore_checksum_func_regtest_pay(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id(
     ): Short
     fun uniffi_bitkitcore_checksum_func_remove_tags(
     ): Short
@@ -1857,6 +1894,8 @@ internal interface UniffiLib : Library {
     fun uniffi_bitkitcore_checksum_func_validate_bitcoin_address(
     ): Short
     fun uniffi_bitkitcore_checksum_func_validate_mnemonic(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_wipe_all_closed_channels(
     ): Short
     fun uniffi_bitkitcore_checksum_func_wipe_all_databases(
     ): Short
@@ -1940,6 +1979,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_bitkitcore_checksum_func_get_all_closed_channels() != 16828.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -1950,6 +1992,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_get_cjit_entries() != 29342.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_get_gift() != 386.toShort()) {
@@ -1983,6 +2028,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_insert_activity() != 1510.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_insert_closed_channel() != 43559.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846.toShort()) {
@@ -2022,6 +2070,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_regtest_pay() != 48342.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_remove_tags() != 58873.toShort()) {
@@ -2067,6 +2118,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels() != 41511.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605.toShort()) {
@@ -2388,6 +2442,64 @@ object FfiConverterTypeAddressResponse: FfiConverterRustBuffer<AddressResponse> 
         FfiConverterString.write(value.`address`, buf)
         FfiConverterSequenceUInt.write(value.`path`, buf)
         FfiConverterString.write(value.`serializedPath`, buf)
+    }
+}
+
+
+
+
+object FfiConverterTypeClosedChannelDetails: FfiConverterRustBuffer<ClosedChannelDetails> {
+    override fun read(buf: ByteBuffer): ClosedChannelDetails {
+        return ClosedChannelDetails(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ClosedChannelDetails) = (
+            FfiConverterString.allocationSize(value.`channelId`) +
+            FfiConverterString.allocationSize(value.`counterpartyNodeId`) +
+            FfiConverterString.allocationSize(value.`fundingTxoTxid`) +
+            FfiConverterUInt.allocationSize(value.`fundingTxoIndex`) +
+            FfiConverterULong.allocationSize(value.`channelValueSats`) +
+            FfiConverterULong.allocationSize(value.`closedAt`) +
+            FfiConverterULong.allocationSize(value.`outboundCapacityMsat`) +
+            FfiConverterULong.allocationSize(value.`inboundCapacityMsat`) +
+            FfiConverterULong.allocationSize(value.`counterpartyUnspendablePunishmentReserve`) +
+            FfiConverterULong.allocationSize(value.`unspendablePunishmentReserve`) +
+            FfiConverterUInt.allocationSize(value.`forwardingFeeProportionalMillionths`) +
+            FfiConverterUInt.allocationSize(value.`forwardingFeeBaseMsat`) +
+            FfiConverterString.allocationSize(value.`channelName`) +
+            FfiConverterString.allocationSize(value.`channelClosureReason`)
+    )
+
+    override fun write(value: ClosedChannelDetails, buf: ByteBuffer) {
+        FfiConverterString.write(value.`channelId`, buf)
+        FfiConverterString.write(value.`counterpartyNodeId`, buf)
+        FfiConverterString.write(value.`fundingTxoTxid`, buf)
+        FfiConverterUInt.write(value.`fundingTxoIndex`, buf)
+        FfiConverterULong.write(value.`channelValueSats`, buf)
+        FfiConverterULong.write(value.`closedAt`, buf)
+        FfiConverterULong.write(value.`outboundCapacityMsat`, buf)
+        FfiConverterULong.write(value.`inboundCapacityMsat`, buf)
+        FfiConverterULong.write(value.`counterpartyUnspendablePunishmentReserve`, buf)
+        FfiConverterULong.write(value.`unspendablePunishmentReserve`, buf)
+        FfiConverterUInt.write(value.`forwardingFeeProportionalMillionths`, buf)
+        FfiConverterUInt.write(value.`forwardingFeeBaseMsat`, buf)
+        FfiConverterString.write(value.`channelName`, buf)
+        FfiConverterString.write(value.`channelClosureReason`, buf)
     }
 }
 
@@ -4171,6 +4283,7 @@ object FfiConverterTypeOnchainActivity: FfiConverterRustBuffer<OnchainActivity> 
             FfiConverterBoolean.read(buf),
             FfiConverterULong.read(buf),
             FfiConverterBoolean.read(buf),
+            FfiConverterSequenceString.read(buf),
             FfiConverterBoolean.read(buf),
             FfiConverterBoolean.read(buf),
             FfiConverterOptionalULong.read(buf),
@@ -4192,6 +4305,7 @@ object FfiConverterTypeOnchainActivity: FfiConverterRustBuffer<OnchainActivity> 
             FfiConverterBoolean.allocationSize(value.`confirmed`) +
             FfiConverterULong.allocationSize(value.`timestamp`) +
             FfiConverterBoolean.allocationSize(value.`isBoosted`) +
+            FfiConverterSequenceString.allocationSize(value.`boostTxIds`) +
             FfiConverterBoolean.allocationSize(value.`isTransfer`) +
             FfiConverterBoolean.allocationSize(value.`doesExist`) +
             FfiConverterOptionalULong.allocationSize(value.`confirmTimestamp`) +
@@ -4212,6 +4326,7 @@ object FfiConverterTypeOnchainActivity: FfiConverterRustBuffer<OnchainActivity> 
         FfiConverterBoolean.write(value.`confirmed`, buf)
         FfiConverterULong.write(value.`timestamp`, buf)
         FfiConverterBoolean.write(value.`isBoosted`, buf)
+        FfiConverterSequenceString.write(value.`boostTxIds`, buf)
         FfiConverterBoolean.write(value.`isTransfer`, buf)
         FfiConverterBoolean.write(value.`doesExist`, buf)
         FfiConverterOptionalULong.write(value.`confirmTimestamp`, buf)
@@ -6781,6 +6896,35 @@ object FfiConverterOptionalByteArray: FfiConverterRustBuffer<kotlin.ByteArray?> 
 
 
 
+object FfiConverterOptionalTypeClosedChannelDetails: FfiConverterRustBuffer<ClosedChannelDetails?> {
+    override fun read(buf: ByteBuffer): ClosedChannelDetails? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeClosedChannelDetails.read(buf)
+    }
+
+    override fun allocationSize(value: ClosedChannelDetails?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeClosedChannelDetails.allocationSize(value)
+        }
+    }
+
+    override fun write(value: ClosedChannelDetails?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeClosedChannelDetails.write(value, buf)
+        }
+    }
+}
+
+
+
+
 object FfiConverterOptionalTypeCoinPurchaseMemo: FfiConverterRustBuffer<CoinPurchaseMemo?> {
     override fun read(buf: ByteBuffer): CoinPurchaseMemo? {
         if (buf.get().toInt() == 0) {
@@ -8360,6 +8504,31 @@ object FfiConverterSequenceTypeAddressInfo: FfiConverterRustBuffer<List<AddressI
 
 
 
+object FfiConverterSequenceTypeClosedChannelDetails: FfiConverterRustBuffer<List<ClosedChannelDetails>> {
+    override fun read(buf: ByteBuffer): List<ClosedChannelDetails> {
+        val len = buf.getInt()
+        return List<ClosedChannelDetails>(len) {
+            FfiConverterTypeClosedChannelDetails.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<ClosedChannelDetails>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeClosedChannelDetails.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<ClosedChannelDetails>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeClosedChannelDetails.write(it, buf)
+        }
+    }
+}
+
+
+
+
 object FfiConverterSequenceTypeFeeLevel: FfiConverterRustBuffer<List<FeeLevel>> {
     override fun read(buf: ByteBuffer): List<FeeLevel> {
         val len = buf.getInt()
@@ -9234,6 +9403,16 @@ fun `getActivityById`(`activityId`: kotlin.String): Activity? {
 }
 
 @Throws(ActivityException::class)
+fun `getAllClosedChannels`(`sortDirection`: SortDirection?): List<ClosedChannelDetails> {
+    return FfiConverterSequenceTypeClosedChannelDetails.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_all_closed_channels(
+            FfiConverterOptionalTypeSortDirection.lower(`sortDirection`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+@Throws(ActivityException::class)
 fun `getAllUniqueTags`(): List<kotlin.String> {
     return FfiConverterSequenceString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_all_unique_tags(
@@ -9277,6 +9456,16 @@ suspend fun `getCjitEntries`(`entryIds`: List<kotlin.String>?, `filter`: CJitSta
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
+}
+
+@Throws(ActivityException::class)
+fun `getClosedChannelById`(`channelId`: kotlin.String): ClosedChannelDetails? {
+    return FfiConverterOptionalTypeClosedChannelDetails.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_get_closed_channel_by_id(
+            FfiConverterString.lower(`channelId`),
+            uniffiRustCallStatus,
+        )
+    })
 }
 
 @Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
@@ -9444,6 +9633,16 @@ fun `insertActivity`(`activity`: Activity) {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_insert_activity(
             FfiConverterTypeActivity.lower(`activity`),
+            uniffiRustCallStatus,
+        )
+    }
+}
+
+@Throws(ActivityException::class)
+fun `insertClosedChannel`(`channel`: ClosedChannelDetails) {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_insert_closed_channel(
+            FfiConverterTypeClosedChannelDetails.lower(`channel`),
             uniffiRustCallStatus,
         )
     }
@@ -9669,6 +9868,16 @@ suspend fun `regtestPay`(`invoice`: kotlin.String, `amountSat`: kotlin.ULong?): 
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
+}
+
+@Throws(ActivityException::class)
+fun `removeClosedChannelById`(`channelId`: kotlin.String): kotlin.Boolean {
+    return FfiConverterBoolean.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_remove_closed_channel_by_id(
+            FfiConverterString.lower(`channelId`),
+            uniffiRustCallStatus,
+        )
+    })
 }
 
 @Throws(ActivityException::class)
@@ -9914,6 +10123,15 @@ fun `validateMnemonic`(`mnemonicPhrase`: kotlin.String) {
     uniffiRustCallWithError(AddressExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_validate_mnemonic(
             FfiConverterString.lower(`mnemonicPhrase`),
+            uniffiRustCallStatus,
+        )
+    }
+}
+
+@Throws(ActivityException::class)
+fun `wipeAllClosedChannels`() {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_wipe_all_closed_channels(
             uniffiRustCallStatus,
         )
     }
