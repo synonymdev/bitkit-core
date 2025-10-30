@@ -360,6 +360,11 @@ RustBuffer uniffi_bitkitcore_fn_func_get_activities_by_tag(RustBuffer tag, RustB
 RustBuffer uniffi_bitkitcore_fn_func_get_activity_by_id(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_CLOSED_CHANNELS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_CLOSED_CHANNELS
+RustBuffer uniffi_bitkitcore_fn_func_get_all_closed_channels(RustBuffer sort_direction, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_UNIQUE_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_UNIQUE_TAGS
 RustBuffer uniffi_bitkitcore_fn_func_get_all_unique_tags(RustCallStatus *_Nonnull out_status
@@ -380,6 +385,11 @@ RustBuffer uniffi_bitkitcore_fn_func_get_bip39_wordlist(RustCallStatus *_Nonnull
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_CJIT_ENTRIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_CJIT_ENTRIES
 uint64_t uniffi_bitkitcore_fn_func_get_cjit_entries(RustBuffer entry_ids, RustBuffer filter, int8_t refresh
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_CLOSED_CHANNEL_BY_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_CLOSED_CHANNEL_BY_ID
+RustBuffer uniffi_bitkitcore_fn_func_get_closed_channel_by_id(RustBuffer channel_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_GIFT
@@ -435,6 +445,11 @@ RustBuffer uniffi_bitkitcore_fn_func_init_db(RustBuffer base_path, RustCallStatu
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INSERT_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INSERT_ACTIVITY
 void uniffi_bitkitcore_fn_func_insert_activity(RustBuffer activity, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INSERT_CLOSED_CHANNEL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INSERT_CLOSED_CHANNEL
+void uniffi_bitkitcore_fn_func_insert_closed_channel(RustBuffer channel, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_IS_VALID_BIP39_WORD
@@ -502,6 +517,11 @@ uint64_t uniffi_bitkitcore_fn_func_regtest_mine(RustBuffer count
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REGTEST_PAY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REGTEST_PAY
 uint64_t uniffi_bitkitcore_fn_func_regtest_pay(RustBuffer invoice, RustBuffer amount_sat
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_CLOSED_CHANNEL_BY_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_CLOSED_CHANNEL_BY_ID
+int8_t uniffi_bitkitcore_fn_func_remove_closed_channel_by_id(RustBuffer channel_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_TAGS
@@ -577,6 +597,12 @@ RustBuffer uniffi_bitkitcore_fn_func_validate_bitcoin_address(RustBuffer address
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_MNEMONIC
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_MNEMONIC
 void uniffi_bitkitcore_fn_func_validate_mnemonic(RustBuffer mnemonic_phrase, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_CLOSED_CHANNELS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_CLOSED_CHANNELS
+void uniffi_bitkitcore_fn_func_wipe_all_closed_channels(RustCallStatus *_Nonnull out_status
+    
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_DATABASES
@@ -991,6 +1017,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_activity_by_id(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_CLOSED_CHANNELS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_CLOSED_CHANNELS
+uint16_t uniffi_bitkitcore_checksum_func_get_all_closed_channels(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_UNIQUE_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_UNIQUE_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_get_all_unique_tags(void
@@ -1012,6 +1044,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_bip39_wordlist(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CJIT_ENTRIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CJIT_ENTRIES
 uint16_t uniffi_bitkitcore_checksum_func_get_cjit_entries(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CLOSED_CHANNEL_BY_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CLOSED_CHANNEL_BY_ID
+uint16_t uniffi_bitkitcore_checksum_func_get_closed_channel_by_id(void
     
 );
 #endif
@@ -1078,6 +1116,12 @@ uint16_t uniffi_bitkitcore_checksum_func_init_db(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INSERT_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INSERT_ACTIVITY
 uint16_t uniffi_bitkitcore_checksum_func_insert_activity(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INSERT_CLOSED_CHANNEL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INSERT_CLOSED_CHANNEL
+uint16_t uniffi_bitkitcore_checksum_func_insert_closed_channel(void
     
 );
 #endif
@@ -1156,6 +1200,12 @@ uint16_t uniffi_bitkitcore_checksum_func_regtest_mine(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGTEST_PAY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGTEST_PAY
 uint16_t uniffi_bitkitcore_checksum_func_regtest_pay(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REMOVE_CLOSED_CHANNEL_BY_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REMOVE_CLOSED_CHANNEL_BY_ID
+uint16_t uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id(void
     
 );
 #endif
@@ -1246,6 +1296,12 @@ uint16_t uniffi_bitkitcore_checksum_func_validate_bitcoin_address(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_MNEMONIC
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_MNEMONIC
 uint16_t uniffi_bitkitcore_checksum_func_validate_mnemonic(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_CLOSED_CHANNELS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_CLOSED_CHANNELS
+uint16_t uniffi_bitkitcore_checksum_func_wipe_all_closed_channels(void
     
 );
 #endif

@@ -12,7 +12,7 @@ pub use modules::scanner::{
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
-use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError};
+use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift};
 use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse};
 pub use crate::onchain::WordCount;
@@ -399,6 +399,51 @@ pub fn get_all_unique_tags() -> Result<Vec<String>, ActivityError> {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.get_all_unique_tags()
+}
+
+#[uniffi::export]
+pub fn insert_closed_channel(channel: ClosedChannelDetails) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.insert_closed_channel(&channel)
+}
+
+#[uniffi::export]
+pub fn get_closed_channel_by_id(channel_id: String) -> Result<Option<ClosedChannelDetails>, ActivityError> {
+    let guard = get_activity_db()?;
+    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.get_closed_channel_by_id(&channel_id)
+}
+
+#[uniffi::export]
+pub fn get_all_closed_channels(sort_direction: Option<SortDirection>) -> Result<Vec<ClosedChannelDetails>, ActivityError> {
+    let guard = get_activity_db()?;
+    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.get_all_closed_channels(sort_direction)
+}
+
+#[uniffi::export]
+pub fn remove_closed_channel_by_id(channel_id: String) -> Result<bool, ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.remove_closed_channel_by_id(&channel_id)
+}
+
+#[uniffi::export]
+pub fn wipe_all_closed_channels() -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.wipe_all_closed_channels()
 }
 
 #[uniffi::export]

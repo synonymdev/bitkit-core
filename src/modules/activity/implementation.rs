@@ -1,5 +1,5 @@
 use rusqlite::{Connection, OptionalExtension};
-use crate::activity::{Activity, ActivityError, ActivityFilter, LightningActivity, OnchainActivity, PaymentState, PaymentType, SortDirection};
+use crate::activity::{Activity, ActivityError, ActivityFilter, LightningActivity, OnchainActivity, PaymentState, PaymentType, SortDirection, ClosedChannelDetails};
 
 pub struct ActivityDB {
     pub conn: Connection,
@@ -62,6 +62,24 @@ const CREATE_TAGS_TABLE: &str = "
             ON DELETE CASCADE
     )";
 
+const CREATE_CLOSED_CHANNELS_TABLE: &str = "
+    CREATE TABLE IF NOT EXISTS closed_channels (
+        channel_id TEXT PRIMARY KEY,
+        counterparty_node_id TEXT NOT NULL,
+        funding_txo_txid TEXT NOT NULL,
+        funding_txo_index INTEGER NOT NULL CHECK (funding_txo_index >= 0),
+        channel_value_sats INTEGER NOT NULL CHECK (channel_value_sats >= 0),
+        closed_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+        outbound_capacity_msat INTEGER NOT NULL CHECK (outbound_capacity_msat >= 0),
+        inbound_capacity_msat INTEGER NOT NULL CHECK (inbound_capacity_msat >= 0),
+        counterparty_unspendable_punishment_reserve INTEGER NOT NULL CHECK (counterparty_unspendable_punishment_reserve >= 0),
+        unspendable_punishment_reserve INTEGER NOT NULL CHECK (unspendable_punishment_reserve >= 0),
+        forwarding_fee_proportional_millionths INTEGER NOT NULL CHECK (forwarding_fee_proportional_millionths >= 0),
+        forwarding_fee_base_msat INTEGER NOT NULL CHECK (forwarding_fee_base_msat >= 0),
+        channel_name TEXT NOT NULL,
+        channel_closure_reason TEXT NOT NULL
+    )";
+
 const INDEX_STATEMENTS: &[&str] = &[
     // Activity indexes
     "CREATE INDEX IF NOT EXISTS idx_activities_type_timestamp ON activities(activity_type, timestamp DESC)",
@@ -77,7 +95,10 @@ const INDEX_STATEMENTS: &[&str] = &[
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_lightning_id ON lightning_activity(id)",
 
     // Tags indexes
-    "CREATE INDEX IF NOT EXISTS idx_activity_tags_tag_activity ON activity_tags(tag, activity_id)"
+    "CREATE INDEX IF NOT EXISTS idx_activity_tags_tag_activity ON activity_tags(tag, activity_id)",
+
+    // Closed channels indexes
+    "CREATE INDEX IF NOT EXISTS idx_closed_channels_funding_txo ON closed_channels(funding_txo_txid)"
 ];
 
 const TRIGGER_STATEMENTS: &[&str] = &[
@@ -178,6 +199,13 @@ impl ActivityDB {
         if let Err(e) = self.conn.execute(CREATE_TAGS_TABLE, []) {
             return Err(ActivityError::InitializationError {
                 error_details: format!("Error creating tags table: {}", e),
+            });
+        }
+
+        // Create closed channels table
+        if let Err(e) = self.conn.execute(CREATE_CLOSED_CHANNELS_TABLE, []) {
+            return Err(ActivityError::InitializationError {
+                error_details: format!("Error creating closed_channels table: {}", e),
             });
         }
 
@@ -991,6 +1019,148 @@ impl ActivityDB {
         Ok(tags)
     }
 
+    pub fn insert_closed_channel(&mut self, channel: &ClosedChannelDetails) -> Result<(), ActivityError> {
+        if channel.channel_id.is_empty() {
+            return Err(ActivityError::DataError {
+                error_details: "Channel ID cannot be empty".to_string(),
+            });
+        }
+
+        let sql = "
+            INSERT INTO closed_channels (
+                channel_id, counterparty_node_id, funding_txo_txid, funding_txo_index,
+                channel_value_sats, closed_at, outbound_capacity_msat, inbound_capacity_msat,
+                counterparty_unspendable_punishment_reserve, unspendable_punishment_reserve,
+                forwarding_fee_proportional_millionths, forwarding_fee_base_msat,
+                channel_name, channel_closure_reason
+            ) VALUES (
+                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14
+            )";
+
+        self.conn.execute(
+            sql,
+            rusqlite::params![
+                &channel.channel_id,
+                &channel.counterparty_node_id,
+                &channel.funding_txo_txid,
+                channel.funding_txo_index as i64,
+                channel.channel_value_sats as i64,
+                channel.closed_at as i64,
+                channel.outbound_capacity_msat as i64,
+                channel.inbound_capacity_msat as i64,
+                channel.counterparty_unspendable_punishment_reserve as i64,
+                channel.unspendable_punishment_reserve as i64,
+                channel.forwarding_fee_proportional_millionths as i64,
+                channel.forwarding_fee_base_msat as i64,
+                &channel.channel_name,
+                &channel.channel_closure_reason,
+            ],
+        ).map_err(|e| ActivityError::InsertError {
+            error_details: format!("Failed to insert closed channel: {}", e),
+        })?;
+
+        Ok(())
+    }
+
+    pub fn get_closed_channel_by_id(&self, channel_id: &str) -> Result<Option<ClosedChannelDetails>, ActivityError> {
+        let sql = "
+            SELECT
+                channel_id, counterparty_node_id, funding_txo_txid, funding_txo_index,
+                channel_value_sats, closed_at, outbound_capacity_msat, inbound_capacity_msat,
+                counterparty_unspendable_punishment_reserve, unspendable_punishment_reserve,
+                forwarding_fee_proportional_millionths, forwarding_fee_base_msat,
+                channel_name, channel_closure_reason
+            FROM closed_channels
+            WHERE channel_id = ?1";
+
+        let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
+
+        match stmt.query_row([channel_id], |row| {
+            let channel_value_sats: i64 = row.get(4)?;
+            let outbound_capacity_msat: i64 = row.get(6)?;
+            let inbound_capacity_msat: i64 = row.get(7)?;
+            let counterparty_unspendable_punishment_reserve: i64 = row.get(8)?;
+
+            Ok(ClosedChannelDetails {
+                channel_id: row.get(0)?,
+                counterparty_node_id: row.get(1)?,
+                funding_txo_txid: row.get(2)?,
+                funding_txo_index: row.get::<_, i64>(3)? as u32,
+                channel_value_sats: channel_value_sats as u64,
+                closed_at: row.get::<_, i64>(5)? as u64,
+                outbound_capacity_msat: outbound_capacity_msat as u64,
+                inbound_capacity_msat: inbound_capacity_msat as u64,
+                counterparty_unspendable_punishment_reserve: counterparty_unspendable_punishment_reserve as u64,
+                unspendable_punishment_reserve: row.get::<_, i64>(9)? as u64,
+                forwarding_fee_proportional_millionths: row.get::<_, i64>(10)? as u32,
+                forwarding_fee_base_msat: row.get::<_, i64>(11)? as u32,
+                channel_name: row.get(12)?,
+                channel_closure_reason: row.get(13)?,
+            })
+        }) {
+            Ok(channel) => Ok(Some(channel)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(ActivityError::RetrievalError {
+                error_details: format!("Failed to get closed channel: {}", e),
+            }),
+        }
+    }
+
+    pub fn get_all_closed_channels(&self, sort_direction: Option<SortDirection>) -> Result<Vec<ClosedChannelDetails>, ActivityError> {
+        let direction = sort_direction.unwrap_or_default();
+        let sql = format!(
+            "
+            SELECT
+                channel_id, counterparty_node_id, funding_txo_txid, funding_txo_index,
+                channel_value_sats, closed_at, outbound_capacity_msat, inbound_capacity_msat,
+                counterparty_unspendable_punishment_reserve, unspendable_punishment_reserve,
+                forwarding_fee_proportional_millionths, forwarding_fee_base_msat,
+                channel_name, channel_closure_reason
+            FROM closed_channels
+            ORDER BY closed_at {}
+            ",
+            Self::sort_direction_to_sql(direction)
+        );
+
+        let mut stmt = self.conn.prepare(&sql).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
+
+        let channels = stmt.query_map([], |row| {
+            let channel_value_sats: i64 = row.get(4)?;
+            let outbound_capacity_msat: i64 = row.get(6)?;
+            let inbound_capacity_msat: i64 = row.get(7)?;
+            let counterparty_unspendable_punishment_reserve: i64 = row.get(8)?;
+
+            Ok(ClosedChannelDetails {
+                channel_id: row.get(0)?,
+                counterparty_node_id: row.get(1)?,
+                funding_txo_txid: row.get(2)?,
+                funding_txo_index: row.get::<_, i64>(3)? as u32,
+                channel_value_sats: channel_value_sats as u64,
+                closed_at: row.get::<_, i64>(5)? as u64,
+                outbound_capacity_msat: outbound_capacity_msat as u64,
+                inbound_capacity_msat: inbound_capacity_msat as u64,
+                counterparty_unspendable_punishment_reserve: counterparty_unspendable_punishment_reserve as u64,
+                unspendable_punishment_reserve: row.get::<_, i64>(9)? as u64,
+                forwarding_fee_proportional_millionths: row.get::<_, i64>(10)? as u32,
+                forwarding_fee_base_msat: row.get::<_, i64>(11)? as u32,
+                channel_name: row.get(12)?,
+                channel_closure_reason: row.get(13)?,
+            })
+        }).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to execute query: {}", e),
+        })?
+        .collect::<Result<Vec<ClosedChannelDetails>, _>>()
+        .map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to process rows: {}", e),
+        })?;
+
+        Ok(channels)
+    }
+
     /// Helper function to convert PaymentType to string
     fn payment_type_to_string(payment_type: &PaymentType) -> &'static str {
         match payment_type {
@@ -1043,6 +1213,27 @@ impl ActivityDB {
         }
     }
 
+    /// Wipes all closed channels from the database
+    pub fn wipe_all_closed_channels(&mut self) -> Result<(), ActivityError> {
+        self.conn.execute("DELETE FROM closed_channels", [])
+            .map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to delete all closed channels: {}", e),
+            })?;
+
+        Ok(())
+    }
+
+    pub fn remove_closed_channel_by_id(&mut self, channel_id: &str) -> Result<bool, ActivityError> {
+        let rows = self.conn.execute(
+            "DELETE FROM closed_channels WHERE channel_id = ?1",
+            [channel_id],
+        ).map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to delete closed channel: {}", e),
+        })?;
+
+        Ok(rows > 0)
+    }
+
     /// Wipes all activity data from the database
     /// This deletes all activities, which cascades to delete all tags due to foreign key constraints
     pub fn wipe_all(&mut self) -> Result<(), ActivityError> {
@@ -1054,6 +1245,12 @@ impl ActivityDB {
         tx.execute("DELETE FROM activities", [])
             .map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to delete all activities: {}", e),
+            })?;
+
+        // Delete all closed channels
+        tx.execute("DELETE FROM closed_channels", [])
+            .map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to delete all closed channels: {}", e),
             })?;
 
         tx.commit().map_err(|e| ActivityError::DataError {
