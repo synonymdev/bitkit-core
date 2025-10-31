@@ -337,10 +337,133 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_create_and_store_order() {
+    async fn test_upsert_orders() {
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
 
-        let timestamp = chrono::Utc::now().to_rfc3339();
+        // Create multiple test orders
+        let mut orders = Vec::new();
+        for i in 1..=5 {
+            let mut order = create_test_order(&format!("bulk_order_{}", i));
+            order.fee_sat = 1000 * i as u64;
+            order.lsp_balance_sat = 10000 * i as u64;
+            orders.push(order);
+        }
+
+        // Test bulk insert
+        let result = db.upsert_orders(&orders).await;
+        assert!(result.is_ok(), "Failed to bulk insert orders: {:?}", result.err());
+
+        // Verify all orders were inserted
+        let stored_orders = db.get_orders(None, None).await.unwrap();
+        assert_eq!(stored_orders.len(), 5, "Should have inserted 5 orders");
+
+        // Verify each order's data is correct
+        for i in 1..=5 {
+            let order_id = format!("bulk_order_{}", i);
+            let stored_order = stored_orders.iter()
+                .find(|o| o.id == order_id)
+                .expect(&format!("Order {} not found", order_id));
+
+            assert_eq!(stored_order.fee_sat, 1000 * i as u64);
+            assert_eq!(stored_order.lsp_balance_sat, 10000 * i as u64);
+            assert_eq!(stored_order.state, BtOrderState::Created);
+
+            // Verify JSON fields are stored correctly
+            assert!(stored_order.lsp_node.is_some());
+            assert_eq!(stored_order.lsp_node.as_ref().unwrap().alias, "test_node");
+            assert!(stored_order.payment.is_some());
+        }
+
+        // Test bulk update - modify some orders
+        let mut updated_orders = orders.clone();
+        updated_orders[0].fee_sat = 9999;  // Update first order
+        updated_orders[1].state = BtOrderState::Open;  // Update second order
+        updated_orders[1].state2 = Some(BtOrderState2::Executed);
+        updated_orders[2].lsp_balance_sat = 99999;  // Update third order
+        updated_orders[2].updated_at = chrono::Utc::now().to_rfc3339();
+
+        // Bulk update
+        let result = db.upsert_orders(&updated_orders).await;
+        assert!(result.is_ok(), "Failed to bulk update orders: {:?}", result.err());
+
+        // Verify updates were applied
+        let stored_orders_after = db.get_orders(None, None).await.unwrap();
+        assert_eq!(stored_orders_after.len(), 5, "Should still have 5 orders");
+
+        let updated_order_1 = stored_orders_after.iter()
+            .find(|o| o.id == "bulk_order_1")
+            .expect("Order 1 not found");
+        assert_eq!(updated_order_1.fee_sat, 9999);
+
+        let updated_order_2 = stored_orders_after.iter()
+            .find(|o| o.id == "bulk_order_2")
+            .expect("Order 2 not found");
+        assert_eq!(updated_order_2.state, BtOrderState::Open);
+        assert_eq!(updated_order_2.state2, Some(BtOrderState2::Executed));
+
+        let updated_order_3 = stored_orders_after.iter()
+            .find(|o| o.id == "bulk_order_3")
+            .expect("Order 3 not found");
+        assert_eq!(updated_order_3.lsp_balance_sat, 99999);
+
+        // Verify other orders weren't affected
+        let updated_order_4 = stored_orders_after.iter()
+            .find(|o| o.id == "bulk_order_4")
+            .expect("Order 4 not found");
+        assert_eq!(updated_order_4.fee_sat, 4000);
+        assert_eq!(updated_order_4.lsp_balance_sat, 40000);
+    }
+
+    #[tokio::test]
+    async fn test_upsert_orders_empty() {
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+
+        // Test with empty vector
+        let result = db.upsert_orders(&[]).await;
+        assert!(result.is_ok(), "Should handle empty vector gracefully");
+
+        // Verify no orders were inserted
+        let stored_orders = db.get_orders(None, None).await.unwrap();
+        assert_eq!(stored_orders.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_upsert_orders_large_batch() {
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+
+        // Create a larger batch of orders to test performance
+        let mut orders = Vec::new();
+        for i in 1..=50 {
+            let mut order = create_test_order(&format!("large_batch_order_{}", i));
+            order.fee_sat = 500 * i as u64;
+            orders.push(order);
+        }
+
+        // Bulk insert
+        let start = std::time::Instant::now();
+        let result = db.upsert_orders(&orders).await;
+        let bulk_duration = start.elapsed();
+        assert!(result.is_ok(), "Failed to bulk insert orders: {:?}", result.err());
+
+        // Verify all orders were inserted
+        let stored_orders = db.get_orders(None, None).await.unwrap();
+        assert_eq!(stored_orders.len(), 50, "Should have inserted 50 orders");
+
+        // Verify a sample of orders
+        for i in (1..=50).step_by(10) {
+            let order_id = format!("large_batch_order_{}", i);
+            let stored_order = stored_orders.iter()
+                .find(|o| o.id == order_id)
+                .expect(&format!("Order {} not found", order_id));
+            assert_eq!(stored_order.fee_sat, 500 * i as u64);
+        }
+
+        println!("Bulk insert of 50 orders took: {:?}", bulk_duration);
+    }
+
+    #[tokio::test]
+    async fn test_create_and_store_order() {
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
 
         let options = CreateOrderOptions {
             coupon_code: "".to_string(),
@@ -988,6 +1111,94 @@ mod tests {
             assert_eq!(row.0, format!("{:?}", updated_entry.state));
             assert_eq!(row.1, updated_entry.fee_sat);
         }
+    }
+
+    #[tokio::test]
+    async fn test_upsert_cjit_entries() {
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+
+        // Create multiple test CJIT entries
+        let mut entries = Vec::new();
+        for i in 1..=5 {
+            let mut entry = create_test_cjit_entry(&format!("bulk_cjit_{}", i));
+            entry.fee_sat = 1000 * i as u64;
+            entry.channel_size_sat = 10000 * i as u64;
+            entries.push(entry);
+        }
+
+        // Test bulk insert
+        let result = db.upsert_cjit_entries(&entries).await;
+        assert!(result.is_ok(), "Failed to bulk insert CJIT entries: {:?}", result.err());
+
+        // Verify all entries were inserted
+        let stored_entries = db.get_cjit_entries(None, None).await.unwrap();
+        assert_eq!(stored_entries.len(), 5, "Should have inserted 5 entries");
+
+        // Verify each entry's data is correct
+        for i in 1..=5 {
+            let entry_id = format!("bulk_cjit_{}", i);
+            let stored_entry = stored_entries.iter()
+                .find(|e| e.id == entry_id)
+                .expect(&format!("Entry {} not found", entry_id));
+
+            assert_eq!(stored_entry.fee_sat, 1000 * i as u64);
+            assert_eq!(stored_entry.channel_size_sat, 10000 * i as u64);
+            assert_eq!(stored_entry.state, CJitStateEnum::Created);
+
+            // Verify JSON fields are stored correctly
+            assert_eq!(stored_entry.lsp_node.alias, "test_node");
+            assert_eq!(stored_entry.invoice.state, BtBolt11InvoiceState::Pending);
+        }
+
+        // Test bulk update - modify some entries
+        let mut updated_entries = entries.clone();
+        updated_entries[0].fee_sat = 9999;  // Update first entry
+        updated_entries[1].state = CJitStateEnum::Completed;  // Update second entry
+        updated_entries[2].channel_size_sat = 99999;  // Update third entry
+        updated_entries[2].updated_at = chrono::Utc::now().to_rfc3339();
+
+        // Bulk update
+        let result = db.upsert_cjit_entries(&updated_entries).await;
+        assert!(result.is_ok(), "Failed to bulk update CJIT entries: {:?}", result.err());
+
+        // Verify updates were applied
+        let stored_entries_after = db.get_cjit_entries(None, None).await.unwrap();
+        assert_eq!(stored_entries_after.len(), 5, "Should still have 5 entries");
+
+        let updated_entry_1 = stored_entries_after.iter()
+            .find(|e| e.id == "bulk_cjit_1")
+            .expect("Entry 1 not found");
+        assert_eq!(updated_entry_1.fee_sat, 9999);
+
+        let updated_entry_2 = stored_entries_after.iter()
+            .find(|e| e.id == "bulk_cjit_2")
+            .expect("Entry 2 not found");
+        assert_eq!(updated_entry_2.state, CJitStateEnum::Completed);
+
+        let updated_entry_3 = stored_entries_after.iter()
+            .find(|e| e.id == "bulk_cjit_3")
+            .expect("Entry 3 not found");
+        assert_eq!(updated_entry_3.channel_size_sat, 99999);
+
+        // Verify other entries weren't affected
+        let updated_entry_4 = stored_entries_after.iter()
+            .find(|e| e.id == "bulk_cjit_4")
+            .expect("Entry 4 not found");
+        assert_eq!(updated_entry_4.fee_sat, 4000);
+        assert_eq!(updated_entry_4.channel_size_sat, 40000);
+    }
+
+    #[tokio::test]
+    async fn test_upsert_cjit_entries_empty() {
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+
+        // Test with empty vector
+        let result = db.upsert_cjit_entries(&[]).await;
+        assert!(result.is_ok(), "Should handle empty vector gracefully");
+
+        // Verify no entries were inserted
+        let stored_entries = db.get_cjit_entries(None, None).await.unwrap();
+        assert_eq!(stored_entries.len(), 0);
     }
 
     #[tokio::test]

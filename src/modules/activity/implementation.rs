@@ -80,6 +80,17 @@ const CREATE_CLOSED_CHANNELS_TABLE: &str = "
         channel_closure_reason TEXT NOT NULL
     )";
 
+const UPSERT_CLOSED_CHANNEL_SQL: &str = "
+    INSERT OR REPLACE INTO closed_channels (
+        channel_id, counterparty_node_id, funding_txo_txid, funding_txo_index,
+        channel_value_sats, closed_at, outbound_capacity_msat, inbound_capacity_msat,
+        counterparty_unspendable_punishment_reserve, unspendable_punishment_reserve,
+        forwarding_fee_proportional_millionths, forwarding_fee_base_msat,
+        channel_name, channel_closure_reason
+    ) VALUES (
+        ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14
+    )";
+
 const INDEX_STATEMENTS: &[&str] = &[
     // Activity indexes
     "CREATE INDEX IF NOT EXISTS idx_activities_type_timestamp ON activities(activity_type, timestamp DESC)",
@@ -371,6 +382,138 @@ impl ActivityDB {
         ).map_err(|e| ActivityError::InsertError {
             error_details: format!("Failed to insert into lightning_activity: {}", e),
         })?;
+
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
+
+        Ok(())
+    }
+
+    pub fn upsert_onchain_activities(&mut self, activities: &[OnchainActivity]) -> Result<(), ActivityError> {
+        if activities.is_empty() {
+            return Ok(());
+        }
+
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        {
+            let mut stmt_act = tx.prepare(
+                "INSERT OR REPLACE INTO activities (id, activity_type, tx_type, timestamp) VALUES (?1, 'onchain', ?2, ?3)"
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to prepare activities statement: {}", e),
+            })?;
+            let mut stmt_onchain = tx.prepare(
+                "INSERT OR REPLACE INTO onchain_activity (
+                    id, tx_id, address, confirmed, value, fee, fee_rate, is_boosted,
+                    boost_tx_ids, is_transfer, does_exist, confirm_timestamp,
+                    channel_id, transfer_tx_id
+                ) VALUES (
+                    ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14
+                )"
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to prepare onchain statement: {}", e),
+            })?;
+
+            for activity in activities {
+                if activity.id.is_empty() {
+                    return Err(ActivityError::DataError {
+                        error_details: "Activity ID cannot be empty".to_string(),
+                    });
+                }
+
+                stmt_act.execute((
+                    &activity.id,
+                    Self::payment_type_to_string(&activity.tx_type),
+                    activity.timestamp,
+                )).map_err(|e| ActivityError::InsertError {
+                    error_details: format!("Failed to upsert activities: {}", e),
+                })?;
+
+                let boost_tx_ids_str = activity.boost_tx_ids.join(",");
+                stmt_onchain.execute((
+                    &activity.id,
+                    &activity.tx_id,
+                    &activity.address,
+                    activity.confirmed,
+                    activity.value,
+                    activity.fee,
+                    activity.fee_rate,
+                    activity.is_boosted,
+                    &boost_tx_ids_str,
+                    activity.is_transfer,
+                    activity.does_exist,
+                    activity.confirm_timestamp,
+                    &activity.channel_id,
+                    &activity.transfer_tx_id,
+                )).map_err(|e| ActivityError::InsertError {
+                    error_details: format!("Failed to upsert onchain_activity: {}", e),
+                })?;
+            }
+        }
+
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
+
+        Ok(())
+    }
+
+    pub fn upsert_lightning_activities(&mut self, activities: &[LightningActivity]) -> Result<(), ActivityError> {
+        if activities.is_empty() {
+            return Ok(());
+        }
+
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        {
+            let mut stmt_act = tx.prepare(
+                "INSERT OR REPLACE INTO activities (id, activity_type, tx_type, timestamp) VALUES (?1, 'lightning', ?2, ?3)"
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to prepare activities statement: {}", e),
+            })?;
+            let mut stmt_ln = tx.prepare(
+                "INSERT OR REPLACE INTO lightning_activity (
+                    id, invoice, value, status, fee, message, preimage
+                ) VALUES (
+                    ?1, ?2, ?3, ?4, ?5, ?6, ?7
+                )"
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to prepare lightning statement: {}", e),
+            })?;
+
+            for activity in activities {
+                if activity.id.is_empty() {
+                    return Err(ActivityError::DataError {
+                        error_details: "Activity ID cannot be empty".to_string(),
+                    });
+                }
+
+                stmt_act.execute((
+                    &activity.id,
+                    Self::payment_type_to_string(&activity.tx_type),
+                    activity.timestamp,
+                )).map_err(|e| ActivityError::InsertError {
+                    error_details: format!("Failed to upsert activities: {}", e),
+                })?;
+
+                stmt_ln.execute((
+                    &activity.id,
+                    &activity.invoice,
+                    activity.value,
+                    Self::payment_state_to_string(&activity.status),
+                    activity.fee,
+                    &activity.message,
+                    &activity.preimage,
+                )).map_err(|e| ActivityError::InsertError {
+                    error_details: format!("Failed to upsert lightning_activity: {}", e),
+                })?;
+            }
+        }
 
         tx.commit().map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to commit transaction: {}", e),
@@ -1019,26 +1162,15 @@ impl ActivityDB {
         Ok(tags)
     }
 
-    pub fn insert_closed_channel(&mut self, channel: &ClosedChannelDetails) -> Result<(), ActivityError> {
+    pub fn upsert_closed_channel(&mut self, channel: &ClosedChannelDetails) -> Result<(), ActivityError> {
         if channel.channel_id.is_empty() {
             return Err(ActivityError::DataError {
                 error_details: "Channel ID cannot be empty".to_string(),
             });
         }
 
-        let sql = "
-            INSERT INTO closed_channels (
-                channel_id, counterparty_node_id, funding_txo_txid, funding_txo_index,
-                channel_value_sats, closed_at, outbound_capacity_msat, inbound_capacity_msat,
-                counterparty_unspendable_punishment_reserve, unspendable_punishment_reserve,
-                forwarding_fee_proportional_millionths, forwarding_fee_base_msat,
-                channel_name, channel_closure_reason
-            ) VALUES (
-                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14
-            )";
-
         self.conn.execute(
-            sql,
+            UPSERT_CLOSED_CHANNEL_SQL,
             rusqlite::params![
                 &channel.channel_id,
                 &channel.counterparty_node_id,
@@ -1057,6 +1189,55 @@ impl ActivityDB {
             ],
         ).map_err(|e| ActivityError::InsertError {
             error_details: format!("Failed to insert closed channel: {}", e),
+        })?;
+
+        Ok(())
+    }
+
+    pub fn upsert_closed_channels(&mut self, channels: &[ClosedChannelDetails]) -> Result<(), ActivityError> {
+        if channels.is_empty() {
+            return Ok(());
+        }
+
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        {
+            let mut stmt = tx.prepare(UPSERT_CLOSED_CHANNEL_SQL).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
+
+            for channel in channels {
+                if channel.channel_id.is_empty() {
+                    return Err(ActivityError::DataError {
+                        error_details: "Channel ID cannot be empty".to_string(),
+                    });
+                }
+
+                stmt.execute(rusqlite::params![
+                    &channel.channel_id,
+                    &channel.counterparty_node_id,
+                    &channel.funding_txo_txid,
+                    channel.funding_txo_index as i64,
+                    channel.channel_value_sats as i64,
+                    channel.closed_at as i64,
+                    channel.outbound_capacity_msat as i64,
+                    channel.inbound_capacity_msat as i64,
+                    channel.counterparty_unspendable_punishment_reserve as i64,
+                    channel.unspendable_punishment_reserve as i64,
+                    channel.forwarding_fee_proportional_millionths as i64,
+                    channel.forwarding_fee_base_msat as i64,
+                    &channel.channel_name,
+                    &channel.channel_closure_reason,
+                ]).map_err(|e| ActivityError::InsertError {
+                    error_details: format!("Failed to insert closed channel {}: {}", channel.channel_id, e),
+                })?;
+            }
+        }
+
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
         Ok(())

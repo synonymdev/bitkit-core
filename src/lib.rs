@@ -402,12 +402,39 @@ pub fn get_all_unique_tags() -> Result<Vec<String>, ActivityError> {
 }
 
 #[uniffi::export]
-pub fn insert_closed_channel(channel: ClosedChannelDetails) -> Result<(), ActivityError> {
+pub fn upsert_closed_channel(channel: ClosedChannelDetails) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
-    db.insert_closed_channel(&channel)
+        db.upsert_closed_channel(&channel)
+}
+
+#[uniffi::export]
+pub fn upsert_closed_channels(channels: Vec<ClosedChannelDetails>) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.upsert_closed_channels(&channels)
+}
+
+#[uniffi::export]
+pub fn upsert_onchain_activities(activities: Vec<OnchainActivity>) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.upsert_onchain_activities(&activities)
+}
+
+#[uniffi::export]
+pub fn upsert_lightning_activities(activities: Vec<LightningActivity>) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.upsert_lightning_activities(&activities)
 }
 
 #[uniffi::export]
@@ -1318,6 +1345,62 @@ pub async fn blocktank_wipe_all() -> Result<(), BlocktankError> {
         })?;
         db.wipe_all().await
     }).await.unwrap()
+}
+
+#[uniffi::export]
+pub async fn upsert_info(info: IBtInfo) -> Result<(), BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let external_info: rust_blocktank_client::IBtInfo = info.into();
+        db.upsert_info(&external_info).await
+    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
+        error_details: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn upsert_orders(orders: Vec<IBtOrder>) -> Result<(), BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+
+        let external_orders: Vec<rust_blocktank_client::IBtOrder> = orders.into_iter().map(|order| order.into()).collect();
+        db.upsert_orders(&external_orders).await
+    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
+        error_details: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn upsert_cjit_entries(entries: Vec<ICJitEntry>) -> Result<(), BlocktankError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+        let guard = cell.lock().await;
+        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string()
+        })?;
+
+        let external_entries: Vec<rust_blocktank_client::ICJitEntry> = entries.into_iter().map(|e| e.into()).collect();
+        db.upsert_cjit_entries(&external_entries).await
+    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
+        error_details: format!("Runtime error: {}", e)
+    }))
 }
 
 #[uniffi::export]
