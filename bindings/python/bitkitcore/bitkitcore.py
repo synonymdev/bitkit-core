@@ -537,8 +537,6 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_insert_activity() != 1510:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_insert_closed_channel() != 43559:
-        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593:
@@ -591,7 +589,23 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_update_blocktank_url() != 52161:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_upsert_activities() != 58470:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_upsert_activity() != 32175:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_upsert_cjit_entries() != 57141:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_upsert_closed_channel() != 18711:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_upsert_closed_channels() != 2086:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_upsert_info() != 7349:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_upsert_lightning_activities() != 8564:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_upsert_onchain_activities() != 15461:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_upsert_orders() != 45856:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -920,11 +934,6 @@ _UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.restype = None
-_UniffiLib.uniffi_bitkitcore_fn_func_insert_closed_channel.argtypes = (
-    _UniffiRustBuffer,
-    ctypes.POINTER(_UniffiRustCallStatus),
-)
-_UniffiLib.uniffi_bitkitcore_fn_func_insert_closed_channel.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_is_valid_bip39_word.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1142,11 +1151,48 @@ _UniffiLib.uniffi_bitkitcore_fn_func_update_blocktank_url.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_update_blocktank_url.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_activities.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_activities.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_upsert_activity.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_upsert_activity.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_cjit_entries.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_cjit_entries.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_closed_channel.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_closed_channel.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_closed_channels.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_closed_channels.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_info.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_info.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_lightning_activities.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_lightning_activities.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_onchain_activities.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_onchain_activities.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_orders.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_orders.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_validate_bitcoin_address.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1546,9 +1592,6 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_init_db.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.restype = ctypes.c_uint16
-_UniffiLib.uniffi_bitkitcore_checksum_func_insert_closed_channel.argtypes = (
-)
-_UniffiLib.uniffi_bitkitcore_checksum_func_insert_closed_channel.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word.restype = ctypes.c_uint16
@@ -1627,9 +1670,33 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_update_activity.restype = ctypes.c_ui
 _UniffiLib.uniffi_bitkitcore_checksum_func_update_blocktank_url.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_update_blocktank_url.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_activities.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_activities.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_activity.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_activity.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_cjit_entries.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_cjit_entries.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_closed_channel.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_closed_channel.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_closed_channels.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_closed_channels.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_info.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_info.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_lightning_activities.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_lightning_activities.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_onchain_activities.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_onchain_activities.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_orders.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_orders.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.restype = ctypes.c_uint16
@@ -13157,6 +13224,56 @@ class _UniffiConverterSequenceTypeIcJitEntry(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterSequenceTypeLightningActivity(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeLightningActivity.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeLightningActivity.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeLightningActivity.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeOnchainActivity(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeOnchainActivity.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeOnchainActivity.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeOnchainActivity.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypePaymentRequestMemo(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14111,13 +14228,6 @@ def insert_activity(activity: "Activity") -> None:
         _UniffiConverterTypeActivity.lower(activity))
 
 
-def insert_closed_channel(channel: "ClosedChannelDetails") -> None:
-    _UniffiConverterTypeClosedChannelDetails.check_lower(channel)
-    
-    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_insert_closed_channel,
-        _UniffiConverterTypeClosedChannelDetails.lower(channel))
-
-
 def is_valid_bip39_word(word: "str") -> "bool":
     _UniffiConverterString.check_lower(word)
     
@@ -14727,12 +14837,101 @@ _UniffiConverterTypeBlocktankError,
 
     )
 
+def upsert_activities(activities: "typing.List[Activity]") -> None:
+    _UniffiConverterSequenceTypeActivity.check_lower(activities)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_activities,
+        _UniffiConverterSequenceTypeActivity.lower(activities))
+
+
 def upsert_activity(activity: "Activity") -> None:
     _UniffiConverterTypeActivity.check_lower(activity)
     
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_activity,
         _UniffiConverterTypeActivity.lower(activity))
 
+async def upsert_cjit_entries(entries: "typing.List[IcJitEntry]") -> None:
+
+    _UniffiConverterSequenceTypeIcJitEntry.check_lower(entries)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_upsert_cjit_entries(
+        _UniffiConverterSequenceTypeIcJitEntry.lower(entries)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+
+def upsert_closed_channel(channel: "ClosedChannelDetails") -> None:
+    _UniffiConverterTypeClosedChannelDetails.check_lower(channel)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_closed_channel,
+        _UniffiConverterTypeClosedChannelDetails.lower(channel))
+
+
+def upsert_closed_channels(channels: "typing.List[ClosedChannelDetails]") -> None:
+    _UniffiConverterSequenceTypeClosedChannelDetails.check_lower(channels)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_closed_channels,
+        _UniffiConverterSequenceTypeClosedChannelDetails.lower(channels))
+
+async def upsert_info(info: "IBtInfo") -> None:
+
+    _UniffiConverterTypeIBtInfo.check_lower(info)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_upsert_info(
+        _UniffiConverterTypeIBtInfo.lower(info)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
+
+def upsert_lightning_activities(activities: "typing.List[LightningActivity]") -> None:
+    _UniffiConverterSequenceTypeLightningActivity.check_lower(activities)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_lightning_activities,
+        _UniffiConverterSequenceTypeLightningActivity.lower(activities))
+
+
+def upsert_onchain_activities(activities: "typing.List[OnchainActivity]") -> None:
+    _UniffiConverterSequenceTypeOnchainActivity.check_lower(activities)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_onchain_activities,
+        _UniffiConverterSequenceTypeOnchainActivity.lower(activities))
+
+async def upsert_orders(orders: "typing.List[IBtOrder]") -> None:
+
+    _UniffiConverterSequenceTypeIBtOrder.check_lower(orders)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_upsert_orders(
+        _UniffiConverterSequenceTypeIBtOrder.lower(orders)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeBlocktankError,
+
+    )
 
 def validate_bitcoin_address(address: "str") -> "ValidationResult":
     _UniffiConverterString.check_lower(address)
@@ -14921,7 +15120,6 @@ __all__ = [
     "gift_pay",
     "init_db",
     "insert_activity",
-    "insert_closed_channel",
     "is_valid_bip39_word",
     "lnurl_auth",
     "mnemonic_to_entropy",
@@ -14948,7 +15146,15 @@ __all__ = [
     "trezor_verify_message",
     "update_activity",
     "update_blocktank_url",
+    "upsert_activities",
     "upsert_activity",
+    "upsert_cjit_entries",
+    "upsert_closed_channel",
+    "upsert_closed_channels",
+    "upsert_info",
+    "upsert_lightning_activities",
+    "upsert_onchain_activities",
+    "upsert_orders",
     "validate_bitcoin_address",
     "validate_mnemonic",
     "wipe_all_closed_channels",

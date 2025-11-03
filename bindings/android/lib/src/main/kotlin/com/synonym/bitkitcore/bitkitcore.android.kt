@@ -1130,6 +1130,20 @@ internal interface UniffiForeignFutureCompleteVoid: com.sun.jna.Callback {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1335,10 +1349,6 @@ internal interface UniffiLib : Library {
         `activity`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
-    fun uniffi_bitkitcore_fn_func_insert_closed_channel(
-        `channel`: RustBufferByValue,
-        uniffiCallStatus: UniffiRustCallStatus,
-    ): Unit
     fun uniffi_bitkitcore_fn_func_is_valid_bip39_word(
         `word`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
@@ -1530,10 +1540,39 @@ internal interface UniffiLib : Library {
     fun uniffi_bitkitcore_fn_func_update_blocktank_url(
         `newUrl`: RustBufferByValue,
     ): Long
+    fun uniffi_bitkitcore_fn_func_upsert_activities(
+        `activities`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
     fun uniffi_bitkitcore_fn_func_upsert_activity(
         `activity`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
+    fun uniffi_bitkitcore_fn_func_upsert_cjit_entries(
+        `entries`: RustBufferByValue,
+    ): Long
+    fun uniffi_bitkitcore_fn_func_upsert_closed_channel(
+        `channel`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    fun uniffi_bitkitcore_fn_func_upsert_closed_channels(
+        `channels`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    fun uniffi_bitkitcore_fn_func_upsert_info(
+        `info`: RustBufferByValue,
+    ): Long
+    fun uniffi_bitkitcore_fn_func_upsert_lightning_activities(
+        `activities`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    fun uniffi_bitkitcore_fn_func_upsert_onchain_activities(
+        `activities`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    fun uniffi_bitkitcore_fn_func_upsert_orders(
+        `orders`: RustBufferByValue,
+    ): Long
     fun uniffi_bitkitcore_fn_func_validate_bitcoin_address(
         `address`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
@@ -1835,8 +1874,6 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_bitkitcore_checksum_func_insert_activity(
     ): Short
-    fun uniffi_bitkitcore_checksum_func_insert_closed_channel(
-    ): Short
     fun uniffi_bitkitcore_checksum_func_is_valid_bip39_word(
     ): Short
     fun uniffi_bitkitcore_checksum_func_lnurl_auth(
@@ -1889,7 +1926,23 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_bitkitcore_checksum_func_update_blocktank_url(
     ): Short
+    fun uniffi_bitkitcore_checksum_func_upsert_activities(
+    ): Short
     fun uniffi_bitkitcore_checksum_func_upsert_activity(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_upsert_cjit_entries(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_upsert_closed_channel(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_upsert_closed_channels(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_upsert_info(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_upsert_lightning_activities(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_upsert_onchain_activities(
+    ): Short
+    fun uniffi_bitkitcore_checksum_func_upsert_orders(
     ): Short
     fun uniffi_bitkitcore_checksum_func_validate_bitcoin_address(
     ): Short
@@ -2030,9 +2083,6 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_bitkitcore_checksum_func_insert_activity() != 1510.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_bitkitcore_checksum_func_insert_closed_channel() != 43559.toShort()) {
-        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    }
     if (lib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -2111,7 +2161,31 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_bitkitcore_checksum_func_update_blocktank_url() != 52161.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_bitkitcore_checksum_func_upsert_activities() != 58470.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_bitkitcore_checksum_func_upsert_activity() != 32175.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_upsert_cjit_entries() != 57141.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_upsert_closed_channel() != 18711.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_upsert_closed_channels() != 2086.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_upsert_info() != 7349.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_upsert_lightning_activities() != 8564.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_upsert_onchain_activities() != 15461.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_bitkitcore_checksum_func_upsert_orders() != 45856.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003.toShort()) {
@@ -8754,6 +8828,56 @@ object FfiConverterSequenceTypeIManualRefund: FfiConverterRustBuffer<List<IManua
 
 
 
+object FfiConverterSequenceTypeLightningActivity: FfiConverterRustBuffer<List<LightningActivity>> {
+    override fun read(buf: ByteBuffer): List<LightningActivity> {
+        val len = buf.getInt()
+        return List<LightningActivity>(len) {
+            FfiConverterTypeLightningActivity.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<LightningActivity>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeLightningActivity.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<LightningActivity>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeLightningActivity.write(it, buf)
+        }
+    }
+}
+
+
+
+
+object FfiConverterSequenceTypeOnchainActivity: FfiConverterRustBuffer<List<OnchainActivity>> {
+    override fun read(buf: ByteBuffer): List<OnchainActivity> {
+        val len = buf.getInt()
+        return List<OnchainActivity>(len) {
+            FfiConverterTypeOnchainActivity.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<OnchainActivity>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeOnchainActivity.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<OnchainActivity>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeOnchainActivity.write(it, buf)
+        }
+    }
+}
+
+
+
+
 object FfiConverterSequenceTypePaymentRequestMemo: FfiConverterRustBuffer<List<PaymentRequestMemo>> {
     override fun read(buf: ByteBuffer): List<PaymentRequestMemo> {
         val len = buf.getInt()
@@ -9638,16 +9762,6 @@ fun `insertActivity`(`activity`: Activity) {
     }
 }
 
-@Throws(ActivityException::class)
-fun `insertClosedChannel`(`channel`: ClosedChannelDetails) {
-    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
-        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_insert_closed_channel(
-            FfiConverterTypeClosedChannelDetails.lower(`channel`),
-            uniffiRustCallStatus,
-        )
-    }
-}
-
 fun `isValidBip39Word`(`word`: kotlin.String): kotlin.Boolean {
     return FfiConverterBoolean.lift(uniffiRustCall { uniffiRustCallStatus ->
         UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_is_valid_bip39_word(
@@ -10099,6 +10213,16 @@ suspend fun `updateBlocktankUrl`(`newUrl`: kotlin.String) {
 }
 
 @Throws(ActivityException::class)
+fun `upsertActivities`(`activities`: List<Activity>) {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_upsert_activities(
+            FfiConverterSequenceTypeActivity.lower(`activities`),
+            uniffiRustCallStatus,
+        )
+    }
+}
+
+@Throws(ActivityException::class)
 fun `upsertActivity`(`activity`: Activity) {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_upsert_activity(
@@ -10106,6 +10230,100 @@ fun `upsertActivity`(`activity`: Activity) {
             uniffiRustCallStatus,
         )
     }
+}
+
+@Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
+suspend fun `upsertCjitEntries`(`entries`: List<IcJitEntry>) {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_upsert_cjit_entries(
+            FfiConverterSequenceTypeICJitEntry.lower(`entries`),
+        ),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        BlocktankExceptionErrorHandler,
+    )
+}
+
+@Throws(ActivityException::class)
+fun `upsertClosedChannel`(`channel`: ClosedChannelDetails) {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_upsert_closed_channel(
+            FfiConverterTypeClosedChannelDetails.lower(`channel`),
+            uniffiRustCallStatus,
+        )
+    }
+}
+
+@Throws(ActivityException::class)
+fun `upsertClosedChannels`(`channels`: List<ClosedChannelDetails>) {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_upsert_closed_channels(
+            FfiConverterSequenceTypeClosedChannelDetails.lower(`channels`),
+            uniffiRustCallStatus,
+        )
+    }
+}
+
+@Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
+suspend fun `upsertInfo`(`info`: IBtInfo) {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_upsert_info(
+            FfiConverterTypeIBtInfo.lower(`info`),
+        ),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        BlocktankExceptionErrorHandler,
+    )
+}
+
+@Throws(ActivityException::class)
+fun `upsertLightningActivities`(`activities`: List<LightningActivity>) {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_upsert_lightning_activities(
+            FfiConverterSequenceTypeLightningActivity.lower(`activities`),
+            uniffiRustCallStatus,
+        )
+    }
+}
+
+@Throws(ActivityException::class)
+fun `upsertOnchainActivities`(`activities`: List<OnchainActivity>) {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_upsert_onchain_activities(
+            FfiConverterSequenceTypeOnchainActivity.lower(`activities`),
+            uniffiRustCallStatus,
+        )
+    }
+}
+
+@Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
+suspend fun `upsertOrders`(`orders`: List<IBtOrder>) {
+    return uniffiRustCallAsync(
+        UniffiLib.INSTANCE.uniffi_bitkitcore_fn_func_upsert_orders(
+            FfiConverterSequenceTypeIBtOrder.lower(`orders`),
+        ),
+        { future, callback, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.INSTANCE.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        BlocktankExceptionErrorHandler,
+    )
 }
 
 @Throws(AddressException::class)

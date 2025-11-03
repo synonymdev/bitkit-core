@@ -447,11 +447,6 @@ RustBuffer uniffi_bitkitcore_fn_func_init_db(RustBuffer base_path, RustCallStatu
 void uniffi_bitkitcore_fn_func_insert_activity(RustBuffer activity, RustCallStatus *_Nonnull out_status
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INSERT_CLOSED_CHANNEL
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_INSERT_CLOSED_CHANNEL
-void uniffi_bitkitcore_fn_func_insert_closed_channel(RustBuffer channel, RustCallStatus *_Nonnull out_status
-);
-#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_IS_VALID_BIP39_WORD
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_IS_VALID_BIP39_WORD
 int8_t uniffi_bitkitcore_fn_func_is_valid_bip39_word(RustBuffer word, RustCallStatus *_Nonnull out_status
@@ -584,9 +579,49 @@ void uniffi_bitkitcore_fn_func_update_activity(RustBuffer activity_id, RustBuffe
 uint64_t uniffi_bitkitcore_fn_func_update_blocktank_url(RustBuffer new_url
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_ACTIVITIES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_ACTIVITIES
+void uniffi_bitkitcore_fn_func_upsert_activities(RustBuffer activities, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_ACTIVITY
 void uniffi_bitkitcore_fn_func_upsert_activity(RustBuffer activity, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_CJIT_ENTRIES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_CJIT_ENTRIES
+uint64_t uniffi_bitkitcore_fn_func_upsert_cjit_entries(RustBuffer entries
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_CLOSED_CHANNEL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_CLOSED_CHANNEL
+void uniffi_bitkitcore_fn_func_upsert_closed_channel(RustBuffer channel, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_CLOSED_CHANNELS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_CLOSED_CHANNELS
+void uniffi_bitkitcore_fn_func_upsert_closed_channels(RustBuffer channels, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_INFO
+uint64_t uniffi_bitkitcore_fn_func_upsert_info(RustBuffer info
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_LIGHTNING_ACTIVITIES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_LIGHTNING_ACTIVITIES
+void uniffi_bitkitcore_fn_func_upsert_lightning_activities(RustBuffer activities, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_ONCHAIN_ACTIVITIES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_ONCHAIN_ACTIVITIES
+void uniffi_bitkitcore_fn_func_upsert_onchain_activities(RustBuffer activities, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_ORDERS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_ORDERS
+uint64_t uniffi_bitkitcore_fn_func_upsert_orders(RustBuffer orders
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_BITCOIN_ADDRESS
@@ -1119,12 +1154,6 @@ uint16_t uniffi_bitkitcore_checksum_func_insert_activity(void
     
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INSERT_CLOSED_CHANNEL
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INSERT_CLOSED_CHANNEL
-uint16_t uniffi_bitkitcore_checksum_func_insert_closed_channel(void
-    
-);
-#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_IS_VALID_BIP39_WORD
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_IS_VALID_BIP39_WORD
 uint16_t uniffi_bitkitcore_checksum_func_is_valid_bip39_word(void
@@ -1281,9 +1310,57 @@ uint16_t uniffi_bitkitcore_checksum_func_update_blocktank_url(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ACTIVITIES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ACTIVITIES
+uint16_t uniffi_bitkitcore_checksum_func_upsert_activities(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ACTIVITY
 uint16_t uniffi_bitkitcore_checksum_func_upsert_activity(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_CJIT_ENTRIES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_CJIT_ENTRIES
+uint16_t uniffi_bitkitcore_checksum_func_upsert_cjit_entries(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_CLOSED_CHANNEL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_CLOSED_CHANNEL
+uint16_t uniffi_bitkitcore_checksum_func_upsert_closed_channel(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_CLOSED_CHANNELS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_CLOSED_CHANNELS
+uint16_t uniffi_bitkitcore_checksum_func_upsert_closed_channels(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_INFO
+uint16_t uniffi_bitkitcore_checksum_func_upsert_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_LIGHTNING_ACTIVITIES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_LIGHTNING_ACTIVITIES
+uint16_t uniffi_bitkitcore_checksum_func_upsert_lightning_activities(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ONCHAIN_ACTIVITIES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ONCHAIN_ACTIVITIES
+uint16_t uniffi_bitkitcore_checksum_func_upsert_onchain_activities(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ORDERS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ORDERS
+uint16_t uniffi_bitkitcore_checksum_func_upsert_orders(void
     
 );
 #endif
