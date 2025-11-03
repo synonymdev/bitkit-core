@@ -438,6 +438,33 @@ pub fn upsert_lightning_activities(activities: Vec<LightningActivity>) -> Result
 }
 
 #[uniffi::export]
+pub fn upsert_activities(activities: Vec<Activity>) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+
+    let mut onchain_list: Vec<OnchainActivity> = Vec::new();
+    let mut lightning_list: Vec<LightningActivity> = Vec::new();
+
+    for activity in activities {
+        match activity {
+            Activity::Onchain(a) => onchain_list.push(a),
+            Activity::Lightning(a) => lightning_list.push(a),
+        }
+    }
+
+    if !onchain_list.is_empty() {
+        db.upsert_onchain_activities(&onchain_list)?;
+    }
+    if !lightning_list.is_empty() {
+        db.upsert_lightning_activities(&lightning_list)?;
+    }
+
+    Ok(())
+}
+
+#[uniffi::export]
 pub fn get_closed_channel_by_id(channel_id: String) -> Result<Option<ClosedChannelDetails>, ActivityError> {
     let guard = get_activity_db()?;
     let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
