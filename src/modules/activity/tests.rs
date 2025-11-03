@@ -1331,8 +1331,8 @@ mod tests {
         channel1.channel_id = "channel1".to_string();
         let mut channel2 = create_test_closed_channel();
         channel2.channel_id = "channel2".to_string();
-        db.insert_closed_channel(&channel1).unwrap();
-        db.insert_closed_channel(&channel2).unwrap();
+        db.upsert_closed_channel(&channel1).unwrap();
+        db.upsert_closed_channel(&channel2).unwrap();
 
         // Verify data exists
         let activities = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
@@ -1368,7 +1368,7 @@ mod tests {
         let channel = create_test_closed_channel();
         
         // Insert closed channel
-        assert!(db.insert_closed_channel(&channel).is_ok());
+        assert!(db.upsert_closed_channel(&channel).is_ok());
 
         // Retrieve by ID
         let retrieved = db.get_closed_channel_by_id(&channel.channel_id).unwrap();
@@ -1410,9 +1410,9 @@ mod tests {
         channel3.channel_id = "channel3".to_string();
         channel3.closed_at = 1500;
 
-        db.insert_closed_channel(&channel1).unwrap();
-        db.insert_closed_channel(&channel2).unwrap();
-        db.insert_closed_channel(&channel3).unwrap();
+        db.upsert_closed_channel(&channel1).unwrap();
+        db.upsert_closed_channel(&channel2).unwrap();
+        db.upsert_closed_channel(&channel3).unwrap();
 
         // Get all channels, default sort (descending - most recent first)
         let all_channels = db.get_all_closed_channels(None).unwrap();
@@ -1442,12 +1442,12 @@ mod tests {
     }
 
     #[test]
-    fn test_insert_closed_channel_empty_id() {
+    fn test_upsert_closed_channel_empty_id() {
         let (mut db, db_path) = setup();
         let mut channel = create_test_closed_channel();
         channel.channel_id = "".to_string();
 
-        let result = db.insert_closed_channel(&channel);
+        let result = db.upsert_closed_channel(&channel);
         assert!(result.is_err());
 
         cleanup(&db_path);
@@ -1458,7 +1458,7 @@ mod tests {
         let (mut db, db_path) = setup();
         let channel = create_test_closed_channel();
         
-        db.insert_closed_channel(&channel).unwrap();
+        db.upsert_closed_channel(&channel).unwrap();
         
         // Verify it exists
         let retrieved = db.get_closed_channel_by_id(&channel.channel_id).unwrap();
@@ -1491,9 +1491,9 @@ mod tests {
         let mut channel3 = create_test_closed_channel();
         channel3.channel_id = "channel3".to_string();
 
-        db.insert_closed_channel(&channel1).unwrap();
-        db.insert_closed_channel(&channel2).unwrap();
-        db.insert_closed_channel(&channel3).unwrap();
+        db.upsert_closed_channel(&channel1).unwrap();
+        db.upsert_closed_channel(&channel2).unwrap();
+        db.upsert_closed_channel(&channel3).unwrap();
 
         // Verify they exist
         let all_channels = db.get_all_closed_channels(None).unwrap();
@@ -1508,10 +1508,160 @@ mod tests {
 
         // Verify we can still insert new channels after wipe
         let new_channel = create_test_closed_channel();
-        db.insert_closed_channel(&new_channel).unwrap();
+        db.upsert_closed_channel(&new_channel).unwrap();
         let all_channels_new = db.get_all_closed_channels(None).unwrap();
         assert_eq!(all_channels_new.len(), 1);
 
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_closed_channels() {
+        let (mut db, db_path) = setup();
+
+        // Create multiple closed channels
+        let mut channels: Vec<ClosedChannelDetails> = Vec::new();
+        for i in 1..=5 {
+            let mut c = create_test_closed_channel();
+            c.channel_id = format!("bulk_channel_{}", i);
+            c.closed_at = 1_000 + i as u64;
+            c.channel_value_sats = 1_000_000 * i as u64;
+            channels.push(c);
+        }
+
+        // Bulk insert
+        assert!(db.upsert_closed_channels(&channels).is_ok());
+
+        // Verify all inserted
+        let all = db.get_all_closed_channels(None).unwrap();
+        assert_eq!(all.len(), 5);
+        for i in 1..=5 {
+            let id = format!("bulk_channel_{}", i);
+            let ch = all.iter().find(|c| c.channel_id == id).expect("missing channel");
+            assert_eq!(ch.channel_value_sats, 1_000_000 * i as u64);
+        }
+
+        // Modify a few and bulk update
+        let mut updated = channels.clone();
+        updated[0].channel_value_sats = 9_999_999;
+        updated[1].channel_name = "Updated Name".to_string();
+        updated[2].forwarding_fee_base_msat = 777;
+        assert!(db.upsert_closed_channels(&updated).is_ok());
+
+        // Verify updates applied
+        let after = db.get_all_closed_channels(None).unwrap();
+        let c1 = after.iter().find(|c| c.channel_id == "bulk_channel_1").unwrap();
+        assert_eq!(c1.channel_value_sats, 9_999_999);
+        let c2 = after.iter().find(|c| c.channel_id == "bulk_channel_2").unwrap();
+        assert_eq!(c2.channel_name, "Updated Name");
+        let c3 = after.iter().find(|c| c.channel_id == "bulk_channel_3").unwrap();
+        assert_eq!(c3.forwarding_fee_base_msat, 777);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_closed_channels_empty() {
+        let (mut db, db_path) = setup();
+        assert!(db.upsert_closed_channels(&[]).is_ok());
+        let all = db.get_all_closed_channels(None).unwrap();
+        assert_eq!(all.len(), 0);
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_onchain_activities() {
+        let (mut db, db_path) = setup();
+
+        let mut acts: Vec<OnchainActivity> = Vec::new();
+        for i in 0..5 {
+            let mut a = create_test_onchain_activity();
+            a.id = format!("onchain_bulk_{}", i);
+            a.timestamp = 1_000 + i as u64;
+            a.value = 10_000 + i as u64;
+            a.address = format!("bc1q_addr_{}", i);
+            acts.push(a);
+        }
+
+        assert!(db.upsert_onchain_activities(&acts).is_ok());
+
+        let all = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, None, None).unwrap();
+        assert_eq!(all.len(), 5);
+
+        let mut updated = acts.clone();
+        updated[0].value = 999_999;
+        updated[1].fee = 42;
+        updated[2].fee_rate = 7;
+        updated[3].is_boosted = true;
+        assert!(db.upsert_onchain_activities(&updated).is_ok());
+
+        let after = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, None, None).unwrap();
+        let map: std::collections::HashMap<String, OnchainActivity> = after.into_iter().map(|a| match a {
+            Activity::Onchain(o) => (o.id.clone(), o),
+            _ => unreachable!(),
+        }).collect();
+        assert_eq!(map["onchain_bulk_0"].value, 999_999);
+        assert_eq!(map["onchain_bulk_1"].fee, 42);
+        assert_eq!(map["onchain_bulk_2"].fee_rate, 7);
+        assert!(map["onchain_bulk_3"].is_boosted);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_onchain_activities_empty() {
+        let (mut db, db_path) = setup();
+        assert!(db.upsert_onchain_activities(&[]).is_ok());
+        let all = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, None, None).unwrap();
+        assert!(all.is_empty());
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_lightning_activities() {
+        let (mut db, db_path) = setup();
+
+        let mut acts: Vec<LightningActivity> = Vec::new();
+        for i in 0..5 {
+            let mut a = create_test_lightning_activity();
+            a.id = format!("lightning_bulk_{}", i);
+            a.timestamp = 2_000 + i as u64;
+            a.value = 1_000 + i as u64;
+            a.message = format!("msg_{}", i);
+            acts.push(a);
+        }
+
+        assert!(db.upsert_lightning_activities(&acts).is_ok());
+
+        let all = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, None, None).unwrap();
+        assert_eq!(all.len(), 5);
+
+        let mut updated = acts.clone();
+        updated[0].value = 55;
+        updated[1].status = PaymentState::Failed;
+        updated[2].fee = Some(0);
+        updated[3].message = "updated".to_string();
+        assert!(db.upsert_lightning_activities(&updated).is_ok());
+
+        let after = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, None, None).unwrap();
+        let map: std::collections::HashMap<String, LightningActivity> = after.into_iter().map(|a| match a {
+            Activity::Lightning(l) => (l.id.clone(), l),
+            _ => unreachable!(),
+        }).collect();
+        assert_eq!(map["lightning_bulk_0"].value, 55);
+        assert_eq!(map["lightning_bulk_1"].status, PaymentState::Failed);
+        assert_eq!(map["lightning_bulk_2"].fee, Some(0));
+        assert_eq!(map["lightning_bulk_3"].message, "updated");
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_lightning_activities_empty() {
+        let (mut db, db_path) = setup();
+        assert!(db.upsert_lightning_activities(&[]).is_ok());
+        let all = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, None, None).unwrap();
+        assert!(all.is_empty());
         cleanup(&db_path);
     }
 }

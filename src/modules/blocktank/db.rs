@@ -227,6 +227,99 @@ impl BlocktankDB {
     pub async fn upsert_order(&self, order: &IBtOrder) -> Result<(), BlocktankError> {
         let conn = self.conn.lock().await;
 
+        let params = Self::build_order_params(order)?;
+
+        let mut stmt = conn.prepare(
+            INSERT_ORDER_SQL
+        ).map_err(|e| BlocktankError::DatabaseError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
+
+        stmt.execute(rusqlite::params![
+            params.id,
+            params.state,
+            params.state2,
+            params.fee_sat,
+            params.network_fee_sat,
+            params.service_fee_sat,
+            params.lsp_balance_sat,
+            params.client_balance_sat,
+            params.zero_conf,
+            params.zero_reserve,
+            params.client_node_id,
+            params.channel_expiry_weeks,
+            params.channel_expires_at,
+            params.order_expires_at,
+            params.lnurl,
+            params.coupon_code,
+            params.source,
+            params.channel_json,
+            params.lsp_node_json,
+            params.payment_json,
+            params.discount_json,
+            params.updated_at,
+            params.created_at,
+        ]).map_err(|e| BlocktankError::InsertError {
+            error_details: format!("Failed to insert order: {}", e),
+        })?;
+
+        Ok(())
+    }
+
+    pub async fn upsert_orders(&self, orders: &[IBtOrder]) -> Result<(), BlocktankError> {
+        let mut conn = self.conn.lock().await;
+        let tx = conn.transaction().map_err(|e| BlocktankError::DatabaseError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        {
+            let mut stmt = tx.prepare(
+                INSERT_ORDER_SQL
+            ).map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
+
+            for order in orders {
+                let params = Self::build_order_params(order)?;
+
+                stmt.execute(rusqlite::params![
+                    params.id,
+                    params.state,
+                    params.state2,
+                    params.fee_sat,
+                    params.network_fee_sat,
+                    params.service_fee_sat,
+                    params.lsp_balance_sat,
+                    params.client_balance_sat,
+                    params.zero_conf,
+                    params.zero_reserve,
+                    params.client_node_id,
+                    params.channel_expiry_weeks,
+                    params.channel_expires_at,
+                    params.order_expires_at,
+                    params.lnurl,
+                    params.coupon_code,
+                    params.source,
+                    params.channel_json,
+                    params.lsp_node_json,
+                    params.payment_json,
+                    params.discount_json,
+                    params.updated_at,
+                    params.created_at,
+                ]).map_err(|e| BlocktankError::InsertError {
+                    error_details: format!("Failed to insert order {}: {}", params.id, e),
+                })?;
+            }
+        }
+
+        tx.commit().map_err(|e| BlocktankError::DatabaseError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
+
+        Ok(())
+    }
+
+    fn build_order_params(order: &IBtOrder) -> Result<OrderInsertParams, BlocktankError> {
         let channel_json = if let Some(channel) = &order.channel {
             Some(serde_json::to_string(channel).map_err(|e| BlocktankError::SerializationError {
                 error_details: format!("Failed to serialize channel: {}", e),
@@ -251,51 +344,78 @@ impl BlocktankDB {
             None
         };
 
-        let mut stmt = conn.prepare(
-            "INSERT OR REPLACE INTO orders (
-            id, state, state2, fee_sat, network_fee_sat, service_fee_sat,
-            lsp_balance_sat, client_balance_sat, zero_conf, zero_reserve,
-            client_node_id, channel_expiry_weeks, channel_expires_at,
-            order_expires_at, lnurl, coupon_code, source, channel_data,
-            lsp_node_data, payment_data, discount_data,
-            updated_at, created_at
-        ) VALUES (
-            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13,
-            ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23
-        )"
-        ).map_err(|e| BlocktankError::DatabaseError {
-            error_details: format!("Failed to prepare statement: {}", e),
+        Ok(OrderInsertParams {
+            id: order.id.clone(),
+            state: format!("{:?}", order.state),
+            state2: order.state2.as_ref().map(|s| format!("{:?}", s)).unwrap_or_else(|| "".to_string()),
+            fee_sat: order.fee_sat,
+            network_fee_sat: order.network_fee_sat,
+            service_fee_sat: order.service_fee_sat,
+            lsp_balance_sat: order.lsp_balance_sat,
+            client_balance_sat: order.client_balance_sat,
+            zero_conf: order.zero_conf,
+            zero_reserve: order.zero_reserve,
+            client_node_id: order.client_node_id.clone(),
+            channel_expiry_weeks: order.channel_expiry_weeks,
+            channel_expires_at: order.channel_expires_at.clone(),
+            order_expires_at: order.order_expires_at.clone(),
+            lnurl: order.lnurl.clone(),
+            coupon_code: order.coupon_code.clone(),
+            source: order.source.clone(),
+            channel_json,
+            lsp_node_json,
+            payment_json,
+            discount_json,
+            updated_at: order.updated_at.clone(),
+            created_at: order.created_at.clone(),
+        })
+    }
+
+    fn build_cjit_params(entry: &ICJitEntry) -> Result<CJitInsertParams, BlocktankError> {
+        let channel_json = if let Some(channel) = &entry.channel {
+            Some(serde_json::to_string(channel).map_err(|e| BlocktankError::SerializationError {
+                error_details: format!("Failed to serialize channel: {}", e),
+            })?)
+        } else {
+            None
+        };
+
+        let invoice_json = serde_json::to_string(&entry.invoice).map_err(|e| BlocktankError::SerializationError {
+            error_details: format!("Failed to serialize invoice: {}", e),
         })?;
 
-        stmt.execute(rusqlite::params![
-        order.id,
-        format!("{:?}", order.state),
-        order.state2.as_ref().map(|s| format!("{:?}", s)).unwrap_or_else(|| "".to_string()),
-        order.fee_sat,
-        order.network_fee_sat,
-        order.service_fee_sat,
-        order.lsp_balance_sat,
-        order.client_balance_sat,
-        order.zero_conf,
-        order.zero_reserve,
-        order.client_node_id,
-        order.channel_expiry_weeks,
-        order.channel_expires_at,
-        order.order_expires_at,
-        order.lnurl,
-        order.coupon_code,
-        order.source,
-        channel_json,
-        lsp_node_json,
-        payment_json,
-        discount_json,
-        order.updated_at,
-        order.created_at,
-    ]).map_err(|e| BlocktankError::InsertError {
-            error_details: format!("Failed to insert order: {}", e),
+        let lsp_node_json = serde_json::to_string(&entry.lsp_node).map_err(|e| BlocktankError::SerializationError {
+            error_details: format!("Failed to serialize lsp_node: {}", e),
         })?;
 
-        Ok(())
+        let discount_json = if let Some(discount) = &entry.discount {
+            Some(serde_json::to_string(discount).map_err(|e| BlocktankError::SerializationError {
+                error_details: format!("Failed to serialize discount: {}", e),
+            })?)
+        } else {
+            None
+        };
+
+        Ok(CJitInsertParams {
+            id: entry.id.clone(),
+            state: format!("{:?}", entry.state),
+            fee_sat: entry.fee_sat,
+            network_fee_sat: entry.network_fee_sat,
+            service_fee_sat: entry.service_fee_sat,
+            channel_size_sat: entry.channel_size_sat,
+            channel_expiry_weeks: entry.channel_expiry_weeks,
+            channel_open_error: entry.channel_open_error.clone(),
+            node_id: entry.node_id.clone(),
+            coupon_code: entry.coupon_code.clone(),
+            source: entry.source.clone(),
+            expires_at: entry.expires_at.clone(),
+            invoice_json,
+            channel_json,
+            lsp_node_json,
+            discount_json,
+            updated_at: entry.updated_at.clone(),
+            created_at: entry.created_at.clone(),
+        })
     }
 
     pub async fn get_orders(
@@ -537,66 +657,83 @@ impl BlocktankDB {
     pub async fn upsert_cjit_entry(&self, entry: &ICJitEntry) -> Result<(), BlocktankError> {
         let conn = self.conn.lock().await;
 
-        let channel_json = if let Some(channel) = &entry.channel {
-            Some(serde_json::to_string(channel).map_err(|e| BlocktankError::SerializationError {
-                error_details: format!("Failed to serialize channel: {}", e),
-            })?)
-        } else {
-            None
-        };
-
-        let invoice_json = serde_json::to_string(&entry.invoice).map_err(|e| BlocktankError::SerializationError {
-            error_details: format!("Failed to serialize invoice: {}", e),
-        })?;
-
-        let lsp_node_json = serde_json::to_string(&entry.lsp_node).map_err(|e| BlocktankError::SerializationError {
-            error_details: format!("Failed to serialize lsp_node: {}", e),
-        })?;
-
-        let discount_json = if let Some(discount) = &entry.discount {
-            Some(serde_json::to_string(discount).map_err(|e| BlocktankError::SerializationError {
-                error_details: format!("Failed to serialize discount: {}", e),
-            })?)
-        } else {
-            None
-        };
+        let params = Self::build_cjit_params(entry)?;
 
         let mut stmt = conn.prepare(
-            "INSERT OR REPLACE INTO cjit_entries (
-            id, state, fee_sat, network_fee_sat, service_fee_sat,
-            channel_size_sat, channel_expiry_weeks, channel_open_error,
-            node_id, coupon_code, source, expires_at, invoice_data,
-            channel_data, lsp_node_data, discount_data,
-            updated_at, created_at
-        ) VALUES (
-            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12,
-            ?13, ?14, ?15, ?16, ?17, ?18
-        )"
+            INSERT_CJIT_SQL
         ).map_err(|e| BlocktankError::DatabaseError {
             error_details: format!("Failed to prepare statement: {}", e),
         })?;
 
         stmt.execute(rusqlite::params![
-        entry.id,
-        format!("{:?}", entry.state),
-        entry.fee_sat,
-        entry.network_fee_sat,
-        entry.service_fee_sat,
-        entry.channel_size_sat,
-        entry.channel_expiry_weeks,
-        entry.channel_open_error,
-        entry.node_id,
-        entry.coupon_code,
-        entry.source,
-        entry.expires_at,
-        invoice_json,
-        channel_json,
-        lsp_node_json,
-        discount_json,
-        entry.updated_at,
-        entry.created_at,
-    ]).map_err(|e| BlocktankError::InsertError {
+            params.id,
+            params.state,
+            params.fee_sat,
+            params.network_fee_sat,
+            params.service_fee_sat,
+            params.channel_size_sat,
+            params.channel_expiry_weeks,
+            params.channel_open_error,
+            params.node_id,
+            params.coupon_code,
+            params.source,
+            params.expires_at,
+            params.invoice_json,
+            params.channel_json,
+            params.lsp_node_json,
+            params.discount_json,
+            params.updated_at,
+            params.created_at,
+        ]).map_err(|e| BlocktankError::InsertError {
             error_details: format!("Failed to insert CJIT entry: {}", e),
+        })?;
+
+        Ok(())
+    }
+
+    pub async fn upsert_cjit_entries(&self, entries: &[ICJitEntry]) -> Result<(), BlocktankError> {
+        let mut conn = self.conn.lock().await;
+        let tx = conn.transaction().map_err(|e| BlocktankError::DatabaseError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        {
+            let mut stmt = tx.prepare(
+                INSERT_CJIT_SQL
+            ).map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
+
+            for entry in entries {
+                let params = Self::build_cjit_params(entry)?;
+
+                stmt.execute(rusqlite::params![
+                    params.id,
+                    params.state,
+                    params.fee_sat,
+                    params.network_fee_sat,
+                    params.service_fee_sat,
+                    params.channel_size_sat,
+                    params.channel_expiry_weeks,
+                    params.channel_open_error,
+                    params.node_id,
+                    params.coupon_code,
+                    params.source,
+                    params.expires_at,
+                    params.invoice_json,
+                    params.channel_json,
+                    params.lsp_node_json,
+                    params.discount_json,
+                    params.updated_at,
+                    params.created_at,
+                ]).map_err(|e| BlocktankError::InsertError {
+                    error_details: format!("Failed to insert CJIT entry {}: {}", params.id, e),
+                })?;
+            }
+        }
+
+        tx.commit().map_err(|e| BlocktankError::DatabaseError {
+            error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
         Ok(())
@@ -883,4 +1020,51 @@ impl BlocktankDB {
 
         Ok(())
     }
+}
+
+struct OrderInsertParams {
+    id: String,
+    state: String,
+    state2: String,
+    fee_sat: u64,
+    network_fee_sat: u64,
+    service_fee_sat: u64,
+    lsp_balance_sat: u64,
+    client_balance_sat: u64,
+    zero_conf: bool,
+    zero_reserve: bool,
+    client_node_id: Option<String>,
+    channel_expiry_weeks: u32,
+    channel_expires_at: String,
+    order_expires_at: String,
+    lnurl: Option<String>,
+    coupon_code: Option<String>,
+    source: Option<String>,
+    channel_json: Option<String>,
+    lsp_node_json: String,
+    payment_json: String,
+    discount_json: Option<String>,
+    updated_at: String,
+    created_at: String,
+}
+
+struct CJitInsertParams {
+    id: String,
+    state: String,
+    fee_sat: u64,
+    network_fee_sat: u64,
+    service_fee_sat: u64,
+    channel_size_sat: u64,
+    channel_expiry_weeks: u32,
+    channel_open_error: Option<String>,
+    node_id: String,
+    coupon_code: String,
+    source: Option<String>,
+    expires_at: String,
+    invoice_json: String,
+    channel_json: Option<String>,
+    lsp_node_json: String,
+    discount_json: Option<String>,
+    updated_at: String,
+    created_at: String,
 }

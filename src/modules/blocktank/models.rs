@@ -83,6 +83,31 @@ pub const CREATE_CJIT_ENTRIES_TABLE: &str = "
         discount_data TEXT  -- JSON for IDiscount
     )";
 
+pub const INSERT_ORDER_SQL: &str = "
+    INSERT OR REPLACE INTO orders (
+        id, state, state2, fee_sat, network_fee_sat, service_fee_sat,
+        lsp_balance_sat, client_balance_sat, zero_conf, zero_reserve,
+        client_node_id, channel_expiry_weeks, channel_expires_at,
+        order_expires_at, lnurl, coupon_code, source, channel_data,
+        lsp_node_data, payment_data, discount_data,
+        updated_at, created_at
+    ) VALUES (
+        ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13,
+        ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23
+    )";
+
+pub const INSERT_CJIT_SQL: &str = "
+    INSERT OR REPLACE INTO cjit_entries (
+        id, state, fee_sat, network_fee_sat, service_fee_sat,
+        channel_size_sat, channel_expiry_weeks, channel_open_error,
+        node_id, coupon_code, source, expires_at, invoice_data,
+        channel_data, lsp_node_data, discount_data,
+        updated_at, created_at
+    ) VALUES (
+        ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12,
+        ?13, ?14, ?15, ?16, ?17, ?18
+    )";
+
 /// Trigger statements for data management
 pub const TRIGGER_STATEMENTS: &[&str] = &[
     // Ensure single current version trigger - INSERT
