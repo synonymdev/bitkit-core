@@ -454,7 +454,7 @@ def _uniffi_load_indirect():
 
 def _uniffi_check_contract_api_version(lib):
     # Get the bindings contract version from our ComponentInterface
-    bindings_contract_version = 26
+    bindings_contract_version = 29
     # Get the scaffolding contract version by calling the into the dylib
     scaffolding_contract_version = lib.ffi_bitkitcore_uniffi_contract_version()
     if bindings_contract_version != scaffolding_contract_version:
@@ -7492,8 +7492,6 @@ class Activity:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], OnchainActivity):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'OnchainActivity', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -7503,15 +7501,13 @@ class Activity:
             return f"Activity.ONCHAIN{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_onchain():
+            if not other.is_ONCHAIN():
                 return False
             return self._values == other._values
     class LIGHTNING:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], LightningActivity):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'LightningActivity', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -7521,15 +7517,19 @@ class Activity:
             return f"Activity.LIGHTNING{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_lightning():
+            if not other.is_LIGHTNING():
                 return False
             return self._values == other._values
     
 
-    # For each variant, we have an `is_NAME` method for easily checking
+    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
     # whether an instance is that variant.
+    def is_ONCHAIN(self) -> bool:
+        return isinstance(self, Activity.ONCHAIN)
     def is_onchain(self) -> bool:
         return isinstance(self, Activity.ONCHAIN)
+    def is_LIGHTNING(self) -> bool:
+        return isinstance(self, Activity.LIGHTNING)
     def is_lightning(self) -> bool:
         return isinstance(self, Activity.LIGHTNING)
     
@@ -7559,20 +7559,20 @@ class _UniffiConverterTypeActivity(_UniffiConverterRustBuffer):
 
     @staticmethod
     def check_lower(value):
-        if value.is_onchain():
+        if value.is_ONCHAIN():
             _UniffiConverterTypeOnchainActivity.check_lower(value._values[0])
             return
-        if value.is_lightning():
+        if value.is_LIGHTNING():
             _UniffiConverterTypeLightningActivity.check_lower(value._values[0])
             return
         raise ValueError(value)
 
     @staticmethod
     def write(value, buf):
-        if value.is_onchain():
+        if value.is_ONCHAIN():
             buf.write_i32(1)
             _UniffiConverterTypeOnchainActivity.write(value._values[0], buf)
-        if value.is_lightning():
+        if value.is_LIGHTNING():
             buf.write_i32(2)
             _UniffiConverterTypeLightningActivity.write(value._values[0], buf)
 
@@ -8908,7 +8908,7 @@ class ComposeOutput:
             return "ComposeOutput.REGULAR(amount={}, address={})".format(self.amount, self.address)
 
         def __eq__(self, other):
-            if not other.is_regular():
+            if not other.is_REGULAR():
                 return False
             if self.amount != other.amount:
                 return False
@@ -8934,7 +8934,7 @@ class ComposeOutput:
             return "ComposeOutput.SEND_MAX(address={})".format(self.address)
 
         def __eq__(self, other):
-            if not other.is_send_max():
+            if not other.is_SEND_MAX():
                 return False
             if self.address != other.address:
                 return False
@@ -8958,7 +8958,7 @@ class ComposeOutput:
             return "ComposeOutput.OP_RETURN(data_hex={})".format(self.data_hex)
 
         def __eq__(self, other):
-            if not other.is_op_return():
+            if not other.is_OP_RETURN():
                 return False
             if self.data_hex != other.data_hex:
                 return False
@@ -8982,7 +8982,7 @@ class ComposeOutput:
             return "ComposeOutput.PAYMENT_NO_ADDRESS(amount={})".format(self.amount)
 
         def __eq__(self, other):
-            if not other.is_payment_no_address():
+            if not other.is_PAYMENT_NO_ADDRESS():
                 return False
             if self.amount != other.amount:
                 return False
@@ -9001,22 +9001,32 @@ class ComposeOutput:
             return "ComposeOutput.SEND_MAX_NO_ADDRESS()".format()
 
         def __eq__(self, other):
-            if not other.is_send_max_no_address():
+            if not other.is_SEND_MAX_NO_ADDRESS():
                 return False
             return True
     
     
 
-    # For each variant, we have an `is_NAME` method for easily checking
+    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
     # whether an instance is that variant.
+    def is_REGULAR(self) -> bool:
+        return isinstance(self, ComposeOutput.REGULAR)
     def is_regular(self) -> bool:
         return isinstance(self, ComposeOutput.REGULAR)
+    def is_SEND_MAX(self) -> bool:
+        return isinstance(self, ComposeOutput.SEND_MAX)
     def is_send_max(self) -> bool:
         return isinstance(self, ComposeOutput.SEND_MAX)
+    def is_OP_RETURN(self) -> bool:
+        return isinstance(self, ComposeOutput.OP_RETURN)
     def is_op_return(self) -> bool:
         return isinstance(self, ComposeOutput.OP_RETURN)
+    def is_PAYMENT_NO_ADDRESS(self) -> bool:
+        return isinstance(self, ComposeOutput.PAYMENT_NO_ADDRESS)
     def is_payment_no_address(self) -> bool:
         return isinstance(self, ComposeOutput.PAYMENT_NO_ADDRESS)
+    def is_SEND_MAX_NO_ADDRESS(self) -> bool:
+        return isinstance(self, ComposeOutput.SEND_MAX_NO_ADDRESS)
     def is_send_max_no_address(self) -> bool:
         return isinstance(self, ComposeOutput.SEND_MAX_NO_ADDRESS)
     
@@ -9061,39 +9071,39 @@ class _UniffiConverterTypeComposeOutput(_UniffiConverterRustBuffer):
 
     @staticmethod
     def check_lower(value):
-        if value.is_regular():
+        if value.is_REGULAR():
             _UniffiConverterString.check_lower(value.amount)
             _UniffiConverterString.check_lower(value.address)
             return
-        if value.is_send_max():
+        if value.is_SEND_MAX():
             _UniffiConverterString.check_lower(value.address)
             return
-        if value.is_op_return():
+        if value.is_OP_RETURN():
             _UniffiConverterString.check_lower(value.data_hex)
             return
-        if value.is_payment_no_address():
+        if value.is_PAYMENT_NO_ADDRESS():
             _UniffiConverterString.check_lower(value.amount)
             return
-        if value.is_send_max_no_address():
+        if value.is_SEND_MAX_NO_ADDRESS():
             return
         raise ValueError(value)
 
     @staticmethod
     def write(value, buf):
-        if value.is_regular():
+        if value.is_REGULAR():
             buf.write_i32(1)
             _UniffiConverterString.write(value.amount, buf)
             _UniffiConverterString.write(value.address, buf)
-        if value.is_send_max():
+        if value.is_SEND_MAX():
             buf.write_i32(2)
             _UniffiConverterString.write(value.address, buf)
-        if value.is_op_return():
+        if value.is_OP_RETURN():
             buf.write_i32(3)
             _UniffiConverterString.write(value.data_hex, buf)
-        if value.is_payment_no_address():
+        if value.is_PAYMENT_NO_ADDRESS():
             buf.write_i32(4)
             _UniffiConverterString.write(value.amount, buf)
-        if value.is_send_max_no_address():
+        if value.is_SEND_MAX_NO_ADDRESS():
             buf.write_i32(5)
 
 
@@ -9119,8 +9129,6 @@ class ComposeTransactionResponse:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], SignedTransactionResponse):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'SignedTransactionResponse', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -9130,7 +9138,7 @@ class ComposeTransactionResponse:
             return f"ComposeTransactionResponse.SIGNED_TRANSACTION{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_signed_transaction():
+            if not other.is_SIGNED_TRANSACTION():
                 return False
             return self._values == other._values
     class PRECOMPOSED_TRANSACTIONS:
@@ -9141,8 +9149,6 @@ class ComposeTransactionResponse:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], typing.List[PrecomposedTransaction]):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'typing.List[PrecomposedTransaction]', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -9152,15 +9158,19 @@ class ComposeTransactionResponse:
             return f"ComposeTransactionResponse.PRECOMPOSED_TRANSACTIONS{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_precomposed_transactions():
+            if not other.is_PRECOMPOSED_TRANSACTIONS():
                 return False
             return self._values == other._values
     
 
-    # For each variant, we have an `is_NAME` method for easily checking
+    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
     # whether an instance is that variant.
+    def is_SIGNED_TRANSACTION(self) -> bool:
+        return isinstance(self, ComposeTransactionResponse.SIGNED_TRANSACTION)
     def is_signed_transaction(self) -> bool:
         return isinstance(self, ComposeTransactionResponse.SIGNED_TRANSACTION)
+    def is_PRECOMPOSED_TRANSACTIONS(self) -> bool:
+        return isinstance(self, ComposeTransactionResponse.PRECOMPOSED_TRANSACTIONS)
     def is_precomposed_transactions(self) -> bool:
         return isinstance(self, ComposeTransactionResponse.PRECOMPOSED_TRANSACTIONS)
     
@@ -9190,20 +9200,20 @@ class _UniffiConverterTypeComposeTransactionResponse(_UniffiConverterRustBuffer)
 
     @staticmethod
     def check_lower(value):
-        if value.is_signed_transaction():
+        if value.is_SIGNED_TRANSACTION():
             _UniffiConverterTypeSignedTransactionResponse.check_lower(value._values[0])
             return
-        if value.is_precomposed_transactions():
+        if value.is_PRECOMPOSED_TRANSACTIONS():
             _UniffiConverterSequenceTypePrecomposedTransaction.check_lower(value._values[0])
             return
         raise ValueError(value)
 
     @staticmethod
     def write(value, buf):
-        if value.is_signed_transaction():
+        if value.is_SIGNED_TRANSACTION():
             buf.write_i32(1)
             _UniffiConverterTypeSignedTransactionResponse.write(value._values[0], buf)
-        if value.is_precomposed_transactions():
+        if value.is_PRECOMPOSED_TRANSACTIONS():
             buf.write_i32(2)
             _UniffiConverterSequenceTypePrecomposedTransaction.write(value._values[0], buf)
 
@@ -9602,8 +9612,6 @@ class HdNodeTypeOrString:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], str):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'str', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -9613,7 +9621,7 @@ class HdNodeTypeOrString:
             return f"HdNodeTypeOrString.STRING{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_string():
+            if not other.is_STRING():
                 return False
             return self._values == other._values
     class NODE:
@@ -9624,8 +9632,6 @@ class HdNodeTypeOrString:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], HdNodeType):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'HdNodeType', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -9635,15 +9641,19 @@ class HdNodeTypeOrString:
             return f"HdNodeTypeOrString.NODE{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_node():
+            if not other.is_NODE():
                 return False
             return self._values == other._values
     
 
-    # For each variant, we have an `is_NAME` method for easily checking
+    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
     # whether an instance is that variant.
+    def is_STRING(self) -> bool:
+        return isinstance(self, HdNodeTypeOrString.STRING)
     def is_string(self) -> bool:
         return isinstance(self, HdNodeTypeOrString.STRING)
+    def is_NODE(self) -> bool:
+        return isinstance(self, HdNodeTypeOrString.NODE)
     def is_node(self) -> bool:
         return isinstance(self, HdNodeTypeOrString.NODE)
     
@@ -9673,20 +9683,20 @@ class _UniffiConverterTypeHdNodeTypeOrString(_UniffiConverterRustBuffer):
 
     @staticmethod
     def check_lower(value):
-        if value.is_string():
+        if value.is_STRING():
             _UniffiConverterString.check_lower(value._values[0])
             return
-        if value.is_node():
+        if value.is_NODE():
             _UniffiConverterTypeHdNodeType.check_lower(value._values[0])
             return
         raise ValueError(value)
 
     @staticmethod
     def write(value, buf):
-        if value.is_string():
+        if value.is_STRING():
             buf.write_i32(1)
             _UniffiConverterString.write(value._values[0], buf)
-        if value.is_node():
+        if value.is_NODE():
             buf.write_i32(2)
             _UniffiConverterTypeHdNodeType.write(value._values[0], buf)
 
@@ -10135,7 +10145,7 @@ class Scanner:
             return "Scanner.ON_CHAIN(invoice={})".format(self.invoice)
 
         def __eq__(self, other):
-            if not other.is_on_chain():
+            if not other.is_ON_CHAIN():
                 return False
             if self.invoice != other.invoice:
                 return False
@@ -10151,7 +10161,7 @@ class Scanner:
             return "Scanner.LIGHTNING(invoice={})".format(self.invoice)
 
         def __eq__(self, other):
-            if not other.is_lightning():
+            if not other.is_LIGHTNING():
                 return False
             if self.invoice != other.invoice:
                 return False
@@ -10167,7 +10177,7 @@ class Scanner:
             return "Scanner.PUBKY_AUTH(data={})".format(self.data)
 
         def __eq__(self, other):
-            if not other.is_pubky_auth():
+            if not other.is_PUBKY_AUTH():
                 return False
             if self.data != other.data:
                 return False
@@ -10183,7 +10193,7 @@ class Scanner:
             return "Scanner.LNURL_CHANNEL(data={})".format(self.data)
 
         def __eq__(self, other):
-            if not other.is_lnurl_channel():
+            if not other.is_LNURL_CHANNEL():
                 return False
             if self.data != other.data:
                 return False
@@ -10199,7 +10209,7 @@ class Scanner:
             return "Scanner.LNURL_AUTH(data={})".format(self.data)
 
         def __eq__(self, other):
-            if not other.is_lnurl_auth():
+            if not other.is_LNURL_AUTH():
                 return False
             if self.data != other.data:
                 return False
@@ -10215,7 +10225,7 @@ class Scanner:
             return "Scanner.LNURL_WITHDRAW(data={})".format(self.data)
 
         def __eq__(self, other):
-            if not other.is_lnurl_withdraw():
+            if not other.is_LNURL_WITHDRAW():
                 return False
             if self.data != other.data:
                 return False
@@ -10231,7 +10241,7 @@ class Scanner:
             return "Scanner.LNURL_ADDRESS(data={})".format(self.data)
 
         def __eq__(self, other):
-            if not other.is_lnurl_address():
+            if not other.is_LNURL_ADDRESS():
                 return False
             if self.data != other.data:
                 return False
@@ -10247,7 +10257,7 @@ class Scanner:
             return "Scanner.LNURL_PAY(data={})".format(self.data)
 
         def __eq__(self, other):
-            if not other.is_lnurl_pay():
+            if not other.is_LNURL_PAY():
                 return False
             if self.data != other.data:
                 return False
@@ -10265,7 +10275,7 @@ class Scanner:
             return "Scanner.NODE_ID(url={}, network={})".format(self.url, self.network)
 
         def __eq__(self, other):
-            if not other.is_node_id():
+            if not other.is_NODE_ID():
                 return False
             if self.url != other.url:
                 return False
@@ -10285,7 +10295,7 @@ class Scanner:
             return "Scanner.GIFT(code={}, amount={})".format(self.code, self.amount)
 
         def __eq__(self, other):
-            if not other.is_gift():
+            if not other.is_GIFT():
                 return False
             if self.code != other.code:
                 return False
@@ -10295,26 +10305,46 @@ class Scanner:
     
     
 
-    # For each variant, we have an `is_NAME` method for easily checking
+    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
     # whether an instance is that variant.
+    def is_ON_CHAIN(self) -> bool:
+        return isinstance(self, Scanner.ON_CHAIN)
     def is_on_chain(self) -> bool:
         return isinstance(self, Scanner.ON_CHAIN)
+    def is_LIGHTNING(self) -> bool:
+        return isinstance(self, Scanner.LIGHTNING)
     def is_lightning(self) -> bool:
         return isinstance(self, Scanner.LIGHTNING)
+    def is_PUBKY_AUTH(self) -> bool:
+        return isinstance(self, Scanner.PUBKY_AUTH)
     def is_pubky_auth(self) -> bool:
         return isinstance(self, Scanner.PUBKY_AUTH)
+    def is_LNURL_CHANNEL(self) -> bool:
+        return isinstance(self, Scanner.LNURL_CHANNEL)
     def is_lnurl_channel(self) -> bool:
         return isinstance(self, Scanner.LNURL_CHANNEL)
+    def is_LNURL_AUTH(self) -> bool:
+        return isinstance(self, Scanner.LNURL_AUTH)
     def is_lnurl_auth(self) -> bool:
         return isinstance(self, Scanner.LNURL_AUTH)
+    def is_LNURL_WITHDRAW(self) -> bool:
+        return isinstance(self, Scanner.LNURL_WITHDRAW)
     def is_lnurl_withdraw(self) -> bool:
         return isinstance(self, Scanner.LNURL_WITHDRAW)
+    def is_LNURL_ADDRESS(self) -> bool:
+        return isinstance(self, Scanner.LNURL_ADDRESS)
     def is_lnurl_address(self) -> bool:
         return isinstance(self, Scanner.LNURL_ADDRESS)
+    def is_LNURL_PAY(self) -> bool:
+        return isinstance(self, Scanner.LNURL_PAY)
     def is_lnurl_pay(self) -> bool:
         return isinstance(self, Scanner.LNURL_PAY)
+    def is_NODE_ID(self) -> bool:
+        return isinstance(self, Scanner.NODE_ID)
     def is_node_id(self) -> bool:
         return isinstance(self, Scanner.NODE_ID)
+    def is_GIFT(self) -> bool:
+        return isinstance(self, Scanner.GIFT)
     def is_gift(self) -> bool:
         return isinstance(self, Scanner.GIFT)
     
@@ -10386,35 +10416,35 @@ class _UniffiConverterTypeScanner(_UniffiConverterRustBuffer):
 
     @staticmethod
     def check_lower(value):
-        if value.is_on_chain():
+        if value.is_ON_CHAIN():
             _UniffiConverterTypeOnChainInvoice.check_lower(value.invoice)
             return
-        if value.is_lightning():
+        if value.is_LIGHTNING():
             _UniffiConverterTypeLightningInvoice.check_lower(value.invoice)
             return
-        if value.is_pubky_auth():
+        if value.is_PUBKY_AUTH():
             _UniffiConverterString.check_lower(value.data)
             return
-        if value.is_lnurl_channel():
+        if value.is_LNURL_CHANNEL():
             _UniffiConverterTypeLnurlChannelData.check_lower(value.data)
             return
-        if value.is_lnurl_auth():
+        if value.is_LNURL_AUTH():
             _UniffiConverterTypeLnurlAuthData.check_lower(value.data)
             return
-        if value.is_lnurl_withdraw():
+        if value.is_LNURL_WITHDRAW():
             _UniffiConverterTypeLnurlWithdrawData.check_lower(value.data)
             return
-        if value.is_lnurl_address():
+        if value.is_LNURL_ADDRESS():
             _UniffiConverterTypeLnurlAddressData.check_lower(value.data)
             return
-        if value.is_lnurl_pay():
+        if value.is_LNURL_PAY():
             _UniffiConverterTypeLnurlPayData.check_lower(value.data)
             return
-        if value.is_node_id():
+        if value.is_NODE_ID():
             _UniffiConverterString.check_lower(value.url)
             _UniffiConverterTypeNetworkType.check_lower(value.network)
             return
-        if value.is_gift():
+        if value.is_GIFT():
             _UniffiConverterString.check_lower(value.code)
             _UniffiConverterUInt64.check_lower(value.amount)
             return
@@ -10422,35 +10452,35 @@ class _UniffiConverterTypeScanner(_UniffiConverterRustBuffer):
 
     @staticmethod
     def write(value, buf):
-        if value.is_on_chain():
+        if value.is_ON_CHAIN():
             buf.write_i32(1)
             _UniffiConverterTypeOnChainInvoice.write(value.invoice, buf)
-        if value.is_lightning():
+        if value.is_LIGHTNING():
             buf.write_i32(2)
             _UniffiConverterTypeLightningInvoice.write(value.invoice, buf)
-        if value.is_pubky_auth():
+        if value.is_PUBKY_AUTH():
             buf.write_i32(3)
             _UniffiConverterString.write(value.data, buf)
-        if value.is_lnurl_channel():
+        if value.is_LNURL_CHANNEL():
             buf.write_i32(4)
             _UniffiConverterTypeLnurlChannelData.write(value.data, buf)
-        if value.is_lnurl_auth():
+        if value.is_LNURL_AUTH():
             buf.write_i32(5)
             _UniffiConverterTypeLnurlAuthData.write(value.data, buf)
-        if value.is_lnurl_withdraw():
+        if value.is_LNURL_WITHDRAW():
             buf.write_i32(6)
             _UniffiConverterTypeLnurlWithdrawData.write(value.data, buf)
-        if value.is_lnurl_address():
+        if value.is_LNURL_ADDRESS():
             buf.write_i32(7)
             _UniffiConverterTypeLnurlAddressData.write(value.data, buf)
-        if value.is_lnurl_pay():
+        if value.is_LNURL_PAY():
             buf.write_i32(8)
             _UniffiConverterTypeLnurlPayData.write(value.data, buf)
-        if value.is_node_id():
+        if value.is_NODE_ID():
             buf.write_i32(9)
             _UniffiConverterString.write(value.url, buf)
             _UniffiConverterTypeNetworkType.write(value.network, buf)
-        if value.is_gift():
+        if value.is_GIFT():
             buf.write_i32(10)
             _UniffiConverterString.write(value.code, buf)
             _UniffiConverterUInt64.write(value.amount, buf)
@@ -10924,8 +10954,6 @@ class TrezorResponsePayload:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], FeatureResponse):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'FeatureResponse', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -10935,7 +10963,7 @@ class TrezorResponsePayload:
             return f"TrezorResponsePayload.FEATURES{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_features():
+            if not other.is_FEATURES():
                 return False
             return self._values == other._values
     class ADDRESS:
@@ -10946,8 +10974,6 @@ class TrezorResponsePayload:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], AddressResponse):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'AddressResponse', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -10957,7 +10983,7 @@ class TrezorResponsePayload:
             return f"TrezorResponsePayload.ADDRESS{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_address():
+            if not other.is_ADDRESS():
                 return False
             return self._values == other._values
     class PUBLIC_KEY:
@@ -10968,8 +10994,6 @@ class TrezorResponsePayload:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], PublicKeyResponse):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'PublicKeyResponse', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -10979,7 +11003,7 @@ class TrezorResponsePayload:
             return f"TrezorResponsePayload.PUBLIC_KEY{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_public_key():
+            if not other.is_PUBLIC_KEY():
                 return False
             return self._values == other._values
     class ACCOUNT_INFO:
@@ -10990,8 +11014,6 @@ class TrezorResponsePayload:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], AccountInfoResponse):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'AccountInfoResponse', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -11001,7 +11023,7 @@ class TrezorResponsePayload:
             return f"TrezorResponsePayload.ACCOUNT_INFO{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_account_info():
+            if not other.is_ACCOUNT_INFO():
                 return False
             return self._values == other._values
     class COMPOSE_TRANSACTION:
@@ -11012,8 +11034,6 @@ class TrezorResponsePayload:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], ComposeTransactionResponse):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'ComposeTransactionResponse', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -11023,7 +11043,7 @@ class TrezorResponsePayload:
             return f"TrezorResponsePayload.COMPOSE_TRANSACTION{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_compose_transaction():
+            if not other.is_COMPOSE_TRANSACTION():
                 return False
             return self._values == other._values
     class VERIFY_MESSAGE:
@@ -11034,8 +11054,6 @@ class TrezorResponsePayload:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], VerifyMessageResponse):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'VerifyMessageResponse', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -11045,7 +11063,7 @@ class TrezorResponsePayload:
             return f"TrezorResponsePayload.VERIFY_MESSAGE{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_verify_message():
+            if not other.is_VERIFY_MESSAGE():
                 return False
             return self._values == other._values
     class MESSAGE_SIGNATURE:
@@ -11056,8 +11074,6 @@ class TrezorResponsePayload:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], MessageSignatureResponse):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'MessageSignatureResponse', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -11067,7 +11083,7 @@ class TrezorResponsePayload:
             return f"TrezorResponsePayload.MESSAGE_SIGNATURE{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_message_signature():
+            if not other.is_MESSAGE_SIGNATURE():
                 return False
             return self._values == other._values
     class SIGNED_TRANSACTION:
@@ -11078,8 +11094,6 @@ class TrezorResponsePayload:
         def __init__(self, *values):
             if len(values) != 1:
                 raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            if not isinstance(values[0], SignedTransactionResponse):
-                raise TypeError(f"unexpected type for tuple element 0 - expected 'SignedTransactionResponse', got '{type(values[0])}'")
             self._values = values
 
         def __getitem__(self, index):
@@ -11089,27 +11103,43 @@ class TrezorResponsePayload:
             return f"TrezorResponsePayload.SIGNED_TRANSACTION{self._values!r}"
 
         def __eq__(self, other):
-            if not other.is_signed_transaction():
+            if not other.is_SIGNED_TRANSACTION():
                 return False
             return self._values == other._values
     
 
-    # For each variant, we have an `is_NAME` method for easily checking
+    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
     # whether an instance is that variant.
+    def is_FEATURES(self) -> bool:
+        return isinstance(self, TrezorResponsePayload.FEATURES)
     def is_features(self) -> bool:
         return isinstance(self, TrezorResponsePayload.FEATURES)
+    def is_ADDRESS(self) -> bool:
+        return isinstance(self, TrezorResponsePayload.ADDRESS)
     def is_address(self) -> bool:
         return isinstance(self, TrezorResponsePayload.ADDRESS)
+    def is_PUBLIC_KEY(self) -> bool:
+        return isinstance(self, TrezorResponsePayload.PUBLIC_KEY)
     def is_public_key(self) -> bool:
         return isinstance(self, TrezorResponsePayload.PUBLIC_KEY)
+    def is_ACCOUNT_INFO(self) -> bool:
+        return isinstance(self, TrezorResponsePayload.ACCOUNT_INFO)
     def is_account_info(self) -> bool:
         return isinstance(self, TrezorResponsePayload.ACCOUNT_INFO)
+    def is_COMPOSE_TRANSACTION(self) -> bool:
+        return isinstance(self, TrezorResponsePayload.COMPOSE_TRANSACTION)
     def is_compose_transaction(self) -> bool:
         return isinstance(self, TrezorResponsePayload.COMPOSE_TRANSACTION)
+    def is_VERIFY_MESSAGE(self) -> bool:
+        return isinstance(self, TrezorResponsePayload.VERIFY_MESSAGE)
     def is_verify_message(self) -> bool:
         return isinstance(self, TrezorResponsePayload.VERIFY_MESSAGE)
+    def is_MESSAGE_SIGNATURE(self) -> bool:
+        return isinstance(self, TrezorResponsePayload.MESSAGE_SIGNATURE)
     def is_message_signature(self) -> bool:
         return isinstance(self, TrezorResponsePayload.MESSAGE_SIGNATURE)
+    def is_SIGNED_TRANSACTION(self) -> bool:
+        return isinstance(self, TrezorResponsePayload.SIGNED_TRANSACTION)
     def is_signed_transaction(self) -> bool:
         return isinstance(self, TrezorResponsePayload.SIGNED_TRANSACTION)
     
@@ -11169,56 +11199,56 @@ class _UniffiConverterTypeTrezorResponsePayload(_UniffiConverterRustBuffer):
 
     @staticmethod
     def check_lower(value):
-        if value.is_features():
+        if value.is_FEATURES():
             _UniffiConverterTypeFeatureResponse.check_lower(value._values[0])
             return
-        if value.is_address():
+        if value.is_ADDRESS():
             _UniffiConverterTypeAddressResponse.check_lower(value._values[0])
             return
-        if value.is_public_key():
+        if value.is_PUBLIC_KEY():
             _UniffiConverterTypePublicKeyResponse.check_lower(value._values[0])
             return
-        if value.is_account_info():
+        if value.is_ACCOUNT_INFO():
             _UniffiConverterTypeAccountInfoResponse.check_lower(value._values[0])
             return
-        if value.is_compose_transaction():
+        if value.is_COMPOSE_TRANSACTION():
             _UniffiConverterTypeComposeTransactionResponse.check_lower(value._values[0])
             return
-        if value.is_verify_message():
+        if value.is_VERIFY_MESSAGE():
             _UniffiConverterTypeVerifyMessageResponse.check_lower(value._values[0])
             return
-        if value.is_message_signature():
+        if value.is_MESSAGE_SIGNATURE():
             _UniffiConverterTypeMessageSignatureResponse.check_lower(value._values[0])
             return
-        if value.is_signed_transaction():
+        if value.is_SIGNED_TRANSACTION():
             _UniffiConverterTypeSignedTransactionResponse.check_lower(value._values[0])
             return
         raise ValueError(value)
 
     @staticmethod
     def write(value, buf):
-        if value.is_features():
+        if value.is_FEATURES():
             buf.write_i32(1)
             _UniffiConverterTypeFeatureResponse.write(value._values[0], buf)
-        if value.is_address():
+        if value.is_ADDRESS():
             buf.write_i32(2)
             _UniffiConverterTypeAddressResponse.write(value._values[0], buf)
-        if value.is_public_key():
+        if value.is_PUBLIC_KEY():
             buf.write_i32(3)
             _UniffiConverterTypePublicKeyResponse.write(value._values[0], buf)
-        if value.is_account_info():
+        if value.is_ACCOUNT_INFO():
             buf.write_i32(4)
             _UniffiConverterTypeAccountInfoResponse.write(value._values[0], buf)
-        if value.is_compose_transaction():
+        if value.is_COMPOSE_TRANSACTION():
             buf.write_i32(5)
             _UniffiConverterTypeComposeTransactionResponse.write(value._values[0], buf)
-        if value.is_verify_message():
+        if value.is_VERIFY_MESSAGE():
             buf.write_i32(6)
             _UniffiConverterTypeVerifyMessageResponse.write(value._values[0], buf)
-        if value.is_message_signature():
+        if value.is_MESSAGE_SIGNATURE():
             buf.write_i32(7)
             _UniffiConverterTypeMessageSignatureResponse.write(value._values[0], buf)
-        if value.is_signed_transaction():
+        if value.is_SIGNED_TRANSACTION():
             buf.write_i32(8)
             _UniffiConverterTypeSignedTransactionResponse.write(value._values[0], buf)
 
@@ -13604,6 +13634,8 @@ class _UniffiConverterMapStringString(_UniffiConverterRustBuffer):
             val = _UniffiConverterString.read(buf)
             d[key] = val
         return d
+
+# objects.
 
 # Async support# RustFuturePoll values
 _UNIFFI_RUST_FUTURE_POLL_READY = 0
