@@ -1108,6 +1108,10 @@ internal interface UniffiForeignFutureCompleteVoid: com.sun.jna.Callback {
 
 
 
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1211,6 +1215,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_all_closed_channels() != 16828.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_get_all_tag_metadata() != 23646.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431.toShort()) {
@@ -1366,6 +1373,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_upsert_orders() != 45856.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_upsert_tags() != 47513.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1446,6 +1456,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_all_closed_channels(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_all_tag_metadata(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_all_unique_tags(
@@ -1599,6 +1612,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_orders(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_upsert_tags(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_validate_bitcoin_address(
@@ -1762,6 +1778,10 @@ internal object UniffiLib : Library {
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_all_closed_channels(
         `sortDirection`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_all_tag_metadata(
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
@@ -2099,6 +2119,11 @@ internal object UniffiLib : Library {
     external fun uniffi_bitkitcore_fn_func_upsert_orders(
         `orders`: RustBufferByValue,
     ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_upsert_tags(
+        `activityTags`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_validate_bitcoin_address(
         `address`: RustBufferByValue,
@@ -2656,6 +2681,65 @@ public object FfiConverterTypeAccountUtxo: FfiConverterRustBuffer<AccountUtxo> {
         FfiConverterString.write(value.`address`, buf)
         FfiConverterString.write(value.`path`, buf)
         FfiConverterOptionalUInt.write(value.`confirmations`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeActivityTags: FfiConverterRustBuffer<ActivityTags> {
+    override fun read(buf: ByteBuffer): ActivityTags {
+        return ActivityTags(
+            FfiConverterString.read(buf),
+            FfiConverterSequenceString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ActivityTags): ULong = (
+            FfiConverterString.allocationSize(value.`activityId`) +
+            FfiConverterSequenceString.allocationSize(value.`tags`)
+    )
+
+    override fun write(value: ActivityTags, buf: ByteBuffer) {
+        FfiConverterString.write(value.`activityId`, buf)
+        FfiConverterSequenceString.write(value.`tags`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeActivityTagsMetadata: FfiConverterRustBuffer<ActivityTagsMetadata> {
+    override fun read(buf: ByteBuffer): ActivityTagsMetadata {
+        return ActivityTagsMetadata(
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterBoolean.read(buf),
+            FfiConverterSequenceString.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ActivityTagsMetadata): ULong = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterOptionalString.allocationSize(value.`paymentHash`) +
+            FfiConverterOptionalString.allocationSize(value.`txId`) +
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterBoolean.allocationSize(value.`isReceive`) +
+            FfiConverterSequenceString.allocationSize(value.`tags`) +
+            FfiConverterULong.allocationSize(value.`createdAt`)
+    )
+
+    override fun write(value: ActivityTagsMetadata, buf: ByteBuffer) {
+        FfiConverterString.write(value.`id`, buf)
+        FfiConverterOptionalString.write(value.`paymentHash`, buf)
+        FfiConverterOptionalString.write(value.`txId`, buf)
+        FfiConverterString.write(value.`address`, buf)
+        FfiConverterBoolean.write(value.`isReceive`, buf)
+        FfiConverterSequenceString.write(value.`tags`, buf)
+        FfiConverterULong.write(value.`createdAt`, buf)
     }
 }
 
@@ -8743,6 +8827,56 @@ public object FfiConverterSequenceTypeAccountUtxo: FfiConverterRustBuffer<List<A
 
 
 
+public object FfiConverterSequenceTypeActivityTags: FfiConverterRustBuffer<List<ActivityTags>> {
+    override fun read(buf: ByteBuffer): List<ActivityTags> {
+        val len = buf.getInt()
+        return List<ActivityTags>(len) {
+            FfiConverterTypeActivityTags.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<ActivityTags>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeActivityTags.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<ActivityTags>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeActivityTags.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeActivityTagsMetadata: FfiConverterRustBuffer<List<ActivityTagsMetadata>> {
+    override fun read(buf: ByteBuffer): List<ActivityTagsMetadata> {
+        val len = buf.getInt()
+        return List<ActivityTagsMetadata>(len) {
+            FfiConverterTypeActivityTagsMetadata.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<ActivityTagsMetadata>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeActivityTagsMetadata.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<ActivityTagsMetadata>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeActivityTagsMetadata.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceTypeAddressInfo: FfiConverterRustBuffer<List<AddressInfo>> {
     override fun read(buf: ByteBuffer): List<AddressInfo> {
         val len = buf.getInt()
@@ -9726,6 +9860,15 @@ public fun `getAllClosedChannels`(`sortDirection`: SortDirection?): List<ClosedC
 }
 
 @Throws(ActivityException::class)
+public fun `getAllTagMetadata`(): List<ActivityTagsMetadata> {
+    return FfiConverterSequenceTypeActivityTagsMetadata.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_get_all_tag_metadata(
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+@Throws(ActivityException::class)
 public fun `getAllUniqueTags`(): List<kotlin.String> {
     return FfiConverterSequenceString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags(
@@ -10513,6 +10656,16 @@ public suspend fun `upsertOrders`(`orders`: List<IBtOrder>) {
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
+}
+
+@Throws(ActivityException::class)
+public fun `upsertTags`(`activityTags`: List<ActivityTags>) {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_upsert_tags(
+            FfiConverterSequenceTypeActivityTags.lower(`activityTags`),
+            uniffiRustCallStatus,
+        )
+    }
 }
 
 @Throws(AddressException::class)

@@ -133,6 +133,23 @@ pub struct ClosedChannelDetails {
     pub channel_closure_reason: String,
 }
 
+#[derive(Debug, Clone, uniffi::Record, Serialize, Deserialize)]
+pub struct ActivityTags {
+    pub activity_id: String,
+    pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, uniffi::Record, Serialize, Deserialize)]
+pub struct ActivityTagsMetadata {
+    pub id: String,
+    pub payment_hash: Option<String>,
+    pub tx_id: Option<String>,
+    pub address: String,
+    pub is_receive: bool,
+    pub tags: Vec<String>,
+    pub created_at: u64,
+}
+
 impl Default for SortDirection {
     fn default() -> Self {
         SortDirection::Desc

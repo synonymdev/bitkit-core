@@ -1,5 +1,6 @@
 use rusqlite::{Connection, OptionalExtension};
-use crate::activity::{Activity, ActivityError, ActivityFilter, LightningActivity, OnchainActivity, PaymentState, PaymentType, SortDirection, ClosedChannelDetails};
+use std::collections::HashMap;
+use crate::activity::{Activity, ActivityError, ActivityFilter, LightningActivity, OnchainActivity, PaymentState, PaymentType, SortDirection, ClosedChannelDetails, ActivityTags, ActivityTagsMetadata};
 
 pub struct ActivityDB {
     pub conn: Connection,
@@ -1160,6 +1161,134 @@ impl ActivityDB {
             })?;
 
         Ok(tags)
+    }
+
+    /// Get all tag metadata for backup (includes full activity metadata)
+    pub fn get_all_tag_metadata(&self) -> Result<Vec<ActivityTagsMetadata>, ActivityError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT 
+                a.id,
+                a.activity_type,
+                a.tx_type,
+                a.created_at,
+                o.address AS onchain_address,
+                t.tag
+            FROM activity_tags t
+            JOIN activities a ON t.activity_id = a.id
+            LEFT JOIN onchain_activity o ON a.id = o.id AND a.activity_type = 'onchain'
+            ORDER BY a.id, t.tag"
+        ).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
+
+        let rows = stmt.query_map([], |row| {
+            let activity_id: String = row.get(0)?;
+            let activity_type: String = row.get(1)?;
+            let tx_type: String = row.get(2)?;
+            let created_at: Option<i64> = row.get(3)?;
+            let onchain_address: Option<String> = row.get(4)?;
+            let tag: String = row.get(5)?;
+
+            let is_receive = tx_type == "received";
+            let payment_hash = if activity_type == "lightning" {
+                Some(activity_id.clone())
+            } else {
+                None
+            };
+            let tx_id = if activity_type == "onchain" {
+                Some(activity_id.clone())
+            } else {
+                None
+            };
+            let address = if activity_type == "onchain" {
+                onchain_address.unwrap_or_default()
+            } else {
+                String::new()
+            };
+
+            Ok((
+                activity_id,
+                payment_hash,
+                tx_id,
+                address,
+                is_receive,
+                created_at.unwrap_or(0) as u64,
+                tag,
+            ))
+        })
+            .map_err(|e| ActivityError::RetrievalError {
+                error_details: format!("Failed to execute query: {}", e),
+            })?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to process rows: {}", e),
+            })?;
+
+        let mut grouped: HashMap<String, (Option<String>, Option<String>, String, bool, u64, Vec<String>)> = HashMap::new();
+        for (activity_id, payment_hash, tx_id, address, is_receive, created_at, tag) in rows {
+            let entry = grouped.entry(activity_id).or_insert_with(|| (payment_hash, tx_id, address, is_receive, created_at, Vec::new()));
+            entry.5.push(tag);
+        }
+
+        let mut result: Vec<ActivityTagsMetadata> = grouped
+            .into_iter()
+            .map(|(id, (payment_hash, tx_id, address, is_receive, created_at, tags))| {
+                ActivityTagsMetadata {
+                    id,
+                    payment_hash,
+                    tx_id,
+                    address,
+                    is_receive,
+                    tags,
+                    created_at,
+                }
+            })
+            .collect();
+        result.sort_by(|a, b| a.id.cmp(&b.id));
+
+        Ok(result)
+    }
+
+    /// Bulk upsert tags for multiple activities
+    pub fn upsert_tags(&mut self, activity_tags: &[ActivityTags]) -> Result<(), ActivityError> {
+        if activity_tags.is_empty() {
+            return Ok(());
+        }
+
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        {
+            let mut stmt = tx.prepare(
+                "INSERT OR IGNORE INTO activity_tags (activity_id, tag) VALUES (?1, ?2)"
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
+
+            for activity_tag in activity_tags {
+                if activity_tag.activity_id.is_empty() {
+                    return Err(ActivityError::DataError {
+                        error_details: "Activity ID cannot be empty".to_string(),
+                    });
+                }
+
+                for tag in &activity_tag.tags {
+                    if tag.is_empty() {
+                        continue; // Skip empty tags
+                    }
+                    stmt.execute([&activity_tag.activity_id, tag]).map_err(|e| ActivityError::DataError {
+                        error_details: format!("Failed to insert tag: {}", e),
+                    })?;
+                }
+            }
+        }
+
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
+
+        Ok(())
     }
 
     pub fn upsert_closed_channel(&mut self, channel: &ClosedChannelDetails) -> Result<(), ActivityError> {
