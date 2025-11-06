@@ -36,7 +36,7 @@ echo "Starting Android build process..."
 
 # Install gobley-uniffi-bindgen from fork with patched version
 echo "Installing gobley-uniffi-bindgen fork..."
-cargo install --git https://github.com/ovitrif/gobley.git --branch fix-v0.2.0 gobley-uniffi-bindgen --force
+cargo install --git https://github.com/ovitrif/gobley.git gobley-uniffi-bindgen --force
 
 #TODO: Remove this section when example/main.rs builds successfully
 # Store example/main.rs content in memory and remove the file
