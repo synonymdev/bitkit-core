@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::activity::{ActivityDB, OnchainActivity, LightningActivity, PaymentType, PaymentState, Activity, ActivityFilter, SortDirection, ClosedChannelDetails};
+    use crate::activity::{ActivityDB, OnchainActivity, LightningActivity, PaymentType, PaymentState, Activity, ActivityFilter, SortDirection, ClosedChannelDetails, ActivityTags, ActivityTagsMetadata};
     use std::fs;
     use rand::random;
 
@@ -1301,6 +1301,313 @@ mod tests {
         cleanup(&db_path);
     }
 
+    #[test]
+    fn test_upsert_tags() {
+        let (mut db, db_path) = setup();
+
+        // Create activities
+        let activity1 = create_test_onchain_activity();
+        let mut activity2 = create_test_onchain_activity();
+        activity2.id = "test_onchain_2".to_string();
+        let mut activity3 = create_test_lightning_activity();
+        activity3.id = "test_lightning_3".to_string();
+
+        db.insert_onchain_activity(&activity1).unwrap();
+        db.insert_onchain_activity(&activity2).unwrap();
+        db.insert_lightning_activity(&activity3).unwrap();
+
+        // Bulk upsert tags
+        let activity_tags = vec![
+            ActivityTags {
+                activity_id: activity1.id.clone(),
+                tags: vec!["payment".to_string(), "coffee".to_string()],
+            },
+            ActivityTags {
+                activity_id: activity2.id.clone(),
+                tags: vec!["payment".to_string(), "food".to_string()],
+            },
+            ActivityTags {
+                activity_id: activity3.id.clone(),
+                tags: vec!["payment".to_string()],
+            },
+        ];
+
+        assert!(db.upsert_tags(&activity_tags).is_ok());
+
+        // Verify tags were added
+        let tags1 = db.get_tags(&activity1.id).unwrap();
+        assert_eq!(tags1.len(), 2);
+        assert!(tags1.contains(&"payment".to_string()));
+        assert!(tags1.contains(&"coffee".to_string()));
+
+        let tags2 = db.get_tags(&activity2.id).unwrap();
+        assert_eq!(tags2.len(), 2);
+        assert!(tags2.contains(&"payment".to_string()));
+        assert!(tags2.contains(&"food".to_string()));
+
+        let tags3 = db.get_tags(&activity3.id).unwrap();
+        assert_eq!(tags3.len(), 1);
+        assert!(tags3.contains(&"payment".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_tags_idempotent() {
+        let (mut db, db_path) = setup();
+
+        // Create activity
+        let activity = create_test_onchain_activity();
+        db.insert_onchain_activity(&activity).unwrap();
+
+        // First upsert
+        let activity_tags = vec![
+            ActivityTags {
+                activity_id: activity.id.clone(),
+                tags: vec!["payment".to_string(), "coffee".to_string()],
+            },
+        ];
+        assert!(db.upsert_tags(&activity_tags).is_ok());
+
+        // Second upsert with same tags (should be idempotent)
+        assert!(db.upsert_tags(&activity_tags).is_ok());
+
+        // Verify tags are still there and not duplicated
+        let tags = db.get_tags(&activity.id).unwrap();
+        assert_eq!(tags.len(), 2);
+        assert!(tags.contains(&"payment".to_string()));
+        assert!(tags.contains(&"coffee".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_tags_adds_new_tags() {
+        let (mut db, db_path) = setup();
+
+        // Create activity and add initial tags
+        let activity = create_test_onchain_activity();
+        db.insert_onchain_activity(&activity).unwrap();
+        db.add_tags(&activity.id, &["payment".to_string()]).unwrap();
+
+        // Upsert with additional tags (adds new tags, keeps existing)
+        let activity_tags = vec![
+            ActivityTags {
+                activity_id: activity.id.clone(),
+                tags: vec!["payment".to_string(), "coffee".to_string(), "food".to_string()],
+            },
+        ];
+        assert!(db.upsert_tags(&activity_tags).is_ok());
+
+        // Verify all tags are present (payment was already there, coffee and food are new)
+        let tags = db.get_tags(&activity.id).unwrap();
+        assert!(tags.len() >= 3);
+        assert!(tags.contains(&"payment".to_string()));
+        assert!(tags.contains(&"coffee".to_string()));
+        assert!(tags.contains(&"food".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_tags_skips_empty_tags() {
+        let (mut db, db_path) = setup();
+
+        // Create activity
+        let activity = create_test_onchain_activity();
+        db.insert_onchain_activity(&activity).unwrap();
+
+        // Upsert with empty tags mixed in
+        let activity_tags = vec![
+            ActivityTags {
+                activity_id: activity.id.clone(),
+                tags: vec!["payment".to_string(), "".to_string(), "coffee".to_string()],
+            },
+        ];
+        assert!(db.upsert_tags(&activity_tags).is_ok());
+
+        // Verify only non-empty tags were added
+        let tags = db.get_tags(&activity.id).unwrap();
+        assert_eq!(tags.len(), 2);
+        assert!(tags.contains(&"payment".to_string()));
+        assert!(tags.contains(&"coffee".to_string()));
+        assert!(!tags.contains(&"".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_tags_multiple_activities() {
+        let (mut db, db_path) = setup();
+
+        // Create multiple activities
+        let activity1 = create_test_onchain_activity();
+        let mut activity2 = create_test_onchain_activity();
+        activity2.id = "test_onchain_2".to_string();
+        let mut activity3 = create_test_lightning_activity();
+        activity3.id = "test_lightning_3".to_string();
+
+        db.insert_onchain_activity(&activity1).unwrap();
+        db.insert_onchain_activity(&activity2).unwrap();
+        db.insert_lightning_activity(&activity3).unwrap();
+
+        // Bulk upsert tags for all activities in one call
+        let activity_tags = vec![
+            ActivityTags {
+                activity_id: activity1.id.clone(),
+                tags: vec!["tag1".to_string(), "tag2".to_string()],
+            },
+            ActivityTags {
+                activity_id: activity2.id.clone(),
+                tags: vec!["tag2".to_string(), "tag3".to_string()],
+            },
+            ActivityTags {
+                activity_id: activity3.id.clone(),
+                tags: vec!["tag1".to_string(), "tag3".to_string(), "tag4".to_string()],
+            },
+        ];
+
+        assert!(db.upsert_tags(&activity_tags).is_ok());
+
+        // Verify all tags were added correctly
+        let tags1 = db.get_tags(&activity1.id).unwrap();
+        assert_eq!(tags1.len(), 2);
+        assert!(tags1.contains(&"tag1".to_string()));
+        assert!(tags1.contains(&"tag2".to_string()));
+
+        let tags2 = db.get_tags(&activity2.id).unwrap();
+        assert_eq!(tags2.len(), 2);
+        assert!(tags2.contains(&"tag2".to_string()));
+        assert!(tags2.contains(&"tag3".to_string()));
+
+        let tags3 = db.get_tags(&activity3.id).unwrap();
+        assert_eq!(tags3.len(), 3);
+        assert!(tags3.contains(&"tag1".to_string()));
+        assert!(tags3.contains(&"tag3".to_string()));
+        assert!(tags3.contains(&"tag4".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    // ========== Tag Metadata Tests ==========
+
+    #[test]
+    fn test_get_all_tag_metadata() {
+        let (mut db, db_path) = setup();
+
+        // Create onchain and lightning activities
+        let mut onchain = create_test_onchain_activity();
+        onchain.id = "onchain_1".to_string();
+        onchain.address = "bc1qtest".to_string();
+        onchain.tx_id = "tx123".to_string();
+        onchain.tx_type = PaymentType::Received;
+        onchain.created_at = Some(1000);
+
+        let mut lightning = create_test_lightning_activity();
+        lightning.id = "lightning_1".to_string();
+        lightning.tx_type = PaymentType::Sent;
+        lightning.created_at = Some(2000);
+
+        db.insert_onchain_activity(&onchain).unwrap();
+        db.insert_lightning_activity(&lightning).unwrap();
+
+        // Add tags
+        db.add_tags(&onchain.id, &["payment".to_string(), "coffee".to_string()]).unwrap();
+        db.add_tags(&lightning.id, &["payment".to_string()]).unwrap();
+
+        // Get all tag metadata
+        let metadata = db.get_all_tag_metadata().unwrap();
+
+        assert_eq!(metadata.len(), 2);
+
+        // Find onchain metadata
+        let onchain_meta = metadata.iter().find(|m| m.id == onchain.id).unwrap();
+        assert_eq!(onchain_meta.id, onchain.id);
+        assert_eq!(onchain_meta.payment_hash, None);
+        assert_eq!(onchain_meta.tx_id, Some(onchain.id.clone()));
+        assert_eq!(onchain_meta.address, "bc1qtest");
+        assert_eq!(onchain_meta.is_receive, true);
+        assert_eq!(onchain_meta.tags.len(), 2);
+        assert!(onchain_meta.tags.contains(&"payment".to_string()));
+        assert!(onchain_meta.tags.contains(&"coffee".to_string()));
+        assert!(onchain_meta.created_at > 0); // created_at is set by database
+
+        // Find lightning metadata
+        let lightning_meta = metadata.iter().find(|m| m.id == lightning.id).unwrap();
+        assert_eq!(lightning_meta.id, lightning.id);
+        assert_eq!(lightning_meta.payment_hash, Some(lightning.id.clone()));
+        assert_eq!(lightning_meta.tx_id, None);
+        assert_eq!(lightning_meta.address, "");
+        assert_eq!(lightning_meta.is_receive, false);
+        assert_eq!(lightning_meta.tags.len(), 1);
+        assert!(lightning_meta.tags.contains(&"payment".to_string()));
+        assert!(lightning_meta.created_at > 0); // created_at is set by database
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_all_tag_metadata_empty() {
+        let (db, db_path) = setup();
+
+        let metadata = db.get_all_tag_metadata().unwrap();
+        assert!(metadata.is_empty());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_tags_empty_tags() {
+        let (mut db, db_path) = setup();
+
+        // Create activity with tags
+        let activity = create_test_onchain_activity();
+        db.insert_onchain_activity(&activity).unwrap();
+        db.add_tags(&activity.id, &["old_tag".to_string()]).unwrap();
+
+        // Upsert with empty tags (with INSERT OR IGNORE, won't clear existing tags)
+        let activity_tags = vec![
+            ActivityTags {
+                activity_id: activity.id.clone(),
+                tags: vec![],
+            },
+        ];
+
+        assert!(db.upsert_tags(&activity_tags).is_ok());
+
+        // Verify old tags still exist (empty tags list doesn't clear)
+        let tags = db.get_tags(&activity.id).unwrap();
+        assert!(tags.contains(&"old_tag".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_tags_empty_input() {
+        let (mut db, db_path) = setup();
+
+        // Test with empty vector
+        assert!(db.upsert_tags(&[]).is_ok());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_tags_empty_activity_id() {
+        let (mut db, db_path) = setup();
+
+        // Test with empty activity_id
+        let activity_tags = vec![
+            ActivityTags {
+                activity_id: "".to_string(),
+                tags: vec!["payment".to_string()],
+            },
+        ];
+
+        assert!(db.upsert_tags(&activity_tags).is_err());
+
+        cleanup(&db_path);
+    }
 
     #[test]
     fn test_wipe_all() {

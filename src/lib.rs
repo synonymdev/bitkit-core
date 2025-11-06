@@ -12,7 +12,7 @@ pub use modules::scanner::{
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
-use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails};
+use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, ActivityTagsMetadata};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift};
 use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse};
 pub use crate::onchain::WordCount;
@@ -399,6 +399,24 @@ pub fn get_all_unique_tags() -> Result<Vec<String>, ActivityError> {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.get_all_unique_tags()
+}
+
+#[uniffi::export]
+pub fn get_all_tag_metadata() -> Result<Vec<ActivityTagsMetadata>, ActivityError> {
+    let guard = get_activity_db()?;
+    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.get_all_tag_metadata()
+}
+
+#[uniffi::export]
+pub fn upsert_tags(activity_tags: Vec<ActivityTags>) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.upsert_tags(&activity_tags)
 }
 
 #[uniffi::export]

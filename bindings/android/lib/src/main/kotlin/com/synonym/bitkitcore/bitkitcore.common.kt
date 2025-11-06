@@ -188,6 +188,31 @@ public data class AccountUtxo (
 
 
 
+@kotlinx.serialization.Serializable
+public data class ActivityTags (
+    val `activityId`: kotlin.String, 
+    val `tags`: List<kotlin.String>
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class ActivityTagsMetadata (
+    val `id`: kotlin.String, 
+    val `paymentHash`: kotlin.String?, 
+    val `txId`: kotlin.String?, 
+    val `address`: kotlin.String, 
+    val `isReceive`: kotlin.Boolean, 
+    val `tags`: List<kotlin.String>, 
+    val `createdAt`: kotlin.ULong
+) {
+    public companion object
+}
+
+
+
 /**
  * Address information
  */
@@ -2928,6 +2953,10 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
+
+
 
 
 
