@@ -16,7 +16,7 @@ package com.synonym.bitkitcore
 // compile the Rust component. The easiest way to ensure this is to bundle the Kotlin
 // helpers directly inline like we're doing here.
 
-class InternalException(message: String) : kotlin.Exception(message)
+public class InternalException(message: String) : kotlin.Exception(message)
 
 // Public interface members begin here.
 
@@ -30,16 +30,17 @@ class InternalException(message: String) : kotlin.Exception(message)
 // The easiest way to ensure this method is called is to use the `.use`
 // helper method to execute a block and destroy the object at the end.
 @OptIn(ExperimentalStdlibApi::class)
-interface Disposable : AutoCloseable {
-    fun destroy()
-    override fun close() = destroy()
-    companion object {
+public interface Disposable : AutoCloseable {
+    public fun destroy()
+    override fun close(): Unit = destroy()
+    public companion object {
         internal fun destroy(vararg args: Any?) {
             for (arg in args) {
                 when (arg) {
                     is Disposable -> arg.destroy()
-                    is Iterable<*> -> {
-                        for (element in arg) {
+                    is ArrayList<*> -> {
+                        for (idx in arg.indices) {
+                            val element = arg[idx]
                             if (element is Disposable) {
                                 element.destroy()
                             }
@@ -59,6 +60,13 @@ interface Disposable : AutoCloseable {
                             }
                         }
                     }
+                    is Iterable<*> -> {
+                        for (element in arg) {
+                            if (element is Disposable) {
+                                element.destroy()
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -66,7 +74,7 @@ interface Disposable : AutoCloseable {
 }
 
 @OptIn(kotlin.contracts.ExperimentalContracts::class)
-inline fun <T : Disposable?, R> T.use(block: (T) -> R): R {
+public inline fun <T : Disposable?, R> T.use(block: (T) -> R): R {
     kotlin.contracts.contract {
         callsInPlace(block, kotlin.contracts.InvocationKind.EXACTLY_ONCE)
     }
@@ -83,7 +91,7 @@ inline fun <T : Disposable?, R> T.use(block: (T) -> R): R {
 }
 
 /** Used to instantiate an interface without an actual pointer, for fakes in tests, mostly. */
-object NoPointer
+public object NoPointer
 
 
 
@@ -105,7 +113,7 @@ object NoPointer
  * Account addresses
  */
 @kotlinx.serialization.Serializable
-data class AccountAddresses (
+public data class AccountAddresses (
     /**
      * Used addresses
      */
@@ -119,7 +127,7 @@ data class AccountAddresses (
      */
     val `change`: List<AddressInfo>
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -128,7 +136,7 @@ data class AccountAddresses (
  * Account info response
  */
 @kotlinx.serialization.Serializable
-data class AccountInfoResponse (
+public data class AccountInfoResponse (
     val `id`: kotlin.UInt, 
     val `path`: kotlin.String, 
     val `descriptor`: kotlin.String, 
@@ -136,7 +144,7 @@ data class AccountInfoResponse (
     val `balance`: kotlin.String, 
     val `availableBalance`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -145,7 +153,7 @@ data class AccountInfoResponse (
  * UTXO information for account
  */
 @kotlinx.serialization.Serializable
-data class AccountUtxo (
+public data class AccountUtxo (
     /**
      * Transaction ID
      */
@@ -175,7 +183,7 @@ data class AccountUtxo (
      */
     val `confirmations`: kotlin.UInt?
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -184,7 +192,7 @@ data class AccountUtxo (
  * Address information
  */
 @kotlinx.serialization.Serializable
-data class AddressInfo (
+public data class AddressInfo (
     /**
      * Address string
      */
@@ -198,7 +206,7 @@ data class AddressInfo (
      */
     val `transfers`: kotlin.UInt
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -207,18 +215,18 @@ data class AddressInfo (
  * Address response containing the derived address information
  */
 @kotlinx.serialization.Serializable
-data class AddressResponse (
+public data class AddressResponse (
     val `address`: kotlin.String, 
     val `path`: List<kotlin.UInt>, 
     val `serializedPath`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class ClosedChannelDetails (
+public data class ClosedChannelDetails (
     val `channelId`: kotlin.String, 
     val `counterpartyNodeId`: kotlin.String, 
     val `fundingTxoTxid`: kotlin.String, 
@@ -234,7 +242,7 @@ data class ClosedChannelDetails (
     val `channelName`: kotlin.String, 
     val `channelClosureReason`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -243,7 +251,7 @@ data class ClosedChannelDetails (
  * Coin purchase memo
  */
 @kotlinx.serialization.Serializable
-data class CoinPurchaseMemo (
+public data class CoinPurchaseMemo (
     /**
      * Coin type
      */
@@ -261,7 +269,7 @@ data class CoinPurchaseMemo (
      */
     val `mac`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -270,7 +278,7 @@ data class CoinPurchaseMemo (
  * Common parameters for all Trezor Connect methods
  */
 @kotlinx.serialization.Serializable
-data class CommonParams (
+public data class CommonParams (
     /**
      * Specific device instance to use
      */
@@ -288,7 +296,7 @@ data class CommonParams (
      */
     val `skipFinalReload`: kotlin.Boolean?
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -297,7 +305,7 @@ data class CommonParams (
  * Account information for compose transaction
  */
 @kotlinx.serialization.Serializable
-data class ComposeAccount (
+public data class ComposeAccount (
     /**
      * Derivation path
      */
@@ -311,23 +319,23 @@ data class ComposeAccount (
      */
     val `utxo`: List<AccountUtxo>
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class CreateCjitOptions (
+public data class CreateCjitOptions (
     val `source`: kotlin.String?, 
     val `discountCode`: kotlin.String?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class CreateOrderOptions (
+public data class CreateOrderOptions (
     val `clientBalanceSat`: kotlin.ULong, 
     val `lspNodeId`: kotlin.String?, 
     val `couponCode`: kotlin.String, 
@@ -342,7 +350,7 @@ data class CreateOrderOptions (
     val `refundOnchainAddress`: kotlin.String?, 
     val `announceChannel`: kotlin.Boolean
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -351,7 +359,7 @@ data class CreateOrderOptions (
  * Result type for deep link generation, including the URL and the ID used
  */
 @kotlinx.serialization.Serializable
-data class DeepLinkResult (
+public data class DeepLinkResult (
     /**
      * The generated deep link URL
      */
@@ -361,7 +369,7 @@ data class DeepLinkResult (
      */
     val `requestId`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -370,7 +378,7 @@ data class DeepLinkResult (
  * Parameters for specifying a particular device
  */
 @kotlinx.serialization.Serializable
-data class DeviceParams (
+public data class DeviceParams (
     /**
      * Device instance path
      */
@@ -380,16 +388,16 @@ data class DeviceParams (
      */
     val `instance`: kotlin.UInt?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class ErrorData (
+public data class ErrorData (
     val `errorDetails`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -398,7 +406,7 @@ data class ErrorData (
  * Feature response containing device capabilities and information
  */
 @kotlinx.serialization.Serializable
-data class FeatureResponse (
+public data class FeatureResponse (
     val `vendor`: kotlin.String, 
     val `majorVersion`: kotlin.UInt, 
     val `minorVersion`: kotlin.UInt, 
@@ -406,7 +414,7 @@ data class FeatureResponse (
     val `deviceId`: kotlin.String, 
     val `capabilities`: List<kotlin.String>?
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -415,7 +423,7 @@ data class FeatureResponse (
  * Fee level for compose transaction
  */
 @kotlinx.serialization.Serializable
-data class FeeLevel (
+public data class FeeLevel (
     /**
      * Fee per unit (satoshi/byte or satoshi/vbyte)
      */
@@ -429,34 +437,34 @@ data class FeeLevel (
      */
     val `floorBaseFee`: kotlin.Boolean?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class FeeRates (
+public data class FeeRates (
     val `fast`: kotlin.UInt, 
     val `mid`: kotlin.UInt, 
     val `slow`: kotlin.UInt
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class FundingTx (
+public data class FundingTx (
     val `id`: kotlin.String, 
     val `vout`: kotlin.ULong
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class GetAddressResponse (
+public data class GetAddressResponse (
     /**
      * The generated Bitcoin address as a string
      */
@@ -470,19 +478,19 @@ data class GetAddressResponse (
      */
     val `publicKey`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class GetAddressesResponse (
+public data class GetAddressesResponse (
     /**
      * Vector of generated Bitcoin addresses
      */
     val `addresses`: List<GetAddressResponse>
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -491,7 +499,7 @@ data class GetAddressesResponse (
  * HD Node Path Type
  */
 @kotlinx.serialization.Serializable
-data class HdNodePathType (
+public data class HdNodePathType (
     /**
      * Node data (can be String or HDNodeType)
      */
@@ -501,7 +509,7 @@ data class HdNodePathType (
      */
     val `addressN`: List<kotlin.UInt>
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -510,7 +518,7 @@ data class HdNodePathType (
  * HD Node Type
  */
 @kotlinx.serialization.Serializable
-data class HdNodeType (
+public data class HdNodeType (
     /**
      * Depth
      */
@@ -540,35 +548,35 @@ data class HdNodeType (
      */
     val `addressN`: List<kotlin.UInt>?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBt0ConfMinTxFeeWindow (
+public data class IBt0ConfMinTxFeeWindow (
     val `satPerVbyte`: kotlin.Double, 
     val `validityEndsAt`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBtBolt11Invoice (
+public data class IBtBolt11Invoice (
     val `request`: kotlin.String, 
     val `state`: BtBolt11InvoiceState, 
     val `expiresAt`: kotlin.String, 
     val `updatedAt`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBtChannel (
+public data class IBtChannel (
     val `state`: BtOpenChannelState, 
     val `lspNodePubkey`: kotlin.String, 
     val `clientNodePubkey`: kotlin.String, 
@@ -578,70 +586,70 @@ data class IBtChannel (
     val `close`: IBtChannelClose?, 
     val `shortChannelId`: kotlin.String?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBtChannelClose (
+public data class IBtChannelClose (
     val `txId`: kotlin.String, 
     val `closeType`: kotlin.String, 
     val `initiator`: kotlin.String, 
     val `registeredAt`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBtEstimateFeeResponse (
+public data class IBtEstimateFeeResponse (
     val `feeSat`: kotlin.ULong, 
     val `min0ConfTxFee`: IBt0ConfMinTxFeeWindow
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBtEstimateFeeResponse2 (
+public data class IBtEstimateFeeResponse2 (
     val `feeSat`: kotlin.ULong, 
     val `networkFeeSat`: kotlin.ULong, 
     val `serviceFeeSat`: kotlin.ULong, 
     val `min0ConfTxFee`: IBt0ConfMinTxFeeWindow
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBtInfo (
+public data class IBtInfo (
     val `version`: kotlin.UInt, 
     val `nodes`: List<ILspNode>, 
     val `options`: IBtInfoOptions, 
     val `versions`: IBtInfoVersions, 
     val `onchain`: IBtInfoOnchain
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBtInfoOnchain (
+public data class IBtInfoOnchain (
     val `network`: BitcoinNetworkEnum, 
     val `feeRates`: FeeRates
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBtInfoOptions (
+public data class IBtInfoOptions (
     val `minChannelSizeSat`: kotlin.ULong, 
     val `maxChannelSizeSat`: kotlin.ULong, 
     val `minExpiryWeeks`: kotlin.UInt, 
@@ -651,24 +659,24 @@ data class IBtInfoOptions (
     val `max0ConfClientBalanceSat`: kotlin.ULong, 
     val `maxClientBalanceSat`: kotlin.ULong
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBtInfoVersions (
+public data class IBtInfoVersions (
     val `http`: kotlin.String, 
     val `btc`: kotlin.String, 
     val `ln2`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBtOnchainTransaction (
+public data class IBtOnchainTransaction (
     val `amountSat`: kotlin.ULong, 
     val `txId`: kotlin.String, 
     val `vout`: kotlin.UInt, 
@@ -678,25 +686,25 @@ data class IBtOnchainTransaction (
     val `confirmed`: kotlin.Boolean, 
     val `suspicious0ConfReason`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBtOnchainTransactions (
+public data class IBtOnchainTransactions (
     val `address`: kotlin.String, 
     val `confirmedSat`: kotlin.ULong, 
     val `requiredConfirmations`: kotlin.UInt, 
     val `transactions`: List<IBtOnchainTransaction>
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBtOrder (
+public data class IBtOrder (
     val `id`: kotlin.String, 
     val `state`: BtOrderState, 
     val `state2`: BtOrderState2?, 
@@ -721,13 +729,13 @@ data class IBtOrder (
     val `updatedAt`: kotlin.String, 
     val `createdAt`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IBtPayment (
+public data class IBtPayment (
     val `state`: BtPaymentState, 
     val `state2`: BtPaymentState2?, 
     val `paidSat`: kotlin.ULong, 
@@ -736,13 +744,13 @@ data class IBtPayment (
     val `isManuallyPaid`: kotlin.Boolean?, 
     val `manualRefunds`: List<IManualRefund>?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IcJitEntry (
+public data class IcJitEntry (
     val `id`: kotlin.String, 
     val `state`: CJitStateEnum, 
     val `feeSat`: kotlin.ULong, 
@@ -762,25 +770,25 @@ data class IcJitEntry (
     val `updatedAt`: kotlin.String, 
     val `createdAt`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IDiscount (
+public data class IDiscount (
     val `code`: kotlin.String, 
     val `absoluteSat`: kotlin.ULong, 
     val `relative`: kotlin.Double, 
     val `overallSat`: kotlin.ULong
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IGift (
+public data class IGift (
     val `id`: kotlin.String, 
     val `nodeId`: kotlin.String, 
     val `orderId`: kotlin.String?, 
@@ -792,13 +800,13 @@ data class IGift (
     val `createdAt`: kotlin.String?, 
     val `updatedAt`: kotlin.String?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IGiftBolt11Invoice (
+public data class IGiftBolt11Invoice (
     val `id`: kotlin.String, 
     val `request`: kotlin.String, 
     val `state`: kotlin.String, 
@@ -811,13 +819,13 @@ data class IGiftBolt11Invoice (
     val `createdAt`: kotlin.String?, 
     val `expiresAt`: kotlin.String?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IGiftBtcAddress (
+public data class IGiftBtcAddress (
     val `id`: kotlin.String, 
     val `address`: kotlin.String, 
     val `transactions`: List<kotlin.String>, 
@@ -828,13 +836,13 @@ data class IGiftBtcAddress (
     val `updatedAt`: kotlin.String?, 
     val `createdAt`: kotlin.String?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IGiftCode (
+public data class IGiftCode (
     val `id`: kotlin.String, 
     val `code`: kotlin.String, 
     val `createdAt`: kotlin.String, 
@@ -844,24 +852,24 @@ data class IGiftCode (
     val `scope`: kotlin.String?, 
     val `maxCount`: kotlin.UInt?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IGiftLspNode (
+public data class IGiftLspNode (
     val `alias`: kotlin.String, 
     val `pubkey`: kotlin.String, 
     val `connectionStrings`: List<kotlin.String>
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IGiftOrder (
+public data class IGiftOrder (
     val `id`: kotlin.String, 
     val `state`: kotlin.String, 
     val `oldState`: kotlin.String?, 
@@ -885,13 +893,13 @@ data class IGiftOrder (
     val `createdAt`: kotlin.String?, 
     val `nodeIdVerified`: kotlin.Boolean?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IGiftPayment (
+public data class IGiftPayment (
     val `id`: kotlin.String, 
     val `state`: kotlin.String, 
     val `oldState`: kotlin.String?, 
@@ -913,25 +921,25 @@ data class IGiftPayment (
     val `bolt11InvoiceId`: kotlin.String?, 
     val `manualRefunds`: List<kotlin.String>
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class ILspNode (
+public data class ILspNode (
     val `alias`: kotlin.String, 
     val `pubkey`: kotlin.String, 
     val `connectionStrings`: List<kotlin.String>, 
     val `readonly`: kotlin.Boolean?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class IManualRefund (
+public data class IManualRefund (
     val `amountSat`: kotlin.ULong, 
     val `target`: kotlin.String, 
     val `state`: ManualRefundStateEnum, 
@@ -940,13 +948,13 @@ data class IManualRefund (
     val `reason`: kotlin.String?, 
     val `targetType`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class LightningActivity (
+public data class LightningActivity (
     val `id`: kotlin.String, 
     val `txType`: PaymentType, 
     val `status`: PaymentState, 
@@ -959,13 +967,13 @@ data class LightningActivity (
     val `createdAt`: kotlin.ULong?, 
     val `updatedAt`: kotlin.ULong?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class LightningInvoice (
+public data class LightningInvoice (
     val `bolt11`: kotlin.String, 
     val `paymentHash`: kotlin.ByteArray, 
     val `amountSatoshis`: kotlin.ULong, 
@@ -1008,48 +1016,48 @@ data class LightningInvoice (
         result = 31 * result + (`payeeNodeId`?.contentHashCode() ?: 0)
         return result
     }
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class LnurlAddressData (
+public data class LnurlAddressData (
     val `uri`: kotlin.String, 
     val `domain`: kotlin.String, 
     val `username`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class LnurlAuthData (
+public data class LnurlAuthData (
     val `uri`: kotlin.String, 
     val `tag`: kotlin.String, 
     val `k1`: kotlin.String, 
     val `domain`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class LnurlChannelData (
+public data class LnurlChannelData (
     val `uri`: kotlin.String, 
     val `callback`: kotlin.String, 
     val `k1`: kotlin.String, 
     val `tag`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class LnurlPayData (
+public data class LnurlPayData (
     val `uri`: kotlin.String, 
     val `callback`: kotlin.String, 
     val `minSendable`: kotlin.ULong, 
@@ -1089,13 +1097,13 @@ data class LnurlPayData (
         result = 31 * result + (`nostrPubkey`?.contentHashCode() ?: 0)
         return result
     }
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class LnurlWithdrawData (
+public data class LnurlWithdrawData (
     val `uri`: kotlin.String, 
     val `callback`: kotlin.String, 
     val `k1`: kotlin.String, 
@@ -1104,7 +1112,7 @@ data class LnurlWithdrawData (
     val `maxWithdrawable`: kotlin.ULong, 
     val `tag`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1113,7 +1121,7 @@ data class LnurlWithdrawData (
  * Message signature response
  */
 @kotlinx.serialization.Serializable
-data class MessageSignatureResponse (
+public data class MessageSignatureResponse (
     /**
      * Signer address
      */
@@ -1123,7 +1131,7 @@ data class MessageSignatureResponse (
      */
     val `signature`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1132,7 +1140,7 @@ data class MessageSignatureResponse (
  * Multisig Redeem Script Type
  */
 @kotlinx.serialization.Serializable
-data class MultisigRedeemScriptType (
+public data class MultisigRedeemScriptType (
     /**
      * Public keys
      */
@@ -1154,26 +1162,26 @@ data class MultisigRedeemScriptType (
      */
     val `pubkeysOrder`: kotlin.UByte?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class OnChainInvoice (
+public data class OnChainInvoice (
     val `address`: kotlin.String, 
     val `amountSatoshis`: kotlin.ULong, 
     val `label`: kotlin.String?, 
     val `message`: kotlin.String?, 
     val `params`: Map<kotlin.String, kotlin.String>?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class OnchainActivity (
+public data class OnchainActivity (
     val `id`: kotlin.String, 
     val `txType`: PaymentType, 
     val `txId`: kotlin.String, 
@@ -1193,7 +1201,7 @@ data class OnchainActivity (
     val `createdAt`: kotlin.ULong?, 
     val `updatedAt`: kotlin.ULong?
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1202,7 +1210,7 @@ data class OnchainActivity (
  * Payment request memo types
  */
 @kotlinx.serialization.Serializable
-data class PaymentRequestMemo (
+public data class PaymentRequestMemo (
     /**
      * Text memo
      */
@@ -1216,7 +1224,7 @@ data class PaymentRequestMemo (
      */
     val `coinPurchaseMemo`: CoinPurchaseMemo?
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1225,7 +1233,7 @@ data class PaymentRequestMemo (
  * Precomposed transaction input
  */
 @kotlinx.serialization.Serializable
-data class PrecomposedInput (
+public data class PrecomposedInput (
     /**
      * BIP32 derivation path
      */
@@ -1247,7 +1255,7 @@ data class PrecomposedInput (
      */
     val `scriptType`: ScriptType
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1256,7 +1264,7 @@ data class PrecomposedInput (
  * Precomposed transaction output
  */
 @kotlinx.serialization.Serializable
-data class PrecomposedOutput (
+public data class PrecomposedOutput (
     /**
      * BIP32 derivation path (for change outputs)
      */
@@ -1274,7 +1282,7 @@ data class PrecomposedOutput (
      */
     val `scriptType`: ScriptType
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1283,7 +1291,7 @@ data class PrecomposedOutput (
  * Precomposed transaction
  */
 @kotlinx.serialization.Serializable
-data class PrecomposedTransaction (
+public data class PrecomposedTransaction (
     /**
      * Transaction type (usually "final" or "error")
      */
@@ -1317,16 +1325,16 @@ data class PrecomposedTransaction (
      */
     val `outputsPermutation`: List<kotlin.UInt>?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class PubkyAuth (
+public data class PubkyAuth (
     val `data`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1335,7 +1343,7 @@ data class PubkyAuth (
  * Public key response containing the derived public key information
  */
 @kotlinx.serialization.Serializable
-data class PublicKeyResponse (
+public data class PublicKeyResponse (
     val `path`: List<kotlin.UInt>, 
     val `serializedPath`: kotlin.String, 
     val `xpub`: kotlin.String, 
@@ -1347,7 +1355,7 @@ data class PublicKeyResponse (
     val `depth`: kotlin.UInt, 
     val `descriptor`: kotlin.String?
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1356,7 +1364,7 @@ data class PublicKeyResponse (
  * Reference transaction for transaction signing
  */
 @kotlinx.serialization.Serializable
-data class RefTransaction (
+public data class RefTransaction (
     /**
      * Transaction hash
      */
@@ -1402,7 +1410,7 @@ data class RefTransaction (
      */
     val `extraData`: kotlin.String?
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1411,7 +1419,7 @@ data class RefTransaction (
  * Reference transaction input
  */
 @kotlinx.serialization.Serializable
-data class RefTxInput (
+public data class RefTxInput (
     /**
      * Previous transaction hash
      */
@@ -1429,7 +1437,7 @@ data class RefTxInput (
      */
     val `sequence`: kotlin.UInt
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1438,7 +1446,7 @@ data class RefTxInput (
  * Reference transaction output (binary format)
  */
 @kotlinx.serialization.Serializable
-data class RefTxOutput (
+public data class RefTxOutput (
     /**
      * Amount in satoshis
      */
@@ -1448,7 +1456,7 @@ data class RefTxOutput (
      */
     val `scriptPubkey`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1457,7 +1465,7 @@ data class RefTxOutput (
  * Refund memo
  */
 @kotlinx.serialization.Serializable
-data class RefundMemo (
+public data class RefundMemo (
     /**
      * Refund address
      */
@@ -1467,7 +1475,7 @@ data class RefundMemo (
      */
     val `mac`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1476,7 +1484,7 @@ data class RefundMemo (
  * Signed transaction response
  */
 @kotlinx.serialization.Serializable
-data class SignedTransactionResponse (
+public data class SignedTransactionResponse (
     /**
      * Array of signer signatures
      */
@@ -1490,7 +1498,7 @@ data class SignedTransactionResponse (
      */
     val `txid`: kotlin.String?
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1499,13 +1507,13 @@ data class SignedTransactionResponse (
  * Text memo
  */
 @kotlinx.serialization.Serializable
-data class TextMemo (
+public data class TextMemo (
     /**
      * Text content
      */
     val `text`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1514,7 +1522,7 @@ data class TextMemo (
  * Payment request
  */
 @kotlinx.serialization.Serializable
-data class TxAckPaymentRequest (
+public data class TxAckPaymentRequest (
     /**
      * Nonce
      */
@@ -1536,7 +1544,7 @@ data class TxAckPaymentRequest (
      */
     val `signature`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1545,7 +1553,7 @@ data class TxAckPaymentRequest (
  * Transaction input type
  */
 @kotlinx.serialization.Serializable
-data class TxInputType (
+public data class TxInputType (
     /**
      * Previous transaction hash
      */
@@ -1607,7 +1615,7 @@ data class TxInputType (
      */
     val `coinjoinFlags`: kotlin.UInt?
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1616,7 +1624,7 @@ data class TxInputType (
  * Transaction output type
  */
 @kotlinx.serialization.Serializable
-data class TxOutputType (
+public data class TxOutputType (
     /**
      * Output address (for address outputs)
      */
@@ -1654,7 +1662,7 @@ data class TxOutputType (
      */
     val `paymentReqIndex`: kotlin.UInt?
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1663,7 +1671,7 @@ data class TxOutputType (
  * Unlock Path parameters
  */
 @kotlinx.serialization.Serializable
-data class UnlockPath (
+public data class UnlockPath (
     /**
      * BIP32 derivation path
      */
@@ -1673,18 +1681,18 @@ data class UnlockPath (
      */
     val `mac`: kotlin.String?
 ) {
-    companion object
+    public companion object
 }
 
 
 
 @kotlinx.serialization.Serializable
-data class ValidationResult (
+public data class ValidationResult (
     val `address`: kotlin.String, 
     val `network`: NetworkType, 
     val `addressType`: AddressType
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1693,13 +1701,13 @@ data class ValidationResult (
  * Verify message response
  */
 @kotlinx.serialization.Serializable
-data class VerifyMessageResponse (
+public data class VerifyMessageResponse (
     /**
      * Verification result message
      */
     val `message`: kotlin.String
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1708,7 +1716,7 @@ data class VerifyMessageResponse (
  * Marker object for XRP accounts
  */
 @kotlinx.serialization.Serializable
-data class XrpMarker (
+public data class XrpMarker (
     /**
      * Ledger number
      */
@@ -1718,7 +1726,7 @@ data class XrpMarker (
      */
     val `seq`: kotlin.ULong
 ) {
-    companion object
+    public companion object
 }
 
 
@@ -1729,7 +1737,7 @@ data class XrpMarker (
  */
 
 @kotlinx.serialization.Serializable
-enum class AccountInfoDetails {
+public enum class AccountInfoDetails {
     
     /**
      * Return only account balances (default)
@@ -1747,7 +1755,7 @@ enum class AccountInfoDetails {
      * TokenBalances + complete account transaction history
      */
     TXS;
-    companion object
+    public companion object
 }
 
 
@@ -1756,14 +1764,14 @@ enum class AccountInfoDetails {
 
 
 @kotlinx.serialization.Serializable
-sealed class Activity {
+public sealed class Activity {
     @kotlinx.serialization.Serializable
-    data class Onchain(
+    public data class Onchain(
         val v1: OnchainActivity,
     ) : Activity() {
     }
     @kotlinx.serialization.Serializable
-    data class Lightning(
+    public data class Lightning(
         val v1: LightningActivity,
     ) : Activity() {
     }
@@ -1776,54 +1784,54 @@ sealed class Activity {
 
 
 
-sealed class ActivityException: kotlin.Exception() {
+public sealed class ActivityException: kotlin.Exception() {
     
-    class InvalidActivity(
-        val `errorDetails`: kotlin.String,
+    public class InvalidActivity(
+        public val `errorDetails`: kotlin.String,
     ) : ActivityException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class InitializationException(
-        val `errorDetails`: kotlin.String,
+    public class InitializationException(
+        public val `errorDetails`: kotlin.String,
     ) : ActivityException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class InsertException(
-        val `errorDetails`: kotlin.String,
+    public class InsertException(
+        public val `errorDetails`: kotlin.String,
     ) : ActivityException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class RetrievalException(
-        val `errorDetails`: kotlin.String,
+    public class RetrievalException(
+        public val `errorDetails`: kotlin.String,
     ) : ActivityException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class DataException(
-        val `errorDetails`: kotlin.String,
+    public class DataException(
+        public val `errorDetails`: kotlin.String,
     ) : ActivityException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class ConnectionException(
-        val `errorDetails`: kotlin.String,
+    public class ConnectionException(
+        public val `errorDetails`: kotlin.String,
     ) : ActivityException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class SerializationException(
-        val `errorDetails`: kotlin.String,
+    public class SerializationException(
+        public val `errorDetails`: kotlin.String,
     ) : ActivityException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
@@ -1834,12 +1842,12 @@ sealed class ActivityException: kotlin.Exception() {
 
 
 @kotlinx.serialization.Serializable
-enum class ActivityFilter {
+public enum class ActivityFilter {
     
     ALL,
     LIGHTNING,
     ONCHAIN;
-    companion object
+    public companion object
 }
 
 
@@ -1849,11 +1857,11 @@ enum class ActivityFilter {
 
 
 @kotlinx.serialization.Serializable
-enum class ActivityType {
+public enum class ActivityType {
     
     ONCHAIN,
     LIGHTNING;
-    companion object
+    public companion object
 }
 
 
@@ -1862,41 +1870,41 @@ enum class ActivityType {
 
 
 
-sealed class AddressException: kotlin.Exception() {
+public sealed class AddressException: kotlin.Exception() {
     
-    class InvalidAddress(
+    public class InvalidAddress(
     ) : AddressException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class InvalidNetwork(
+    public class InvalidNetwork(
     ) : AddressException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class MnemonicGenerationFailed(
+    public class MnemonicGenerationFailed(
     ) : AddressException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class InvalidMnemonic(
+    public class InvalidMnemonic(
     ) : AddressException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class InvalidEntropy(
+    public class InvalidEntropy(
     ) : AddressException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class AddressDerivationFailed(
+    public class AddressDerivationFailed(
     ) : AddressException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
@@ -1907,7 +1915,7 @@ sealed class AddressException: kotlin.Exception() {
 
 
 @kotlinx.serialization.Serializable
-enum class AddressType {
+public enum class AddressType {
     
     P2PKH,
     P2SH,
@@ -1915,7 +1923,7 @@ enum class AddressType {
     P2WSH,
     P2TR,
     UNKNOWN;
-    companion object
+    public companion object
 }
 
 
@@ -1928,13 +1936,13 @@ enum class AddressType {
  */
 
 @kotlinx.serialization.Serializable
-enum class AmountUnit {
+public enum class AmountUnit {
     
     BITCOIN,
     MILLI_BITCOIN,
     MICRO_BITCOIN,
     SATOSHI;
-    companion object
+    public companion object
 }
 
 
@@ -1944,13 +1952,13 @@ enum class AmountUnit {
 
 
 @kotlinx.serialization.Serializable
-enum class BitcoinNetworkEnum {
+public enum class BitcoinNetworkEnum {
     
     MAINNET,
     TESTNET,
     SIGNET,
     REGTEST;
-    companion object
+    public companion object
 }
 
 
@@ -1959,97 +1967,97 @@ enum class BitcoinNetworkEnum {
 
 
 
-sealed class BlocktankException: kotlin.Exception() {
+public sealed class BlocktankException: kotlin.Exception() {
     
-    class HttpClient(
-        val `errorDetails`: kotlin.String,
+    public class HttpClient(
+        public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class BlocktankClient(
-        val `errorDetails`: kotlin.String,
+    public class BlocktankClient(
+        public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class InvalidBlocktank(
-        val `errorDetails`: kotlin.String,
+    public class InvalidBlocktank(
+        public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class InitializationException(
-        val `errorDetails`: kotlin.String,
+    public class InitializationException(
+        public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class InsertException(
-        val `errorDetails`: kotlin.String,
+    public class InsertException(
+        public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class RetrievalException(
-        val `errorDetails`: kotlin.String,
+    public class RetrievalException(
+        public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class DataException(
-        val `errorDetails`: kotlin.String,
+    public class DataException(
+        public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class ConnectionException(
-        val `errorDetails`: kotlin.String,
+    public class ConnectionException(
+        public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class SerializationException(
-        val `errorDetails`: kotlin.String,
+    public class SerializationException(
+        public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class ChannelOpen(
-        val `errorType`: BtChannelOrderErrorType,
-        val `errorDetails`: kotlin.String,
+    public class ChannelOpen(
+        public val `errorType`: BtChannelOrderErrorType,
+        public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
-        override val message
+        override val message: String
             get() = "errorType=${ `errorType` }, errorDetails=${ `errorDetails` }"
     }
     
-    class OrderState(
-        val `errorDetails`: kotlin.String,
+    public class OrderState(
+        public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class InvalidParameter(
-        val `errorDetails`: kotlin.String,
+    public class InvalidParameter(
+        public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class DatabaseException(
-        val `errorDetails`: kotlin.String,
+    public class DatabaseException(
+        public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
@@ -2060,13 +2068,13 @@ sealed class BlocktankException: kotlin.Exception() {
 
 
 @kotlinx.serialization.Serializable
-enum class BtBolt11InvoiceState {
+public enum class BtBolt11InvoiceState {
     
     PENDING,
     HOLDING,
     PAID,
     CANCELED;
-    companion object
+    public companion object
 }
 
 
@@ -2076,14 +2084,14 @@ enum class BtBolt11InvoiceState {
 
 
 @kotlinx.serialization.Serializable
-enum class BtChannelOrderErrorType {
+public enum class BtChannelOrderErrorType {
     
     WRONG_ORDER_STATE,
     PEER_NOT_REACHABLE,
     CHANNEL_REJECTED_BY_DESTINATION,
     CHANNEL_REJECTED_BY_LSP,
     BLOCKTANK_NOT_READY;
-    companion object
+    public companion object
 }
 
 
@@ -2093,12 +2101,12 @@ enum class BtChannelOrderErrorType {
 
 
 @kotlinx.serialization.Serializable
-enum class BtOpenChannelState {
+public enum class BtOpenChannelState {
     
     OPENING,
     OPEN,
     CLOSED;
-    companion object
+    public companion object
 }
 
 
@@ -2108,13 +2116,13 @@ enum class BtOpenChannelState {
 
 
 @kotlinx.serialization.Serializable
-enum class BtOrderState {
+public enum class BtOrderState {
     
     CREATED,
     EXPIRED,
     OPEN,
     CLOSED;
-    companion object
+    public companion object
 }
 
 
@@ -2124,13 +2132,13 @@ enum class BtOrderState {
 
 
 @kotlinx.serialization.Serializable
-enum class BtOrderState2 {
+public enum class BtOrderState2 {
     
     CREATED,
     EXPIRED,
     EXECUTED,
     PAID;
-    companion object
+    public companion object
 }
 
 
@@ -2140,14 +2148,14 @@ enum class BtOrderState2 {
 
 
 @kotlinx.serialization.Serializable
-enum class BtPaymentState {
+public enum class BtPaymentState {
     
     CREATED,
     PARTIALLY_PAID,
     PAID,
     REFUNDED,
     REFUND_AVAILABLE;
-    companion object
+    public companion object
 }
 
 
@@ -2157,14 +2165,14 @@ enum class BtPaymentState {
 
 
 @kotlinx.serialization.Serializable
-enum class BtPaymentState2 {
+public enum class BtPaymentState2 {
     
     CREATED,
     PAID,
     REFUNDED,
     REFUND_AVAILABLE,
     CANCELED;
-    companion object
+    public companion object
 }
 
 
@@ -2174,13 +2182,13 @@ enum class BtPaymentState2 {
 
 
 @kotlinx.serialization.Serializable
-enum class CJitStateEnum {
+public enum class CJitStateEnum {
     
     CREATED,
     COMPLETED,
     EXPIRED,
     FAILED;
-    companion object
+    public companion object
 }
 
 
@@ -2192,12 +2200,12 @@ enum class CJitStateEnum {
  * Output type for compose transaction
  */
 @kotlinx.serialization.Serializable
-sealed class ComposeOutput {
+public sealed class ComposeOutput {
     
     /**
      * Regular output with amount and address
      */@kotlinx.serialization.Serializable
-    data class Regular(
+    public data class Regular(
         /**
          * Amount in satoshis
          */
@@ -2212,7 +2220,7 @@ sealed class ComposeOutput {
     /**
      * Send max output
      */@kotlinx.serialization.Serializable
-    data class SendMax(
+    public data class SendMax(
         /**
          * Recipient address
          */
@@ -2223,7 +2231,7 @@ sealed class ComposeOutput {
     /**
      * OP_RETURN output
      */@kotlinx.serialization.Serializable
-    data class OpReturn(
+    public data class OpReturn(
         /**
          * Hexadecimal string with arbitrary data
          */
@@ -2234,7 +2242,7 @@ sealed class ComposeOutput {
     /**
      * Payment without address (precompose only)
      */@kotlinx.serialization.Serializable
-    data class PaymentNoAddress(
+    public data class PaymentNoAddress(
         /**
          * Amount in satoshis
          */
@@ -2246,7 +2254,7 @@ sealed class ComposeOutput {
      * Send max without address (precompose only)
      */
     @kotlinx.serialization.Serializable
-    data object SendMaxNoAddress : ComposeOutput() 
+    public data object SendMaxNoAddress : ComposeOutput() 
     
     
 }
@@ -2260,12 +2268,12 @@ sealed class ComposeOutput {
  * Compose transaction response
  */
 @kotlinx.serialization.Serializable
-sealed class ComposeTransactionResponse {
+public sealed class ComposeTransactionResponse {
     
     /**
      * Signed transaction (payment mode)
      */@kotlinx.serialization.Serializable
-    data class SignedTransaction(
+    public data class SignedTransaction(
         val v1: SignedTransactionResponse,
     ) : ComposeTransactionResponse() {
     }
@@ -2273,7 +2281,7 @@ sealed class ComposeTransactionResponse {
     /**
      * Precomposed transactions (precompose mode)
      */@kotlinx.serialization.Serializable
-    data class PrecomposedTransactions(
+    public data class PrecomposedTransactions(
         val v1: List<PrecomposedTransaction>,
     ) : ComposeTransactionResponse() {
     }
@@ -2286,26 +2294,26 @@ sealed class ComposeTransactionResponse {
 
 
 
-sealed class DbException: kotlin.Exception() {
+public sealed class DbException: kotlin.Exception() {
     
-    class DbActivityException(
-        val `errorDetails`: ActivityException,
+    public class DbActivityException(
+        public val `errorDetails`: ActivityException,
     ) : DbException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class DbBlocktankException(
-        val `errorDetails`: BlocktankException,
+    public class DbBlocktankException(
+        public val `errorDetails`: BlocktankException,
     ) : DbException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class InitializationException(
-        val `errorDetails`: kotlin.String,
+    public class InitializationException(
+        public val `errorDetails`: kotlin.String,
     ) : DbException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
@@ -2315,81 +2323,81 @@ sealed class DbException: kotlin.Exception() {
 
 
 
-sealed class DecodingException: kotlin.Exception() {
+public sealed class DecodingException: kotlin.Exception() {
     
-    class InvalidFormat(
+    public class InvalidFormat(
     ) : DecodingException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class InvalidNetwork(
+    public class InvalidNetwork(
     ) : DecodingException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class InvalidAmount(
+    public class InvalidAmount(
     ) : DecodingException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class InvalidLnurlPayAmount(
-        val `amountSatoshis`: kotlin.ULong,
-        val `min`: kotlin.ULong,
-        val `max`: kotlin.ULong,
+    public class InvalidLnurlPayAmount(
+        public val `amountSatoshis`: kotlin.ULong,
+        public val `min`: kotlin.ULong,
+        public val `max`: kotlin.ULong,
     ) : DecodingException() {
-        override val message
+        override val message: String
             get() = "amountSatoshis=${ `amountSatoshis` }, min=${ `min` }, max=${ `max` }"
     }
     
-    class InvalidTimestamp(
+    public class InvalidTimestamp(
     ) : DecodingException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class InvalidChecksum(
+    public class InvalidChecksum(
     ) : DecodingException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class InvalidResponse(
+    public class InvalidResponse(
     ) : DecodingException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class UnsupportedType(
+    public class UnsupportedType(
     ) : DecodingException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class InvalidAddress(
+    public class InvalidAddress(
     ) : DecodingException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class RequestFailed(
+    public class RequestFailed(
     ) : DecodingException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class ClientCreationFailed(
+    public class ClientCreationFailed(
     ) : DecodingException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class InvoiceCreationFailed(
-        val `errorMessage`: kotlin.String,
+    public class InvoiceCreationFailed(
+        public val `errorMessage`: kotlin.String,
     ) : DecodingException() {
-        override val message
+        override val message: String
             get() = "errorMessage=${ `errorMessage` }"
     }
     
@@ -2403,7 +2411,7 @@ sealed class DecodingException: kotlin.Exception() {
  */
 
 @kotlinx.serialization.Serializable
-enum class DefaultAccountType {
+public enum class DefaultAccountType {
     
     /**
      * Normal account
@@ -2417,7 +2425,7 @@ enum class DefaultAccountType {
      * Legacy account
      */
     LEGACY;
-    companion object
+    public companion object
 }
 
 
@@ -2429,12 +2437,12 @@ enum class DefaultAccountType {
  * Union type for HD Node (either a String or HDNodeType)
  */
 @kotlinx.serialization.Serializable
-sealed class HdNodeTypeOrString {
+public sealed class HdNodeTypeOrString {
     
     /**
      * HD Node as a string
      */@kotlinx.serialization.Serializable
-    data class String(
+    public data class String(
         val v1: kotlin.String,
     ) : HdNodeTypeOrString() {
     }
@@ -2442,7 +2450,7 @@ sealed class HdNodeTypeOrString {
     /**
      * HD Node as an object
      */@kotlinx.serialization.Serializable
-    data class Node(
+    public data class Node(
         val v1: HdNodeType,
     ) : HdNodeTypeOrString() {
     }
@@ -2455,51 +2463,51 @@ sealed class HdNodeTypeOrString {
 
 
 
-sealed class LnurlException: kotlin.Exception() {
+public sealed class LnurlException: kotlin.Exception() {
     
-    class InvalidAddress(
+    public class InvalidAddress(
     ) : LnurlException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class ClientCreationFailed(
+    public class ClientCreationFailed(
     ) : LnurlException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class RequestFailed(
+    public class RequestFailed(
     ) : LnurlException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class InvalidResponse(
+    public class InvalidResponse(
     ) : LnurlException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
-    class InvalidAmount(
-        val `amountSatoshis`: kotlin.ULong,
-        val `min`: kotlin.ULong,
-        val `max`: kotlin.ULong,
+    public class InvalidAmount(
+        public val `amountSatoshis`: kotlin.ULong,
+        public val `min`: kotlin.ULong,
+        public val `max`: kotlin.ULong,
     ) : LnurlException() {
-        override val message
+        override val message: String
             get() = "amountSatoshis=${ `amountSatoshis` }, min=${ `min` }, max=${ `max` }"
     }
     
-    class InvoiceCreationFailed(
-        val `errorDetails`: kotlin.String,
+    public class InvoiceCreationFailed(
+        public val `errorDetails`: kotlin.String,
     ) : LnurlException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class AuthenticationFailed(
+    public class AuthenticationFailed(
     ) : LnurlException() {
-        override val message
+        override val message: String
             get() = ""
     }
     
@@ -2510,13 +2518,13 @@ sealed class LnurlException: kotlin.Exception() {
 
 
 @kotlinx.serialization.Serializable
-enum class ManualRefundStateEnum {
+public enum class ManualRefundStateEnum {
     
     CREATED,
     APPROVED,
     REJECTED,
     SENT;
-    companion object
+    public companion object
 }
 
 
@@ -2526,7 +2534,7 @@ enum class ManualRefundStateEnum {
 
 
 @kotlinx.serialization.Serializable
-enum class Network {
+public enum class Network {
     
     /**
      * Mainnet Bitcoin.
@@ -2548,7 +2556,7 @@ enum class Network {
      * Bitcoin's regtest network.
      */
     REGTEST;
-    companion object
+    public companion object
 }
 
 
@@ -2558,13 +2566,13 @@ enum class Network {
 
 
 @kotlinx.serialization.Serializable
-enum class NetworkType {
+public enum class NetworkType {
     
     BITCOIN,
     TESTNET,
     REGTEST,
     SIGNET;
-    companion object
+    public companion object
 }
 
 
@@ -2574,12 +2582,12 @@ enum class NetworkType {
 
 
 @kotlinx.serialization.Serializable
-enum class PaymentState {
+public enum class PaymentState {
     
     PENDING,
     SUCCEEDED,
     FAILED;
-    companion object
+    public companion object
 }
 
 
@@ -2589,11 +2597,11 @@ enum class PaymentState {
 
 
 @kotlinx.serialization.Serializable
-enum class PaymentType {
+public enum class PaymentType {
     
     SENT,
     RECEIVED;
-    companion object
+    public companion object
 }
 
 
@@ -2602,55 +2610,55 @@ enum class PaymentType {
 
 
 @kotlinx.serialization.Serializable
-sealed class Scanner {
+public sealed class Scanner {
     @kotlinx.serialization.Serializable
-    data class OnChain(
+    public data class OnChain(
         val `invoice`: OnChainInvoice,
     ) : Scanner() {
     }
     @kotlinx.serialization.Serializable
-    data class Lightning(
+    public data class Lightning(
         val `invoice`: LightningInvoice,
     ) : Scanner() {
     }
     @kotlinx.serialization.Serializable
-    data class PubkyAuth(
+    public data class PubkyAuth(
         val `data`: kotlin.String,
     ) : Scanner() {
     }
     @kotlinx.serialization.Serializable
-    data class LnurlChannel(
+    public data class LnurlChannel(
         val `data`: LnurlChannelData,
     ) : Scanner() {
     }
     @kotlinx.serialization.Serializable
-    data class LnurlAuth(
+    public data class LnurlAuth(
         val `data`: LnurlAuthData,
     ) : Scanner() {
     }
     @kotlinx.serialization.Serializable
-    data class LnurlWithdraw(
+    public data class LnurlWithdraw(
         val `data`: LnurlWithdrawData,
     ) : Scanner() {
     }
     @kotlinx.serialization.Serializable
-    data class LnurlAddress(
+    public data class LnurlAddress(
         val `data`: LnurlAddressData,
     ) : Scanner() {
     }
     @kotlinx.serialization.Serializable
-    data class LnurlPay(
+    public data class LnurlPay(
         val `data`: LnurlPayData,
     ) : Scanner() {
     }
     @kotlinx.serialization.Serializable
-    data class NodeId(
+    public data class NodeId(
         val `url`: kotlin.String,
         val `network`: NetworkType,
     ) : Scanner() {
     }
     @kotlinx.serialization.Serializable
-    data class Gift(
+    public data class Gift(
         val `code`: kotlin.String,
         val `amount`: kotlin.ULong,
     ) : Scanner() {
@@ -2668,7 +2676,7 @@ sealed class Scanner {
  */
 
 @kotlinx.serialization.Serializable
-enum class ScriptType {
+public enum class ScriptType {
     
     SPEND_ADDRESS,
     SPEND_MULTISIG,
@@ -2683,7 +2691,7 @@ enum class ScriptType {
     PAY_TO_P2SH_WITNESS,
     PAY_TO_TAPROOT,
     PAY_TO_OP_RETURN;
-    companion object
+    public companion object
 }
 
 
@@ -2693,11 +2701,11 @@ enum class ScriptType {
 
 
 @kotlinx.serialization.Serializable
-enum class SortDirection {
+public enum class SortDirection {
     
     ASC,
     DESC;
-    companion object
+    public companion object
 }
 
 
@@ -2710,7 +2718,7 @@ enum class SortDirection {
  */
 
 @kotlinx.serialization.Serializable
-enum class TokenFilter {
+public enum class TokenFilter {
     
     /**
      * Return only addresses with nonzero balance (default)
@@ -2724,7 +2732,7 @@ enum class TokenFilter {
      * Return all derived addresses
      */
     DERIVED;
-    companion object
+    public companion object
 }
 
 
@@ -2736,52 +2744,52 @@ enum class TokenFilter {
 /**
  * Error types for Trezor Connect operations
  */
-sealed class TrezorConnectException: kotlin.Exception() {
+public sealed class TrezorConnectException: kotlin.Exception() {
     
     /**
      * Error during serialization/deserialization
      */
-    class SerdeException(
-        val `errorDetails`: kotlin.String,
+    public class SerdeException(
+        public val `errorDetails`: kotlin.String,
     ) : TrezorConnectException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
     /**
      * Error with URL parsing or formatting
      */
-    class UrlException(
-        val `errorDetails`: kotlin.String,
+    public class UrlException(
+        public val `errorDetails`: kotlin.String,
     ) : TrezorConnectException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
     /**
      * Environment-related errors
      */
-    class EnvironmentException(
-        val `errorDetails`: kotlin.String,
+    public class EnvironmentException(
+        public val `errorDetails`: kotlin.String,
     ) : TrezorConnectException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
     /**
      * General errors
      */
-    class Other(
-        val `errorDetails`: kotlin.String,
+    public class Other(
+        public val `errorDetails`: kotlin.String,
     ) : TrezorConnectException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    class ClientException(
-        val `errorDetails`: kotlin.String,
+    public class ClientException(
+        public val `errorDetails`: kotlin.String,
     ) : TrezorConnectException() {
-        override val message
+        override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
@@ -2795,7 +2803,7 @@ sealed class TrezorConnectException: kotlin.Exception() {
  */
 
 @kotlinx.serialization.Serializable
-enum class TrezorEnvironment {
+public enum class TrezorEnvironment {
     
     /**
      * Production environment (currently unavailable according to docs)
@@ -2809,7 +2817,7 @@ enum class TrezorEnvironment {
      * Local environment
      */
     LOCAL;
-    companion object
+    public companion object
 }
 
 
@@ -2821,12 +2829,12 @@ enum class TrezorEnvironment {
  * Enum representing the different types of Trezor responses
  */
 @kotlinx.serialization.Serializable
-sealed class TrezorResponsePayload {
+public sealed class TrezorResponsePayload {
     
     /**
      * Response from getFeatures method
      */@kotlinx.serialization.Serializable
-    data class Features(
+    public data class Features(
         val v1: FeatureResponse,
     ) : TrezorResponsePayload() {
     }
@@ -2834,7 +2842,7 @@ sealed class TrezorResponsePayload {
     /**
      * Response from getAddress method
      */@kotlinx.serialization.Serializable
-    data class Address(
+    public data class Address(
         val v1: AddressResponse,
     ) : TrezorResponsePayload() {
     }
@@ -2842,7 +2850,7 @@ sealed class TrezorResponsePayload {
     /**
      * Response from getPublicKey method
      */@kotlinx.serialization.Serializable
-    data class PublicKey(
+    public data class PublicKey(
         val v1: PublicKeyResponse,
     ) : TrezorResponsePayload() {
     }
@@ -2850,7 +2858,7 @@ sealed class TrezorResponsePayload {
     /**
      * Response from getAccountInfo method
      */@kotlinx.serialization.Serializable
-    data class AccountInfo(
+    public data class AccountInfo(
         val v1: AccountInfoResponse,
     ) : TrezorResponsePayload() {
     }
@@ -2858,7 +2866,7 @@ sealed class TrezorResponsePayload {
     /**
      * Response from composeTransaction method
      */@kotlinx.serialization.Serializable
-    data class ComposeTransaction(
+    public data class ComposeTransaction(
         val v1: ComposeTransactionResponse,
     ) : TrezorResponsePayload() {
     }
@@ -2866,7 +2874,7 @@ sealed class TrezorResponsePayload {
     /**
      * Response from verifyMessage method
      */@kotlinx.serialization.Serializable
-    data class VerifyMessage(
+    public data class VerifyMessage(
         val v1: VerifyMessageResponse,
     ) : TrezorResponsePayload() {
     }
@@ -2874,7 +2882,7 @@ sealed class TrezorResponsePayload {
     /**
      * Response from signMessage method
      */@kotlinx.serialization.Serializable
-    data class MessageSignature(
+    public data class MessageSignature(
         val v1: MessageSignatureResponse,
     ) : TrezorResponsePayload() {
     }
@@ -2882,7 +2890,7 @@ sealed class TrezorResponsePayload {
     /**
      * Response from signTransaction method
      */@kotlinx.serialization.Serializable
-    data class SignedTransaction(
+    public data class SignedTransaction(
         val v1: SignedTransactionResponse,
     ) : TrezorResponsePayload() {
     }
@@ -2896,7 +2904,7 @@ sealed class TrezorResponsePayload {
 
 
 @kotlinx.serialization.Serializable
-enum class WordCount {
+public enum class WordCount {
     
     /**
      * 12-word mnemonic (128 bits of entropy)
@@ -2918,7 +2926,7 @@ enum class WordCount {
      * 24-word mnemonic (256 bits of entropy)
      */
     WORDS24;
-    companion object
+    public companion object
 }
 
 
