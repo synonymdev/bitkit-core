@@ -198,21 +198,6 @@ public data class ActivityTags (
 
 
 
-@kotlinx.serialization.Serializable
-public data class ActivityTagsMetadata (
-    val `id`: kotlin.String, 
-    val `paymentHash`: kotlin.String?, 
-    val `txId`: kotlin.String?, 
-    val `address`: kotlin.String, 
-    val `isReceive`: kotlin.Boolean, 
-    val `tags`: List<kotlin.String>, 
-    val `createdAt`: kotlin.ULong
-) {
-    public companion object
-}
-
-
-
 /**
  * Address information
  */
@@ -1248,6 +1233,22 @@ public data class PaymentRequestMemo (
      * Coin purchase memo
      */
     val `coinPurchaseMemo`: CoinPurchaseMemo?
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class PreActivityMetadata (
+    val `paymentId`: kotlin.String, 
+    val `paymentType`: ActivityType, 
+    val `tags`: List<kotlin.String>, 
+    val `paymentHash`: kotlin.String?, 
+    val `txId`: kotlin.String?, 
+    val `address`: kotlin.String?, 
+    val `isReceive`: kotlin.Boolean, 
+    val `createdAt`: kotlin.ULong
 ) {
     public companion object
 }

@@ -53,7 +53,7 @@ impl Activity {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, uniffi::Enum)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy, uniffi::Enum)]
 pub enum ActivityType {
     #[serde(rename = "onchain")]
     Onchain,
@@ -140,13 +140,17 @@ pub struct ActivityTags {
 }
 
 #[derive(Debug, Clone, uniffi::Record, Serialize, Deserialize)]
-pub struct ActivityTagsMetadata {
-    pub id: String,
-    pub payment_hash: Option<String>,
-    pub tx_id: Option<String>,
-    pub address: String,
-    pub is_receive: bool,
+pub struct PreActivityMetadata {
+    pub payment_id: String,
+    pub payment_type: ActivityType,
     pub tags: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payment_hash: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tx_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub address: Option<String>,
+    pub is_receive: bool,
     pub created_at: u64,
 }
 
