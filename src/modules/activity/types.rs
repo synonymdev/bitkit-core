@@ -53,7 +53,7 @@ impl Activity {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, uniffi::Enum)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy, uniffi::Enum)]
 pub enum ActivityType {
     #[serde(rename = "onchain")]
     Onchain,
@@ -136,6 +136,13 @@ pub struct ClosedChannelDetails {
 #[derive(Debug, Clone, uniffi::Record, Serialize, Deserialize)]
 pub struct ActivityTags {
     pub activity_id: String,
+    pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, uniffi::Record, Serialize, Deserialize)]
+pub struct ReceivingTags {
+    pub payment_id: String,
+    pub payment_type: ActivityType,
     pub tags: Vec<String>,
 }
 

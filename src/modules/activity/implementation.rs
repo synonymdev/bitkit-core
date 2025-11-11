@@ -1,6 +1,6 @@
 use rusqlite::{Connection, OptionalExtension};
 use std::collections::HashMap;
-use crate::activity::{Activity, ActivityError, ActivityFilter, LightningActivity, OnchainActivity, PaymentState, PaymentType, SortDirection, ClosedChannelDetails, ActivityTags, ActivityTagsMetadata};
+use crate::activity::{Activity, ActivityError, ActivityFilter, ActivityType, LightningActivity, OnchainActivity, PaymentState, PaymentType, SortDirection, ClosedChannelDetails, ActivityTags, ActivityTagsMetadata, ReceivingTags};
 
 pub struct ActivityDB {
     pub conn: Connection,
@@ -63,6 +63,14 @@ const CREATE_TAGS_TABLE: &str = "
             ON DELETE CASCADE
     )";
 
+const CREATE_RECEIVING_TAGS_TABLE: &str = "
+    CREATE TABLE IF NOT EXISTS receiving_tags (
+        payment_id TEXT NOT NULL,
+        tag TEXT NOT NULL,
+        payment_type TEXT NOT NULL CHECK (payment_type IN ('onchain', 'lightning')),
+        PRIMARY KEY (payment_id, tag, payment_type)
+    )";
+
 const CREATE_CLOSED_CHANNELS_TABLE: &str = "
     CREATE TABLE IF NOT EXISTS closed_channels (
         channel_id TEXT PRIMARY KEY,
@@ -108,6 +116,9 @@ const INDEX_STATEMENTS: &[&str] = &[
 
     // Tags indexes
     "CREATE INDEX IF NOT EXISTS idx_activity_tags_tag_activity ON activity_tags(tag, activity_id)",
+
+    // Receiving tags indexes
+    "CREATE INDEX IF NOT EXISTS idx_receiving_tags_id_type ON receiving_tags(payment_id, payment_type)",
 
     // Closed channels indexes
     "CREATE INDEX IF NOT EXISTS idx_closed_channels_funding_txo ON closed_channels(funding_txo_txid)"
@@ -211,6 +222,13 @@ impl ActivityDB {
         if let Err(e) = self.conn.execute(CREATE_TAGS_TABLE, []) {
             return Err(ActivityError::InitializationError {
                 error_details: format!("Error creating tags table: {}", e),
+            });
+        }
+
+        // Create receiving tags table
+        if let Err(e) = self.conn.execute(CREATE_RECEIVING_TAGS_TABLE, []) {
+            return Err(ActivityError::InitializationError {
+                error_details: format!("Error creating receiving_tags table: {}", e),
             });
         }
 
@@ -335,6 +353,11 @@ impl ActivityDB {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
+        // If this is a received payment, check for receiving tags and transfer them
+        if activity.tx_type == PaymentType::Received {
+            let _ = self.transfer_receiving_tags_to_activity(&activity.address, &activity.id);
+        }
+
         Ok(())
     }
 
@@ -387,6 +410,11 @@ impl ActivityDB {
         tx.commit().map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
+
+        // If this is a received payment, check for receiving tags and transfer them
+        if activity.tx_type == PaymentType::Received {
+            let _ = self.transfer_receiving_tags_to_activity(&activity.invoice, &activity.id);
+        }
 
         Ok(())
     }
@@ -1291,6 +1319,209 @@ impl ActivityDB {
         Ok(())
     }
 
+    /// Add receiving tags for an onchain address or lightning invoice
+    pub fn add_receiving_tags(&mut self, payment_id: &str, payment_type: &ActivityType, tags: &[String]) -> Result<(), ActivityError> {
+        if payment_id.is_empty() {
+            return Err(ActivityError::DataError {
+                error_details: "Payment ID cannot be empty".to_string(),
+            });
+        }
+
+        let payment_type_str = Self::activity_type_to_string(payment_type);
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        for tag in tags {
+            tx.execute(
+                "INSERT OR IGNORE INTO receiving_tags (payment_id, tag, payment_type) VALUES (?1, ?2, ?3)",
+                [payment_id, tag, payment_type_str],
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to insert receiving tag: {}", e),
+            })?;
+        }
+
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
+
+        Ok(())
+    }
+
+    /// Remove receiving tags for an onchain address or lightning invoice
+    pub fn remove_receiving_tags(&mut self, payment_id: &str, tags: &[String]) -> Result<(), ActivityError> {
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        for tag in tags {
+            tx.execute(
+                "DELETE FROM receiving_tags WHERE payment_id = ?1 AND tag = ?2",
+                [payment_id, tag],
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to remove receiving tag: {}", e),
+            })?;
+        }
+
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
+
+        Ok(())
+    }
+
+    /// Reset (clear all) receiving tags for an onchain address or lightning invoice
+    pub fn reset_receiving_tags(&mut self, payment_id: &str) -> Result<(), ActivityError> {
+        self.conn.execute(
+            "DELETE FROM receiving_tags WHERE payment_id = ?1",
+            [payment_id],
+        ).map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to reset receiving tags: {}", e),
+        })?;
+
+        Ok(())
+    }
+
+    /// Bulk upsert receiving tags for backup/restore
+    pub fn upsert_receiving_tags(&mut self, receiving_tags: &[ReceivingTags]) -> Result<(), ActivityError> {
+        if receiving_tags.is_empty() {
+            return Ok(());
+        }
+
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        {
+            let mut stmt = tx.prepare(
+                "INSERT OR REPLACE INTO receiving_tags (payment_id, tag, payment_type) VALUES (?1, ?2, ?3)"
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
+
+            for receiving_tag in receiving_tags {
+                let payment_type_str = Self::activity_type_to_string(&receiving_tag.payment_type);
+
+                for tag in &receiving_tag.tags {
+                    stmt.execute([&receiving_tag.payment_id, tag, payment_type_str]).map_err(|e| ActivityError::DataError {
+                        error_details: format!("Failed to insert receiving tag: {}", e),
+                    })?;
+                }
+            }
+        }
+
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
+
+        Ok(())
+    }
+
+    /// Get all receiving tags for backup
+    pub fn get_all_receiving_tags(&self) -> Result<Vec<ReceivingTags>, ActivityError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT payment_id, tag, payment_type FROM receiving_tags ORDER BY payment_id, payment_type, tag"
+        ).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
+
+        let rows: Vec<(String, String, String)> = stmt.query_map([], |row| {
+            Ok((
+                row.get(0)?,
+                row.get(1)?,
+                row.get(2)?,
+            ))
+        }).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to execute query: {}", e),
+        })?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to process rows: {}", e),
+        })?;
+
+        // Group by payment_id and payment_type
+        let mut grouped: std::collections::HashMap<(String, ActivityType), Vec<String>> = std::collections::HashMap::new();
+
+        for (payment_id, tag, payment_type_str) in rows {
+            let payment_type = Self::parse_activity_type(&payment_type_str)?;
+
+            grouped.entry((payment_id, payment_type))
+                .or_insert_with(Vec::new)
+                .push(tag);
+        }
+
+        let mut result: Vec<ReceivingTags> = grouped.into_iter()
+            .map(|((payment_id, payment_type), tags)| {
+                ReceivingTags {
+                    payment_id,
+                    payment_type,
+                    tags,
+                }
+            })
+            .collect();
+
+        // Sort for consistent output
+        result.sort_by(|a, b| a.payment_id.cmp(&b.payment_id));
+
+        Ok(result)
+    }
+
+    /// Get receiving tags for an onchain address or lightning invoice and transfer them to an activity
+    /// Returns the tags that were transferred
+    fn transfer_receiving_tags_to_activity(&mut self, payment_id: &str, activity_id: &str) -> Result<Vec<String>, ActivityError> {
+        // Check if tags exist first
+        let tags: Vec<String> = {
+            let mut stmt = self.conn.prepare(
+                "SELECT tag FROM receiving_tags WHERE payment_id = ?1",
+            ).map_err(|e| ActivityError::RetrievalError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
+
+            let rows: Result<Vec<String>, _> = stmt.query_map([payment_id], |row| row.get(0))
+                .map_err(|e| ActivityError::RetrievalError {
+                    error_details: format!("Failed to execute query: {}", e),
+                })?
+                .collect();
+            
+            rows.map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to process rows: {}", e),
+            })?
+        };
+
+        if tags.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        // Start transaction for the actual transfer operations
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        // Add tags to activity
+        for tag in &tags {
+            tx.execute(
+                "INSERT OR IGNORE INTO activity_tags (activity_id, tag) VALUES (?1, ?2)",
+                [activity_id, tag],
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to insert tag: {}", e),
+            })?;
+        }
+
+        // Delete receiving tags
+        tx.execute(
+            "DELETE FROM receiving_tags WHERE payment_id = ?1",
+            [payment_id],
+        ).map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to delete receiving tags: {}", e),
+        })?;
+
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
+
+        Ok(tags)
+    }
+
     pub fn upsert_closed_channel(&mut self, channel: &ClosedChannelDetails) -> Result<(), ActivityError> {
         if channel.channel_id.is_empty() {
             return Err(ActivityError::DataError {
@@ -1469,6 +1700,25 @@ impl ActivityDB {
         })?;
 
         Ok(channels)
+    }
+
+    /// Helper function to convert ActivityType to string
+    fn activity_type_to_string(activity_type: &ActivityType) -> &'static str {
+        match activity_type {
+            ActivityType::Onchain => "onchain",
+            ActivityType::Lightning => "lightning",
+        }
+    }
+
+    /// Helper function to parse ActivityType from string
+    fn parse_activity_type(activity_type_str: &str) -> Result<ActivityType, ActivityError> {
+        match activity_type_str {
+            "onchain" => Ok(ActivityType::Onchain),
+            "lightning" => Ok(ActivityType::Lightning),
+            _ => Err(ActivityError::DataError {
+                error_details: format!("Invalid payment_type: {}", activity_type_str),
+            }),
+        }
     }
 
     /// Helper function to convert PaymentType to string

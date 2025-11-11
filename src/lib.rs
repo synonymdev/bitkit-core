@@ -3,8 +3,6 @@ uniffi::setup_scaffolding!();
 mod modules;
 
 use once_cell::sync::OnceCell;
-use std::sync::Mutex;
-use thiserror::Error;
 pub use modules::scanner::{
     Scanner,
     DecodingError
@@ -12,7 +10,7 @@ pub use modules::scanner::{
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
-use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, ActivityTagsMetadata};
+use crate::activity::{ActivityError, ActivityDB, ActivityType, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, ActivityTagsMetadata, ReceivingTags};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift};
 use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse};
 pub use crate::onchain::WordCount;
@@ -417,6 +415,51 @@ pub fn upsert_tags(activity_tags: Vec<ActivityTags>) -> Result<(), ActivityError
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.upsert_tags(&activity_tags)
+}
+
+#[uniffi::export]
+pub fn add_receiving_tags(payment_id: String, payment_type: ActivityType, tags: Vec<String>) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.add_receiving_tags(&payment_id, &payment_type, &tags)
+}
+
+#[uniffi::export]
+pub fn remove_receiving_tags(payment_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.remove_receiving_tags(&payment_id, &tags)
+}
+
+#[uniffi::export]
+pub fn reset_receiving_tags(payment_id: String) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.reset_receiving_tags(&payment_id)
+}
+
+#[uniffi::export]
+pub fn upsert_receiving_tags(receiving_tags: Vec<ReceivingTags>) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.upsert_receiving_tags(&receiving_tags)
+}
+
+#[uniffi::export]
+pub fn get_all_receiving_tags() -> Result<Vec<ReceivingTags>, ActivityError> {
+    let guard = get_activity_db()?;
+    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.get_all_receiving_tags()
 }
 
 #[uniffi::export]

@@ -8010,6 +8010,86 @@ public func FfiConverterTypePublicKeyResponse_lower(_ value: PublicKeyResponse) 
 }
 
 
+public struct ReceivingTags {
+    public var paymentId: String
+    public var paymentType: ActivityType
+    public var tags: [String]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(paymentId: String, paymentType: ActivityType, tags: [String]) {
+        self.paymentId = paymentId
+        self.paymentType = paymentType
+        self.tags = tags
+    }
+}
+
+#if compiler(>=6)
+extension ReceivingTags: Sendable {}
+#endif
+
+
+extension ReceivingTags: Equatable, Hashable {
+    public static func ==(lhs: ReceivingTags, rhs: ReceivingTags) -> Bool {
+        if lhs.paymentId != rhs.paymentId {
+            return false
+        }
+        if lhs.paymentType != rhs.paymentType {
+            return false
+        }
+        if lhs.tags != rhs.tags {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(paymentId)
+        hasher.combine(paymentType)
+        hasher.combine(tags)
+    }
+}
+
+extension ReceivingTags: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeReceivingTags: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ReceivingTags {
+        return
+            try ReceivingTags(
+                paymentId: FfiConverterString.read(from: &buf), 
+                paymentType: FfiConverterTypeActivityType.read(from: &buf), 
+                tags: FfiConverterSequenceString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ReceivingTags, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.paymentId, into: &buf)
+        FfiConverterTypeActivityType.write(value.paymentType, into: &buf)
+        FfiConverterSequenceString.write(value.tags, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeReceivingTags_lift(_ buf: RustBuffer) throws -> ReceivingTags {
+    return try FfiConverterTypeReceivingTags.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeReceivingTags_lower(_ value: ReceivingTags) -> RustBuffer {
+    return FfiConverterTypeReceivingTags.lower(value)
+}
+
+
 /**
  * Reference transaction for transaction signing
  */
@@ -15468,6 +15548,31 @@ fileprivate struct FfiConverterSequenceTypePrecomposedTransaction: FfiConverterR
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeReceivingTags: FfiConverterRustBuffer {
+    typealias SwiftType = [ReceivingTags]
+
+    public static func write(_ value: [ReceivingTags], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeReceivingTags.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ReceivingTags] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ReceivingTags]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeReceivingTags.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeRefTransaction: FfiConverterRustBuffer {
     typealias SwiftType = [RefTransaction]
 
@@ -15741,6 +15846,14 @@ public func activityWipeAll()throws   {try rustCallWithError(FfiConverterTypeAct
     )
 }
 }
+public func addReceivingTags(paymentId: String, paymentType: ActivityType, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_add_receiving_tags(
+        FfiConverterString.lower(paymentId),
+        FfiConverterTypeActivityType_lower(paymentType),
+        FfiConverterSequenceString.lower(tags),$0
+    )
+}
+}
 public func addTags(activityId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_add_tags(
         FfiConverterString.lower(activityId),
@@ -15968,6 +16081,12 @@ public func getAllClosedChannels(sortDirection: SortDirection?)throws  -> [Close
     return try  FfiConverterSequenceTypeClosedChannelDetails.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_all_closed_channels(
         FfiConverterOptionTypeSortDirection.lower(sortDirection),$0
+    )
+})
+}
+public func getAllReceivingTags()throws  -> [ReceivingTags]  {
+    return try  FfiConverterSequenceTypeReceivingTags.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_get_all_receiving_tags($0
     )
 })
 }
@@ -16325,10 +16444,23 @@ public func removeClosedChannelById(channelId: String)throws  -> Bool  {
     )
 })
 }
+public func removeReceivingTags(paymentId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_remove_receiving_tags(
+        FfiConverterString.lower(paymentId),
+        FfiConverterSequenceString.lower(tags),$0
+    )
+}
+}
 public func removeTags(activityId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_remove_tags(
         FfiConverterString.lower(activityId),
         FfiConverterSequenceString.lower(tags),$0
+    )
+}
+}
+public func resetReceivingTags(paymentId: String)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_reset_receiving_tags(
+        FfiConverterString.lower(paymentId),$0
     )
 }
 }
@@ -16579,6 +16711,12 @@ public func upsertOrders(orders: [IBtOrder])async throws   {
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
+public func upsertReceivingTags(receivingTags: [ReceivingTags])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_upsert_receiving_tags(
+        FfiConverterSequenceTypeReceivingTags.lower(receivingTags),$0
+    )
+}
+}
 public func upsertTags(activityTags: [ActivityTags])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_upsert_tags(
         FfiConverterSequenceTypeActivityTags.lower(activityTags),$0
@@ -16634,6 +16772,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.contractVersionMismatch
     }
     if (uniffi_bitkitcore_checksum_func_activity_wipe_all() != 19332) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_add_receiving_tags() != 31804) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_add_tags() != 63739) {
@@ -16697,6 +16838,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_all_closed_channels() != 16828) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_all_receiving_tags() != 7636) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_all_tag_metadata() != 23646) {
@@ -16792,7 +16936,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_remove_receiving_tags() != 23199) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_remove_tags() != 58873) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_reset_receiving_tags() != 4920) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_test_notification() != 32857) {
@@ -16853,6 +17003,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_upsert_orders() != 45856) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_upsert_receiving_tags() != 57493) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_upsert_tags() != 47513) {

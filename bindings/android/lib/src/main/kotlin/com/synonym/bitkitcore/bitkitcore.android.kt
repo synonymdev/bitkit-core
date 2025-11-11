@@ -1112,6 +1112,16 @@ internal interface UniffiForeignFutureCompleteVoid: com.sun.jna.Callback {
 
 
 
+
+
+
+
+
+
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1152,6 +1162,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     }
     private fun uniffiCheckApiChecksums() {
         if (uniffi_bitkitcore_checksum_func_activity_wipe_all() != 19332.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_add_receiving_tags() != 31804.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_add_tags() != 63739.toShort()) {
@@ -1215,6 +1228,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_all_closed_channels() != 16828.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_get_all_receiving_tags() != 7636.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_all_tag_metadata() != 23646.toShort()) {
@@ -1310,7 +1326,13 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_remove_receiving_tags() != 23199.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_remove_tags() != 58873.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_reset_receiving_tags() != 4920.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_test_notification() != 32857.toShort()) {
@@ -1373,6 +1395,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_upsert_orders() != 45856.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_upsert_receiving_tags() != 57493.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_upsert_tags() != 47513.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1393,6 +1418,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     // Integrity check functions only
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_activity_wipe_all(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_add_receiving_tags(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_add_tags(
@@ -1456,6 +1484,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_all_closed_channels(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_all_receiving_tags(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_all_tag_metadata(
@@ -1551,7 +1582,13 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_remove_receiving_tags(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_remove_tags(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_reset_receiving_tags(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_test_notification(
@@ -1614,6 +1651,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_upsert_orders(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_upsert_receiving_tags(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_tags(
     ): Short
     @JvmStatic
@@ -1645,6 +1685,13 @@ internal object UniffiLib : Library {
     }
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_activity_wipe_all(
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_add_receiving_tags(
+        `paymentId`: RustBufferByValue,
+        `paymentType`: RustBufferByValue,
+        `tags`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
     @JvmStatic
@@ -1778,6 +1825,10 @@ internal object UniffiLib : Library {
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_all_closed_channels(
         `sortDirection`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_all_receiving_tags(
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
@@ -1937,9 +1988,20 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): Byte
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_remove_receiving_tags(
+        `paymentId`: RustBufferByValue,
+        `tags`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_remove_tags(
         `activityId`: RustBufferByValue,
         `tags`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_reset_receiving_tags(
+        `paymentId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
     @JvmStatic
@@ -2119,6 +2181,11 @@ internal object UniffiLib : Library {
     external fun uniffi_bitkitcore_fn_func_upsert_orders(
         `orders`: RustBufferByValue,
     ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_upsert_receiving_tags(
+        `receivingTags`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_upsert_tags(
         `activityTags`: RustBufferByValue,
@@ -4871,6 +4938,31 @@ public object FfiConverterTypePublicKeyResponse: FfiConverterRustBuffer<PublicKe
         FfiConverterUInt.write(value.`fingerprint`, buf)
         FfiConverterUInt.write(value.`depth`, buf)
         FfiConverterOptionalString.write(value.`descriptor`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeReceivingTags: FfiConverterRustBuffer<ReceivingTags> {
+    override fun read(buf: ByteBuffer): ReceivingTags {
+        return ReceivingTags(
+            FfiConverterString.read(buf),
+            FfiConverterTypeActivityType.read(buf),
+            FfiConverterSequenceString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ReceivingTags): ULong = (
+            FfiConverterString.allocationSize(value.`paymentId`) +
+            FfiConverterTypeActivityType.allocationSize(value.`paymentType`) +
+            FfiConverterSequenceString.allocationSize(value.`tags`)
+    )
+
+    override fun write(value: ReceivingTags, buf: ByteBuffer) {
+        FfiConverterString.write(value.`paymentId`, buf)
+        FfiConverterTypeActivityType.write(value.`paymentType`, buf)
+        FfiConverterSequenceString.write(value.`tags`, buf)
     }
 }
 
@@ -9302,6 +9394,31 @@ public object FfiConverterSequenceTypePrecomposedTransaction: FfiConverterRustBu
 
 
 
+public object FfiConverterSequenceTypeReceivingTags: FfiConverterRustBuffer<List<ReceivingTags>> {
+    override fun read(buf: ByteBuffer): List<ReceivingTags> {
+        val len = buf.getInt()
+        return List<ReceivingTags>(len) {
+            FfiConverterTypeReceivingTags.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<ReceivingTags>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeReceivingTags.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<ReceivingTags>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeReceivingTags.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceTypeRefTransaction: FfiConverterRustBuffer<List<RefTransaction>> {
     override fun read(buf: ByteBuffer): List<RefTransaction> {
         val len = buf.getInt()
@@ -9549,6 +9666,18 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
 public fun `activityWipeAll`() {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_activity_wipe_all(
+            uniffiRustCallStatus,
+        )
+    }
+}
+
+@Throws(ActivityException::class)
+public fun `addReceivingTags`(`paymentId`: kotlin.String, `paymentType`: ActivityType, `tags`: List<kotlin.String>) {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_add_receiving_tags(
+            FfiConverterString.lower(`paymentId`),
+            FfiConverterTypeActivityType.lower(`paymentType`),
+            FfiConverterSequenceString.lower(`tags`),
             uniffiRustCallStatus,
         )
     }
@@ -9854,6 +9983,15 @@ public fun `getAllClosedChannels`(`sortDirection`: SortDirection?): List<ClosedC
     return FfiConverterSequenceTypeClosedChannelDetails.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_all_closed_channels(
             FfiConverterOptionalTypeSortDirection.lower(`sortDirection`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+@Throws(ActivityException::class)
+public fun `getAllReceivingTags`(): List<ReceivingTags> {
+    return FfiConverterSequenceTypeReceivingTags.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_get_all_receiving_tags(
             uniffiRustCallStatus,
         )
     })
@@ -10327,11 +10465,32 @@ public fun `removeClosedChannelById`(`channelId`: kotlin.String): kotlin.Boolean
 }
 
 @Throws(ActivityException::class)
+public fun `removeReceivingTags`(`paymentId`: kotlin.String, `tags`: List<kotlin.String>) {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_remove_receiving_tags(
+            FfiConverterString.lower(`paymentId`),
+            FfiConverterSequenceString.lower(`tags`),
+            uniffiRustCallStatus,
+        )
+    }
+}
+
+@Throws(ActivityException::class)
 public fun `removeTags`(`activityId`: kotlin.String, `tags`: List<kotlin.String>) {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_remove_tags(
             FfiConverterString.lower(`activityId`),
             FfiConverterSequenceString.lower(`tags`),
+            uniffiRustCallStatus,
+        )
+    }
+}
+
+@Throws(ActivityException::class)
+public fun `resetReceivingTags`(`paymentId`: kotlin.String) {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_reset_receiving_tags(
+            FfiConverterString.lower(`paymentId`),
             uniffiRustCallStatus,
         )
     }
@@ -10656,6 +10815,16 @@ public suspend fun `upsertOrders`(`orders`: List<IBtOrder>) {
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
+}
+
+@Throws(ActivityException::class)
+public fun `upsertReceivingTags`(`receivingTags`: List<ReceivingTags>) {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_upsert_receiving_tags(
+            FfiConverterSequenceTypeReceivingTags.lower(`receivingTags`),
+            uniffiRustCallStatus,
+        )
+    }
 }
 
 @Throws(ActivityException::class)

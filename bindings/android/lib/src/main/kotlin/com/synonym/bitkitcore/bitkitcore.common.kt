@@ -1385,6 +1385,17 @@ public data class PublicKeyResponse (
 
 
 
+@kotlinx.serialization.Serializable
+public data class ReceivingTags (
+    val `paymentId`: kotlin.String, 
+    val `paymentType`: ActivityType, 
+    val `tags`: List<kotlin.String>
+) {
+    public companion object
+}
+
+
+
 /**
  * Reference transaction for transaction signing
  */
@@ -2953,6 +2964,8 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
 
 
 

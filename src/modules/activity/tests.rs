@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::activity::{ActivityDB, OnchainActivity, LightningActivity, PaymentType, PaymentState, Activity, ActivityFilter, SortDirection, ClosedChannelDetails, ActivityTags, ActivityTagsMetadata};
+    use crate::activity::{ActivityDB, OnchainActivity, LightningActivity, PaymentType, PaymentState, Activity, ActivityFilter, ActivityType, SortDirection, ClosedChannelDetails, ActivityTags, ReceivingTags};
     use std::fs;
     use rand::random;
 
@@ -1969,6 +1969,754 @@ mod tests {
         assert!(db.upsert_lightning_activities(&[]).is_ok());
         let all = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, None, None).unwrap();
         assert!(all.is_empty());
+        cleanup(&db_path);
+    }
+
+    // ========== Receiving Tags Tests ==========
+
+    #[test]
+    fn test_add_receiving_tags_onchain() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["payment".to_string(), "coffee".to_string()];
+
+        assert!(db.add_receiving_tags(&address, &ActivityType::Onchain, &tags).is_ok());
+
+        // Verify tags are transferred when activity is received
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let activity_tags = db.get_tags(&activity.id).unwrap();
+        assert_eq!(activity_tags.len(), 2);
+        assert!(activity_tags.contains(&"payment".to_string()));
+        assert!(activity_tags.contains(&"coffee".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_add_receiving_tags_lightning() {
+        let (mut db, db_path) = setup();
+        let invoice = "lightning:invoice123".to_string();
+        let tags = vec!["invoice".to_string(), "payment".to_string()];
+
+        assert!(db.add_receiving_tags(&invoice, &ActivityType::Lightning, &tags).is_ok());
+
+        // Verify tags are transferred when activity is received
+        let mut activity = create_test_lightning_activity();
+        activity.invoice = invoice.clone();
+        activity.tx_type = PaymentType::Received;
+        db.insert_lightning_activity(&activity).unwrap();
+
+        let activity_tags = db.get_tags(&activity.id).unwrap();
+        assert_eq!(activity_tags.len(), 2);
+        assert!(activity_tags.contains(&"invoice".to_string()));
+        assert!(activity_tags.contains(&"payment".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_add_receiving_tags_empty_identifier() {
+        let (mut db, db_path) = setup();
+        let tags = vec!["payment".to_string()];
+
+        let result = db.add_receiving_tags("", &ActivityType::Onchain, &tags);
+        assert!(result.is_err());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_add_receiving_tags_duplicate() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["payment".to_string()];
+
+        // Add same tags twice (should be idempotent)
+        assert!(db.add_receiving_tags(&address, &ActivityType::Onchain, &tags).is_ok());
+        assert!(db.add_receiving_tags(&address, &ActivityType::Onchain, &tags).is_ok());
+
+        // Verify tags are transferred correctly
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let activity_tags = db.get_tags(&activity.id).unwrap();
+        assert_eq!(activity_tags.len(), 1);
+        assert!(activity_tags.contains(&"payment".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_add_receiving_tags_multiple() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+
+        // Add tags in multiple calls
+        assert!(db.add_receiving_tags(&address, &ActivityType::Onchain, &["tag1".to_string()]).is_ok());
+        assert!(db.add_receiving_tags(&address, &ActivityType::Onchain, &["tag2".to_string(), "tag3".to_string()]).is_ok());
+
+        // Verify all tags are transferred
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let activity_tags = db.get_tags(&activity.id).unwrap();
+        assert_eq!(activity_tags.len(), 3);
+        assert!(activity_tags.contains(&"tag1".to_string()));
+        assert!(activity_tags.contains(&"tag2".to_string()));
+        assert!(activity_tags.contains(&"tag3".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_remove_receiving_tags() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string()];
+
+        // Add tags
+        assert!(db.add_receiving_tags(&address, &ActivityType::Onchain, &tags).is_ok());
+
+        // Remove one tag
+        assert!(db.remove_receiving_tags(&address, &["tag2".to_string()]).is_ok());
+
+        // Verify only remaining tags are transferred
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let activity_tags = db.get_tags(&activity.id).unwrap();
+        assert_eq!(activity_tags.len(), 2);
+        assert!(activity_tags.contains(&"tag1".to_string()));
+        assert!(activity_tags.contains(&"tag3".to_string()));
+        assert!(!activity_tags.contains(&"tag2".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_remove_receiving_tags_multiple() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string(), "tag4".to_string()];
+
+        // Add tags
+        assert!(db.add_receiving_tags(&address, &ActivityType::Onchain, &tags).is_ok());
+
+        // Remove multiple tags
+        assert!(db.remove_receiving_tags(&address, &["tag1".to_string(), "tag3".to_string()]).is_ok());
+
+        // Verify only remaining tags are transferred
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let activity_tags = db.get_tags(&activity.id).unwrap();
+        assert_eq!(activity_tags.len(), 2);
+        assert!(activity_tags.contains(&"tag2".to_string()));
+        assert!(activity_tags.contains(&"tag4".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_remove_receiving_tags_nonexistent() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+
+        // Try to remove tags that don't exist (should not error)
+        assert!(db.remove_receiving_tags(&address, &["nonexistent".to_string()]).is_ok());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_reset_receiving_tags() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string()];
+
+        // Add tags
+        assert!(db.add_receiving_tags(&address, &ActivityType::Onchain, &tags).is_ok());
+
+        // Reset all tags
+        assert!(db.reset_receiving_tags(&address).is_ok());
+
+        // Verify no tags are transferred
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let activity_tags = db.get_tags(&activity.id).unwrap();
+        assert!(activity_tags.is_empty());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_reset_receiving_tags_empty() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+
+        // Reset tags that don't exist (should not error)
+        assert!(db.reset_receiving_tags(&address).is_ok());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_receiving_tags_transferred_only_on_received() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["payment".to_string()];
+
+        // Add receiving tags
+        assert!(db.add_receiving_tags(&address, &ActivityType::Onchain, &tags).is_ok());
+
+        // Insert sent activity (should NOT transfer tags)
+        let mut sent_activity = create_test_onchain_activity();
+        sent_activity.address = address.clone();
+        sent_activity.tx_type = PaymentType::Sent;
+        db.insert_onchain_activity(&sent_activity).unwrap();
+
+        let sent_tags = db.get_tags(&sent_activity.id).unwrap();
+        assert!(sent_tags.is_empty());
+
+        // Insert received activity (should transfer tags)
+        let mut received_activity = create_test_onchain_activity();
+        received_activity.id = "received_activity".to_string();
+        received_activity.address = address.clone();
+        received_activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&received_activity).unwrap();
+
+        let received_tags = db.get_tags(&received_activity.id).unwrap();
+        assert_eq!(received_tags.len(), 1);
+        assert!(received_tags.contains(&"payment".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_receiving_tags_deleted_after_transfer() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["tag1".to_string(), "tag2".to_string()];
+
+        // Add receiving tags
+        assert!(db.add_receiving_tags(&address, &ActivityType::Onchain, &tags).is_ok());
+
+        // Insert first received activity (should transfer tags)
+        let mut activity1 = create_test_onchain_activity();
+        activity1.address = address.clone();
+        activity1.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity1).unwrap();
+
+        let tags1 = db.get_tags(&activity1.id).unwrap();
+        assert_eq!(tags1.len(), 2);
+
+        // Insert second received activity with same address (should NOT transfer tags again)
+        let mut activity2 = create_test_onchain_activity();
+        activity2.id = "activity2".to_string();
+        activity2.address = address.clone();
+        activity2.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity2).unwrap();
+
+        let tags2 = db.get_tags(&activity2.id).unwrap();
+        assert!(tags2.is_empty()); // Tags were already deleted after first transfer
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_receiving_tags_lightning_received() {
+        let (mut db, db_path) = setup();
+        let invoice = "lightning:invoice123".to_string();
+        let tags = vec!["invoice".to_string(), "payment".to_string()];
+
+        // Add receiving tags
+        assert!(db.add_receiving_tags(&invoice, &ActivityType::Lightning, &tags).is_ok());
+
+        // Insert received lightning activity
+        let mut activity = create_test_lightning_activity();
+        activity.invoice = invoice.clone();
+        activity.tx_type = PaymentType::Received;
+        db.insert_lightning_activity(&activity).unwrap();
+
+        let activity_tags = db.get_tags(&activity.id).unwrap();
+        assert_eq!(activity_tags.len(), 2);
+        assert!(activity_tags.contains(&"invoice".to_string()));
+        assert!(activity_tags.contains(&"payment".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_receiving_tags_multiple_identifiers() {
+        let (mut db, db_path) = setup();
+        let address1 = "bc1qtest123".to_string();
+        let address2 = "bc1qtest456".to_string();
+
+        // Add tags for different addresses
+        assert!(db.add_receiving_tags(&address1, &ActivityType::Onchain, &["tag1".to_string()]).is_ok());
+        assert!(db.add_receiving_tags(&address2, &ActivityType::Onchain, &["tag2".to_string()]).is_ok());
+
+        // Insert activities for both addresses
+        let mut activity1 = create_test_onchain_activity();
+        activity1.address = address1.clone();
+        activity1.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity1).unwrap();
+
+        let mut activity2 = create_test_onchain_activity();
+        activity2.id = "activity2".to_string();
+        activity2.address = address2.clone();
+        activity2.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity2).unwrap();
+
+        // Verify each activity got its own tags
+        let tags1 = db.get_tags(&activity1.id).unwrap();
+        assert_eq!(tags1.len(), 1);
+        assert!(tags1.contains(&"tag1".to_string()));
+
+        let tags2 = db.get_tags(&activity2.id).unwrap();
+        assert_eq!(tags2.len(), 1);
+        assert!(tags2.contains(&"tag2".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_receiving_tags_onchain_and_lightning_separate() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let invoice = "lightning:invoice123".to_string();
+
+        // Add tags for both onchain and lightning (same identifier string, different types)
+        assert!(db.add_receiving_tags(&address, &ActivityType::Onchain, &["onchain_tag".to_string()]).is_ok());
+        assert!(db.add_receiving_tags(&invoice, &ActivityType::Lightning, &["lightning_tag".to_string()]).is_ok());
+
+        // Insert onchain received activity
+        let mut onchain_activity = create_test_onchain_activity();
+        onchain_activity.address = address.clone();
+        onchain_activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&onchain_activity).unwrap();
+
+        // Insert lightning received activity
+        let mut lightning_activity = create_test_lightning_activity();
+        lightning_activity.invoice = invoice.clone();
+        lightning_activity.tx_type = PaymentType::Received;
+        db.insert_lightning_activity(&lightning_activity).unwrap();
+
+        // Verify each got its own tags
+        let onchain_tags = db.get_tags(&onchain_activity.id).unwrap();
+        assert_eq!(onchain_tags.len(), 1);
+        assert!(onchain_tags.contains(&"onchain_tag".to_string()));
+
+        let lightning_tags = db.get_tags(&lightning_activity.id).unwrap();
+        assert_eq!(lightning_tags.len(), 1);
+        assert!(lightning_tags.contains(&"lightning_tag".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_receiving_tags_empty_tags() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+
+        // Add empty tags (should be allowed, but won't transfer anything meaningful)
+        assert!(db.add_receiving_tags(&address, &ActivityType::Onchain, &[]).is_ok());
+
+        // Insert received activity
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        // Verify no tags were transferred
+        let activity_tags = db.get_tags(&activity.id).unwrap();
+        assert!(activity_tags.is_empty());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_receiving_tags_combined_with_regular_tags() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+
+        // Add receiving tags
+        assert!(db.add_receiving_tags(&address, &ActivityType::Onchain, &["receiving_tag".to_string()]).is_ok());
+
+        // Insert received activity
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        // Add regular tags to the same activity
+        db.add_tags(&activity.id, &["regular_tag".to_string()]).unwrap();
+
+        // Verify both types of tags are present
+        let activity_tags = db.get_tags(&activity.id).unwrap();
+        assert_eq!(activity_tags.len(), 2);
+        assert!(activity_tags.contains(&"receiving_tag".to_string()));
+        assert!(activity_tags.contains(&"regular_tag".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_all_receiving_tags() {
+        let (mut db, db_path) = setup();
+        let address1 = "bc1qtest123".to_string();
+        let address2 = "bc1qtest456".to_string();
+        let invoice = "lightning:invoice123".to_string();
+
+        // Add receiving tags for multiple identifiers
+        assert!(db.add_receiving_tags(&address1, &ActivityType::Onchain, &["tag1".to_string(), "tag2".to_string()]).is_ok());
+        assert!(db.add_receiving_tags(&address2, &ActivityType::Onchain, &["tag3".to_string()]).is_ok());
+        assert!(db.add_receiving_tags(&invoice, &ActivityType::Lightning, &["tag4".to_string(), "tag5".to_string()]).is_ok());
+
+        // Get all receiving tags
+        let all_tags = db.get_all_receiving_tags().unwrap();
+        assert_eq!(all_tags.len(), 3);
+
+        // Find tags for address1
+        let addr1_tags = all_tags.iter().find(|rt| rt.payment_id == address1 && rt.payment_type == ActivityType::Onchain).unwrap();
+        assert_eq!(addr1_tags.tags.len(), 2);
+        assert!(addr1_tags.tags.contains(&"tag1".to_string()));
+        assert!(addr1_tags.tags.contains(&"tag2".to_string()));
+
+        // Find tags for address2
+        let addr2_tags = all_tags.iter().find(|rt| rt.payment_id == address2 && rt.payment_type == ActivityType::Onchain).unwrap();
+        assert_eq!(addr2_tags.tags.len(), 1);
+        assert!(addr2_tags.tags.contains(&"tag3".to_string()));
+
+        // Find tags for invoice
+        let invoice_tags = all_tags.iter().find(|rt| rt.payment_id == invoice && rt.payment_type == ActivityType::Lightning).unwrap();
+        assert_eq!(invoice_tags.tags.len(), 2);
+        assert!(invoice_tags.tags.contains(&"tag4".to_string()));
+        assert!(invoice_tags.tags.contains(&"tag5".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_all_receiving_tags_empty() {
+        let (db, db_path) = setup();
+
+        let all_tags = db.get_all_receiving_tags().unwrap();
+        assert!(all_tags.is_empty());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_receiving_tags() {
+        let (mut db, db_path) = setup();
+
+        // Create receiving tags for backup/restore
+        let receiving_tags = vec![
+            ReceivingTags {
+                payment_id: "bc1qtest123".to_string(),
+                payment_type: ActivityType::Onchain,
+                tags: vec!["tag1".to_string(), "tag2".to_string()],
+            },
+            ReceivingTags {
+                payment_id: "bc1qtest456".to_string(),
+                payment_type: ActivityType::Onchain,
+                tags: vec!["tag3".to_string()],
+            },
+            ReceivingTags {
+                payment_id: "lightning:invoice123".to_string(),
+                payment_type: ActivityType::Lightning,
+                tags: vec!["tag4".to_string(), "tag5".to_string()],
+            },
+        ];
+
+        // Upsert receiving tags
+        assert!(db.upsert_receiving_tags(&receiving_tags).is_ok());
+
+        // Verify tags were added
+        let all_tags = db.get_all_receiving_tags().unwrap();
+        assert_eq!(all_tags.len(), 3);
+
+        // Verify tags can be transferred
+        let mut activity = create_test_onchain_activity();
+        activity.address = "bc1qtest123".to_string();
+        activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let activity_tags = db.get_tags(&activity.id).unwrap();
+        assert_eq!(activity_tags.len(), 2);
+        assert!(activity_tags.contains(&"tag1".to_string()));
+        assert!(activity_tags.contains(&"tag2".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_receiving_tags_idempotent() {
+        let (mut db, db_path) = setup();
+
+        let receiving_tags = vec![
+            ReceivingTags {
+                payment_id: "bc1qtest123".to_string(),
+                payment_type: ActivityType::Onchain,
+                tags: vec!["tag1".to_string(), "tag2".to_string()],
+            },
+        ];
+
+        // Upsert twice (should be idempotent)
+        assert!(db.upsert_receiving_tags(&receiving_tags).is_ok());
+        assert!(db.upsert_receiving_tags(&receiving_tags).is_ok());
+
+        // Verify tags are still there
+        let all_tags = db.get_all_receiving_tags().unwrap();
+        assert_eq!(all_tags.len(), 1);
+        let tags = &all_tags[0];
+        assert_eq!(tags.tags.len(), 2);
+        assert!(tags.tags.contains(&"tag1".to_string()));
+        assert!(tags.tags.contains(&"tag2".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_receiving_tags_updates_existing() {
+        let (mut db, db_path) = setup();
+
+        // Add initial tags
+        assert!(db.add_receiving_tags(&"bc1qtest123".to_string(), &ActivityType::Onchain, &["tag1".to_string()]).is_ok());
+
+        // Upsert with additional tags
+        let receiving_tags = vec![
+            ReceivingTags {
+                payment_id: "bc1qtest123".to_string(),
+                payment_type: ActivityType::Onchain,
+                tags: vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string()],
+            },
+        ];
+
+        assert!(db.upsert_receiving_tags(&receiving_tags).is_ok());
+
+        // Verify all tags are present
+        let all_tags = db.get_all_receiving_tags().unwrap();
+        assert_eq!(all_tags.len(), 1);
+        let tags = &all_tags[0];
+        assert_eq!(tags.tags.len(), 3);
+        assert!(tags.tags.contains(&"tag1".to_string()));
+        assert!(tags.tags.contains(&"tag2".to_string()));
+        assert!(tags.tags.contains(&"tag3".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_receiving_tags_empty() {
+        let (mut db, db_path) = setup();
+
+        // Upsert with empty vector (should not error)
+        assert!(db.upsert_receiving_tags(&[]).is_ok());
+
+        let all_tags = db.get_all_receiving_tags().unwrap();
+        assert!(all_tags.is_empty());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_receiving_tags_empty_identifier() {
+        let (mut db, db_path) = setup();
+
+        let receiving_tags = vec![
+            ReceivingTags {
+                payment_id: "".to_string(),
+                payment_type: ActivityType::Onchain,
+                tags: vec!["tag1".to_string()],
+            },
+        ];
+
+        // Empty identifier is allowed for backup/restore (restores exactly what was backed up)
+        assert!(db.upsert_receiving_tags(&receiving_tags).is_ok());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_backup_restore_receiving_tags() {
+        let (mut db, db_path) = setup();
+
+        // Add some receiving tags
+        assert!(db.add_receiving_tags(&"bc1qtest123".to_string(), &ActivityType::Onchain, &["tag1".to_string(), "tag2".to_string()]).is_ok());
+        assert!(db.add_receiving_tags(&"lightning:invoice123".to_string(), &ActivityType::Lightning, &["tag3".to_string()]).is_ok());
+
+        // Backup: Get all receiving tags
+        let backup = db.get_all_receiving_tags().unwrap();
+        assert_eq!(backup.len(), 2);
+
+        // Simulate restore: Clear and restore
+        assert!(db.reset_receiving_tags(&"bc1qtest123".to_string()).is_ok());
+        assert!(db.reset_receiving_tags(&"lightning:invoice123".to_string()).is_ok());
+
+        // Verify cleared
+        let after_clear = db.get_all_receiving_tags().unwrap();
+        assert!(after_clear.is_empty());
+
+        // Restore from backup
+        assert!(db.upsert_receiving_tags(&backup).is_ok());
+
+        // Verify restored
+        let restored = db.get_all_receiving_tags().unwrap();
+        assert_eq!(restored.len(), 2);
+
+        // Verify tags work after restore
+        let mut activity = create_test_onchain_activity();
+        activity.address = "bc1qtest123".to_string();
+        activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let activity_tags = db.get_tags(&activity.id).unwrap();
+        assert_eq!(activity_tags.len(), 2);
+        assert!(activity_tags.contains(&"tag1".to_string()));
+        assert!(activity_tags.contains(&"tag2".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_receiving_tags_same_identifier_different_type() {
+        let (mut db, db_path) = setup();
+
+        // Same identifier string but different types (should be separate)
+        let receiving_tags = vec![
+            ReceivingTags {
+                payment_id: "same_id".to_string(),
+                payment_type: ActivityType::Onchain,
+                tags: vec!["onchain_tag".to_string()],
+            },
+            ReceivingTags {
+                payment_id: "same_id".to_string(),
+                payment_type: ActivityType::Lightning,
+                tags: vec!["lightning_tag".to_string()],
+            },
+        ];
+
+        assert!(db.upsert_receiving_tags(&receiving_tags).is_ok());
+
+        // Verify both are stored separately
+        let all_tags = db.get_all_receiving_tags().unwrap();
+        assert_eq!(all_tags.len(), 2);
+
+        let onchain_tags = all_tags.iter().find(|rt| rt.payment_type == ActivityType::Onchain).unwrap();
+        assert_eq!(onchain_tags.tags.len(), 1);
+        assert!(onchain_tags.tags.contains(&"onchain_tag".to_string()));
+
+        let lightning_tags = all_tags.iter().find(|rt| rt.payment_type == ActivityType::Lightning).unwrap();
+        assert_eq!(lightning_tags.tags.len(), 1);
+        assert!(lightning_tags.tags.contains(&"lightning_tag".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_all_receiving_tags_ordering() {
+        let (mut db, db_path) = setup();
+
+        // Add tags in non-alphabetical order
+        assert!(db.add_receiving_tags(&"z_address".to_string(), &ActivityType::Onchain, &["tag1".to_string()]).is_ok());
+        assert!(db.add_receiving_tags(&"a_address".to_string(), &ActivityType::Onchain, &["tag2".to_string()]).is_ok());
+        assert!(db.add_receiving_tags(&"m_address".to_string(), &ActivityType::Onchain, &["tag3".to_string()]).is_ok());
+
+        // Get all tags - should be sorted by payment_id
+        let all_tags = db.get_all_receiving_tags().unwrap();
+        assert_eq!(all_tags.len(), 3);
+        assert_eq!(all_tags[0].payment_id, "a_address");
+        assert_eq!(all_tags[1].payment_id, "m_address");
+        assert_eq!(all_tags[2].payment_id, "z_address");
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_receiving_tags_partial_update() {
+        let (mut db, db_path) = setup();
+
+        // Add initial tags for multiple payment IDs
+        assert!(db.add_receiving_tags(&"address1".to_string(), &ActivityType::Onchain, &["tag1".to_string()]).is_ok());
+        assert!(db.add_receiving_tags(&"address2".to_string(), &ActivityType::Onchain, &["tag2".to_string()]).is_ok());
+        assert!(db.add_receiving_tags(&"address3".to_string(), &ActivityType::Onchain, &["tag3".to_string()]).is_ok());
+
+        // Get all
+        let all = db.get_all_receiving_tags().unwrap();
+        assert_eq!(all.len(), 3);
+
+        // Upsert with new tags for address2 (adds to existing, doesn't replace all)
+        let updated = vec![
+            ReceivingTags {
+                payment_id: "address2".to_string(),
+                payment_type: ActivityType::Onchain,
+                tags: vec!["tag2_updated".to_string(), "tag2_new".to_string()],
+            },
+        ];
+
+        assert!(db.upsert_receiving_tags(&updated).is_ok());
+
+        // Verify address1 and address3 unchanged, address2 has all its tags
+        let after = db.get_all_receiving_tags().unwrap();
+        assert_eq!(after.len(), 3);
+
+        let addr1 = after.iter().find(|rt| rt.payment_id == "address1").unwrap();
+        assert_eq!(addr1.tags, vec!["tag1".to_string()]);
+
+        let addr2 = after.iter().find(|rt| rt.payment_id == "address2").unwrap();
+        // address2 now has tag2 (original), tag2_updated, and tag2_new
+        assert_eq!(addr2.tags.len(), 3);
+        assert!(addr2.tags.contains(&"tag2".to_string()));
+        assert!(addr2.tags.contains(&"tag2_updated".to_string()));
+        assert!(addr2.tags.contains(&"tag2_new".to_string()));
+
+        let addr3 = after.iter().find(|rt| rt.payment_id == "address3").unwrap();
+        assert_eq!(addr3.tags, vec!["tag3".to_string()]);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_all_receiving_tags_after_transfer() {
+        let (mut db, db_path) = setup();
+
+        // Add receiving tags
+        assert!(db.add_receiving_tags(&"bc1qtest123".to_string(), &ActivityType::Onchain, &["tag1".to_string(), "tag2".to_string()]).is_ok());
+        assert!(db.add_receiving_tags(&"bc1qtest456".to_string(), &ActivityType::Onchain, &["tag3".to_string()]).is_ok());
+
+        // Get all before transfer
+        let before = db.get_all_receiving_tags().unwrap();
+        assert_eq!(before.len(), 2);
+
+        // Transfer tags for one address
+        let mut activity = create_test_onchain_activity();
+        activity.address = "bc1qtest123".to_string();
+        activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        // Get all after transfer - should only have the untransferred one
+        let after = db.get_all_receiving_tags().unwrap();
+        assert_eq!(after.len(), 1);
+        assert_eq!(after[0].payment_id, "bc1qtest456");
+        assert_eq!(after[0].tags, vec!["tag3".to_string()]);
+
         cleanup(&db_path);
     }
 }
