@@ -1124,6 +1124,10 @@ internal interface UniffiForeignFutureCompleteVoid: com.sun.jna.Callback {
 
 
 
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1167,6 +1171,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata() != 17211.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags() != 28081.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_add_tags() != 63739.toShort()) {
@@ -1272,6 +1279,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_payment() != 29170.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 30505.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_tags() != 11308.toShort()) {
@@ -1428,6 +1438,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_add_pre_activity_metadata(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_add_tags(
     ): Short
     @JvmStatic
@@ -1531,6 +1544,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_payment(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_pre_activity_metadata(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_tags(
@@ -1698,6 +1714,12 @@ internal object UniffiLib : Library {
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_add_pre_activity_metadata(
         `preActivityMetadata`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags(
+        `paymentId`: RustBufferByValue,
+        `tags`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
     @JvmStatic
@@ -1898,6 +1920,11 @@ internal object UniffiLib : Library {
     external fun uniffi_bitkitcore_fn_func_get_payment(
         `paymentId`: RustBufferByValue,
     ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_pre_activity_metadata(
+        `paymentId`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_tags(
         `activityId`: RustBufferByValue,
@@ -7963,6 +7990,35 @@ public object FfiConverterOptionalTypeMultisigRedeemScriptType: FfiConverterRust
 
 
 
+public object FfiConverterOptionalTypePreActivityMetadata: FfiConverterRustBuffer<PreActivityMetadata?> {
+    override fun read(buf: ByteBuffer): PreActivityMetadata? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypePreActivityMetadata.read(buf)
+    }
+
+    override fun allocationSize(value: PreActivityMetadata?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypePreActivityMetadata.allocationSize(value)
+        }
+    }
+
+    override fun write(value: PreActivityMetadata?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypePreActivityMetadata.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeRefundMemo: FfiConverterRustBuffer<RefundMemo?> {
     override fun read(buf: ByteBuffer): RefundMemo? {
         if (buf.get().toInt() == 0) {
@@ -9646,6 +9702,17 @@ public fun `addPreActivityMetadata`(`preActivityMetadata`: PreActivityMetadata) 
 }
 
 @Throws(ActivityException::class)
+public fun `addPreActivityMetadataTags`(`paymentId`: kotlin.String, `tags`: List<kotlin.String>) {
+    uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags(
+            FfiConverterString.lower(`paymentId`),
+            FfiConverterSequenceString.lower(`tags`),
+            uniffiRustCallStatus,
+        )
+    }
+}
+
+@Throws(ActivityException::class)
 public fun `addTags`(`activityId`: kotlin.String, `tags`: List<kotlin.String>) {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_add_tags(
@@ -10137,6 +10204,16 @@ public suspend fun `getPayment`(`paymentId`: kotlin.String): IBtBolt11Invoice {
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
+}
+
+@Throws(ActivityException::class)
+public fun `getPreActivityMetadata`(`paymentId`: kotlin.String): PreActivityMetadata? {
+    return FfiConverterOptionalTypePreActivityMetadata.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata(
+            FfiConverterString.lower(`paymentId`),
+            uniffiRustCallStatus,
+        )
+    })
 }
 
 @Throws(ActivityException::class)

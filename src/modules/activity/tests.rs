@@ -2072,6 +2072,51 @@ mod tests {
     }
 
     #[test]
+    fn test_add_pre_activity_metadata_tags() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+
+        // Add initial metadata with one tag
+        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["tag1".to_string()])).is_ok());
+
+        // Add more tags to existing metadata
+        assert!(db.add_pre_activity_metadata_tags(&address, &["tag2".to_string(), "tag3".to_string()]).is_ok());
+
+        // Verify all tags are present
+        let all_metadata = db.get_all_pre_activity_metadata().unwrap();
+        assert_eq!(all_metadata.len(), 1);
+        let metadata = &all_metadata[0];
+        assert_eq!(metadata.tags.len(), 3);
+        assert!(metadata.tags.contains(&"tag1".to_string()));
+        assert!(metadata.tags.contains(&"tag2".to_string()));
+        assert!(metadata.tags.contains(&"tag3".to_string()));
+
+        // Add duplicate tag (should not add duplicate)
+        assert!(db.add_pre_activity_metadata_tags(&address, &["tag2".to_string()]).is_ok());
+
+        // Verify no duplicate was added
+        let all_metadata_after = db.get_all_pre_activity_metadata().unwrap();
+        assert_eq!(all_metadata_after.len(), 1);
+        let metadata_after = &all_metadata_after[0];
+        assert_eq!(metadata_after.tags.len(), 3);
+        assert_eq!(metadata_after.tags.iter().filter(|t| *t == "tag2").count(), 1);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_add_pre_activity_metadata_tags_nonexistent() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+
+        // Try to add tags to non-existent metadata (should error)
+        let result = db.add_pre_activity_metadata_tags(&address, &["tag1".to_string()]);
+        assert!(result.is_err());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_remove_pre_activity_metadata() {
         let (mut db, db_path) = setup();
         let address = "bc1qtest123".to_string();
@@ -2399,6 +2444,32 @@ mod tests {
         assert_eq!(activity_tags.len(), 2);
         assert!(activity_tags.contains(&"receiving_tag".to_string()));
         assert!(activity_tags.contains(&"regular_tag".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_pre_activity_metadata() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["tag1".to_string(), "tag2".to_string()];
+
+        // Get non-existent metadata (should return None)
+        let result = db.get_pre_activity_metadata(&address).unwrap();
+        assert!(result.is_none());
+
+        // Add pre-activity metadata
+        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone())).is_ok());
+
+        // Get existing metadata
+        let metadata = db.get_pre_activity_metadata(&address).unwrap();
+        assert!(metadata.is_some());
+        let metadata = metadata.unwrap();
+        assert_eq!(metadata.payment_id, address);
+        assert_eq!(metadata.payment_type, ActivityType::Onchain);
+        assert_eq!(metadata.tags.len(), 2);
+        assert!(metadata.tags.contains(&"tag1".to_string()));
+        assert!(metadata.tags.contains(&"tag2".to_string()));
 
         cleanup(&db_path);
     }

@@ -1314,6 +1314,50 @@ impl ActivityDB {
         Ok(())
     }
 
+    /// Add tags to existing pre-activity metadata for an onchain address or lightning invoice
+    /// Returns an error if the metadata doesn't exist
+    pub fn add_pre_activity_metadata_tags(&mut self, payment_id: &str, tags_to_add: &[String]) -> Result<(), ActivityError> {
+        // Get current metadata
+        let current_tags_json: Option<String> = self.conn.query_row(
+            "SELECT tags FROM pre_activity_metadata WHERE payment_id = ?1",
+            [payment_id],
+            |row| row.get(0)
+        ).optional().map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to get current tags: {}", e),
+        })?;
+
+        let mut current_tags: Vec<String> = if let Some(tags_json) = current_tags_json {
+            serde_json::from_str(&tags_json).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to deserialize tags: {}", e),
+            })?
+        } else {
+            return Err(ActivityError::DataError {
+                error_details: format!("Pre-activity metadata not found for payment_id: {}", payment_id),
+            });
+        };
+
+        // Add new tags, avoiding duplicates
+        for tag in tags_to_add {
+            if !current_tags.contains(tag) {
+                current_tags.push(tag.clone());
+            }
+        }
+
+        // Update with merged tags
+        let updated_tags_json = serde_json::to_string(&current_tags).map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to serialize tags: {}", e),
+        })?;
+
+        self.conn.execute(
+            "UPDATE pre_activity_metadata SET tags = ?1 WHERE payment_id = ?2",
+            [&updated_tags_json, payment_id],
+        ).map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to update tags: {}", e),
+        })?;
+
+        Ok(())
+    }
+
     /// Remove specific tags from pre-activity metadata for an onchain address or lightning invoice
     pub fn remove_pre_activity_metadata_tags(&mut self, payment_id: &str, tags_to_remove: &[String]) -> Result<(), ActivityError> {
         // Get current metadata
@@ -1434,6 +1478,59 @@ impl ActivityDB {
         })?;
 
         Ok(())
+    }
+
+    /// Get pre-activity metadata for a specific payment_id
+    pub fn get_pre_activity_metadata(&self, payment_id: &str) -> Result<Option<PreActivityMetadata>, ActivityError> {
+        let sql = "
+            SELECT
+                payment_id, payment_type, tags, payment_hash, tx_id, address, is_receive, created_at
+            FROM pre_activity_metadata
+            WHERE payment_id = ?1";
+
+        let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
+
+        match stmt.query_row([payment_id], |row| {
+            let payment_id_val: String = row.get(0)?;
+            let payment_type_str: String = row.get(1)?;
+            let tags_json: String = row.get(2)?;
+            let payment_hash: Option<String> = row.get(3)?;
+            let tx_id: Option<String> = row.get(4)?;
+            let address: Option<String> = row.get(5)?;
+            let is_receive: bool = row.get(6)?;
+            let created_at: i64 = row.get(7)?;
+
+            let payment_type = Self::parse_activity_type(&payment_type_str).map_err(|_e| rusqlite::Error::InvalidColumnType(
+                1,
+                "payment_type".to_string(),
+                rusqlite::types::Type::Text,
+            ))?;
+            let tags: Vec<String> = serde_json::from_str(&tags_json).map_err(|_e: serde_json::Error| rusqlite::Error::InvalidColumnType(
+                2,
+                "tags".to_string(),
+                rusqlite::types::Type::Text,
+            ))?;
+            let created_at_u64 = created_at as u64;
+
+            Ok(PreActivityMetadata {
+                payment_id: payment_id_val,
+                payment_type,
+                tags,
+                payment_hash,
+                tx_id,
+                address,
+                is_receive,
+                created_at: created_at_u64,
+            })
+        }) {
+            Ok(metadata) => Ok(Some(metadata)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(ActivityError::RetrievalError {
+                error_details: format!("Failed to get pre-activity metadata: {}", e),
+            }),
+        }
     }
 
     /// Get all pre-activity metadata for backup
