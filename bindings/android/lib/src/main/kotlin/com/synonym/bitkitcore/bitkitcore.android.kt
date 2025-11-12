@@ -1281,7 +1281,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_get_payment() != 29170.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 30505.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 53126.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_tags() != 11308.toShort()) {
@@ -1922,7 +1922,8 @@ internal object UniffiLib : Library {
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_pre_activity_metadata(
-        `paymentId`: RustBufferByValue,
+        `searchKey`: RustBufferByValue,
+        `searchByAddress`: Byte,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
@@ -4785,7 +4786,6 @@ public object FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer<PreAct
     override fun read(buf: ByteBuffer): PreActivityMetadata {
         return PreActivityMetadata(
             FfiConverterString.read(buf),
-            FfiConverterTypeActivityType.read(buf),
             FfiConverterSequenceString.read(buf),
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalString.read(buf),
@@ -4797,7 +4797,6 @@ public object FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer<PreAct
 
     override fun allocationSize(value: PreActivityMetadata): ULong = (
             FfiConverterString.allocationSize(value.`paymentId`) +
-            FfiConverterTypeActivityType.allocationSize(value.`paymentType`) +
             FfiConverterSequenceString.allocationSize(value.`tags`) +
             FfiConverterOptionalString.allocationSize(value.`paymentHash`) +
             FfiConverterOptionalString.allocationSize(value.`txId`) +
@@ -4808,7 +4807,6 @@ public object FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer<PreAct
 
     override fun write(value: PreActivityMetadata, buf: ByteBuffer) {
         FfiConverterString.write(value.`paymentId`, buf)
-        FfiConverterTypeActivityType.write(value.`paymentType`, buf)
         FfiConverterSequenceString.write(value.`tags`, buf)
         FfiConverterOptionalString.write(value.`paymentHash`, buf)
         FfiConverterOptionalString.write(value.`txId`, buf)
@@ -10207,10 +10205,11 @@ public suspend fun `getPayment`(`paymentId`: kotlin.String): IBtBolt11Invoice {
 }
 
 @Throws(ActivityException::class)
-public fun `getPreActivityMetadata`(`paymentId`: kotlin.String): PreActivityMetadata? {
+public fun `getPreActivityMetadata`(`searchKey`: kotlin.String, `searchByAddress`: kotlin.Boolean): PreActivityMetadata? {
     return FfiConverterOptionalTypePreActivityMetadata.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata(
-            FfiConverterString.lower(`paymentId`),
+            FfiConverterString.lower(`searchKey`),
+            FfiConverterBoolean.lower(`searchByAddress`),
             uniffiRustCallStatus,
         )
     })

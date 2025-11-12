@@ -1,6 +1,6 @@
 use rusqlite::{Connection, OptionalExtension};
 use serde_json;
-use crate::activity::{Activity, ActivityError, ActivityFilter, ActivityType, LightningActivity, OnchainActivity, PaymentState, PaymentType, SortDirection, ClosedChannelDetails, ActivityTags, PreActivityMetadata};
+use crate::activity::{Activity, ActivityError, ActivityFilter, LightningActivity, OnchainActivity, PaymentState, PaymentType, SortDirection, ClosedChannelDetails, ActivityTags, PreActivityMetadata};
 
 pub struct ActivityDB {
     pub conn: Connection,
@@ -66,7 +66,6 @@ const CREATE_TAGS_TABLE: &str = "
 const CREATE_PRE_ACTIVITY_METADATA_TABLE: &str = "
     CREATE TABLE IF NOT EXISTS pre_activity_metadata (
         payment_id TEXT PRIMARY KEY,
-        payment_type TEXT NOT NULL CHECK (payment_type IN ('onchain', 'lightning')),
         tags TEXT NOT NULL,
         payment_hash TEXT,
         tx_id TEXT,
@@ -122,7 +121,9 @@ const INDEX_STATEMENTS: &[&str] = &[
     "CREATE INDEX IF NOT EXISTS idx_activity_tags_tag_activity ON activity_tags(tag, activity_id)",
 
     // Pre-activity metadata indexes
-    "CREATE INDEX IF NOT EXISTS idx_pre_activity_metadata_id_type ON pre_activity_metadata(payment_id, payment_type)",
+    "CREATE INDEX IF NOT EXISTS idx_pre_activity_metadata_id ON pre_activity_metadata(payment_id)",
+    "CREATE INDEX IF NOT EXISTS idx_pre_activity_metadata_address ON pre_activity_metadata(address)",
+    "CREATE INDEX IF NOT EXISTS idx_pre_activity_metadata_tx_id ON pre_activity_metadata(tx_id)",
 
     // Closed channels indexes
     "CREATE INDEX IF NOT EXISTS idx_closed_channels_funding_txo ON closed_channels(funding_txo_txid)"
@@ -357,13 +358,10 @@ impl ActivityDB {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
-        // If this is a received payment, check for pre-activity metadata and transfer tags based on address
         if activity.tx_type == PaymentType::Received {
-            let _ = self.transfer_pre_activity_metadata_to_activity(&activity.address, &activity.id);
-        }
-        // For sent payments, transfer metadata based on tx_id
-        else if activity.tx_type == PaymentType::Sent {
-            let _ = self.transfer_pre_activity_metadata_to_activity(&activity.tx_id, &activity.id);
+            let _ = self.transfer_pre_activity_metadata_to_activity(&activity.address, &activity.id, true);
+        } else if activity.tx_type == PaymentType::Sent {
+            let _ = self.transfer_pre_activity_metadata_to_activity(&activity.tx_id, &activity.id, false);
         }
 
         Ok(())
@@ -419,8 +417,7 @@ impl ActivityDB {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
-        // For lightning, check for pre-activity metadata and transfer tags based on invoice
-        let _ = self.transfer_pre_activity_metadata_to_activity(&activity.invoice, &activity.id);
+        let _ = self.transfer_pre_activity_metadata_to_activity(&activity.id, &activity.id, false);
 
         Ok(())
     }
@@ -1285,6 +1282,7 @@ impl ActivityDB {
     }
 
     /// Add pre-activity metadata for an onchain address or lightning invoice
+    /// If the metadata has an address, any existing metadata with the same address will be removed first
     pub fn add_pre_activity_metadata(&mut self, pre_activity_metadata: &PreActivityMetadata) -> Result<(), ActivityError> {
         if pre_activity_metadata.payment_id.is_empty() {
             return Err(ActivityError::DataError {
@@ -1292,16 +1290,29 @@ impl ActivityDB {
             });
         }
 
-        let payment_type_str = Self::activity_type_to_string(&pre_activity_metadata.payment_type);
         let tags_json = serde_json::to_string(&pre_activity_metadata.tags).map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to serialize tags: {}", e),
         })?;
 
-        self.conn.execute(
-            "INSERT OR REPLACE INTO pre_activity_metadata (payment_id, payment_type, tags, payment_hash, tx_id, address, is_receive, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        if let Some(ref address) = pre_activity_metadata.address {
+            if !address.is_empty() {
+                tx.execute(
+                    "DELETE FROM pre_activity_metadata WHERE address = ?1",
+                    [address],
+                ).map_err(|e| ActivityError::DataError {
+                    error_details: format!("Failed to delete existing metadata with address: {}", e),
+                })?;
+            }
+        }
+
+        tx.execute(
+            "INSERT OR REPLACE INTO pre_activity_metadata (payment_id, tags, payment_hash, tx_id, address, is_receive, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             rusqlite::params![
                 &pre_activity_metadata.payment_id,
-                payment_type_str,
                 &tags_json,
                 &pre_activity_metadata.payment_hash,
                 &pre_activity_metadata.tx_id,
@@ -1311,6 +1322,10 @@ impl ActivityDB {
             ],
         ).map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to insert pre-activity metadata: {}", e),
+        })?;
+
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
         Ok(())
@@ -1449,20 +1464,18 @@ impl ActivityDB {
 
         {
             let mut stmt = tx.prepare(
-                "INSERT OR REPLACE INTO pre_activity_metadata (payment_id, payment_type, tags, payment_hash, tx_id, address, is_receive, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)"
+                "INSERT OR REPLACE INTO pre_activity_metadata (payment_id, tags, payment_hash, tx_id, address, is_receive, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"
             ).map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to prepare statement: {}", e),
             })?;
 
             for metadata in pre_activity_metadata {
-                let payment_type_str = Self::activity_type_to_string(&metadata.payment_type);
                 let tags_json = serde_json::to_string(&metadata.tags).map_err(|e| ActivityError::DataError {
                     error_details: format!("Failed to serialize tags: {}", e),
                 })?;
 
                 stmt.execute(rusqlite::params![
                     &metadata.payment_id,
-                    payment_type_str,
                     &tags_json,
                     &metadata.payment_hash,
                     &metadata.tx_id,
@@ -1482,35 +1495,37 @@ impl ActivityDB {
         Ok(())
     }
 
-    /// Get pre-activity metadata for a specific payment_id
-    pub fn get_pre_activity_metadata(&self, payment_id: &str) -> Result<Option<PreActivityMetadata>, ActivityError> {
-        let sql = "
+    /// Get pre-activity metadata for a specific payment_id or address
+    pub fn get_pre_activity_metadata(&self, search_key: &str, search_by_address: bool) -> Result<Option<PreActivityMetadata>, ActivityError> {
+        let sql = if search_by_address {
+            "
             SELECT
-                payment_id, payment_type, tags, payment_hash, tx_id, address, is_receive, created_at
+                payment_id, tags, payment_hash, tx_id, address, is_receive, created_at
             FROM pre_activity_metadata
-            WHERE payment_id = ?1";
+            WHERE address = ?1"
+        } else {
+            "
+            SELECT
+                payment_id, tags, payment_hash, tx_id, address, is_receive, created_at
+            FROM pre_activity_metadata
+            WHERE payment_id = ?1"
+        };
 
         let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
             error_details: format!("Failed to prepare statement: {}", e),
         })?;
 
-        match stmt.query_row([payment_id], |row| {
+        match stmt.query_row([search_key], |row| {
             let payment_id_val: String = row.get(0)?;
-            let payment_type_str: String = row.get(1)?;
-            let tags_json: String = row.get(2)?;
-            let payment_hash: Option<String> = row.get(3)?;
-            let tx_id: Option<String> = row.get(4)?;
-            let address: Option<String> = row.get(5)?;
-            let is_receive: bool = row.get(6)?;
-            let created_at: i64 = row.get(7)?;
+            let tags_json: String = row.get(1)?;
+            let payment_hash: Option<String> = row.get(2)?;
+            let tx_id: Option<String> = row.get(3)?;
+            let address: Option<String> = row.get(4)?;
+            let is_receive: bool = row.get(5)?;
+            let created_at: i64 = row.get(6)?;
 
-            let payment_type = Self::parse_activity_type(&payment_type_str).map_err(|_e| rusqlite::Error::InvalidColumnType(
-                1,
-                "payment_type".to_string(),
-                rusqlite::types::Type::Text,
-            ))?;
             let tags: Vec<String> = serde_json::from_str(&tags_json).map_err(|_e: serde_json::Error| rusqlite::Error::InvalidColumnType(
-                2,
+                1,
                 "tags".to_string(),
                 rusqlite::types::Type::Text,
             ))?;
@@ -1518,7 +1533,6 @@ impl ActivityDB {
 
             Ok(PreActivityMetadata {
                 payment_id: payment_id_val,
-                payment_type,
                 tags,
                 payment_hash,
                 tx_id,
@@ -1538,12 +1552,12 @@ impl ActivityDB {
     /// Get all pre-activity metadata for backup
     pub fn get_all_pre_activity_metadata(&self) -> Result<Vec<PreActivityMetadata>, ActivityError> {
         let mut stmt = self.conn.prepare(
-            "SELECT payment_id, payment_type, tags, payment_hash, tx_id, address, is_receive, created_at FROM pre_activity_metadata ORDER BY payment_id"
+            "SELECT payment_id, tags, payment_hash, tx_id, address, is_receive, created_at FROM pre_activity_metadata ORDER BY payment_id"
         ).map_err(|e| ActivityError::RetrievalError {
             error_details: format!("Failed to prepare statement: {}", e),
         })?;
 
-        let rows: Vec<(String, String, String, Option<String>, Option<String>, Option<String>, bool, i64)> = stmt.query_map([], |row| {
+        let rows: Vec<(String, String, Option<String>, Option<String>, Option<String>, bool, i64)> = stmt.query_map([], |row| {
             Ok((
                 row.get(0)?,
                 row.get(1)?,
@@ -1552,7 +1566,6 @@ impl ActivityDB {
                 row.get(4)?,
                 row.get(5)?,
                 row.get(6)?,
-                row.get(7)?,
             ))
         }).map_err(|e| ActivityError::RetrievalError {
             error_details: format!("Failed to execute query: {}", e),
@@ -1564,8 +1577,7 @@ impl ActivityDB {
 
         let mut result: Vec<PreActivityMetadata> = Vec::new();
 
-        for (payment_id, payment_type_str, tags_json, payment_hash, tx_id, address, is_receive, created_at) in rows {
-            let payment_type = Self::parse_activity_type(&payment_type_str)?;
+        for (payment_id, tags_json, payment_hash, tx_id, address, is_receive, created_at) in rows {
             let tags: Vec<String> = serde_json::from_str(&tags_json).map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to deserialize tags: {}", e),
             })?;
@@ -1573,7 +1585,6 @@ impl ActivityDB {
 
             result.push(PreActivityMetadata {
                 payment_id,
-                payment_type,
                 tags,
                 payment_hash,
                 tx_id,
@@ -1589,43 +1600,42 @@ impl ActivityDB {
         Ok(result)
     }
 
-    /// Get pre-activity metadata for an onchain address or lightning invoice and transfer metadata to an activity
-    /// For onchain activities, also updates the address if provided in metadata
-    /// Returns the tags that were transferred
-    fn transfer_pre_activity_metadata_to_activity(&mut self, payment_id: &str, activity_id: &str) -> Result<Vec<String>, ActivityError> {
-        // Get the full metadata
-        let metadata = match self.get_pre_activity_metadata(payment_id)? {
+    fn transfer_pre_activity_metadata_to_activity(&mut self, search_key: &str, activity_id: &str, search_by_address: bool) -> Result<Vec<String>, ActivityError> {
+        let metadata = match self.get_pre_activity_metadata(search_key, search_by_address)? {
             Some(m) => m,
             None => return Ok(Vec::new()),
         };
 
         let tags = metadata.tags;
         if tags.is_empty() && metadata.address.is_none() {
-            // No tags and no address to update, but we should still delete the metadata
-            self.delete_pre_activity_metadata(payment_id)?;
+            if search_by_address {
+                self.conn.execute(
+                    "DELETE FROM pre_activity_metadata WHERE address = ?1 AND is_receive = 1",
+                    [search_key],
+                ).map_err(|e| ActivityError::DataError {
+                    error_details: format!("Failed to delete pre-activity metadata: {}", e),
+                })?;
+            } else {
+                self.delete_pre_activity_metadata(search_key)?;
+            }
             return Ok(Vec::new());
         }
 
-        // Start transaction for the actual transfer operations
         let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to start transaction: {}", e),
         })?;
 
-        // For onchain activities, update address if provided in metadata
-        if metadata.payment_type == ActivityType::Onchain {
-            if let Some(address) = &metadata.address {
-                if !address.is_empty() {
-                    tx.execute(
-                        "UPDATE onchain_activity SET address = ?1 WHERE id = ?2",
-                        [address, activity_id],
-                    ).map_err(|e| ActivityError::DataError {
-                        error_details: format!("Failed to update address: {}", e),
-                    })?;
-                }
+        if let Some(address) = &metadata.address {
+            if !address.is_empty() {
+                tx.execute(
+                    "UPDATE onchain_activity SET address = ?1 WHERE id = ?2",
+                    [address, activity_id],
+                ).map_err(|e| ActivityError::DataError {
+                    error_details: format!("Failed to update address: {}", e),
+                })?;
             }
         }
 
-        // Add tags to activity
         for tag in &tags {
             tx.execute(
                 "INSERT OR IGNORE INTO activity_tags (activity_id, tag) VALUES (?1, ?2)",
@@ -1635,13 +1645,21 @@ impl ActivityDB {
             })?;
         }
 
-        // Delete pre-activity metadata
-        tx.execute(
-            "DELETE FROM pre_activity_metadata WHERE payment_id = ?1",
-            [payment_id],
-        ).map_err(|e| ActivityError::DataError {
-            error_details: format!("Failed to delete pre-activity metadata: {}", e),
-        })?;
+        if search_by_address {
+            tx.execute(
+                "DELETE FROM pre_activity_metadata WHERE address = ?1 AND is_receive = 1",
+                [search_key],
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to delete pre-activity metadata: {}", e),
+            })?;
+        } else {
+            tx.execute(
+                "DELETE FROM pre_activity_metadata WHERE payment_id = ?1",
+                [search_key],
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to delete pre-activity metadata: {}", e),
+            })?;
+        }
 
         tx.commit().map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to commit transaction: {}", e),
@@ -1828,25 +1846,6 @@ impl ActivityDB {
         })?;
 
         Ok(channels)
-    }
-
-    /// Helper function to convert ActivityType to string
-    fn activity_type_to_string(activity_type: &ActivityType) -> &'static str {
-        match activity_type {
-            ActivityType::Onchain => "onchain",
-            ActivityType::Lightning => "lightning",
-        }
-    }
-
-    /// Helper function to parse ActivityType from string
-    fn parse_activity_type(activity_type_str: &str) -> Result<ActivityType, ActivityError> {
-        match activity_type_str {
-            "onchain" => Ok(ActivityType::Onchain),
-            "lightning" => Ok(ActivityType::Lightning),
-            _ => Err(ActivityError::DataError {
-                error_details: format!("Invalid payment_type: {}", activity_type_str),
-            }),
-        }
     }
 
     /// Helper function to convert PaymentType to string

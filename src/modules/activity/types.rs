@@ -142,7 +142,6 @@ pub struct ActivityTags {
 #[derive(Debug, Clone, uniffi::Record, Serialize, Deserialize)]
 pub struct PreActivityMetadata {
     pub payment_id: String,
-    pub payment_type: ActivityType,
     pub tags: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub payment_hash: Option<String>,

@@ -451,7 +451,7 @@ uint64_t uniffi_bitkitcore_fn_func_get_payment(RustBuffer payment_id
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PRE_ACTIVITY_METADATA
-RustBuffer uniffi_bitkitcore_fn_func_get_pre_activity_metadata(RustBuffer payment_id, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_pre_activity_metadata(RustBuffer search_key, int8_t search_by_address, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TAGS
