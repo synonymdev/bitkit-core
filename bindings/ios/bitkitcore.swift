@@ -982,118 +982,6 @@ public func FfiConverterTypeActivityTags_lower(_ value: ActivityTags) -> RustBuf
 }
 
 
-public struct ActivityTagsMetadata {
-    public var id: String
-    public var paymentHash: String?
-    public var txId: String?
-    public var address: String
-    public var isReceive: Bool
-    public var tags: [String]
-    public var createdAt: UInt64
-
-    // Default memberwise initializers are never public by default, so we
-    // declare one manually.
-    public init(id: String, paymentHash: String?, txId: String?, address: String, isReceive: Bool, tags: [String], createdAt: UInt64) {
-        self.id = id
-        self.paymentHash = paymentHash
-        self.txId = txId
-        self.address = address
-        self.isReceive = isReceive
-        self.tags = tags
-        self.createdAt = createdAt
-    }
-}
-
-#if compiler(>=6)
-extension ActivityTagsMetadata: Sendable {}
-#endif
-
-
-extension ActivityTagsMetadata: Equatable, Hashable {
-    public static func ==(lhs: ActivityTagsMetadata, rhs: ActivityTagsMetadata) -> Bool {
-        if lhs.id != rhs.id {
-            return false
-        }
-        if lhs.paymentHash != rhs.paymentHash {
-            return false
-        }
-        if lhs.txId != rhs.txId {
-            return false
-        }
-        if lhs.address != rhs.address {
-            return false
-        }
-        if lhs.isReceive != rhs.isReceive {
-            return false
-        }
-        if lhs.tags != rhs.tags {
-            return false
-        }
-        if lhs.createdAt != rhs.createdAt {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-        hasher.combine(paymentHash)
-        hasher.combine(txId)
-        hasher.combine(address)
-        hasher.combine(isReceive)
-        hasher.combine(tags)
-        hasher.combine(createdAt)
-    }
-}
-
-extension ActivityTagsMetadata: Codable {}
-
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeActivityTagsMetadata: FfiConverterRustBuffer {
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ActivityTagsMetadata {
-        return
-            try ActivityTagsMetadata(
-                id: FfiConverterString.read(from: &buf), 
-                paymentHash: FfiConverterOptionString.read(from: &buf), 
-                txId: FfiConverterOptionString.read(from: &buf), 
-                address: FfiConverterString.read(from: &buf), 
-                isReceive: FfiConverterBool.read(from: &buf), 
-                tags: FfiConverterSequenceString.read(from: &buf), 
-                createdAt: FfiConverterUInt64.read(from: &buf)
-        )
-    }
-
-    public static func write(_ value: ActivityTagsMetadata, into buf: inout [UInt8]) {
-        FfiConverterString.write(value.id, into: &buf)
-        FfiConverterOptionString.write(value.paymentHash, into: &buf)
-        FfiConverterOptionString.write(value.txId, into: &buf)
-        FfiConverterString.write(value.address, into: &buf)
-        FfiConverterBool.write(value.isReceive, into: &buf)
-        FfiConverterSequenceString.write(value.tags, into: &buf)
-        FfiConverterUInt64.write(value.createdAt, into: &buf)
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeActivityTagsMetadata_lift(_ buf: RustBuffer) throws -> ActivityTagsMetadata {
-    return try FfiConverterTypeActivityTagsMetadata.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeActivityTagsMetadata_lower(_ value: ActivityTagsMetadata) -> RustBuffer {
-    return FfiConverterTypeActivityTagsMetadata.lower(value)
-}
-
-
 /**
  * Address information
  */
@@ -7389,6 +7277,126 @@ public func FfiConverterTypePaymentRequestMemo_lift(_ buf: RustBuffer) throws ->
 #endif
 public func FfiConverterTypePaymentRequestMemo_lower(_ value: PaymentRequestMemo) -> RustBuffer {
     return FfiConverterTypePaymentRequestMemo.lower(value)
+}
+
+
+public struct PreActivityMetadata {
+    public var paymentId: String
+    public var paymentType: ActivityType
+    public var tags: [String]
+    public var paymentHash: String?
+    public var txId: String?
+    public var address: String?
+    public var isReceive: Bool
+    public var createdAt: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(paymentId: String, paymentType: ActivityType, tags: [String], paymentHash: String?, txId: String?, address: String?, isReceive: Bool, createdAt: UInt64) {
+        self.paymentId = paymentId
+        self.paymentType = paymentType
+        self.tags = tags
+        self.paymentHash = paymentHash
+        self.txId = txId
+        self.address = address
+        self.isReceive = isReceive
+        self.createdAt = createdAt
+    }
+}
+
+#if compiler(>=6)
+extension PreActivityMetadata: Sendable {}
+#endif
+
+
+extension PreActivityMetadata: Equatable, Hashable {
+    public static func ==(lhs: PreActivityMetadata, rhs: PreActivityMetadata) -> Bool {
+        if lhs.paymentId != rhs.paymentId {
+            return false
+        }
+        if lhs.paymentType != rhs.paymentType {
+            return false
+        }
+        if lhs.tags != rhs.tags {
+            return false
+        }
+        if lhs.paymentHash != rhs.paymentHash {
+            return false
+        }
+        if lhs.txId != rhs.txId {
+            return false
+        }
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.isReceive != rhs.isReceive {
+            return false
+        }
+        if lhs.createdAt != rhs.createdAt {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(paymentId)
+        hasher.combine(paymentType)
+        hasher.combine(tags)
+        hasher.combine(paymentHash)
+        hasher.combine(txId)
+        hasher.combine(address)
+        hasher.combine(isReceive)
+        hasher.combine(createdAt)
+    }
+}
+
+extension PreActivityMetadata: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PreActivityMetadata {
+        return
+            try PreActivityMetadata(
+                paymentId: FfiConverterString.read(from: &buf), 
+                paymentType: FfiConverterTypeActivityType.read(from: &buf), 
+                tags: FfiConverterSequenceString.read(from: &buf), 
+                paymentHash: FfiConverterOptionString.read(from: &buf), 
+                txId: FfiConverterOptionString.read(from: &buf), 
+                address: FfiConverterOptionString.read(from: &buf), 
+                isReceive: FfiConverterBool.read(from: &buf), 
+                createdAt: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PreActivityMetadata, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.paymentId, into: &buf)
+        FfiConverterTypeActivityType.write(value.paymentType, into: &buf)
+        FfiConverterSequenceString.write(value.tags, into: &buf)
+        FfiConverterOptionString.write(value.paymentHash, into: &buf)
+        FfiConverterOptionString.write(value.txId, into: &buf)
+        FfiConverterOptionString.write(value.address, into: &buf)
+        FfiConverterBool.write(value.isReceive, into: &buf)
+        FfiConverterUInt64.write(value.createdAt, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePreActivityMetadata_lift(_ buf: RustBuffer) throws -> PreActivityMetadata {
+    return try FfiConverterTypePreActivityMetadata.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePreActivityMetadata_lower(_ value: PreActivityMetadata) -> RustBuffer {
+    return FfiConverterTypePreActivityMetadata.lower(value)
 }
 
 
@@ -15018,31 +15026,6 @@ fileprivate struct FfiConverterSequenceTypeActivityTags: FfiConverterRustBuffer 
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
-fileprivate struct FfiConverterSequenceTypeActivityTagsMetadata: FfiConverterRustBuffer {
-    typealias SwiftType = [ActivityTagsMetadata]
-
-    public static func write(_ value: [ActivityTagsMetadata], into buf: inout [UInt8]) {
-        let len = Int32(value.count)
-        writeInt(&buf, len)
-        for item in value {
-            FfiConverterTypeActivityTagsMetadata.write(item, into: &buf)
-        }
-    }
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ActivityTagsMetadata] {
-        let len: Int32 = try readInt(&buf)
-        var seq = [ActivityTagsMetadata]()
-        seq.reserveCapacity(Int(len))
-        for _ in 0 ..< len {
-            seq.append(try FfiConverterTypeActivityTagsMetadata.read(from: &buf))
-        }
-        return seq
-    }
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
 fileprivate struct FfiConverterSequenceTypeAddressInfo: FfiConverterRustBuffer {
     typealias SwiftType = [AddressInfo]
 
@@ -15385,6 +15368,31 @@ fileprivate struct FfiConverterSequenceTypePaymentRequestMemo: FfiConverterRustB
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypePaymentRequestMemo.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypePreActivityMetadata: FfiConverterRustBuffer {
+    typealias SwiftType = [PreActivityMetadata]
+
+    public static func write(_ value: [PreActivityMetadata], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypePreActivityMetadata.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PreActivityMetadata] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [PreActivityMetadata]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypePreActivityMetadata.read(from: &buf))
         }
         return seq
     }
@@ -15741,6 +15749,12 @@ public func activityWipeAll()throws   {try rustCallWithError(FfiConverterTypeAct
     )
 }
 }
+public func addPreActivityMetadata(preActivityMetadata: PreActivityMetadata)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_add_pre_activity_metadata(
+        FfiConverterTypePreActivityMetadata_lower(preActivityMetadata),$0
+    )
+}
+}
 public func addTags(activityId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_add_tags(
         FfiConverterString.lower(activityId),
@@ -15859,6 +15873,12 @@ public func deleteActivityById(activityId: String)throws  -> Bool  {
     )
 })
 }
+public func deletePreActivityMetadata(paymentId: String)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_delete_pre_activity_metadata(
+        FfiConverterString.lower(paymentId),$0
+    )
+}
+}
 public func deriveBitcoinAddress(mnemonicPhrase: String, derivationPathStr: String?, network: Network?, bip39Passphrase: String?)throws  -> GetAddressResponse  {
     return try  FfiConverterTypeGetAddressResponse_lift(try rustCallWithError(FfiConverterTypeAddressError_lift) {
     uniffi_bitkitcore_fn_func_derive_bitcoin_address(
@@ -15964,6 +15984,12 @@ public func getActivityById(activityId: String)throws  -> Activity?  {
     )
 })
 }
+public func getAllActivitiesTags()throws  -> [ActivityTags]  {
+    return try  FfiConverterSequenceTypeActivityTags.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_get_all_activities_tags($0
+    )
+})
+}
 public func getAllClosedChannels(sortDirection: SortDirection?)throws  -> [ClosedChannelDetails]  {
     return try  FfiConverterSequenceTypeClosedChannelDetails.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_all_closed_channels(
@@ -15971,9 +15997,9 @@ public func getAllClosedChannels(sortDirection: SortDirection?)throws  -> [Close
     )
 })
 }
-public func getAllTagMetadata()throws  -> [ActivityTagsMetadata]  {
-    return try  FfiConverterSequenceTypeActivityTagsMetadata.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
-    uniffi_bitkitcore_fn_func_get_all_tag_metadata($0
+public func getAllPreActivityMetadata()throws  -> [PreActivityMetadata]  {
+    return try  FfiConverterSequenceTypePreActivityMetadata.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_get_all_pre_activity_metadata($0
     )
 })
 }
@@ -16325,10 +16351,23 @@ public func removeClosedChannelById(channelId: String)throws  -> Bool  {
     )
 })
 }
+public func removePreActivityMetadataTags(paymentId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags(
+        FfiConverterString.lower(paymentId),
+        FfiConverterSequenceString.lower(tags),$0
+    )
+}
+}
 public func removeTags(activityId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_remove_tags(
         FfiConverterString.lower(activityId),
         FfiConverterSequenceString.lower(tags),$0
+    )
+}
+}
+public func resetPreActivityMetadataTags(paymentId: String)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags(
+        FfiConverterString.lower(paymentId),$0
     )
 }
 }
@@ -16579,6 +16618,12 @@ public func upsertOrders(orders: [IBtOrder])async throws   {
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
+public func upsertPreActivityMetadata(preActivityMetadata: [PreActivityMetadata])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_upsert_pre_activity_metadata(
+        FfiConverterSequenceTypePreActivityMetadata.lower(preActivityMetadata),$0
+    )
+}
+}
 public func upsertTags(activityTags: [ActivityTags])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_upsert_tags(
         FfiConverterSequenceTypeActivityTags.lower(activityTags),$0
@@ -16636,6 +16681,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_activity_wipe_all() != 19332) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata() != 17211) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_add_tags() != 63739) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -16664,6 +16712,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 46621) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_derive_bitcoin_address() != 35090) {
@@ -16696,10 +16747,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_get_all_activities_tags() != 29245) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_get_all_closed_channels() != 16828) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_all_tag_metadata() != 23646) {
+    if (uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata() != 25130) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431) {
@@ -16792,7 +16846,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 1991) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_remove_tags() != 58873) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_test_notification() != 32857) {
@@ -16853,6 +16913,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_upsert_orders() != 45856) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_upsert_pre_activity_metadata() != 12307) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_upsert_tags() != 47513) {

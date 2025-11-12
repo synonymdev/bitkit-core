@@ -257,6 +257,11 @@ void uniffi_bitkitcore_fn_func_activity_wipe_all(RustCallStatus *_Nonnull out_st
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_PRE_ACTIVITY_METADATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_PRE_ACTIVITY_METADATA
+void uniffi_bitkitcore_fn_func_add_pre_activity_metadata(RustBuffer pre_activity_metadata, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_TAGS
 void uniffi_bitkitcore_fn_func_add_tags(RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
@@ -310,6 +315,11 @@ uint64_t uniffi_bitkitcore_fn_func_decode(RustBuffer invoice
 int8_t uniffi_bitkitcore_fn_func_delete_activity_by_id(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_PRE_ACTIVITY_METADATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_PRE_ACTIVITY_METADATA
+void uniffi_bitkitcore_fn_func_delete_pre_activity_metadata(RustBuffer payment_id, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_BITCOIN_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_BITCOIN_ADDRESS
 RustBuffer uniffi_bitkitcore_fn_func_derive_bitcoin_address(RustBuffer mnemonic_phrase, RustBuffer derivation_path_str, RustBuffer network, RustBuffer bip39_passphrase, RustCallStatus *_Nonnull out_status
@@ -360,14 +370,20 @@ RustBuffer uniffi_bitkitcore_fn_func_get_activities_by_tag(RustBuffer tag, RustB
 RustBuffer uniffi_bitkitcore_fn_func_get_activity_by_id(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_ACTIVITIES_TAGS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_ACTIVITIES_TAGS
+RustBuffer uniffi_bitkitcore_fn_func_get_all_activities_tags(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_CLOSED_CHANNELS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_CLOSED_CHANNELS
 RustBuffer uniffi_bitkitcore_fn_func_get_all_closed_channels(RustBuffer sort_direction, RustCallStatus *_Nonnull out_status
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_TAG_METADATA
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_TAG_METADATA
-RustBuffer uniffi_bitkitcore_fn_func_get_all_tag_metadata(RustCallStatus *_Nonnull out_status
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_PRE_ACTIVITY_METADATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_PRE_ACTIVITY_METADATA
+RustBuffer uniffi_bitkitcore_fn_func_get_all_pre_activity_metadata(RustCallStatus *_Nonnull out_status
     
 );
 #endif
@@ -525,9 +541,19 @@ uint64_t uniffi_bitkitcore_fn_func_regtest_pay(RustBuffer invoice, RustBuffer am
 int8_t uniffi_bitkitcore_fn_func_remove_closed_channel_by_id(RustBuffer channel_id, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_PRE_ACTIVITY_METADATA_TAGS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_PRE_ACTIVITY_METADATA_TAGS
+void uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags(RustBuffer payment_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_TAGS
 void uniffi_bitkitcore_fn_func_remove_tags(RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_RESET_PRE_ACTIVITY_METADATA_TAGS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_RESET_PRE_ACTIVITY_METADATA_TAGS
+void uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags(RustBuffer payment_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TEST_NOTIFICATION
@@ -628,6 +654,11 @@ void uniffi_bitkitcore_fn_func_upsert_onchain_activities(RustBuffer activities, 
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_ORDERS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_ORDERS
 uint64_t uniffi_bitkitcore_fn_func_upsert_orders(RustBuffer orders
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_PRE_ACTIVITY_METADATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_PRE_ACTIVITY_METADATA
+void uniffi_bitkitcore_fn_func_upsert_pre_activity_metadata(RustBuffer pre_activity_metadata, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_TAGS
@@ -943,6 +974,12 @@ uint16_t uniffi_bitkitcore_checksum_func_activity_wipe_all(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_PRE_ACTIVITY_METADATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_PRE_ACTIVITY_METADATA
+uint16_t uniffi_bitkitcore_checksum_func_add_pre_activity_metadata(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_add_tags(void
@@ -1000,6 +1037,12 @@ uint16_t uniffi_bitkitcore_checksum_func_decode(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_ACTIVITY_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_ACTIVITY_BY_ID
 uint16_t uniffi_bitkitcore_checksum_func_delete_activity_by_id(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_PRE_ACTIVITY_METADATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_PRE_ACTIVITY_METADATA
+uint16_t uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata(void
     
 );
 #endif
@@ -1063,15 +1106,21 @@ uint16_t uniffi_bitkitcore_checksum_func_get_activity_by_id(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_ACTIVITIES_TAGS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_ACTIVITIES_TAGS
+uint16_t uniffi_bitkitcore_checksum_func_get_all_activities_tags(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_CLOSED_CHANNELS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_CLOSED_CHANNELS
 uint16_t uniffi_bitkitcore_checksum_func_get_all_closed_channels(void
     
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_TAG_METADATA
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_TAG_METADATA
-uint16_t uniffi_bitkitcore_checksum_func_get_all_tag_metadata(void
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_PRE_ACTIVITY_METADATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_PRE_ACTIVITY_METADATA
+uint16_t uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata(void
     
 );
 #endif
@@ -1255,9 +1304,21 @@ uint16_t uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REMOVE_PRE_ACTIVITY_METADATA_TAGS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REMOVE_PRE_ACTIVITY_METADATA_TAGS
+uint16_t uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REMOVE_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REMOVE_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_remove_tags(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_RESET_PRE_ACTIVITY_METADATA_TAGS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_RESET_PRE_ACTIVITY_METADATA_TAGS
+uint16_t uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags(void
     
 );
 #endif
@@ -1378,6 +1439,12 @@ uint16_t uniffi_bitkitcore_checksum_func_upsert_onchain_activities(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ORDERS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ORDERS
 uint16_t uniffi_bitkitcore_checksum_func_upsert_orders(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_PRE_ACTIVITY_METADATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_PRE_ACTIVITY_METADATA
+uint16_t uniffi_bitkitcore_checksum_func_upsert_pre_activity_metadata(void
     
 );
 #endif

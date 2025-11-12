@@ -463,6 +463,8 @@ def _uniffi_check_contract_api_version(lib):
 def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_activity_wipe_all() != 19332:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata() != 17211:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_add_tags() != 63739:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries() != 40127:
@@ -482,6 +484,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_decode() != 28437:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 46621:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_derive_bitcoin_address() != 35090:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -503,9 +507,11 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_all_activities_tags() != 29245:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_all_closed_channels() != 16828:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_all_tag_metadata() != 23646:
+    if lib.uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata() != 25130:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -567,7 +573,11 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 1991:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_remove_tags() != 58873:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_test_notification() != 32857:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -608,6 +618,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_upsert_onchain_activities() != 15461:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_upsert_orders() != 45856:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_upsert_pre_activity_metadata() != 12307:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_upsert_tags() != 47513:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -729,6 +741,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_activity_wipe_all.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_activity_wipe_all.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_add_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -784,6 +801,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.restype = ctypes.c_int8
+_UniffiLib.uniffi_bitkitcore_fn_func_delete_pre_activity_metadata.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_delete_pre_activity_metadata.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_derive_bitcoin_address.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -857,15 +879,19 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_all_activities_tags.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_all_activities_tags.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_all_closed_channels.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_all_closed_channels.restype = _UniffiRustBuffer
-_UniffiLib.uniffi_bitkitcore_fn_func_get_all_tag_metadata.argtypes = (
+_UniffiLib.uniffi_bitkitcore_fn_func_get_all_pre_activity_metadata.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_get_all_tag_metadata.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_all_pre_activity_metadata.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -1018,12 +1044,23 @@ _UniffiLib.uniffi_bitkitcore_fn_func_remove_closed_channel_by_id.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_closed_channel_by_id.restype = ctypes.c_int8
+_UniffiLib.uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_tags.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_test_notification.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1201,6 +1238,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_upsert_orders.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_upsert_orders.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_pre_activity_metadata.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_pre_activity_metadata.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_upsert_tags.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1494,6 +1536,9 @@ _UniffiLib.ffi_bitkitcore_rust_future_complete_void.restype = None
 _UniffiLib.uniffi_bitkitcore_checksum_func_activity_wipe_all.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_activity_wipe_all.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_add_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_add_tags.restype = ctypes.c_uint16
@@ -1524,6 +1569,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_decode.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_delete_activity_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_delete_activity_by_id.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_address.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_address.restype = ctypes.c_uint16
@@ -1554,12 +1602,15 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_by_tag.restype = ctype
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_all_activities_tags.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_all_activities_tags.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_closed_channels.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_closed_channels.restype = ctypes.c_uint16
-_UniffiLib.uniffi_bitkitcore_checksum_func_get_all_tag_metadata.argtypes = (
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata.argtypes = (
 )
-_UniffiLib.uniffi_bitkitcore_checksum_func_get_all_tag_metadata.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_unique_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_unique_tags.restype = ctypes.c_uint16
@@ -1650,9 +1701,15 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_regtest_pay.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_tags.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_test_notification.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_test_notification.restype = ctypes.c_uint16
@@ -1713,6 +1770,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_onchain_activities.restype = c
 _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_orders.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_orders.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_pre_activity_metadata.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_pre_activity_metadata.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_tags.restype = ctypes.c_uint16
@@ -2124,77 +2184,6 @@ class _UniffiConverterTypeActivityTags(_UniffiConverterRustBuffer):
     def write(value, buf):
         _UniffiConverterString.write(value.activity_id, buf)
         _UniffiConverterSequenceString.write(value.tags, buf)
-
-
-class ActivityTagsMetadata:
-    id: "str"
-    payment_hash: "typing.Optional[str]"
-    tx_id: "typing.Optional[str]"
-    address: "str"
-    is_receive: "bool"
-    tags: "typing.List[str]"
-    created_at: "int"
-    def __init__(self, *, id: "str", payment_hash: "typing.Optional[str]", tx_id: "typing.Optional[str]", address: "str", is_receive: "bool", tags: "typing.List[str]", created_at: "int"):
-        self.id = id
-        self.payment_hash = payment_hash
-        self.tx_id = tx_id
-        self.address = address
-        self.is_receive = is_receive
-        self.tags = tags
-        self.created_at = created_at
-
-    def __str__(self):
-        return "ActivityTagsMetadata(id={}, payment_hash={}, tx_id={}, address={}, is_receive={}, tags={}, created_at={})".format(self.id, self.payment_hash, self.tx_id, self.address, self.is_receive, self.tags, self.created_at)
-
-    def __eq__(self, other):
-        if self.id != other.id:
-            return False
-        if self.payment_hash != other.payment_hash:
-            return False
-        if self.tx_id != other.tx_id:
-            return False
-        if self.address != other.address:
-            return False
-        if self.is_receive != other.is_receive:
-            return False
-        if self.tags != other.tags:
-            return False
-        if self.created_at != other.created_at:
-            return False
-        return True
-
-class _UniffiConverterTypeActivityTagsMetadata(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return ActivityTagsMetadata(
-            id=_UniffiConverterString.read(buf),
-            payment_hash=_UniffiConverterOptionalString.read(buf),
-            tx_id=_UniffiConverterOptionalString.read(buf),
-            address=_UniffiConverterString.read(buf),
-            is_receive=_UniffiConverterBool.read(buf),
-            tags=_UniffiConverterSequenceString.read(buf),
-            created_at=_UniffiConverterUInt64.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.id)
-        _UniffiConverterOptionalString.check_lower(value.payment_hash)
-        _UniffiConverterOptionalString.check_lower(value.tx_id)
-        _UniffiConverterString.check_lower(value.address)
-        _UniffiConverterBool.check_lower(value.is_receive)
-        _UniffiConverterSequenceString.check_lower(value.tags)
-        _UniffiConverterUInt64.check_lower(value.created_at)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.id, buf)
-        _UniffiConverterOptionalString.write(value.payment_hash, buf)
-        _UniffiConverterOptionalString.write(value.tx_id, buf)
-        _UniffiConverterString.write(value.address, buf)
-        _UniffiConverterBool.write(value.is_receive, buf)
-        _UniffiConverterSequenceString.write(value.tags, buf)
-        _UniffiConverterUInt64.write(value.created_at, buf)
 
 
 class AddressInfo:
@@ -6158,6 +6147,84 @@ class _UniffiConverterTypePaymentRequestMemo(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalTypeTextMemo.write(value.text_memo, buf)
         _UniffiConverterOptionalTypeRefundMemo.write(value.refund_memo, buf)
         _UniffiConverterOptionalTypeCoinPurchaseMemo.write(value.coin_purchase_memo, buf)
+
+
+class PreActivityMetadata:
+    payment_id: "str"
+    payment_type: "ActivityType"
+    tags: "typing.List[str]"
+    payment_hash: "typing.Optional[str]"
+    tx_id: "typing.Optional[str]"
+    address: "typing.Optional[str]"
+    is_receive: "bool"
+    created_at: "int"
+    def __init__(self, *, payment_id: "str", payment_type: "ActivityType", tags: "typing.List[str]", payment_hash: "typing.Optional[str]", tx_id: "typing.Optional[str]", address: "typing.Optional[str]", is_receive: "bool", created_at: "int"):
+        self.payment_id = payment_id
+        self.payment_type = payment_type
+        self.tags = tags
+        self.payment_hash = payment_hash
+        self.tx_id = tx_id
+        self.address = address
+        self.is_receive = is_receive
+        self.created_at = created_at
+
+    def __str__(self):
+        return "PreActivityMetadata(payment_id={}, payment_type={}, tags={}, payment_hash={}, tx_id={}, address={}, is_receive={}, created_at={})".format(self.payment_id, self.payment_type, self.tags, self.payment_hash, self.tx_id, self.address, self.is_receive, self.created_at)
+
+    def __eq__(self, other):
+        if self.payment_id != other.payment_id:
+            return False
+        if self.payment_type != other.payment_type:
+            return False
+        if self.tags != other.tags:
+            return False
+        if self.payment_hash != other.payment_hash:
+            return False
+        if self.tx_id != other.tx_id:
+            return False
+        if self.address != other.address:
+            return False
+        if self.is_receive != other.is_receive:
+            return False
+        if self.created_at != other.created_at:
+            return False
+        return True
+
+class _UniffiConverterTypePreActivityMetadata(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return PreActivityMetadata(
+            payment_id=_UniffiConverterString.read(buf),
+            payment_type=_UniffiConverterTypeActivityType.read(buf),
+            tags=_UniffiConverterSequenceString.read(buf),
+            payment_hash=_UniffiConverterOptionalString.read(buf),
+            tx_id=_UniffiConverterOptionalString.read(buf),
+            address=_UniffiConverterOptionalString.read(buf),
+            is_receive=_UniffiConverterBool.read(buf),
+            created_at=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.payment_id)
+        _UniffiConverterTypeActivityType.check_lower(value.payment_type)
+        _UniffiConverterSequenceString.check_lower(value.tags)
+        _UniffiConverterOptionalString.check_lower(value.payment_hash)
+        _UniffiConverterOptionalString.check_lower(value.tx_id)
+        _UniffiConverterOptionalString.check_lower(value.address)
+        _UniffiConverterBool.check_lower(value.is_receive)
+        _UniffiConverterUInt64.check_lower(value.created_at)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.payment_id, buf)
+        _UniffiConverterTypeActivityType.write(value.payment_type, buf)
+        _UniffiConverterSequenceString.write(value.tags, buf)
+        _UniffiConverterOptionalString.write(value.payment_hash, buf)
+        _UniffiConverterOptionalString.write(value.tx_id, buf)
+        _UniffiConverterOptionalString.write(value.address, buf)
+        _UniffiConverterBool.write(value.is_receive, buf)
+        _UniffiConverterUInt64.write(value.created_at, buf)
 
 
 class PrecomposedInput:
@@ -13130,31 +13197,6 @@ class _UniffiConverterSequenceTypeActivityTags(_UniffiConverterRustBuffer):
 
 
 
-class _UniffiConverterSequenceTypeActivityTagsMetadata(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypeActivityTagsMetadata.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypeActivityTagsMetadata.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypeActivityTagsMetadata.read(buf) for i in range(count)
-        ]
-
-
-
 class _UniffiConverterSequenceTypeAddressInfo(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -13501,6 +13543,31 @@ class _UniffiConverterSequenceTypePaymentRequestMemo(_UniffiConverterRustBuffer)
 
         return [
             _UniffiConverterTypePaymentRequestMemo.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypePreActivityMetadata(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypePreActivityMetadata.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypePreActivityMetadata.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypePreActivityMetadata.read(buf) for i in range(count)
         ]
 
 
@@ -13881,6 +13948,13 @@ def activity_wipe_all() -> None:
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_activity_wipe_all,)
 
 
+def add_pre_activity_metadata(pre_activity_metadata: "PreActivityMetadata") -> None:
+    _UniffiConverterTypePreActivityMetadata.check_lower(pre_activity_metadata)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata,
+        _UniffiConverterTypePreActivityMetadata.lower(pre_activity_metadata))
+
+
 def add_tags(activity_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(activity_id)
     
@@ -14045,6 +14119,13 @@ def delete_activity_by_id(activity_id: "str") -> "bool":
     
     return _UniffiConverterBool.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id,
         _UniffiConverterString.lower(activity_id)))
+
+
+def delete_pre_activity_metadata(payment_id: "str") -> None:
+    _UniffiConverterString.check_lower(payment_id)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_pre_activity_metadata,
+        _UniffiConverterString.lower(payment_id))
 
 
 def derive_bitcoin_address(mnemonic_phrase: "str",derivation_path_str: "typing.Optional[str]",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]") -> "GetAddressResponse":
@@ -14212,6 +14293,10 @@ def get_activity_by_id(activity_id: "str") -> "typing.Optional[Activity]":
         _UniffiConverterString.lower(activity_id)))
 
 
+def get_all_activities_tags() -> "typing.List[ActivityTags]":
+    return _UniffiConverterSequenceTypeActivityTags.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_activities_tags,))
+
+
 def get_all_closed_channels(sort_direction: "typing.Optional[SortDirection]") -> "typing.List[ClosedChannelDetails]":
     _UniffiConverterOptionalTypeSortDirection.check_lower(sort_direction)
     
@@ -14219,8 +14304,8 @@ def get_all_closed_channels(sort_direction: "typing.Optional[SortDirection]") ->
         _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)))
 
 
-def get_all_tag_metadata() -> "typing.List[ActivityTagsMetadata]":
-    return _UniffiConverterSequenceTypeActivityTagsMetadata.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_tag_metadata,))
+def get_all_pre_activity_metadata() -> "typing.List[PreActivityMetadata]":
+    return _UniffiConverterSequenceTypePreActivityMetadata.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_pre_activity_metadata,))
 
 
 def get_all_unique_tags() -> "typing.List[str]":
@@ -14695,6 +14780,16 @@ def remove_closed_channel_by_id(channel_id: "str") -> "bool":
         _UniffiConverterString.lower(channel_id)))
 
 
+def remove_pre_activity_metadata_tags(payment_id: "str",tags: "typing.List[str]") -> None:
+    _UniffiConverterString.check_lower(payment_id)
+    
+    _UniffiConverterSequenceString.check_lower(tags)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags,
+        _UniffiConverterString.lower(payment_id),
+        _UniffiConverterSequenceString.lower(tags))
+
+
 def remove_tags(activity_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(activity_id)
     
@@ -14703,6 +14798,13 @@ def remove_tags(activity_id: "str",tags: "typing.List[str]") -> None:
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_remove_tags,
         _UniffiConverterString.lower(activity_id),
         _UniffiConverterSequenceString.lower(tags))
+
+
+def reset_pre_activity_metadata_tags(payment_id: "str") -> None:
+    _UniffiConverterString.check_lower(payment_id)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags,
+        _UniffiConverterString.lower(payment_id))
 
 async def test_notification(device_token: "str",secret_message: "str",notification_type: "typing.Optional[str]",custom_url: "typing.Optional[str]") -> "str":
 
@@ -15145,6 +15247,13 @@ _UniffiConverterTypeBlocktankError,
 
     )
 
+def upsert_pre_activity_metadata(pre_activity_metadata: "typing.List[PreActivityMetadata]") -> None:
+    _UniffiConverterSequenceTypePreActivityMetadata.check_lower(pre_activity_metadata)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_pre_activity_metadata,
+        _UniffiConverterSequenceTypePreActivityMetadata.lower(pre_activity_metadata))
+
+
 def upsert_tags(activity_tags: "typing.List[ActivityTags]") -> None:
     _UniffiConverterSequenceTypeActivityTags.check_lower(activity_tags)
     
@@ -15228,7 +15337,6 @@ __all__ = [
     "AccountInfoResponse",
     "AccountUtxo",
     "ActivityTags",
-    "ActivityTagsMetadata",
     "AddressInfo",
     "AddressResponse",
     "ClosedChannelDetails",
@@ -15285,6 +15393,7 @@ __all__ = [
     "OnChainInvoice",
     "OnchainActivity",
     "PaymentRequestMemo",
+    "PreActivityMetadata",
     "PrecomposedInput",
     "PrecomposedOutput",
     "PrecomposedTransaction",
@@ -15304,6 +15413,7 @@ __all__ = [
     "VerifyMessageResponse",
     "XrpMarker",
     "activity_wipe_all",
+    "add_pre_activity_metadata",
     "add_tags",
     "blocktank_remove_all_cjit_entries",
     "blocktank_remove_all_orders",
@@ -15314,6 +15424,7 @@ __all__ = [
     "create_withdraw_callback_url",
     "decode",
     "delete_activity_by_id",
+    "delete_pre_activity_metadata",
     "derive_bitcoin_address",
     "derive_bitcoin_addresses",
     "derive_private_key",
@@ -15324,8 +15435,9 @@ __all__ = [
     "get_activities",
     "get_activities_by_tag",
     "get_activity_by_id",
+    "get_all_activities_tags",
     "get_all_closed_channels",
-    "get_all_tag_metadata",
+    "get_all_pre_activity_metadata",
     "get_all_unique_tags",
     "get_bip39_suggestions",
     "get_bip39_wordlist",
@@ -15356,7 +15468,9 @@ __all__ = [
     "regtest_mine",
     "regtest_pay",
     "remove_closed_channel_by_id",
+    "remove_pre_activity_metadata_tags",
     "remove_tags",
+    "reset_pre_activity_metadata_tags",
     "test_notification",
     "trezor_compose_transaction",
     "trezor_get_account_info",
@@ -15377,6 +15491,7 @@ __all__ = [
     "upsert_lightning_activities",
     "upsert_onchain_activities",
     "upsert_orders",
+    "upsert_pre_activity_metadata",
     "upsert_tags",
     "validate_bitcoin_address",
     "validate_mnemonic",
