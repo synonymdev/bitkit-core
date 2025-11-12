@@ -2248,7 +2248,7 @@ mod tests {
     }
 
     #[test]
-    fn test_pre_activity_metadata_transferred_only_on_received() {
+    fn test_pre_activity_metadata_transferred_on_received() {
         let (mut db, db_path) = setup();
         let address = "bc1qtest123".to_string();
         let tags = vec!["payment".to_string()];
@@ -2256,16 +2256,7 @@ mod tests {
         // Add pre-activity metadata
         assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone())).is_ok());
 
-        // Insert sent activity (should NOT transfer tags)
-        let mut sent_activity = create_test_onchain_activity();
-        sent_activity.address = address.clone();
-        sent_activity.tx_type = PaymentType::Sent;
-        db.insert_onchain_activity(&sent_activity).unwrap();
-
-        let sent_tags = db.get_tags(&sent_activity.id).unwrap();
-        assert!(sent_tags.is_empty());
-
-        // Insert received activity (should transfer tags)
+        // Insert received activity (should transfer tags based on address)
         let mut received_activity = create_test_onchain_activity();
         received_activity.id = "received_activity".to_string();
         received_activity.address = address.clone();
@@ -2275,6 +2266,88 @@ mod tests {
         let received_tags = db.get_tags(&received_activity.id).unwrap();
         assert_eq!(received_tags.len(), 1);
         assert!(received_tags.contains(&"payment".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_pre_activity_metadata_transferred_on_sent_onchain() {
+        let (mut db, db_path) = setup();
+        let tx_id = "txid123".to_string();
+        let tags = vec!["sent_payment".to_string()];
+
+        // Add pre-activity metadata with tx_id
+        let mut metadata = create_test_pre_activity_metadata(tx_id.clone(), ActivityType::Onchain, tags.clone());
+        metadata.tx_id = Some(tx_id.clone());
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
+
+        // Insert sent activity (should transfer tags based on tx_id)
+        let mut sent_activity = create_test_onchain_activity();
+        sent_activity.tx_id = tx_id.clone();
+        sent_activity.tx_type = PaymentType::Sent;
+        db.insert_onchain_activity(&sent_activity).unwrap();
+
+        let sent_tags = db.get_tags(&sent_activity.id).unwrap();
+        assert_eq!(sent_tags.len(), 1);
+        assert!(sent_tags.contains(&"sent_payment".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_pre_activity_metadata_address_update_on_sent() {
+        let (mut db, db_path) = setup();
+        let tx_id = "txid123".to_string();
+        let metadata_address = "bc1qmetadata456".to_string();
+        let tags = vec!["sent_payment".to_string()];
+
+        // Add pre-activity metadata with address
+        let mut metadata = create_test_pre_activity_metadata(tx_id.clone(), ActivityType::Onchain, tags.clone());
+        metadata.tx_id = Some(tx_id.clone());
+        metadata.address = Some(metadata_address.clone());
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
+
+        // Insert sent activity with different address
+        let mut sent_activity = create_test_onchain_activity();
+        sent_activity.tx_id = tx_id.clone();
+        sent_activity.address = "bc1qoriginal789".to_string();
+        sent_activity.tx_type = PaymentType::Sent;
+        db.insert_onchain_activity(&sent_activity).unwrap();
+
+        // Verify address was updated from metadata
+        let retrieved = db.get_activity_by_id(&sent_activity.id).unwrap();
+        if let Activity::Onchain(activity) = retrieved.unwrap() {
+            assert_eq!(activity.address, metadata_address);
+        } else {
+            panic!("Expected Onchain activity");
+        }
+
+        // Verify tags were also transferred
+        let sent_tags = db.get_tags(&sent_activity.id).unwrap();
+        assert_eq!(sent_tags.len(), 1);
+        assert!(sent_tags.contains(&"sent_payment".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_pre_activity_metadata_transferred_on_lightning_sent() {
+        let (mut db, db_path) = setup();
+        let invoice = "lightning:invoice123".to_string();
+        let tags = vec!["sent_invoice".to_string()];
+
+        // Add pre-activity metadata
+        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(invoice.clone(), ActivityType::Lightning, tags.clone())).is_ok());
+
+        // Insert sent lightning activity (should transfer tags based on invoice)
+        let mut sent_activity = create_test_lightning_activity();
+        sent_activity.invoice = invoice.clone();
+        sent_activity.tx_type = PaymentType::Sent;
+        db.insert_lightning_activity(&sent_activity).unwrap();
+
+        let sent_tags = db.get_tags(&sent_activity.id).unwrap();
+        assert_eq!(sent_tags.len(), 1);
+        assert!(sent_tags.contains(&"sent_invoice".to_string()));
 
         cleanup(&db_path);
     }

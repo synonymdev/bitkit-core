@@ -357,9 +357,13 @@ impl ActivityDB {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
-        // If this is a received payment, check for pre-activity metadata and transfer tags
+        // If this is a received payment, check for pre-activity metadata and transfer tags based on address
         if activity.tx_type == PaymentType::Received {
             let _ = self.transfer_pre_activity_metadata_to_activity(&activity.address, &activity.id);
+        }
+        // For sent payments, transfer metadata based on tx_id
+        else if activity.tx_type == PaymentType::Sent {
+            let _ = self.transfer_pre_activity_metadata_to_activity(&activity.tx_id, &activity.id);
         }
 
         Ok(())
@@ -415,10 +419,8 @@ impl ActivityDB {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
-        // If this is a received payment, check for pre-activity metadata and transfer tags
-        if activity.tx_type == PaymentType::Received {
-            let _ = self.transfer_pre_activity_metadata_to_activity(&activity.invoice, &activity.id);
-        }
+        // For lightning, check for pre-activity metadata and transfer tags based on invoice
+        let _ = self.transfer_pre_activity_metadata_to_activity(&activity.invoice, &activity.id);
 
         Ok(())
     }
@@ -1587,27 +1589,20 @@ impl ActivityDB {
         Ok(result)
     }
 
-    /// Get pre-activity metadata for an onchain address or lightning invoice and transfer tags to an activity
+    /// Get pre-activity metadata for an onchain address or lightning invoice and transfer metadata to an activity
+    /// For onchain activities, also updates the address if provided in metadata
     /// Returns the tags that were transferred
     fn transfer_pre_activity_metadata_to_activity(&mut self, payment_id: &str, activity_id: &str) -> Result<Vec<String>, ActivityError> {
-        // Check if tags exist first
-        let tags_json: Option<String> = self.conn.query_row(
-            "SELECT tags FROM pre_activity_metadata WHERE payment_id = ?1",
-            [payment_id],
-            |row| row.get(0)
-        ).optional().map_err(|e| ActivityError::RetrievalError {
-            error_details: format!("Failed to get tags: {}", e),
-        })?;
-
-        let tags = if let Some(json) = tags_json {
-            serde_json::from_str::<Vec<String>>(&json).map_err(|e| ActivityError::DataError {
-                error_details: format!("Failed to deserialize tags: {}", e),
-            })?
-        } else {
-            return Ok(Vec::new());
+        // Get the full metadata
+        let metadata = match self.get_pre_activity_metadata(payment_id)? {
+            Some(m) => m,
+            None => return Ok(Vec::new()),
         };
 
-        if tags.is_empty() {
+        let tags = metadata.tags;
+        if tags.is_empty() && metadata.address.is_none() {
+            // No tags and no address to update, but we should still delete the metadata
+            self.delete_pre_activity_metadata(payment_id)?;
             return Ok(Vec::new());
         }
 
@@ -1615,6 +1610,20 @@ impl ActivityDB {
         let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to start transaction: {}", e),
         })?;
+
+        // For onchain activities, update address if provided in metadata
+        if metadata.payment_type == ActivityType::Onchain {
+            if let Some(address) = &metadata.address {
+                if !address.is_empty() {
+                    tx.execute(
+                        "UPDATE onchain_activity SET address = ?1 WHERE id = ?2",
+                        [address, activity_id],
+                    ).map_err(|e| ActivityError::DataError {
+                        error_details: format!("Failed to update address: {}", e),
+                    })?;
+                }
+            }
+        }
 
         // Add tags to activity
         for tag in &tags {
