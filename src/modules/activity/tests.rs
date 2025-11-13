@@ -80,6 +80,9 @@ mod tests {
             tx_id: None,
             address: None,
             is_receive: false,
+            fee_rate: 0,
+            is_transfer: false,
+            channel_id: None,
             created_at: 0,
         }
     }
@@ -2375,6 +2378,187 @@ mod tests {
     }
 
     #[test]
+    fn test_pre_activity_metadata_fee_rate_transfer() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["payment".to_string()];
+
+        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata.address = Some(address.clone());
+        metadata.is_receive = true;
+        metadata.fee_rate = 10;
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
+
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        activity.fee_rate = 0;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap();
+        if let Activity::Onchain(activity) = retrieved.unwrap() {
+            assert_eq!(activity.fee_rate, 10);
+        } else {
+            panic!("Expected Onchain activity");
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_pre_activity_metadata_is_transfer_transfer() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["payment".to_string()];
+
+        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata.address = Some(address.clone());
+        metadata.is_receive = true;
+        metadata.is_transfer = true;
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
+
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        activity.is_transfer = false;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap();
+        if let Activity::Onchain(activity) = retrieved.unwrap() {
+            assert_eq!(activity.is_transfer, true);
+        } else {
+            panic!("Expected Onchain activity");
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_pre_activity_metadata_channel_id_transfer() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let channel_id = "channel_abc123".to_string();
+        let tags = vec!["payment".to_string()];
+
+        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata.address = Some(address.clone());
+        metadata.is_receive = true;
+        metadata.channel_id = Some(channel_id.clone());
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
+
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        activity.channel_id = None;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap();
+        if let Activity::Onchain(activity) = retrieved.unwrap() {
+            assert_eq!(activity.channel_id, Some(channel_id));
+        } else {
+            panic!("Expected Onchain activity");
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_pre_activity_metadata_all_fields_transfer() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let channel_id = "channel_xyz789".to_string();
+        let tags = vec!["payment".to_string(), "transfer".to_string()];
+
+        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata.address = Some(address.clone());
+        metadata.is_receive = true;
+        metadata.fee_rate = 15;
+        metadata.is_transfer = true;
+        metadata.channel_id = Some(channel_id.clone());
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
+
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        activity.fee_rate = 0;
+        activity.is_transfer = false;
+        activity.channel_id = None;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap();
+        if let Activity::Onchain(activity) = retrieved.unwrap() {
+            assert_eq!(activity.address, address);
+            assert_eq!(activity.fee_rate, 15);
+            assert_eq!(activity.is_transfer, true);
+            assert_eq!(activity.channel_id, Some(channel_id));
+            let activity_tags = db.get_tags(&activity.id).unwrap();
+            assert_eq!(activity_tags.len(), 2);
+            assert!(activity_tags.contains(&"payment".to_string()));
+            assert!(activity_tags.contains(&"transfer".to_string()));
+        } else {
+            panic!("Expected Onchain activity");
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_pre_activity_metadata_fee_rate_zero_not_transferred() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["payment".to_string()];
+
+        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata.address = Some(address.clone());
+        metadata.is_receive = true;
+        metadata.fee_rate = 0;
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
+
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        activity.fee_rate = 5;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap();
+        if let Activity::Onchain(activity) = retrieved.unwrap() {
+            assert_eq!(activity.fee_rate, 5);
+        } else {
+            panic!("Expected Onchain activity");
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_pre_activity_metadata_is_transfer_false_not_transferred() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["payment".to_string()];
+
+        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata.address = Some(address.clone());
+        metadata.is_receive = true;
+        metadata.is_transfer = false;
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
+
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        activity.is_transfer = false;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap();
+        if let Activity::Onchain(activity) = retrieved.unwrap() {
+            assert_eq!(activity.is_transfer, false);
+        } else {
+            panic!("Expected Onchain activity");
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_pre_activity_metadata_transferred_on_lightning_sent() {
         let (mut db, db_path) = setup();
         let payment_hash = "test_lightning_sent_1".to_string();
@@ -2714,6 +2898,9 @@ mod tests {
                 tx_id: None,
                 address: Some("bc1qtest123".to_string()),
                 is_receive: true,
+                fee_rate: 0,
+                is_transfer: false,
+                channel_id: None,
                 created_at: 0,
             },
             PreActivityMetadata {
@@ -2723,6 +2910,9 @@ mod tests {
                 tx_id: None,
                 address: None,
                 is_receive: false,
+                fee_rate: 0,
+                is_transfer: false,
+                channel_id: None,
                 created_at: 0,
             },
             PreActivityMetadata {
@@ -2732,6 +2922,9 @@ mod tests {
                 tx_id: None,
                 address: None,
                 is_receive: false,
+                fee_rate: 0,
+                is_transfer: false,
+                channel_id: None,
                 created_at: 0,
             },
         ];
@@ -2769,6 +2962,9 @@ mod tests {
                 tx_id: None,
                 address: None,
                 is_receive: false,
+                fee_rate: 0,
+                is_transfer: false,
+                channel_id: None,
                 created_at: 0,
             },
         ];
@@ -2805,6 +3001,9 @@ mod tests {
                 tx_id: None,
                 address: Some("bc1qtest123".to_string()),
                 is_receive: true,
+                fee_rate: 0,
+                is_transfer: false,
+                channel_id: None,
                 created_at: 0,
             },
         ];
@@ -2848,6 +3047,9 @@ mod tests {
                 tx_id: None,
                 address: None,
                 is_receive: false,
+                fee_rate: 0,
+                is_transfer: false,
+                channel_id: None,
                 created_at: 0,
             },
         ];
@@ -2914,6 +3116,9 @@ mod tests {
                 tx_id: None,
                 address: None,
                 is_receive: false,
+                fee_rate: 0,
+                is_transfer: false,
+                channel_id: None,
                 created_at: 0,
             },
             PreActivityMetadata {
@@ -2923,6 +3128,9 @@ mod tests {
                 tx_id: None,
                 address: None,
                 is_receive: false,
+                fee_rate: 0,
+                is_transfer: false,
+                channel_id: None,
                 created_at: 0,
             },
         ];
@@ -2989,6 +3197,9 @@ mod tests {
                 tx_id: None,
                 address: None,
                 is_receive: false,
+                fee_rate: 0,
+                is_transfer: false,
+                channel_id: None,
                 created_at: 0,
             },
         ];

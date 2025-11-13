@@ -4792,6 +4792,9 @@ public object FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer<PreAct
             FfiConverterOptionalString.read(buf),
             FfiConverterBoolean.read(buf),
             FfiConverterULong.read(buf),
+            FfiConverterBoolean.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterULong.read(buf),
         )
     }
 
@@ -4802,6 +4805,9 @@ public object FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer<PreAct
             FfiConverterOptionalString.allocationSize(value.`txId`) +
             FfiConverterOptionalString.allocationSize(value.`address`) +
             FfiConverterBoolean.allocationSize(value.`isReceive`) +
+            FfiConverterULong.allocationSize(value.`feeRate`) +
+            FfiConverterBoolean.allocationSize(value.`isTransfer`) +
+            FfiConverterOptionalString.allocationSize(value.`channelId`) +
             FfiConverterULong.allocationSize(value.`createdAt`)
     )
 
@@ -4812,6 +4818,9 @@ public object FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer<PreAct
         FfiConverterOptionalString.write(value.`txId`, buf)
         FfiConverterOptionalString.write(value.`address`, buf)
         FfiConverterBoolean.write(value.`isReceive`, buf)
+        FfiConverterULong.write(value.`feeRate`, buf)
+        FfiConverterBoolean.write(value.`isTransfer`, buf)
+        FfiConverterOptionalString.write(value.`channelId`, buf)
         FfiConverterULong.write(value.`createdAt`, buf)
     }
 }

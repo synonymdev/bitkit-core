@@ -150,6 +150,10 @@ pub struct PreActivityMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub address: Option<String>,
     pub is_receive: bool,
+    pub fee_rate: u64,
+    pub is_transfer: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub channel_id: Option<String>,
     pub created_at: u64,
 }
 
