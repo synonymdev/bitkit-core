@@ -262,6 +262,11 @@ void uniffi_bitkitcore_fn_func_activity_wipe_all(RustCallStatus *_Nonnull out_st
 void uniffi_bitkitcore_fn_func_add_pre_activity_metadata(RustBuffer pre_activity_metadata, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_PRE_ACTIVITY_METADATA_TAGS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_PRE_ACTIVITY_METADATA_TAGS
+void uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags(RustBuffer payment_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_TAGS
 void uniffi_bitkitcore_fn_func_add_tags(RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
@@ -442,6 +447,11 @@ uint64_t uniffi_bitkitcore_fn_func_get_orders(RustBuffer order_ids, RustBuffer f
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PAYMENT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PAYMENT
 uint64_t uniffi_bitkitcore_fn_func_get_payment(RustBuffer payment_id
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PRE_ACTIVITY_METADATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PRE_ACTIVITY_METADATA
+RustBuffer uniffi_bitkitcore_fn_func_get_pre_activity_metadata(RustBuffer search_key, int8_t search_by_address, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TAGS
@@ -980,6 +990,12 @@ uint16_t uniffi_bitkitcore_checksum_func_add_pre_activity_metadata(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_PRE_ACTIVITY_METADATA_TAGS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_PRE_ACTIVITY_METADATA_TAGS
+uint16_t uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_add_tags(void
@@ -1187,6 +1203,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_orders(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PAYMENT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PAYMENT
 uint16_t uniffi_bitkitcore_checksum_func_get_payment(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA
+uint16_t uniffi_bitkitcore_checksum_func_get_pre_activity_metadata(void
     
 );
 #endif

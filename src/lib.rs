@@ -427,6 +427,15 @@ pub fn add_pre_activity_metadata(pre_activity_metadata: PreActivityMetadata) -> 
 }
 
 #[uniffi::export]
+pub fn add_pre_activity_metadata_tags(payment_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.add_pre_activity_metadata_tags(&payment_id, &tags)
+}
+
+#[uniffi::export]
 pub fn remove_pre_activity_metadata_tags(payment_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
@@ -460,6 +469,15 @@ pub fn upsert_pre_activity_metadata(pre_activity_metadata: Vec<PreActivityMetada
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.upsert_pre_activity_metadata(&pre_activity_metadata)
+}
+
+#[uniffi::export]
+pub fn get_pre_activity_metadata(search_key: String, search_by_address: bool) -> Result<Option<PreActivityMetadata>, ActivityError> {
+    let guard = get_activity_db()?;
+    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.get_pre_activity_metadata(&search_key, search_by_address)
 }
 
 #[uniffi::export]

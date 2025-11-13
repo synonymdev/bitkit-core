@@ -72,10 +72,9 @@ mod tests {
         }
     }
 
-    fn create_test_pre_activity_metadata(payment_id: String, payment_type: ActivityType, tags: Vec<String>) -> PreActivityMetadata {
+    fn create_test_pre_activity_metadata(payment_id: String, _payment_type: ActivityType, tags: Vec<String>) -> PreActivityMetadata {
         PreActivityMetadata {
             payment_id,
-            payment_type,
             tags,
             payment_hash: None,
             tx_id: None,
@@ -1976,9 +1975,11 @@ mod tests {
         let address = "bc1qtest123".to_string();
         let tags = vec!["payment".to_string(), "coffee".to_string()];
 
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone())).is_ok());
+        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata.address = Some(address.clone());
+        metadata.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
-        // Verify tags are transferred when activity is received
         let mut activity = create_test_onchain_activity();
         activity.address = address.clone();
         activity.tx_type = PaymentType::Received;
@@ -1995,14 +1996,14 @@ mod tests {
     #[test]
     fn test_add_pre_activity_metadata_lightning() {
         let (mut db, db_path) = setup();
-        let invoice = "lightning:invoice123".to_string();
+        let payment_hash = "test_lightning_1".to_string();
         let tags = vec!["invoice".to_string(), "payment".to_string()];
 
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(invoice.clone(), ActivityType::Lightning, tags.clone())).is_ok());
+        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(payment_hash.clone(), ActivityType::Lightning, tags.clone())).is_ok());
 
         // Verify tags are transferred when activity is received
         let mut activity = create_test_lightning_activity();
-        activity.invoice = invoice.clone();
+        activity.id = payment_hash.clone();
         activity.tx_type = PaymentType::Received;
         db.insert_lightning_activity(&activity).unwrap();
 
@@ -2031,11 +2032,15 @@ mod tests {
         let address = "bc1qtest123".to_string();
         let tags = vec!["payment".to_string()];
 
-        // Add same tags twice (should be idempotent)
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone())).is_ok());
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone())).is_ok());
+        let mut metadata1 = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata1.address = Some(address.clone());
+        metadata1.is_receive = true;
+        let mut metadata2 = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata2.address = Some(address.clone());
+        metadata2.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
+        assert!(db.add_pre_activity_metadata(&metadata2).is_ok());
 
-        // Verify tags are transferred correctly
         let mut activity = create_test_onchain_activity();
         activity.address = address.clone();
         activity.tx_type = PaymentType::Received;
@@ -2049,15 +2054,61 @@ mod tests {
     }
 
     #[test]
+    fn test_add_pre_activity_metadata_replaces_by_address() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let payment_id1 = "payment_id_1".to_string();
+        let payment_id2 = "payment_id_2".to_string();
+
+        // Add metadata with payment_id1 and address
+        let mut metadata1 = create_test_pre_activity_metadata(payment_id1.clone(), ActivityType::Onchain, vec!["tag1".to_string()]);
+        metadata1.address = Some(address.clone());
+        metadata1.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
+
+        // Verify it exists
+        let result1 = db.get_pre_activity_metadata(&payment_id1, false).unwrap();
+        assert!(result1.is_some());
+        let result_by_address1 = db.get_pre_activity_metadata(&address, true).unwrap();
+        assert!(result_by_address1.is_some());
+        assert_eq!(result_by_address1.unwrap().payment_id, payment_id1);
+
+        // Add metadata with payment_id2 and same address (should replace metadata1)
+        let mut metadata2 = create_test_pre_activity_metadata(payment_id2.clone(), ActivityType::Onchain, vec!["tag2".to_string()]);
+        metadata2.address = Some(address.clone());
+        metadata2.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&metadata2).is_ok());
+
+        // Verify metadata1 is gone
+        let result1_after = db.get_pre_activity_metadata(&payment_id1, false).unwrap();
+        assert!(result1_after.is_none());
+
+        // Verify metadata2 exists and can be found by address
+        let result2 = db.get_pre_activity_metadata(&payment_id2, false).unwrap();
+        assert!(result2.is_some());
+        let result_by_address2 = db.get_pre_activity_metadata(&address, true).unwrap();
+        assert!(result_by_address2.is_some());
+        let metadata2_retrieved = result_by_address2.unwrap();
+        assert_eq!(metadata2_retrieved.payment_id, payment_id2);
+        assert_eq!(metadata2_retrieved.tags, vec!["tag2".to_string()]);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_add_pre_activity_metadata_multiple() {
         let (mut db, db_path) = setup();
         let address = "bc1qtest123".to_string();
 
-        // Add tags in multiple calls (second call replaces first with new schema)
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["tag1".to_string()])).is_ok());
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["tag2".to_string(), "tag3".to_string()])).is_ok());
+        let mut metadata1 = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["tag1".to_string()]);
+        metadata1.address = Some(address.clone());
+        metadata1.is_receive = true;
+        let mut metadata2 = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["tag2".to_string(), "tag3".to_string()]);
+        metadata2.address = Some(address.clone());
+        metadata2.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
+        assert!(db.add_pre_activity_metadata(&metadata2).is_ok());
 
-        // Verify only the last tags are transferred (second call replaced first)
         let mut activity = create_test_onchain_activity();
         activity.address = address.clone();
         activity.tx_type = PaymentType::Received;
@@ -2072,18 +2123,62 @@ mod tests {
     }
 
     #[test]
+    fn test_add_pre_activity_metadata_tags() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+
+        // Add initial metadata with one tag
+        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["tag1".to_string()])).is_ok());
+
+        // Add more tags to existing metadata
+        assert!(db.add_pre_activity_metadata_tags(&address, &["tag2".to_string(), "tag3".to_string()]).is_ok());
+
+        // Verify all tags are present
+        let all_metadata = db.get_all_pre_activity_metadata().unwrap();
+        assert_eq!(all_metadata.len(), 1);
+        let metadata = &all_metadata[0];
+        assert_eq!(metadata.tags.len(), 3);
+        assert!(metadata.tags.contains(&"tag1".to_string()));
+        assert!(metadata.tags.contains(&"tag2".to_string()));
+        assert!(metadata.tags.contains(&"tag3".to_string()));
+
+        // Add duplicate tag (should not add duplicate)
+        assert!(db.add_pre_activity_metadata_tags(&address, &["tag2".to_string()]).is_ok());
+
+        // Verify no duplicate was added
+        let all_metadata_after = db.get_all_pre_activity_metadata().unwrap();
+        assert_eq!(all_metadata_after.len(), 1);
+        let metadata_after = &all_metadata_after[0];
+        assert_eq!(metadata_after.tags.len(), 3);
+        assert_eq!(metadata_after.tags.iter().filter(|t| *t == "tag2").count(), 1);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_add_pre_activity_metadata_tags_nonexistent() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+
+        // Try to add tags to non-existent metadata (should error)
+        let result = db.add_pre_activity_metadata_tags(&address, &["tag1".to_string()]);
+        assert!(result.is_err());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_remove_pre_activity_metadata() {
         let (mut db, db_path) = setup();
         let address = "bc1qtest123".to_string();
         let tags = vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string()];
 
-        // Add tags
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone())).is_ok());
+        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata.address = Some(address.clone());
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
-        // Remove one tag
         assert!(db.remove_pre_activity_metadata_tags(&address, &["tag2".to_string()]).is_ok());
 
-        // Verify only remaining tags are transferred
         let mut activity = create_test_onchain_activity();
         activity.address = address.clone();
         activity.tx_type = PaymentType::Received;
@@ -2104,13 +2199,12 @@ mod tests {
         let address = "bc1qtest123".to_string();
         let tags = vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string(), "tag4".to_string()];
 
-        // Add tags
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone())).is_ok());
+        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata.address = Some(address.clone());
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
-        // Remove multiple tags
         assert!(db.remove_pre_activity_metadata_tags(&address, &["tag1".to_string(), "tag3".to_string()]).is_ok());
 
-        // Verify only remaining tags are transferred
         let mut activity = create_test_onchain_activity();
         activity.address = address.clone();
         activity.tx_type = PaymentType::Received;
@@ -2203,24 +2297,16 @@ mod tests {
     }
 
     #[test]
-    fn test_pre_activity_metadata_transferred_only_on_received() {
+    fn test_pre_activity_metadata_transferred_on_received() {
         let (mut db, db_path) = setup();
         let address = "bc1qtest123".to_string();
         let tags = vec!["payment".to_string()];
 
-        // Add pre-activity metadata
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone())).is_ok());
+        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata.address = Some(address.clone());
+        metadata.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
-        // Insert sent activity (should NOT transfer tags)
-        let mut sent_activity = create_test_onchain_activity();
-        sent_activity.address = address.clone();
-        sent_activity.tx_type = PaymentType::Sent;
-        db.insert_onchain_activity(&sent_activity).unwrap();
-
-        let sent_tags = db.get_tags(&sent_activity.id).unwrap();
-        assert!(sent_tags.is_empty());
-
-        // Insert received activity (should transfer tags)
         let mut received_activity = create_test_onchain_activity();
         received_activity.id = "received_activity".to_string();
         received_activity.address = address.clone();
@@ -2235,15 +2321,92 @@ mod tests {
     }
 
     #[test]
+    fn test_pre_activity_metadata_transferred_on_sent_onchain() {
+        let (mut db, db_path) = setup();
+        let tx_id = "txid123".to_string();
+        let tags = vec!["sent_payment".to_string()];
+
+        let mut metadata = create_test_pre_activity_metadata(tx_id.clone(), ActivityType::Onchain, tags.clone());
+        metadata.tx_id = Some(tx_id.clone());
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
+
+        let mut sent_activity = create_test_onchain_activity();
+        sent_activity.tx_id = tx_id.clone();
+        sent_activity.tx_type = PaymentType::Sent;
+        db.insert_onchain_activity(&sent_activity).unwrap();
+
+        let sent_tags = db.get_tags(&sent_activity.id).unwrap();
+        assert_eq!(sent_tags.len(), 1);
+        assert!(sent_tags.contains(&"sent_payment".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_pre_activity_metadata_address_update_on_sent() {
+        let (mut db, db_path) = setup();
+        let tx_id = "txid123".to_string();
+        let metadata_address = "bc1qmetadata456".to_string();
+        let tags = vec!["sent_payment".to_string()];
+
+        let mut metadata = create_test_pre_activity_metadata(tx_id.clone(), ActivityType::Onchain, tags.clone());
+        metadata.tx_id = Some(tx_id.clone());
+        metadata.address = Some(metadata_address.clone());
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
+
+        let mut sent_activity = create_test_onchain_activity();
+        sent_activity.tx_id = tx_id.clone();
+        sent_activity.address = "bc1qoriginal789".to_string();
+        sent_activity.tx_type = PaymentType::Sent;
+        db.insert_onchain_activity(&sent_activity).unwrap();
+
+        let retrieved = db.get_activity_by_id(&sent_activity.id).unwrap();
+        if let Activity::Onchain(activity) = retrieved.unwrap() {
+            assert_eq!(activity.address, metadata_address);
+        } else {
+            panic!("Expected Onchain activity");
+        }
+
+        let sent_tags = db.get_tags(&sent_activity.id).unwrap();
+        assert_eq!(sent_tags.len(), 1);
+        assert!(sent_tags.contains(&"sent_payment".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_pre_activity_metadata_transferred_on_lightning_sent() {
+        let (mut db, db_path) = setup();
+        let payment_hash = "test_lightning_sent_1".to_string();
+        let tags = vec!["sent_invoice".to_string()];
+
+        // Add pre-activity metadata using payment hash
+        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(payment_hash.clone(), ActivityType::Lightning, tags.clone())).is_ok());
+
+        // Insert sent lightning activity (should transfer tags based on payment hash)
+        let mut sent_activity = create_test_lightning_activity();
+        sent_activity.id = payment_hash.clone();
+        sent_activity.tx_type = PaymentType::Sent;
+        db.insert_lightning_activity(&sent_activity).unwrap();
+
+        let sent_tags = db.get_tags(&sent_activity.id).unwrap();
+        assert_eq!(sent_tags.len(), 1);
+        assert!(sent_tags.contains(&"sent_invoice".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_pre_activity_metadata_deleted_after_transfer() {
         let (mut db, db_path) = setup();
         let address = "bc1qtest123".to_string();
         let tags = vec!["tag1".to_string(), "tag2".to_string()];
 
-        // Add pre-activity metadata
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone())).is_ok());
+        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata.address = Some(address.clone());
+        metadata.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
-        // Insert first received activity (should transfer tags)
         let mut activity1 = create_test_onchain_activity();
         activity1.address = address.clone();
         activity1.tx_type = PaymentType::Received;
@@ -2252,7 +2415,6 @@ mod tests {
         let tags1 = db.get_tags(&activity1.id).unwrap();
         assert_eq!(tags1.len(), 2);
 
-        // Insert second received activity with same address (should NOT transfer tags again)
         let mut activity2 = create_test_onchain_activity();
         activity2.id = "activity2".to_string();
         activity2.address = address.clone();
@@ -2260,7 +2422,7 @@ mod tests {
         db.insert_onchain_activity(&activity2).unwrap();
 
         let tags2 = db.get_tags(&activity2.id).unwrap();
-        assert!(tags2.is_empty()); // Tags were already deleted after first transfer
+        assert!(tags2.is_empty());
 
         cleanup(&db_path);
     }
@@ -2268,15 +2430,13 @@ mod tests {
     #[test]
     fn test_pre_activity_metadata_lightning_received() {
         let (mut db, db_path) = setup();
-        let invoice = "lightning:invoice123".to_string();
+        let payment_hash = "test_lightning_received_1".to_string();
         let tags = vec!["invoice".to_string(), "payment".to_string()];
 
-        // Add pre-activity metadata
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(invoice.clone(), ActivityType::Lightning, tags.clone())).is_ok());
+        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(payment_hash.clone(), ActivityType::Lightning, tags.clone())).is_ok());
 
-        // Insert received lightning activity
         let mut activity = create_test_lightning_activity();
-        activity.invoice = invoice.clone();
+        activity.id = payment_hash.clone();
         activity.tx_type = PaymentType::Received;
         db.insert_lightning_activity(&activity).unwrap();
 
@@ -2289,14 +2449,44 @@ mod tests {
     }
 
     #[test]
+    fn test_pre_activity_metadata_onchain_received_with_ln_payment_hash() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let ln_payment_hash = "ln_payment_hash_abc123".to_string();
+        let tags = vec!["payment".to_string(), "coffee".to_string()];
+
+        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        metadata.address = Some(address.clone());
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
+
+        let mut activity = create_test_onchain_activity();
+        activity.id = ln_payment_hash.clone();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let activity_tags = db.get_tags(&activity.id).unwrap();
+        assert_eq!(activity_tags.len(), 2);
+        assert!(activity_tags.contains(&"payment".to_string()));
+        assert!(activity_tags.contains(&"coffee".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_pre_activity_metadata_multiple_identifiers() {
         let (mut db, db_path) = setup();
         let address1 = "bc1qtest123".to_string();
         let address2 = "bc1qtest456".to_string();
 
-        // Add tags for different addresses
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address1.clone(), ActivityType::Onchain, vec!["tag1".to_string()])).is_ok());
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address2.clone(), ActivityType::Onchain, vec!["tag2".to_string()])).is_ok());
+        let mut metadata1 = create_test_pre_activity_metadata(address1.clone(), ActivityType::Onchain, vec!["tag1".to_string()]);
+        metadata1.address = Some(address1.clone());
+        metadata1.is_receive = true;
+        let mut metadata2 = create_test_pre_activity_metadata(address2.clone(), ActivityType::Onchain, vec!["tag2".to_string()]);
+        metadata2.address = Some(address2.clone());
+        metadata2.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
+        assert!(db.add_pre_activity_metadata(&metadata2).is_ok());
 
         // Insert activities for both addresses
         let mut activity1 = create_test_onchain_activity();
@@ -2326,11 +2516,14 @@ mod tests {
     fn test_pre_activity_metadata_onchain_and_lightning_separate() {
         let (mut db, db_path) = setup();
         let address = "bc1qtest123".to_string();
-        let invoice = "lightning:invoice123".to_string();
+        let payment_hash = "test_lightning_separate_1".to_string();
 
-        // Add tags for both onchain and lightning (same identifier string, different types)
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["onchain_tag".to_string()])).is_ok());
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(invoice.clone(), ActivityType::Lightning, vec!["lightning_tag".to_string()])).is_ok());
+        let mut metadata1 = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["onchain_tag".to_string()]);
+        metadata1.address = Some(address.clone());
+        metadata1.is_receive = true;
+        let metadata2 = create_test_pre_activity_metadata(payment_hash.clone(), ActivityType::Lightning, vec!["lightning_tag".to_string()]);
+        assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
+        assert!(db.add_pre_activity_metadata(&metadata2).is_ok());
 
         // Insert onchain received activity
         let mut onchain_activity = create_test_onchain_activity();
@@ -2340,7 +2533,7 @@ mod tests {
 
         // Insert lightning received activity
         let mut lightning_activity = create_test_lightning_activity();
-        lightning_activity.invoice = invoice.clone();
+        lightning_activity.id = payment_hash.clone();
         lightning_activity.tx_type = PaymentType::Received;
         db.insert_lightning_activity(&lightning_activity).unwrap();
 
@@ -2382,10 +2575,11 @@ mod tests {
         let (mut db, db_path) = setup();
         let address = "bc1qtest123".to_string();
 
-        // Add pre-activity metadata
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["receiving_tag".to_string()])).is_ok());
+        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["receiving_tag".to_string()]);
+        metadata.address = Some(address.clone());
+        metadata.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
-        // Insert received activity
         let mut activity = create_test_onchain_activity();
         activity.address = address.clone();
         activity.tx_type = PaymentType::Received;
@@ -2399,6 +2593,64 @@ mod tests {
         assert_eq!(activity_tags.len(), 2);
         assert!(activity_tags.contains(&"receiving_tag".to_string()));
         assert!(activity_tags.contains(&"regular_tag".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_pre_activity_metadata() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["tag1".to_string(), "tag2".to_string()];
+
+        // Get non-existent metadata (should return None)
+        let result = db.get_pre_activity_metadata(&address, false).unwrap();
+        assert!(result.is_none());
+
+        // Add pre-activity metadata
+        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone())).is_ok());
+
+        // Get existing metadata
+        let metadata = db.get_pre_activity_metadata(&address, false).unwrap();
+        assert!(metadata.is_some());
+        let metadata = metadata.unwrap();
+        assert_eq!(metadata.payment_id, address);
+        assert_eq!(metadata.tags.len(), 2);
+        assert!(metadata.tags.contains(&"tag1".to_string()));
+        assert!(metadata.tags.contains(&"tag2".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_pre_activity_metadata_by_address() {
+        let (mut db, db_path) = setup();
+        let payment_id = "payment_id_123".to_string();
+        let address = "bc1qtest123".to_string();
+        let tags = vec!["tag1".to_string(), "tag2".to_string()];
+
+        // Add pre-activity metadata with address
+        let mut metadata = create_test_pre_activity_metadata(payment_id.clone(), ActivityType::Onchain, tags.clone());
+        metadata.address = Some(address.clone());
+        metadata.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
+
+        // Test searching by payment_id
+        let result_by_payment_id = db.get_pre_activity_metadata(&payment_id, false).unwrap();
+        assert!(result_by_payment_id.is_some());
+
+        // Test searching by address
+        let result_by_address = db.get_pre_activity_metadata(&address, true).unwrap();
+        assert!(result_by_address.is_some());
+        let metadata_by_address = result_by_address.unwrap();
+        assert_eq!(metadata_by_address.payment_id, payment_id);
+        assert_eq!(metadata_by_address.tags.len(), 2);
+        assert!(metadata_by_address.tags.contains(&"tag1".to_string()));
+        assert!(metadata_by_address.tags.contains(&"tag2".to_string()));
+
+        // Test that searching by address with wrong search type returns None
+        let result_wrong_search = db.get_pre_activity_metadata(&address, false).unwrap();
+        assert!(result_wrong_search.is_none());
 
         cleanup(&db_path);
     }
@@ -2420,18 +2672,18 @@ mod tests {
         assert_eq!(all_tags.len(), 3);
 
         // Find tags for address1
-        let addr1_tags = all_tags.iter().find(|rt| rt.payment_id == address1 && rt.payment_type == ActivityType::Onchain).unwrap();
+        let addr1_tags = all_tags.iter().find(|rt| rt.payment_id == address1).unwrap();
         assert_eq!(addr1_tags.tags.len(), 2);
         assert!(addr1_tags.tags.contains(&"tag1".to_string()));
         assert!(addr1_tags.tags.contains(&"tag2".to_string()));
 
         // Find tags for address2
-        let addr2_tags = all_tags.iter().find(|rt| rt.payment_id == address2 && rt.payment_type == ActivityType::Onchain).unwrap();
+        let addr2_tags = all_tags.iter().find(|rt| rt.payment_id == address2).unwrap();
         assert_eq!(addr2_tags.tags.len(), 1);
         assert!(addr2_tags.tags.contains(&"tag3".to_string()));
 
         // Find tags for invoice
-        let invoice_tags = all_tags.iter().find(|rt| rt.payment_id == invoice && rt.payment_type == ActivityType::Lightning).unwrap();
+        let invoice_tags = all_tags.iter().find(|rt| rt.payment_id == invoice).unwrap();
         assert_eq!(invoice_tags.tags.len(), 2);
         assert!(invoice_tags.tags.contains(&"tag4".to_string()));
         assert!(invoice_tags.tags.contains(&"tag5".to_string()));
@@ -2457,17 +2709,15 @@ mod tests {
         let pre_activity_metadata = vec![
             PreActivityMetadata {
                 payment_id: "bc1qtest123".to_string(),
-                payment_type: ActivityType::Onchain,
                 tags: vec!["tag1".to_string(), "tag2".to_string()],
                 payment_hash: None,
                 tx_id: None,
-                address: None,
-                is_receive: false,
+                address: Some("bc1qtest123".to_string()),
+                is_receive: true,
                 created_at: 0,
             },
             PreActivityMetadata {
                 payment_id: "bc1qtest456".to_string(),
-                payment_type: ActivityType::Onchain,
                 tags: vec!["tag3".to_string()],
                 payment_hash: None,
                 tx_id: None,
@@ -2477,7 +2727,6 @@ mod tests {
             },
             PreActivityMetadata {
                 payment_id: "lightning:invoice123".to_string(),
-                payment_type: ActivityType::Lightning,
                 tags: vec!["tag4".to_string(), "tag5".to_string()],
                 payment_hash: None,
                 tx_id: None,
@@ -2515,7 +2764,6 @@ mod tests {
         let pre_activity_metadata = vec![
             PreActivityMetadata {
                 payment_id: "bc1qtest123".to_string(),
-                payment_type: ActivityType::Onchain,
                 tags: vec!["tag1".to_string(), "tag2".to_string()],
                 payment_hash: None,
                 tx_id: None,
@@ -2544,19 +2792,19 @@ mod tests {
     fn test_upsert_pre_activity_metadata_updates_existing() {
         let (mut db, db_path) = setup();
 
-        // Add initial tags
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata("bc1qtest123".to_string(), ActivityType::Onchain, vec!["tag1".to_string()])).is_ok());
+        let mut initial_metadata = create_test_pre_activity_metadata("bc1qtest123".to_string(), ActivityType::Onchain, vec!["tag1".to_string()]);
+        initial_metadata.address = Some("bc1qtest123".to_string());
+        initial_metadata.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&initial_metadata).is_ok());
 
-        // Upsert with additional tags
         let pre_activity_metadata = vec![
             PreActivityMetadata {
                 payment_id: "bc1qtest123".to_string(),
-                payment_type: ActivityType::Onchain,
                 tags: vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string()],
                 payment_hash: None,
                 tx_id: None,
-                address: None,
-                is_receive: false,
+                address: Some("bc1qtest123".to_string()),
+                is_receive: true,
                 created_at: 0,
             },
         ];
@@ -2595,7 +2843,6 @@ mod tests {
         let pre_activity_metadata = vec![
             PreActivityMetadata {
                 payment_id: "".to_string(),
-                payment_type: ActivityType::Onchain,
                 tags: vec!["tag1".to_string()],
                 payment_hash: None,
                 tx_id: None,
@@ -2615,9 +2862,11 @@ mod tests {
     fn test_backup_restore_pre_activity_metadata() {
         let (mut db, db_path) = setup();
 
-        // Add some pre-activity metadata
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata("bc1qtest123".to_string(), ActivityType::Onchain, vec!["tag1".to_string(), "tag2".to_string()])).is_ok());
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata("lightning:invoice123".to_string(), ActivityType::Lightning, vec!["tag3".to_string()])).is_ok());
+        let mut metadata1 = create_test_pre_activity_metadata("bc1qtest123".to_string(), ActivityType::Onchain, vec!["tag1".to_string(), "tag2".to_string()]);
+        metadata1.address = Some("bc1qtest123".to_string());
+        let metadata2 = create_test_pre_activity_metadata("lightning:invoice123".to_string(), ActivityType::Lightning, vec!["tag3".to_string()]);
+        assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
+        assert!(db.add_pre_activity_metadata(&metadata2).is_ok());
 
         // Backup: Get all pre-activity metadata
         let backup = db.get_all_pre_activity_metadata().unwrap();
@@ -2653,15 +2902,14 @@ mod tests {
     }
 
     #[test]
-    fn test_upsert_pre_activity_metadata_same_identifier_different_type() {
+    fn test_upsert_pre_activity_metadata_same_identifier() {
         let (mut db, db_path) = setup();
 
-        // Same identifier string but different types (second one replaces first with new schema)
+        // Same identifier string (second one replaces first)
         let pre_activity_metadata = vec![
             PreActivityMetadata {
                 payment_id: "same_id".to_string(),
-                payment_type: ActivityType::Onchain,
-                tags: vec!["onchain_tag".to_string()],
+                tags: vec!["tag1".to_string()],
                 payment_hash: None,
                 tx_id: None,
                 address: None,
@@ -2670,8 +2918,7 @@ mod tests {
             },
             PreActivityMetadata {
                 payment_id: "same_id".to_string(),
-                payment_type: ActivityType::Lightning,
-                tags: vec!["lightning_tag".to_string()],
+                tags: vec!["tag2".to_string()],
                 payment_hash: None,
                 tx_id: None,
                 address: None,
@@ -2686,10 +2933,9 @@ mod tests {
         let all_tags = db.get_all_pre_activity_metadata().unwrap();
         assert_eq!(all_tags.len(), 1);
 
-        let lightning_tags = &all_tags[0];
-        assert_eq!(lightning_tags.payment_type, ActivityType::Lightning);
-        assert_eq!(lightning_tags.tags.len(), 1);
-        assert!(lightning_tags.tags.contains(&"lightning_tag".to_string()));
+        let metadata = &all_tags[0];
+        assert_eq!(metadata.tags.len(), 1);
+        assert!(metadata.tags.contains(&"tag2".to_string()));
 
         cleanup(&db_path);
     }
@@ -2717,20 +2963,27 @@ mod tests {
     fn test_upsert_pre_activity_metadata_partial_update() {
         let (mut db, db_path) = setup();
 
-        // Add initial tags for multiple payment IDs
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata("address1".to_string(), ActivityType::Onchain, vec!["tag1".to_string()])).is_ok());
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata("address2".to_string(), ActivityType::Onchain, vec!["tag2".to_string()])).is_ok());
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata("address3".to_string(), ActivityType::Onchain, vec!["tag3".to_string()])).is_ok());
+        let mut metadata1 = create_test_pre_activity_metadata("address1".to_string(), ActivityType::Onchain, vec!["tag1".to_string()]);
+        metadata1.address = Some("address1".to_string());
+        metadata1.is_receive = true;
+        let mut metadata2 = create_test_pre_activity_metadata("address2".to_string(), ActivityType::Onchain, vec!["tag2".to_string()]);
+        metadata2.address = Some("address2".to_string());
+        metadata2.is_receive = true;
+        let mut metadata3 = create_test_pre_activity_metadata("address3".to_string(), ActivityType::Onchain, vec!["tag3".to_string()]);
+        metadata3.address = Some("address3".to_string());
+        metadata3.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
+        assert!(db.add_pre_activity_metadata(&metadata2).is_ok());
+        assert!(db.add_pre_activity_metadata(&metadata3).is_ok());
 
         // Get all
         let all = db.get_all_pre_activity_metadata().unwrap();
         assert_eq!(all.len(), 3);
 
-        // Upsert with new tags for address2 (replaces existing tags with new schema)
+        // Upsert with new tags for address2 (replaces existing tags)
         let updated = vec![
             PreActivityMetadata {
                 payment_id: "address2".to_string(),
-                payment_type: ActivityType::Onchain,
                 tags: vec!["tag2_updated".to_string(), "tag2_new".to_string()],
                 payment_hash: None,
                 tx_id: None,
@@ -2766,9 +3019,14 @@ mod tests {
     fn test_get_all_pre_activity_metadata_after_transfer() {
         let (mut db, db_path) = setup();
 
-        // Add pre-activity metadata
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata("bc1qtest123".to_string(), ActivityType::Onchain, vec!["tag1".to_string(), "tag2".to_string()])).is_ok());
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata("bc1qtest456".to_string(), ActivityType::Onchain, vec!["tag3".to_string()])).is_ok());
+        let mut metadata1 = create_test_pre_activity_metadata("bc1qtest123".to_string(), ActivityType::Onchain, vec!["tag1".to_string(), "tag2".to_string()]);
+        metadata1.address = Some("bc1qtest123".to_string());
+        metadata1.is_receive = true;
+        let mut metadata2 = create_test_pre_activity_metadata("bc1qtest456".to_string(), ActivityType::Onchain, vec!["tag3".to_string()]);
+        metadata2.address = Some("bc1qtest456".to_string());
+        metadata2.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
+        assert!(db.add_pre_activity_metadata(&metadata2).is_ok());
 
         // Get all before transfer
         let before = db.get_all_pre_activity_metadata().unwrap();

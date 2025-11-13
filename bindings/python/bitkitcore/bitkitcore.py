@@ -465,6 +465,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata() != 17211:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags() != 28081:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_add_tags() != 63739:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries() != 40127:
@@ -534,6 +536,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_get_orders() != 47460:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_payment() != 29170:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 53126:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_tags() != 11308:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -746,6 +750,12 @@ _UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_add_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -944,6 +954,12 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_payment.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_payment.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.c_int8,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_tags.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1539,6 +1555,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_activity_wipe_all.restype = ctypes.c_
 _UniffiLib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_add_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_add_tags.restype = ctypes.c_uint16
@@ -1644,6 +1663,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_orders.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_payment.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_payment.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_tags.restype = ctypes.c_uint16
@@ -6151,16 +6173,14 @@ class _UniffiConverterTypePaymentRequestMemo(_UniffiConverterRustBuffer):
 
 class PreActivityMetadata:
     payment_id: "str"
-    payment_type: "ActivityType"
     tags: "typing.List[str]"
     payment_hash: "typing.Optional[str]"
     tx_id: "typing.Optional[str]"
     address: "typing.Optional[str]"
     is_receive: "bool"
     created_at: "int"
-    def __init__(self, *, payment_id: "str", payment_type: "ActivityType", tags: "typing.List[str]", payment_hash: "typing.Optional[str]", tx_id: "typing.Optional[str]", address: "typing.Optional[str]", is_receive: "bool", created_at: "int"):
+    def __init__(self, *, payment_id: "str", tags: "typing.List[str]", payment_hash: "typing.Optional[str]", tx_id: "typing.Optional[str]", address: "typing.Optional[str]", is_receive: "bool", created_at: "int"):
         self.payment_id = payment_id
-        self.payment_type = payment_type
         self.tags = tags
         self.payment_hash = payment_hash
         self.tx_id = tx_id
@@ -6169,12 +6189,10 @@ class PreActivityMetadata:
         self.created_at = created_at
 
     def __str__(self):
-        return "PreActivityMetadata(payment_id={}, payment_type={}, tags={}, payment_hash={}, tx_id={}, address={}, is_receive={}, created_at={})".format(self.payment_id, self.payment_type, self.tags, self.payment_hash, self.tx_id, self.address, self.is_receive, self.created_at)
+        return "PreActivityMetadata(payment_id={}, tags={}, payment_hash={}, tx_id={}, address={}, is_receive={}, created_at={})".format(self.payment_id, self.tags, self.payment_hash, self.tx_id, self.address, self.is_receive, self.created_at)
 
     def __eq__(self, other):
         if self.payment_id != other.payment_id:
-            return False
-        if self.payment_type != other.payment_type:
             return False
         if self.tags != other.tags:
             return False
@@ -6195,7 +6213,6 @@ class _UniffiConverterTypePreActivityMetadata(_UniffiConverterRustBuffer):
     def read(buf):
         return PreActivityMetadata(
             payment_id=_UniffiConverterString.read(buf),
-            payment_type=_UniffiConverterTypeActivityType.read(buf),
             tags=_UniffiConverterSequenceString.read(buf),
             payment_hash=_UniffiConverterOptionalString.read(buf),
             tx_id=_UniffiConverterOptionalString.read(buf),
@@ -6207,7 +6224,6 @@ class _UniffiConverterTypePreActivityMetadata(_UniffiConverterRustBuffer):
     @staticmethod
     def check_lower(value):
         _UniffiConverterString.check_lower(value.payment_id)
-        _UniffiConverterTypeActivityType.check_lower(value.payment_type)
         _UniffiConverterSequenceString.check_lower(value.tags)
         _UniffiConverterOptionalString.check_lower(value.payment_hash)
         _UniffiConverterOptionalString.check_lower(value.tx_id)
@@ -6218,7 +6234,6 @@ class _UniffiConverterTypePreActivityMetadata(_UniffiConverterRustBuffer):
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.payment_id, buf)
-        _UniffiConverterTypeActivityType.write(value.payment_type, buf)
         _UniffiConverterSequenceString.write(value.tags, buf)
         _UniffiConverterOptionalString.write(value.payment_hash, buf)
         _UniffiConverterOptionalString.write(value.tx_id, buf)
@@ -12287,6 +12302,33 @@ class _UniffiConverterOptionalTypeMultisigRedeemScriptType(_UniffiConverterRustB
 
 
 
+class _UniffiConverterOptionalTypePreActivityMetadata(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypePreActivityMetadata.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypePreActivityMetadata.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypePreActivityMetadata.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypeRefundMemo(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -13955,6 +13997,16 @@ def add_pre_activity_metadata(pre_activity_metadata: "PreActivityMetadata") -> N
         _UniffiConverterTypePreActivityMetadata.lower(pre_activity_metadata))
 
 
+def add_pre_activity_metadata_tags(payment_id: "str",tags: "typing.List[str]") -> None:
+    _UniffiConverterString.check_lower(payment_id)
+    
+    _UniffiConverterSequenceString.check_lower(tags)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags,
+        _UniffiConverterString.lower(payment_id),
+        _UniffiConverterSequenceString.lower(tags))
+
+
 def add_tags(activity_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(activity_id)
     
@@ -14466,6 +14518,16 @@ async def get_payment(payment_id: "str") -> "IBtBolt11Invoice":
 _UniffiConverterTypeBlocktankError,
 
     )
+
+def get_pre_activity_metadata(search_key: "str",search_by_address: "bool") -> "typing.Optional[PreActivityMetadata]":
+    _UniffiConverterString.check_lower(search_key)
+    
+    _UniffiConverterBool.check_lower(search_by_address)
+    
+    return _UniffiConverterOptionalTypePreActivityMetadata.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata,
+        _UniffiConverterString.lower(search_key),
+        _UniffiConverterBool.lower(search_by_address)))
+
 
 def get_tags(activity_id: "str") -> "typing.List[str]":
     _UniffiConverterString.check_lower(activity_id)
@@ -15414,6 +15476,7 @@ __all__ = [
     "XrpMarker",
     "activity_wipe_all",
     "add_pre_activity_metadata",
+    "add_pre_activity_metadata_tags",
     "add_tags",
     "blocktank_remove_all_cjit_entries",
     "blocktank_remove_all_orders",
@@ -15449,6 +15512,7 @@ __all__ = [
     "get_min_zero_conf_tx_fee",
     "get_orders",
     "get_payment",
+    "get_pre_activity_metadata",
     "get_tags",
     "gift_order",
     "gift_pay",

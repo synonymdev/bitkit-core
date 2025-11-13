@@ -1242,7 +1242,6 @@ public data class PaymentRequestMemo (
 @kotlinx.serialization.Serializable
 public data class PreActivityMetadata (
     val `paymentId`: kotlin.String, 
-    val `paymentType`: ActivityType, 
     val `tags`: List<kotlin.String>, 
     val `paymentHash`: kotlin.String?, 
     val `txId`: kotlin.String?, 
@@ -2954,6 +2953,8 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
 
 
 
