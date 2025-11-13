@@ -7287,17 +7287,23 @@ public struct PreActivityMetadata {
     public var txId: String?
     public var address: String?
     public var isReceive: Bool
+    public var feeRate: UInt64
+    public var isTransfer: Bool
+    public var channelId: String?
     public var createdAt: UInt64
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(paymentId: String, tags: [String], paymentHash: String?, txId: String?, address: String?, isReceive: Bool, createdAt: UInt64) {
+    public init(paymentId: String, tags: [String], paymentHash: String?, txId: String?, address: String?, isReceive: Bool, feeRate: UInt64, isTransfer: Bool, channelId: String?, createdAt: UInt64) {
         self.paymentId = paymentId
         self.tags = tags
         self.paymentHash = paymentHash
         self.txId = txId
         self.address = address
         self.isReceive = isReceive
+        self.feeRate = feeRate
+        self.isTransfer = isTransfer
+        self.channelId = channelId
         self.createdAt = createdAt
     }
 }
@@ -7327,6 +7333,15 @@ extension PreActivityMetadata: Equatable, Hashable {
         if lhs.isReceive != rhs.isReceive {
             return false
         }
+        if lhs.feeRate != rhs.feeRate {
+            return false
+        }
+        if lhs.isTransfer != rhs.isTransfer {
+            return false
+        }
+        if lhs.channelId != rhs.channelId {
+            return false
+        }
         if lhs.createdAt != rhs.createdAt {
             return false
         }
@@ -7340,6 +7355,9 @@ extension PreActivityMetadata: Equatable, Hashable {
         hasher.combine(txId)
         hasher.combine(address)
         hasher.combine(isReceive)
+        hasher.combine(feeRate)
+        hasher.combine(isTransfer)
+        hasher.combine(channelId)
         hasher.combine(createdAt)
     }
 }
@@ -7361,6 +7379,9 @@ public struct FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer {
                 txId: FfiConverterOptionString.read(from: &buf), 
                 address: FfiConverterOptionString.read(from: &buf), 
                 isReceive: FfiConverterBool.read(from: &buf), 
+                feeRate: FfiConverterUInt64.read(from: &buf), 
+                isTransfer: FfiConverterBool.read(from: &buf), 
+                channelId: FfiConverterOptionString.read(from: &buf), 
                 createdAt: FfiConverterUInt64.read(from: &buf)
         )
     }
@@ -7372,6 +7393,9 @@ public struct FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer {
         FfiConverterOptionString.write(value.txId, into: &buf)
         FfiConverterOptionString.write(value.address, into: &buf)
         FfiConverterBool.write(value.isReceive, into: &buf)
+        FfiConverterUInt64.write(value.feeRate, into: &buf)
+        FfiConverterBool.write(value.isTransfer, into: &buf)
+        FfiConverterOptionString.write(value.channelId, into: &buf)
         FfiConverterUInt64.write(value.createdAt, into: &buf)
     }
 }

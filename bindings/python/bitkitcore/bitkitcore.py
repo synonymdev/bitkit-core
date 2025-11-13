@@ -6178,18 +6178,24 @@ class PreActivityMetadata:
     tx_id: "typing.Optional[str]"
     address: "typing.Optional[str]"
     is_receive: "bool"
+    fee_rate: "int"
+    is_transfer: "bool"
+    channel_id: "typing.Optional[str]"
     created_at: "int"
-    def __init__(self, *, payment_id: "str", tags: "typing.List[str]", payment_hash: "typing.Optional[str]", tx_id: "typing.Optional[str]", address: "typing.Optional[str]", is_receive: "bool", created_at: "int"):
+    def __init__(self, *, payment_id: "str", tags: "typing.List[str]", payment_hash: "typing.Optional[str]", tx_id: "typing.Optional[str]", address: "typing.Optional[str]", is_receive: "bool", fee_rate: "int", is_transfer: "bool", channel_id: "typing.Optional[str]", created_at: "int"):
         self.payment_id = payment_id
         self.tags = tags
         self.payment_hash = payment_hash
         self.tx_id = tx_id
         self.address = address
         self.is_receive = is_receive
+        self.fee_rate = fee_rate
+        self.is_transfer = is_transfer
+        self.channel_id = channel_id
         self.created_at = created_at
 
     def __str__(self):
-        return "PreActivityMetadata(payment_id={}, tags={}, payment_hash={}, tx_id={}, address={}, is_receive={}, created_at={})".format(self.payment_id, self.tags, self.payment_hash, self.tx_id, self.address, self.is_receive, self.created_at)
+        return "PreActivityMetadata(payment_id={}, tags={}, payment_hash={}, tx_id={}, address={}, is_receive={}, fee_rate={}, is_transfer={}, channel_id={}, created_at={})".format(self.payment_id, self.tags, self.payment_hash, self.tx_id, self.address, self.is_receive, self.fee_rate, self.is_transfer, self.channel_id, self.created_at)
 
     def __eq__(self, other):
         if self.payment_id != other.payment_id:
@@ -6203,6 +6209,12 @@ class PreActivityMetadata:
         if self.address != other.address:
             return False
         if self.is_receive != other.is_receive:
+            return False
+        if self.fee_rate != other.fee_rate:
+            return False
+        if self.is_transfer != other.is_transfer:
+            return False
+        if self.channel_id != other.channel_id:
             return False
         if self.created_at != other.created_at:
             return False
@@ -6218,6 +6230,9 @@ class _UniffiConverterTypePreActivityMetadata(_UniffiConverterRustBuffer):
             tx_id=_UniffiConverterOptionalString.read(buf),
             address=_UniffiConverterOptionalString.read(buf),
             is_receive=_UniffiConverterBool.read(buf),
+            fee_rate=_UniffiConverterUInt64.read(buf),
+            is_transfer=_UniffiConverterBool.read(buf),
+            channel_id=_UniffiConverterOptionalString.read(buf),
             created_at=_UniffiConverterUInt64.read(buf),
         )
 
@@ -6229,6 +6244,9 @@ class _UniffiConverterTypePreActivityMetadata(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalString.check_lower(value.tx_id)
         _UniffiConverterOptionalString.check_lower(value.address)
         _UniffiConverterBool.check_lower(value.is_receive)
+        _UniffiConverterUInt64.check_lower(value.fee_rate)
+        _UniffiConverterBool.check_lower(value.is_transfer)
+        _UniffiConverterOptionalString.check_lower(value.channel_id)
         _UniffiConverterUInt64.check_lower(value.created_at)
 
     @staticmethod
@@ -6239,6 +6257,9 @@ class _UniffiConverterTypePreActivityMetadata(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalString.write(value.tx_id, buf)
         _UniffiConverterOptionalString.write(value.address, buf)
         _UniffiConverterBool.write(value.is_receive, buf)
+        _UniffiConverterUInt64.write(value.fee_rate, buf)
+        _UniffiConverterBool.write(value.is_transfer, buf)
+        _UniffiConverterOptionalString.write(value.channel_id, buf)
         _UniffiConverterUInt64.write(value.created_at, buf)
 
 

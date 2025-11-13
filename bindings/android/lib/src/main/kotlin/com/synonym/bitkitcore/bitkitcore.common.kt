@@ -1247,6 +1247,9 @@ public data class PreActivityMetadata (
     val `txId`: kotlin.String?, 
     val `address`: kotlin.String?, 
     val `isReceive`: kotlin.Boolean, 
+    val `feeRate`: kotlin.ULong, 
+    val `isTransfer`: kotlin.Boolean, 
+    val `channelId`: kotlin.String?, 
     val `createdAt`: kotlin.ULong
 ) {
     public companion object

@@ -71,6 +71,9 @@ const CREATE_PRE_ACTIVITY_METADATA_TABLE: &str = "
         tx_id TEXT,
         address TEXT,
         is_receive BOOLEAN NOT NULL DEFAULT FALSE,
+        fee_rate INTEGER NOT NULL DEFAULT 0,
+        is_transfer BOOLEAN NOT NULL DEFAULT FALSE,
+        channel_id TEXT,
         created_at INTEGER NOT NULL DEFAULT 0
     )";
 
@@ -1310,7 +1313,7 @@ impl ActivityDB {
         }
 
         tx.execute(
-            "INSERT OR REPLACE INTO pre_activity_metadata (payment_id, tags, payment_hash, tx_id, address, is_receive, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            "INSERT OR REPLACE INTO pre_activity_metadata (payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
             rusqlite::params![
                 &pre_activity_metadata.payment_id,
                 &tags_json,
@@ -1318,6 +1321,9 @@ impl ActivityDB {
                 &pre_activity_metadata.tx_id,
                 &pre_activity_metadata.address,
                 pre_activity_metadata.is_receive,
+                pre_activity_metadata.fee_rate as i64,
+                pre_activity_metadata.is_transfer,
+                &pre_activity_metadata.channel_id,
                 pre_activity_metadata.created_at as i64,
             ],
         ).map_err(|e| ActivityError::DataError {
@@ -1464,7 +1470,7 @@ impl ActivityDB {
 
         {
             let mut stmt = tx.prepare(
-                "INSERT OR REPLACE INTO pre_activity_metadata (payment_id, tags, payment_hash, tx_id, address, is_receive, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"
+                "INSERT OR REPLACE INTO pre_activity_metadata (payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
             ).map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to prepare statement: {}", e),
             })?;
@@ -1481,6 +1487,9 @@ impl ActivityDB {
                     &metadata.tx_id,
                     &metadata.address,
                     metadata.is_receive,
+                    metadata.fee_rate as i64,
+                    metadata.is_transfer,
+                    &metadata.channel_id,
                     metadata.created_at as i64,
                 ]).map_err(|e| ActivityError::DataError {
                     error_details: format!("Failed to insert pre-activity metadata: {}", e),
@@ -1500,13 +1509,13 @@ impl ActivityDB {
         let sql = if search_by_address {
             "
             SELECT
-                payment_id, tags, payment_hash, tx_id, address, is_receive, created_at
+                payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at
             FROM pre_activity_metadata
             WHERE address = ?1"
         } else {
             "
             SELECT
-                payment_id, tags, payment_hash, tx_id, address, is_receive, created_at
+                payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at
             FROM pre_activity_metadata
             WHERE payment_id = ?1"
         };
@@ -1522,7 +1531,10 @@ impl ActivityDB {
             let tx_id: Option<String> = row.get(3)?;
             let address: Option<String> = row.get(4)?;
             let is_receive: bool = row.get(5)?;
-            let created_at: i64 = row.get(6)?;
+            let fee_rate: i64 = row.get(6)?;
+            let is_transfer: bool = row.get(7)?;
+            let channel_id: Option<String> = row.get(8)?;
+            let created_at: i64 = row.get(9)?;
 
             let tags: Vec<String> = serde_json::from_str(&tags_json).map_err(|_e: serde_json::Error| rusqlite::Error::InvalidColumnType(
                 1,
@@ -1538,6 +1550,9 @@ impl ActivityDB {
                 tx_id,
                 address,
                 is_receive,
+                fee_rate: fee_rate as u64,
+                is_transfer,
+                channel_id,
                 created_at: created_at_u64,
             })
         }) {
@@ -1552,12 +1567,12 @@ impl ActivityDB {
     /// Get all pre-activity metadata for backup
     pub fn get_all_pre_activity_metadata(&self) -> Result<Vec<PreActivityMetadata>, ActivityError> {
         let mut stmt = self.conn.prepare(
-            "SELECT payment_id, tags, payment_hash, tx_id, address, is_receive, created_at FROM pre_activity_metadata ORDER BY payment_id"
+            "SELECT payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at FROM pre_activity_metadata ORDER BY payment_id"
         ).map_err(|e| ActivityError::RetrievalError {
             error_details: format!("Failed to prepare statement: {}", e),
         })?;
 
-        let rows: Vec<(String, String, Option<String>, Option<String>, Option<String>, bool, i64)> = stmt.query_map([], |row| {
+        let rows: Vec<(String, String, Option<String>, Option<String>, Option<String>, bool, i64, bool, Option<String>, i64)> = stmt.query_map([], |row| {
             Ok((
                 row.get(0)?,
                 row.get(1)?,
@@ -1566,6 +1581,9 @@ impl ActivityDB {
                 row.get(4)?,
                 row.get(5)?,
                 row.get(6)?,
+                row.get(7)?,
+                row.get(8)?,
+                row.get(9)?,
             ))
         }).map_err(|e| ActivityError::RetrievalError {
             error_details: format!("Failed to execute query: {}", e),
@@ -1577,7 +1595,7 @@ impl ActivityDB {
 
         let mut result: Vec<PreActivityMetadata> = Vec::new();
 
-        for (payment_id, tags_json, payment_hash, tx_id, address, is_receive, created_at) in rows {
+        for (payment_id, tags_json, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at) in rows {
             let tags: Vec<String> = serde_json::from_str(&tags_json).map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to deserialize tags: {}", e),
             })?;
@@ -1590,6 +1608,9 @@ impl ActivityDB {
                 tx_id,
                 address,
                 is_receive,
+                fee_rate: fee_rate as u64,
+                is_transfer,
+                channel_id,
                 created_at: created_at_u64,
             });
         }
@@ -1607,19 +1628,6 @@ impl ActivityDB {
         };
 
         let tags = metadata.tags;
-        if tags.is_empty() && metadata.address.is_none() {
-            if search_by_address {
-                self.conn.execute(
-                    "DELETE FROM pre_activity_metadata WHERE address = ?1 AND is_receive = 1",
-                    [search_key],
-                ).map_err(|e| ActivityError::DataError {
-                    error_details: format!("Failed to delete pre-activity metadata: {}", e),
-                })?;
-            } else {
-                self.delete_pre_activity_metadata(search_key)?;
-            }
-            return Ok(Vec::new());
-        }
 
         let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to start transaction: {}", e),
@@ -1632,6 +1640,35 @@ impl ActivityDB {
                     [address, activity_id],
                 ).map_err(|e| ActivityError::DataError {
                     error_details: format!("Failed to update address: {}", e),
+                })?;
+            }
+        }
+
+        if metadata.fee_rate > 0 {
+            tx.execute(
+                "UPDATE onchain_activity SET fee_rate = ?1 WHERE id = ?2",
+                rusqlite::params![metadata.fee_rate as i64, activity_id],
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to update fee_rate: {}", e),
+            })?;
+        }
+
+        if metadata.is_transfer {
+            tx.execute(
+                "UPDATE onchain_activity SET is_transfer = ?1 WHERE id = ?2",
+                rusqlite::params![metadata.is_transfer, activity_id],
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to update is_transfer: {}", e),
+            })?;
+        }
+
+        if let Some(channel_id) = &metadata.channel_id {
+            if !channel_id.is_empty() {
+                tx.execute(
+                    "UPDATE onchain_activity SET channel_id = ?1 WHERE id = ?2",
+                    [channel_id, activity_id],
+                ).map_err(|e| ActivityError::DataError {
+                    error_details: format!("Failed to update channel_id: {}", e),
                 })?;
             }
         }
