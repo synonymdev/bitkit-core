@@ -16231,6 +16231,13 @@ public func insertActivity(activity: Activity)throws   {try rustCallWithError(Ff
     )
 }
 }
+public func isAddressUsed(address: String)throws  -> Bool  {
+    return try  FfiConverterBool.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_is_address_used(
+        FfiConverterString.lower(address),$0
+    )
+})
+}
 public func isValidBip39Word(word: String) -> Bool  {
     return try!  FfiConverterBool.lift(try! rustCall() {
     uniffi_bitkitcore_fn_func_is_valid_bip39_word(
@@ -16863,6 +16870,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_insert_activity() != 1510) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_is_address_used() != 64038) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846) {
