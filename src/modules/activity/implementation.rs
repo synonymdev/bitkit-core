@@ -1990,4 +1990,24 @@ impl ActivityDB {
 
         Ok(())
     }
+
+    /// Check if an address has been used (has any activities associated with it).
+    /// This checks for any onchain activities where the address appears, regardless
+    /// of whether it's a sent or received transaction.
+    pub fn is_address_used(&self, address: &str) -> Result<bool, ActivityError> {
+        let count: i64 = self.conn.query_row(
+            "
+            SELECT COUNT(*)
+            FROM activities a
+            JOIN onchain_activity o ON a.id = o.id
+            WHERE o.address = ?1 AND a.activity_type = 'onchain'
+            ",
+            [address],
+            |row| row.get(0),
+        ).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to check address usage: {}", e),
+        })?;
+
+        Ok(count > 0)
+    }
 }

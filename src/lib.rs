@@ -1418,6 +1418,15 @@ pub fn activity_wipe_all() -> Result<(), ActivityError> {
 }
 
 #[uniffi::export]
+pub fn is_address_used(address: String) -> Result<bool, ActivityError> {
+    let guard = get_activity_db()?;
+    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.is_address_used(&address)
+}
+
+#[uniffi::export]
 pub async fn blocktank_remove_all_orders() -> Result<(), BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {

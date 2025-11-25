@@ -549,6 +549,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_insert_activity() != 1510:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_is_address_used() != 64038:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593:
@@ -984,6 +986,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_insert_activity.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_is_address_used.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_is_address_used.restype = ctypes.c_int8
 _UniffiLib.uniffi_bitkitcore_fn_func_is_valid_bip39_word.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1681,6 +1688,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_init_db.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_insert_activity.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_is_address_used.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_is_address_used.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word.restype = ctypes.c_uint16
@@ -14608,6 +14618,13 @@ def insert_activity(activity: "Activity") -> None:
         _UniffiConverterTypeActivity.lower(activity))
 
 
+def is_address_used(address: "str") -> "bool":
+    _UniffiConverterString.check_lower(address)
+    
+    return _UniffiConverterBool.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_is_address_used,
+        _UniffiConverterString.lower(address)))
+
+
 def is_valid_bip39_word(word: "str") -> "bool":
     _UniffiConverterString.check_lower(word)
     
@@ -15539,6 +15556,7 @@ __all__ = [
     "gift_pay",
     "init_db",
     "insert_activity",
+    "is_address_used",
     "is_valid_bip39_word",
     "lnurl_auth",
     "mnemonic_to_entropy",

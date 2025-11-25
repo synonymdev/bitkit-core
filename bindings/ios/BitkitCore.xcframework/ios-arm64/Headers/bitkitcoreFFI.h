@@ -479,6 +479,11 @@ RustBuffer uniffi_bitkitcore_fn_func_init_db(RustBuffer base_path, RustCallStatu
 void uniffi_bitkitcore_fn_func_insert_activity(RustBuffer activity, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_IS_ADDRESS_USED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_IS_ADDRESS_USED
+int8_t uniffi_bitkitcore_fn_func_is_address_used(RustBuffer address, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_IS_VALID_BIP39_WORD
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_IS_VALID_BIP39_WORD
 int8_t uniffi_bitkitcore_fn_func_is_valid_bip39_word(RustBuffer word, RustCallStatus *_Nonnull out_status
@@ -1239,6 +1244,12 @@ uint16_t uniffi_bitkitcore_checksum_func_init_db(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INSERT_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INSERT_ACTIVITY
 uint16_t uniffi_bitkitcore_checksum_func_insert_activity(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_IS_ADDRESS_USED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_IS_ADDRESS_USED
+uint16_t uniffi_bitkitcore_checksum_func_is_address_used(void
     
 );
 #endif

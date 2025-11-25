@@ -3257,4 +3257,148 @@ mod tests {
 
         cleanup(&db_path);
     }
+
+    #[test]
+    fn test_is_address_used_no_activities() {
+        let (db, db_path) = setup();
+        let address = "bc1qunused123".to_string();
+        
+        let is_used = db.is_address_used(&address).unwrap();
+        assert!(!is_used, "Address with no activities should return false");
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_is_address_used_with_received_activity() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qreceived123".to_string();
+        
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        activity.id = "test_received_1".to_string();
+        
+        db.insert_onchain_activity(&activity).unwrap();
+        
+        let is_used = db.is_address_used(&address).unwrap();
+        assert!(is_used, "Address with received activity should return true");
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_is_address_used_with_sent_activity() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qsent123".to_string();
+        
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Sent;
+        activity.id = "test_sent_1".to_string();
+        
+        db.insert_onchain_activity(&activity).unwrap();
+        
+        let is_used = db.is_address_used(&address).unwrap();
+        assert!(is_used, "Address with sent activity should return true");
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_is_address_used_with_multiple_activities() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qmultiple123".to_string();
+        
+        // Add received activity
+        let mut received_activity = create_test_onchain_activity();
+        received_activity.address = address.clone();
+        received_activity.tx_type = PaymentType::Received;
+        received_activity.id = "test_received_1".to_string();
+        received_activity.confirmed = true;
+        db.insert_onchain_activity(&received_activity).unwrap();
+        
+        // Add sent activity
+        let mut sent_activity = create_test_onchain_activity();
+        sent_activity.address = address.clone();
+        sent_activity.tx_type = PaymentType::Sent;
+        sent_activity.id = "test_sent_1".to_string();
+        sent_activity.confirmed = false;
+        db.insert_onchain_activity(&sent_activity).unwrap();
+        
+        let is_used = db.is_address_used(&address).unwrap();
+        assert!(is_used, "Address with multiple activities should return true");
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_is_address_used_with_unconfirmed_activity() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qunconfirmed123".to_string();
+        
+        let mut activity = create_test_onchain_activity();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        activity.id = "test_unconfirmed_1".to_string();
+        activity.confirmed = false;
+        
+        db.insert_onchain_activity(&activity).unwrap();
+        
+        let is_used = db.is_address_used(&address).unwrap();
+        assert!(is_used, "Address with unconfirmed activity should return true");
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_is_address_used_different_addresses() {
+        let (mut db, db_path) = setup();
+        let used_address = "bc1qused123".to_string();
+        let unused_address = "bc1qunused456".to_string();
+        
+        // Add activity for one address
+        let mut activity = create_test_onchain_activity();
+        activity.address = used_address.clone();
+        activity.tx_type = PaymentType::Received;
+        activity.id = "test_used_1".to_string();
+        db.insert_onchain_activity(&activity).unwrap();
+        
+        // Check used address
+        let is_used = db.is_address_used(&used_address).unwrap();
+        assert!(is_used, "Address with activity should return true");
+        
+        // Check unused address
+        let is_unused = db.is_address_used(&unused_address).unwrap();
+        assert!(!is_unused, "Address without activity should return false");
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_is_address_used_only_onchain_activities() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qonchain123".to_string();
+        
+        // Add lightning activity (should not affect the check)
+        let lightning_activity = create_test_lightning_activity();
+        db.insert_lightning_activity(&lightning_activity).unwrap();
+        
+        // Address should still be unused since no onchain activity
+        let is_used = db.is_address_used(&address).unwrap();
+        assert!(!is_used, "Address should return false if only lightning activities exist");
+        
+        // Now add onchain activity
+        let mut onchain_activity = create_test_onchain_activity();
+        onchain_activity.address = address.clone();
+        onchain_activity.tx_type = PaymentType::Received;
+        onchain_activity.id = "test_onchain_1".to_string();
+        db.insert_onchain_activity(&onchain_activity).unwrap();
+        
+        // Now it should be used
+        let is_used_after = db.is_address_used(&address).unwrap();
+        assert!(is_used_after, "Address should return true after onchain activity is added");
+        
+        cleanup(&db_path);
+    }
 }

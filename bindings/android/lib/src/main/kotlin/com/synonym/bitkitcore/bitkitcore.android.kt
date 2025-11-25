@@ -1128,6 +1128,8 @@ internal interface UniffiForeignFutureCompleteVoid: com.sun.jna.Callback {
 
 
 
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1297,6 +1299,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_insert_activity() != 1510.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_is_address_used() != 64038.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846.toShort()) {
@@ -1562,6 +1567,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_insert_activity(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_is_address_used(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_is_valid_bip39_word(
@@ -1950,6 +1958,11 @@ internal object UniffiLib : Library {
         `activity`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_is_address_used(
+        `address`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Byte
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_is_valid_bip39_word(
         `word`: RustBufferByValue,
@@ -10287,6 +10300,16 @@ public fun `insertActivity`(`activity`: Activity) {
             uniffiRustCallStatus,
         )
     }
+}
+
+@Throws(ActivityException::class)
+public fun `isAddressUsed`(`address`: kotlin.String): kotlin.Boolean {
+    return FfiConverterBoolean.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_is_address_used(
+            FfiConverterString.lower(`address`),
+            uniffiRustCallStatus,
+        )
+    })
 }
 
 public fun `isValidBip39Word`(`word`: kotlin.String): kotlin.Boolean {
