@@ -3401,4 +3401,139 @@ mod tests {
         
         cleanup(&db_path);
     }
+
+    #[test]
+    fn test_get_activity_by_tx_id_not_found() {
+        let (db, db_path) = setup();
+        let tx_id = "nonexistent_tx_id".to_string();
+        
+        let activity = db.get_activity_by_tx_id(&tx_id).unwrap();
+        assert!(activity.is_none(), "Non-existent tx_id should return None");
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_activity_by_tx_id_found() {
+        let (mut db, db_path) = setup();
+        let tx_id = "test_tx_id_123".to_string();
+        
+        let mut activity = create_test_onchain_activity();
+        activity.tx_id = tx_id.clone();
+        activity.id = "test_activity_1".to_string();
+        
+        db.insert_onchain_activity(&activity).unwrap();
+        
+        let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
+        assert!(retrieved.is_some(), "Activity should be found by tx_id");
+        
+        if let Some(retrieved_activity) = retrieved {
+            assert_eq!(retrieved_activity.tx_id, tx_id);
+            assert_eq!(retrieved_activity.id, activity.id);
+            assert_eq!(retrieved_activity.value, activity.value);
+        } else {
+            panic!("Expected Onchain activity");
+        }
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_activity_by_tx_id_multiple_activities() {
+        let (mut db, db_path) = setup();
+        let tx_id = "shared_tx_id".to_string();
+        
+        // Insert first activity
+        let mut activity1 = create_test_onchain_activity();
+        activity1.tx_id = tx_id.clone();
+        activity1.id = "test_activity_1".to_string();
+        activity1.value = 10000;
+        db.insert_onchain_activity(&activity1).unwrap();
+        
+        // Insert second activity with same tx_id (shouldn't happen in practice, but test it)
+        let mut activity2 = create_test_onchain_activity();
+        activity2.tx_id = tx_id.clone();
+        activity2.id = "test_activity_2".to_string();
+        activity2.value = 20000;
+        db.insert_onchain_activity(&activity2).unwrap();
+        
+        // Should return the first one found
+        let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
+        assert!(retrieved.is_some(), "Activity should be found by tx_id");
+        
+        if let Some(retrieved_activity) = retrieved {
+            assert_eq!(retrieved_activity.tx_id, tx_id);
+            // Should return one of them (implementation dependent which one)
+            assert!(retrieved_activity.id == activity1.id || retrieved_activity.id == activity2.id);
+        } else {
+            panic!("Expected Onchain activity");
+        }
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_activity_by_tx_id_different_tx_ids() {
+        let (mut db, db_path) = setup();
+        let tx_id1 = "tx_id_1".to_string();
+        let tx_id2 = "tx_id_2".to_string();
+        
+        let mut activity1 = create_test_onchain_activity();
+        activity1.tx_id = tx_id1.clone();
+        activity1.id = "test_activity_1".to_string();
+        db.insert_onchain_activity(&activity1).unwrap();
+        
+        let mut activity2 = create_test_onchain_activity();
+        activity2.tx_id = tx_id2.clone();
+        activity2.id = "test_activity_2".to_string();
+        db.insert_onchain_activity(&activity2).unwrap();
+        
+        // Get first activity
+        let retrieved1 = db.get_activity_by_tx_id(&tx_id1).unwrap();
+        assert!(retrieved1.is_some(), "First activity should be found");
+        if let Some(retrieved) = retrieved1 {
+            assert_eq!(retrieved.tx_id, tx_id1);
+            assert_eq!(retrieved.id, activity1.id);
+        } else {
+            panic!("Expected Onchain activity");
+        }
+        
+        // Get second activity
+        let retrieved2 = db.get_activity_by_tx_id(&tx_id2).unwrap();
+        assert!(retrieved2.is_some(), "Second activity should be found");
+        if let Some(retrieved) = retrieved2 {
+            assert_eq!(retrieved.tx_id, tx_id2);
+            assert_eq!(retrieved.id, activity2.id);
+        } else {
+            panic!("Expected Onchain activity");
+        }
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_activity_by_tx_id_only_onchain() {
+        let (mut db, db_path) = setup();
+        let tx_id = "onchain_tx_id".to_string();
+        
+        // Add lightning activity (should not be found by tx_id)
+        let lightning_activity = create_test_lightning_activity();
+        db.insert_lightning_activity(&lightning_activity).unwrap();
+        
+        // Try to get by tx_id - should return None since lightning doesn't have tx_id
+        let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
+        assert!(retrieved.is_none(), "Lightning activities should not be found by tx_id");
+        
+        // Add onchain activity
+        let mut onchain_activity = create_test_onchain_activity();
+        onchain_activity.tx_id = tx_id.clone();
+        onchain_activity.id = "test_onchain_1".to_string();
+        db.insert_onchain_activity(&onchain_activity).unwrap();
+        
+        // Now should find it
+        let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
+        assert!(retrieved.is_some(), "Onchain activity should be found by tx_id");
+        
+        cleanup(&db_path);
+    }
 }

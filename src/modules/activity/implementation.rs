@@ -880,6 +880,69 @@ impl ActivityDB {
     }
 }
 
+    /// Retrieves an onchain activity by transaction ID.
+    pub fn get_activity_by_tx_id(&self, tx_id: &str) -> Result<Option<OnchainActivity>, ActivityError> {
+        let sql = "
+            SELECT
+                a.id, a.tx_type, o.tx_id, o.value, o.fee, o.fee_rate,
+                o.address, o.confirmed, a.timestamp, o.is_boosted,
+                o.boost_tx_ids, o.is_transfer, o.does_exist, o.confirm_timestamp,
+                o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at
+            FROM activities a
+            JOIN onchain_activity o ON a.id = o.id
+            WHERE o.tx_id = ?1 AND a.activity_type = 'onchain'
+            LIMIT 1";
+
+        let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
+
+        let activity = match stmt.query_row([tx_id], |row| {
+            let value: i64 = row.get(3)?;
+            let fee: i64 = row.get(4)?;
+            let fee_rate: i64 = row.get(5)?;
+            let timestamp: i64 = row.get(8)?;
+            let confirm_timestamp: Option<i64> = row.get(13)?;
+            let created_at: Option<i64> = row.get(16)?;
+            let updated_at: Option<i64> = row.get(17)?;
+            let boost_tx_ids_str: String = row.get(10)?;
+            let boost_tx_ids: Vec<String> = if boost_tx_ids_str.is_empty() {
+                Vec::new()
+            } else {
+                boost_tx_ids_str.split(',').map(|s| s.to_string()).collect()
+            };
+
+            Ok(OnchainActivity {
+                id: row.get(0)?,
+                tx_type: Self::parse_payment_type(row, 1)?,
+                tx_id: row.get(2)?,
+                value: value as u64,
+                fee: fee as u64,
+                fee_rate: fee_rate as u64,
+                address: row.get(6)?,
+                confirmed: row.get(7)?,
+                timestamp: timestamp as u64,
+                is_boosted: row.get(9)?,
+                boost_tx_ids,
+                is_transfer: row.get(11)?,
+                does_exist: row.get(12)?,
+                confirm_timestamp: confirm_timestamp.map(|t| t as u64),
+                channel_id: row.get(14)?,
+                transfer_tx_id: row.get(15)?,
+                created_at: created_at.map(|t| t as u64),
+                updated_at: updated_at.map(|t| t as u64),
+            })
+        }) {
+            Ok(activity) => Ok(Some(activity)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(ActivityError::RetrievalError {
+                error_details: format!("Failed to get activity by tx_id: {}", e),
+            }),
+        };
+
+        activity
+    }
+
     /// Updates an existing onchain activity by ID.
     pub fn update_onchain_activity_by_id(&mut self, activity_id: &str, activity: &OnchainActivity) -> Result<(), ActivityError> {
         let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
