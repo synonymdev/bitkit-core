@@ -509,6 +509,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_activity_by_tx_id() != 2520:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_all_activities_tags() != 29245:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_all_closed_channels() != 16828:
@@ -891,6 +893,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_tx_id.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_tx_id.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_all_activities_tags.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -1628,6 +1635,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_by_tag.restype = ctype
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_tx_id.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_tx_id.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_activities_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_activities_tags.restype = ctypes.c_uint16
@@ -12333,6 +12343,33 @@ class _UniffiConverterOptionalTypeMultisigRedeemScriptType(_UniffiConverterRustB
 
 
 
+class _UniffiConverterOptionalTypeOnchainActivity(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeOnchainActivity.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeOnchainActivity.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeOnchainActivity.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypePreActivityMetadata(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14376,6 +14413,13 @@ def get_activity_by_id(activity_id: "str") -> "typing.Optional[Activity]":
         _UniffiConverterString.lower(activity_id)))
 
 
+def get_activity_by_tx_id(tx_id: "str") -> "typing.Optional[OnchainActivity]":
+    _UniffiConverterString.check_lower(tx_id)
+    
+    return _UniffiConverterOptionalTypeOnchainActivity.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_tx_id,
+        _UniffiConverterString.lower(tx_id)))
+
+
 def get_all_activities_tags() -> "typing.List[ActivityTags]":
     return _UniffiConverterSequenceTypeActivityTags.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_activities_tags,))
 
@@ -15536,6 +15580,7 @@ __all__ = [
     "get_activities",
     "get_activities_by_tag",
     "get_activity_by_id",
+    "get_activity_by_tx_id",
     "get_all_activities_tags",
     "get_all_closed_channels",
     "get_all_pre_activity_metadata",

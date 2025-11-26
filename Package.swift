@@ -3,8 +3,8 @@
 
 import PackageDescription
 
-let tag = "v0.1.29"
-let checksum = "26ca27c593aee9e06d77e5dcf030a157cb5d971b939b9e5c8e5ce35bae84a9b1"
+let tag = "v0.1.30"
+let checksum = "3bbb4aef3a8ac2e5cbf283b98a00289b4d59f3870f1a60a941d1183bceaaa042"
 let url = "https://github.com/synonymdev/bitkit-core/releases/download/\(tag)/BitkitCore.xcframework.zip"
 
 let package = Package(

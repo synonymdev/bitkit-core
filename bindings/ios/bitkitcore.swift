@@ -14222,6 +14222,30 @@ fileprivate struct FfiConverterOptionTypeMultisigRedeemScriptType: FfiConverterR
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeOnchainActivity: FfiConverterRustBuffer {
+    typealias SwiftType = OnchainActivity?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeOnchainActivity.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeOnchainActivity.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypePreActivityMetadata: FfiConverterRustBuffer {
     typealias SwiftType = PreActivityMetadata?
 
@@ -16031,6 +16055,13 @@ public func getActivityById(activityId: String)throws  -> Activity?  {
     )
 })
 }
+public func getActivityByTxId(txId: String)throws  -> OnchainActivity?  {
+    return try  FfiConverterOptionTypeOnchainActivity.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_get_activity_by_tx_id(
+        FfiConverterString.lower(txId),$0
+    )
+})
+}
 public func getAllActivitiesTags()throws  -> [ActivityTags]  {
     return try  FfiConverterSequenceTypeActivityTags.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_all_activities_tags($0
@@ -16810,6 +16841,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_activity_by_tx_id() != 2520) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_all_activities_tags() != 29245) {

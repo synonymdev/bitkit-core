@@ -1130,6 +1130,8 @@ internal interface UniffiForeignFutureCompleteVoid: com.sun.jna.Callback {
 
 
 
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1239,6 +1241,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_get_activity_by_tx_id() != 2520.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_all_activities_tags() != 29245.toShort()) {
@@ -1507,6 +1512,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_activity_by_id(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_activity_by_tx_id(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_all_activities_tags(
@@ -1861,6 +1869,11 @@ internal object UniffiLib : Library {
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_activity_by_id(
         `activityId`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_activity_by_tx_id(
+        `txId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
@@ -8010,6 +8023,35 @@ public object FfiConverterOptionalTypeMultisigRedeemScriptType: FfiConverterRust
 
 
 
+public object FfiConverterOptionalTypeOnchainActivity: FfiConverterRustBuffer<OnchainActivity?> {
+    override fun read(buf: ByteBuffer): OnchainActivity? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeOnchainActivity.read(buf)
+    }
+
+    override fun allocationSize(value: OnchainActivity?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeOnchainActivity.allocationSize(value)
+        }
+    }
+
+    override fun write(value: OnchainActivity?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeOnchainActivity.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypePreActivityMetadata: FfiConverterRustBuffer<PreActivityMetadata?> {
     override fun read(buf: ByteBuffer): PreActivityMetadata? {
         if (buf.get().toInt() == 0) {
@@ -10032,6 +10074,16 @@ public fun `getActivityById`(`activityId`: kotlin.String): Activity? {
     return FfiConverterOptionalTypeActivity.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id(
             FfiConverterString.lower(`activityId`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+@Throws(ActivityException::class)
+public fun `getActivityByTxId`(`txId`: kotlin.String): OnchainActivity? {
+    return FfiConverterOptionalTypeOnchainActivity.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_tx_id(
+            FfiConverterString.lower(`txId`),
             uniffiRustCallStatus,
         )
     })
