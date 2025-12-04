@@ -1166,6 +1166,190 @@ public func FfiConverterTypeAddressResponse_lower(_ value: AddressResponse) -> R
 }
 
 
+public struct ChannelLiquidityOptions {
+    public var defaultLspBalanceSat: UInt64
+    public var minLspBalanceSat: UInt64
+    public var maxLspBalanceSat: UInt64
+    public var maxClientBalanceSat: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(defaultLspBalanceSat: UInt64, minLspBalanceSat: UInt64, maxLspBalanceSat: UInt64, maxClientBalanceSat: UInt64) {
+        self.defaultLspBalanceSat = defaultLspBalanceSat
+        self.minLspBalanceSat = minLspBalanceSat
+        self.maxLspBalanceSat = maxLspBalanceSat
+        self.maxClientBalanceSat = maxClientBalanceSat
+    }
+}
+
+#if compiler(>=6)
+extension ChannelLiquidityOptions: Sendable {}
+#endif
+
+
+extension ChannelLiquidityOptions: Equatable, Hashable {
+    public static func ==(lhs: ChannelLiquidityOptions, rhs: ChannelLiquidityOptions) -> Bool {
+        if lhs.defaultLspBalanceSat != rhs.defaultLspBalanceSat {
+            return false
+        }
+        if lhs.minLspBalanceSat != rhs.minLspBalanceSat {
+            return false
+        }
+        if lhs.maxLspBalanceSat != rhs.maxLspBalanceSat {
+            return false
+        }
+        if lhs.maxClientBalanceSat != rhs.maxClientBalanceSat {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(defaultLspBalanceSat)
+        hasher.combine(minLspBalanceSat)
+        hasher.combine(maxLspBalanceSat)
+        hasher.combine(maxClientBalanceSat)
+    }
+}
+
+extension ChannelLiquidityOptions: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeChannelLiquidityOptions: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ChannelLiquidityOptions {
+        return
+            try ChannelLiquidityOptions(
+                defaultLspBalanceSat: FfiConverterUInt64.read(from: &buf), 
+                minLspBalanceSat: FfiConverterUInt64.read(from: &buf), 
+                maxLspBalanceSat: FfiConverterUInt64.read(from: &buf), 
+                maxClientBalanceSat: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ChannelLiquidityOptions, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.defaultLspBalanceSat, into: &buf)
+        FfiConverterUInt64.write(value.minLspBalanceSat, into: &buf)
+        FfiConverterUInt64.write(value.maxLspBalanceSat, into: &buf)
+        FfiConverterUInt64.write(value.maxClientBalanceSat, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeChannelLiquidityOptions_lift(_ buf: RustBuffer) throws -> ChannelLiquidityOptions {
+    return try FfiConverterTypeChannelLiquidityOptions.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeChannelLiquidityOptions_lower(_ value: ChannelLiquidityOptions) -> RustBuffer {
+    return FfiConverterTypeChannelLiquidityOptions.lower(value)
+}
+
+
+public struct ChannelLiquidityParams {
+    public var clientBalanceSat: UInt64
+    public var existingChannelsTotalSat: UInt64
+    public var minChannelSizeSat: UInt64
+    public var maxChannelSizeSat: UInt64
+    public var satsPerEur: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(clientBalanceSat: UInt64, existingChannelsTotalSat: UInt64, minChannelSizeSat: UInt64, maxChannelSizeSat: UInt64, satsPerEur: UInt64) {
+        self.clientBalanceSat = clientBalanceSat
+        self.existingChannelsTotalSat = existingChannelsTotalSat
+        self.minChannelSizeSat = minChannelSizeSat
+        self.maxChannelSizeSat = maxChannelSizeSat
+        self.satsPerEur = satsPerEur
+    }
+}
+
+#if compiler(>=6)
+extension ChannelLiquidityParams: Sendable {}
+#endif
+
+
+extension ChannelLiquidityParams: Equatable, Hashable {
+    public static func ==(lhs: ChannelLiquidityParams, rhs: ChannelLiquidityParams) -> Bool {
+        if lhs.clientBalanceSat != rhs.clientBalanceSat {
+            return false
+        }
+        if lhs.existingChannelsTotalSat != rhs.existingChannelsTotalSat {
+            return false
+        }
+        if lhs.minChannelSizeSat != rhs.minChannelSizeSat {
+            return false
+        }
+        if lhs.maxChannelSizeSat != rhs.maxChannelSizeSat {
+            return false
+        }
+        if lhs.satsPerEur != rhs.satsPerEur {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(clientBalanceSat)
+        hasher.combine(existingChannelsTotalSat)
+        hasher.combine(minChannelSizeSat)
+        hasher.combine(maxChannelSizeSat)
+        hasher.combine(satsPerEur)
+    }
+}
+
+extension ChannelLiquidityParams: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeChannelLiquidityParams: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ChannelLiquidityParams {
+        return
+            try ChannelLiquidityParams(
+                clientBalanceSat: FfiConverterUInt64.read(from: &buf), 
+                existingChannelsTotalSat: FfiConverterUInt64.read(from: &buf), 
+                minChannelSizeSat: FfiConverterUInt64.read(from: &buf), 
+                maxChannelSizeSat: FfiConverterUInt64.read(from: &buf), 
+                satsPerEur: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ChannelLiquidityParams, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.clientBalanceSat, into: &buf)
+        FfiConverterUInt64.write(value.existingChannelsTotalSat, into: &buf)
+        FfiConverterUInt64.write(value.minChannelSizeSat, into: &buf)
+        FfiConverterUInt64.write(value.maxChannelSizeSat, into: &buf)
+        FfiConverterUInt64.write(value.satsPerEur, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeChannelLiquidityParams_lift(_ buf: RustBuffer) throws -> ChannelLiquidityParams {
+    return try FfiConverterTypeChannelLiquidityParams.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeChannelLiquidityParams_lower(_ value: ChannelLiquidityParams) -> RustBuffer {
+    return FfiConverterTypeChannelLiquidityParams.lower(value)
+}
+
+
 public struct ClosedChannelDetails {
     public var channelId: String
     public var counterpartyNodeId: String
@@ -1981,6 +2165,86 @@ public func FfiConverterTypeDeepLinkResult_lift(_ buf: RustBuffer) throws -> Dee
 #endif
 public func FfiConverterTypeDeepLinkResult_lower(_ value: DeepLinkResult) -> RustBuffer {
     return FfiConverterTypeDeepLinkResult.lower(value)
+}
+
+
+public struct DefaultLspBalanceParams {
+    public var clientBalanceSat: UInt64
+    public var maxChannelSizeSat: UInt64
+    public var satsPerEur: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(clientBalanceSat: UInt64, maxChannelSizeSat: UInt64, satsPerEur: UInt64) {
+        self.clientBalanceSat = clientBalanceSat
+        self.maxChannelSizeSat = maxChannelSizeSat
+        self.satsPerEur = satsPerEur
+    }
+}
+
+#if compiler(>=6)
+extension DefaultLspBalanceParams: Sendable {}
+#endif
+
+
+extension DefaultLspBalanceParams: Equatable, Hashable {
+    public static func ==(lhs: DefaultLspBalanceParams, rhs: DefaultLspBalanceParams) -> Bool {
+        if lhs.clientBalanceSat != rhs.clientBalanceSat {
+            return false
+        }
+        if lhs.maxChannelSizeSat != rhs.maxChannelSizeSat {
+            return false
+        }
+        if lhs.satsPerEur != rhs.satsPerEur {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(clientBalanceSat)
+        hasher.combine(maxChannelSizeSat)
+        hasher.combine(satsPerEur)
+    }
+}
+
+extension DefaultLspBalanceParams: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeDefaultLspBalanceParams: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> DefaultLspBalanceParams {
+        return
+            try DefaultLspBalanceParams(
+                clientBalanceSat: FfiConverterUInt64.read(from: &buf), 
+                maxChannelSizeSat: FfiConverterUInt64.read(from: &buf), 
+                satsPerEur: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: DefaultLspBalanceParams, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.clientBalanceSat, into: &buf)
+        FfiConverterUInt64.write(value.maxChannelSizeSat, into: &buf)
+        FfiConverterUInt64.write(value.satsPerEur, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeDefaultLspBalanceParams_lift(_ buf: RustBuffer) throws -> DefaultLspBalanceParams {
+    return try FfiConverterTypeDefaultLspBalanceParams.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeDefaultLspBalanceParams_lower(_ value: DefaultLspBalanceParams) -> RustBuffer {
+    return FfiConverterTypeDefaultLspBalanceParams.lower(value)
 }
 
 
@@ -15875,6 +16139,13 @@ public func blocktankWipeAll()async throws   {
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
+public func calculateChannelLiquidityOptions(params: ChannelLiquidityParams) -> ChannelLiquidityOptions  {
+    return try!  FfiConverterTypeChannelLiquidityOptions_lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options(
+        FfiConverterTypeChannelLiquidityParams_lower(params),$0
+    )
+})
+}
 public func createChannelRequestUrl(k1: String, callback: String, localNodeId: String, isPrivate: Bool, cancel: Bool)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeLnurlError_lift) {
     uniffi_bitkitcore_fn_func_create_channel_request_url(
@@ -16119,6 +16390,13 @@ public func getClosedChannelById(channelId: String)throws  -> ClosedChannelDetai
     return try  FfiConverterOptionTypeClosedChannelDetails.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_closed_channel_by_id(
         FfiConverterString.lower(channelId),$0
+    )
+})
+}
+public func getDefaultLspBalance(params: DefaultLspBalanceParams) -> UInt64  {
+    return try!  FfiConverterUInt64.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_get_default_lsp_balance(
+        FfiConverterTypeDefaultLspBalanceParams_lower(params),$0
     )
 })
 }
@@ -16792,6 +17070,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -16868,6 +17149,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_default_lsp_balance() != 35903) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_gift() != 386) {

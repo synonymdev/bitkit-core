@@ -1132,6 +1132,10 @@ internal interface UniffiForeignFutureCompleteVoid: com.sun.jna.Callback {
 
 
 
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1190,6 +1194,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305.toShort()) {
@@ -1268,6 +1275,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_get_default_lsp_balance() != 35903.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_gift() != 386.toShort()) {
@@ -1463,6 +1473,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_blocktank_wipe_all(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_create_channel_request_url(
     ): Short
     @JvmStatic
@@ -1539,6 +1552,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_closed_channel_by_id(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_default_lsp_balance(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_gift(
@@ -1754,6 +1770,11 @@ internal object UniffiLib : Library {
     external fun uniffi_bitkitcore_fn_func_blocktank_wipe_all(
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options(
+        `params`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_create_channel_request_url(
         `k1`: RustBufferByValue,
         `callback`: RustBufferByValue,
@@ -1914,6 +1935,11 @@ internal object UniffiLib : Library {
         `channelId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_default_lsp_balance(
+        `params`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_gift(
         `giftId`: RustBufferByValue,
@@ -2891,6 +2917,65 @@ public object FfiConverterTypeAddressResponse: FfiConverterRustBuffer<AddressRes
 
 
 
+public object FfiConverterTypeChannelLiquidityOptions: FfiConverterRustBuffer<ChannelLiquidityOptions> {
+    override fun read(buf: ByteBuffer): ChannelLiquidityOptions {
+        return ChannelLiquidityOptions(
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ChannelLiquidityOptions): ULong = (
+            FfiConverterULong.allocationSize(value.`defaultLspBalanceSat`) +
+            FfiConverterULong.allocationSize(value.`minLspBalanceSat`) +
+            FfiConverterULong.allocationSize(value.`maxLspBalanceSat`) +
+            FfiConverterULong.allocationSize(value.`maxClientBalanceSat`)
+    )
+
+    override fun write(value: ChannelLiquidityOptions, buf: ByteBuffer) {
+        FfiConverterULong.write(value.`defaultLspBalanceSat`, buf)
+        FfiConverterULong.write(value.`minLspBalanceSat`, buf)
+        FfiConverterULong.write(value.`maxLspBalanceSat`, buf)
+        FfiConverterULong.write(value.`maxClientBalanceSat`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeChannelLiquidityParams: FfiConverterRustBuffer<ChannelLiquidityParams> {
+    override fun read(buf: ByteBuffer): ChannelLiquidityParams {
+        return ChannelLiquidityParams(
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ChannelLiquidityParams): ULong = (
+            FfiConverterULong.allocationSize(value.`clientBalanceSat`) +
+            FfiConverterULong.allocationSize(value.`existingChannelsTotalSat`) +
+            FfiConverterULong.allocationSize(value.`minChannelSizeSat`) +
+            FfiConverterULong.allocationSize(value.`maxChannelSizeSat`) +
+            FfiConverterULong.allocationSize(value.`satsPerEur`)
+    )
+
+    override fun write(value: ChannelLiquidityParams, buf: ByteBuffer) {
+        FfiConverterULong.write(value.`clientBalanceSat`, buf)
+        FfiConverterULong.write(value.`existingChannelsTotalSat`, buf)
+        FfiConverterULong.write(value.`minChannelSizeSat`, buf)
+        FfiConverterULong.write(value.`maxChannelSizeSat`, buf)
+        FfiConverterULong.write(value.`satsPerEur`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypeClosedChannelDetails: FfiConverterRustBuffer<ClosedChannelDetails> {
     override fun read(buf: ByteBuffer): ClosedChannelDetails {
         return ClosedChannelDetails(
@@ -3123,6 +3208,31 @@ public object FfiConverterTypeDeepLinkResult: FfiConverterRustBuffer<DeepLinkRes
     override fun write(value: DeepLinkResult, buf: ByteBuffer) {
         FfiConverterString.write(value.`url`, buf)
         FfiConverterString.write(value.`requestId`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeDefaultLspBalanceParams: FfiConverterRustBuffer<DefaultLspBalanceParams> {
+    override fun read(buf: ByteBuffer): DefaultLspBalanceParams {
+        return DefaultLspBalanceParams(
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: DefaultLspBalanceParams): ULong = (
+            FfiConverterULong.allocationSize(value.`clientBalanceSat`) +
+            FfiConverterULong.allocationSize(value.`maxChannelSizeSat`) +
+            FfiConverterULong.allocationSize(value.`satsPerEur`)
+    )
+
+    override fun write(value: DefaultLspBalanceParams, buf: ByteBuffer) {
+        FfiConverterULong.write(value.`clientBalanceSat`, buf)
+        FfiConverterULong.write(value.`maxChannelSizeSat`, buf)
+        FfiConverterULong.write(value.`satsPerEur`, buf)
     }
 }
 
@@ -9836,6 +9946,15 @@ public suspend fun `blocktankWipeAll`() {
     )
 }
 
+public fun `calculateChannelLiquidityOptions`(`params`: ChannelLiquidityParams): ChannelLiquidityOptions {
+    return FfiConverterTypeChannelLiquidityOptions.lift(uniffiRustCall { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options(
+            FfiConverterTypeChannelLiquidityParams.lower(`params`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
 @Throws(LnurlException::class)
 public fun `createChannelRequestUrl`(`k1`: kotlin.String, `callback`: kotlin.String, `localNodeId`: kotlin.String, `isPrivate`: kotlin.Boolean, `cancel`: kotlin.Boolean): kotlin.String {
     return FfiConverterString.lift(uniffiRustCallWithError(LnurlExceptionErrorHandler) { uniffiRustCallStatus ->
@@ -10168,6 +10287,15 @@ public fun `getClosedChannelById`(`channelId`: kotlin.String): ClosedChannelDeta
     return FfiConverterOptionalTypeClosedChannelDetails.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id(
             FfiConverterString.lower(`channelId`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+public fun `getDefaultLspBalance`(`params`: DefaultLspBalanceParams): kotlin.ULong {
+    return FfiConverterULong.lift(uniffiRustCall { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_get_default_lsp_balance(
+            FfiConverterTypeDefaultLspBalanceParams.lower(`params`),
             uniffiRustCallStatus,
         )
     })

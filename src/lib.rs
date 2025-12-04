@@ -11,7 +11,7 @@ pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata};
-use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift};
+use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
 use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse};
 pub use crate::onchain::WordCount;
 
@@ -1570,4 +1570,16 @@ pub async fn wipe_all_databases() -> Result<String, DbError> {
     }).await.unwrap()?;
 
     Ok("All databases wiped successfully".to_string())
+}
+
+#[uniffi::export]
+pub fn calculate_channel_liquidity_options(
+    params: ChannelLiquidityParams,
+) -> ChannelLiquidityOptions {
+    crate::modules::blocktank::calculate_channel_liquidity_options(params)
+}
+
+#[uniffi::export]
+pub fn get_default_lsp_balance(params: DefaultLspBalanceParams) -> u64 {
+    crate::modules::blocktank::get_default_lsp_balance(params)
 }

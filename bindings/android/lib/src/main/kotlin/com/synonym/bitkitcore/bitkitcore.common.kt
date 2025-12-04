@@ -236,6 +236,31 @@ public data class AddressResponse (
 
 
 @kotlinx.serialization.Serializable
+public data class ChannelLiquidityOptions (
+    val `defaultLspBalanceSat`: kotlin.ULong, 
+    val `minLspBalanceSat`: kotlin.ULong, 
+    val `maxLspBalanceSat`: kotlin.ULong, 
+    val `maxClientBalanceSat`: kotlin.ULong
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class ChannelLiquidityParams (
+    val `clientBalanceSat`: kotlin.ULong, 
+    val `existingChannelsTotalSat`: kotlin.ULong, 
+    val `minChannelSizeSat`: kotlin.ULong, 
+    val `maxChannelSizeSat`: kotlin.ULong, 
+    val `satsPerEur`: kotlin.ULong
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
 public data class ClosedChannelDetails (
     val `channelId`: kotlin.String, 
     val `counterpartyNodeId`: kotlin.String, 
@@ -378,6 +403,17 @@ public data class DeepLinkResult (
      * The request ID used (either provided or auto-generated)
      */
     val `requestId`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class DefaultLspBalanceParams (
+    val `clientBalanceSat`: kotlin.ULong, 
+    val `maxChannelSizeSat`: kotlin.ULong, 
+    val `satsPerEur`: kotlin.ULong
 ) {
     public companion object
 }
