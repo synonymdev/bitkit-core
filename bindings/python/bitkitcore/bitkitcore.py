@@ -475,6 +475,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_create_cjit_entry() != 51504:
@@ -526,6 +528,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_get_cjit_entries() != 29342:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_default_lsp_balance() != 35903:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_gift() != 386:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -775,6 +779,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_remove_all_orders.restype = ctype
 _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_wipe_all.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_wipe_all.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_create_channel_request_url.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -936,6 +945,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_default_lsp_balance.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_default_lsp_balance.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_get_gift.argtypes = (
     _UniffiRustBuffer,
 )
@@ -1584,6 +1598,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders.restype =
 _UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_channel_request_url.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_channel_request_url.restype = ctypes.c_uint16
@@ -1662,6 +1679,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_cjit_entries.restype = ctypes.c_u
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_closed_channel_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_closed_channel_by_id.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_default_lsp_balance.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_default_lsp_balance.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_gift.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_gift.restype = ctypes.c_uint16
@@ -2334,6 +2354,113 @@ class _UniffiConverterTypeAddressResponse(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.serialized_path, buf)
 
 
+class ChannelLiquidityOptions:
+    default_lsp_balance_sat: "int"
+    min_lsp_balance_sat: "int"
+    max_lsp_balance_sat: "int"
+    max_client_balance_sat: "int"
+    def __init__(self, *, default_lsp_balance_sat: "int", min_lsp_balance_sat: "int", max_lsp_balance_sat: "int", max_client_balance_sat: "int"):
+        self.default_lsp_balance_sat = default_lsp_balance_sat
+        self.min_lsp_balance_sat = min_lsp_balance_sat
+        self.max_lsp_balance_sat = max_lsp_balance_sat
+        self.max_client_balance_sat = max_client_balance_sat
+
+    def __str__(self):
+        return "ChannelLiquidityOptions(default_lsp_balance_sat={}, min_lsp_balance_sat={}, max_lsp_balance_sat={}, max_client_balance_sat={})".format(self.default_lsp_balance_sat, self.min_lsp_balance_sat, self.max_lsp_balance_sat, self.max_client_balance_sat)
+
+    def __eq__(self, other):
+        if self.default_lsp_balance_sat != other.default_lsp_balance_sat:
+            return False
+        if self.min_lsp_balance_sat != other.min_lsp_balance_sat:
+            return False
+        if self.max_lsp_balance_sat != other.max_lsp_balance_sat:
+            return False
+        if self.max_client_balance_sat != other.max_client_balance_sat:
+            return False
+        return True
+
+class _UniffiConverterTypeChannelLiquidityOptions(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return ChannelLiquidityOptions(
+            default_lsp_balance_sat=_UniffiConverterUInt64.read(buf),
+            min_lsp_balance_sat=_UniffiConverterUInt64.read(buf),
+            max_lsp_balance_sat=_UniffiConverterUInt64.read(buf),
+            max_client_balance_sat=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.default_lsp_balance_sat)
+        _UniffiConverterUInt64.check_lower(value.min_lsp_balance_sat)
+        _UniffiConverterUInt64.check_lower(value.max_lsp_balance_sat)
+        _UniffiConverterUInt64.check_lower(value.max_client_balance_sat)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.default_lsp_balance_sat, buf)
+        _UniffiConverterUInt64.write(value.min_lsp_balance_sat, buf)
+        _UniffiConverterUInt64.write(value.max_lsp_balance_sat, buf)
+        _UniffiConverterUInt64.write(value.max_client_balance_sat, buf)
+
+
+class ChannelLiquidityParams:
+    client_balance_sat: "int"
+    existing_channels_total_sat: "int"
+    min_channel_size_sat: "int"
+    max_channel_size_sat: "int"
+    sats_per_eur: "int"
+    def __init__(self, *, client_balance_sat: "int", existing_channels_total_sat: "int", min_channel_size_sat: "int", max_channel_size_sat: "int", sats_per_eur: "int"):
+        self.client_balance_sat = client_balance_sat
+        self.existing_channels_total_sat = existing_channels_total_sat
+        self.min_channel_size_sat = min_channel_size_sat
+        self.max_channel_size_sat = max_channel_size_sat
+        self.sats_per_eur = sats_per_eur
+
+    def __str__(self):
+        return "ChannelLiquidityParams(client_balance_sat={}, existing_channels_total_sat={}, min_channel_size_sat={}, max_channel_size_sat={}, sats_per_eur={})".format(self.client_balance_sat, self.existing_channels_total_sat, self.min_channel_size_sat, self.max_channel_size_sat, self.sats_per_eur)
+
+    def __eq__(self, other):
+        if self.client_balance_sat != other.client_balance_sat:
+            return False
+        if self.existing_channels_total_sat != other.existing_channels_total_sat:
+            return False
+        if self.min_channel_size_sat != other.min_channel_size_sat:
+            return False
+        if self.max_channel_size_sat != other.max_channel_size_sat:
+            return False
+        if self.sats_per_eur != other.sats_per_eur:
+            return False
+        return True
+
+class _UniffiConverterTypeChannelLiquidityParams(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return ChannelLiquidityParams(
+            client_balance_sat=_UniffiConverterUInt64.read(buf),
+            existing_channels_total_sat=_UniffiConverterUInt64.read(buf),
+            min_channel_size_sat=_UniffiConverterUInt64.read(buf),
+            max_channel_size_sat=_UniffiConverterUInt64.read(buf),
+            sats_per_eur=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.client_balance_sat)
+        _UniffiConverterUInt64.check_lower(value.existing_channels_total_sat)
+        _UniffiConverterUInt64.check_lower(value.min_channel_size_sat)
+        _UniffiConverterUInt64.check_lower(value.max_channel_size_sat)
+        _UniffiConverterUInt64.check_lower(value.sats_per_eur)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.client_balance_sat, buf)
+        _UniffiConverterUInt64.write(value.existing_channels_total_sat, buf)
+        _UniffiConverterUInt64.write(value.min_channel_size_sat, buf)
+        _UniffiConverterUInt64.write(value.max_channel_size_sat, buf)
+        _UniffiConverterUInt64.write(value.sats_per_eur, buf)
+
+
 class ClosedChannelDetails:
     channel_id: "str"
     counterparty_node_id: "str"
@@ -2848,6 +2975,49 @@ class _UniffiConverterTypeDeepLinkResult(_UniffiConverterRustBuffer):
     def write(value, buf):
         _UniffiConverterString.write(value.url, buf)
         _UniffiConverterString.write(value.request_id, buf)
+
+
+class DefaultLspBalanceParams:
+    client_balance_sat: "int"
+    max_channel_size_sat: "int"
+    sats_per_eur: "int"
+    def __init__(self, *, client_balance_sat: "int", max_channel_size_sat: "int", sats_per_eur: "int"):
+        self.client_balance_sat = client_balance_sat
+        self.max_channel_size_sat = max_channel_size_sat
+        self.sats_per_eur = sats_per_eur
+
+    def __str__(self):
+        return "DefaultLspBalanceParams(client_balance_sat={}, max_channel_size_sat={}, sats_per_eur={})".format(self.client_balance_sat, self.max_channel_size_sat, self.sats_per_eur)
+
+    def __eq__(self, other):
+        if self.client_balance_sat != other.client_balance_sat:
+            return False
+        if self.max_channel_size_sat != other.max_channel_size_sat:
+            return False
+        if self.sats_per_eur != other.sats_per_eur:
+            return False
+        return True
+
+class _UniffiConverterTypeDefaultLspBalanceParams(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return DefaultLspBalanceParams(
+            client_balance_sat=_UniffiConverterUInt64.read(buf),
+            max_channel_size_sat=_UniffiConverterUInt64.read(buf),
+            sats_per_eur=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.client_balance_sat)
+        _UniffiConverterUInt64.check_lower(value.max_channel_size_sat)
+        _UniffiConverterUInt64.check_lower(value.sats_per_eur)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.client_balance_sat, buf)
+        _UniffiConverterUInt64.write(value.max_channel_size_sat, buf)
+        _UniffiConverterUInt64.write(value.sats_per_eur, buf)
 
 
 class DeviceParams:
@@ -14130,6 +14300,13 @@ _UniffiConverterTypeBlocktankError,
 
     )
 
+def calculate_channel_liquidity_options(params: "ChannelLiquidityParams") -> "ChannelLiquidityOptions":
+    _UniffiConverterTypeChannelLiquidityParams.check_lower(params)
+    
+    return _UniffiConverterTypeChannelLiquidityOptions.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options,
+        _UniffiConverterTypeChannelLiquidityParams.lower(params)))
+
+
 def create_channel_request_url(k1: "str",callback: "str",local_node_id: "str",is_private: "bool",cancel: "bool") -> "str":
     _UniffiConverterString.check_lower(k1)
     
@@ -14481,6 +14658,13 @@ def get_closed_channel_by_id(channel_id: "str") -> "typing.Optional[ClosedChanne
     
     return _UniffiConverterOptionalTypeClosedChannelDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id,
         _UniffiConverterString.lower(channel_id)))
+
+
+def get_default_lsp_balance(params: "DefaultLspBalanceParams") -> "int":
+    _UniffiConverterTypeDefaultLspBalanceParams.check_lower(params)
+    
+    return _UniffiConverterUInt64.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_get_default_lsp_balance,
+        _UniffiConverterTypeDefaultLspBalanceParams.lower(params)))
 
 async def get_gift(gift_id: "str") -> "IGift":
 
@@ -15483,6 +15667,8 @@ __all__ = [
     "ActivityTags",
     "AddressInfo",
     "AddressResponse",
+    "ChannelLiquidityOptions",
+    "ChannelLiquidityParams",
     "ClosedChannelDetails",
     "CoinPurchaseMemo",
     "CommonParams",
@@ -15490,6 +15676,7 @@ __all__ = [
     "CreateCjitOptions",
     "CreateOrderOptions",
     "DeepLinkResult",
+    "DefaultLspBalanceParams",
     "DeviceParams",
     "ErrorData",
     "FeatureResponse",
@@ -15563,6 +15750,7 @@ __all__ = [
     "blocktank_remove_all_cjit_entries",
     "blocktank_remove_all_orders",
     "blocktank_wipe_all",
+    "calculate_channel_liquidity_options",
     "create_channel_request_url",
     "create_cjit_entry",
     "create_order",
@@ -15589,6 +15777,7 @@ __all__ = [
     "get_bip39_wordlist",
     "get_cjit_entries",
     "get_closed_channel_by_id",
+    "get_default_lsp_balance",
     "get_gift",
     "get_info",
     "get_lnurl_invoice",

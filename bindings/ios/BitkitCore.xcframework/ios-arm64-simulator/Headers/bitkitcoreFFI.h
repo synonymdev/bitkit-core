@@ -290,6 +290,11 @@ uint64_t uniffi_bitkitcore_fn_func_blocktank_wipe_all(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CALCULATE_CHANNEL_LIQUIDITY_OPTIONS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CALCULATE_CHANNEL_LIQUIDITY_OPTIONS
+RustBuffer uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options(RustBuffer params, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CREATE_CHANNEL_REQUEST_URL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CREATE_CHANNEL_REQUEST_URL
 RustBuffer uniffi_bitkitcore_fn_func_create_channel_request_url(RustBuffer k1, RustBuffer callback, RustBuffer local_node_id, int8_t is_private, int8_t cancel, RustCallStatus *_Nonnull out_status
@@ -422,6 +427,11 @@ uint64_t uniffi_bitkitcore_fn_func_get_cjit_entries(RustBuffer entry_ids, RustBu
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_CLOSED_CHANNEL_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_CLOSED_CHANNEL_BY_ID
 RustBuffer uniffi_bitkitcore_fn_func_get_closed_channel_by_id(RustBuffer channel_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_LSP_BALANCE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_LSP_BALANCE
+uint64_t uniffi_bitkitcore_fn_func_get_default_lsp_balance(RustBuffer params, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_GIFT
@@ -1030,6 +1040,12 @@ uint16_t uniffi_bitkitcore_checksum_func_blocktank_wipe_all(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CALCULATE_CHANNEL_LIQUIDITY_OPTIONS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CALCULATE_CHANNEL_LIQUIDITY_OPTIONS
+uint16_t uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CREATE_CHANNEL_REQUEST_URL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CREATE_CHANNEL_REQUEST_URL
 uint16_t uniffi_bitkitcore_checksum_func_create_channel_request_url(void
@@ -1183,6 +1199,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_cjit_entries(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CLOSED_CHANNEL_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CLOSED_CHANNEL_BY_ID
 uint16_t uniffi_bitkitcore_checksum_func_get_closed_channel_by_id(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_LSP_BALANCE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_LSP_BALANCE
+uint16_t uniffi_bitkitcore_checksum_func_get_default_lsp_balance(void
     
 );
 #endif

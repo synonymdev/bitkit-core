@@ -6,6 +6,10 @@ const STAGING_SERVER: &str = "https://api.stag.blocktank.to/blocktank/api/v2";
 mod tests {
     use rust_blocktank_client::*;
     use crate::modules::blocktank::{BlocktankDB, BlocktankError};
+    use crate::modules::blocktank::liquidity::{
+        calculate_channel_liquidity_options, ChannelLiquidityParams,
+        get_default_lsp_balance, DefaultLspBalanceParams,
+    };
     use super::*;
 
     #[tokio::test]
@@ -1918,5 +1922,291 @@ mod tests {
                 },
             },
         }
+    }
+
+    // Test rate: 1000 sats per EUR (for easy math)
+    const TEST_SATS_PER_EUR: u64 = 1000;
+
+    #[test]
+    fn test_default_lsp_balance_small_client_balance() {
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 100_000,
+            existing_channels_total_sat: 0,
+            min_channel_size_sat: 100_000,
+            max_channel_size_sat: 1_020_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+        let options = calculate_channel_liquidity_options(params);
+        // 0-225€: fill to 450€, so LSP = 450k - 100k = 350k
+        assert_eq!(options.default_lsp_balance_sat, 350_000);
+    }
+
+    #[test]
+    fn test_default_lsp_balance_medium_client_balance() {
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 300_000,
+            existing_channels_total_sat: 0,
+            min_channel_size_sat: 100_000,
+            max_channel_size_sat: 1_020_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+        let options = calculate_channel_liquidity_options(params);
+        // 225-495€: 1:1 ratio
+        assert_eq!(options.default_lsp_balance_sat, 300_000);
+    }
+
+    #[test]
+    fn test_default_lsp_balance_large_client_balance() {
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 600_000,
+            existing_channels_total_sat: 0,
+            min_channel_size_sat: 100_000,
+            max_channel_size_sat: 970_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+        let options = calculate_channel_liquidity_options(params);
+        // 495€+: max out, max_channel = 970k * 0.98 = 950.6k, max_lsp = 950.6k - 600k = 350.6k
+        assert_eq!(options.default_lsp_balance_sat, 350_600);
+    }
+
+    #[test]
+    fn test_min_lsp_balance_ldk_reserve() {
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 1_000_000,
+            existing_channels_total_sat: 0,
+            min_channel_size_sat: 100_000,
+            max_channel_size_sat: 2_000_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+        let options = calculate_channel_liquidity_options(params);
+        // LDK reserve: 2.5% of 1M = 25k
+        assert_eq!(options.min_lsp_balance_sat, 25_000);
+    }
+
+    #[test]
+    fn test_min_lsp_balance_channel_minimum() {
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 50_000,
+            existing_channels_total_sat: 0,
+            min_channel_size_sat: 200_000,
+            max_channel_size_sat: 1_000_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+        let options = calculate_channel_liquidity_options(params);
+        // Channel minimum: 200k - 50k = 150k needed
+        assert_eq!(options.min_lsp_balance_sat, 150_000);
+    }
+
+    #[test]
+    fn test_max_client_balance() {
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 0,
+            existing_channels_total_sat: 0,
+            min_channel_size_sat: 100_000,
+            max_channel_size_sat: 1_020_408,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+        let options = calculate_channel_liquidity_options(params);
+        // max_channel = 1_020_408 * 0.98 = 999,999.84 ≈ 1M
+        // max_client = 97.5% of ~1M = 975k
+        assert_eq!(options.max_client_balance_sat, 975_000);
+    }
+
+    #[test]
+    fn test_full_calculation_with_existing_channels() {
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 200_000,
+            existing_channels_total_sat: 300_000,
+            min_channel_size_sat: 100_000,
+            max_channel_size_sat: 1_000_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+
+        let options = calculate_channel_liquidity_options(params);
+
+        // max_channel = 1M * 0.98 = 980k, then 980k - 300k existing = 680k
+        // default = 450k - 200k = 250k (below threshold_1)
+        // min = max(200k * 0.025, 100k - 200k) = max(5k, 0) = 5k
+        // max_lsp = 680k - 200k = 480k
+        // max_client = 680k * 0.975 = 663k
+
+        assert_eq!(options.default_lsp_balance_sat, 250_000);
+        assert_eq!(options.min_lsp_balance_sat, 5_000);
+        assert_eq!(options.max_lsp_balance_sat, 480_000);
+        assert_eq!(options.max_client_balance_sat, 663_000);
+    }
+
+    #[test]
+    fn test_boundary_at_threshold_1() {
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 225_000, // exactly 225€
+            existing_channels_total_sat: 0,
+            min_channel_size_sat: 100_000,
+            max_channel_size_sat: 1_020_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+        let options = calculate_channel_liquidity_options(params);
+        // 225 is NOT > 225, so fills to 450: LSP = 450 - 225 = 225
+        assert_eq!(options.default_lsp_balance_sat, 225_000);
+    }
+
+    #[test]
+    fn test_boundary_at_threshold_2() {
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 495_000, // exactly 495€
+            existing_channels_total_sat: 0,
+            min_channel_size_sat: 100_000,
+            max_channel_size_sat: 970_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+        let options = calculate_channel_liquidity_options(params);
+        // At exactly 495€ with > (not >=): uses 1:1 ratio = 495k
+        // But capped by max_lsp = 950.6k - 495k = 455.6k
+        assert_eq!(options.default_lsp_balance_sat, 455_600);
+    }
+
+    #[test]
+    fn test_policy_example_1_client_200() {
+        // Policy example: Client = 200€, LSP = 250€ (fill to 450)
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 200_000,
+            existing_channels_total_sat: 0,
+            min_channel_size_sat: 100_000,
+            max_channel_size_sat: 970_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+
+        let options = calculate_channel_liquidity_options(params);
+        assert_eq!(options.default_lsp_balance_sat, 250_000);
+    }
+
+    #[test]
+    fn test_policy_example_2_client_300() {
+        // Policy example: Client = 300€, LSP = 300€ (1:1 ratio)
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 300_000,
+            existing_channels_total_sat: 0,
+            min_channel_size_sat: 100_000,
+            max_channel_size_sat: 970_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+
+        let options = calculate_channel_liquidity_options(params);
+        assert_eq!(options.default_lsp_balance_sat, 300_000);
+    }
+
+    #[test]
+    fn test_policy_example_3_client_600() {
+        // Policy example: Client = 600€, LSP = 350€ (max out to 950)
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 600_000,
+            existing_channels_total_sat: 0,
+            min_channel_size_sat: 100_000,
+            max_channel_size_sat: 970_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+
+        let options = calculate_channel_liquidity_options(params);
+        // max_channel = 970k * 0.98 = 950.6k, max_lsp = 950.6k - 600k = 350.6k
+        assert_eq!(options.default_lsp_balance_sat, 350_600);
+    }
+
+    #[test]
+    fn test_two_channels_scenario() {
+        // Policy: User can open 2 channels of 450€ each (total 900€)
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 100_000,
+            existing_channels_total_sat: 450_000,
+            min_channel_size_sat: 100_000,
+            max_channel_size_sat: 970_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+
+        let options = calculate_channel_liquidity_options(params);
+
+        // max_channel = 970k * 0.98 - 450k = 500.6k remaining
+        // default = 450k - 100k = 350k (fill to 450)
+        // max_lsp = 500.6k - 100k = 400.6k
+        assert_eq!(options.default_lsp_balance_sat, 350_000);
+        assert_eq!(options.max_lsp_balance_sat, 400_600);
+    }
+
+    #[test]
+    fn test_existing_channels_near_limit() {
+        // User already has 900€ in channels, very limited remaining
+        let params = ChannelLiquidityParams {
+            client_balance_sat: 30_000,
+            existing_channels_total_sat: 900_000,
+            min_channel_size_sat: 50_000,
+            max_channel_size_sat: 970_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+
+        let options = calculate_channel_liquidity_options(params);
+
+        // max_channel = 970k * 0.98 - 900k = 50.6k remaining
+        // default would be 450k - 30k = 420k, but capped to max_lsp
+        // max_lsp = 50.6k - 30k = 20.6k
+        assert_eq!(options.default_lsp_balance_sat, 20_600);
+        assert_eq!(options.max_lsp_balance_sat, 20_600);
+    }
+
+    // Simple default LSP balance tests (for CJIT channels)
+
+    #[test]
+    fn test_simple_default_lsp_balance_small_amount() {
+        let params = DefaultLspBalanceParams {
+            client_balance_sat: 100_000,
+            max_channel_size_sat: 1_000_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+        // default_target = 450€ = 450_000 sats
+        // result = 450_000 - 100_000 = 350_000
+        assert_eq!(get_default_lsp_balance(params), 350_000);
+    }
+
+    #[test]
+    fn test_simple_default_lsp_balance_medium_amount() {
+        let params = DefaultLspBalanceParams {
+            client_balance_sat: 300_000, // 300€, between 225€ and 495€
+            max_channel_size_sat: 1_000_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+        // 1:1 ratio
+        assert_eq!(get_default_lsp_balance(params), 300_000);
+    }
+
+    #[test]
+    fn test_simple_default_lsp_balance_large_amount() {
+        let params = DefaultLspBalanceParams {
+            client_balance_sat: 600_000, // 600€, above 495€
+            max_channel_size_sat: 1_000_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+        // use max
+        assert_eq!(get_default_lsp_balance(params), 1_000_000);
+    }
+
+    #[test]
+    fn test_simple_default_lsp_balance_capped_by_max() {
+        let params = DefaultLspBalanceParams {
+            client_balance_sat: 100_000,
+            max_channel_size_sat: 200_000, // Small max
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+        // default would be 350_000 but capped at 200_000
+        assert_eq!(get_default_lsp_balance(params), 200_000);
+    }
+
+    #[test]
+    fn test_simple_default_lsp_balance_zero_client() {
+        // Use case: calculating minimum CJIT sats
+        let params = DefaultLspBalanceParams {
+            client_balance_sat: 0,
+            max_channel_size_sat: 1_000_000,
+            sats_per_eur: TEST_SATS_PER_EUR,
+        };
+        // default_target = 450€ = 450_000 sats
+        assert_eq!(get_default_lsp_balance(params), 450_000);
     }
 }
