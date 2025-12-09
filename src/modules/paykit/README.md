@@ -1,4 +1,4 @@
-s# Paykit Module
+# Paykit Module
 
 This module provides UniFFI bindings for the [paykit-rs](https://github.com/pubky/paykit-rs) library, enabling Bitkit to interact with Pubky homeservers for payment endpoint management.
 
