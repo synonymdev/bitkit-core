@@ -42,6 +42,14 @@ fn handle_decode_result(result: Result<Scanner, DecodingError>) {
             println!("Data: {}", data);
         }
 
+        Ok(Scanner::PaykitSession { data }) => {
+            println!("\nSuccessfully decoded Paykit Session:");
+            println!("URL: {}", data.url);
+            println!("Action: {}", data.action);
+            println!("Token: {}", data.token);
+            println!("Parameters: {:?}", data.parameters);
+        }
+
         Ok(Scanner::LnurlChannel { data }) => {
             println!("\nSuccessfully decoded LNURL-channel:");
             println!("URI: {}", data.uri);
