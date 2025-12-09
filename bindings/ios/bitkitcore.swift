@@ -448,6 +448,22 @@ fileprivate struct FfiConverterUInt64: FfiConverterPrimitive {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterInt64: FfiConverterPrimitive {
+    typealias FfiType = Int64
+    typealias SwiftType = Int64
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Int64 {
+        return try lift(readInt(&buf))
+    }
+
+    public static func write(_ value: Int64, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterDouble: FfiConverterPrimitive {
     typealias FfiType = Double
     typealias SwiftType = Double
@@ -543,6 +559,464 @@ fileprivate struct FfiConverterData: FfiConverterRustBuffer {
         writeBytes(&buf, value)
     }
 }
+
+
+
+
+/**
+ * Authenticated transport wrapper for Paykit write operations.
+ */
+public protocol PubkyAuthenticatedTransportProtocol: AnyObject, Sendable {
+    
+    /**
+     * Removes a payment endpoint.
+     *
+     * # Parameters
+     * - `method`: Payment method identifier to remove
+     *
+     * # Returns
+     * - `Ok(())` on successful removal
+     * - `Err` if the endpoint doesn't exist or transport fails
+     */
+    func removePaymentEndpoint(method: MethodId) async throws 
+    
+    /**
+     * Stores or updates a payment endpoint.
+     *
+     * # Parameters
+     * - `method`: Payment method identifier (e.g., "lightning", "onchain")
+     * - `data`: Endpoint data payload (UTF-8 JSON or other text format)
+     */
+    func setPaymentEndpoint(method: MethodId, data: EndpointData) async throws 
+    
+}
+/**
+ * Authenticated transport wrapper for Paykit write operations.
+ */
+open class PubkyAuthenticatedTransport: PubkyAuthenticatedTransportProtocol, @unchecked Sendable {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_bitkitcore_fn_clone_pubkyauthenticatedtransport(self.pointer, $0) }
+    }
+    /**
+     * Creates a new authenticated transport.
+     * Note: This requires proper session initialization which should be handled
+     * by the application layer. For now, this returns an error indicating the
+     * need for external session management.
+     */
+public convenience init()throws  {
+    let pointer =
+        try rustCallWithError(FfiConverterTypePaykitError_lift) {
+    uniffi_bitkitcore_fn_constructor_pubkyauthenticatedtransport_new($0
+    )
+}
+    self.init(unsafeFromRawPointer: pointer)
+}
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_bitkitcore_fn_free_pubkyauthenticatedtransport(pointer, $0) }
+    }
+
+    
+
+    
+    /**
+     * Removes a payment endpoint.
+     *
+     * # Parameters
+     * - `method`: Payment method identifier to remove
+     *
+     * # Returns
+     * - `Ok(())` on successful removal
+     * - `Err` if the endpoint doesn't exist or transport fails
+     */
+open func removePaymentEndpoint(method: MethodId)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_pubkyauthenticatedtransport_remove_payment_endpoint(
+                    self.uniffiClonePointer(),
+                    FfiConverterTypeMethodId_lower(method)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypePaykitError_lift
+        )
+}
+    
+    /**
+     * Stores or updates a payment endpoint.
+     *
+     * # Parameters
+     * - `method`: Payment method identifier (e.g., "lightning", "onchain")
+     * - `data`: Endpoint data payload (UTF-8 JSON or other text format)
+     */
+open func setPaymentEndpoint(method: MethodId, data: EndpointData)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_pubkyauthenticatedtransport_set_payment_endpoint(
+                    self.uniffiClonePointer(),
+                    FfiConverterTypeMethodId_lower(method),FfiConverterTypeEndpointData_lower(data)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypePaykitError_lift
+        )
+}
+    
+
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePubkyAuthenticatedTransport: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = PubkyAuthenticatedTransport
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> PubkyAuthenticatedTransport {
+        return PubkyAuthenticatedTransport(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: PubkyAuthenticatedTransport) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PubkyAuthenticatedTransport {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: PubkyAuthenticatedTransport, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyAuthenticatedTransport_lift(_ pointer: UnsafeMutableRawPointer) throws -> PubkyAuthenticatedTransport {
+    return try FfiConverterTypePubkyAuthenticatedTransport.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyAuthenticatedTransport_lower(_ value: PubkyAuthenticatedTransport) -> UnsafeMutableRawPointer {
+    return FfiConverterTypePubkyAuthenticatedTransport.lower(value)
+}
+
+
+
+
+
+
+/**
+ * Unauthenticated transport wrapper for Paykit read operations.
+ */
+public protocol PubkyUnauthenticatedTransportProtocol: AnyObject, Sendable {
+    
+    /**
+     * Returns known contacts (follows) of a given public key.
+     *
+     * # Parameters
+     * - `key`: Public key to query for contacts
+     *
+     * # Returns
+     * - `Ok(Vec<PublicKey>)` with list of known contacts
+     * - Returns empty vector if no contacts are stored
+     * - `Err` only on transport failures
+     */
+    func getKnownContacts(key: PublicKey) async throws  -> [PublicKey]
+    
+    /**
+     * Retrieves a specific payment endpoint for a payee and method.
+     *
+     * # Parameters
+     * - `payee`: Public key of the payee
+     * - `method`: Payment method identifier to query
+     *
+     * # Returns
+     * - `Ok(Some(EndpointData))` if the endpoint exists
+     * - `Ok(None)` if the endpoint is not published
+     * - `Err` only on transport failures
+     */
+    func getPaymentEndpoint(payee: PublicKey, method: MethodId) async throws  -> EndpointData?
+    
+    /**
+     * Retrieves all supported payment methods for a given payee.
+     *
+     * # Parameters
+     * - `payee`: Public key of the payee to query
+     *
+     * # Returns
+     * - `Ok(SupportedPayments)` with map of method IDs to endpoint data
+     * - Returns empty map if no endpoints are published
+     * - `Err` only on transport failures
+     */
+    func getPaymentList(payee: PublicKey) async throws  -> SupportedPayments
+    
+}
+/**
+ * Unauthenticated transport wrapper for Paykit read operations.
+ */
+open class PubkyUnauthenticatedTransport: PubkyUnauthenticatedTransportProtocol, @unchecked Sendable {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_bitkitcore_fn_clone_pubkyunauthenticatedtransport(self.pointer, $0) }
+    }
+    /**
+     * Creates a new unauthenticated transport for reading public payment data.
+     */
+public convenience init()throws  {
+    let pointer =
+        try rustCallWithError(FfiConverterTypePaykitError_lift) {
+    uniffi_bitkitcore_fn_constructor_pubkyunauthenticatedtransport_new($0
+    )
+}
+    self.init(unsafeFromRawPointer: pointer)
+}
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_bitkitcore_fn_free_pubkyunauthenticatedtransport(pointer, $0) }
+    }
+
+    
+
+    
+    /**
+     * Returns known contacts (follows) of a given public key.
+     *
+     * # Parameters
+     * - `key`: Public key to query for contacts
+     *
+     * # Returns
+     * - `Ok(Vec<PublicKey>)` with list of known contacts
+     * - Returns empty vector if no contacts are stored
+     * - `Err` only on transport failures
+     */
+open func getKnownContacts(key: PublicKey)async throws  -> [PublicKey]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_known_contacts(
+                    self.uniffiClonePointer(),
+                    FfiConverterTypePublicKey_lower(key)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypePublicKey.lift,
+            errorHandler: FfiConverterTypePaykitError_lift
+        )
+}
+    
+    /**
+     * Retrieves a specific payment endpoint for a payee and method.
+     *
+     * # Parameters
+     * - `payee`: Public key of the payee
+     * - `method`: Payment method identifier to query
+     *
+     * # Returns
+     * - `Ok(Some(EndpointData))` if the endpoint exists
+     * - `Ok(None)` if the endpoint is not published
+     * - `Err` only on transport failures
+     */
+open func getPaymentEndpoint(payee: PublicKey, method: MethodId)async throws  -> EndpointData?  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_payment_endpoint(
+                    self.uniffiClonePointer(),
+                    FfiConverterTypePublicKey_lower(payee),FfiConverterTypeMethodId_lower(method)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypeEndpointData.lift,
+            errorHandler: FfiConverterTypePaykitError_lift
+        )
+}
+    
+    /**
+     * Retrieves all supported payment methods for a given payee.
+     *
+     * # Parameters
+     * - `payee`: Public key of the payee to query
+     *
+     * # Returns
+     * - `Ok(SupportedPayments)` with map of method IDs to endpoint data
+     * - Returns empty map if no endpoints are published
+     * - `Err` only on transport failures
+     */
+open func getPaymentList(payee: PublicKey)async throws  -> SupportedPayments  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_payment_list(
+                    self.uniffiClonePointer(),
+                    FfiConverterTypePublicKey_lower(payee)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeSupportedPayments_lift,
+            errorHandler: FfiConverterTypePaykitError_lift
+        )
+}
+    
+
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePubkyUnauthenticatedTransport: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = PubkyUnauthenticatedTransport
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> PubkyUnauthenticatedTransport {
+        return PubkyUnauthenticatedTransport(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: PubkyUnauthenticatedTransport) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PubkyUnauthenticatedTransport {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: PubkyUnauthenticatedTransport, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyUnauthenticatedTransport_lift(_ pointer: UnsafeMutableRawPointer) throws -> PubkyUnauthenticatedTransport {
+    return try FfiConverterTypePubkyUnauthenticatedTransport.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyUnauthenticatedTransport_lower(_ value: PubkyUnauthenticatedTransport) -> UnsafeMutableRawPointer {
+    return FfiConverterTypePubkyUnauthenticatedTransport.lower(value)
+}
+
+
 
 
 /**
@@ -2332,6 +2806,73 @@ public func FfiConverterTypeDeviceParams_lift(_ buf: RustBuffer) throws -> Devic
 #endif
 public func FfiConverterTypeDeviceParams_lower(_ value: DeviceParams) -> RustBuffer {
     return FfiConverterTypeDeviceParams.lower(value)
+}
+
+
+/**
+ * Serialized payload served by a payment endpoint (UTF-8 text such as JSON, LNURL, etc.).
+ */
+public struct EndpointData {
+    public var data: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(data: String) {
+        self.data = data
+    }
+}
+
+#if compiler(>=6)
+extension EndpointData: Sendable {}
+#endif
+
+
+extension EndpointData: Equatable, Hashable {
+    public static func ==(lhs: EndpointData, rhs: EndpointData) -> Bool {
+        if lhs.data != rhs.data {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(data)
+    }
+}
+
+extension EndpointData: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeEndpointData: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> EndpointData {
+        return
+            try EndpointData(
+                data: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: EndpointData, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.data, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeEndpointData_lift(_ buf: RustBuffer) throws -> EndpointData {
+    return try FfiConverterTypeEndpointData.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeEndpointData_lower(_ value: EndpointData) -> RustBuffer {
+    return FfiConverterTypeEndpointData.lower(value)
 }
 
 
@@ -7019,6 +7560,73 @@ public func FfiConverterTypeMessageSignatureResponse_lower(_ value: MessageSigna
 
 
 /**
+ * Identifier for a payment method specification (e.g., "lightning", "onchain", "bolt11").
+ */
+public struct MethodId {
+    public var id: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String) {
+        self.id = id
+    }
+}
+
+#if compiler(>=6)
+extension MethodId: Sendable {}
+#endif
+
+
+extension MethodId: Equatable, Hashable {
+    public static func ==(lhs: MethodId, rhs: MethodId) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
+extension MethodId: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeMethodId: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> MethodId {
+        return
+            try MethodId(
+                id: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: MethodId, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMethodId_lift(_ buf: RustBuffer) throws -> MethodId {
+    return try FfiConverterTypeMethodId.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeMethodId_lower(_ value: MethodId) -> RustBuffer {
+    return FfiConverterTypeMethodId.lower(value)
+}
+
+
+/**
  * Multisig Redeem Script Type
  */
 public struct MultisigRedeemScriptType {
@@ -7440,6 +8048,107 @@ public func FfiConverterTypeOnchainActivity_lift(_ buf: RustBuffer) throws -> On
 #endif
 public func FfiConverterTypeOnchainActivity_lower(_ value: OnchainActivity) -> RustBuffer {
     return FfiConverterTypeOnchainActivity.lower(value)
+}
+
+
+/**
+ * Represents a parsed deeplink with Paykit session information
+ */
+public struct PaykitDeeplink {
+    /**
+     * The action to perform (e.g., "session", "payment", "connect")
+     */
+    public var action: String
+    /**
+     * The session token if present
+     */
+    public var sessionToken: String?
+    /**
+     * Additional parameters from the deeplink
+     */
+    public var parameters: [String: String]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The action to perform (e.g., "session", "payment", "connect")
+         */action: String, 
+        /**
+         * The session token if present
+         */sessionToken: String?, 
+        /**
+         * Additional parameters from the deeplink
+         */parameters: [String: String]) {
+        self.action = action
+        self.sessionToken = sessionToken
+        self.parameters = parameters
+    }
+}
+
+#if compiler(>=6)
+extension PaykitDeeplink: Sendable {}
+#endif
+
+
+extension PaykitDeeplink: Equatable, Hashable {
+    public static func ==(lhs: PaykitDeeplink, rhs: PaykitDeeplink) -> Bool {
+        if lhs.action != rhs.action {
+            return false
+        }
+        if lhs.sessionToken != rhs.sessionToken {
+            return false
+        }
+        if lhs.parameters != rhs.parameters {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(action)
+        hasher.combine(sessionToken)
+        hasher.combine(parameters)
+    }
+}
+
+extension PaykitDeeplink: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePaykitDeeplink: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PaykitDeeplink {
+        return
+            try PaykitDeeplink(
+                action: FfiConverterString.read(from: &buf), 
+                sessionToken: FfiConverterOptionString.read(from: &buf), 
+                parameters: FfiConverterDictionaryStringString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PaykitDeeplink, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.action, into: &buf)
+        FfiConverterOptionString.write(value.sessionToken, into: &buf)
+        FfiConverterDictionaryStringString.write(value.parameters, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePaykitDeeplink_lift(_ buf: RustBuffer) throws -> PaykitDeeplink {
+    return try FfiConverterTypePaykitDeeplink.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePaykitDeeplink_lower(_ value: PaykitDeeplink) -> RustBuffer {
+    return FfiConverterTypePaykitDeeplink.lower(value)
 }
 
 
@@ -8160,6 +8869,73 @@ public func FfiConverterTypePubkyAuth_lower(_ value: PubkyAuth) -> RustBuffer {
 
 
 /**
+ * Public key wrapper for Paykit operations.
+ */
+public struct PublicKey {
+    public var key: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(key: String) {
+        self.key = key
+    }
+}
+
+#if compiler(>=6)
+extension PublicKey: Sendable {}
+#endif
+
+
+extension PublicKey: Equatable, Hashable {
+    public static func ==(lhs: PublicKey, rhs: PublicKey) -> Bool {
+        if lhs.key != rhs.key {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(key)
+    }
+}
+
+extension PublicKey: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePublicKey: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PublicKey {
+        return
+            try PublicKey(
+                key: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PublicKey, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.key, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePublicKey_lift(_ buf: RustBuffer) throws -> PublicKey {
+    return try FfiConverterTypePublicKey.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePublicKey_lower(_ value: PublicKey) -> RustBuffer {
+    return FfiConverterTypePublicKey.lower(value)
+}
+
+
+/**
  * Public key response containing the derived public key information
  */
 public struct PublicKeyResponse {
@@ -8800,6 +9576,296 @@ public func FfiConverterTypeRefundMemo_lower(_ value: RefundMemo) -> RustBuffer 
 }
 
 
+public struct ScannedPaykitSession {
+    public var url: String
+    public var action: String
+    public var token: String
+    public var parameters: [String: String]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(url: String, action: String, token: String, parameters: [String: String]) {
+        self.url = url
+        self.action = action
+        self.token = token
+        self.parameters = parameters
+    }
+}
+
+#if compiler(>=6)
+extension ScannedPaykitSession: Sendable {}
+#endif
+
+
+extension ScannedPaykitSession: Equatable, Hashable {
+    public static func ==(lhs: ScannedPaykitSession, rhs: ScannedPaykitSession) -> Bool {
+        if lhs.url != rhs.url {
+            return false
+        }
+        if lhs.action != rhs.action {
+            return false
+        }
+        if lhs.token != rhs.token {
+            return false
+        }
+        if lhs.parameters != rhs.parameters {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(url)
+        hasher.combine(action)
+        hasher.combine(token)
+        hasher.combine(parameters)
+    }
+}
+
+extension ScannedPaykitSession: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeScannedPaykitSession: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ScannedPaykitSession {
+        return
+            try ScannedPaykitSession(
+                url: FfiConverterString.read(from: &buf), 
+                action: FfiConverterString.read(from: &buf), 
+                token: FfiConverterString.read(from: &buf), 
+                parameters: FfiConverterDictionaryStringString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ScannedPaykitSession, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.url, into: &buf)
+        FfiConverterString.write(value.action, into: &buf)
+        FfiConverterString.write(value.token, into: &buf)
+        FfiConverterDictionaryStringString.write(value.parameters, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeScannedPaykitSession_lift(_ buf: RustBuffer) throws -> ScannedPaykitSession {
+    return try FfiConverterTypeScannedPaykitSession.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeScannedPaykitSession_lower(_ value: ScannedPaykitSession) -> RustBuffer {
+    return FfiConverterTypeScannedPaykitSession.lower(value)
+}
+
+
+/**
+ * Represents serializable session data that can be passed through a deeplink
+ */
+public struct SessionData {
+    /**
+     * The user's public key
+     */
+    public var publicKey: String
+    /**
+     * The user's secret key (encrypted or encoded)
+     */
+    public var secretKey: String
+    /**
+     * Optional homeserver URL
+     */
+    public var homeserverUrl: String?
+    /**
+     * Session expiry timestamp (Unix timestamp)
+     */
+    public var expiresAt: Int64?
+    /**
+     * Additional metadata
+     */
+    public var metadata: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The user's public key
+         */publicKey: String, 
+        /**
+         * The user's secret key (encrypted or encoded)
+         */secretKey: String, 
+        /**
+         * Optional homeserver URL
+         */homeserverUrl: String?, 
+        /**
+         * Session expiry timestamp (Unix timestamp)
+         */expiresAt: Int64?, 
+        /**
+         * Additional metadata
+         */metadata: String?) {
+        self.publicKey = publicKey
+        self.secretKey = secretKey
+        self.homeserverUrl = homeserverUrl
+        self.expiresAt = expiresAt
+        self.metadata = metadata
+    }
+}
+
+#if compiler(>=6)
+extension SessionData: Sendable {}
+#endif
+
+
+extension SessionData: Equatable, Hashable {
+    public static func ==(lhs: SessionData, rhs: SessionData) -> Bool {
+        if lhs.publicKey != rhs.publicKey {
+            return false
+        }
+        if lhs.secretKey != rhs.secretKey {
+            return false
+        }
+        if lhs.homeserverUrl != rhs.homeserverUrl {
+            return false
+        }
+        if lhs.expiresAt != rhs.expiresAt {
+            return false
+        }
+        if lhs.metadata != rhs.metadata {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(publicKey)
+        hasher.combine(secretKey)
+        hasher.combine(homeserverUrl)
+        hasher.combine(expiresAt)
+        hasher.combine(metadata)
+    }
+}
+
+extension SessionData: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSessionData: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SessionData {
+        return
+            try SessionData(
+                publicKey: FfiConverterString.read(from: &buf), 
+                secretKey: FfiConverterString.read(from: &buf), 
+                homeserverUrl: FfiConverterOptionString.read(from: &buf), 
+                expiresAt: FfiConverterOptionInt64.read(from: &buf), 
+                metadata: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SessionData, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.publicKey, into: &buf)
+        FfiConverterString.write(value.secretKey, into: &buf)
+        FfiConverterOptionString.write(value.homeserverUrl, into: &buf)
+        FfiConverterOptionInt64.write(value.expiresAt, into: &buf)
+        FfiConverterOptionString.write(value.metadata, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSessionData_lift(_ buf: RustBuffer) throws -> SessionData {
+    return try FfiConverterTypeSessionData.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSessionData_lower(_ value: SessionData) -> RustBuffer {
+    return FfiConverterTypeSessionData.lower(value)
+}
+
+
+/**
+ * Represents a session token that can be passed through deeplinks
+ */
+public struct SessionToken {
+    /**
+     * Base64 URL-safe encoded session data
+     */
+    public var token: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Base64 URL-safe encoded session data
+         */token: String) {
+        self.token = token
+    }
+}
+
+#if compiler(>=6)
+extension SessionToken: Sendable {}
+#endif
+
+
+extension SessionToken: Equatable, Hashable {
+    public static func ==(lhs: SessionToken, rhs: SessionToken) -> Bool {
+        if lhs.token != rhs.token {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(token)
+    }
+}
+
+extension SessionToken: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSessionToken: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SessionToken {
+        return
+            try SessionToken(
+                token: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SessionToken, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.token, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSessionToken_lift(_ buf: RustBuffer) throws -> SessionToken {
+    return try FfiConverterTypeSessionToken.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSessionToken_lower(_ value: SessionToken) -> RustBuffer {
+    return FfiConverterTypeSessionToken.lower(value)
+}
+
+
 /**
  * Signed transaction response
  */
@@ -8898,6 +9964,73 @@ public func FfiConverterTypeSignedTransactionResponse_lift(_ buf: RustBuffer) th
 #endif
 public func FfiConverterTypeSignedTransactionResponse_lower(_ value: SignedTransactionResponse) -> RustBuffer {
     return FfiConverterTypeSignedTransactionResponse.lower(value)
+}
+
+
+/**
+ * Collection of supported payment entries keyed by method identifiers.
+ */
+public struct SupportedPayments {
+    public var entries: [String: EndpointData]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(entries: [String: EndpointData]) {
+        self.entries = entries
+    }
+}
+
+#if compiler(>=6)
+extension SupportedPayments: Sendable {}
+#endif
+
+
+extension SupportedPayments: Equatable, Hashable {
+    public static func ==(lhs: SupportedPayments, rhs: SupportedPayments) -> Bool {
+        if lhs.entries != rhs.entries {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(entries)
+    }
+}
+
+extension SupportedPayments: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSupportedPayments: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SupportedPayments {
+        return
+            try SupportedPayments(
+                entries: FfiConverterDictionaryStringTypeEndpointData.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SupportedPayments, into buf: inout [UInt8]) {
+        FfiConverterDictionaryStringTypeEndpointData.write(value.entries, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSupportedPayments_lift(_ buf: RustBuffer) throws -> SupportedPayments {
+    return try FfiConverterTypeSupportedPayments.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSupportedPayments_lower(_ value: SupportedPayments) -> RustBuffer {
+    return FfiConverterTypeSupportedPayments.lower(value)
 }
 
 
@@ -12688,6 +13821,137 @@ extension NetworkType: Codable {}
 
 
 
+
+/**
+ * Domain-specific error type for Paykit operations.
+ */
+public enum PaykitError: Swift.Error {
+
+    
+    
+    case Unimplemented(String
+    )
+    case Transport(String
+    )
+    case InvalidPublicKey(String
+    )
+    case InvalidMethodId(String
+    )
+    case InvalidEndpointData(String
+    )
+    case SessionError(String
+    )
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePaykitError: FfiConverterRustBuffer {
+    typealias SwiftType = PaykitError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PaykitError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .Unimplemented(
+            try FfiConverterString.read(from: &buf)
+            )
+        case 2: return .Transport(
+            try FfiConverterString.read(from: &buf)
+            )
+        case 3: return .InvalidPublicKey(
+            try FfiConverterString.read(from: &buf)
+            )
+        case 4: return .InvalidMethodId(
+            try FfiConverterString.read(from: &buf)
+            )
+        case 5: return .InvalidEndpointData(
+            try FfiConverterString.read(from: &buf)
+            )
+        case 6: return .SessionError(
+            try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: PaykitError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .Unimplemented(v1):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(v1, into: &buf)
+            
+        
+        case let .Transport(v1):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(v1, into: &buf)
+            
+        
+        case let .InvalidPublicKey(v1):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(v1, into: &buf)
+            
+        
+        case let .InvalidMethodId(v1):
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(v1, into: &buf)
+            
+        
+        case let .InvalidEndpointData(v1):
+            writeInt(&buf, Int32(5))
+            FfiConverterString.write(v1, into: &buf)
+            
+        
+        case let .SessionError(v1):
+            writeInt(&buf, Int32(6))
+            FfiConverterString.write(v1, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePaykitError_lift(_ buf: RustBuffer) throws -> PaykitError {
+    return try FfiConverterTypePaykitError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePaykitError_lower(_ value: PaykitError) -> RustBuffer {
+    return FfiConverterTypePaykitError.lower(value)
+}
+
+
+extension PaykitError: Equatable, Hashable {}
+
+extension PaykitError: Codable {}
+
+
+
+
+extension PaykitError: Foundation.LocalizedError {
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+
+
+
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
@@ -12850,6 +14114,8 @@ public enum Scanner {
     )
     case pubkyAuth(data: String
     )
+    case paykitSession(data: ScannedPaykitSession
+    )
     case lnurlChannel(data: LnurlChannelData
     )
     case lnurlAuth(data: LnurlAuthData
@@ -12890,25 +14156,28 @@ public struct FfiConverterTypeScanner: FfiConverterRustBuffer {
         case 3: return .pubkyAuth(data: try FfiConverterString.read(from: &buf)
         )
         
-        case 4: return .lnurlChannel(data: try FfiConverterTypeLnurlChannelData.read(from: &buf)
+        case 4: return .paykitSession(data: try FfiConverterTypeScannedPaykitSession.read(from: &buf)
         )
         
-        case 5: return .lnurlAuth(data: try FfiConverterTypeLnurlAuthData.read(from: &buf)
+        case 5: return .lnurlChannel(data: try FfiConverterTypeLnurlChannelData.read(from: &buf)
         )
         
-        case 6: return .lnurlWithdraw(data: try FfiConverterTypeLnurlWithdrawData.read(from: &buf)
+        case 6: return .lnurlAuth(data: try FfiConverterTypeLnurlAuthData.read(from: &buf)
         )
         
-        case 7: return .lnurlAddress(data: try FfiConverterTypeLnurlAddressData.read(from: &buf)
+        case 7: return .lnurlWithdraw(data: try FfiConverterTypeLnurlWithdrawData.read(from: &buf)
         )
         
-        case 8: return .lnurlPay(data: try FfiConverterTypeLnurlPayData.read(from: &buf)
+        case 8: return .lnurlAddress(data: try FfiConverterTypeLnurlAddressData.read(from: &buf)
         )
         
-        case 9: return .nodeId(url: try FfiConverterString.read(from: &buf), network: try FfiConverterTypeNetworkType.read(from: &buf)
+        case 9: return .lnurlPay(data: try FfiConverterTypeLnurlPayData.read(from: &buf)
         )
         
-        case 10: return .gift(code: try FfiConverterString.read(from: &buf), amount: try FfiConverterUInt64.read(from: &buf)
+        case 10: return .nodeId(url: try FfiConverterString.read(from: &buf), network: try FfiConverterTypeNetworkType.read(from: &buf)
+        )
+        
+        case 11: return .gift(code: try FfiConverterString.read(from: &buf), amount: try FfiConverterUInt64.read(from: &buf)
         )
         
         default: throw UniffiInternalError.unexpectedEnumCase
@@ -12934,39 +14203,44 @@ public struct FfiConverterTypeScanner: FfiConverterRustBuffer {
             FfiConverterString.write(data, into: &buf)
             
         
-        case let .lnurlChannel(data):
+        case let .paykitSession(data):
             writeInt(&buf, Int32(4))
+            FfiConverterTypeScannedPaykitSession.write(data, into: &buf)
+            
+        
+        case let .lnurlChannel(data):
+            writeInt(&buf, Int32(5))
             FfiConverterTypeLnurlChannelData.write(data, into: &buf)
             
         
         case let .lnurlAuth(data):
-            writeInt(&buf, Int32(5))
+            writeInt(&buf, Int32(6))
             FfiConverterTypeLnurlAuthData.write(data, into: &buf)
             
         
         case let .lnurlWithdraw(data):
-            writeInt(&buf, Int32(6))
+            writeInt(&buf, Int32(7))
             FfiConverterTypeLnurlWithdrawData.write(data, into: &buf)
             
         
         case let .lnurlAddress(data):
-            writeInt(&buf, Int32(7))
+            writeInt(&buf, Int32(8))
             FfiConverterTypeLnurlAddressData.write(data, into: &buf)
             
         
         case let .lnurlPay(data):
-            writeInt(&buf, Int32(8))
+            writeInt(&buf, Int32(9))
             FfiConverterTypeLnurlPayData.write(data, into: &buf)
             
         
         case let .nodeId(url,network):
-            writeInt(&buf, Int32(9))
+            writeInt(&buf, Int32(10))
             FfiConverterString.write(url, into: &buf)
             FfiConverterTypeNetworkType.write(network, into: &buf)
             
         
         case let .gift(code,amount):
-            writeInt(&buf, Int32(10))
+            writeInt(&buf, Int32(11))
             FfiConverterString.write(code, into: &buf)
             FfiConverterUInt64.write(amount, into: &buf)
             
@@ -13886,6 +15160,30 @@ fileprivate struct FfiConverterOptionUInt64: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionInt64: FfiConverterRustBuffer {
+    typealias SwiftType = Int64?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterInt64.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterInt64.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionBool: FfiConverterRustBuffer {
     typealias SwiftType = Bool?
 
@@ -14118,6 +15416,30 @@ fileprivate struct FfiConverterOptionTypeDeviceParams: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeDeviceParams.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeEndpointData: FfiConverterRustBuffer {
+    typealias SwiftType = EndpointData?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeEndpointData.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeEndpointData.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -15804,6 +17126,31 @@ fileprivate struct FfiConverterSequenceTypePrecomposedTransaction: FfiConverterR
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypePublicKey: FfiConverterRustBuffer {
+    typealias SwiftType = [PublicKey]
+
+    public static func write(_ value: [PublicKey], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypePublicKey.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PublicKey] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [PublicKey]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypePublicKey.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeRefTransaction: FfiConverterRustBuffer {
     typealias SwiftType = [RefTransaction]
 
@@ -16026,6 +17373,32 @@ fileprivate struct FfiConverterDictionaryStringString: FfiConverterRustBuffer {
         return dict
     }
 }
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterDictionaryStringTypeEndpointData: FfiConverterRustBuffer {
+    public static func write(_ value: [String: EndpointData], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for (key, value) in value {
+            FfiConverterString.write(key, into: &buf)
+            FfiConverterTypeEndpointData.write(value, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [String: EndpointData] {
+        let len: Int32 = try readInt(&buf)
+        var dict = [String: EndpointData]()
+        dict.reserveCapacity(Int(len))
+        for _ in 0..<len {
+            let key = try FfiConverterString.read(from: &buf)
+            let value = try FfiConverterTypeEndpointData.read(from: &buf)
+            dict[key] = value
+        }
+        return dict
+    }
+}
 private let UNIFFI_RUST_FUTURE_POLL_READY: Int8 = 0
 private let UNIFFI_RUST_FUTURE_POLL_MAYBE_READY: Int8 = 1
 
@@ -16171,6 +17544,39 @@ public func createCjitEntry(channelSizeSat: UInt64, invoiceSat: UInt64, invoiceD
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
+/**
+ * Creates a deeplink URL from a session token.
+ *
+ * Use this to generate a deeplink that can be shared with another app instance.
+ *
+ * # Example
+ * ```
+ * let token = create_session_token_from_keypair(
+ * public_key,
+ * secret_key,
+ * None,
+ * Some(3600)
+ * )?;
+ *
+ * let deeplink_url = create_deeplink_from_token(
+ * "myapp://",
+ * "session",
+ * token,
+ * None
+ * )?;
+ * // Result: "myapp://paykit/session?token=..."
+ * ```
+ */
+public func createDeeplinkFromToken(baseUrl: String, action: String, token: SessionToken, additionalParams: [String: String]?)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypePaykitError_lift) {
+    uniffi_bitkitcore_fn_func_create_deeplink_from_token(
+        FfiConverterString.lower(baseUrl),
+        FfiConverterString.lower(action),
+        FfiConverterTypeSessionToken_lower(token),
+        FfiConverterOptionDictionaryStringString.lower(additionalParams),$0
+    )
+})
+}
 public func createOrder(lspBalanceSat: UInt64, channelExpiryWeeks: UInt32, options: CreateOrderOptions?)async throws  -> IBtOrder  {
     return
         try  await uniffiRustCallAsync(
@@ -16184,6 +17590,62 @@ public func createOrder(lspBalanceSat: UInt64, channelExpiryWeeks: UInt32, optio
             liftFunc: FfiConverterTypeIBtOrder_lift,
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
+}
+/**
+ * Creates a session request URL to send to Pubky Ring for authentication.
+ *
+ * This generates a URL that Bitkit displays as a QR code or uses to open Pubky Ring.
+ * When Pubky Ring completes authentication, it will return the session data
+ * via the provided callback URL.
+ *
+ * # Parameters
+ * - `callback_url`: The URL scheme and path where Pubky Ring should return the session.
+ * Example: "bitkit://paykit/session-data" or "bitkit://session"
+ * - `additional_params`: Optional additional parameters to include in the request URL
+ *
+ * # Returns
+ * A URL string like: `pubkyring://session?callback=bitkit%3A%2F%2Fpaykit%2Fsession-data`
+ *
+ * # Example
+ * ```
+ * // Generate URL for QR code or "Open Pubky Ring" button
+ * let request_url = create_pubky_ring_session_request(
+ * "bitkit://paykit/session-data".to_string(),
+ * None
+ * )?;
+ * // Result: "pubkyring://session?callback=bitkit%3A%2F%2Fpaykit%2Fsession-data"
+ *
+ * // With additional parameters
+ * let mut params = HashMap::new();
+ * params.insert("app_name".to_string(), "Bitkit".to_string());
+ * let request_url = create_pubky_ring_session_request(
+ * "bitkit://paykit/session-data".to_string(),
+ * Some(params)
+ * )?;
+ * ```
+ */
+public func createPubkyRingSessionRequest(callbackUrl: String, additionalParams: [String: String]?)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypePaykitError_lift) {
+    uniffi_bitkitcore_fn_func_create_pubky_ring_session_request(
+        FfiConverterString.lower(callbackUrl),
+        FfiConverterOptionDictionaryStringString.lower(additionalParams),$0
+    )
+})
+}
+/**
+ * Helper function to create a session token from raw keypair data.
+ *
+ * This is useful when you have the keypair but need to create a shareable token.
+ */
+public func createSessionTokenFromKeypair(publicKey: String, secretKey: String, homeserverUrl: String?, expiresInSeconds: Int64?)throws  -> SessionToken  {
+    return try  FfiConverterTypeSessionToken_lift(try rustCallWithError(FfiConverterTypePaykitError_lift) {
+    uniffi_bitkitcore_fn_func_create_session_token_from_keypair(
+        FfiConverterString.lower(publicKey),
+        FfiConverterString.lower(secretKey),
+        FfiConverterOptionString.lower(homeserverUrl),
+        FfiConverterOptionInt64.lower(expiresInSeconds),$0
+    )
+})
 }
 public func createWithdrawCallbackUrl(k1: String, callback: String, paymentRequest: String)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeLnurlError_lift) {
@@ -16251,6 +17713,23 @@ public func derivePrivateKey(mnemonicPhrase: String, derivationPathStr: String?,
         FfiConverterOptionString.lower(derivationPathStr),
         FfiConverterOptionTypeNetwork.lower(network),
         FfiConverterOptionString.lower(bip39Passphrase),$0
+    )
+})
+}
+/**
+ * Deserializes a session token back into session data.
+ *
+ * # Example
+ * ```
+ * let token = SessionToken::new("base64_encoded_session_data");
+ * let session_data = deserialize_token_to_session(token)?;
+ * // Now you have the session data back
+ * ```
+ */
+public func deserializeTokenToSession(token: SessionToken)throws  -> SessionData  {
+    return try  FfiConverterTypeSessionData_lift(try rustCallWithError(FfiConverterTypePaykitError_lift) {
+    uniffi_bitkitcore_fn_func_deserialize_token_to_session(
+        FfiConverterTypeSessionToken_lower(token),$0
     )
 })
 }
@@ -16428,6 +17907,42 @@ public func getInfo(refresh: Bool?)async throws  -> IBtInfo?  {
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
+/**
+ * Returns known contacts (follows) of a given public key.
+ *
+ * # Parameters
+ * - `reader`: Unauthenticated transport for reading public data
+ * - `key`: Public key to query for contacts
+ *
+ * # Returns
+ * - `Ok(Vec<PublicKey>)` with list of known contacts
+ * - Returns empty vector if no contacts are stored
+ * - `Err` only on transport failures
+ *
+ * # Example
+ * ```
+ * let reader = PubkyUnauthenticatedTransport::new()?;
+ * let user = PublicKey { key: "...".to_string() };
+ * let contacts = get_known_contacts(&reader, &user).await?;
+ * for contact in contacts {
+ * println!("Contact: {}", contact.key);
+ * }
+ * ```
+ */
+public func getKnownContacts(reader: PubkyUnauthenticatedTransport, key: PublicKey)async throws  -> [PublicKey]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_get_known_contacts(FfiConverterTypePubkyUnauthenticatedTransport_lower(reader),FfiConverterTypePublicKey_lower(key)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypePublicKey.lift,
+            errorHandler: FfiConverterTypePaykitError_lift
+        )
+}
 public func getLnurlInvoice(address: String, amountSatoshis: UInt64)async throws  -> String  {
     return
         try  await uniffiRustCallAsync(
@@ -16482,6 +17997,79 @@ public func getPayment(paymentId: String)async throws  -> IBtBolt11Invoice  {
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeIBtBolt11Invoice_lift,
             errorHandler: FfiConverterTypeBlocktankError_lift
+        )
+}
+/**
+ * Retrieves a specific payment endpoint for a payee and method.
+ *
+ * # Parameters
+ * - `reader`: Unauthenticated transport for reading public data
+ * - `payee`: Public key of the payee
+ * - `method`: Payment method identifier to query
+ *
+ * # Returns
+ * - `Ok(Some(EndpointData))` if the endpoint exists
+ * - `Ok(None)` if the endpoint is not published
+ * - `Err` only on transport failures
+ *
+ * # Example
+ * ```
+ * let reader = PubkyUnauthenticatedTransport::new()?;
+ * let payee = PublicKey { key: "...".to_string() };
+ * let method = MethodId { id: "lightning".to_string() };
+ * if let Some(endpoint) = get_payment_endpoint(&reader, &payee, &method).await? {
+ * println!("Lightning endpoint: {}", endpoint.data);
+ * }
+ * ```
+ */
+public func getPaymentEndpoint(reader: PubkyUnauthenticatedTransport, payee: PublicKey, method: MethodId)async throws  -> EndpointData?  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_get_payment_endpoint(FfiConverterTypePubkyUnauthenticatedTransport_lower(reader),FfiConverterTypePublicKey_lower(payee),FfiConverterTypeMethodId_lower(method)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypeEndpointData.lift,
+            errorHandler: FfiConverterTypePaykitError_lift
+        )
+}
+/**
+ * Retrieves all supported payment methods for a given payee.
+ *
+ * # Parameters
+ * - `reader`: Unauthenticated transport for reading public data
+ * - `payee`: Public key of the payee to query
+ *
+ * # Returns
+ * - `Ok(SupportedPayments)` with map of method IDs to endpoint data
+ * - Returns empty map if no endpoints are published
+ * - `Err` only on transport failures
+ *
+ * # Example
+ * ```
+ * let reader = PubkyUnauthenticatedTransport::new()?;
+ * let payee = PublicKey { key: "...".to_string() };
+ * let payments = get_payment_list(&reader, &payee).await?;
+ * for (method_id, data) in payments.entries {
+ * println!("Method: {}, Data: {}", method_id, data.data);
+ * }
+ * ```
+ */
+public func getPaymentList(reader: PubkyUnauthenticatedTransport, payee: PublicKey)async throws  -> SupportedPayments  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_get_payment_list(FfiConverterTypePubkyUnauthenticatedTransport_lower(reader),FfiConverterTypePublicKey_lower(payee)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeSupportedPayments_lift,
+            errorHandler: FfiConverterTypePaykitError_lift
         )
 }
 public func getPreActivityMetadata(searchKey: String, searchByAddress: Bool)throws  -> PreActivityMetadata?  {
@@ -16596,6 +18184,29 @@ public func openChannel(orderId: String, connectionString: String)async throws  
             liftFunc: FfiConverterTypeIBtOrder_lift,
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
+}
+/**
+ * Parses a deeplink URL into a PaykitDeeplink structure.
+ *
+ * # Supported URL Formats
+ * - `myapp://paykit/session?token=<base64_token>`
+ * - `myapp://paykit/connect?token=<base64_token>&return_url=<url>`
+ * - `https://myapp.com/paykit/session?token=<base64_token>`
+ *
+ * # Example
+ * ```
+ * let url = "myapp://paykit/session?token=eyJwdWJsaWNfa2V5IjoiLi4uIn0";
+ * let deeplink = parse_paykit_deeplink(url)?;
+ * assert_eq!(deeplink.action, "session");
+ * assert!(deeplink.session_token.is_some());
+ * ```
+ */
+public func parsePaykitDeeplink(url: String)throws  -> PaykitDeeplink  {
+    return try  FfiConverterTypePaykitDeeplink_lift(try rustCallWithError(FfiConverterTypePaykitError_lift) {
+    uniffi_bitkitcore_fn_func_parse_paykit_deeplink(
+        FfiConverterString.lower(url),$0
+    )
+})
 }
 /**
  * Refresh all active CJIT entries in the database with latest data from the LSP
@@ -16722,6 +18333,31 @@ public func removeClosedChannelById(channelId: String)throws  -> Bool  {
     )
 })
 }
+/**
+ * Removes a payment endpoint via the authenticated transport.
+ *
+ * # Parameters
+ * - `client`: Authenticated transport client
+ * - `method`: Payment method identifier to remove
+ *
+ * # Returns
+ * - `Ok(())` on successful removal
+ * - `Err` if the endpoint doesn't exist or transport fails
+ */
+public func removePaymentEndpoint(client: PubkyAuthenticatedTransport, method: MethodId)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_remove_payment_endpoint(FfiConverterTypePubkyAuthenticatedTransport_lower(client),FfiConverterTypeMethodId_lower(method)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypePaykitError_lift
+        )
+}
 public func removePreActivityMetadataTags(paymentId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags(
         FfiConverterString.lower(paymentId),
@@ -16741,6 +18377,65 @@ public func resetPreActivityMetadataTags(paymentId: String)throws   {try rustCal
         FfiConverterString.lower(paymentId),$0
     )
 }
+}
+/**
+ * Serializes session data into a token string suitable for deeplinks.
+ *
+ * # Security Considerations
+ * - The secret key should be encrypted before serialization
+ * - Use HTTPS/secure channels when transmitting
+ * - Consider adding expiration times
+ * - Implement token rotation for long-lived sessions
+ *
+ * # Example
+ * ```
+ * let session_data = SessionData {
+ * public_key: "user_public_key".to_string(),
+ * secret_key: "encrypted_secret".to_string(),
+ * homeserver_url: Some("https://homeserver.example".to_string()),
+ * expires_at: Some(1234567890),
+ * metadata: None,
+ * };
+ *
+ * let token = serialize_session_to_token(session_data)?;
+ * // token.token can now be passed through a deeplink
+ * ```
+ */
+public func serializeSessionToToken(sessionData: SessionData)throws  -> SessionToken  {
+    return try  FfiConverterTypeSessionToken_lift(try rustCallWithError(FfiConverterTypePaykitError_lift) {
+    uniffi_bitkitcore_fn_func_serialize_session_to_token(
+        FfiConverterTypeSessionData_lower(sessionData),$0
+    )
+})
+}
+/**
+ * Stores or updates a payment endpoint via the authenticated transport.
+ *
+ * # Parameters
+ * - `client`: Authenticated transport client
+ * - `method`: Payment method identifier (e.g., "lightning", "onchain")
+ * - `data`: Endpoint data payload (UTF-8 JSON or other text format)
+ *
+ * # Example
+ * ```
+ * let method = MethodId { id: "lightning".to_string() };
+ * let data = EndpointData { data: r#"{"bolt11":"lnbc..."}"#.to_string() };
+ * set_payment_endpoint(&client, method, data).await?;
+ * ```
+ */
+public func setPaymentEndpoint(client: PubkyAuthenticatedTransport, method: MethodId, data: EndpointData)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_set_payment_endpoint(FfiConverterTypePubkyAuthenticatedTransport_lower(client),FfiConverterTypeMethodId_lower(method),FfiConverterTypeEndpointData_lower(data)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypePaykitError_lift
+        )
 }
 public func testNotification(deviceToken: String, secretMessage: String, notificationType: String?, customUrl: String?)async throws  -> String  {
     return
@@ -17014,6 +18709,18 @@ public func validateMnemonic(mnemonicPhrase: String)throws   {try rustCallWithEr
     )
 }
 }
+/**
+ * Validates a deeplink URL without processing it.
+ *
+ * Use this to check if a URL is a valid Paykit deeplink before handling it.
+ */
+public func validatePaykitDeeplink(url: String)throws  -> Bool  {
+    return try  FfiConverterBool.lift(try rustCallWithError(FfiConverterTypePaykitError_lift) {
+    uniffi_bitkitcore_fn_func_validate_paykit_deeplink(
+        FfiConverterString.lower(url),$0
+    )
+})
+}
 public func wipeAllClosedChannels()throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_wipe_all_closed_channels($0
     )
@@ -17079,7 +18786,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_create_cjit_entry() != 51504) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_create_deeplink_from_token() != 51091) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_create_order() != 33461) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_create_pubky_ring_session_request() != 2842) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_create_session_token_from_keypair() != 61582) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_create_withdraw_callback_url() != 39350) {
@@ -17101,6 +18817,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_derive_private_key() != 25155) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_deserialize_token_to_session() != 9427) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123) {
@@ -17160,6 +18879,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_get_info() != 43607) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_get_known_contacts() != 14867) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -17170,6 +18892,12 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_payment() != 29170) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_payment_endpoint() != 60834) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_payment_list() != 49866) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 53126) {
@@ -17208,6 +18936,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_open_channel() != 21402) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_parse_paykit_deeplink() != 40846) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries() != 5324) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -17235,6 +18966,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_remove_payment_endpoint() != 692) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 1991) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -17242,6 +18976,12 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_serialize_session_to_token() != 52557) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_set_payment_endpoint() != 19775) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_test_notification() != 32857) {
@@ -17316,10 +19056,34 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_validate_paykit_deeplink() != 64617) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_wipe_all_closed_channels() != 41511) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_pubkyauthenticatedtransport_remove_payment_endpoint() != 6181) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_pubkyauthenticatedtransport_set_payment_endpoint() != 9801) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_known_contacts() != 59528) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_payment_endpoint() != 53072) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_payment_list() != 50101) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_constructor_pubkyauthenticatedtransport_new() != 38771) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_constructor_pubkyunauthenticatedtransport_new() != 43061) {
         return InitializationResult.apiChecksumMismatch
     }
 

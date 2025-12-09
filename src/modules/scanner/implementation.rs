@@ -47,7 +47,12 @@ impl Scanner {
         // Handle Bitkit deep links
         if invoice_str.starts_with("bitkit://") {
             let data = invoice_str.replace("bitkit://", "");
-            
+
+            // Check if it's a paykit session deeplink: bitkit://paykit/...
+            if data.starts_with("paykit/") {
+                return Self::decode_paykit_deeplink(invoice_str);
+            }
+
             // Check if it's a gift code format: bitkit://gift-<code>-<amount>
             if data.starts_with("gift-") {
                 let parts: Vec<&str> = data.splitn(3, '-').collect();
@@ -63,6 +68,11 @@ impl Scanner {
             }
             
             return Box::pin(Self::decode(data)).await;
+        }
+
+        // Handle generic paykit deeplinks (any scheme with /paykit/ path)
+        if Self::is_paykit_deeplink(invoice_str) {
+            return Self::decode_paykit_deeplink(invoice_str);
         }
 
         // Node connection string handling
@@ -267,6 +277,70 @@ impl Scanner {
                 description,
                 network_type: network,
                 payee_node_id: Some(payee_node_id),
+            }
+        })
+    }
+
+    /// Checks if a string is a paykit deeplink
+    ///
+    /// Only accepts known/supported URL schemes to avoid ambiguity with
+    /// different transports (e.g., iroh:// vs pubky://).
+    fn is_paykit_deeplink(url: &str) -> bool {
+        // Parse URL to check scheme and structure
+        if let Ok(parsed) = Url::parse(url) {
+            let scheme = parsed.scheme();
+
+            // Check for paykit:// scheme directly
+            if scheme == "paykit" {
+                return true;
+            }
+
+            // Only accept known schemes with /paykit/ path
+            let known_schemes = ["bitkit", "pubky", "http", "https"];
+            if !known_schemes.contains(&scheme) {
+                return false;
+            }
+
+            // For custom schemes, check if host is "paykit"
+            if let Some(host) = parsed.host_str() {
+                if host == "paykit" {
+                    return true;
+                }
+            }
+
+            // For http(s), check if path contains /paykit/
+            if scheme == "http" || scheme == "https" {
+                return parsed.path().contains("/paykit/");
+            }
+        }
+
+        false
+    }
+
+    /// Decodes a paykit deeplink into Scanner data
+    fn decode_paykit_deeplink(url: &str) -> Result<Self, DecodingError> {
+        use crate::paykit::{parse_paykit_deeplink, PaykitError};
+
+        // Try to parse the deeplink
+        let deeplink = match parse_paykit_deeplink(url.to_string()) {
+            Ok(dl) => dl,
+            Err(PaykitError::SessionError(_message)) => {
+                return Err(DecodingError::InvalidFormat);
+            }
+            Err(_) => {
+                return Err(DecodingError::InvalidFormat);
+            }
+        };
+
+        // Extract the session token
+        let token = deeplink.session_token.ok_or(DecodingError::InvalidFormat)?;
+
+        Ok(Scanner::PaykitSession {
+            data: ScannedPaykitSession {
+                url: url.to_string(),
+                action: deeplink.action,
+                token,
+                parameters: deeplink.parameters,
             }
         })
     }

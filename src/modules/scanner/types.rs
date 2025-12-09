@@ -97,6 +97,14 @@ pub struct PubkyAuth {
 }
 
 #[derive(uniffi::Record, Serialize, Debug, Clone)]
+pub struct ScannedPaykitSession {
+    pub url: String,
+    pub action: String,
+    pub token: String,
+    pub parameters: HashMap<String, String>,
+}
+
+#[derive(uniffi::Record, Serialize, Debug, Clone)]
 pub struct OnChainInvoice {
     pub address: String,
     pub amount_satoshis: u64,
@@ -123,6 +131,7 @@ pub enum Scanner {
     OnChain { invoice: OnChainInvoice },
     Lightning { invoice: LightningInvoice },
     PubkyAuth { data: String },
+    PaykitSession { data: ScannedPaykitSession },
     LnurlChannel { data: LnurlChannelData },
     LnurlAuth { data: LnurlAuthData },
     LnurlWithdraw { data: LnurlWithdrawData },

@@ -109,6 +109,96 @@ public object NoPointer
 
 
 
+
+
+/**
+ * Authenticated transport wrapper for Paykit write operations.
+ */
+public interface PubkyAuthenticatedTransportInterface {
+    
+    /**
+     * Removes a payment endpoint.
+     *
+     * # Parameters
+     * - `method`: Payment method identifier to remove
+     *
+     * # Returns
+     * - `Ok(())` on successful removal
+     * - `Err` if the endpoint doesn't exist or transport fails
+     */
+    @Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+    public suspend fun `removePaymentEndpoint`(`method`: MethodId)
+    
+    /**
+     * Stores or updates a payment endpoint.
+     *
+     * # Parameters
+     * - `method`: Payment method identifier (e.g., "lightning", "onchain")
+     * - `data`: Endpoint data payload (UTF-8 JSON or other text format)
+     */
+    @Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+    public suspend fun `setPaymentEndpoint`(`method`: MethodId, `data`: EndpointData)
+    
+    public companion object
+}
+
+
+
+
+/**
+ * Unauthenticated transport wrapper for Paykit read operations.
+ */
+public interface PubkyUnauthenticatedTransportInterface {
+    
+    /**
+     * Returns known contacts (follows) of a given public key.
+     *
+     * # Parameters
+     * - `key`: Public key to query for contacts
+     *
+     * # Returns
+     * - `Ok(Vec<PublicKey>)` with list of known contacts
+     * - Returns empty vector if no contacts are stored
+     * - `Err` only on transport failures
+     */
+    @Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+    public suspend fun `getKnownContacts`(`key`: PublicKey): List<PublicKey>
+    
+    /**
+     * Retrieves a specific payment endpoint for a payee and method.
+     *
+     * # Parameters
+     * - `payee`: Public key of the payee
+     * - `method`: Payment method identifier to query
+     *
+     * # Returns
+     * - `Ok(Some(EndpointData))` if the endpoint exists
+     * - `Ok(None)` if the endpoint is not published
+     * - `Err` only on transport failures
+     */
+    @Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+    public suspend fun `getPaymentEndpoint`(`payee`: PublicKey, `method`: MethodId): EndpointData?
+    
+    /**
+     * Retrieves all supported payment methods for a given payee.
+     *
+     * # Parameters
+     * - `payee`: Public key of the payee to query
+     *
+     * # Returns
+     * - `Ok(SupportedPayments)` with map of method IDs to endpoint data
+     * - Returns empty map if no endpoints are published
+     * - `Err` only on transport failures
+     */
+    @Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+    public suspend fun `getPaymentList`(`payee`: PublicKey): SupportedPayments
+    
+    public companion object
+}
+
+
+
+
 /**
  * Account addresses
  */
@@ -433,6 +523,18 @@ public data class DeviceParams (
      * Device instance ID
      */
     val `instance`: kotlin.UInt?
+) {
+    public companion object
+}
+
+
+
+/**
+ * Serialized payload served by a payment endpoint (UTF-8 text such as JSON, LNURL, etc.).
+ */
+@kotlinx.serialization.Serializable
+public data class EndpointData (
+    val `data`: kotlin.String
 ) {
     public companion object
 }
@@ -1183,6 +1285,18 @@ public data class MessageSignatureResponse (
 
 
 /**
+ * Identifier for a payment method specification (e.g., "lightning", "onchain", "bolt11").
+ */
+@kotlinx.serialization.Serializable
+public data class MethodId (
+    val `id`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+/**
  * Multisig Redeem Script Type
  */
 @kotlinx.serialization.Serializable
@@ -1246,6 +1360,29 @@ public data class OnchainActivity (
     val `transferTxId`: kotlin.String?, 
     val `createdAt`: kotlin.ULong?, 
     val `updatedAt`: kotlin.ULong?
+) {
+    public companion object
+}
+
+
+
+/**
+ * Represents a parsed deeplink with Paykit session information
+ */
+@kotlinx.serialization.Serializable
+public data class PaykitDeeplink (
+    /**
+     * The action to perform (e.g., "session", "payment", "connect")
+     */
+    val `action`: kotlin.String, 
+    /**
+     * The session token if present
+     */
+    val `sessionToken`: kotlin.String?, 
+    /**
+     * Additional parameters from the deeplink
+     */
+    val `parameters`: Map<kotlin.String, kotlin.String>
 ) {
     public companion object
 }
@@ -1404,6 +1541,18 @@ public data class PubkyAuth (
 
 
 /**
+ * Public key wrapper for Paykit operations.
+ */
+@kotlinx.serialization.Serializable
+public data class PublicKey (
+    val `key`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+/**
  * Public key response containing the derived public key information
  */
 @kotlinx.serialization.Serializable
@@ -1544,6 +1693,64 @@ public data class RefundMemo (
 
 
 
+@kotlinx.serialization.Serializable
+public data class ScannedPaykitSession (
+    val `url`: kotlin.String, 
+    val `action`: kotlin.String, 
+    val `token`: kotlin.String, 
+    val `parameters`: Map<kotlin.String, kotlin.String>
+) {
+    public companion object
+}
+
+
+
+/**
+ * Represents serializable session data that can be passed through a deeplink
+ */
+@kotlinx.serialization.Serializable
+public data class SessionData (
+    /**
+     * The user's public key
+     */
+    val `publicKey`: kotlin.String, 
+    /**
+     * The user's secret key (encrypted or encoded)
+     */
+    val `secretKey`: kotlin.String, 
+    /**
+     * Optional homeserver URL
+     */
+    val `homeserverUrl`: kotlin.String?, 
+    /**
+     * Session expiry timestamp (Unix timestamp)
+     */
+    val `expiresAt`: kotlin.Long?, 
+    /**
+     * Additional metadata
+     */
+    val `metadata`: kotlin.String?
+) {
+    public companion object
+}
+
+
+
+/**
+ * Represents a session token that can be passed through deeplinks
+ */
+@kotlinx.serialization.Serializable
+public data class SessionToken (
+    /**
+     * Base64 URL-safe encoded session data
+     */
+    val `token`: kotlin.String
+) {
+    public companion object
+}
+
+
+
 /**
  * Signed transaction response
  */
@@ -1561,6 +1768,18 @@ public data class SignedTransactionResponse (
      * Broadcasted transaction ID (if push was true)
      */
     val `txid`: kotlin.String?
+) {
+    public companion object
+}
+
+
+
+/**
+ * Collection of supported payment entries keyed by method identifiers.
+ */
+@kotlinx.serialization.Serializable
+public data class SupportedPayments (
+    val `entries`: Map<kotlin.String, EndpointData>
 ) {
     public companion object
 }
@@ -2645,6 +2864,59 @@ public enum class NetworkType {
 
 
 
+/**
+ * Domain-specific error type for Paykit operations.
+ */
+public sealed class PaykitException: kotlin.Exception() {
+    
+    public class Unimplemented(
+        public val v1: kotlin.String,
+    ) : PaykitException() {
+        override val message: String
+            get() = "v1=${ v1 }"
+    }
+    
+    public class Transport(
+        public val v1: kotlin.String,
+    ) : PaykitException() {
+        override val message: String
+            get() = "v1=${ v1 }"
+    }
+    
+    public class InvalidPublicKey(
+        public val v1: kotlin.String,
+    ) : PaykitException() {
+        override val message: String
+            get() = "v1=${ v1 }"
+    }
+    
+    public class InvalidMethodId(
+        public val v1: kotlin.String,
+    ) : PaykitException() {
+        override val message: String
+            get() = "v1=${ v1 }"
+    }
+    
+    public class InvalidEndpointData(
+        public val v1: kotlin.String,
+    ) : PaykitException() {
+        override val message: String
+            get() = "v1=${ v1 }"
+    }
+    
+    public class SessionException(
+        public val v1: kotlin.String,
+    ) : PaykitException() {
+        override val message: String
+            get() = "v1=${ v1 }"
+    }
+    
+}
+
+
+
+
+
 @kotlinx.serialization.Serializable
 public enum class PaymentState {
     
@@ -2688,6 +2960,11 @@ public sealed class Scanner {
     @kotlinx.serialization.Serializable
     public data class PubkyAuth(
         val `data`: kotlin.String,
+    ) : Scanner() {
+    }
+    @kotlinx.serialization.Serializable
+    public data class PaykitSession(
+        val `data`: ScannedPaykitSession,
     ) : Scanner() {
     }
     @kotlinx.serialization.Serializable
@@ -2992,6 +3269,14 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
+
+
+
+
+
+
 
 
 

@@ -481,7 +481,13 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_create_cjit_entry() != 51504:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_create_deeplink_from_token() != 51091:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_create_order() != 33461:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_create_pubky_ring_session_request() != 2842:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_create_session_token_from_keypair() != 61582:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_create_withdraw_callback_url() != 39350:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -496,6 +502,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses() != 34371:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_derive_private_key() != 25155:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_deserialize_token_to_session() != 9427:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -535,6 +543,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_info() != 43607:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_known_contacts() != 14867:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee() != 6427:
@@ -542,6 +552,10 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_get_orders() != 47460:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_payment() != 29170:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_payment_endpoint() != 60834:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_payment_list() != 49866:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 53126:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -567,6 +581,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_open_channel() != 21402:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_parse_paykit_deeplink() != 40846:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries() != 5324:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_refresh_active_orders() != 50661:
@@ -585,11 +601,17 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_remove_payment_endpoint() != 692:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 1991:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_remove_tags() != 58873:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_serialize_session_to_token() != 52557:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_set_payment_endpoint() != 19775:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_test_notification() != 32857:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -639,9 +661,25 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_validate_paykit_deeplink() != 64617:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels() != 41511:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_pubkyauthenticatedtransport_remove_payment_endpoint() != 6181:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_pubkyauthenticatedtransport_set_payment_endpoint() != 9801:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_known_contacts() != 59528:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_payment_endpoint() != 53072:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_payment_list() != 50101:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_constructor_pubkyauthenticatedtransport_new() != 38771:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_constructor_pubkyunauthenticatedtransport_new() != 43061:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
 
 # A ctypes library to expose the extern-C FFI definitions.
@@ -749,6 +787,61 @@ class _UniffiForeignFutureStructVoid(ctypes.Structure):
     ]
 _UNIFFI_FOREIGN_FUTURE_COMPLETE_VOID = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiForeignFutureStructVoid,
 )
+_UniffiLib.uniffi_bitkitcore_fn_clone_pubkyauthenticatedtransport.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_clone_pubkyauthenticatedtransport.restype = ctypes.c_void_p
+_UniffiLib.uniffi_bitkitcore_fn_free_pubkyauthenticatedtransport.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_free_pubkyauthenticatedtransport.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_constructor_pubkyauthenticatedtransport_new.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_constructor_pubkyauthenticatedtransport_new.restype = ctypes.c_void_p
+_UniffiLib.uniffi_bitkitcore_fn_method_pubkyauthenticatedtransport_remove_payment_endpoint.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_pubkyauthenticatedtransport_remove_payment_endpoint.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_method_pubkyauthenticatedtransport_set_payment_endpoint.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_pubkyauthenticatedtransport_set_payment_endpoint.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_clone_pubkyunauthenticatedtransport.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_clone_pubkyunauthenticatedtransport.restype = ctypes.c_void_p
+_UniffiLib.uniffi_bitkitcore_fn_free_pubkyunauthenticatedtransport.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_free_pubkyunauthenticatedtransport.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_constructor_pubkyunauthenticatedtransport_new.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_constructor_pubkyunauthenticatedtransport_new.restype = ctypes.c_void_p
+_UniffiLib.uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_known_contacts.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_known_contacts.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_payment_endpoint.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_payment_endpoint.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_payment_list.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_payment_list.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_activity_wipe_all.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -802,12 +895,34 @@ _UniffiLib.uniffi_bitkitcore_fn_func_create_cjit_entry.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_create_cjit_entry.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_create_deeplink_from_token.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_create_deeplink_from_token.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_create_order.argtypes = (
     ctypes.c_uint64,
     ctypes.c_uint32,
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_create_order.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_create_pubky_ring_session_request.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_create_pubky_ring_session_request.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_create_session_token_from_keypair.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_create_session_token_from_keypair.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_create_withdraw_callback_url.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -856,6 +971,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_derive_private_key.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_derive_private_key.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_deserialize_token_to_session.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_deserialize_token_to_session.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_entropy_to_mnemonic.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -958,6 +1078,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_info.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_info.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_known_contacts.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_known_contacts.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice.argtypes = (
     _UniffiRustBuffer,
     ctypes.c_uint64,
@@ -977,6 +1102,17 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_payment.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_payment.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_payment_endpoint.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_payment_endpoint.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_payment_list.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_payment_list.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata.argtypes = (
     _UniffiRustBuffer,
     ctypes.c_int8,
@@ -1042,6 +1178,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_open_channel.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_open_channel.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_parse_paykit_deeplink.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_parse_paykit_deeplink.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_cjit_entries.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_cjit_entries.restype = ctypes.c_uint64
@@ -1088,6 +1229,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_remove_closed_channel_by_id.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_closed_channel_by_id.restype = ctypes.c_int8
+_UniffiLib.uniffi_bitkitcore_fn_func_remove_payment_endpoint.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_remove_payment_endpoint.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1105,6 +1251,17 @@ _UniffiLib.uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags.argtypes =
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_serialize_session_to_token.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_serialize_session_to_token.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_set_payment_endpoint.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_set_payment_endpoint.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_test_notification.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1302,6 +1459,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_validate_paykit_deeplink.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_validate_paykit_deeplink.restype = ctypes.c_int8
 _UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_closed_channels.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -1607,9 +1769,18 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_create_channel_request_url.restype = 
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_cjit_entry.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_cjit_entry.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_create_deeplink_from_token.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_create_deeplink_from_token.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_order.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_order.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_create_pubky_ring_session_request.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_create_pubky_ring_session_request.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_create_session_token_from_keypair.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_create_session_token_from_keypair.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_withdraw_callback_url.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_withdraw_callback_url.restype = ctypes.c_uint16
@@ -1631,6 +1802,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses.restype = ct
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_private_key.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_private_key.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_deserialize_token_to_session.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_deserialize_token_to_session.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic.restype = ctypes.c_uint16
@@ -1688,6 +1862,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_gift.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_info.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_info.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_known_contacts.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_known_contacts.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice.restype = ctypes.c_uint16
@@ -1700,6 +1877,12 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_orders.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_payment.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_payment.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_payment_endpoint.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_payment_endpoint.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_payment_list.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_payment_list.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata.restype = ctypes.c_uint16
@@ -1736,6 +1919,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_mnemonic_to_seed.restype = ctypes.c_u
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_parse_paykit_deeplink.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_parse_paykit_deeplink.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries.restype = ctypes.c_uint16
@@ -1763,6 +1949,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_regtest_pay.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_remove_payment_endpoint.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_remove_payment_endpoint.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags.restype = ctypes.c_uint16
@@ -1772,6 +1961,12 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_remove_tags.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_serialize_session_to_token.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_serialize_session_to_token.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_set_payment_endpoint.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_set_payment_endpoint.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_test_notification.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_test_notification.restype = ctypes.c_uint16
@@ -1844,12 +2039,36 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.restype = ct
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_mnemonic.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_mnemonic.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_validate_paykit_deeplink.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_validate_paykit_deeplink.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_databases.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_databases.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_pubkyauthenticatedtransport_remove_payment_endpoint.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_pubkyauthenticatedtransport_remove_payment_endpoint.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_pubkyauthenticatedtransport_set_payment_endpoint.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_pubkyauthenticatedtransport_set_payment_endpoint.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_known_contacts.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_known_contacts.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_payment_endpoint.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_payment_endpoint.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_payment_list.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_payment_list.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_constructor_pubkyauthenticatedtransport_new.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_constructor_pubkyauthenticatedtransport_new.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_constructor_pubkyunauthenticatedtransport_new.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_constructor_pubkyunauthenticatedtransport_new.restype = ctypes.c_uint16
 _UniffiLib.ffi_bitkitcore_uniffi_contract_version.argtypes = (
 )
 _UniffiLib.ffi_bitkitcore_uniffi_contract_version.restype = ctypes.c_uint32
@@ -1898,6 +2117,19 @@ class _UniffiConverterUInt64(_UniffiConverterPrimitiveInt):
     @staticmethod
     def write(value, buf):
         buf.write_u64(value)
+
+class _UniffiConverterInt64(_UniffiConverterPrimitiveInt):
+    CLASS_NAME = "i64"
+    VALUE_MIN = -2**63
+    VALUE_MAX = 2**63
+
+    @staticmethod
+    def read(buf):
+        return buf.read_i64()
+
+    @staticmethod
+    def write(value, buf):
+        buf.write_i64(value)
 
 class _UniffiConverterDouble(_UniffiConverterPrimitiveFloat):
     @staticmethod
@@ -1980,6 +2212,10 @@ class _UniffiConverterBytes(_UniffiConverterRustBuffer):
     def write(value, buf):
         buf.write_i32(len(value))
         buf.write(value)
+
+
+
+
 
 
 class AccountAddresses:
@@ -3066,6 +3302,39 @@ class _UniffiConverterTypeDeviceParams(_UniffiConverterRustBuffer):
     def write(value, buf):
         _UniffiConverterOptionalString.write(value.path, buf)
         _UniffiConverterOptionalUInt32.write(value.instance, buf)
+
+
+class EndpointData:
+    """
+    Serialized payload served by a payment endpoint (UTF-8 text such as JSON, LNURL, etc.).
+    """
+
+    data: "str"
+    def __init__(self, *, data: "str"):
+        self.data = data
+
+    def __str__(self):
+        return "EndpointData(data={})".format(self.data)
+
+    def __eq__(self, other):
+        if self.data != other.data:
+            return False
+        return True
+
+class _UniffiConverterTypeEndpointData(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return EndpointData(
+            data=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.data)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.data, buf)
 
 
 class ErrorData:
@@ -6016,6 +6285,39 @@ class _UniffiConverterTypeMessageSignatureResponse(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.signature, buf)
 
 
+class MethodId:
+    """
+    Identifier for a payment method specification (e.g., "lightning", "onchain", "bolt11").
+    """
+
+    id: "str"
+    def __init__(self, *, id: "str"):
+        self.id = id
+
+    def __str__(self):
+        return "MethodId(id={})".format(self.id)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        return True
+
+class _UniffiConverterTypeMethodId(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return MethodId(
+            id=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+
+
 class MultisigRedeemScriptType:
     """
     Multisig Redeem Script Type
@@ -6300,6 +6602,65 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalString.write(value.transfer_tx_id, buf)
         _UniffiConverterOptionalUInt64.write(value.created_at, buf)
         _UniffiConverterOptionalUInt64.write(value.updated_at, buf)
+
+
+class PaykitDeeplink:
+    """
+    Represents a parsed deeplink with Paykit session information
+    """
+
+    action: "str"
+    """
+    The action to perform (e.g., "session", "payment", "connect")
+    """
+
+    session_token: "typing.Optional[str]"
+    """
+    The session token if present
+    """
+
+    parameters: "dict[str, str]"
+    """
+    Additional parameters from the deeplink
+    """
+
+    def __init__(self, *, action: "str", session_token: "typing.Optional[str]", parameters: "dict[str, str]"):
+        self.action = action
+        self.session_token = session_token
+        self.parameters = parameters
+
+    def __str__(self):
+        return "PaykitDeeplink(action={}, session_token={}, parameters={})".format(self.action, self.session_token, self.parameters)
+
+    def __eq__(self, other):
+        if self.action != other.action:
+            return False
+        if self.session_token != other.session_token:
+            return False
+        if self.parameters != other.parameters:
+            return False
+        return True
+
+class _UniffiConverterTypePaykitDeeplink(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return PaykitDeeplink(
+            action=_UniffiConverterString.read(buf),
+            session_token=_UniffiConverterOptionalString.read(buf),
+            parameters=_UniffiConverterMapStringString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.action)
+        _UniffiConverterOptionalString.check_lower(value.session_token)
+        _UniffiConverterMapStringString.check_lower(value.parameters)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.action, buf)
+        _UniffiConverterOptionalString.write(value.session_token, buf)
+        _UniffiConverterMapStringString.write(value.parameters, buf)
 
 
 class PaymentRequestMemo:
@@ -6747,6 +7108,39 @@ class _UniffiConverterTypePubkyAuth(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.data, buf)
 
 
+class PublicKey:
+    """
+    Public key wrapper for Paykit operations.
+    """
+
+    key: "str"
+    def __init__(self, *, key: "str"):
+        self.key = key
+
+    def __str__(self):
+        return "PublicKey(key={})".format(self.key)
+
+    def __eq__(self, other):
+        if self.key != other.key:
+            return False
+        return True
+
+class _UniffiConverterTypePublicKey(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return PublicKey(
+            key=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.key)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.key, buf)
+
+
 class PublicKeyResponse:
     """
     Public key response containing the derived public key information
@@ -7156,6 +7550,174 @@ class _UniffiConverterTypeRefundMemo(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.mac, buf)
 
 
+class ScannedPaykitSession:
+    url: "str"
+    action: "str"
+    token: "str"
+    parameters: "dict[str, str]"
+    def __init__(self, *, url: "str", action: "str", token: "str", parameters: "dict[str, str]"):
+        self.url = url
+        self.action = action
+        self.token = token
+        self.parameters = parameters
+
+    def __str__(self):
+        return "ScannedPaykitSession(url={}, action={}, token={}, parameters={})".format(self.url, self.action, self.token, self.parameters)
+
+    def __eq__(self, other):
+        if self.url != other.url:
+            return False
+        if self.action != other.action:
+            return False
+        if self.token != other.token:
+            return False
+        if self.parameters != other.parameters:
+            return False
+        return True
+
+class _UniffiConverterTypeScannedPaykitSession(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return ScannedPaykitSession(
+            url=_UniffiConverterString.read(buf),
+            action=_UniffiConverterString.read(buf),
+            token=_UniffiConverterString.read(buf),
+            parameters=_UniffiConverterMapStringString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.url)
+        _UniffiConverterString.check_lower(value.action)
+        _UniffiConverterString.check_lower(value.token)
+        _UniffiConverterMapStringString.check_lower(value.parameters)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.url, buf)
+        _UniffiConverterString.write(value.action, buf)
+        _UniffiConverterString.write(value.token, buf)
+        _UniffiConverterMapStringString.write(value.parameters, buf)
+
+
+class SessionData:
+    """
+    Represents serializable session data that can be passed through a deeplink
+    """
+
+    public_key: "str"
+    """
+    The user's public key
+    """
+
+    secret_key: "str"
+    """
+    The user's secret key (encrypted or encoded)
+    """
+
+    homeserver_url: "typing.Optional[str]"
+    """
+    Optional homeserver URL
+    """
+
+    expires_at: "typing.Optional[int]"
+    """
+    Session expiry timestamp (Unix timestamp)
+    """
+
+    metadata: "typing.Optional[str]"
+    """
+    Additional metadata
+    """
+
+    def __init__(self, *, public_key: "str", secret_key: "str", homeserver_url: "typing.Optional[str]", expires_at: "typing.Optional[int]", metadata: "typing.Optional[str]"):
+        self.public_key = public_key
+        self.secret_key = secret_key
+        self.homeserver_url = homeserver_url
+        self.expires_at = expires_at
+        self.metadata = metadata
+
+    def __str__(self):
+        return "SessionData(public_key={}, secret_key={}, homeserver_url={}, expires_at={}, metadata={})".format(self.public_key, self.secret_key, self.homeserver_url, self.expires_at, self.metadata)
+
+    def __eq__(self, other):
+        if self.public_key != other.public_key:
+            return False
+        if self.secret_key != other.secret_key:
+            return False
+        if self.homeserver_url != other.homeserver_url:
+            return False
+        if self.expires_at != other.expires_at:
+            return False
+        if self.metadata != other.metadata:
+            return False
+        return True
+
+class _UniffiConverterTypeSessionData(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return SessionData(
+            public_key=_UniffiConverterString.read(buf),
+            secret_key=_UniffiConverterString.read(buf),
+            homeserver_url=_UniffiConverterOptionalString.read(buf),
+            expires_at=_UniffiConverterOptionalInt64.read(buf),
+            metadata=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.public_key)
+        _UniffiConverterString.check_lower(value.secret_key)
+        _UniffiConverterOptionalString.check_lower(value.homeserver_url)
+        _UniffiConverterOptionalInt64.check_lower(value.expires_at)
+        _UniffiConverterOptionalString.check_lower(value.metadata)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.public_key, buf)
+        _UniffiConverterString.write(value.secret_key, buf)
+        _UniffiConverterOptionalString.write(value.homeserver_url, buf)
+        _UniffiConverterOptionalInt64.write(value.expires_at, buf)
+        _UniffiConverterOptionalString.write(value.metadata, buf)
+
+
+class SessionToken:
+    """
+    Represents a session token that can be passed through deeplinks
+    """
+
+    token: "str"
+    """
+    Base64 URL-safe encoded session data
+    """
+
+    def __init__(self, *, token: "str"):
+        self.token = token
+
+    def __str__(self):
+        return "SessionToken(token={})".format(self.token)
+
+    def __eq__(self, other):
+        if self.token != other.token:
+            return False
+        return True
+
+class _UniffiConverterTypeSessionToken(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return SessionToken(
+            token=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.token)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.token, buf)
+
+
 class SignedTransactionResponse:
     """
     Signed transaction response
@@ -7213,6 +7775,39 @@ class _UniffiConverterTypeSignedTransactionResponse(_UniffiConverterRustBuffer):
         _UniffiConverterSequenceString.write(value.signatures, buf)
         _UniffiConverterString.write(value.serialized_tx, buf)
         _UniffiConverterOptionalString.write(value.txid, buf)
+
+
+class SupportedPayments:
+    """
+    Collection of supported payment entries keyed by method identifiers.
+    """
+
+    entries: "dict[str, EndpointData]"
+    def __init__(self, *, entries: "dict[str, EndpointData]"):
+        self.entries = entries
+
+    def __str__(self):
+        return "SupportedPayments(entries={})".format(self.entries)
+
+    def __eq__(self, other):
+        if self.entries != other.entries:
+            return False
+        return True
+
+class _UniffiConverterTypeSupportedPayments(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return SupportedPayments(
+            entries=_UniffiConverterMapStringTypeEndpointData.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterMapStringTypeEndpointData.check_lower(value.entries)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterMapStringTypeEndpointData.write(value.entries, buf)
 
 
 class TextMemo:
@@ -10462,6 +11057,194 @@ class _UniffiConverterTypeNetworkType(_UniffiConverterRustBuffer):
 
 
 
+# PaykitError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class PaykitError(Exception):
+    """
+    Domain-specific error type for Paykit operations.
+    """
+
+    pass
+
+_UniffiTempPaykitError = PaykitError
+
+class PaykitError:  # type: ignore
+    """
+    Domain-specific error type for Paykit operations.
+    """
+
+    class Unimplemented(_UniffiTempPaykitError):
+        def __init__(self, *values):
+            if len(values) != 1:
+                raise TypeError(f"Expected 1 arguments, found {len(values)}")
+            if not isinstance(values[0], str):
+                raise TypeError(f"unexpected type for tuple element 0 - expected 'str', got '{type(values[0])}'")
+            super().__init__(", ".join(map(repr, values)))
+            self._values = values
+
+        def __getitem__(self, index):
+            return self._values[index]
+
+        def __repr__(self):
+            return "PaykitError.Unimplemented({})".format(str(self))
+    _UniffiTempPaykitError.Unimplemented = Unimplemented # type: ignore
+    class Transport(_UniffiTempPaykitError):
+        def __init__(self, *values):
+            if len(values) != 1:
+                raise TypeError(f"Expected 1 arguments, found {len(values)}")
+            if not isinstance(values[0], str):
+                raise TypeError(f"unexpected type for tuple element 0 - expected 'str', got '{type(values[0])}'")
+            super().__init__(", ".join(map(repr, values)))
+            self._values = values
+
+        def __getitem__(self, index):
+            return self._values[index]
+
+        def __repr__(self):
+            return "PaykitError.Transport({})".format(str(self))
+    _UniffiTempPaykitError.Transport = Transport # type: ignore
+    class InvalidPublicKey(_UniffiTempPaykitError):
+        def __init__(self, *values):
+            if len(values) != 1:
+                raise TypeError(f"Expected 1 arguments, found {len(values)}")
+            if not isinstance(values[0], str):
+                raise TypeError(f"unexpected type for tuple element 0 - expected 'str', got '{type(values[0])}'")
+            super().__init__(", ".join(map(repr, values)))
+            self._values = values
+
+        def __getitem__(self, index):
+            return self._values[index]
+
+        def __repr__(self):
+            return "PaykitError.InvalidPublicKey({})".format(str(self))
+    _UniffiTempPaykitError.InvalidPublicKey = InvalidPublicKey # type: ignore
+    class InvalidMethodId(_UniffiTempPaykitError):
+        def __init__(self, *values):
+            if len(values) != 1:
+                raise TypeError(f"Expected 1 arguments, found {len(values)}")
+            if not isinstance(values[0], str):
+                raise TypeError(f"unexpected type for tuple element 0 - expected 'str', got '{type(values[0])}'")
+            super().__init__(", ".join(map(repr, values)))
+            self._values = values
+
+        def __getitem__(self, index):
+            return self._values[index]
+
+        def __repr__(self):
+            return "PaykitError.InvalidMethodId({})".format(str(self))
+    _UniffiTempPaykitError.InvalidMethodId = InvalidMethodId # type: ignore
+    class InvalidEndpointData(_UniffiTempPaykitError):
+        def __init__(self, *values):
+            if len(values) != 1:
+                raise TypeError(f"Expected 1 arguments, found {len(values)}")
+            if not isinstance(values[0], str):
+                raise TypeError(f"unexpected type for tuple element 0 - expected 'str', got '{type(values[0])}'")
+            super().__init__(", ".join(map(repr, values)))
+            self._values = values
+
+        def __getitem__(self, index):
+            return self._values[index]
+
+        def __repr__(self):
+            return "PaykitError.InvalidEndpointData({})".format(str(self))
+    _UniffiTempPaykitError.InvalidEndpointData = InvalidEndpointData # type: ignore
+    class SessionError(_UniffiTempPaykitError):
+        def __init__(self, *values):
+            if len(values) != 1:
+                raise TypeError(f"Expected 1 arguments, found {len(values)}")
+            if not isinstance(values[0], str):
+                raise TypeError(f"unexpected type for tuple element 0 - expected 'str', got '{type(values[0])}'")
+            super().__init__(", ".join(map(repr, values)))
+            self._values = values
+
+        def __getitem__(self, index):
+            return self._values[index]
+
+        def __repr__(self):
+            return "PaykitError.SessionError({})".format(str(self))
+    _UniffiTempPaykitError.SessionError = SessionError # type: ignore
+
+PaykitError = _UniffiTempPaykitError # type: ignore
+del _UniffiTempPaykitError
+
+
+class _UniffiConverterTypePaykitError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return PaykitError.Unimplemented(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 2:
+            return PaykitError.Transport(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return PaykitError.InvalidPublicKey(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 4:
+            return PaykitError.InvalidMethodId(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 5:
+            return PaykitError.InvalidEndpointData(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 6:
+            return PaykitError.SessionError(
+                _UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, PaykitError.Unimplemented):
+            _UniffiConverterString.check_lower(value._values[0])
+            return
+        if isinstance(value, PaykitError.Transport):
+            _UniffiConverterString.check_lower(value._values[0])
+            return
+        if isinstance(value, PaykitError.InvalidPublicKey):
+            _UniffiConverterString.check_lower(value._values[0])
+            return
+        if isinstance(value, PaykitError.InvalidMethodId):
+            _UniffiConverterString.check_lower(value._values[0])
+            return
+        if isinstance(value, PaykitError.InvalidEndpointData):
+            _UniffiConverterString.check_lower(value._values[0])
+            return
+        if isinstance(value, PaykitError.SessionError):
+            _UniffiConverterString.check_lower(value._values[0])
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, PaykitError.Unimplemented):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value._values[0], buf)
+        if isinstance(value, PaykitError.Transport):
+            buf.write_i32(2)
+            _UniffiConverterString.write(value._values[0], buf)
+        if isinstance(value, PaykitError.InvalidPublicKey):
+            buf.write_i32(3)
+            _UniffiConverterString.write(value._values[0], buf)
+        if isinstance(value, PaykitError.InvalidMethodId):
+            buf.write_i32(4)
+            _UniffiConverterString.write(value._values[0], buf)
+        if isinstance(value, PaykitError.InvalidEndpointData):
+            buf.write_i32(5)
+            _UniffiConverterString.write(value._values[0], buf)
+        if isinstance(value, PaykitError.SessionError):
+            buf.write_i32(6)
+            _UniffiConverterString.write(value._values[0], buf)
+
+
 
 
 
@@ -10597,6 +11380,22 @@ class Scanner:
 
         def __eq__(self, other):
             if not other.is_PUBKY_AUTH():
+                return False
+            if self.data != other.data:
+                return False
+            return True
+    
+    class PAYKIT_SESSION:
+        data: "ScannedPaykitSession"
+
+        def __init__(self,data: "ScannedPaykitSession"):
+            self.data = data
+
+        def __str__(self):
+            return "Scanner.PAYKIT_SESSION(data={})".format(self.data)
+
+        def __eq__(self, other):
+            if not other.is_PAYKIT_SESSION():
                 return False
             if self.data != other.data:
                 return False
@@ -10738,6 +11537,10 @@ class Scanner:
         return isinstance(self, Scanner.PUBKY_AUTH)
     def is_pubky_auth(self) -> bool:
         return isinstance(self, Scanner.PUBKY_AUTH)
+    def is_PAYKIT_SESSION(self) -> bool:
+        return isinstance(self, Scanner.PAYKIT_SESSION)
+    def is_paykit_session(self) -> bool:
+        return isinstance(self, Scanner.PAYKIT_SESSION)
     def is_LNURL_CHANNEL(self) -> bool:
         return isinstance(self, Scanner.LNURL_CHANNEL)
     def is_lnurl_channel(self) -> bool:
@@ -10774,6 +11577,7 @@ class Scanner:
 Scanner.ON_CHAIN = type("Scanner.ON_CHAIN", (Scanner.ON_CHAIN, Scanner,), {})  # type: ignore
 Scanner.LIGHTNING = type("Scanner.LIGHTNING", (Scanner.LIGHTNING, Scanner,), {})  # type: ignore
 Scanner.PUBKY_AUTH = type("Scanner.PUBKY_AUTH", (Scanner.PUBKY_AUTH, Scanner,), {})  # type: ignore
+Scanner.PAYKIT_SESSION = type("Scanner.PAYKIT_SESSION", (Scanner.PAYKIT_SESSION, Scanner,), {})  # type: ignore
 Scanner.LNURL_CHANNEL = type("Scanner.LNURL_CHANNEL", (Scanner.LNURL_CHANNEL, Scanner,), {})  # type: ignore
 Scanner.LNURL_AUTH = type("Scanner.LNURL_AUTH", (Scanner.LNURL_AUTH, Scanner,), {})  # type: ignore
 Scanner.LNURL_WITHDRAW = type("Scanner.LNURL_WITHDRAW", (Scanner.LNURL_WITHDRAW, Scanner,), {})  # type: ignore
@@ -10802,31 +11606,35 @@ class _UniffiConverterTypeScanner(_UniffiConverterRustBuffer):
                 _UniffiConverterString.read(buf),
             )
         if variant == 4:
+            return Scanner.PAYKIT_SESSION(
+                _UniffiConverterTypeScannedPaykitSession.read(buf),
+            )
+        if variant == 5:
             return Scanner.LNURL_CHANNEL(
                 _UniffiConverterTypeLnurlChannelData.read(buf),
             )
-        if variant == 5:
+        if variant == 6:
             return Scanner.LNURL_AUTH(
                 _UniffiConverterTypeLnurlAuthData.read(buf),
             )
-        if variant == 6:
+        if variant == 7:
             return Scanner.LNURL_WITHDRAW(
                 _UniffiConverterTypeLnurlWithdrawData.read(buf),
             )
-        if variant == 7:
+        if variant == 8:
             return Scanner.LNURL_ADDRESS(
                 _UniffiConverterTypeLnurlAddressData.read(buf),
             )
-        if variant == 8:
+        if variant == 9:
             return Scanner.LNURL_PAY(
                 _UniffiConverterTypeLnurlPayData.read(buf),
             )
-        if variant == 9:
+        if variant == 10:
             return Scanner.NODE_ID(
                 _UniffiConverterString.read(buf),
                 _UniffiConverterTypeNetworkType.read(buf),
             )
-        if variant == 10:
+        if variant == 11:
             return Scanner.GIFT(
                 _UniffiConverterString.read(buf),
                 _UniffiConverterUInt64.read(buf),
@@ -10843,6 +11651,9 @@ class _UniffiConverterTypeScanner(_UniffiConverterRustBuffer):
             return
         if value.is_PUBKY_AUTH():
             _UniffiConverterString.check_lower(value.data)
+            return
+        if value.is_PAYKIT_SESSION():
+            _UniffiConverterTypeScannedPaykitSession.check_lower(value.data)
             return
         if value.is_LNURL_CHANNEL():
             _UniffiConverterTypeLnurlChannelData.check_lower(value.data)
@@ -10880,27 +11691,30 @@ class _UniffiConverterTypeScanner(_UniffiConverterRustBuffer):
         if value.is_PUBKY_AUTH():
             buf.write_i32(3)
             _UniffiConverterString.write(value.data, buf)
-        if value.is_LNURL_CHANNEL():
+        if value.is_PAYKIT_SESSION():
             buf.write_i32(4)
+            _UniffiConverterTypeScannedPaykitSession.write(value.data, buf)
+        if value.is_LNURL_CHANNEL():
+            buf.write_i32(5)
             _UniffiConverterTypeLnurlChannelData.write(value.data, buf)
         if value.is_LNURL_AUTH():
-            buf.write_i32(5)
+            buf.write_i32(6)
             _UniffiConverterTypeLnurlAuthData.write(value.data, buf)
         if value.is_LNURL_WITHDRAW():
-            buf.write_i32(6)
+            buf.write_i32(7)
             _UniffiConverterTypeLnurlWithdrawData.write(value.data, buf)
         if value.is_LNURL_ADDRESS():
-            buf.write_i32(7)
+            buf.write_i32(8)
             _UniffiConverterTypeLnurlAddressData.write(value.data, buf)
         if value.is_LNURL_PAY():
-            buf.write_i32(8)
+            buf.write_i32(9)
             _UniffiConverterTypeLnurlPayData.write(value.data, buf)
         if value.is_NODE_ID():
-            buf.write_i32(9)
+            buf.write_i32(10)
             _UniffiConverterString.write(value.url, buf)
             _UniffiConverterTypeNetworkType.write(value.network, buf)
         if value.is_GIFT():
-            buf.write_i32(10)
+            buf.write_i32(11)
             _UniffiConverterString.write(value.code, buf)
             _UniffiConverterUInt64.write(value.amount, buf)
 
@@ -11838,6 +12652,33 @@ class _UniffiConverterOptionalUInt64(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalInt64(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterInt64.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterInt64.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterInt64.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalBool(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -12103,6 +12944,33 @@ class _UniffiConverterOptionalTypeDeviceParams(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterTypeDeviceParams.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeEndpointData(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeEndpointData.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeEndpointData.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeEndpointData.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -13927,6 +14795,31 @@ class _UniffiConverterSequenceTypePrecomposedTransaction(_UniffiConverterRustBuf
 
 
 
+class _UniffiConverterSequenceTypePublicKey(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypePublicKey.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypePublicKey.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypePublicKey.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypeRefTransaction(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14158,7 +15051,412 @@ class _UniffiConverterMapStringString(_UniffiConverterRustBuffer):
             d[key] = val
         return d
 
+
+
+class _UniffiConverterMapStringTypeEndpointData(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, items):
+        for (key, value) in items.items():
+            _UniffiConverterString.check_lower(key)
+            _UniffiConverterTypeEndpointData.check_lower(value)
+
+    @classmethod
+    def write(cls, items, buf):
+        buf.write_i32(len(items))
+        for (key, value) in items.items():
+            _UniffiConverterString.write(key, buf)
+            _UniffiConverterTypeEndpointData.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative map size")
+
+        # It would be nice to use a dict comprehension,
+        # but in Python 3.7 and before the evaluation order is not according to spec,
+        # so we we're reading the value before the key.
+        # This loop makes the order explicit: first reading the key, then the value.
+        d = {}
+        for i in range(count):
+            key = _UniffiConverterString.read(buf)
+            val = _UniffiConverterTypeEndpointData.read(buf)
+            d[key] = val
+        return d
+
 # objects.
+class PubkyAuthenticatedTransportProtocol(typing.Protocol):
+    """
+    Authenticated transport wrapper for Paykit write operations.
+    """
+
+    def remove_payment_endpoint(self, method: "MethodId"):
+        """
+        Removes a payment endpoint.
+
+        # Parameters
+        - `method`: Payment method identifier to remove
+
+        # Returns
+        - `Ok(())` on successful removal
+        - `Err` if the endpoint doesn't exist or transport fails
+        """
+
+        raise NotImplementedError
+    def set_payment_endpoint(self, method: "MethodId",data: "EndpointData"):
+        """
+        Stores or updates a payment endpoint.
+
+        # Parameters
+        - `method`: Payment method identifier (e.g., "lightning", "onchain")
+        - `data`: Endpoint data payload (UTF-8 JSON or other text format)
+        """
+
+        raise NotImplementedError
+# PubkyAuthenticatedTransport is a Rust-only trait - it's a wrapper around a Rust implementation.
+class PubkyAuthenticatedTransport():
+    """
+    Authenticated transport wrapper for Paykit write operations.
+    """
+
+    _pointer: ctypes.c_void_p
+    def __init__(self, ):
+        """
+        Creates a new authenticated transport.
+        Note: This requires proper session initialization which should be handled
+        by the application layer. For now, this returns an error indicating the
+        need for external session management.
+        """
+
+        self._pointer = _uniffi_rust_call_with_error(_UniffiConverterTypePaykitError,_UniffiLib.uniffi_bitkitcore_fn_constructor_pubkyauthenticatedtransport_new,)
+
+    def __del__(self):
+        # In case of partial initialization of instances.
+        pointer = getattr(self, "_pointer", None)
+        if pointer is not None:
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_free_pubkyauthenticatedtransport, pointer)
+
+    def _uniffi_clone_pointer(self):
+        return _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_clone_pubkyauthenticatedtransport, self._pointer)
+
+    # Used by alternative constructors or any methods which return this type.
+    @classmethod
+    def _make_instance_(cls, pointer):
+        # Lightly yucky way to bypass the usual __init__ logic
+        # and just create a new instance with the required pointer.
+        inst = cls.__new__(cls)
+        inst._pointer = pointer
+        return inst
+
+    async def remove_payment_endpoint(self, method: "MethodId") -> None:
+
+        """
+        Removes a payment endpoint.
+
+        # Parameters
+        - `method`: Payment method identifier to remove
+
+        # Returns
+        - `Ok(())` on successful removal
+        - `Err` if the endpoint doesn't exist or transport fails
+        """
+
+        _UniffiConverterTypeMethodId.check_lower(method)
+        
+        return await _uniffi_rust_call_async(
+            _UniffiLib.uniffi_bitkitcore_fn_method_pubkyauthenticatedtransport_remove_payment_endpoint(
+                self._uniffi_clone_pointer(), 
+        _UniffiConverterTypeMethodId.lower(method)
+            ),
+            _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+            _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+            _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+            # lift function
+            lambda val: None,
+            
+            
+    # Error FFI converter
+_UniffiConverterTypePaykitError,
+
+        )
+
+
+
+    async def set_payment_endpoint(self, method: "MethodId",data: "EndpointData") -> None:
+
+        """
+        Stores or updates a payment endpoint.
+
+        # Parameters
+        - `method`: Payment method identifier (e.g., "lightning", "onchain")
+        - `data`: Endpoint data payload (UTF-8 JSON or other text format)
+        """
+
+        _UniffiConverterTypeMethodId.check_lower(method)
+        
+        _UniffiConverterTypeEndpointData.check_lower(data)
+        
+        return await _uniffi_rust_call_async(
+            _UniffiLib.uniffi_bitkitcore_fn_method_pubkyauthenticatedtransport_set_payment_endpoint(
+                self._uniffi_clone_pointer(), 
+        _UniffiConverterTypeMethodId.lower(method),
+        _UniffiConverterTypeEndpointData.lower(data)
+            ),
+            _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+            _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+            _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+            # lift function
+            lambda val: None,
+            
+            
+    # Error FFI converter
+_UniffiConverterTypePaykitError,
+
+        )
+
+
+
+
+
+class _UniffiConverterTypePubkyAuthenticatedTransport:
+
+    @staticmethod
+    def lift(value: int):
+        return PubkyAuthenticatedTransport._make_instance_(value)
+
+    @staticmethod
+    def check_lower(value: PubkyAuthenticatedTransport):
+        if not isinstance(value, PubkyAuthenticatedTransport):
+            raise TypeError("Expected PubkyAuthenticatedTransport instance, {} found".format(type(value).__name__))
+
+    @staticmethod
+    def lower(value: PubkyAuthenticatedTransportProtocol):
+        if not isinstance(value, PubkyAuthenticatedTransport):
+            raise TypeError("Expected PubkyAuthenticatedTransport instance, {} found".format(type(value).__name__))
+        return value._uniffi_clone_pointer()
+
+    @classmethod
+    def read(cls, buf: _UniffiRustBuffer):
+        ptr = buf.read_u64()
+        if ptr == 0:
+            raise InternalError("Raw pointer value was null")
+        return cls.lift(ptr)
+
+    @classmethod
+    def write(cls, value: PubkyAuthenticatedTransportProtocol, buf: _UniffiRustBuffer):
+        buf.write_u64(cls.lower(value))
+class PubkyUnauthenticatedTransportProtocol(typing.Protocol):
+    """
+    Unauthenticated transport wrapper for Paykit read operations.
+    """
+
+    def get_known_contacts(self, key: "PublicKey"):
+        """
+        Returns known contacts (follows) of a given public key.
+
+        # Parameters
+        - `key`: Public key to query for contacts
+
+        # Returns
+        - `Ok(Vec<PublicKey>)` with list of known contacts
+        - Returns empty vector if no contacts are stored
+        - `Err` only on transport failures
+        """
+
+        raise NotImplementedError
+    def get_payment_endpoint(self, payee: "PublicKey",method: "MethodId"):
+        """
+        Retrieves a specific payment endpoint for a payee and method.
+
+        # Parameters
+        - `payee`: Public key of the payee
+        - `method`: Payment method identifier to query
+
+        # Returns
+        - `Ok(Some(EndpointData))` if the endpoint exists
+        - `Ok(None)` if the endpoint is not published
+        - `Err` only on transport failures
+        """
+
+        raise NotImplementedError
+    def get_payment_list(self, payee: "PublicKey"):
+        """
+        Retrieves all supported payment methods for a given payee.
+
+        # Parameters
+        - `payee`: Public key of the payee to query
+
+        # Returns
+        - `Ok(SupportedPayments)` with map of method IDs to endpoint data
+        - Returns empty map if no endpoints are published
+        - `Err` only on transport failures
+        """
+
+        raise NotImplementedError
+# PubkyUnauthenticatedTransport is a Rust-only trait - it's a wrapper around a Rust implementation.
+class PubkyUnauthenticatedTransport():
+    """
+    Unauthenticated transport wrapper for Paykit read operations.
+    """
+
+    _pointer: ctypes.c_void_p
+    def __init__(self, ):
+        """
+        Creates a new unauthenticated transport for reading public payment data.
+        """
+
+        self._pointer = _uniffi_rust_call_with_error(_UniffiConverterTypePaykitError,_UniffiLib.uniffi_bitkitcore_fn_constructor_pubkyunauthenticatedtransport_new,)
+
+    def __del__(self):
+        # In case of partial initialization of instances.
+        pointer = getattr(self, "_pointer", None)
+        if pointer is not None:
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_free_pubkyunauthenticatedtransport, pointer)
+
+    def _uniffi_clone_pointer(self):
+        return _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_clone_pubkyunauthenticatedtransport, self._pointer)
+
+    # Used by alternative constructors or any methods which return this type.
+    @classmethod
+    def _make_instance_(cls, pointer):
+        # Lightly yucky way to bypass the usual __init__ logic
+        # and just create a new instance with the required pointer.
+        inst = cls.__new__(cls)
+        inst._pointer = pointer
+        return inst
+
+    async def get_known_contacts(self, key: "PublicKey") -> "typing.List[PublicKey]":
+        """
+        Returns known contacts (follows) of a given public key.
+
+        # Parameters
+        - `key`: Public key to query for contacts
+
+        # Returns
+        - `Ok(Vec<PublicKey>)` with list of known contacts
+        - Returns empty vector if no contacts are stored
+        - `Err` only on transport failures
+        """
+
+        _UniffiConverterTypePublicKey.check_lower(key)
+        
+        return await _uniffi_rust_call_async(
+            _UniffiLib.uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_known_contacts(
+                self._uniffi_clone_pointer(), 
+        _UniffiConverterTypePublicKey.lower(key)
+            ),
+            _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+            _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+            _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+            # lift function
+            _UniffiConverterSequenceTypePublicKey.lift,
+            
+    # Error FFI converter
+_UniffiConverterTypePaykitError,
+
+        )
+
+
+
+    async def get_payment_endpoint(self, payee: "PublicKey",method: "MethodId") -> "typing.Optional[EndpointData]":
+        """
+        Retrieves a specific payment endpoint for a payee and method.
+
+        # Parameters
+        - `payee`: Public key of the payee
+        - `method`: Payment method identifier to query
+
+        # Returns
+        - `Ok(Some(EndpointData))` if the endpoint exists
+        - `Ok(None)` if the endpoint is not published
+        - `Err` only on transport failures
+        """
+
+        _UniffiConverterTypePublicKey.check_lower(payee)
+        
+        _UniffiConverterTypeMethodId.check_lower(method)
+        
+        return await _uniffi_rust_call_async(
+            _UniffiLib.uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_payment_endpoint(
+                self._uniffi_clone_pointer(), 
+        _UniffiConverterTypePublicKey.lower(payee),
+        _UniffiConverterTypeMethodId.lower(method)
+            ),
+            _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+            _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+            _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+            # lift function
+            _UniffiConverterOptionalTypeEndpointData.lift,
+            
+    # Error FFI converter
+_UniffiConverterTypePaykitError,
+
+        )
+
+
+
+    async def get_payment_list(self, payee: "PublicKey") -> "SupportedPayments":
+        """
+        Retrieves all supported payment methods for a given payee.
+
+        # Parameters
+        - `payee`: Public key of the payee to query
+
+        # Returns
+        - `Ok(SupportedPayments)` with map of method IDs to endpoint data
+        - Returns empty map if no endpoints are published
+        - `Err` only on transport failures
+        """
+
+        _UniffiConverterTypePublicKey.check_lower(payee)
+        
+        return await _uniffi_rust_call_async(
+            _UniffiLib.uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_payment_list(
+                self._uniffi_clone_pointer(), 
+        _UniffiConverterTypePublicKey.lower(payee)
+            ),
+            _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+            _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+            _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+            # lift function
+            _UniffiConverterTypeSupportedPayments.lift,
+            
+    # Error FFI converter
+_UniffiConverterTypePaykitError,
+
+        )
+
+
+
+
+
+class _UniffiConverterTypePubkyUnauthenticatedTransport:
+
+    @staticmethod
+    def lift(value: int):
+        return PubkyUnauthenticatedTransport._make_instance_(value)
+
+    @staticmethod
+    def check_lower(value: PubkyUnauthenticatedTransport):
+        if not isinstance(value, PubkyUnauthenticatedTransport):
+            raise TypeError("Expected PubkyUnauthenticatedTransport instance, {} found".format(type(value).__name__))
+
+    @staticmethod
+    def lower(value: PubkyUnauthenticatedTransportProtocol):
+        if not isinstance(value, PubkyUnauthenticatedTransport):
+            raise TypeError("Expected PubkyUnauthenticatedTransport instance, {} found".format(type(value).__name__))
+        return value._uniffi_clone_pointer()
+
+    @classmethod
+    def read(cls, buf: _UniffiRustBuffer):
+        ptr = buf.read_u64()
+        if ptr == 0:
+            raise InternalError("Raw pointer value was null")
+        return cls.lift(ptr)
+
+    @classmethod
+    def write(cls, value: PubkyUnauthenticatedTransportProtocol, buf: _UniffiRustBuffer):
+        buf.write_u64(cls.lower(value))
 
 # Async support# RustFuturePoll values
 _UNIFFI_RUST_FUTURE_POLL_READY = 0
@@ -14357,6 +15655,46 @@ async def create_cjit_entry(channel_size_sat: "int",invoice_sat: "int",invoice_d
 _UniffiConverterTypeBlocktankError,
 
     )
+
+def create_deeplink_from_token(base_url: "str",action: "str",token: "SessionToken",additional_params: "typing.Optional[dict[str, str]]") -> "str":
+    """
+    Creates a deeplink URL from a session token.
+
+    Use this to generate a deeplink that can be shared with another app instance.
+
+    # Example
+    ```
+    let token = create_session_token_from_keypair(
+    public_key,
+    secret_key,
+    None,
+    Some(3600)
+    )?;
+
+    let deeplink_url = create_deeplink_from_token(
+    "myapp://",
+    "session",
+    token,
+    None
+    )?;
+    // Result: "myapp://paykit/session?token=..."
+    ```
+    """
+
+    _UniffiConverterString.check_lower(base_url)
+    
+    _UniffiConverterString.check_lower(action)
+    
+    _UniffiConverterTypeSessionToken.check_lower(token)
+    
+    _UniffiConverterOptionalMapStringString.check_lower(additional_params)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePaykitError,_UniffiLib.uniffi_bitkitcore_fn_func_create_deeplink_from_token,
+        _UniffiConverterString.lower(base_url),
+        _UniffiConverterString.lower(action),
+        _UniffiConverterTypeSessionToken.lower(token),
+        _UniffiConverterOptionalMapStringString.lower(additional_params)))
+
 async def create_order(lsp_balance_sat: "int",channel_expiry_weeks: "int",options: "typing.Optional[CreateOrderOptions]") -> "IBtOrder":
 
     _UniffiConverterUInt64.check_lower(lsp_balance_sat)
@@ -14380,6 +15718,72 @@ async def create_order(lsp_balance_sat: "int",channel_expiry_weeks: "int",option
 _UniffiConverterTypeBlocktankError,
 
     )
+
+def create_pubky_ring_session_request(callback_url: "str",additional_params: "typing.Optional[dict[str, str]]") -> "str":
+    """
+    Creates a session request URL to send to Pubky Ring for authentication.
+
+    This generates a URL that Bitkit displays as a QR code or uses to open Pubky Ring.
+    When Pubky Ring completes authentication, it will return the session data
+    via the provided callback URL.
+
+    # Parameters
+    - `callback_url`: The URL scheme and path where Pubky Ring should return the session.
+    Example: "bitkit://paykit/session-data" or "bitkit://session"
+    - `additional_params`: Optional additional parameters to include in the request URL
+
+    # Returns
+    A URL string like: `pubkyring://session?callback=bitkit%3A%2F%2Fpaykit%2Fsession-data`
+
+    # Example
+    ```
+    // Generate URL for QR code or "Open Pubky Ring" button
+    let request_url = create_pubky_ring_session_request(
+    "bitkit://paykit/session-data".to_string(),
+    None
+    )?;
+    // Result: "pubkyring://session?callback=bitkit%3A%2F%2Fpaykit%2Fsession-data"
+
+    // With additional parameters
+    let mut params = HashMap::new();
+    params.insert("app_name".to_string(), "Bitkit".to_string());
+    let request_url = create_pubky_ring_session_request(
+    "bitkit://paykit/session-data".to_string(),
+    Some(params)
+    )?;
+    ```
+    """
+
+    _UniffiConverterString.check_lower(callback_url)
+    
+    _UniffiConverterOptionalMapStringString.check_lower(additional_params)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePaykitError,_UniffiLib.uniffi_bitkitcore_fn_func_create_pubky_ring_session_request,
+        _UniffiConverterString.lower(callback_url),
+        _UniffiConverterOptionalMapStringString.lower(additional_params)))
+
+
+def create_session_token_from_keypair(public_key: "str",secret_key: "str",homeserver_url: "typing.Optional[str]",expires_in_seconds: "typing.Optional[int]") -> "SessionToken":
+    """
+    Helper function to create a session token from raw keypair data.
+
+    This is useful when you have the keypair but need to create a shareable token.
+    """
+
+    _UniffiConverterString.check_lower(public_key)
+    
+    _UniffiConverterString.check_lower(secret_key)
+    
+    _UniffiConverterOptionalString.check_lower(homeserver_url)
+    
+    _UniffiConverterOptionalInt64.check_lower(expires_in_seconds)
+    
+    return _UniffiConverterTypeSessionToken.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePaykitError,_UniffiLib.uniffi_bitkitcore_fn_func_create_session_token_from_keypair,
+        _UniffiConverterString.lower(public_key),
+        _UniffiConverterString.lower(secret_key),
+        _UniffiConverterOptionalString.lower(homeserver_url),
+        _UniffiConverterOptionalInt64.lower(expires_in_seconds)))
+
 
 def create_withdraw_callback_url(k1: "str",callback: "str",payment_request: "str") -> "str":
     _UniffiConverterString.check_lower(k1)
@@ -14480,6 +15884,24 @@ def derive_private_key(mnemonic_phrase: "str",derivation_path_str: "typing.Optio
         _UniffiConverterOptionalString.lower(derivation_path_str),
         _UniffiConverterOptionalTypeNetwork.lower(network),
         _UniffiConverterOptionalString.lower(bip39_passphrase)))
+
+
+def deserialize_token_to_session(token: "SessionToken") -> "SessionData":
+    """
+    Deserializes a session token back into session data.
+
+    # Example
+    ```
+    let token = SessionToken::new("base64_encoded_session_data");
+    let session_data = deserialize_token_to_session(token)?;
+    // Now you have the session data back
+    ```
+    """
+
+    _UniffiConverterTypeSessionToken.check_lower(token)
+    
+    return _UniffiConverterTypeSessionData.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePaykitError,_UniffiLib.uniffi_bitkitcore_fn_func_deserialize_token_to_session,
+        _UniffiConverterTypeSessionToken.lower(token)))
 
 
 def entropy_to_mnemonic(entropy: "bytes") -> "str":
@@ -14700,6 +16122,49 @@ async def get_info(refresh: "typing.Optional[bool]") -> "typing.Optional[IBtInfo
 _UniffiConverterTypeBlocktankError,
 
     )
+async def get_known_contacts(reader: "PubkyUnauthenticatedTransport",key: "PublicKey") -> "typing.List[PublicKey]":
+
+    """
+    Returns known contacts (follows) of a given public key.
+
+    # Parameters
+    - `reader`: Unauthenticated transport for reading public data
+    - `key`: Public key to query for contacts
+
+    # Returns
+    - `Ok(Vec<PublicKey>)` with list of known contacts
+    - Returns empty vector if no contacts are stored
+    - `Err` only on transport failures
+
+    # Example
+    ```
+    let reader = PubkyUnauthenticatedTransport::new()?;
+    let user = PublicKey { key: "...".to_string() };
+    let contacts = get_known_contacts(&reader, &user).await?;
+    for contact in contacts {
+    println!("Contact: {}", contact.key);
+    }
+    ```
+    """
+
+    _UniffiConverterTypePubkyUnauthenticatedTransport.check_lower(reader)
+    
+    _UniffiConverterTypePublicKey.check_lower(key)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_get_known_contacts(
+        _UniffiConverterTypePubkyUnauthenticatedTransport.lower(reader),
+        _UniffiConverterTypePublicKey.lower(key)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterSequenceTypePublicKey.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypePaykitError,
+
+    )
 async def get_lnurl_invoice(address: "str",amount_satoshis: "int") -> "str":
 
     _UniffiConverterString.check_lower(address)
@@ -14775,6 +16240,96 @@ async def get_payment(payment_id: "str") -> "IBtBolt11Invoice":
         
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
+
+    )
+async def get_payment_endpoint(reader: "PubkyUnauthenticatedTransport",payee: "PublicKey",method: "MethodId") -> "typing.Optional[EndpointData]":
+
+    """
+    Retrieves a specific payment endpoint for a payee and method.
+
+    # Parameters
+    - `reader`: Unauthenticated transport for reading public data
+    - `payee`: Public key of the payee
+    - `method`: Payment method identifier to query
+
+    # Returns
+    - `Ok(Some(EndpointData))` if the endpoint exists
+    - `Ok(None)` if the endpoint is not published
+    - `Err` only on transport failures
+
+    # Example
+    ```
+    let reader = PubkyUnauthenticatedTransport::new()?;
+    let payee = PublicKey { key: "...".to_string() };
+    let method = MethodId { id: "lightning".to_string() };
+    if let Some(endpoint) = get_payment_endpoint(&reader, &payee, &method).await? {
+    println!("Lightning endpoint: {}", endpoint.data);
+    }
+    ```
+    """
+
+    _UniffiConverterTypePubkyUnauthenticatedTransport.check_lower(reader)
+    
+    _UniffiConverterTypePublicKey.check_lower(payee)
+    
+    _UniffiConverterTypeMethodId.check_lower(method)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_get_payment_endpoint(
+        _UniffiConverterTypePubkyUnauthenticatedTransport.lower(reader),
+        _UniffiConverterTypePublicKey.lower(payee),
+        _UniffiConverterTypeMethodId.lower(method)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterOptionalTypeEndpointData.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypePaykitError,
+
+    )
+async def get_payment_list(reader: "PubkyUnauthenticatedTransport",payee: "PublicKey") -> "SupportedPayments":
+
+    """
+    Retrieves all supported payment methods for a given payee.
+
+    # Parameters
+    - `reader`: Unauthenticated transport for reading public data
+    - `payee`: Public key of the payee to query
+
+    # Returns
+    - `Ok(SupportedPayments)` with map of method IDs to endpoint data
+    - Returns empty map if no endpoints are published
+    - `Err` only on transport failures
+
+    # Example
+    ```
+    let reader = PubkyUnauthenticatedTransport::new()?;
+    let payee = PublicKey { key: "...".to_string() };
+    let payments = get_payment_list(&reader, &payee).await?;
+    for (method_id, data) in payments.entries {
+    println!("Method: {}, Data: {}", method_id, data.data);
+    }
+    ```
+    """
+
+    _UniffiConverterTypePubkyUnauthenticatedTransport.check_lower(reader)
+    
+    _UniffiConverterTypePublicKey.check_lower(payee)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_get_payment_list(
+        _UniffiConverterTypePubkyUnauthenticatedTransport.lower(reader),
+        _UniffiConverterTypePublicKey.lower(payee)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeSupportedPayments.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypePaykitError,
 
     )
 
@@ -14928,6 +16483,30 @@ async def open_channel(order_id: "str",connection_string: "str") -> "IBtOrder":
 _UniffiConverterTypeBlocktankError,
 
     )
+
+def parse_paykit_deeplink(url: "str") -> "PaykitDeeplink":
+    """
+    Parses a deeplink URL into a PaykitDeeplink structure.
+
+    # Supported URL Formats
+    - `myapp://paykit/session?token=<base64_token>`
+    - `myapp://paykit/connect?token=<base64_token>&return_url=<url>`
+    - `https://myapp.com/paykit/session?token=<base64_token>`
+
+    # Example
+    ```
+    let url = "myapp://paykit/session?token=eyJwdWJsaWNfa2V5IjoiLi4uIn0";
+    let deeplink = parse_paykit_deeplink(url)?;
+    assert_eq!(deeplink.action, "session");
+    assert!(deeplink.session_token.is_some());
+    ```
+    """
+
+    _UniffiConverterString.check_lower(url)
+    
+    return _UniffiConverterTypePaykitDeeplink.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePaykitError,_UniffiLib.uniffi_bitkitcore_fn_func_parse_paykit_deeplink,
+        _UniffiConverterString.lower(url)))
+
 async def refresh_active_cjit_entries() -> "typing.List[IcJitEntry]":
 
     """
@@ -15107,6 +16686,39 @@ def remove_closed_channel_by_id(channel_id: "str") -> "bool":
     return _UniffiConverterBool.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_remove_closed_channel_by_id,
         _UniffiConverterString.lower(channel_id)))
 
+async def remove_payment_endpoint(client: "PubkyAuthenticatedTransport",method: "MethodId") -> None:
+
+    """
+    Removes a payment endpoint via the authenticated transport.
+
+    # Parameters
+    - `client`: Authenticated transport client
+    - `method`: Payment method identifier to remove
+
+    # Returns
+    - `Ok(())` on successful removal
+    - `Err` if the endpoint doesn't exist or transport fails
+    """
+
+    _UniffiConverterTypePubkyAuthenticatedTransport.check_lower(client)
+    
+    _UniffiConverterTypeMethodId.check_lower(method)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_remove_payment_endpoint(
+        _UniffiConverterTypePubkyAuthenticatedTransport.lower(client),
+        _UniffiConverterTypeMethodId.lower(method)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypePaykitError,
+
+    )
 
 def remove_pre_activity_metadata_tags(payment_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(payment_id)
@@ -15134,6 +16746,77 @@ def reset_pre_activity_metadata_tags(payment_id: "str") -> None:
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags,
         _UniffiConverterString.lower(payment_id))
 
+
+def serialize_session_to_token(session_data: "SessionData") -> "SessionToken":
+    """
+    Serializes session data into a token string suitable for deeplinks.
+
+    # Security Considerations
+    - The secret key should be encrypted before serialization
+    - Use HTTPS/secure channels when transmitting
+    - Consider adding expiration times
+    - Implement token rotation for long-lived sessions
+
+    # Example
+    ```
+    let session_data = SessionData {
+    public_key: "user_public_key".to_string(),
+    secret_key: "encrypted_secret".to_string(),
+    homeserver_url: Some("https://homeserver.example".to_string()),
+    expires_at: Some(1234567890),
+    metadata: None,
+    };
+
+    let token = serialize_session_to_token(session_data)?;
+    // token.token can now be passed through a deeplink
+    ```
+    """
+
+    _UniffiConverterTypeSessionData.check_lower(session_data)
+    
+    return _UniffiConverterTypeSessionToken.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePaykitError,_UniffiLib.uniffi_bitkitcore_fn_func_serialize_session_to_token,
+        _UniffiConverterTypeSessionData.lower(session_data)))
+
+async def set_payment_endpoint(client: "PubkyAuthenticatedTransport",method: "MethodId",data: "EndpointData") -> None:
+
+    """
+    Stores or updates a payment endpoint via the authenticated transport.
+
+    # Parameters
+    - `client`: Authenticated transport client
+    - `method`: Payment method identifier (e.g., "lightning", "onchain")
+    - `data`: Endpoint data payload (UTF-8 JSON or other text format)
+
+    # Example
+    ```
+    let method = MethodId { id: "lightning".to_string() };
+    let data = EndpointData { data: r#"{"bolt11":"lnbc..."}"#.to_string() };
+    set_payment_endpoint(&client, method, data).await?;
+    ```
+    """
+
+    _UniffiConverterTypePubkyAuthenticatedTransport.check_lower(client)
+    
+    _UniffiConverterTypeMethodId.check_lower(method)
+    
+    _UniffiConverterTypeEndpointData.check_lower(data)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_set_payment_endpoint(
+        _UniffiConverterTypePubkyAuthenticatedTransport.lower(client),
+        _UniffiConverterTypeMethodId.lower(method),
+        _UniffiConverterTypeEndpointData.lower(data)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypePaykitError,
+
+    )
 async def test_notification(device_token: "str",secret_message: "str",notification_type: "typing.Optional[str]",custom_url: "typing.Optional[str]") -> "str":
 
     _UniffiConverterString.check_lower(device_token)
@@ -15603,6 +17286,19 @@ def validate_mnemonic(mnemonic_phrase: "str") -> None:
         _UniffiConverterString.lower(mnemonic_phrase))
 
 
+def validate_paykit_deeplink(url: "str") -> "bool":
+    """
+    Validates a deeplink URL without processing it.
+
+    Use this to check if a URL is a valid Paykit deeplink before handling it.
+    """
+
+    _UniffiConverterString.check_lower(url)
+    
+    return _UniffiConverterBool.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePaykitError,_UniffiLib.uniffi_bitkitcore_fn_func_validate_paykit_deeplink,
+        _UniffiConverterString.lower(url)))
+
+
 def wipe_all_closed_channels() -> None:
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_closed_channels,)
 
@@ -15651,6 +17347,7 @@ __all__ = [
     "ManualRefundStateEnum",
     "Network",
     "NetworkType",
+    "PaykitError",
     "PaymentState",
     "PaymentType",
     "Scanner",
@@ -15678,6 +17375,7 @@ __all__ = [
     "DeepLinkResult",
     "DefaultLspBalanceParams",
     "DeviceParams",
+    "EndpointData",
     "ErrorData",
     "FeatureResponse",
     "FeeLevel",
@@ -15720,21 +17418,28 @@ __all__ = [
     "LnurlPayData",
     "LnurlWithdrawData",
     "MessageSignatureResponse",
+    "MethodId",
     "MultisigRedeemScriptType",
     "OnChainInvoice",
     "OnchainActivity",
+    "PaykitDeeplink",
     "PaymentRequestMemo",
     "PreActivityMetadata",
     "PrecomposedInput",
     "PrecomposedOutput",
     "PrecomposedTransaction",
     "PubkyAuth",
+    "PublicKey",
     "PublicKeyResponse",
     "RefTransaction",
     "RefTxInput",
     "RefTxOutput",
     "RefundMemo",
+    "ScannedPaykitSession",
+    "SessionData",
+    "SessionToken",
     "SignedTransactionResponse",
+    "SupportedPayments",
     "TextMemo",
     "TxAckPaymentRequest",
     "TxInputType",
@@ -15753,7 +17458,10 @@ __all__ = [
     "calculate_channel_liquidity_options",
     "create_channel_request_url",
     "create_cjit_entry",
+    "create_deeplink_from_token",
     "create_order",
+    "create_pubky_ring_session_request",
+    "create_session_token_from_keypair",
     "create_withdraw_callback_url",
     "decode",
     "delete_activity_by_id",
@@ -15761,6 +17469,7 @@ __all__ = [
     "derive_bitcoin_address",
     "derive_bitcoin_addresses",
     "derive_private_key",
+    "deserialize_token_to_session",
     "entropy_to_mnemonic",
     "estimate_order_fee",
     "estimate_order_fee_full",
@@ -15780,10 +17489,13 @@ __all__ = [
     "get_default_lsp_balance",
     "get_gift",
     "get_info",
+    "get_known_contacts",
     "get_lnurl_invoice",
     "get_min_zero_conf_tx_fee",
     "get_orders",
     "get_payment",
+    "get_payment_endpoint",
+    "get_payment_list",
     "get_pre_activity_metadata",
     "get_tags",
     "gift_order",
@@ -15796,6 +17508,7 @@ __all__ = [
     "mnemonic_to_entropy",
     "mnemonic_to_seed",
     "open_channel",
+    "parse_paykit_deeplink",
     "refresh_active_cjit_entries",
     "refresh_active_orders",
     "register_device",
@@ -15805,9 +17518,12 @@ __all__ = [
     "regtest_mine",
     "regtest_pay",
     "remove_closed_channel_by_id",
+    "remove_payment_endpoint",
     "remove_pre_activity_metadata_tags",
     "remove_tags",
     "reset_pre_activity_metadata_tags",
+    "serialize_session_to_token",
+    "set_payment_endpoint",
     "test_notification",
     "trezor_compose_transaction",
     "trezor_get_account_info",
@@ -15832,7 +17548,10 @@ __all__ = [
     "upsert_tags",
     "validate_bitcoin_address",
     "validate_mnemonic",
+    "validate_paykit_deeplink",
     "wipe_all_closed_channels",
     "wipe_all_databases",
+    "PubkyAuthenticatedTransport",
+    "PubkyUnauthenticatedTransport",
 ]
 

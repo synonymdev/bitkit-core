@@ -10,6 +10,7 @@ pub use modules::scanner::{
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
+pub use modules::paykit;
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
 use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse};

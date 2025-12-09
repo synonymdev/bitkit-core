@@ -19,6 +19,8 @@ package com.synonym.bitkitcore
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Structure
+import android.os.Build
+import androidx.annotation.RequiresApi
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -1136,6 +1138,48 @@ internal interface UniffiForeignFutureCompleteVoid: com.sun.jna.Callback {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1205,7 +1249,16 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_create_cjit_entry() != 51504.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_create_deeplink_from_token() != 51091.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_create_order() != 33461.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_create_pubky_ring_session_request() != 2842.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_create_session_token_from_keypair() != 61582.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_create_withdraw_callback_url() != 39350.toShort()) {
@@ -1227,6 +1280,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_derive_private_key() != 25155.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_deserialize_token_to_session() != 9427.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123.toShort()) {
@@ -1286,6 +1342,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_get_info() != 43607.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_get_known_contacts() != 14867.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1296,6 +1355,12 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_payment() != 29170.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_get_payment_endpoint() != 60834.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_get_payment_list() != 49866.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 53126.toShort()) {
@@ -1334,6 +1399,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_open_channel() != 21402.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_parse_paykit_deeplink() != 40846.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries() != 5324.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1361,6 +1429,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_remove_payment_endpoint() != 692.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 1991.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1368,6 +1439,12 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_serialize_session_to_token() != 52557.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_set_payment_endpoint() != 19775.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_test_notification() != 32857.toShort()) {
@@ -1442,10 +1519,34 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_validate_paykit_deeplink() != 64617.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_wipe_all_closed_channels() != 41511.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_pubkyauthenticatedtransport_remove_payment_endpoint() != 6181.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_pubkyauthenticatedtransport_set_payment_endpoint() != 9801.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_known_contacts() != 59528.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_payment_endpoint() != 53072.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_payment_list() != 50101.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_constructor_pubkyauthenticatedtransport_new() != 38771.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_constructor_pubkyunauthenticatedtransport_new() != 43061.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
     }
@@ -1482,7 +1583,16 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_create_cjit_entry(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_create_deeplink_from_token(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_create_order(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_create_pubky_ring_session_request(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_create_session_token_from_keypair(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_create_withdraw_callback_url(
@@ -1504,6 +1614,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_derive_private_key(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_deserialize_token_to_session(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_entropy_to_mnemonic(
@@ -1563,6 +1676,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_get_info(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_known_contacts(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_lnurl_invoice(
     ): Short
     @JvmStatic
@@ -1573,6 +1689,12 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_payment(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_payment_endpoint(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_payment_list(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_pre_activity_metadata(
@@ -1611,6 +1733,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_open_channel(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_parse_paykit_deeplink(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries(
     ): Short
     @JvmStatic
@@ -1638,6 +1763,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_remove_payment_endpoint(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags(
     ): Short
     @JvmStatic
@@ -1645,6 +1773,12 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_serialize_session_to_token(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_set_payment_endpoint(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_test_notification(
@@ -1719,10 +1853,34 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_validate_mnemonic(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_validate_paykit_deeplink(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_wipe_all_closed_channels(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_wipe_all_databases(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_pubkyauthenticatedtransport_remove_payment_endpoint(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_pubkyauthenticatedtransport_set_payment_endpoint(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_known_contacts(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_payment_endpoint(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_pubkyunauthenticatedtransport_get_payment_list(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_constructor_pubkyauthenticatedtransport_new(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_constructor_pubkyunauthenticatedtransport_new(
     ): Short
     @JvmStatic
     external fun ffi_bitkitcore_uniffi_contract_version(
@@ -1739,6 +1897,65 @@ internal object UniffiLib : Library {
         // No need to check the contract version and checksums, since
         // we already did that with `IntegrityCheckingUniffiLib` above.
     }
+    // The Cleaner for the whole library
+    internal val CLEANER: UniffiCleaner by lazy {
+        UniffiCleaner.create()
+    }
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_clone_pubkyauthenticatedtransport(
+        `ptr`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Pointer?
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_free_pubkyauthenticatedtransport(
+        `ptr`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_constructor_pubkyauthenticatedtransport_new(
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Pointer?
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_pubkyauthenticatedtransport_remove_payment_endpoint(
+        `ptr`: Pointer?,
+        `method`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_pubkyauthenticatedtransport_set_payment_endpoint(
+        `ptr`: Pointer?,
+        `method`: RustBufferByValue,
+        `data`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_clone_pubkyunauthenticatedtransport(
+        `ptr`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Pointer?
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_free_pubkyunauthenticatedtransport(
+        `ptr`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_constructor_pubkyunauthenticatedtransport_new(
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Pointer?
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_known_contacts(
+        `ptr`: Pointer?,
+        `key`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_payment_endpoint(
+        `ptr`: Pointer?,
+        `payee`: RustBufferByValue,
+        `method`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_payment_list(
+        `ptr`: Pointer?,
+        `payee`: RustBufferByValue,
+    ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_activity_wipe_all(
         uniffiCallStatus: UniffiRustCallStatus,
@@ -1793,11 +2010,33 @@ internal object UniffiLib : Library {
         `options`: RustBufferByValue,
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_create_deeplink_from_token(
+        `baseUrl`: RustBufferByValue,
+        `action`: RustBufferByValue,
+        `token`: RustBufferByValue,
+        `additionalParams`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_create_order(
         `lspBalanceSat`: Long,
         `channelExpiryWeeks`: Int,
         `options`: RustBufferByValue,
     ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_create_pubky_ring_session_request(
+        `callbackUrl`: RustBufferByValue,
+        `additionalParams`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_create_session_token_from_keypair(
+        `publicKey`: RustBufferByValue,
+        `secretKey`: RustBufferByValue,
+        `homeserverUrl`: RustBufferByValue,
+        `expiresInSeconds`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_create_withdraw_callback_url(
         `k1`: RustBufferByValue,
@@ -1844,6 +2083,11 @@ internal object UniffiLib : Library {
         `derivationPathStr`: RustBufferByValue,
         `network`: RustBufferByValue,
         `bip39Passphrase`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_deserialize_token_to_session(
+        `token`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
@@ -1949,6 +2193,11 @@ internal object UniffiLib : Library {
         `refresh`: RustBufferByValue,
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_known_contacts(
+        `reader`: Pointer?,
+        `key`: RustBufferByValue,
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_lnurl_invoice(
         `address`: RustBufferByValue,
         `amountSatoshis`: Long,
@@ -1966,6 +2215,17 @@ internal object UniffiLib : Library {
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_payment(
         `paymentId`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_payment_endpoint(
+        `reader`: Pointer?,
+        `payee`: RustBufferByValue,
+        `method`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_payment_list(
+        `reader`: Pointer?,
+        `payee`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_pre_activity_metadata(
@@ -2033,6 +2293,11 @@ internal object UniffiLib : Library {
         `connectionString`: RustBufferByValue,
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_parse_paykit_deeplink(
+        `url`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_refresh_active_cjit_entries(
     ): Long
     @JvmStatic
@@ -2079,6 +2344,11 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): Byte
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_remove_payment_endpoint(
+        `client`: Pointer?,
+        `method`: RustBufferByValue,
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags(
         `paymentId`: RustBufferByValue,
         `tags`: RustBufferByValue,
@@ -2095,6 +2365,17 @@ internal object UniffiLib : Library {
         `paymentId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_serialize_session_to_token(
+        `sessionData`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_set_payment_endpoint(
+        `client`: Pointer?,
+        `method`: RustBufferByValue,
+        `data`: RustBufferByValue,
+    ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_test_notification(
         `deviceToken`: RustBufferByValue,
@@ -2292,6 +2573,11 @@ internal object UniffiLib : Library {
         `mnemonicPhrase`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_validate_paykit_deeplink(
+        `url`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Byte
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_wipe_all_closed_channels(
         uniffiCallStatus: UniffiRustCallStatus,
@@ -2575,6 +2861,69 @@ public fun uniffiEnsureInitialized() {
 
 // Public interface members begin here.
 
+// The cleaner interface for Object finalization code to run.
+// This is the entry point to any implementation that we're using.
+//
+// The cleaner registers disposables and returns cleanables, so now we are
+// defining a `UniffiCleaner` with a `UniffiClenaer.Cleanable` to abstract the
+// different implementations available at compile time.
+public interface UniffiCleaner {
+    public interface Cleanable {
+        public fun clean()
+    }
+
+    public fun register(resource: Any, disposable: Disposable): UniffiCleaner.Cleanable
+
+    public companion object
+}
+// The fallback Jna cleaner, which is available for both Android, and the JVM.
+private class UniffiJnaCleaner : UniffiCleaner {
+    private val cleaner = com.sun.jna.internal.Cleaner.getCleaner()
+
+    override fun register(resource: Any, disposable: Disposable): UniffiCleaner.Cleanable =
+        UniffiJnaCleanable(cleaner.register(resource, UniffiCleanerAction(disposable)))
+}
+
+private class UniffiJnaCleanable(
+    private val cleanable: com.sun.jna.internal.Cleaner.Cleanable,
+) : UniffiCleaner.Cleanable {
+    override fun clean() = cleanable.clean()
+}
+
+private class UniffiCleanerAction(private val disposable: Disposable): Runnable {
+    override fun run() {
+        disposable.destroy()
+    }
+}
+
+// The SystemCleaner, available from API Level 33.
+// Some API Level 33 OSes do not support using it, so we require API Level 34.
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+private class AndroidSystemCleaner : UniffiCleaner {
+    private val cleaner = android.system.SystemCleaner.cleaner()
+
+    override fun register(resource: Any, disposable: Disposable): UniffiCleaner.Cleanable =
+        AndroidSystemCleanable(cleaner.register(resource, UniffiCleanerAction(disposable)))
+}
+
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+private class AndroidSystemCleanable(
+    private val cleanable: java.lang.ref.Cleaner.Cleanable,
+) : UniffiCleaner.Cleanable {
+    override fun clean() = cleanable.clean()
+}
+
+private fun UniffiCleaner.Companion.create(): UniffiCleaner {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        try {
+            return AndroidSystemCleaner()
+        } catch (_: IllegalAccessError) {
+            // (For Compose preview) Fallback to UniffiJnaCleaner if AndroidSystemCleaner is
+            // unavailable, even for API level 34 or higher.
+        }
+    }
+    return UniffiJnaCleaner()
+}
 
 
 public object FfiConverterUByte: FfiConverter<UByte, Byte> {
@@ -2636,6 +2985,27 @@ public object FfiConverterULong: FfiConverter<ULong, Long> {
 
     override fun write(value: ULong, buf: ByteBuffer) {
         buf.putLong(value.toLong())
+    }
+}
+
+
+public object FfiConverterLong: FfiConverter<Long, Long> {
+    override fun lift(value: Long): Long {
+        return value
+    }
+
+    override fun read(buf: ByteBuffer): Long {
+        return buf.getLong()
+    }
+
+    override fun lower(value: Long): Long {
+        return value
+    }
+
+    override fun allocationSize(value: Long): ULong = 8UL
+
+    override fun write(value: Long, buf: ByteBuffer) {
+        buf.putLong(value)
     }
 }
 
@@ -2743,6 +3113,454 @@ public object FfiConverterByteArray: FfiConverterRustBuffer<ByteArray> {
     override fun write(value: ByteArray, buf: ByteBuffer) {
         buf.putInt(value.size)
         buf.put(value)
+    }
+}
+
+
+
+/**
+ * Authenticated transport wrapper for Paykit write operations.
+ */
+public open class PubkyAuthenticatedTransport: Disposable, PubkyAuthenticatedTransportInterface {
+
+    public constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiPointerDestroyer(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    public constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiPointerDestroyer(null))
+    }
+    /**
+     * Creates a new authenticated transport.
+     * Note: This requires proper session initialization which should be handled
+     * by the application layer. For now, this returns an error indicating the
+     * need for external session management.
+     */
+    public constructor() : this(
+        uniffiRustCallWithError(PaykitExceptionErrorHandler) { uniffiRustCallStatus ->
+            UniffiLib.uniffi_bitkitcore_fn_constructor_pubkyauthenticatedtransport_new(
+                uniffiRustCallStatus,
+            )
+        }!!
+    )
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed: kotlinx.atomicfu.AtomicBoolean = kotlinx.atomicfu.atomic(false)
+    private val callCounter: kotlinx.atomicfu.AtomicLong = kotlinx.atomicfu.atomic(1L)
+
+    private val lock = kotlinx.atomicfu.locks.ReentrantLock()
+
+    private fun <T> synchronized(block: () -> T): T {
+        lock.lock()
+        try {
+            return block()
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    override fun close() {
+        synchronized { this.destroy() }
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.value
+            if (c == 0L) {
+                throw IllegalStateException("${this::class::simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this::class::simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiPointerDestroyer(private val pointer: Pointer?) : Disposable {
+        override fun destroy() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.uniffi_bitkitcore_fn_free_pubkyauthenticatedtransport(ptr, status)
+                }
+            }
+        }
+    }
+
+    public fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall { status ->
+            UniffiLib.uniffi_bitkitcore_fn_clone_pubkyauthenticatedtransport(pointer!!, status)
+        }!!
+    }
+
+    
+    /**
+     * Removes a payment endpoint.
+     *
+     * # Parameters
+     * - `method`: Payment method identifier to remove
+     *
+     * # Returns
+     * - `Ok(())` on successful removal
+     * - `Err` if the endpoint doesn't exist or transport fails
+     */
+    @Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+    public override suspend fun `removePaymentEndpoint`(`method`: MethodId) {
+        return uniffiRustCallAsync(
+            callWithPointer { thisPtr ->
+                UniffiLib.uniffi_bitkitcore_fn_method_pubkyauthenticatedtransport_remove_payment_endpoint(
+                    thisPtr,
+                    FfiConverterTypeMethodId.lower(`method`),
+                )
+            },
+            { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+            { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+            { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+            { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+            // lift function
+            { Unit },
+            
+            // Error FFI converter
+            PaykitExceptionErrorHandler,
+        )
+    }
+
+    /**
+     * Stores or updates a payment endpoint.
+     *
+     * # Parameters
+     * - `method`: Payment method identifier (e.g., "lightning", "onchain")
+     * - `data`: Endpoint data payload (UTF-8 JSON or other text format)
+     */
+    @Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+    public override suspend fun `setPaymentEndpoint`(`method`: MethodId, `data`: EndpointData) {
+        return uniffiRustCallAsync(
+            callWithPointer { thisPtr ->
+                UniffiLib.uniffi_bitkitcore_fn_method_pubkyauthenticatedtransport_set_payment_endpoint(
+                    thisPtr,
+                    FfiConverterTypeMethodId.lower(`method`),
+                    FfiConverterTypeEndpointData.lower(`data`),
+                )
+            },
+            { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+            { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+            { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+            { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+            // lift function
+            { Unit },
+            
+            // Error FFI converter
+            PaykitExceptionErrorHandler,
+        )
+    }
+
+
+    
+    
+
+    
+    
+    public companion object
+    
+}
+
+
+
+
+
+public object FfiConverterTypePubkyAuthenticatedTransport: FfiConverter<PubkyAuthenticatedTransport, Pointer> {
+
+    override fun lower(value: PubkyAuthenticatedTransport): Pointer {
+        return value.uniffiClonePointer()
+    }
+
+    override fun lift(value: Pointer): PubkyAuthenticatedTransport {
+        return PubkyAuthenticatedTransport(value)
+    }
+
+    override fun read(buf: ByteBuffer): PubkyAuthenticatedTransport {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(buf.getLong().toPointer())
+    }
+
+    override fun allocationSize(value: PubkyAuthenticatedTransport): ULong = 8UL
+
+    override fun write(value: PubkyAuthenticatedTransport, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(lower(value).toLong())
+    }
+}
+
+
+
+/**
+ * Unauthenticated transport wrapper for Paykit read operations.
+ */
+public open class PubkyUnauthenticatedTransport: Disposable, PubkyUnauthenticatedTransportInterface {
+
+    public constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiPointerDestroyer(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    public constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiPointerDestroyer(null))
+    }
+    /**
+     * Creates a new unauthenticated transport for reading public payment data.
+     */
+    public constructor() : this(
+        uniffiRustCallWithError(PaykitExceptionErrorHandler) { uniffiRustCallStatus ->
+            UniffiLib.uniffi_bitkitcore_fn_constructor_pubkyunauthenticatedtransport_new(
+                uniffiRustCallStatus,
+            )
+        }!!
+    )
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed: kotlinx.atomicfu.AtomicBoolean = kotlinx.atomicfu.atomic(false)
+    private val callCounter: kotlinx.atomicfu.AtomicLong = kotlinx.atomicfu.atomic(1L)
+
+    private val lock = kotlinx.atomicfu.locks.ReentrantLock()
+
+    private fun <T> synchronized(block: () -> T): T {
+        lock.lock()
+        try {
+            return block()
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    override fun close() {
+        synchronized { this.destroy() }
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.value
+            if (c == 0L) {
+                throw IllegalStateException("${this::class::simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this::class::simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiPointerDestroyer(private val pointer: Pointer?) : Disposable {
+        override fun destroy() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.uniffi_bitkitcore_fn_free_pubkyunauthenticatedtransport(ptr, status)
+                }
+            }
+        }
+    }
+
+    public fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall { status ->
+            UniffiLib.uniffi_bitkitcore_fn_clone_pubkyunauthenticatedtransport(pointer!!, status)
+        }!!
+    }
+
+    
+    /**
+     * Returns known contacts (follows) of a given public key.
+     *
+     * # Parameters
+     * - `key`: Public key to query for contacts
+     *
+     * # Returns
+     * - `Ok(Vec<PublicKey>)` with list of known contacts
+     * - Returns empty vector if no contacts are stored
+     * - `Err` only on transport failures
+     */
+    @Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+    public override suspend fun `getKnownContacts`(`key`: PublicKey): List<PublicKey> {
+        return uniffiRustCallAsync(
+            callWithPointer { thisPtr ->
+                UniffiLib.uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_known_contacts(
+                    thisPtr,
+                    FfiConverterTypePublicKey.lower(`key`),
+                )
+            },
+            { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+            { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+            { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+            { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+            // lift function
+            { FfiConverterSequenceTypePublicKey.lift(it) },
+            // Error FFI converter
+            PaykitExceptionErrorHandler,
+        )
+    }
+
+    /**
+     * Retrieves a specific payment endpoint for a payee and method.
+     *
+     * # Parameters
+     * - `payee`: Public key of the payee
+     * - `method`: Payment method identifier to query
+     *
+     * # Returns
+     * - `Ok(Some(EndpointData))` if the endpoint exists
+     * - `Ok(None)` if the endpoint is not published
+     * - `Err` only on transport failures
+     */
+    @Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+    public override suspend fun `getPaymentEndpoint`(`payee`: PublicKey, `method`: MethodId): EndpointData? {
+        return uniffiRustCallAsync(
+            callWithPointer { thisPtr ->
+                UniffiLib.uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_payment_endpoint(
+                    thisPtr,
+                    FfiConverterTypePublicKey.lower(`payee`),
+                    FfiConverterTypeMethodId.lower(`method`),
+                )
+            },
+            { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+            { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+            { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+            { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+            // lift function
+            { FfiConverterOptionalTypeEndpointData.lift(it) },
+            // Error FFI converter
+            PaykitExceptionErrorHandler,
+        )
+    }
+
+    /**
+     * Retrieves all supported payment methods for a given payee.
+     *
+     * # Parameters
+     * - `payee`: Public key of the payee to query
+     *
+     * # Returns
+     * - `Ok(SupportedPayments)` with map of method IDs to endpoint data
+     * - Returns empty map if no endpoints are published
+     * - `Err` only on transport failures
+     */
+    @Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+    public override suspend fun `getPaymentList`(`payee`: PublicKey): SupportedPayments {
+        return uniffiRustCallAsync(
+            callWithPointer { thisPtr ->
+                UniffiLib.uniffi_bitkitcore_fn_method_pubkyunauthenticatedtransport_get_payment_list(
+                    thisPtr,
+                    FfiConverterTypePublicKey.lower(`payee`),
+                )
+            },
+            { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+            { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+            { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+            { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+            // lift function
+            { FfiConverterTypeSupportedPayments.lift(it) },
+            // Error FFI converter
+            PaykitExceptionErrorHandler,
+        )
+    }
+
+
+    
+    
+
+    
+    
+    public companion object
+    
+}
+
+
+
+
+
+public object FfiConverterTypePubkyUnauthenticatedTransport: FfiConverter<PubkyUnauthenticatedTransport, Pointer> {
+
+    override fun lower(value: PubkyUnauthenticatedTransport): Pointer {
+        return value.uniffiClonePointer()
+    }
+
+    override fun lift(value: Pointer): PubkyUnauthenticatedTransport {
+        return PubkyUnauthenticatedTransport(value)
+    }
+
+    override fun read(buf: ByteBuffer): PubkyUnauthenticatedTransport {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(buf.getLong().toPointer())
+    }
+
+    override fun allocationSize(value: PubkyUnauthenticatedTransport): ULong = 8UL
+
+    override fun write(value: PubkyUnauthenticatedTransport, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(lower(value).toLong())
     }
 }
 
@@ -3255,6 +4073,25 @@ public object FfiConverterTypeDeviceParams: FfiConverterRustBuffer<DeviceParams>
     override fun write(value: DeviceParams, buf: ByteBuffer) {
         FfiConverterOptionalString.write(value.`path`, buf)
         FfiConverterOptionalUInt.write(value.`instance`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeEndpointData: FfiConverterRustBuffer<EndpointData> {
+    override fun read(buf: ByteBuffer): EndpointData {
+        return EndpointData(
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: EndpointData): ULong = (
+            FfiConverterString.allocationSize(value.`data`)
+    )
+
+    override fun write(value: EndpointData, buf: ByteBuffer) {
+        FfiConverterString.write(value.`data`, buf)
     }
 }
 
@@ -4761,6 +5598,25 @@ public object FfiConverterTypeMessageSignatureResponse: FfiConverterRustBuffer<M
 
 
 
+public object FfiConverterTypeMethodId: FfiConverterRustBuffer<MethodId> {
+    override fun read(buf: ByteBuffer): MethodId {
+        return MethodId(
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: MethodId): ULong = (
+            FfiConverterString.allocationSize(value.`id`)
+    )
+
+    override fun write(value: MethodId, buf: ByteBuffer) {
+        FfiConverterString.write(value.`id`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypeMultisigRedeemScriptType: FfiConverterRustBuffer<MultisigRedeemScriptType> {
     override fun read(buf: ByteBuffer): MultisigRedeemScriptType {
         return MultisigRedeemScriptType(
@@ -4887,6 +5743,31 @@ public object FfiConverterTypeOnchainActivity: FfiConverterRustBuffer<OnchainAct
         FfiConverterOptionalString.write(value.`transferTxId`, buf)
         FfiConverterOptionalULong.write(value.`createdAt`, buf)
         FfiConverterOptionalULong.write(value.`updatedAt`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypePaykitDeeplink: FfiConverterRustBuffer<PaykitDeeplink> {
+    override fun read(buf: ByteBuffer): PaykitDeeplink {
+        return PaykitDeeplink(
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterMapStringString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PaykitDeeplink): ULong = (
+            FfiConverterString.allocationSize(value.`action`) +
+            FfiConverterOptionalString.allocationSize(value.`sessionToken`) +
+            FfiConverterMapStringString.allocationSize(value.`parameters`)
+    )
+
+    override fun write(value: PaykitDeeplink, buf: ByteBuffer) {
+        FfiConverterString.write(value.`action`, buf)
+        FfiConverterOptionalString.write(value.`sessionToken`, buf)
+        FfiConverterMapStringString.write(value.`parameters`, buf)
     }
 }
 
@@ -5082,6 +5963,25 @@ public object FfiConverterTypePubkyAuth: FfiConverterRustBuffer<PubkyAuth> {
 
 
 
+public object FfiConverterTypePublicKey: FfiConverterRustBuffer<PublicKey> {
+    override fun read(buf: ByteBuffer): PublicKey {
+        return PublicKey(
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PublicKey): ULong = (
+            FfiConverterString.allocationSize(value.`key`)
+    )
+
+    override fun write(value: PublicKey, buf: ByteBuffer) {
+        FfiConverterString.write(value.`key`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypePublicKeyResponse: FfiConverterRustBuffer<PublicKeyResponse> {
     override fun read(buf: ByteBuffer): PublicKeyResponse {
         return PublicKeyResponse(
@@ -5249,6 +6149,84 @@ public object FfiConverterTypeRefundMemo: FfiConverterRustBuffer<RefundMemo> {
 
 
 
+public object FfiConverterTypeScannedPaykitSession: FfiConverterRustBuffer<ScannedPaykitSession> {
+    override fun read(buf: ByteBuffer): ScannedPaykitSession {
+        return ScannedPaykitSession(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterMapStringString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ScannedPaykitSession): ULong = (
+            FfiConverterString.allocationSize(value.`url`) +
+            FfiConverterString.allocationSize(value.`action`) +
+            FfiConverterString.allocationSize(value.`token`) +
+            FfiConverterMapStringString.allocationSize(value.`parameters`)
+    )
+
+    override fun write(value: ScannedPaykitSession, buf: ByteBuffer) {
+        FfiConverterString.write(value.`url`, buf)
+        FfiConverterString.write(value.`action`, buf)
+        FfiConverterString.write(value.`token`, buf)
+        FfiConverterMapStringString.write(value.`parameters`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeSessionData: FfiConverterRustBuffer<SessionData> {
+    override fun read(buf: ByteBuffer): SessionData {
+        return SessionData(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalLong.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: SessionData): ULong = (
+            FfiConverterString.allocationSize(value.`publicKey`) +
+            FfiConverterString.allocationSize(value.`secretKey`) +
+            FfiConverterOptionalString.allocationSize(value.`homeserverUrl`) +
+            FfiConverterOptionalLong.allocationSize(value.`expiresAt`) +
+            FfiConverterOptionalString.allocationSize(value.`metadata`)
+    )
+
+    override fun write(value: SessionData, buf: ByteBuffer) {
+        FfiConverterString.write(value.`publicKey`, buf)
+        FfiConverterString.write(value.`secretKey`, buf)
+        FfiConverterOptionalString.write(value.`homeserverUrl`, buf)
+        FfiConverterOptionalLong.write(value.`expiresAt`, buf)
+        FfiConverterOptionalString.write(value.`metadata`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeSessionToken: FfiConverterRustBuffer<SessionToken> {
+    override fun read(buf: ByteBuffer): SessionToken {
+        return SessionToken(
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: SessionToken): ULong = (
+            FfiConverterString.allocationSize(value.`token`)
+    )
+
+    override fun write(value: SessionToken, buf: ByteBuffer) {
+        FfiConverterString.write(value.`token`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypeSignedTransactionResponse: FfiConverterRustBuffer<SignedTransactionResponse> {
     override fun read(buf: ByteBuffer): SignedTransactionResponse {
         return SignedTransactionResponse(
@@ -5268,6 +6246,25 @@ public object FfiConverterTypeSignedTransactionResponse: FfiConverterRustBuffer<
         FfiConverterSequenceString.write(value.`signatures`, buf)
         FfiConverterString.write(value.`serializedTx`, buf)
         FfiConverterOptionalString.write(value.`txid`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeSupportedPayments: FfiConverterRustBuffer<SupportedPayments> {
+    override fun read(buf: ByteBuffer): SupportedPayments {
+        return SupportedPayments(
+            FfiConverterMapStringTypeEndpointData.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: SupportedPayments): ULong = (
+            FfiConverterMapStringTypeEndpointData.allocationSize(value.`entries`)
+    )
+
+    override fun write(value: SupportedPayments, buf: ByteBuffer) {
+        FfiConverterMapStringTypeEndpointData.write(value.`entries`, buf)
     }
 }
 
@@ -6789,6 +7786,109 @@ public object FfiConverterTypeNetworkType: FfiConverterRustBuffer<NetworkType> {
 
 
 
+public object PaykitExceptionErrorHandler : UniffiRustCallStatusErrorHandler<PaykitException> {
+    override fun lift(errorBuf: RustBufferByValue): PaykitException = FfiConverterTypePaykitError.lift(errorBuf)
+}
+
+public object FfiConverterTypePaykitError : FfiConverterRustBuffer<PaykitException> {
+    override fun read(buf: ByteBuffer): PaykitException {
+        return when (buf.getInt()) {
+            1 -> PaykitException.Unimplemented(
+                FfiConverterString.read(buf),
+                )
+            2 -> PaykitException.Transport(
+                FfiConverterString.read(buf),
+                )
+            3 -> PaykitException.InvalidPublicKey(
+                FfiConverterString.read(buf),
+                )
+            4 -> PaykitException.InvalidMethodId(
+                FfiConverterString.read(buf),
+                )
+            5 -> PaykitException.InvalidEndpointData(
+                FfiConverterString.read(buf),
+                )
+            6 -> PaykitException.SessionException(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: PaykitException): ULong {
+        return when (value) {
+            is PaykitException.Unimplemented -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.v1)
+            )
+            is PaykitException.Transport -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.v1)
+            )
+            is PaykitException.InvalidPublicKey -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.v1)
+            )
+            is PaykitException.InvalidMethodId -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.v1)
+            )
+            is PaykitException.InvalidEndpointData -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.v1)
+            )
+            is PaykitException.SessionException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.v1)
+            )
+        }
+    }
+
+    override fun write(value: PaykitException, buf: ByteBuffer) {
+        when (value) {
+            is PaykitException.Unimplemented -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.v1, buf)
+                Unit
+            }
+            is PaykitException.Transport -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.v1, buf)
+                Unit
+            }
+            is PaykitException.InvalidPublicKey -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.v1, buf)
+                Unit
+            }
+            is PaykitException.InvalidMethodId -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.v1, buf)
+                Unit
+            }
+            is PaykitException.InvalidEndpointData -> {
+                buf.putInt(5)
+                FfiConverterString.write(value.v1, buf)
+                Unit
+            }
+            is PaykitException.SessionException -> {
+                buf.putInt(6)
+                FfiConverterString.write(value.v1, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
 
 public object FfiConverterTypePaymentState: FfiConverterRustBuffer<PaymentState> {
     override fun read(buf: ByteBuffer): PaymentState = try {
@@ -6838,26 +7938,29 @@ public object FfiConverterTypeScanner : FfiConverterRustBuffer<Scanner>{
             3 -> Scanner.PubkyAuth(
                 FfiConverterString.read(buf),
                 )
-            4 -> Scanner.LnurlChannel(
+            4 -> Scanner.PaykitSession(
+                FfiConverterTypeScannedPaykitSession.read(buf),
+                )
+            5 -> Scanner.LnurlChannel(
                 FfiConverterTypeLnurlChannelData.read(buf),
                 )
-            5 -> Scanner.LnurlAuth(
+            6 -> Scanner.LnurlAuth(
                 FfiConverterTypeLnurlAuthData.read(buf),
                 )
-            6 -> Scanner.LnurlWithdraw(
+            7 -> Scanner.LnurlWithdraw(
                 FfiConverterTypeLnurlWithdrawData.read(buf),
                 )
-            7 -> Scanner.LnurlAddress(
+            8 -> Scanner.LnurlAddress(
                 FfiConverterTypeLnurlAddressData.read(buf),
                 )
-            8 -> Scanner.LnurlPay(
+            9 -> Scanner.LnurlPay(
                 FfiConverterTypeLnurlPayData.read(buf),
                 )
-            9 -> Scanner.NodeId(
+            10 -> Scanner.NodeId(
                 FfiConverterString.read(buf),
                 FfiConverterTypeNetworkType.read(buf),
                 )
-            10 -> Scanner.Gift(
+            11 -> Scanner.Gift(
                 FfiConverterString.read(buf),
                 FfiConverterULong.read(buf),
                 )
@@ -6885,6 +7988,13 @@ public object FfiConverterTypeScanner : FfiConverterRustBuffer<Scanner>{
             (
                 4UL
                 + FfiConverterString.allocationSize(value.`data`)
+            )
+        }
+        is Scanner.PaykitSession -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterTypeScannedPaykitSession.allocationSize(value.`data`)
             )
         }
         is Scanner.LnurlChannel -> {
@@ -6957,39 +8067,44 @@ public object FfiConverterTypeScanner : FfiConverterRustBuffer<Scanner>{
                 FfiConverterString.write(value.`data`, buf)
                 Unit
             }
-            is Scanner.LnurlChannel -> {
+            is Scanner.PaykitSession -> {
                 buf.putInt(4)
+                FfiConverterTypeScannedPaykitSession.write(value.`data`, buf)
+                Unit
+            }
+            is Scanner.LnurlChannel -> {
+                buf.putInt(5)
                 FfiConverterTypeLnurlChannelData.write(value.`data`, buf)
                 Unit
             }
             is Scanner.LnurlAuth -> {
-                buf.putInt(5)
+                buf.putInt(6)
                 FfiConverterTypeLnurlAuthData.write(value.`data`, buf)
                 Unit
             }
             is Scanner.LnurlWithdraw -> {
-                buf.putInt(6)
+                buf.putInt(7)
                 FfiConverterTypeLnurlWithdrawData.write(value.`data`, buf)
                 Unit
             }
             is Scanner.LnurlAddress -> {
-                buf.putInt(7)
+                buf.putInt(8)
                 FfiConverterTypeLnurlAddressData.write(value.`data`, buf)
                 Unit
             }
             is Scanner.LnurlPay -> {
-                buf.putInt(8)
+                buf.putInt(9)
                 FfiConverterTypeLnurlPayData.write(value.`data`, buf)
                 Unit
             }
             is Scanner.NodeId -> {
-                buf.putInt(9)
+                buf.putInt(10)
                 FfiConverterString.write(value.`url`, buf)
                 FfiConverterTypeNetworkType.write(value.`network`, buf)
                 Unit
             }
             is Scanner.Gift -> {
-                buf.putInt(10)
+                buf.putInt(11)
                 FfiConverterString.write(value.`code`, buf)
                 FfiConverterULong.write(value.`amount`, buf)
                 Unit
@@ -7408,6 +8523,35 @@ public object FfiConverterOptionalULong: FfiConverterRustBuffer<kotlin.ULong?> {
 
 
 
+public object FfiConverterOptionalLong: FfiConverterRustBuffer<kotlin.Long?> {
+    override fun read(buf: ByteBuffer): kotlin.Long? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterLong.read(buf)
+    }
+
+    override fun allocationSize(value: kotlin.Long?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterLong.allocationSize(value)
+        }
+    }
+
+    override fun write(value: kotlin.Long?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterLong.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalBoolean: FfiConverterRustBuffer<kotlin.Boolean?> {
     override fun read(buf: ByteBuffer): kotlin.Boolean? {
         if (buf.get().toInt() == 0) {
@@ -7691,6 +8835,35 @@ public object FfiConverterOptionalTypeDeviceParams: FfiConverterRustBuffer<Devic
         } else {
             buf.put(1)
             FfiConverterTypeDeviceParams.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeEndpointData: FfiConverterRustBuffer<EndpointData?> {
+    override fun read(buf: ByteBuffer): EndpointData? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeEndpointData.read(buf)
+    }
+
+    override fun allocationSize(value: EndpointData?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeEndpointData.allocationSize(value)
+        }
+    }
+
+    override fun write(value: EndpointData?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeEndpointData.write(value, buf)
         }
     }
 }
@@ -9611,6 +10784,31 @@ public object FfiConverterSequenceTypePrecomposedTransaction: FfiConverterRustBu
 
 
 
+public object FfiConverterSequenceTypePublicKey: FfiConverterRustBuffer<List<PublicKey>> {
+    override fun read(buf: ByteBuffer): List<PublicKey> {
+        val len = buf.getInt()
+        return List<PublicKey>(len) {
+            FfiConverterTypePublicKey.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<PublicKey>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypePublicKey.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<PublicKey>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypePublicKey.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceTypeRefTransaction: FfiConverterRustBuffer<List<RefTransaction>> {
     override fun read(buf: ByteBuffer): List<RefTransaction> {
         val len = buf.getInt()
@@ -9845,6 +11043,41 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
 
 
 
+public object FfiConverterMapStringTypeEndpointData: FfiConverterRustBuffer<Map<kotlin.String, EndpointData>> {
+    override fun read(buf: ByteBuffer): Map<kotlin.String, EndpointData> {
+        val len = buf.getInt()
+        return buildMap<kotlin.String, EndpointData>(len) {
+            repeat(len) {
+                val k = FfiConverterString.read(buf)
+                val v = FfiConverterTypeEndpointData.read(buf)
+                this[k] = v
+            }
+        }
+    }
+
+    override fun allocationSize(value: Map<kotlin.String, EndpointData>): ULong {
+        val spaceForMapSize = 4UL
+        val spaceForChildren = value.entries.sumOf { (k, v) ->
+            FfiConverterString.allocationSize(k) +
+            FfiConverterTypeEndpointData.allocationSize(v)
+        }
+        return spaceForMapSize + spaceForChildren
+    }
+
+    override fun write(value: Map<kotlin.String, EndpointData>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        // The parens on `(k, v)` here ensure we're calling the right method,
+        // which is important for compatibility with older android devices.
+        // Ref https://blog.danlew.net/2017/03/16/kotlin-puzzler-whose-line-is-it-anyways/
+        value.forEach { (k, v) ->
+            FfiConverterString.write(k, buf)
+            FfiConverterTypeEndpointData.write(v, buf)
+        }
+    }
+}
+
+
+
 
 
 
@@ -9991,6 +11224,42 @@ public suspend fun `createCjitEntry`(`channelSizeSat`: kotlin.ULong, `invoiceSat
     )
 }
 
+/**
+ * Creates a deeplink URL from a session token.
+ *
+ * Use this to generate a deeplink that can be shared with another app instance.
+ *
+ * # Example
+ * ```
+ * let token = create_session_token_from_keypair(
+ * public_key,
+ * secret_key,
+ * None,
+ * Some(3600)
+ * )?;
+ *
+ * let deeplink_url = create_deeplink_from_token(
+ * "myapp://",
+ * "session",
+ * token,
+ * None
+ * )?;
+ * // Result: "myapp://paykit/session?token=..."
+ * ```
+ */
+@Throws(PaykitException::class)
+public fun `createDeeplinkFromToken`(`baseUrl`: kotlin.String, `action`: kotlin.String, `token`: SessionToken, `additionalParams`: Map<kotlin.String, kotlin.String>?): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(PaykitExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_create_deeplink_from_token(
+            FfiConverterString.lower(`baseUrl`),
+            FfiConverterString.lower(`action`),
+            FfiConverterTypeSessionToken.lower(`token`),
+            FfiConverterOptionalMapStringString.lower(`additionalParams`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
 @Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
 public suspend fun `createOrder`(`lspBalanceSat`: kotlin.ULong, `channelExpiryWeeks`: kotlin.UInt, `options`: CreateOrderOptions?): IBtOrder {
     return uniffiRustCallAsync(
@@ -10008,6 +11277,68 @@ public suspend fun `createOrder`(`lspBalanceSat`: kotlin.ULong, `channelExpiryWe
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
+}
+
+/**
+ * Creates a session request URL to send to Pubky Ring for authentication.
+ *
+ * This generates a URL that Bitkit displays as a QR code or uses to open Pubky Ring.
+ * When Pubky Ring completes authentication, it will return the session data
+ * via the provided callback URL.
+ *
+ * # Parameters
+ * - `callback_url`: The URL scheme and path where Pubky Ring should return the session.
+ * Example: "bitkit://paykit/session-data" or "bitkit://session"
+ * - `additional_params`: Optional additional parameters to include in the request URL
+ *
+ * # Returns
+ * A URL string like: `pubkyring://session?callback=bitkit%3A%2F%2Fpaykit%2Fsession-data`
+ *
+ * # Example
+ * ```
+ * // Generate URL for QR code or "Open Pubky Ring" button
+ * let request_url = create_pubky_ring_session_request(
+ * "bitkit://paykit/session-data".to_string(),
+ * None
+ * )?;
+ * // Result: "pubkyring://session?callback=bitkit%3A%2F%2Fpaykit%2Fsession-data"
+ *
+ * // With additional parameters
+ * let mut params = HashMap::new();
+ * params.insert("app_name".to_string(), "Bitkit".to_string());
+ * let request_url = create_pubky_ring_session_request(
+ * "bitkit://paykit/session-data".to_string(),
+ * Some(params)
+ * )?;
+ * ```
+ */
+@Throws(PaykitException::class)
+public fun `createPubkyRingSessionRequest`(`callbackUrl`: kotlin.String, `additionalParams`: Map<kotlin.String, kotlin.String>?): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(PaykitExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_create_pubky_ring_session_request(
+            FfiConverterString.lower(`callbackUrl`),
+            FfiConverterOptionalMapStringString.lower(`additionalParams`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Helper function to create a session token from raw keypair data.
+ *
+ * This is useful when you have the keypair but need to create a shareable token.
+ */
+@Throws(PaykitException::class)
+public fun `createSessionTokenFromKeypair`(`publicKey`: kotlin.String, `secretKey`: kotlin.String, `homeserverUrl`: kotlin.String?, `expiresInSeconds`: kotlin.Long?): SessionToken {
+    return FfiConverterTypeSessionToken.lift(uniffiRustCallWithError(PaykitExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_create_session_token_from_keypair(
+            FfiConverterString.lower(`publicKey`),
+            FfiConverterString.lower(`secretKey`),
+            FfiConverterOptionalString.lower(`homeserverUrl`),
+            FfiConverterOptionalLong.lower(`expiresInSeconds`),
+            uniffiRustCallStatus,
+        )
+    })
 }
 
 @Throws(LnurlException::class)
@@ -10096,6 +11427,26 @@ public fun `derivePrivateKey`(`mnemonicPhrase`: kotlin.String, `derivationPathSt
             FfiConverterOptionalString.lower(`derivationPathStr`),
             FfiConverterOptionalTypeNetwork.lower(`network`),
             FfiConverterOptionalString.lower(`bip39Passphrase`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Deserializes a session token back into session data.
+ *
+ * # Example
+ * ```
+ * let token = SessionToken::new("base64_encoded_session_data");
+ * let session_data = deserialize_token_to_session(token)?;
+ * // Now you have the session data back
+ * ```
+ */
+@Throws(PaykitException::class)
+public fun `deserializeTokenToSession`(`token`: SessionToken): SessionData {
+    return FfiConverterTypeSessionData.lift(uniffiRustCallWithError(PaykitExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_deserialize_token_to_session(
+            FfiConverterTypeSessionToken.lower(`token`),
             uniffiRustCallStatus,
         )
     })
@@ -10335,6 +11686,46 @@ public suspend fun `getInfo`(`refresh`: kotlin.Boolean?): IBtInfo? {
     )
 }
 
+/**
+ * Returns known contacts (follows) of a given public key.
+ *
+ * # Parameters
+ * - `reader`: Unauthenticated transport for reading public data
+ * - `key`: Public key to query for contacts
+ *
+ * # Returns
+ * - `Ok(Vec<PublicKey>)` with list of known contacts
+ * - Returns empty vector if no contacts are stored
+ * - `Err` only on transport failures
+ *
+ * # Example
+ * ```
+ * let reader = PubkyUnauthenticatedTransport::new()?;
+ * let user = PublicKey { key: "...".to_string() };
+ * let contacts = get_known_contacts(&reader, &user).await?;
+ * for contact in contacts {
+ * println!("Contact: {}", contact.key);
+ * }
+ * ```
+ */
+@Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `getKnownContacts`(`reader`: PubkyUnauthenticatedTransport, `key`: PublicKey): List<PublicKey> {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_get_known_contacts(
+            FfiConverterTypePubkyUnauthenticatedTransport.lower(`reader`),
+            FfiConverterTypePublicKey.lower(`key`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterSequenceTypePublicKey.lift(it) },
+        // Error FFI converter
+        PaykitExceptionErrorHandler,
+    )
+}
+
 @Throws(LnurlException::class, kotlin.coroutines.cancellation.CancellationException::class)
 public suspend fun `getLnurlInvoice`(`address`: kotlin.String, `amountSatoshis`: kotlin.ULong): kotlin.String {
     return uniffiRustCallAsync(
@@ -10403,6 +11794,88 @@ public suspend fun `getPayment`(`paymentId`: kotlin.String): IBtBolt11Invoice {
         { FfiConverterTypeIBtBolt11Invoice.lift(it) },
         // Error FFI converter
         BlocktankExceptionErrorHandler,
+    )
+}
+
+/**
+ * Retrieves a specific payment endpoint for a payee and method.
+ *
+ * # Parameters
+ * - `reader`: Unauthenticated transport for reading public data
+ * - `payee`: Public key of the payee
+ * - `method`: Payment method identifier to query
+ *
+ * # Returns
+ * - `Ok(Some(EndpointData))` if the endpoint exists
+ * - `Ok(None)` if the endpoint is not published
+ * - `Err` only on transport failures
+ *
+ * # Example
+ * ```
+ * let reader = PubkyUnauthenticatedTransport::new()?;
+ * let payee = PublicKey { key: "...".to_string() };
+ * let method = MethodId { id: "lightning".to_string() };
+ * if let Some(endpoint) = get_payment_endpoint(&reader, &payee, &method).await? {
+ * println!("Lightning endpoint: {}", endpoint.data);
+ * }
+ * ```
+ */
+@Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `getPaymentEndpoint`(`reader`: PubkyUnauthenticatedTransport, `payee`: PublicKey, `method`: MethodId): EndpointData? {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_get_payment_endpoint(
+            FfiConverterTypePubkyUnauthenticatedTransport.lower(`reader`),
+            FfiConverterTypePublicKey.lower(`payee`),
+            FfiConverterTypeMethodId.lower(`method`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterOptionalTypeEndpointData.lift(it) },
+        // Error FFI converter
+        PaykitExceptionErrorHandler,
+    )
+}
+
+/**
+ * Retrieves all supported payment methods for a given payee.
+ *
+ * # Parameters
+ * - `reader`: Unauthenticated transport for reading public data
+ * - `payee`: Public key of the payee to query
+ *
+ * # Returns
+ * - `Ok(SupportedPayments)` with map of method IDs to endpoint data
+ * - Returns empty map if no endpoints are published
+ * - `Err` only on transport failures
+ *
+ * # Example
+ * ```
+ * let reader = PubkyUnauthenticatedTransport::new()?;
+ * let payee = PublicKey { key: "...".to_string() };
+ * let payments = get_payment_list(&reader, &payee).await?;
+ * for (method_id, data) in payments.entries {
+ * println!("Method: {}, Data: {}", method_id, data.data);
+ * }
+ * ```
+ */
+@Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `getPaymentList`(`reader`: PubkyUnauthenticatedTransport, `payee`: PublicKey): SupportedPayments {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_get_payment_list(
+            FfiConverterTypePubkyUnauthenticatedTransport.lower(`reader`),
+            FfiConverterTypePublicKey.lower(`payee`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeSupportedPayments.lift(it) },
+        // Error FFI converter
+        PaykitExceptionErrorHandler,
     )
 }
 
@@ -10560,6 +12033,32 @@ public suspend fun `openChannel`(`orderId`: kotlin.String, `connectionString`: k
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
+}
+
+/**
+ * Parses a deeplink URL into a PaykitDeeplink structure.
+ *
+ * # Supported URL Formats
+ * - `myapp://paykit/session?token=<base64_token>`
+ * - `myapp://paykit/connect?token=<base64_token>&return_url=<url>`
+ * - `https://myapp.com/paykit/session?token=<base64_token>`
+ *
+ * # Example
+ * ```
+ * let url = "myapp://paykit/session?token=eyJwdWJsaWNfa2V5IjoiLi4uIn0";
+ * let deeplink = parse_paykit_deeplink(url)?;
+ * assert_eq!(deeplink.action, "session");
+ * assert!(deeplink.session_token.is_some());
+ * ```
+ */
+@Throws(PaykitException::class)
+public fun `parsePaykitDeeplink`(`url`: kotlin.String): PaykitDeeplink {
+    return FfiConverterTypePaykitDeeplink.lift(uniffiRustCallWithError(PaykitExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_parse_paykit_deeplink(
+            FfiConverterString.lower(`url`),
+            uniffiRustCallStatus,
+        )
+    })
 }
 
 /**
@@ -10724,6 +12223,36 @@ public fun `removeClosedChannelById`(`channelId`: kotlin.String): kotlin.Boolean
     })
 }
 
+/**
+ * Removes a payment endpoint via the authenticated transport.
+ *
+ * # Parameters
+ * - `client`: Authenticated transport client
+ * - `method`: Payment method identifier to remove
+ *
+ * # Returns
+ * - `Ok(())` on successful removal
+ * - `Err` if the endpoint doesn't exist or transport fails
+ */
+@Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `removePaymentEndpoint`(`client`: PubkyAuthenticatedTransport, `method`: MethodId) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_remove_payment_endpoint(
+            FfiConverterTypePubkyAuthenticatedTransport.lower(`client`),
+            FfiConverterTypeMethodId.lower(`method`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        PaykitExceptionErrorHandler,
+    )
+}
+
 @Throws(ActivityException::class)
 public fun `removePreActivityMetadataTags`(`paymentId`: kotlin.String, `tags`: List<kotlin.String>) {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
@@ -10754,6 +12283,74 @@ public fun `resetPreActivityMetadataTags`(`paymentId`: kotlin.String) {
             uniffiRustCallStatus,
         )
     }
+}
+
+/**
+ * Serializes session data into a token string suitable for deeplinks.
+ *
+ * # Security Considerations
+ * - The secret key should be encrypted before serialization
+ * - Use HTTPS/secure channels when transmitting
+ * - Consider adding expiration times
+ * - Implement token rotation for long-lived sessions
+ *
+ * # Example
+ * ```
+ * let session_data = SessionData {
+ * public_key: "user_public_key".to_string(),
+ * secret_key: "encrypted_secret".to_string(),
+ * homeserver_url: Some("https://homeserver.example".to_string()),
+ * expires_at: Some(1234567890),
+ * metadata: None,
+ * };
+ *
+ * let token = serialize_session_to_token(session_data)?;
+ * // token.token can now be passed through a deeplink
+ * ```
+ */
+@Throws(PaykitException::class)
+public fun `serializeSessionToToken`(`sessionData`: SessionData): SessionToken {
+    return FfiConverterTypeSessionToken.lift(uniffiRustCallWithError(PaykitExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_serialize_session_to_token(
+            FfiConverterTypeSessionData.lower(`sessionData`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Stores or updates a payment endpoint via the authenticated transport.
+ *
+ * # Parameters
+ * - `client`: Authenticated transport client
+ * - `method`: Payment method identifier (e.g., "lightning", "onchain")
+ * - `data`: Endpoint data payload (UTF-8 JSON or other text format)
+ *
+ * # Example
+ * ```
+ * let method = MethodId { id: "lightning".to_string() };
+ * let data = EndpointData { data: r#"{"bolt11":"lnbc..."}"#.to_string() };
+ * set_payment_endpoint(&client, method, data).await?;
+ * ```
+ */
+@Throws(PaykitException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `setPaymentEndpoint`(`client`: PubkyAuthenticatedTransport, `method`: MethodId, `data`: EndpointData) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_set_payment_endpoint(
+            FfiConverterTypePubkyAuthenticatedTransport.lower(`client`),
+            FfiConverterTypeMethodId.lower(`method`),
+            FfiConverterTypeEndpointData.lower(`data`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        PaykitExceptionErrorHandler,
+    )
 }
 
 @Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
@@ -11115,6 +12712,21 @@ public fun `validateMnemonic`(`mnemonicPhrase`: kotlin.String) {
             uniffiRustCallStatus,
         )
     }
+}
+
+/**
+ * Validates a deeplink URL without processing it.
+ *
+ * Use this to check if a URL is a valid Paykit deeplink before handling it.
+ */
+@Throws(PaykitException::class)
+public fun `validatePaykitDeeplink`(`url`: kotlin.String): kotlin.Boolean {
+    return FfiConverterBoolean.lift(uniffiRustCallWithError(PaykitExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_validate_paykit_deeplink(
+            FfiConverterString.lower(`url`),
+            uniffiRustCallStatus,
+        )
+    })
 }
 
 @Throws(ActivityException::class)

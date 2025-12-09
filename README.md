@@ -30,6 +30,12 @@
   - Derive addresses for specified paths
   - Retrieve account information
   - Handle responses from Trezor devices
+- Paykit Module
+  - Integration with Pubky homeservers for payment endpoint management
+  - Import authenticated sessions from Pubky Ring via deeplinks
+  - Publish payment endpoints (Bitcoin addresses, Lightning invoices)
+  - Retrieve payment endpoints from other Pubky users
+  - Session lifecycle management and authentication
 
 ## Available Modules: Methods
 - Scanner
@@ -435,6 +441,61 @@
         identity: Option<String>,
         common: Option<CommonParams>,
     ) -> Result<DeepLinkResult, TrezorConnectError>
+    ```
+- Paykit:
+  - [create_pubky_ring_session_request](src/modules/paykit/README.md#api-reference): Generate a URL to request a session from Pubky Ring
+    ```rust
+    fn create_pubky_ring_session_request(
+        callback_url: String,
+        additional_params: Option<HashMap<String, String>>
+    ) -> Result<String, PaykitError>
+    ```
+  - [parse_paykit_deeplink](src/modules/paykit/README.md#api-reference): Parse a deeplink URL containing a session token
+    ```rust
+    fn parse_paykit_deeplink(url: String) -> Result<PaykitDeeplink, PaykitError>
+    ```
+  - [create_transport_from_session_token](src/modules/paykit/README.md#api-reference): Create an authenticated session from a token
+    ```rust
+    async fn create_transport_from_session_token(
+        token: SessionToken
+    ) -> Result<PubkyAuthenticatedTransport, PaykitError>
+    ```
+  - [set_payment_endpoint](src/modules/paykit/README.md#api-reference): Store a payment endpoint on the user's homeserver
+    ```rust
+    async fn set_payment_endpoint(
+        client: &PubkyAuthenticatedTransport,
+        method: MethodId,
+        data: EndpointData
+    ) -> Result<(), PaykitError>
+    ```
+  - [remove_payment_endpoint](src/modules/paykit/README.md#api-reference): Remove a payment endpoint from the user's homeserver
+    ```rust
+    async fn remove_payment_endpoint(
+        client: &PubkyAuthenticatedTransport,
+        method: MethodId
+    ) -> Result<(), PaykitError>
+    ```
+  - [get_payment_list](src/modules/paykit/README.md#api-reference): Retrieve all payment methods for a given user
+    ```rust
+    async fn get_payment_list(
+        reader: &PubkyUnauthenticatedTransport,
+        payee: &PublicKey
+    ) -> Result<SupportedPayments, PaykitError>
+    ```
+  - [get_payment_endpoint](src/modules/paykit/README.md#api-reference): Retrieve a specific payment endpoint
+    ```rust
+    async fn get_payment_endpoint(
+        reader: &PubkyUnauthenticatedTransport,
+        payee: &PublicKey,
+        method: &MethodId
+    ) -> Result<Option<EndpointData>, PaykitError>
+    ```
+  - [get_known_contacts](src/modules/paykit/README.md#api-reference): Get contacts list for a given user
+    ```rust
+    async fn get_known_contacts(
+        reader: &PubkyUnauthenticatedTransport,
+        key: &PublicKey
+    ) -> Result<Vec<PublicKey>, PaykitError>
     ```
 
 ## Building the Bindings
