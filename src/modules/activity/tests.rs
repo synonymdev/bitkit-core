@@ -34,6 +34,7 @@ mod tests {
             transfer_tx_id: None,
             created_at: None,
             updated_at: None,
+            seen_at: None,
         }
     }
 
@@ -50,6 +51,7 @@ mod tests {
             preimage: Some("preimage123".to_string()),
             created_at: None,
             updated_at: None,
+            seen_at: None,
         }
     }
 
@@ -3534,6 +3536,111 @@ mod tests {
         let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
         assert!(retrieved.is_some(), "Onchain activity should be found by tx_id");
         
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_mark_activity_as_seen_onchain() {
+        let (mut db, db_path) = setup();
+        let activity = create_test_onchain_activity();
+        db.insert_onchain_activity(&activity).unwrap();
+
+        // Verify initial state - seen_at should be None
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        assert!(retrieved.get_seen_at().is_none(), "seen_at should be None initially");
+
+        // Mark as seen
+        let seen_timestamp = 1234567900u64;
+        db.mark_activity_as_seen(&activity.id, seen_timestamp).unwrap();
+
+        // Verify seen_at is now set
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        assert_eq!(retrieved.get_seen_at(), Some(seen_timestamp), "seen_at should be set");
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_mark_activity_as_seen_lightning() {
+        let (mut db, db_path) = setup();
+        let activity = create_test_lightning_activity();
+        db.insert_lightning_activity(&activity).unwrap();
+
+        // Verify initial state - seen_at should be None
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        assert!(retrieved.get_seen_at().is_none(), "seen_at should be None initially");
+
+        // Mark as seen
+        let seen_timestamp = 1234567900u64;
+        db.mark_activity_as_seen(&activity.id, seen_timestamp).unwrap();
+
+        // Verify seen_at is now set
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        assert_eq!(retrieved.get_seen_at(), Some(seen_timestamp), "seen_at should be set");
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_mark_activity_as_seen_nonexistent() {
+        let (mut db, db_path) = setup();
+
+        // Try to mark a non-existent activity as seen
+        let result = db.mark_activity_as_seen("nonexistent_id", 1234567900);
+        assert!(result.is_err(), "Should fail for non-existent activity");
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_seen_at_preserved_in_get_activities() {
+        let (mut db, db_path) = setup();
+        
+        // Insert two activities
+        let mut onchain = create_test_onchain_activity();
+        onchain.timestamp = 1000;
+        let mut lightning = create_test_lightning_activity();
+        lightning.timestamp = 2000;
+        
+        db.insert_onchain_activity(&onchain).unwrap();
+        db.insert_lightning_activity(&lightning).unwrap();
+        
+        // Mark only onchain as seen
+        let seen_timestamp = 3000u64;
+        db.mark_activity_as_seen(&onchain.id, seen_timestamp).unwrap();
+        
+        // Get all activities
+        let activities = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
+        assert_eq!(activities.len(), 2);
+        
+        for activity in activities {
+            match activity {
+                Activity::Onchain(o) => {
+                    assert_eq!(o.seen_at, Some(seen_timestamp), "Onchain should have seen_at set");
+                }
+                Activity::Lightning(l) => {
+                    assert!(l.seen_at.is_none(), "Lightning should not have seen_at set");
+                }
+            }
+        }
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_seen_at_preserved_in_get_activity_by_tx_id() {
+        let (mut db, db_path) = setup();
+        let activity = create_test_onchain_activity();
+        db.insert_onchain_activity(&activity).unwrap();
+
+        // Mark as seen
+        let seen_timestamp = 1234567900u64;
+        db.mark_activity_as_seen(&activity.id, seen_timestamp).unwrap();
+
+        // Retrieve by tx_id and verify seen_at
+        let retrieved = db.get_activity_by_tx_id(&activity.tx_id).unwrap().unwrap();
+        assert_eq!(retrieved.seen_at, Some(seen_timestamp), "seen_at should be preserved when getting by tx_id");
+
         cleanup(&db_path);
     }
 }

@@ -51,6 +51,13 @@ impl Activity {
             Activity::Lightning(l) => l.updated_at,
         }
     }
+
+    pub fn get_seen_at(&self) -> Option<u64> {
+        match self {
+            Activity::Onchain(o) => o.seen_at,
+            Activity::Lightning(l) => l.seen_at,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy, uniffi::Enum)]
@@ -96,6 +103,8 @@ pub struct OnchainActivity {
     pub created_at: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub updated_at: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seen_at: Option<u64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, uniffi::Record)]
@@ -113,6 +122,8 @@ pub struct LightningActivity {
     pub created_at: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub updated_at: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seen_at: Option<u64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, uniffi::Record)]

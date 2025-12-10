@@ -12,7 +12,8 @@ const CREATE_ACTIVITIES_TABLE: &str = "
         tx_type TEXT NOT NULL CHECK (tx_type IN ('sent', 'received')),
         timestamp INTEGER NOT NULL CHECK (timestamp > 0),
         created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-        updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+        updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+        seen_at INTEGER CHECK (seen_at IS NULL OR seen_at > 0)
     )";
 
 const CREATE_ONCHAIN_TABLE: &str = "
@@ -641,6 +642,7 @@ impl ActivityDB {
             a.timestamp,
             a.created_at,
             a.updated_at,
+            a.seen_at,
 
             -- Onchain columns
             o.tx_id AS onchain_tx_id,
@@ -688,11 +690,12 @@ impl ActivityDB {
                     let timestamp: i64 = row.get(3)?;
                     let created_at: Option<i64> = row.get(4)?;
                     let updated_at: Option<i64> = row.get(5)?;
-                    let value: i64 = row.get(7)?;
-                    let fee: i64 = row.get(8)?;
-                    let fee_rate: i64 = row.get(9)?;
-                    let confirm_timestamp: Option<i64> = row.get(16)?;
-                    let boost_tx_ids_str: String = row.get(13)?;
+                    let seen_at: Option<i64> = row.get(6)?;
+                    let value: i64 = row.get(8)?;
+                    let fee: i64 = row.get(9)?;
+                    let fee_rate: i64 = row.get(10)?;
+                    let confirm_timestamp: Option<i64> = row.get(17)?;
+                    let boost_tx_ids_str: String = row.get(14)?;
                     let boost_tx_ids: Vec<String> = if boost_tx_ids_str.is_empty() {
                         Vec::new()
                     } else {
@@ -705,27 +708,29 @@ impl ActivityDB {
                         timestamp: timestamp as u64,
                         created_at: created_at.map(|t| t as u64),
                         updated_at: updated_at.map(|t| t as u64),
-                        tx_id: row.get(6)?,
+                        seen_at: seen_at.map(|t| t as u64),
+                        tx_id: row.get(7)?,
                         value: value as u64,
                         fee: fee as u64,
                         fee_rate: fee_rate as u64,
-                        address: row.get(10)?,
-                        confirmed: row.get(11)?,
-                        is_boosted: row.get(12)?,
+                        address: row.get(11)?,
+                        confirmed: row.get(12)?,
+                        is_boosted: row.get(13)?,
                         boost_tx_ids,
-                        is_transfer: row.get(14)?,
-                        does_exist: row.get(15)?,
+                        is_transfer: row.get(15)?,
+                        does_exist: row.get(16)?,
                         confirm_timestamp: confirm_timestamp.map(|t| t as u64),
-                        channel_id: row.get(17)?,
-                        transfer_tx_id: row.get(18)?,
+                        channel_id: row.get(18)?,
+                        transfer_tx_id: row.get(19)?,
                     }))
                 }
                 "lightning" => {
                     let timestamp: i64 = row.get(3)?;
                     let created_at: Option<i64> = row.get(4)?;
                     let updated_at: Option<i64> = row.get(5)?;
-                    let value: i64 = row.get(20)?;
-                    let fee: Option<i64> = row.get(22)?;
+                    let seen_at: Option<i64> = row.get(6)?;
+                    let value: i64 = row.get(21)?;
+                    let fee: Option<i64> = row.get(23)?;
 
                     Ok(Activity::Lightning(LightningActivity {
                         id: row.get(0)?,
@@ -733,12 +738,13 @@ impl ActivityDB {
                         timestamp: timestamp as u64,
                         created_at: created_at.map(|t| t as u64),
                         updated_at: updated_at.map(|t| t as u64),
-                        invoice: row.get(19)?,
+                        seen_at: seen_at.map(|t| t as u64),
+                        invoice: row.get(20)?,
                         value: value as u64,
-                        status: Self::parse_payment_state(row, 21)?,
+                        status: Self::parse_payment_state(row, 22)?,
                         fee: fee.map(|f| f as u64),
-                        message: row.get(23)?,
-                        preimage: row.get(24)?,
+                        message: row.get(24)?,
+                        preimage: row.get(25)?,
                     }))
                 }
                 _ => Err(rusqlite::Error::InvalidColumnType(
@@ -783,7 +789,7 @@ impl ActivityDB {
                     a.id, a.tx_type, o.tx_id, o.value, o.fee, o.fee_rate,
                     o.address, o.confirmed, a.timestamp, o.is_boosted,
                     o.boost_tx_ids, o.is_transfer, o.does_exist, o.confirm_timestamp,
-                    o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at
+                    o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at, a.seen_at
                 FROM activities a
                 JOIN onchain_activity o ON a.id = o.id
                 WHERE a.id = ?1";
@@ -800,6 +806,7 @@ impl ActivityDB {
                 let confirm_timestamp: Option<i64> = row.get(13)?;
                 let created_at: Option<i64> = row.get(16)?;
                 let updated_at: Option<i64> = row.get(17)?;
+                let seen_at: Option<i64> = row.get(18)?;
                 let boost_tx_ids_str: String = row.get(10)?;
                 let boost_tx_ids: Vec<String> = if boost_tx_ids_str.is_empty() {
                     Vec::new()
@@ -826,6 +833,7 @@ impl ActivityDB {
                     transfer_tx_id: row.get(15)?,
                     created_at: created_at.map(|t| t as u64),
                     updated_at: updated_at.map(|t| t as u64),
+                    seen_at: seen_at.map(|t| t as u64),
                 }))
             }) {
                 Ok(activity) => Ok(Some(activity)),
@@ -841,7 +849,7 @@ impl ActivityDB {
                 SELECT
                     a.id, a.tx_type, l.status, l.value, l.fee,
                     l.invoice, l.message, a.timestamp,
-                    l.preimage, a.created_at, a.updated_at
+                    l.preimage, a.created_at, a.updated_at, a.seen_at
                 FROM activities a
                 JOIN lightning_activity l ON a.id = l.id
                 WHERE a.id = ?1";
@@ -856,6 +864,7 @@ impl ActivityDB {
                 let timestamp: i64 = row.get(7)?;
                 let created_at: Option<i64> = row.get(9)?;
                 let updated_at: Option<i64> = row.get(10)?;
+                let seen_at: Option<i64> = row.get(11)?;
 
                 Ok(Activity::Lightning(LightningActivity {
                     id: row.get(0)?,
@@ -869,6 +878,7 @@ impl ActivityDB {
                     preimage: row.get(8)?,
                     created_at: created_at.map(|t| t as u64),
                     updated_at: updated_at.map(|t| t as u64),
+                    seen_at: seen_at.map(|t| t as u64),
                 }))
             }).map_err(|e| ActivityError::RetrievalError {
                 error_details: format!("Failed to get lightning activity: {}", e),
@@ -887,7 +897,7 @@ impl ActivityDB {
                 a.id, a.tx_type, o.tx_id, o.value, o.fee, o.fee_rate,
                 o.address, o.confirmed, a.timestamp, o.is_boosted,
                 o.boost_tx_ids, o.is_transfer, o.does_exist, o.confirm_timestamp,
-                o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at
+                o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at, a.seen_at
             FROM activities a
             JOIN onchain_activity o ON a.id = o.id
             WHERE o.tx_id = ?1 AND a.activity_type = 'onchain'
@@ -905,6 +915,7 @@ impl ActivityDB {
             let confirm_timestamp: Option<i64> = row.get(13)?;
             let created_at: Option<i64> = row.get(16)?;
             let updated_at: Option<i64> = row.get(17)?;
+            let seen_at: Option<i64> = row.get(18)?;
             let boost_tx_ids_str: String = row.get(10)?;
             let boost_tx_ids: Vec<String> = if boost_tx_ids_str.is_empty() {
                 Vec::new()
@@ -931,6 +942,7 @@ impl ActivityDB {
                 transfer_tx_id: row.get(15)?,
                 created_at: created_at.map(|t| t as u64),
                 updated_at: updated_at.map(|t| t as u64),
+                seen_at: seen_at.map(|t| t as u64),
             })
         }) {
             Ok(activity) => Ok(Some(activity)),
@@ -1077,6 +1089,24 @@ impl ActivityDB {
         tx.commit().map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
+
+        Ok(())
+    }
+
+    /// Marks an activity as seen by setting the seen_at timestamp.
+    pub fn mark_activity_as_seen(&mut self, activity_id: &str, seen_at: u64) -> Result<(), ActivityError> {
+        let rows = self.conn.execute(
+            "UPDATE activities SET seen_at = ?1 WHERE id = ?2",
+            rusqlite::params![seen_at as i64, activity_id],
+        ).map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to mark activity as seen: {}", e),
+        })?;
+
+        if rows == 0 {
+            return Err(ActivityError::DataError {
+                error_details: "No activity found with given ID".to_string(),
+            });
+        }
 
         Ok(())
     }

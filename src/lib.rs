@@ -1436,6 +1436,15 @@ pub fn is_address_used(address: String) -> Result<bool, ActivityError> {
 }
 
 #[uniffi::export]
+pub fn mark_activity_as_seen(activity_id: String, seen_at: u64) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.mark_activity_as_seen(&activity_id, seen_at)
+}
+
+#[uniffi::export]
 pub async fn blocktank_remove_all_orders() -> Result<(), BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
