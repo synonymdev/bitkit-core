@@ -330,6 +330,11 @@ int8_t uniffi_bitkitcore_fn_func_delete_activity_by_id(RustBuffer activity_id, R
 void uniffi_bitkitcore_fn_func_delete_pre_activity_metadata(RustBuffer payment_id, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_TRANSACTION_DETAILS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_TRANSACTION_DETAILS
+int8_t uniffi_bitkitcore_fn_func_delete_transaction_details(RustBuffer tx_id, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_BITCOIN_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_BITCOIN_ADDRESS
 RustBuffer uniffi_bitkitcore_fn_func_derive_bitcoin_address(RustBuffer mnemonic_phrase, RustBuffer derivation_path_str, RustBuffer network, RustBuffer bip39_passphrase, RustCallStatus *_Nonnull out_status
@@ -399,6 +404,12 @@ RustBuffer uniffi_bitkitcore_fn_func_get_all_closed_channels(RustBuffer sort_dir
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_PRE_ACTIVITY_METADATA
 RustBuffer uniffi_bitkitcore_fn_func_get_all_pre_activity_metadata(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_TRANSACTION_DETAILS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_TRANSACTION_DETAILS
+RustBuffer uniffi_bitkitcore_fn_func_get_all_transaction_details(RustCallStatus *_Nonnull out_status
     
 );
 #endif
@@ -474,6 +485,11 @@ RustBuffer uniffi_bitkitcore_fn_func_get_pre_activity_metadata(RustBuffer search
 RustBuffer uniffi_bitkitcore_fn_func_get_tags(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TRANSACTION_DETAILS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TRANSACTION_DETAILS
+RustBuffer uniffi_bitkitcore_fn_func_get_transaction_details(RustBuffer tx_id, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GIFT_ORDER
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GIFT_ORDER
 uint64_t uniffi_bitkitcore_fn_func_gift_order(RustBuffer client_node_id, RustBuffer code
@@ -507,6 +523,11 @@ int8_t uniffi_bitkitcore_fn_func_is_valid_bip39_word(RustBuffer word, RustCallSt
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_LNURL_AUTH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_LNURL_AUTH
 uint64_t uniffi_bitkitcore_fn_func_lnurl_auth(RustBuffer domain, RustBuffer k1, RustBuffer callback, RustBuffer bip32_mnemonic, RustBuffer network, RustBuffer bip39_passphrase
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_MARK_ACTIVITY_AS_SEEN
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_MARK_ACTIVITY_AS_SEEN
+void uniffi_bitkitcore_fn_func_mark_activity_as_seen(RustBuffer activity_id, uint64_t seen_at, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_MNEMONIC_TO_ENTROPY
@@ -696,6 +717,11 @@ void uniffi_bitkitcore_fn_func_upsert_pre_activity_metadata(RustBuffer pre_activ
 void uniffi_bitkitcore_fn_func_upsert_tags(RustBuffer activity_tags, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_TRANSACTION_DETAILS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_TRANSACTION_DETAILS
+void uniffi_bitkitcore_fn_func_upsert_transaction_details(RustBuffer details_list, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_BITCOIN_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_BITCOIN_ADDRESS
 RustBuffer uniffi_bitkitcore_fn_func_validate_bitcoin_address(RustBuffer address, RustCallStatus *_Nonnull out_status
@@ -715,6 +741,12 @@ void uniffi_bitkitcore_fn_func_wipe_all_closed_channels(RustCallStatus *_Nonnull
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_DATABASES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_DATABASES
 uint64_t uniffi_bitkitcore_fn_func_wipe_all_databases(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_TRANSACTION_DETAILS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_TRANSACTION_DETAILS
+void uniffi_bitkitcore_fn_func_wipe_all_transaction_details(RustCallStatus *_Nonnull out_status
     
 );
 #endif
@@ -1088,6 +1120,12 @@ uint16_t uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_TRANSACTION_DETAILS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_TRANSACTION_DETAILS
+uint16_t uniffi_bitkitcore_checksum_func_delete_transaction_details(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_BITCOIN_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_BITCOIN_ADDRESS
 uint16_t uniffi_bitkitcore_checksum_func_derive_bitcoin_address(void
@@ -1169,6 +1207,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_all_closed_channels(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_PRE_ACTIVITY_METADATA
 uint16_t uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_TRANSACTION_DETAILS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_TRANSACTION_DETAILS
+uint16_t uniffi_bitkitcore_checksum_func_get_all_transaction_details(void
     
 );
 #endif
@@ -1256,6 +1300,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_tags(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_TRANSACTION_DETAILS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_TRANSACTION_DETAILS
+uint16_t uniffi_bitkitcore_checksum_func_get_transaction_details(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GIFT_ORDER
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GIFT_ORDER
 uint16_t uniffi_bitkitcore_checksum_func_gift_order(void
@@ -1295,6 +1345,12 @@ uint16_t uniffi_bitkitcore_checksum_func_is_valid_bip39_word(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_LNURL_AUTH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_LNURL_AUTH
 uint16_t uniffi_bitkitcore_checksum_func_lnurl_auth(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_MARK_ACTIVITY_AS_SEEN
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_MARK_ACTIVITY_AS_SEEN
+uint16_t uniffi_bitkitcore_checksum_func_mark_activity_as_seen(void
     
 );
 #endif
@@ -1520,6 +1576,12 @@ uint16_t uniffi_bitkitcore_checksum_func_upsert_tags(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_TRANSACTION_DETAILS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_TRANSACTION_DETAILS
+uint16_t uniffi_bitkitcore_checksum_func_upsert_transaction_details(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 uint16_t uniffi_bitkitcore_checksum_func_validate_bitcoin_address(void
@@ -1541,6 +1603,12 @@ uint16_t uniffi_bitkitcore_checksum_func_wipe_all_closed_channels(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_DATABASES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_DATABASES
 uint16_t uniffi_bitkitcore_checksum_func_wipe_all_databases(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_TRANSACTION_DETAILS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_TRANSACTION_DETAILS
+uint16_t uniffi_bitkitcore_checksum_func_wipe_all_transaction_details(void
     
 );
 #endif
