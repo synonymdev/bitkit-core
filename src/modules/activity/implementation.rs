@@ -1,6 +1,6 @@
 use rusqlite::{Connection, OptionalExtension};
 use serde_json;
-use crate::activity::{Activity, ActivityError, ActivityFilter, LightningActivity, OnchainActivity, PaymentState, PaymentType, SortDirection, ClosedChannelDetails, ActivityTags, PreActivityMetadata};
+use crate::activity::{Activity, ActivityError, ActivityFilter, LightningActivity, OnchainActivity, PaymentState, PaymentType, SortDirection, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
 
 pub struct ActivityDB {
     pub conn: Connection,
@@ -94,6 +94,14 @@ const CREATE_CLOSED_CHANNELS_TABLE: &str = "
         forwarding_fee_base_msat INTEGER NOT NULL CHECK (forwarding_fee_base_msat >= 0),
         channel_name TEXT NOT NULL,
         channel_closure_reason TEXT NOT NULL
+    )";
+
+const CREATE_TRANSACTION_DETAILS_TABLE: &str = "
+    CREATE TABLE IF NOT EXISTS transaction_details (
+        tx_id TEXT PRIMARY KEY,
+        amount_sats INTEGER NOT NULL,
+        inputs TEXT NOT NULL,
+        outputs TEXT NOT NULL
     )";
 
 const UPSERT_CLOSED_CHANNEL_SQL: &str = "
@@ -245,6 +253,13 @@ impl ActivityDB {
         if let Err(e) = self.conn.execute(CREATE_CLOSED_CHANNELS_TABLE, []) {
             return Err(ActivityError::InitializationError {
                 error_details: format!("Error creating closed_channels table: {}", e),
+            });
+        }
+
+        // Create transaction details table
+        if let Err(e) = self.conn.execute(CREATE_TRANSACTION_DETAILS_TABLE, []) {
+            return Err(ActivityError::InitializationError {
+                error_details: format!("Error creating transaction_details table: {}", e),
             });
         }
 
@@ -2051,6 +2066,157 @@ impl ActivityDB {
         Ok(rows > 0)
     }
 
+    /// Upserts transaction details for one or more onchain transactions.
+    pub fn upsert_transaction_details(&mut self, details_list: &[TransactionDetails]) -> Result<(), ActivityError> {
+        if details_list.is_empty() {
+            return Ok(());
+        }
+
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        {
+            let mut stmt = tx.prepare(
+                "INSERT OR REPLACE INTO transaction_details (tx_id, amount_sats, inputs, outputs) VALUES (?1, ?2, ?3, ?4)"
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
+
+            for details in details_list {
+                if details.tx_id.is_empty() {
+                    return Err(ActivityError::DataError {
+                        error_details: "Transaction ID cannot be empty".to_string(),
+                    });
+                }
+
+                let inputs_json = serde_json::to_string(&details.inputs).map_err(|e| ActivityError::DataError {
+                    error_details: format!("Failed to serialize inputs: {}", e),
+                })?;
+
+                let outputs_json = serde_json::to_string(&details.outputs).map_err(|e| ActivityError::DataError {
+                    error_details: format!("Failed to serialize outputs: {}", e),
+                })?;
+
+                stmt.execute(rusqlite::params![
+                    &details.tx_id,
+                    details.amount_sats,
+                    &inputs_json,
+                    &outputs_json,
+                ]).map_err(|e| ActivityError::InsertError {
+                    error_details: format!("Failed to upsert transaction details: {}", e),
+                })?;
+            }
+        }
+
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
+
+        Ok(())
+    }
+
+    /// Retrieves transaction details by transaction ID.
+    pub fn get_transaction_details(&self, tx_id: &str) -> Result<Option<TransactionDetails>, ActivityError> {
+        let sql = "SELECT tx_id, amount_sats, inputs, outputs FROM transaction_details WHERE tx_id = ?1";
+
+        let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
+
+        match stmt.query_row([tx_id], |row| {
+            let tx_id: String = row.get(0)?;
+            let amount_sats: i64 = row.get(1)?;
+            let inputs_json: String = row.get(2)?;
+            let outputs_json: String = row.get(3)?;
+
+            let inputs: Vec<TxInput> = serde_json::from_str(&inputs_json).map_err(|_| {
+                rusqlite::Error::InvalidColumnType(2, "inputs".to_string(), rusqlite::types::Type::Text)
+            })?;
+
+            let outputs: Vec<TxOutput> = serde_json::from_str(&outputs_json).map_err(|_| {
+                rusqlite::Error::InvalidColumnType(3, "outputs".to_string(), rusqlite::types::Type::Text)
+            })?;
+
+            Ok(TransactionDetails {
+                tx_id,
+                amount_sats,
+                inputs,
+                outputs,
+            })
+        }) {
+            Ok(details) => Ok(Some(details)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(ActivityError::RetrievalError {
+                error_details: format!("Failed to get transaction details: {}", e),
+            }),
+        }
+    }
+
+    /// Retrieves all transaction details.
+    pub fn get_all_transaction_details(&self) -> Result<Vec<TransactionDetails>, ActivityError> {
+        let sql = "SELECT tx_id, amount_sats, inputs, outputs FROM transaction_details ORDER BY tx_id";
+
+        let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
+
+        let rows = stmt.query_map([], |row| {
+            let tx_id: String = row.get(0)?;
+            let amount_sats: i64 = row.get(1)?;
+            let inputs_json: String = row.get(2)?;
+            let outputs_json: String = row.get(3)?;
+
+            let inputs: Vec<TxInput> = serde_json::from_str(&inputs_json).map_err(|_| {
+                rusqlite::Error::InvalidColumnType(2, "inputs".to_string(), rusqlite::types::Type::Text)
+            })?;
+
+            let outputs: Vec<TxOutput> = serde_json::from_str(&outputs_json).map_err(|_| {
+                rusqlite::Error::InvalidColumnType(3, "outputs".to_string(), rusqlite::types::Type::Text)
+            })?;
+
+            Ok(TransactionDetails {
+                tx_id,
+                amount_sats,
+                inputs,
+                outputs,
+            })
+        }).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to execute query: {}", e),
+        })?;
+
+        let mut results = Vec::new();
+        for row in rows {
+            results.push(row.map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to process row: {}", e),
+            })?);
+        }
+
+        Ok(results)
+    }
+
+    /// Deletes transaction details by transaction ID.
+    pub fn delete_transaction_details(&mut self, tx_id: &str) -> Result<bool, ActivityError> {
+        let rows = self.conn.execute(
+            "DELETE FROM transaction_details WHERE tx_id = ?1",
+            [tx_id],
+        ).map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to delete transaction details: {}", e),
+        })?;
+
+        Ok(rows > 0)
+    }
+
+    /// Wipes all transaction details from the database.
+    pub fn wipe_all_transaction_details(&mut self) -> Result<(), ActivityError> {
+        self.conn.execute("DELETE FROM transaction_details", [])
+            .map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to delete all transaction details: {}", e),
+            })?;
+
+        Ok(())
+    }
+
     /// Wipes all activity data from the database
     /// This deletes all activities, which cascades to delete all activity_tags due to foreign key constraints.
     /// Also deletes all pre_activity_metadata and closed_channels.
@@ -2075,6 +2241,12 @@ impl ActivityDB {
         tx.execute("DELETE FROM closed_channels", [])
             .map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to delete all closed channels: {}", e),
+            })?;
+
+        // Delete all transaction details
+        tx.execute("DELETE FROM transaction_details", [])
+            .map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to delete all transaction details: {}", e),
             })?;
 
         tx.commit().map_err(|e| ActivityError::DataError {
