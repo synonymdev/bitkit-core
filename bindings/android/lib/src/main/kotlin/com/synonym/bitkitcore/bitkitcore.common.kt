@@ -109,6 +109,8 @@ public object NoPointer
 
 
 
+
+
 /**
  * Account addresses
  */
@@ -1011,7 +1013,8 @@ public data class LightningActivity (
     val `timestamp`: kotlin.ULong, 
     val `preimage`: kotlin.String?, 
     val `createdAt`: kotlin.ULong?, 
-    val `updatedAt`: kotlin.ULong?
+    val `updatedAt`: kotlin.ULong?, 
+    val `seenAt`: kotlin.ULong?
 ) {
     public companion object
 }
@@ -1245,7 +1248,8 @@ public data class OnchainActivity (
     val `channelId`: kotlin.String?, 
     val `transferTxId`: kotlin.String?, 
     val `createdAt`: kotlin.ULong?, 
-    val `updatedAt`: kotlin.ULong?
+    val `updatedAt`: kotlin.ULong?, 
+    val `seenAt`: kotlin.ULong?
 ) {
     public companion object
 }
@@ -1583,6 +1587,38 @@ public data class TextMemo (
 
 
 /**
+ * Details about an onchain transaction.
+ */
+@kotlinx.serialization.Serializable
+public data class TransactionDetails (
+    /**
+     * The transaction ID.
+     */
+    val `txId`: kotlin.String, 
+    /**
+     * The net amount in this transaction (in satoshis).
+     *
+     * This is calculated as: (received - sent). For incoming payments,
+     * this will be positive. For outgoing payments, this will be negative.
+     *
+     * Note: This amount does NOT include transaction fees.
+     */
+    val `amountSats`: kotlin.Long, 
+    /**
+     * The transaction inputs with full details.
+     */
+    val `inputs`: List<TxInput>, 
+    /**
+     * The transaction outputs with full details.
+     */
+    val `outputs`: List<TxOutput>
+) {
+    public companion object
+}
+
+
+
+/**
  * Payment request
  */
 @kotlinx.serialization.Serializable
@@ -1607,6 +1643,37 @@ public data class TxAckPaymentRequest (
      * Signature
      */
     val `signature`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+/**
+ * Details about a transaction input.
+ */
+@kotlinx.serialization.Serializable
+public data class TxInput (
+    /**
+     * The transaction ID of the previous output being spent.
+     */
+    val `txid`: kotlin.String, 
+    /**
+     * The output index of the previous output being spent.
+     */
+    val `vout`: kotlin.UInt, 
+    /**
+     * The script signature (hex-encoded).
+     */
+    val `scriptsig`: kotlin.String, 
+    /**
+     * The witness stack (hex-encoded strings).
+     */
+    val `witness`: List<kotlin.String>, 
+    /**
+     * The sequence number.
+     */
+    val `sequence`: kotlin.UInt
 ) {
     public companion object
 }
@@ -1678,6 +1745,37 @@ public data class TxInputType (
      * Coinjoin flags
      */
     val `coinjoinFlags`: kotlin.UInt?
+) {
+    public companion object
+}
+
+
+
+/**
+ * Details about a transaction output.
+ */
+@kotlinx.serialization.Serializable
+public data class TxOutput (
+    /**
+     * The script public key (hex-encoded).
+     */
+    val `scriptpubkey`: kotlin.String, 
+    /**
+     * The script public key type (e.g., "p2pkh", "p2sh", "p2wpkh", "p2wsh", "p2tr").
+     */
+    val `scriptpubkeyType`: kotlin.String?, 
+    /**
+     * The address corresponding to this script (if decodable).
+     */
+    val `scriptpubkeyAddress`: kotlin.String?, 
+    /**
+     * The value in satoshis.
+     */
+    val `value`: kotlin.Long, 
+    /**
+     * The output index in the transaction.
+     */
+    val `n`: kotlin.UInt
 ) {
     public companion object
 }
@@ -2992,6 +3090,14 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
+
+
+
+
+
+
 
 
 

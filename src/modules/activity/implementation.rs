@@ -1,6 +1,6 @@
 use rusqlite::{Connection, OptionalExtension};
 use serde_json;
-use crate::activity::{Activity, ActivityError, ActivityFilter, LightningActivity, OnchainActivity, PaymentState, PaymentType, SortDirection, ClosedChannelDetails, ActivityTags, PreActivityMetadata};
+use crate::activity::{Activity, ActivityError, ActivityFilter, LightningActivity, OnchainActivity, PaymentState, PaymentType, SortDirection, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
 
 pub struct ActivityDB {
     pub conn: Connection,
@@ -12,7 +12,8 @@ const CREATE_ACTIVITIES_TABLE: &str = "
         tx_type TEXT NOT NULL CHECK (tx_type IN ('sent', 'received')),
         timestamp INTEGER NOT NULL CHECK (timestamp > 0),
         created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-        updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+        updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+        seen_at INTEGER CHECK (seen_at IS NULL OR seen_at > 0)
     )";
 
 const CREATE_ONCHAIN_TABLE: &str = "
@@ -93,6 +94,14 @@ const CREATE_CLOSED_CHANNELS_TABLE: &str = "
         forwarding_fee_base_msat INTEGER NOT NULL CHECK (forwarding_fee_base_msat >= 0),
         channel_name TEXT NOT NULL,
         channel_closure_reason TEXT NOT NULL
+    )";
+
+const CREATE_TRANSACTION_DETAILS_TABLE: &str = "
+    CREATE TABLE IF NOT EXISTS transaction_details (
+        tx_id TEXT PRIMARY KEY,
+        amount_sats INTEGER NOT NULL,
+        inputs TEXT NOT NULL,
+        outputs TEXT NOT NULL
     )";
 
 const UPSERT_CLOSED_CHANNEL_SQL: &str = "
@@ -244,6 +253,13 @@ impl ActivityDB {
         if let Err(e) = self.conn.execute(CREATE_CLOSED_CHANNELS_TABLE, []) {
             return Err(ActivityError::InitializationError {
                 error_details: format!("Error creating closed_channels table: {}", e),
+            });
+        }
+
+        // Create transaction details table
+        if let Err(e) = self.conn.execute(CREATE_TRANSACTION_DETAILS_TABLE, []) {
+            return Err(ActivityError::InitializationError {
+                error_details: format!("Error creating transaction_details table: {}", e),
             });
         }
 
@@ -641,6 +657,7 @@ impl ActivityDB {
             a.timestamp,
             a.created_at,
             a.updated_at,
+            a.seen_at,
 
             -- Onchain columns
             o.tx_id AS onchain_tx_id,
@@ -688,11 +705,12 @@ impl ActivityDB {
                     let timestamp: i64 = row.get(3)?;
                     let created_at: Option<i64> = row.get(4)?;
                     let updated_at: Option<i64> = row.get(5)?;
-                    let value: i64 = row.get(7)?;
-                    let fee: i64 = row.get(8)?;
-                    let fee_rate: i64 = row.get(9)?;
-                    let confirm_timestamp: Option<i64> = row.get(16)?;
-                    let boost_tx_ids_str: String = row.get(13)?;
+                    let seen_at: Option<i64> = row.get(6)?;
+                    let value: i64 = row.get(8)?;
+                    let fee: i64 = row.get(9)?;
+                    let fee_rate: i64 = row.get(10)?;
+                    let confirm_timestamp: Option<i64> = row.get(17)?;
+                    let boost_tx_ids_str: String = row.get(14)?;
                     let boost_tx_ids: Vec<String> = if boost_tx_ids_str.is_empty() {
                         Vec::new()
                     } else {
@@ -705,27 +723,29 @@ impl ActivityDB {
                         timestamp: timestamp as u64,
                         created_at: created_at.map(|t| t as u64),
                         updated_at: updated_at.map(|t| t as u64),
-                        tx_id: row.get(6)?,
+                        seen_at: seen_at.map(|t| t as u64),
+                        tx_id: row.get(7)?,
                         value: value as u64,
                         fee: fee as u64,
                         fee_rate: fee_rate as u64,
-                        address: row.get(10)?,
-                        confirmed: row.get(11)?,
-                        is_boosted: row.get(12)?,
+                        address: row.get(11)?,
+                        confirmed: row.get(12)?,
+                        is_boosted: row.get(13)?,
                         boost_tx_ids,
-                        is_transfer: row.get(14)?,
-                        does_exist: row.get(15)?,
+                        is_transfer: row.get(15)?,
+                        does_exist: row.get(16)?,
                         confirm_timestamp: confirm_timestamp.map(|t| t as u64),
-                        channel_id: row.get(17)?,
-                        transfer_tx_id: row.get(18)?,
+                        channel_id: row.get(18)?,
+                        transfer_tx_id: row.get(19)?,
                     }))
                 }
                 "lightning" => {
                     let timestamp: i64 = row.get(3)?;
                     let created_at: Option<i64> = row.get(4)?;
                     let updated_at: Option<i64> = row.get(5)?;
-                    let value: i64 = row.get(20)?;
-                    let fee: Option<i64> = row.get(22)?;
+                    let seen_at: Option<i64> = row.get(6)?;
+                    let value: i64 = row.get(21)?;
+                    let fee: Option<i64> = row.get(23)?;
 
                     Ok(Activity::Lightning(LightningActivity {
                         id: row.get(0)?,
@@ -733,12 +753,13 @@ impl ActivityDB {
                         timestamp: timestamp as u64,
                         created_at: created_at.map(|t| t as u64),
                         updated_at: updated_at.map(|t| t as u64),
-                        invoice: row.get(19)?,
+                        seen_at: seen_at.map(|t| t as u64),
+                        invoice: row.get(20)?,
                         value: value as u64,
-                        status: Self::parse_payment_state(row, 21)?,
+                        status: Self::parse_payment_state(row, 22)?,
                         fee: fee.map(|f| f as u64),
-                        message: row.get(23)?,
-                        preimage: row.get(24)?,
+                        message: row.get(24)?,
+                        preimage: row.get(25)?,
                     }))
                 }
                 _ => Err(rusqlite::Error::InvalidColumnType(
@@ -783,7 +804,7 @@ impl ActivityDB {
                     a.id, a.tx_type, o.tx_id, o.value, o.fee, o.fee_rate,
                     o.address, o.confirmed, a.timestamp, o.is_boosted,
                     o.boost_tx_ids, o.is_transfer, o.does_exist, o.confirm_timestamp,
-                    o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at
+                    o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at, a.seen_at
                 FROM activities a
                 JOIN onchain_activity o ON a.id = o.id
                 WHERE a.id = ?1";
@@ -800,6 +821,7 @@ impl ActivityDB {
                 let confirm_timestamp: Option<i64> = row.get(13)?;
                 let created_at: Option<i64> = row.get(16)?;
                 let updated_at: Option<i64> = row.get(17)?;
+                let seen_at: Option<i64> = row.get(18)?;
                 let boost_tx_ids_str: String = row.get(10)?;
                 let boost_tx_ids: Vec<String> = if boost_tx_ids_str.is_empty() {
                     Vec::new()
@@ -826,6 +848,7 @@ impl ActivityDB {
                     transfer_tx_id: row.get(15)?,
                     created_at: created_at.map(|t| t as u64),
                     updated_at: updated_at.map(|t| t as u64),
+                    seen_at: seen_at.map(|t| t as u64),
                 }))
             }) {
                 Ok(activity) => Ok(Some(activity)),
@@ -841,7 +864,7 @@ impl ActivityDB {
                 SELECT
                     a.id, a.tx_type, l.status, l.value, l.fee,
                     l.invoice, l.message, a.timestamp,
-                    l.preimage, a.created_at, a.updated_at
+                    l.preimage, a.created_at, a.updated_at, a.seen_at
                 FROM activities a
                 JOIN lightning_activity l ON a.id = l.id
                 WHERE a.id = ?1";
@@ -856,6 +879,7 @@ impl ActivityDB {
                 let timestamp: i64 = row.get(7)?;
                 let created_at: Option<i64> = row.get(9)?;
                 let updated_at: Option<i64> = row.get(10)?;
+                let seen_at: Option<i64> = row.get(11)?;
 
                 Ok(Activity::Lightning(LightningActivity {
                     id: row.get(0)?,
@@ -869,6 +893,7 @@ impl ActivityDB {
                     preimage: row.get(8)?,
                     created_at: created_at.map(|t| t as u64),
                     updated_at: updated_at.map(|t| t as u64),
+                    seen_at: seen_at.map(|t| t as u64),
                 }))
             }).map_err(|e| ActivityError::RetrievalError {
                 error_details: format!("Failed to get lightning activity: {}", e),
@@ -887,7 +912,7 @@ impl ActivityDB {
                 a.id, a.tx_type, o.tx_id, o.value, o.fee, o.fee_rate,
                 o.address, o.confirmed, a.timestamp, o.is_boosted,
                 o.boost_tx_ids, o.is_transfer, o.does_exist, o.confirm_timestamp,
-                o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at
+                o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at, a.seen_at
             FROM activities a
             JOIN onchain_activity o ON a.id = o.id
             WHERE o.tx_id = ?1 AND a.activity_type = 'onchain'
@@ -905,6 +930,7 @@ impl ActivityDB {
             let confirm_timestamp: Option<i64> = row.get(13)?;
             let created_at: Option<i64> = row.get(16)?;
             let updated_at: Option<i64> = row.get(17)?;
+            let seen_at: Option<i64> = row.get(18)?;
             let boost_tx_ids_str: String = row.get(10)?;
             let boost_tx_ids: Vec<String> = if boost_tx_ids_str.is_empty() {
                 Vec::new()
@@ -931,6 +957,7 @@ impl ActivityDB {
                 transfer_tx_id: row.get(15)?,
                 created_at: created_at.map(|t| t as u64),
                 updated_at: updated_at.map(|t| t as u64),
+                seen_at: seen_at.map(|t| t as u64),
             })
         }) {
             Ok(activity) => Ok(Some(activity)),
@@ -1077,6 +1104,24 @@ impl ActivityDB {
         tx.commit().map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
+
+        Ok(())
+    }
+
+    /// Marks an activity as seen by setting the seen_at timestamp.
+    pub fn mark_activity_as_seen(&mut self, activity_id: &str, seen_at: u64) -> Result<(), ActivityError> {
+        let rows = self.conn.execute(
+            "UPDATE activities SET seen_at = ?1 WHERE id = ?2",
+            rusqlite::params![seen_at as i64, activity_id],
+        ).map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to mark activity as seen: {}", e),
+        })?;
+
+        if rows == 0 {
+            return Err(ActivityError::DataError {
+                error_details: "No activity found with given ID".to_string(),
+            });
+        }
 
         Ok(())
     }
@@ -2021,6 +2066,157 @@ impl ActivityDB {
         Ok(rows > 0)
     }
 
+    /// Upserts transaction details for one or more onchain transactions.
+    pub fn upsert_transaction_details(&mut self, details_list: &[TransactionDetails]) -> Result<(), ActivityError> {
+        if details_list.is_empty() {
+            return Ok(());
+        }
+
+        let tx = self.conn.transaction().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to start transaction: {}", e),
+        })?;
+
+        {
+            let mut stmt = tx.prepare(
+                "INSERT OR REPLACE INTO transaction_details (tx_id, amount_sats, inputs, outputs) VALUES (?1, ?2, ?3, ?4)"
+            ).map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
+
+            for details in details_list {
+                if details.tx_id.is_empty() {
+                    return Err(ActivityError::DataError {
+                        error_details: "Transaction ID cannot be empty".to_string(),
+                    });
+                }
+
+                let inputs_json = serde_json::to_string(&details.inputs).map_err(|e| ActivityError::DataError {
+                    error_details: format!("Failed to serialize inputs: {}", e),
+                })?;
+
+                let outputs_json = serde_json::to_string(&details.outputs).map_err(|e| ActivityError::DataError {
+                    error_details: format!("Failed to serialize outputs: {}", e),
+                })?;
+
+                stmt.execute(rusqlite::params![
+                    &details.tx_id,
+                    details.amount_sats,
+                    &inputs_json,
+                    &outputs_json,
+                ]).map_err(|e| ActivityError::InsertError {
+                    error_details: format!("Failed to upsert transaction details: {}", e),
+                })?;
+            }
+        }
+
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
+
+        Ok(())
+    }
+
+    /// Retrieves transaction details by transaction ID.
+    pub fn get_transaction_details(&self, tx_id: &str) -> Result<Option<TransactionDetails>, ActivityError> {
+        let sql = "SELECT tx_id, amount_sats, inputs, outputs FROM transaction_details WHERE tx_id = ?1";
+
+        let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
+
+        match stmt.query_row([tx_id], |row| {
+            let tx_id: String = row.get(0)?;
+            let amount_sats: i64 = row.get(1)?;
+            let inputs_json: String = row.get(2)?;
+            let outputs_json: String = row.get(3)?;
+
+            let inputs: Vec<TxInput> = serde_json::from_str(&inputs_json).map_err(|_| {
+                rusqlite::Error::InvalidColumnType(2, "inputs".to_string(), rusqlite::types::Type::Text)
+            })?;
+
+            let outputs: Vec<TxOutput> = serde_json::from_str(&outputs_json).map_err(|_| {
+                rusqlite::Error::InvalidColumnType(3, "outputs".to_string(), rusqlite::types::Type::Text)
+            })?;
+
+            Ok(TransactionDetails {
+                tx_id,
+                amount_sats,
+                inputs,
+                outputs,
+            })
+        }) {
+            Ok(details) => Ok(Some(details)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(ActivityError::RetrievalError {
+                error_details: format!("Failed to get transaction details: {}", e),
+            }),
+        }
+    }
+
+    /// Retrieves all transaction details.
+    pub fn get_all_transaction_details(&self) -> Result<Vec<TransactionDetails>, ActivityError> {
+        let sql = "SELECT tx_id, amount_sats, inputs, outputs FROM transaction_details ORDER BY tx_id";
+
+        let mut stmt = self.conn.prepare(sql).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to prepare statement: {}", e),
+        })?;
+
+        let rows = stmt.query_map([], |row| {
+            let tx_id: String = row.get(0)?;
+            let amount_sats: i64 = row.get(1)?;
+            let inputs_json: String = row.get(2)?;
+            let outputs_json: String = row.get(3)?;
+
+            let inputs: Vec<TxInput> = serde_json::from_str(&inputs_json).map_err(|_| {
+                rusqlite::Error::InvalidColumnType(2, "inputs".to_string(), rusqlite::types::Type::Text)
+            })?;
+
+            let outputs: Vec<TxOutput> = serde_json::from_str(&outputs_json).map_err(|_| {
+                rusqlite::Error::InvalidColumnType(3, "outputs".to_string(), rusqlite::types::Type::Text)
+            })?;
+
+            Ok(TransactionDetails {
+                tx_id,
+                amount_sats,
+                inputs,
+                outputs,
+            })
+        }).map_err(|e| ActivityError::RetrievalError {
+            error_details: format!("Failed to execute query: {}", e),
+        })?;
+
+        let mut results = Vec::new();
+        for row in rows {
+            results.push(row.map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to process row: {}", e),
+            })?);
+        }
+
+        Ok(results)
+    }
+
+    /// Deletes transaction details by transaction ID.
+    pub fn delete_transaction_details(&mut self, tx_id: &str) -> Result<bool, ActivityError> {
+        let rows = self.conn.execute(
+            "DELETE FROM transaction_details WHERE tx_id = ?1",
+            [tx_id],
+        ).map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to delete transaction details: {}", e),
+        })?;
+
+        Ok(rows > 0)
+    }
+
+    /// Wipes all transaction details from the database.
+    pub fn wipe_all_transaction_details(&mut self) -> Result<(), ActivityError> {
+        self.conn.execute("DELETE FROM transaction_details", [])
+            .map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to delete all transaction details: {}", e),
+            })?;
+
+        Ok(())
+    }
+
     /// Wipes all activity data from the database
     /// This deletes all activities, which cascades to delete all activity_tags due to foreign key constraints.
     /// Also deletes all pre_activity_metadata and closed_channels.
@@ -2045,6 +2241,12 @@ impl ActivityDB {
         tx.execute("DELETE FROM closed_channels", [])
             .map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to delete all closed channels: {}", e),
+            })?;
+
+        // Delete all transaction details
+        tx.execute("DELETE FROM transaction_details", [])
+            .map_err(|e| ActivityError::DataError {
+                error_details: format!("Failed to delete all transaction details: {}", e),
             })?;
 
         tx.commit().map_err(|e| ActivityError::DataError {

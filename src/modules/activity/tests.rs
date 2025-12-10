@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::activity::{ActivityDB, OnchainActivity, LightningActivity, PaymentType, PaymentState, Activity, ActivityFilter, ActivityType, SortDirection, ClosedChannelDetails, ActivityTags, PreActivityMetadata};
+    use crate::activity::{ActivityDB, OnchainActivity, LightningActivity, PaymentType, PaymentState, Activity, ActivityFilter, ActivityType, SortDirection, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
     use std::fs;
     use rand::random;
 
@@ -34,6 +34,7 @@ mod tests {
             transfer_tx_id: None,
             created_at: None,
             updated_at: None,
+            seen_at: None,
         }
     }
 
@@ -50,6 +51,7 @@ mod tests {
             preimage: Some("preimage123".to_string()),
             created_at: None,
             updated_at: None,
+            seen_at: None,
         }
     }
 
@@ -3533,6 +3535,358 @@ mod tests {
         // Now should find it
         let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
         assert!(retrieved.is_some(), "Onchain activity should be found by tx_id");
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_mark_activity_as_seen_onchain() {
+        let (mut db, db_path) = setup();
+        let activity = create_test_onchain_activity();
+        db.insert_onchain_activity(&activity).unwrap();
+
+        // Verify initial state - seen_at should be None
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        assert!(retrieved.get_seen_at().is_none(), "seen_at should be None initially");
+
+        // Mark as seen
+        let seen_timestamp = 1234567900u64;
+        db.mark_activity_as_seen(&activity.id, seen_timestamp).unwrap();
+
+        // Verify seen_at is now set
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        assert_eq!(retrieved.get_seen_at(), Some(seen_timestamp), "seen_at should be set");
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_mark_activity_as_seen_lightning() {
+        let (mut db, db_path) = setup();
+        let activity = create_test_lightning_activity();
+        db.insert_lightning_activity(&activity).unwrap();
+
+        // Verify initial state - seen_at should be None
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        assert!(retrieved.get_seen_at().is_none(), "seen_at should be None initially");
+
+        // Mark as seen
+        let seen_timestamp = 1234567900u64;
+        db.mark_activity_as_seen(&activity.id, seen_timestamp).unwrap();
+
+        // Verify seen_at is now set
+        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        assert_eq!(retrieved.get_seen_at(), Some(seen_timestamp), "seen_at should be set");
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_mark_activity_as_seen_nonexistent() {
+        let (mut db, db_path) = setup();
+
+        // Try to mark a non-existent activity as seen
+        let result = db.mark_activity_as_seen("nonexistent_id", 1234567900);
+        assert!(result.is_err(), "Should fail for non-existent activity");
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_seen_at_preserved_in_get_activities() {
+        let (mut db, db_path) = setup();
+        
+        // Insert two activities
+        let mut onchain = create_test_onchain_activity();
+        onchain.timestamp = 1000;
+        let mut lightning = create_test_lightning_activity();
+        lightning.timestamp = 2000;
+        
+        db.insert_onchain_activity(&onchain).unwrap();
+        db.insert_lightning_activity(&lightning).unwrap();
+        
+        // Mark only onchain as seen
+        let seen_timestamp = 3000u64;
+        db.mark_activity_as_seen(&onchain.id, seen_timestamp).unwrap();
+        
+        // Get all activities
+        let activities = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
+        assert_eq!(activities.len(), 2);
+        
+        for activity in activities {
+            match activity {
+                Activity::Onchain(o) => {
+                    assert_eq!(o.seen_at, Some(seen_timestamp), "Onchain should have seen_at set");
+                }
+                Activity::Lightning(l) => {
+                    assert!(l.seen_at.is_none(), "Lightning should not have seen_at set");
+                }
+            }
+        }
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_seen_at_preserved_in_get_activity_by_tx_id() {
+        let (mut db, db_path) = setup();
+        let activity = create_test_onchain_activity();
+        db.insert_onchain_activity(&activity).unwrap();
+
+        // Mark as seen
+        let seen_timestamp = 1234567900u64;
+        db.mark_activity_as_seen(&activity.id, seen_timestamp).unwrap();
+
+        // Retrieve by tx_id and verify seen_at
+        let retrieved = db.get_activity_by_tx_id(&activity.tx_id).unwrap().unwrap();
+        assert_eq!(retrieved.seen_at, Some(seen_timestamp), "seen_at should be preserved when getting by tx_id");
+
+        cleanup(&db_path);
+    }
+
+    fn create_test_transaction_details() -> TransactionDetails {
+        TransactionDetails {
+            tx_id: "tx123abc".to_string(),
+            amount_sats: 50000,
+            inputs: vec![
+                TxInput {
+                    txid: "prev_tx_abc".to_string(),
+                    vout: 0,
+                    scriptsig: "00".to_string(),
+                    witness: vec!["witness1".to_string(), "witness2".to_string()],
+                    sequence: 0xffffffff,
+                },
+            ],
+            outputs: vec![
+                TxOutput {
+                    scriptpubkey: "0014abc123".to_string(),
+                    scriptpubkey_type: Some("p2wpkh".to_string()),
+                    scriptpubkey_address: Some("bc1qtest...".to_string()),
+                    value: 45000,
+                    n: 0,
+                },
+                TxOutput {
+                    scriptpubkey: "0014def456".to_string(),
+                    scriptpubkey_type: Some("p2wpkh".to_string()),
+                    scriptpubkey_address: Some("bc1qchange...".to_string()),
+                    value: 4500,
+                    n: 1,
+                },
+            ],
+        }
+    }
+
+    #[test]
+    fn test_upsert_and_get_transaction_details() {
+        let (mut db, db_path) = setup();
+        let details = create_test_transaction_details();
+        
+        // Upsert
+        db.upsert_transaction_details(&[details.clone()]).unwrap();
+        
+        // Retrieve
+        let retrieved = db.get_transaction_details(&details.tx_id).unwrap().unwrap();
+        assert_eq!(retrieved.tx_id, details.tx_id);
+        assert_eq!(retrieved.amount_sats, details.amount_sats);
+        assert_eq!(retrieved.inputs.len(), 1);
+        assert_eq!(retrieved.outputs.len(), 2);
+        assert_eq!(retrieved.inputs[0].txid, "prev_tx_abc");
+        assert_eq!(retrieved.outputs[0].value, 45000);
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_transaction_details_not_found() {
+        let (db, db_path) = setup();
+        
+        let retrieved = db.get_transaction_details("nonexistent_tx").unwrap();
+        assert!(retrieved.is_none());
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_transaction_details_updates_existing() {
+        let (mut db, db_path) = setup();
+        let mut details = create_test_transaction_details();
+        
+        // Initial insert
+        db.upsert_transaction_details(&[details.clone()]).unwrap();
+        
+        // Update with new amount
+        details.amount_sats = 100000;
+        db.upsert_transaction_details(&[details.clone()]).unwrap();
+        
+        // Verify update
+        let retrieved = db.get_transaction_details(&details.tx_id).unwrap().unwrap();
+        assert_eq!(retrieved.amount_sats, 100000);
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_delete_transaction_details() {
+        let (mut db, db_path) = setup();
+        let details = create_test_transaction_details();
+        
+        db.upsert_transaction_details(&[details.clone()]).unwrap();
+        
+        // Delete
+        let deleted = db.delete_transaction_details(&details.tx_id).unwrap();
+        assert!(deleted);
+        
+        // Verify deletion
+        let retrieved = db.get_transaction_details(&details.tx_id).unwrap();
+        assert!(retrieved.is_none());
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_delete_nonexistent_transaction_details() {
+        let (mut db, db_path) = setup();
+        
+        let deleted = db.delete_transaction_details("nonexistent_tx").unwrap();
+        assert!(!deleted);
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_transaction_details_multiple() {
+        let (mut db, db_path) = setup();
+        
+        let details1 = create_test_transaction_details();
+        let mut details2 = create_test_transaction_details();
+        details2.tx_id = "tx456def".to_string();
+        details2.amount_sats = -25000; // Outgoing
+        
+        db.upsert_transaction_details(&[details1.clone(), details2.clone()]).unwrap();
+        
+        // Verify both were inserted
+        let all = db.get_all_transaction_details().unwrap();
+        assert_eq!(all.len(), 2);
+        
+        let retrieved1 = db.get_transaction_details(&details1.tx_id).unwrap().unwrap();
+        assert_eq!(retrieved1.amount_sats, 50000);
+        
+        let retrieved2 = db.get_transaction_details(&details2.tx_id).unwrap().unwrap();
+        assert_eq!(retrieved2.amount_sats, -25000);
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_all_transaction_details() {
+        let (mut db, db_path) = setup();
+        
+        // Initially empty
+        let all = db.get_all_transaction_details().unwrap();
+        assert!(all.is_empty());
+        
+        // Add some
+        let details1 = create_test_transaction_details();
+        let mut details2 = create_test_transaction_details();
+        details2.tx_id = "tx789ghi".to_string();
+        
+        db.upsert_transaction_details(&[details1, details2]).unwrap();
+        
+        let all = db.get_all_transaction_details().unwrap();
+        assert_eq!(all.len(), 2);
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_wipe_all_transaction_details() {
+        let (mut db, db_path) = setup();
+        
+        let details1 = create_test_transaction_details();
+        let mut details2 = create_test_transaction_details();
+        details2.tx_id = "tx999xyz".to_string();
+        
+        db.upsert_transaction_details(&[details1, details2]).unwrap();
+        
+        // Wipe all
+        db.wipe_all_transaction_details().unwrap();
+        
+        let all = db.get_all_transaction_details().unwrap();
+        assert!(all.is_empty());
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_transaction_details_empty_tx_id_fails() {
+        let (mut db, db_path) = setup();
+        
+        let mut details = create_test_transaction_details();
+        details.tx_id = "".to_string();
+        
+        let result = db.upsert_transaction_details(&[details]);
+        assert!(result.is_err());
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_transaction_details_complex_witness() {
+        let (mut db, db_path) = setup();
+        
+        let details = TransactionDetails {
+            tx_id: "tx_with_complex_witness".to_string(),
+            amount_sats: 10000,
+            inputs: vec![
+                TxInput {
+                    txid: "prev_tx".to_string(),
+                    vout: 1,
+                    scriptsig: "".to_string(),
+                    witness: vec![
+                        "304402...".to_string(),
+                        "02abc...".to_string(),
+                        "c0...".to_string(),
+                    ],
+                    sequence: 0xfffffffd,
+                },
+            ],
+            outputs: vec![
+                TxOutput {
+                    scriptpubkey: "5120...".to_string(),
+                    scriptpubkey_type: Some("p2tr".to_string()),
+                    scriptpubkey_address: Some("bc1p...".to_string()),
+                    value: 9500,
+                    n: 0,
+                },
+            ],
+        };
+        
+        db.upsert_transaction_details(&[details.clone()]).unwrap();
+        
+        let retrieved = db.get_transaction_details(&details.tx_id).unwrap().unwrap();
+        assert_eq!(retrieved.inputs[0].witness.len(), 3);
+        assert_eq!(retrieved.outputs[0].scriptpubkey_type, Some("p2tr".to_string()));
+        
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_wipe_all_includes_transaction_details() {
+        let (mut db, db_path) = setup();
+        
+        // Add activity and transaction details
+        let activity = create_test_onchain_activity();
+        db.insert_onchain_activity(&activity).unwrap();
+        
+        let details = create_test_transaction_details();
+        db.upsert_transaction_details(&[details]).unwrap();
+        
+        // Wipe all
+        db.wipe_all().unwrap();
+        
+        // Verify transaction details are also wiped
+        let all = db.get_all_transaction_details().unwrap();
+        assert!(all.is_empty());
         
         cleanup(&db_path);
     }

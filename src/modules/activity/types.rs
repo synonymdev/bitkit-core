@@ -51,6 +51,13 @@ impl Activity {
             Activity::Lightning(l) => l.updated_at,
         }
     }
+
+    pub fn get_seen_at(&self) -> Option<u64> {
+        match self {
+            Activity::Onchain(o) => o.seen_at,
+            Activity::Lightning(l) => l.seen_at,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy, uniffi::Enum)]
@@ -96,6 +103,8 @@ pub struct OnchainActivity {
     pub created_at: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub updated_at: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seen_at: Option<u64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, uniffi::Record)]
@@ -113,6 +122,8 @@ pub struct LightningActivity {
     pub created_at: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub updated_at: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seen_at: Option<u64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, uniffi::Record)]
@@ -155,6 +166,54 @@ pub struct PreActivityMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub channel_id: Option<String>,
     pub created_at: u64,
+}
+
+/// Details about a transaction input.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Record)]
+pub struct TxInput {
+    /// The transaction ID of the previous output being spent.
+    pub txid: String,
+    /// The output index of the previous output being spent.
+    pub vout: u32,
+    /// The script signature (hex-encoded).
+    pub scriptsig: String,
+    /// The witness stack (hex-encoded strings).
+    pub witness: Vec<String>,
+    /// The sequence number.
+    pub sequence: u32,
+}
+
+/// Details about a transaction output.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Record)]
+pub struct TxOutput {
+    /// The script public key (hex-encoded).
+    pub scriptpubkey: String,
+    /// The script public key type (e.g., "p2pkh", "p2sh", "p2wpkh", "p2wsh", "p2tr").
+    pub scriptpubkey_type: Option<String>,
+    /// The address corresponding to this script (if decodable).
+    pub scriptpubkey_address: Option<String>,
+    /// The value in satoshis.
+    pub value: i64,
+    /// The output index in the transaction.
+    pub n: u32,
+}
+
+/// Details about an onchain transaction.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Record)]
+pub struct TransactionDetails {
+    /// The transaction ID.
+    pub tx_id: String,
+    /// The net amount in this transaction (in satoshis).
+    ///
+    /// This is calculated as: (received - sent). For incoming payments,
+    /// this will be positive. For outgoing payments, this will be negative.
+    ///
+    /// Note: This amount does NOT include transaction fees.
+    pub amount_sats: i64,
+    /// The transaction inputs with full details.
+    pub inputs: Vec<TxInput>,
+    /// The transaction outputs with full details.
+    pub outputs: Vec<TxOutput>,
 }
 
 impl Default for SortDirection {

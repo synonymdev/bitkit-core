@@ -448,6 +448,22 @@ fileprivate struct FfiConverterUInt64: FfiConverterPrimitive {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterInt64: FfiConverterPrimitive {
+    typealias FfiType = Int64
+    typealias SwiftType = Int64
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Int64 {
+        return try lift(readInt(&buf))
+    }
+
+    public static func write(_ value: Int64, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterDouble: FfiConverterPrimitive {
     typealias FfiType = Double
     typealias SwiftType = Double
@@ -6183,10 +6199,11 @@ public struct LightningActivity {
     public var preimage: String?
     public var createdAt: UInt64?
     public var updatedAt: UInt64?
+    public var seenAt: UInt64?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, txType: PaymentType, status: PaymentState, value: UInt64, fee: UInt64?, invoice: String, message: String, timestamp: UInt64, preimage: String?, createdAt: UInt64?, updatedAt: UInt64?) {
+    public init(id: String, txType: PaymentType, status: PaymentState, value: UInt64, fee: UInt64?, invoice: String, message: String, timestamp: UInt64, preimage: String?, createdAt: UInt64?, updatedAt: UInt64?, seenAt: UInt64?) {
         self.id = id
         self.txType = txType
         self.status = status
@@ -6198,6 +6215,7 @@ public struct LightningActivity {
         self.preimage = preimage
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.seenAt = seenAt
     }
 }
 
@@ -6241,6 +6259,9 @@ extension LightningActivity: Equatable, Hashable {
         if lhs.updatedAt != rhs.updatedAt {
             return false
         }
+        if lhs.seenAt != rhs.seenAt {
+            return false
+        }
         return true
     }
 
@@ -6256,6 +6277,7 @@ extension LightningActivity: Equatable, Hashable {
         hasher.combine(preimage)
         hasher.combine(createdAt)
         hasher.combine(updatedAt)
+        hasher.combine(seenAt)
     }
 }
 
@@ -6280,7 +6302,8 @@ public struct FfiConverterTypeLightningActivity: FfiConverterRustBuffer {
                 timestamp: FfiConverterUInt64.read(from: &buf), 
                 preimage: FfiConverterOptionString.read(from: &buf), 
                 createdAt: FfiConverterOptionUInt64.read(from: &buf), 
-                updatedAt: FfiConverterOptionUInt64.read(from: &buf)
+                updatedAt: FfiConverterOptionUInt64.read(from: &buf), 
+                seenAt: FfiConverterOptionUInt64.read(from: &buf)
         )
     }
 
@@ -6296,6 +6319,7 @@ public struct FfiConverterTypeLightningActivity: FfiConverterRustBuffer {
         FfiConverterOptionString.write(value.preimage, into: &buf)
         FfiConverterOptionUInt64.write(value.createdAt, into: &buf)
         FfiConverterOptionUInt64.write(value.updatedAt, into: &buf)
+        FfiConverterOptionUInt64.write(value.seenAt, into: &buf)
     }
 }
 
@@ -7262,10 +7286,11 @@ public struct OnchainActivity {
     public var transferTxId: String?
     public var createdAt: UInt64?
     public var updatedAt: UInt64?
+    public var seenAt: UInt64?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, txType: PaymentType, txId: String, value: UInt64, fee: UInt64, feeRate: UInt64, address: String, confirmed: Bool, timestamp: UInt64, isBoosted: Bool, boostTxIds: [String], isTransfer: Bool, doesExist: Bool, confirmTimestamp: UInt64?, channelId: String?, transferTxId: String?, createdAt: UInt64?, updatedAt: UInt64?) {
+    public init(id: String, txType: PaymentType, txId: String, value: UInt64, fee: UInt64, feeRate: UInt64, address: String, confirmed: Bool, timestamp: UInt64, isBoosted: Bool, boostTxIds: [String], isTransfer: Bool, doesExist: Bool, confirmTimestamp: UInt64?, channelId: String?, transferTxId: String?, createdAt: UInt64?, updatedAt: UInt64?, seenAt: UInt64?) {
         self.id = id
         self.txType = txType
         self.txId = txId
@@ -7284,6 +7309,7 @@ public struct OnchainActivity {
         self.transferTxId = transferTxId
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.seenAt = seenAt
     }
 }
 
@@ -7348,6 +7374,9 @@ extension OnchainActivity: Equatable, Hashable {
         if lhs.updatedAt != rhs.updatedAt {
             return false
         }
+        if lhs.seenAt != rhs.seenAt {
+            return false
+        }
         return true
     }
 
@@ -7370,6 +7399,7 @@ extension OnchainActivity: Equatable, Hashable {
         hasher.combine(transferTxId)
         hasher.combine(createdAt)
         hasher.combine(updatedAt)
+        hasher.combine(seenAt)
     }
 }
 
@@ -7401,7 +7431,8 @@ public struct FfiConverterTypeOnchainActivity: FfiConverterRustBuffer {
                 channelId: FfiConverterOptionString.read(from: &buf), 
                 transferTxId: FfiConverterOptionString.read(from: &buf), 
                 createdAt: FfiConverterOptionUInt64.read(from: &buf), 
-                updatedAt: FfiConverterOptionUInt64.read(from: &buf)
+                updatedAt: FfiConverterOptionUInt64.read(from: &buf), 
+                seenAt: FfiConverterOptionUInt64.read(from: &buf)
         )
     }
 
@@ -7424,6 +7455,7 @@ public struct FfiConverterTypeOnchainActivity: FfiConverterRustBuffer {
         FfiConverterOptionString.write(value.transferTxId, into: &buf)
         FfiConverterOptionUInt64.write(value.createdAt, into: &buf)
         FfiConverterOptionUInt64.write(value.updatedAt, into: &buf)
+        FfiConverterOptionUInt64.write(value.seenAt, into: &buf)
     }
 }
 
@@ -8975,6 +9007,131 @@ public func FfiConverterTypeTextMemo_lower(_ value: TextMemo) -> RustBuffer {
 
 
 /**
+ * Details about an onchain transaction.
+ */
+public struct TransactionDetails {
+    /**
+     * The transaction ID.
+     */
+    public var txId: String
+    /**
+     * The net amount in this transaction (in satoshis).
+     *
+     * This is calculated as: (received - sent). For incoming payments,
+     * this will be positive. For outgoing payments, this will be negative.
+     *
+     * Note: This amount does NOT include transaction fees.
+     */
+    public var amountSats: Int64
+    /**
+     * The transaction inputs with full details.
+     */
+    public var inputs: [TxInput]
+    /**
+     * The transaction outputs with full details.
+     */
+    public var outputs: [TxOutput]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The transaction ID.
+         */txId: String, 
+        /**
+         * The net amount in this transaction (in satoshis).
+         *
+         * This is calculated as: (received - sent). For incoming payments,
+         * this will be positive. For outgoing payments, this will be negative.
+         *
+         * Note: This amount does NOT include transaction fees.
+         */amountSats: Int64, 
+        /**
+         * The transaction inputs with full details.
+         */inputs: [TxInput], 
+        /**
+         * The transaction outputs with full details.
+         */outputs: [TxOutput]) {
+        self.txId = txId
+        self.amountSats = amountSats
+        self.inputs = inputs
+        self.outputs = outputs
+    }
+}
+
+#if compiler(>=6)
+extension TransactionDetails: Sendable {}
+#endif
+
+
+extension TransactionDetails: Equatable, Hashable {
+    public static func ==(lhs: TransactionDetails, rhs: TransactionDetails) -> Bool {
+        if lhs.txId != rhs.txId {
+            return false
+        }
+        if lhs.amountSats != rhs.amountSats {
+            return false
+        }
+        if lhs.inputs != rhs.inputs {
+            return false
+        }
+        if lhs.outputs != rhs.outputs {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(txId)
+        hasher.combine(amountSats)
+        hasher.combine(inputs)
+        hasher.combine(outputs)
+    }
+}
+
+extension TransactionDetails: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTransactionDetails: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TransactionDetails {
+        return
+            try TransactionDetails(
+                txId: FfiConverterString.read(from: &buf), 
+                amountSats: FfiConverterInt64.read(from: &buf), 
+                inputs: FfiConverterSequenceTypeTxInput.read(from: &buf), 
+                outputs: FfiConverterSequenceTypeTxOutput.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TransactionDetails, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.txId, into: &buf)
+        FfiConverterInt64.write(value.amountSats, into: &buf)
+        FfiConverterSequenceTypeTxInput.write(value.inputs, into: &buf)
+        FfiConverterSequenceTypeTxOutput.write(value.outputs, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTransactionDetails_lift(_ buf: RustBuffer) throws -> TransactionDetails {
+    return try FfiConverterTypeTransactionDetails.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTransactionDetails_lower(_ value: TransactionDetails) -> RustBuffer {
+    return FfiConverterTypeTransactionDetails.lower(value)
+}
+
+
+/**
  * Payment request
  */
 public struct TxAckPaymentRequest {
@@ -9100,6 +9257,135 @@ public func FfiConverterTypeTxAckPaymentRequest_lift(_ buf: RustBuffer) throws -
 #endif
 public func FfiConverterTypeTxAckPaymentRequest_lower(_ value: TxAckPaymentRequest) -> RustBuffer {
     return FfiConverterTypeTxAckPaymentRequest.lower(value)
+}
+
+
+/**
+ * Details about a transaction input.
+ */
+public struct TxInput {
+    /**
+     * The transaction ID of the previous output being spent.
+     */
+    public var txid: String
+    /**
+     * The output index of the previous output being spent.
+     */
+    public var vout: UInt32
+    /**
+     * The script signature (hex-encoded).
+     */
+    public var scriptsig: String
+    /**
+     * The witness stack (hex-encoded strings).
+     */
+    public var witness: [String]
+    /**
+     * The sequence number.
+     */
+    public var sequence: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The transaction ID of the previous output being spent.
+         */txid: String, 
+        /**
+         * The output index of the previous output being spent.
+         */vout: UInt32, 
+        /**
+         * The script signature (hex-encoded).
+         */scriptsig: String, 
+        /**
+         * The witness stack (hex-encoded strings).
+         */witness: [String], 
+        /**
+         * The sequence number.
+         */sequence: UInt32) {
+        self.txid = txid
+        self.vout = vout
+        self.scriptsig = scriptsig
+        self.witness = witness
+        self.sequence = sequence
+    }
+}
+
+#if compiler(>=6)
+extension TxInput: Sendable {}
+#endif
+
+
+extension TxInput: Equatable, Hashable {
+    public static func ==(lhs: TxInput, rhs: TxInput) -> Bool {
+        if lhs.txid != rhs.txid {
+            return false
+        }
+        if lhs.vout != rhs.vout {
+            return false
+        }
+        if lhs.scriptsig != rhs.scriptsig {
+            return false
+        }
+        if lhs.witness != rhs.witness {
+            return false
+        }
+        if lhs.sequence != rhs.sequence {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(txid)
+        hasher.combine(vout)
+        hasher.combine(scriptsig)
+        hasher.combine(witness)
+        hasher.combine(sequence)
+    }
+}
+
+extension TxInput: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTxInput: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TxInput {
+        return
+            try TxInput(
+                txid: FfiConverterString.read(from: &buf), 
+                vout: FfiConverterUInt32.read(from: &buf), 
+                scriptsig: FfiConverterString.read(from: &buf), 
+                witness: FfiConverterSequenceString.read(from: &buf), 
+                sequence: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TxInput, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.txid, into: &buf)
+        FfiConverterUInt32.write(value.vout, into: &buf)
+        FfiConverterString.write(value.scriptsig, into: &buf)
+        FfiConverterSequenceString.write(value.witness, into: &buf)
+        FfiConverterUInt32.write(value.sequence, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTxInput_lift(_ buf: RustBuffer) throws -> TxInput {
+    return try FfiConverterTypeTxInput.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTxInput_lower(_ value: TxInput) -> RustBuffer {
+    return FfiConverterTypeTxInput.lower(value)
 }
 
 
@@ -9369,6 +9655,135 @@ public func FfiConverterTypeTxInputType_lift(_ buf: RustBuffer) throws -> TxInpu
 #endif
 public func FfiConverterTypeTxInputType_lower(_ value: TxInputType) -> RustBuffer {
     return FfiConverterTypeTxInputType.lower(value)
+}
+
+
+/**
+ * Details about a transaction output.
+ */
+public struct TxOutput {
+    /**
+     * The script public key (hex-encoded).
+     */
+    public var scriptpubkey: String
+    /**
+     * The script public key type (e.g., "p2pkh", "p2sh", "p2wpkh", "p2wsh", "p2tr").
+     */
+    public var scriptpubkeyType: String?
+    /**
+     * The address corresponding to this script (if decodable).
+     */
+    public var scriptpubkeyAddress: String?
+    /**
+     * The value in satoshis.
+     */
+    public var value: Int64
+    /**
+     * The output index in the transaction.
+     */
+    public var n: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The script public key (hex-encoded).
+         */scriptpubkey: String, 
+        /**
+         * The script public key type (e.g., "p2pkh", "p2sh", "p2wpkh", "p2wsh", "p2tr").
+         */scriptpubkeyType: String?, 
+        /**
+         * The address corresponding to this script (if decodable).
+         */scriptpubkeyAddress: String?, 
+        /**
+         * The value in satoshis.
+         */value: Int64, 
+        /**
+         * The output index in the transaction.
+         */n: UInt32) {
+        self.scriptpubkey = scriptpubkey
+        self.scriptpubkeyType = scriptpubkeyType
+        self.scriptpubkeyAddress = scriptpubkeyAddress
+        self.value = value
+        self.n = n
+    }
+}
+
+#if compiler(>=6)
+extension TxOutput: Sendable {}
+#endif
+
+
+extension TxOutput: Equatable, Hashable {
+    public static func ==(lhs: TxOutput, rhs: TxOutput) -> Bool {
+        if lhs.scriptpubkey != rhs.scriptpubkey {
+            return false
+        }
+        if lhs.scriptpubkeyType != rhs.scriptpubkeyType {
+            return false
+        }
+        if lhs.scriptpubkeyAddress != rhs.scriptpubkeyAddress {
+            return false
+        }
+        if lhs.value != rhs.value {
+            return false
+        }
+        if lhs.n != rhs.n {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(scriptpubkey)
+        hasher.combine(scriptpubkeyType)
+        hasher.combine(scriptpubkeyAddress)
+        hasher.combine(value)
+        hasher.combine(n)
+    }
+}
+
+extension TxOutput: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTxOutput: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TxOutput {
+        return
+            try TxOutput(
+                scriptpubkey: FfiConverterString.read(from: &buf), 
+                scriptpubkeyType: FfiConverterOptionString.read(from: &buf), 
+                scriptpubkeyAddress: FfiConverterOptionString.read(from: &buf), 
+                value: FfiConverterInt64.read(from: &buf), 
+                n: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TxOutput, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.scriptpubkey, into: &buf)
+        FfiConverterOptionString.write(value.scriptpubkeyType, into: &buf)
+        FfiConverterOptionString.write(value.scriptpubkeyAddress, into: &buf)
+        FfiConverterInt64.write(value.value, into: &buf)
+        FfiConverterUInt32.write(value.n, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTxOutput_lift(_ buf: RustBuffer) throws -> TxOutput {
+    return try FfiConverterTypeTxOutput.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTxOutput_lower(_ value: TxOutput) -> RustBuffer {
+    return FfiConverterTypeTxOutput.lower(value)
 }
 
 
@@ -14582,6 +14997,30 @@ fileprivate struct FfiConverterOptionTypeTextMemo: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeTransactionDetails: FfiConverterRustBuffer {
+    typealias SwiftType = TransactionDetails?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeTransactionDetails.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeTransactionDetails.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypeUnlockPath: FfiConverterRustBuffer {
     typealias SwiftType = UnlockPath?
 
@@ -15879,6 +16318,31 @@ fileprivate struct FfiConverterSequenceTypeRefTxOutput: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeTransactionDetails: FfiConverterRustBuffer {
+    typealias SwiftType = [TransactionDetails]
+
+    public static func write(_ value: [TransactionDetails], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTransactionDetails.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TransactionDetails] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TransactionDetails]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTransactionDetails.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeTxAckPaymentRequest: FfiConverterRustBuffer {
     typealias SwiftType = [TxAckPaymentRequest]
 
@@ -15904,6 +16368,31 @@ fileprivate struct FfiConverterSequenceTypeTxAckPaymentRequest: FfiConverterRust
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeTxInput: FfiConverterRustBuffer {
+    typealias SwiftType = [TxInput]
+
+    public static func write(_ value: [TxInput], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTxInput.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TxInput] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TxInput]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTxInput.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeTxInputType: FfiConverterRustBuffer {
     typealias SwiftType = [TxInputType]
 
@@ -15921,6 +16410,31 @@ fileprivate struct FfiConverterSequenceTypeTxInputType: FfiConverterRustBuffer {
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeTxInputType.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeTxOutput: FfiConverterRustBuffer {
+    typealias SwiftType = [TxOutput]
+
+    public static func write(_ value: [TxOutput], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTxOutput.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TxOutput] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TxOutput]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTxOutput.read(from: &buf))
         }
         return seq
     }
@@ -16221,6 +16735,13 @@ public func deletePreActivityMetadata(paymentId: String)throws   {try rustCallWi
     )
 }
 }
+public func deleteTransactionDetails(txId: String)throws  -> Bool  {
+    return try  FfiConverterBool.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_delete_transaction_details(
+        FfiConverterString.lower(txId),$0
+    )
+})
+}
 public func deriveBitcoinAddress(mnemonicPhrase: String, derivationPathStr: String?, network: Network?, bip39Passphrase: String?)throws  -> GetAddressResponse  {
     return try  FfiConverterTypeGetAddressResponse_lift(try rustCallWithError(FfiConverterTypeAddressError_lift) {
     uniffi_bitkitcore_fn_func_derive_bitcoin_address(
@@ -16349,6 +16870,12 @@ public func getAllClosedChannels(sortDirection: SortDirection?)throws  -> [Close
 public func getAllPreActivityMetadata()throws  -> [PreActivityMetadata]  {
     return try  FfiConverterSequenceTypePreActivityMetadata.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_all_pre_activity_metadata($0
+    )
+})
+}
+public func getAllTransactionDetails()throws  -> [TransactionDetails]  {
+    return try  FfiConverterSequenceTypeTransactionDetails.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_get_all_transaction_details($0
     )
 })
 }
@@ -16499,6 +17026,13 @@ public func getTags(activityId: String)throws  -> [String]  {
     )
 })
 }
+public func getTransactionDetails(txId: String)throws  -> TransactionDetails?  {
+    return try  FfiConverterOptionTypeTransactionDetails.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_get_transaction_details(
+        FfiConverterString.lower(txId),$0
+    )
+})
+}
 public func giftOrder(clientNodeId: String, code: String)async throws  -> IGift  {
     return
         try  await uniffiRustCallAsync(
@@ -16567,6 +17101,13 @@ public func lnurlAuth(domain: String, k1: String, callback: String, bip32Mnemoni
             liftFunc: FfiConverterString.lift,
             errorHandler: FfiConverterTypeLnurlError_lift
         )
+}
+public func markActivityAsSeen(activityId: String, seenAt: UInt64)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_mark_activity_as_seen(
+        FfiConverterString.lower(activityId),
+        FfiConverterUInt64.lower(seenAt),$0
+    )
+}
 }
 public func mnemonicToEntropy(mnemonicPhrase: String)throws  -> Data  {
     return try  FfiConverterData.lift(try rustCallWithError(FfiConverterTypeAddressError_lift) {
@@ -17001,6 +17542,12 @@ public func upsertTags(activityTags: [ActivityTags])throws   {try rustCallWithEr
     )
 }
 }
+public func upsertTransactionDetails(detailsList: [TransactionDetails])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_upsert_transaction_details(
+        FfiConverterSequenceTypeTransactionDetails.lower(detailsList),$0
+    )
+}
+}
 public func validateBitcoinAddress(address: String)throws  -> ValidationResult  {
     return try  FfiConverterTypeValidationResult_lift(try rustCallWithError(FfiConverterTypeAddressError_lift) {
     uniffi_bitkitcore_fn_func_validate_bitcoin_address(
@@ -17032,6 +17579,11 @@ public func wipeAllDatabases()async throws  -> String  {
             liftFunc: FfiConverterString.lift,
             errorHandler: FfiConverterTypeDbError_lift
         )
+}
+public func wipeAllTransactionDetails()throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_wipe_all_transaction_details($0
+    )
+}
 }
 
 private enum InitializationResult {
@@ -17094,6 +17646,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 46621) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_delete_transaction_details() != 21670) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_derive_bitcoin_address() != 35090) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -17134,6 +17689,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata() != 25130) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_all_transaction_details() != 36056) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431) {
@@ -17178,6 +17736,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_get_tags() != 11308) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_get_transaction_details() != 6118) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_gift_order() != 22040) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -17197,6 +17758,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 65086) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_mnemonic_to_entropy() != 36669) {
@@ -17310,6 +17874,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_upsert_tags() != 47513) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_upsert_transaction_details() != 62351) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -17320,6 +17887,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_wipe_all_transaction_details() != 65339) {
         return InitializationResult.apiChecksumMismatch
     }
 

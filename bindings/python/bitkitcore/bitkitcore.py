@@ -491,6 +491,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 46621:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_delete_transaction_details() != 21670:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_derive_bitcoin_address() != 35090:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses() != 34371:
@@ -518,6 +520,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_get_all_closed_channels() != 16828:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata() != 25130:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_all_transaction_details() != 36056:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -547,6 +551,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_tags() != 11308:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_transaction_details() != 6118:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_gift_order() != 22040:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_gift_pay() != 22142:
@@ -560,6 +566,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 65086:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_mnemonic_to_entropy() != 36669:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -635,6 +643,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_upsert_tags() != 47513:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_upsert_transaction_details() != 62351:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005:
@@ -642,6 +652,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels() != 41511:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_wipe_all_transaction_details() != 65339:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
 
 # A ctypes library to expose the extern-C FFI definitions.
@@ -829,6 +841,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_delete_pre_activity_metadata.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_delete_pre_activity_metadata.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_delete_transaction_details.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_delete_transaction_details.restype = ctypes.c_int8
 _UniffiLib.uniffi_bitkitcore_fn_func_derive_bitcoin_address.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -920,6 +937,10 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_all_pre_activity_metadata.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_all_pre_activity_metadata.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_all_transaction_details.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_all_transaction_details.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -988,6 +1009,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_tags.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_tags.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_transaction_details.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_transaction_details.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_gift_order.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1026,6 +1052,12 @@ _UniffiLib.uniffi_bitkitcore_fn_func_lnurl_auth.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_lnurl_auth.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_mark_activity_as_seen.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.c_uint64,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_mark_activity_as_seen.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_mnemonic_to_entropy.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1292,6 +1324,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_upsert_tags.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_upsert_tags.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_transaction_details.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_upsert_transaction_details.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_validate_bitcoin_address.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1309,6 +1346,10 @@ _UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_closed_channels.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_databases.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_databases.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_transaction_details.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_transaction_details.restype = None
 _UniffiLib.ffi_bitkitcore_rustbuffer_alloc.argtypes = (
     ctypes.c_uint64,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1622,6 +1663,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_delete_activity_by_id.restype = ctype
 _UniffiLib.uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_delete_transaction_details.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_delete_transaction_details.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_address.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_address.restype = ctypes.c_uint16
@@ -1664,6 +1708,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_closed_channels.restype = cty
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_all_transaction_details.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_all_transaction_details.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_unique_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_all_unique_tags.restype = ctypes.c_uint16
@@ -1706,6 +1753,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata.restype = c
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_tags.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_transaction_details.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_transaction_details.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_gift_order.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_gift_order.restype = ctypes.c_uint16
@@ -1727,6 +1777,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word.restype = ctypes.
 _UniffiLib.uniffi_bitkitcore_checksum_func_lnurl_auth.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_lnurl_auth.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_mark_activity_as_seen.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_mark_activity_as_seen.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_mnemonic_to_entropy.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_mnemonic_to_entropy.restype = ctypes.c_uint16
@@ -1838,6 +1891,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_pre_activity_metadata.restype 
 _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_tags.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_transaction_details.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_upsert_transaction_details.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.restype = ctypes.c_uint16
@@ -1850,6 +1906,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels.restype = ct
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_databases.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_databases.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_transaction_details.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_transaction_details.restype = ctypes.c_uint16
 _UniffiLib.ffi_bitkitcore_uniffi_contract_version.argtypes = (
 )
 _UniffiLib.ffi_bitkitcore_uniffi_contract_version.restype = ctypes.c_uint32
@@ -1898,6 +1957,19 @@ class _UniffiConverterUInt64(_UniffiConverterPrimitiveInt):
     @staticmethod
     def write(value, buf):
         buf.write_u64(value)
+
+class _UniffiConverterInt64(_UniffiConverterPrimitiveInt):
+    CLASS_NAME = "i64"
+    VALUE_MIN = -2**63
+    VALUE_MAX = 2**63
+
+    @staticmethod
+    def read(buf):
+        return buf.read_i64()
+
+    @staticmethod
+    def write(value, buf):
+        buf.write_i64(value)
 
 class _UniffiConverterDouble(_UniffiConverterPrimitiveFloat):
     @staticmethod
@@ -5504,7 +5576,8 @@ class LightningActivity:
     preimage: "typing.Optional[str]"
     created_at: "typing.Optional[int]"
     updated_at: "typing.Optional[int]"
-    def __init__(self, *, id: "str", tx_type: "PaymentType", status: "PaymentState", value: "int", fee: "typing.Optional[int]", invoice: "str", message: "str", timestamp: "int", preimage: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]"):
+    seen_at: "typing.Optional[int]"
+    def __init__(self, *, id: "str", tx_type: "PaymentType", status: "PaymentState", value: "int", fee: "typing.Optional[int]", invoice: "str", message: "str", timestamp: "int", preimage: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]", seen_at: "typing.Optional[int]"):
         self.id = id
         self.tx_type = tx_type
         self.status = status
@@ -5516,9 +5589,10 @@ class LightningActivity:
         self.preimage = preimage
         self.created_at = created_at
         self.updated_at = updated_at
+        self.seen_at = seen_at
 
     def __str__(self):
-        return "LightningActivity(id={}, tx_type={}, status={}, value={}, fee={}, invoice={}, message={}, timestamp={}, preimage={}, created_at={}, updated_at={})".format(self.id, self.tx_type, self.status, self.value, self.fee, self.invoice, self.message, self.timestamp, self.preimage, self.created_at, self.updated_at)
+        return "LightningActivity(id={}, tx_type={}, status={}, value={}, fee={}, invoice={}, message={}, timestamp={}, preimage={}, created_at={}, updated_at={}, seen_at={})".format(self.id, self.tx_type, self.status, self.value, self.fee, self.invoice, self.message, self.timestamp, self.preimage, self.created_at, self.updated_at, self.seen_at)
 
     def __eq__(self, other):
         if self.id != other.id:
@@ -5543,6 +5617,8 @@ class LightningActivity:
             return False
         if self.updated_at != other.updated_at:
             return False
+        if self.seen_at != other.seen_at:
+            return False
         return True
 
 class _UniffiConverterTypeLightningActivity(_UniffiConverterRustBuffer):
@@ -5560,6 +5636,7 @@ class _UniffiConverterTypeLightningActivity(_UniffiConverterRustBuffer):
             preimage=_UniffiConverterOptionalString.read(buf),
             created_at=_UniffiConverterOptionalUInt64.read(buf),
             updated_at=_UniffiConverterOptionalUInt64.read(buf),
+            seen_at=_UniffiConverterOptionalUInt64.read(buf),
         )
 
     @staticmethod
@@ -5575,6 +5652,7 @@ class _UniffiConverterTypeLightningActivity(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalString.check_lower(value.preimage)
         _UniffiConverterOptionalUInt64.check_lower(value.created_at)
         _UniffiConverterOptionalUInt64.check_lower(value.updated_at)
+        _UniffiConverterOptionalUInt64.check_lower(value.seen_at)
 
     @staticmethod
     def write(value, buf):
@@ -5589,6 +5667,7 @@ class _UniffiConverterTypeLightningActivity(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalString.write(value.preimage, buf)
         _UniffiConverterOptionalUInt64.write(value.created_at, buf)
         _UniffiConverterOptionalUInt64.write(value.updated_at, buf)
+        _UniffiConverterOptionalUInt64.write(value.seen_at, buf)
 
 
 class LightningInvoice:
@@ -6173,7 +6252,8 @@ class OnchainActivity:
     transfer_tx_id: "typing.Optional[str]"
     created_at: "typing.Optional[int]"
     updated_at: "typing.Optional[int]"
-    def __init__(self, *, id: "str", tx_type: "PaymentType", tx_id: "str", value: "int", fee: "int", fee_rate: "int", address: "str", confirmed: "bool", timestamp: "int", is_boosted: "bool", boost_tx_ids: "typing.List[str]", is_transfer: "bool", does_exist: "bool", confirm_timestamp: "typing.Optional[int]", channel_id: "typing.Optional[str]", transfer_tx_id: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]"):
+    seen_at: "typing.Optional[int]"
+    def __init__(self, *, id: "str", tx_type: "PaymentType", tx_id: "str", value: "int", fee: "int", fee_rate: "int", address: "str", confirmed: "bool", timestamp: "int", is_boosted: "bool", boost_tx_ids: "typing.List[str]", is_transfer: "bool", does_exist: "bool", confirm_timestamp: "typing.Optional[int]", channel_id: "typing.Optional[str]", transfer_tx_id: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]", seen_at: "typing.Optional[int]"):
         self.id = id
         self.tx_type = tx_type
         self.tx_id = tx_id
@@ -6192,9 +6272,10 @@ class OnchainActivity:
         self.transfer_tx_id = transfer_tx_id
         self.created_at = created_at
         self.updated_at = updated_at
+        self.seen_at = seen_at
 
     def __str__(self):
-        return "OnchainActivity(id={}, tx_type={}, tx_id={}, value={}, fee={}, fee_rate={}, address={}, confirmed={}, timestamp={}, is_boosted={}, boost_tx_ids={}, is_transfer={}, does_exist={}, confirm_timestamp={}, channel_id={}, transfer_tx_id={}, created_at={}, updated_at={})".format(self.id, self.tx_type, self.tx_id, self.value, self.fee, self.fee_rate, self.address, self.confirmed, self.timestamp, self.is_boosted, self.boost_tx_ids, self.is_transfer, self.does_exist, self.confirm_timestamp, self.channel_id, self.transfer_tx_id, self.created_at, self.updated_at)
+        return "OnchainActivity(id={}, tx_type={}, tx_id={}, value={}, fee={}, fee_rate={}, address={}, confirmed={}, timestamp={}, is_boosted={}, boost_tx_ids={}, is_transfer={}, does_exist={}, confirm_timestamp={}, channel_id={}, transfer_tx_id={}, created_at={}, updated_at={}, seen_at={})".format(self.id, self.tx_type, self.tx_id, self.value, self.fee, self.fee_rate, self.address, self.confirmed, self.timestamp, self.is_boosted, self.boost_tx_ids, self.is_transfer, self.does_exist, self.confirm_timestamp, self.channel_id, self.transfer_tx_id, self.created_at, self.updated_at, self.seen_at)
 
     def __eq__(self, other):
         if self.id != other.id:
@@ -6233,6 +6314,8 @@ class OnchainActivity:
             return False
         if self.updated_at != other.updated_at:
             return False
+        if self.seen_at != other.seen_at:
+            return False
         return True
 
 class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
@@ -6257,6 +6340,7 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
             transfer_tx_id=_UniffiConverterOptionalString.read(buf),
             created_at=_UniffiConverterOptionalUInt64.read(buf),
             updated_at=_UniffiConverterOptionalUInt64.read(buf),
+            seen_at=_UniffiConverterOptionalUInt64.read(buf),
         )
 
     @staticmethod
@@ -6279,6 +6363,7 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalString.check_lower(value.transfer_tx_id)
         _UniffiConverterOptionalUInt64.check_lower(value.created_at)
         _UniffiConverterOptionalUInt64.check_lower(value.updated_at)
+        _UniffiConverterOptionalUInt64.check_lower(value.seen_at)
 
     @staticmethod
     def write(value, buf):
@@ -6300,6 +6385,7 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalString.write(value.transfer_tx_id, buf)
         _UniffiConverterOptionalUInt64.write(value.created_at, buf)
         _UniffiConverterOptionalUInt64.write(value.updated_at, buf)
+        _UniffiConverterOptionalUInt64.write(value.seen_at, buf)
 
 
 class PaymentRequestMemo:
@@ -7252,6 +7338,81 @@ class _UniffiConverterTypeTextMemo(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.text, buf)
 
 
+class TransactionDetails:
+    """
+    Details about an onchain transaction.
+    """
+
+    tx_id: "str"
+    """
+    The transaction ID.
+    """
+
+    amount_sats: "int"
+    """
+    The net amount in this transaction (in satoshis).
+
+    This is calculated as: (received - sent). For incoming payments,
+    this will be positive. For outgoing payments, this will be negative.
+
+    Note: This amount does NOT include transaction fees.
+    """
+
+    inputs: "typing.List[TxInput]"
+    """
+    The transaction inputs with full details.
+    """
+
+    outputs: "typing.List[TxOutput]"
+    """
+    The transaction outputs with full details.
+    """
+
+    def __init__(self, *, tx_id: "str", amount_sats: "int", inputs: "typing.List[TxInput]", outputs: "typing.List[TxOutput]"):
+        self.tx_id = tx_id
+        self.amount_sats = amount_sats
+        self.inputs = inputs
+        self.outputs = outputs
+
+    def __str__(self):
+        return "TransactionDetails(tx_id={}, amount_sats={}, inputs={}, outputs={})".format(self.tx_id, self.amount_sats, self.inputs, self.outputs)
+
+    def __eq__(self, other):
+        if self.tx_id != other.tx_id:
+            return False
+        if self.amount_sats != other.amount_sats:
+            return False
+        if self.inputs != other.inputs:
+            return False
+        if self.outputs != other.outputs:
+            return False
+        return True
+
+class _UniffiConverterTypeTransactionDetails(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TransactionDetails(
+            tx_id=_UniffiConverterString.read(buf),
+            amount_sats=_UniffiConverterInt64.read(buf),
+            inputs=_UniffiConverterSequenceTypeTxInput.read(buf),
+            outputs=_UniffiConverterSequenceTypeTxOutput.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.tx_id)
+        _UniffiConverterInt64.check_lower(value.amount_sats)
+        _UniffiConverterSequenceTypeTxInput.check_lower(value.inputs)
+        _UniffiConverterSequenceTypeTxOutput.check_lower(value.outputs)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.tx_id, buf)
+        _UniffiConverterInt64.write(value.amount_sats, buf)
+        _UniffiConverterSequenceTypeTxInput.write(value.inputs, buf)
+        _UniffiConverterSequenceTypeTxOutput.write(value.outputs, buf)
+
+
 class TxAckPaymentRequest:
     """
     Payment request
@@ -7331,6 +7492,87 @@ class _UniffiConverterTypeTxAckPaymentRequest(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalSequenceTypePaymentRequestMemo.write(value.memos, buf)
         _UniffiConverterOptionalUInt64.write(value.amount, buf)
         _UniffiConverterString.write(value.signature, buf)
+
+
+class TxInput:
+    """
+    Details about a transaction input.
+    """
+
+    txid: "str"
+    """
+    The transaction ID of the previous output being spent.
+    """
+
+    vout: "int"
+    """
+    The output index of the previous output being spent.
+    """
+
+    scriptsig: "str"
+    """
+    The script signature (hex-encoded).
+    """
+
+    witness: "typing.List[str]"
+    """
+    The witness stack (hex-encoded strings).
+    """
+
+    sequence: "int"
+    """
+    The sequence number.
+    """
+
+    def __init__(self, *, txid: "str", vout: "int", scriptsig: "str", witness: "typing.List[str]", sequence: "int"):
+        self.txid = txid
+        self.vout = vout
+        self.scriptsig = scriptsig
+        self.witness = witness
+        self.sequence = sequence
+
+    def __str__(self):
+        return "TxInput(txid={}, vout={}, scriptsig={}, witness={}, sequence={})".format(self.txid, self.vout, self.scriptsig, self.witness, self.sequence)
+
+    def __eq__(self, other):
+        if self.txid != other.txid:
+            return False
+        if self.vout != other.vout:
+            return False
+        if self.scriptsig != other.scriptsig:
+            return False
+        if self.witness != other.witness:
+            return False
+        if self.sequence != other.sequence:
+            return False
+        return True
+
+class _UniffiConverterTypeTxInput(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TxInput(
+            txid=_UniffiConverterString.read(buf),
+            vout=_UniffiConverterUInt32.read(buf),
+            scriptsig=_UniffiConverterString.read(buf),
+            witness=_UniffiConverterSequenceString.read(buf),
+            sequence=_UniffiConverterUInt32.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.txid)
+        _UniffiConverterUInt32.check_lower(value.vout)
+        _UniffiConverterString.check_lower(value.scriptsig)
+        _UniffiConverterSequenceString.check_lower(value.witness)
+        _UniffiConverterUInt32.check_lower(value.sequence)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.txid, buf)
+        _UniffiConverterUInt32.write(value.vout, buf)
+        _UniffiConverterString.write(value.scriptsig, buf)
+        _UniffiConverterSequenceString.write(value.witness, buf)
+        _UniffiConverterUInt32.write(value.sequence, buf)
 
 
 class TxInputType:
@@ -7522,6 +7764,87 @@ class _UniffiConverterTypeTxInputType(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalString.write(value.orig_hash, buf)
         _UniffiConverterOptionalUInt32.write(value.orig_index, buf)
         _UniffiConverterOptionalUInt32.write(value.coinjoin_flags, buf)
+
+
+class TxOutput:
+    """
+    Details about a transaction output.
+    """
+
+    scriptpubkey: "str"
+    """
+    The script public key (hex-encoded).
+    """
+
+    scriptpubkey_type: "typing.Optional[str]"
+    """
+    The script public key type (e.g., "p2pkh", "p2sh", "p2wpkh", "p2wsh", "p2tr").
+    """
+
+    scriptpubkey_address: "typing.Optional[str]"
+    """
+    The address corresponding to this script (if decodable).
+    """
+
+    value: "int"
+    """
+    The value in satoshis.
+    """
+
+    n: "int"
+    """
+    The output index in the transaction.
+    """
+
+    def __init__(self, *, scriptpubkey: "str", scriptpubkey_type: "typing.Optional[str]", scriptpubkey_address: "typing.Optional[str]", value: "int", n: "int"):
+        self.scriptpubkey = scriptpubkey
+        self.scriptpubkey_type = scriptpubkey_type
+        self.scriptpubkey_address = scriptpubkey_address
+        self.value = value
+        self.n = n
+
+    def __str__(self):
+        return "TxOutput(scriptpubkey={}, scriptpubkey_type={}, scriptpubkey_address={}, value={}, n={})".format(self.scriptpubkey, self.scriptpubkey_type, self.scriptpubkey_address, self.value, self.n)
+
+    def __eq__(self, other):
+        if self.scriptpubkey != other.scriptpubkey:
+            return False
+        if self.scriptpubkey_type != other.scriptpubkey_type:
+            return False
+        if self.scriptpubkey_address != other.scriptpubkey_address:
+            return False
+        if self.value != other.value:
+            return False
+        if self.n != other.n:
+            return False
+        return True
+
+class _UniffiConverterTypeTxOutput(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TxOutput(
+            scriptpubkey=_UniffiConverterString.read(buf),
+            scriptpubkey_type=_UniffiConverterOptionalString.read(buf),
+            scriptpubkey_address=_UniffiConverterOptionalString.read(buf),
+            value=_UniffiConverterInt64.read(buf),
+            n=_UniffiConverterUInt32.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.scriptpubkey)
+        _UniffiConverterOptionalString.check_lower(value.scriptpubkey_type)
+        _UniffiConverterOptionalString.check_lower(value.scriptpubkey_address)
+        _UniffiConverterInt64.check_lower(value.value)
+        _UniffiConverterUInt32.check_lower(value.n)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.scriptpubkey, buf)
+        _UniffiConverterOptionalString.write(value.scriptpubkey_type, buf)
+        _UniffiConverterOptionalString.write(value.scriptpubkey_address, buf)
+        _UniffiConverterInt64.write(value.value, buf)
+        _UniffiConverterUInt32.write(value.n, buf)
 
 
 class TxOutputType:
@@ -12621,6 +12944,33 @@ class _UniffiConverterOptionalTypeTextMemo(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypeTransactionDetails(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeTransactionDetails.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeTransactionDetails.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeTransactionDetails.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypeUnlockPath(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14002,6 +14352,31 @@ class _UniffiConverterSequenceTypeRefTxOutput(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterSequenceTypeTransactionDetails(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeTransactionDetails.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeTransactionDetails.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeTransactionDetails.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypeTxAckPaymentRequest(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14027,6 +14402,31 @@ class _UniffiConverterSequenceTypeTxAckPaymentRequest(_UniffiConverterRustBuffer
 
 
 
+class _UniffiConverterSequenceTypeTxInput(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeTxInput.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeTxInput.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeTxInput.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypeTxInputType(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14048,6 +14448,31 @@ class _UniffiConverterSequenceTypeTxInputType(_UniffiConverterRustBuffer):
 
         return [
             _UniffiConverterTypeTxInputType.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeTxOutput(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeTxOutput.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeTxOutput.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeTxOutput.read(buf) for i in range(count)
         ]
 
 
@@ -14425,6 +14850,13 @@ def delete_pre_activity_metadata(payment_id: "str") -> None:
         _UniffiConverterString.lower(payment_id))
 
 
+def delete_transaction_details(tx_id: "str") -> "bool":
+    _UniffiConverterString.check_lower(tx_id)
+    
+    return _UniffiConverterBool.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_transaction_details,
+        _UniffiConverterString.lower(tx_id)))
+
+
 def derive_bitcoin_address(mnemonic_phrase: "str",derivation_path_str: "typing.Optional[str]",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]") -> "GetAddressResponse":
     _UniffiConverterString.check_lower(mnemonic_phrase)
     
@@ -14612,6 +15044,10 @@ def get_all_pre_activity_metadata() -> "typing.List[PreActivityMetadata]":
     return _UniffiConverterSequenceTypePreActivityMetadata.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_pre_activity_metadata,))
 
 
+def get_all_transaction_details() -> "typing.List[TransactionDetails]":
+    return _UniffiConverterSequenceTypeTransactionDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_transaction_details,))
+
+
 def get_all_unique_tags() -> "typing.List[str]":
     return _UniffiConverterSequenceString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_unique_tags,))
 
@@ -14794,6 +15230,13 @@ def get_tags(activity_id: "str") -> "typing.List[str]":
     return _UniffiConverterSequenceString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_tags,
         _UniffiConverterString.lower(activity_id)))
 
+
+def get_transaction_details(tx_id: "str") -> "typing.Optional[TransactionDetails]":
+    _UniffiConverterString.check_lower(tx_id)
+    
+    return _UniffiConverterOptionalTypeTransactionDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_transaction_details,
+        _UniffiConverterString.lower(tx_id)))
+
 async def gift_order(client_node_id: "str",code: "str") -> "IGift":
 
     _UniffiConverterString.check_lower(client_node_id)
@@ -14891,6 +15334,16 @@ async def lnurl_auth(domain: "str",k1: "str",callback: "str",bip32_mnemonic: "st
 _UniffiConverterTypeLnurlError,
 
     )
+
+def mark_activity_as_seen(activity_id: "str",seen_at: "int") -> None:
+    _UniffiConverterString.check_lower(activity_id)
+    
+    _UniffiConverterUInt64.check_lower(seen_at)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_mark_activity_as_seen,
+        _UniffiConverterString.lower(activity_id),
+        _UniffiConverterUInt64.lower(seen_at))
+
 
 def mnemonic_to_entropy(mnemonic_phrase: "str") -> "bytes":
     _UniffiConverterString.check_lower(mnemonic_phrase)
@@ -15589,6 +16042,13 @@ def upsert_tags(activity_tags: "typing.List[ActivityTags]") -> None:
         _UniffiConverterSequenceTypeActivityTags.lower(activity_tags))
 
 
+def upsert_transaction_details(details_list: "typing.List[TransactionDetails]") -> None:
+    _UniffiConverterSequenceTypeTransactionDetails.check_lower(details_list)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_transaction_details,
+        _UniffiConverterSequenceTypeTransactionDetails.lower(details_list))
+
+
 def validate_bitcoin_address(address: "str") -> "ValidationResult":
     _UniffiConverterString.check_lower(address)
     
@@ -15620,6 +16080,10 @@ async def wipe_all_databases() -> "str":
 _UniffiConverterTypeDbError,
 
     )
+
+def wipe_all_transaction_details() -> None:
+    _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_transaction_details,)
+
 
 __all__ = [
     "InternalError",
@@ -15736,8 +16200,11 @@ __all__ = [
     "RefundMemo",
     "SignedTransactionResponse",
     "TextMemo",
+    "TransactionDetails",
     "TxAckPaymentRequest",
+    "TxInput",
     "TxInputType",
+    "TxOutput",
     "TxOutputType",
     "UnlockPath",
     "ValidationResult",
@@ -15758,6 +16225,7 @@ __all__ = [
     "decode",
     "delete_activity_by_id",
     "delete_pre_activity_metadata",
+    "delete_transaction_details",
     "derive_bitcoin_address",
     "derive_bitcoin_addresses",
     "derive_private_key",
@@ -15772,6 +16240,7 @@ __all__ = [
     "get_all_activities_tags",
     "get_all_closed_channels",
     "get_all_pre_activity_metadata",
+    "get_all_transaction_details",
     "get_all_unique_tags",
     "get_bip39_suggestions",
     "get_bip39_wordlist",
@@ -15786,6 +16255,7 @@ __all__ = [
     "get_payment",
     "get_pre_activity_metadata",
     "get_tags",
+    "get_transaction_details",
     "gift_order",
     "gift_pay",
     "init_db",
@@ -15793,6 +16263,7 @@ __all__ = [
     "is_address_used",
     "is_valid_bip39_word",
     "lnurl_auth",
+    "mark_activity_as_seen",
     "mnemonic_to_entropy",
     "mnemonic_to_seed",
     "open_channel",
@@ -15830,9 +16301,11 @@ __all__ = [
     "upsert_orders",
     "upsert_pre_activity_metadata",
     "upsert_tags",
+    "upsert_transaction_details",
     "validate_bitcoin_address",
     "validate_mnemonic",
     "wipe_all_closed_channels",
     "wipe_all_databases",
+    "wipe_all_transaction_details",
 ]
 

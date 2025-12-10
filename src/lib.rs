@@ -10,7 +10,7 @@ pub use modules::scanner::{
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
-use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata};
+use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
 use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse};
 pub use crate::onchain::WordCount;
@@ -1433,6 +1433,60 @@ pub fn is_address_used(address: String) -> Result<bool, ActivityError> {
         error_details: "Database not initialized. Call init_db first.".to_string()
     })?;
     db.is_address_used(&address)
+}
+
+#[uniffi::export]
+pub fn mark_activity_as_seen(activity_id: String, seen_at: u64) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.mark_activity_as_seen(&activity_id, seen_at)
+}
+
+#[uniffi::export]
+pub fn upsert_transaction_details(details_list: Vec<TransactionDetails>) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.upsert_transaction_details(&details_list)
+}
+
+#[uniffi::export]
+pub fn get_transaction_details(tx_id: String) -> Result<Option<TransactionDetails>, ActivityError> {
+    let guard = get_activity_db()?;
+    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.get_transaction_details(&tx_id)
+}
+
+#[uniffi::export]
+pub fn get_all_transaction_details() -> Result<Vec<TransactionDetails>, ActivityError> {
+    let guard = get_activity_db()?;
+    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.get_all_transaction_details()
+}
+
+#[uniffi::export]
+pub fn delete_transaction_details(tx_id: String) -> Result<bool, ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.delete_transaction_details(&tx_id)
+}
+
+#[uniffi::export]
+pub fn wipe_all_transaction_details() -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string()
+    })?;
+    db.wipe_all_transaction_details()
 }
 
 #[uniffi::export]
