@@ -1148,6 +1148,12 @@ internal interface UniffiForeignFutureCompleteVoid: com.sun.jna.Callback {
 
 
 
+
+
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1208,7 +1214,13 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 36197.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_check_sweepable_balances() != 64201.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305.toShort()) {
@@ -1358,6 +1370,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_open_channel() != 21402.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries() != 5324.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1503,7 +1518,13 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_blocktank_wipe_all(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_check_sweepable_balances(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_create_channel_request_url(
@@ -1651,6 +1672,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_open_channel(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_prepare_sweep_transaction(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries(
@@ -1818,10 +1842,26 @@ internal object UniffiLib : Library {
     external fun uniffi_bitkitcore_fn_func_blocktank_wipe_all(
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(
+        `psbt`: RustBufferByValue,
+        `feeRateSatsPerVbyte`: Int,
+        `mnemonicPhrase`: RustBufferByValue,
+        `network`: RustBufferByValue,
+        `bip39Passphrase`: RustBufferByValue,
+        `electrumUrl`: RustBufferByValue,
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options(
         `params`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_check_sweepable_balances(
+        `mnemonicPhrase`: RustBufferByValue,
+        `network`: RustBufferByValue,
+        `bip39Passphrase`: RustBufferByValue,
+        `electrumUrl`: RustBufferByValue,
+    ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_create_channel_request_url(
         `k1`: RustBufferByValue,
@@ -2099,6 +2139,15 @@ internal object UniffiLib : Library {
     external fun uniffi_bitkitcore_fn_func_open_channel(
         `orderId`: RustBufferByValue,
         `connectionString`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_prepare_sweep_transaction(
+        `mnemonicPhrase`: RustBufferByValue,
+        `network`: RustBufferByValue,
+        `bip39Passphrase`: RustBufferByValue,
+        `electrumUrl`: RustBufferByValue,
+        `destinationAddress`: RustBufferByValue,
+        `feeRateSatsPerVbyte`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_refresh_active_cjit_entries(
@@ -5378,6 +5427,108 @@ public object FfiConverterTypeSignedTransactionResponse: FfiConverterRustBuffer<
 
 
 
+public object FfiConverterTypeSweepResult: FfiConverterRustBuffer<SweepResult> {
+    override fun read(buf: ByteBuffer): SweepResult {
+        return SweepResult(
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: SweepResult): ULong = (
+            FfiConverterString.allocationSize(value.`txid`) +
+            FfiConverterULong.allocationSize(value.`amountSwept`) +
+            FfiConverterULong.allocationSize(value.`feePaid`) +
+            FfiConverterUInt.allocationSize(value.`utxosSwept`)
+    )
+
+    override fun write(value: SweepResult, buf: ByteBuffer) {
+        FfiConverterString.write(value.`txid`, buf)
+        FfiConverterULong.write(value.`amountSwept`, buf)
+        FfiConverterULong.write(value.`feePaid`, buf)
+        FfiConverterUInt.write(value.`utxosSwept`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeSweepTransactionPreview: FfiConverterRustBuffer<SweepTransactionPreview> {
+    override fun read(buf: ByteBuffer): SweepTransactionPreview {
+        return SweepTransactionPreview(
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: SweepTransactionPreview): ULong = (
+            FfiConverterString.allocationSize(value.`psbt`) +
+            FfiConverterULong.allocationSize(value.`totalAmount`) +
+            FfiConverterULong.allocationSize(value.`estimatedFee`) +
+            FfiConverterUInt.allocationSize(value.`utxosCount`) +
+            FfiConverterString.allocationSize(value.`destinationAddress`) +
+            FfiConverterULong.allocationSize(value.`amountAfterFees`)
+    )
+
+    override fun write(value: SweepTransactionPreview, buf: ByteBuffer) {
+        FfiConverterString.write(value.`psbt`, buf)
+        FfiConverterULong.write(value.`totalAmount`, buf)
+        FfiConverterULong.write(value.`estimatedFee`, buf)
+        FfiConverterUInt.write(value.`utxosCount`, buf)
+        FfiConverterString.write(value.`destinationAddress`, buf)
+        FfiConverterULong.write(value.`amountAfterFees`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeSweepableBalances: FfiConverterRustBuffer<SweepableBalances> {
+    override fun read(buf: ByteBuffer): SweepableBalances {
+        return SweepableBalances(
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: SweepableBalances): ULong = (
+            FfiConverterULong.allocationSize(value.`legacyBalance`) +
+            FfiConverterULong.allocationSize(value.`p2shBalance`) +
+            FfiConverterULong.allocationSize(value.`taprootBalance`) +
+            FfiConverterULong.allocationSize(value.`totalBalance`) +
+            FfiConverterUInt.allocationSize(value.`legacyUtxosCount`) +
+            FfiConverterUInt.allocationSize(value.`p2shUtxosCount`) +
+            FfiConverterUInt.allocationSize(value.`taprootUtxosCount`) +
+            FfiConverterUInt.allocationSize(value.`totalUtxosCount`)
+    )
+
+    override fun write(value: SweepableBalances, buf: ByteBuffer) {
+        FfiConverterULong.write(value.`legacyBalance`, buf)
+        FfiConverterULong.write(value.`p2shBalance`, buf)
+        FfiConverterULong.write(value.`taprootBalance`, buf)
+        FfiConverterULong.write(value.`totalBalance`, buf)
+        FfiConverterUInt.write(value.`legacyUtxosCount`, buf)
+        FfiConverterUInt.write(value.`p2shUtxosCount`, buf)
+        FfiConverterUInt.write(value.`taprootUtxosCount`, buf)
+        FfiConverterUInt.write(value.`totalUtxosCount`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypeTextMemo: FfiConverterRustBuffer<TextMemo> {
     override fun read(buf: ByteBuffer): TextMemo {
         return TextMemo(
@@ -7225,6 +7376,71 @@ public object FfiConverterTypeSortDirection: FfiConverterRustBuffer<SortDirectio
 
     override fun write(value: SortDirection, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+public object SweepExceptionErrorHandler : UniffiRustCallStatusErrorHandler<SweepException> {
+    override fun lift(errorBuf: RustBufferByValue): SweepException = FfiConverterTypeSweepError.lift(errorBuf)
+}
+
+public object FfiConverterTypeSweepError : FfiConverterRustBuffer<SweepException> {
+    override fun read(buf: ByteBuffer): SweepException {
+        return when (buf.getInt()) {
+            1 -> SweepException.SweepFailed(
+                FfiConverterString.read(buf),
+                )
+            2 -> SweepException.NoUtxosFound()
+            3 -> SweepException.InsufficientFunds()
+            4 -> SweepException.InvalidMnemonic()
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: SweepException): ULong {
+        return when (value) {
+            is SweepException.SweepFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.v1)
+            )
+            is SweepException.NoUtxosFound -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is SweepException.InsufficientFunds -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is SweepException.InvalidMnemonic -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+        }
+    }
+
+    override fun write(value: SweepException, buf: ByteBuffer) {
+        when (value) {
+            is SweepException.SweepFailed -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.v1, buf)
+                Unit
+            }
+            is SweepException.NoUtxosFound -> {
+                buf.putInt(2)
+                Unit
+            }
+            is SweepException.InsufficientFunds -> {
+                buf.putInt(3)
+                Unit
+            }
+            is SweepException.InvalidMnemonic -> {
+                buf.putInt(4)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
 }
 
@@ -10244,6 +10460,28 @@ public suspend fun `blocktankWipeAll`() {
     )
 }
 
+@Throws(SweepException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `broadcastSweepTransaction`(`psbt`: kotlin.String, `feeRateSatsPerVbyte`: kotlin.UInt, `mnemonicPhrase`: kotlin.String, `network`: Network?, `bip39Passphrase`: kotlin.String?, `electrumUrl`: kotlin.String): SweepResult {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(
+            FfiConverterString.lower(`psbt`),
+            FfiConverterUInt.lower(`feeRateSatsPerVbyte`),
+            FfiConverterString.lower(`mnemonicPhrase`),
+            FfiConverterOptionalTypeNetwork.lower(`network`),
+            FfiConverterOptionalString.lower(`bip39Passphrase`),
+            FfiConverterString.lower(`electrumUrl`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeSweepResult.lift(it) },
+        // Error FFI converter
+        SweepExceptionErrorHandler,
+    )
+}
+
 public fun `calculateChannelLiquidityOptions`(`params`: ChannelLiquidityParams): ChannelLiquidityOptions {
     return FfiConverterTypeChannelLiquidityOptions.lift(uniffiRustCall { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options(
@@ -10251,6 +10489,26 @@ public fun `calculateChannelLiquidityOptions`(`params`: ChannelLiquidityParams):
             uniffiRustCallStatus,
         )
     })
+}
+
+@Throws(SweepException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `checkSweepableBalances`(`mnemonicPhrase`: kotlin.String, `network`: Network?, `bip39Passphrase`: kotlin.String?, `electrumUrl`: kotlin.String): SweepableBalances {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_check_sweepable_balances(
+            FfiConverterString.lower(`mnemonicPhrase`),
+            FfiConverterOptionalTypeNetwork.lower(`network`),
+            FfiConverterOptionalString.lower(`bip39Passphrase`),
+            FfiConverterString.lower(`electrumUrl`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeSweepableBalances.lift(it) },
+        // Error FFI converter
+        SweepExceptionErrorHandler,
+    )
 }
 
 @Throws(LnurlException::class)
@@ -10897,6 +11155,28 @@ public suspend fun `openChannel`(`orderId`: kotlin.String, `connectionString`: k
         { FfiConverterTypeIBtOrder.lift(it) },
         // Error FFI converter
         BlocktankExceptionErrorHandler,
+    )
+}
+
+@Throws(SweepException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `prepareSweepTransaction`(`mnemonicPhrase`: kotlin.String, `network`: Network?, `bip39Passphrase`: kotlin.String?, `electrumUrl`: kotlin.String, `destinationAddress`: kotlin.String, `feeRateSatsPerVbyte`: kotlin.UInt?): SweepTransactionPreview {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_prepare_sweep_transaction(
+            FfiConverterString.lower(`mnemonicPhrase`),
+            FfiConverterOptionalTypeNetwork.lower(`network`),
+            FfiConverterOptionalString.lower(`bip39Passphrase`),
+            FfiConverterString.lower(`electrumUrl`),
+            FfiConverterString.lower(`destinationAddress`),
+            FfiConverterOptionalUInt.lower(`feeRateSatsPerVbyte`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeSweepTransactionPreview.lift(it) },
+        // Error FFI converter
+        SweepExceptionErrorHandler,
     )
 }
 

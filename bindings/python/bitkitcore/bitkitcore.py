@@ -475,7 +475,11 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 36197:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_check_sweepable_balances() != 64201:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -574,6 +578,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_mnemonic_to_seed() != 40039:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_open_channel() != 21402:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries() != 5324:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -791,11 +797,27 @@ _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_remove_all_orders.restype = ctype
 _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_wipe_all.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_wipe_all.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_broadcast_sweep_transaction.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.c_uint32,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_broadcast_sweep_transaction.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_check_sweepable_balances.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_check_sweepable_balances.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_create_channel_request_url.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1074,6 +1096,15 @@ _UniffiLib.uniffi_bitkitcore_fn_func_open_channel.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_open_channel.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_prepare_sweep_transaction.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_prepare_sweep_transaction.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_cjit_entries.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_cjit_entries.restype = ctypes.c_uint64
@@ -1639,9 +1670,15 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders.restype =
 _UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_check_sweepable_balances.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_check_sweepable_balances.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_channel_request_url.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_channel_request_url.restype = ctypes.c_uint16
@@ -1789,6 +1826,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_mnemonic_to_seed.restype = ctypes.c_u
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries.restype = ctypes.c_uint16
@@ -7301,6 +7341,270 @@ class _UniffiConverterTypeSignedTransactionResponse(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalString.write(value.txid, buf)
 
 
+class SweepResult:
+    txid: "str"
+    """
+    The transaction ID of the sweep transaction
+    """
+
+    amount_swept: "int"
+    """
+    The total amount swept (in satoshis)
+    """
+
+    fee_paid: "int"
+    """
+    The fee paid (in satoshis)
+    """
+
+    utxos_swept: "int"
+    """
+    The number of UTXOs swept
+    """
+
+    def __init__(self, *, txid: "str", amount_swept: "int", fee_paid: "int", utxos_swept: "int"):
+        self.txid = txid
+        self.amount_swept = amount_swept
+        self.fee_paid = fee_paid
+        self.utxos_swept = utxos_swept
+
+    def __str__(self):
+        return "SweepResult(txid={}, amount_swept={}, fee_paid={}, utxos_swept={})".format(self.txid, self.amount_swept, self.fee_paid, self.utxos_swept)
+
+    def __eq__(self, other):
+        if self.txid != other.txid:
+            return False
+        if self.amount_swept != other.amount_swept:
+            return False
+        if self.fee_paid != other.fee_paid:
+            return False
+        if self.utxos_swept != other.utxos_swept:
+            return False
+        return True
+
+class _UniffiConverterTypeSweepResult(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return SweepResult(
+            txid=_UniffiConverterString.read(buf),
+            amount_swept=_UniffiConverterUInt64.read(buf),
+            fee_paid=_UniffiConverterUInt64.read(buf),
+            utxos_swept=_UniffiConverterUInt32.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.txid)
+        _UniffiConverterUInt64.check_lower(value.amount_swept)
+        _UniffiConverterUInt64.check_lower(value.fee_paid)
+        _UniffiConverterUInt32.check_lower(value.utxos_swept)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.txid, buf)
+        _UniffiConverterUInt64.write(value.amount_swept, buf)
+        _UniffiConverterUInt64.write(value.fee_paid, buf)
+        _UniffiConverterUInt32.write(value.utxos_swept, buf)
+
+
+class SweepTransactionPreview:
+    psbt: "str"
+    """
+    The PSBT (Partially Signed Bitcoin Transaction) in base64 format
+    """
+
+    total_amount: "int"
+    """
+    The total amount available to sweep (in satoshis)
+    """
+
+    estimated_fee: "int"
+    """
+    The estimated fee for the transaction (in satoshis) - calculated with provided or default fee rate
+    """
+
+    utxos_count: "int"
+    """
+    The number of UTXOs that will be swept
+    """
+
+    destination_address: "str"
+    """
+    The destination address
+    """
+
+    amount_after_fees: "int"
+    """
+    The amount that will be sent to destination after fees (in satoshis)
+    """
+
+    def __init__(self, *, psbt: "str", total_amount: "int", estimated_fee: "int", utxos_count: "int", destination_address: "str", amount_after_fees: "int"):
+        self.psbt = psbt
+        self.total_amount = total_amount
+        self.estimated_fee = estimated_fee
+        self.utxos_count = utxos_count
+        self.destination_address = destination_address
+        self.amount_after_fees = amount_after_fees
+
+    def __str__(self):
+        return "SweepTransactionPreview(psbt={}, total_amount={}, estimated_fee={}, utxos_count={}, destination_address={}, amount_after_fees={})".format(self.psbt, self.total_amount, self.estimated_fee, self.utxos_count, self.destination_address, self.amount_after_fees)
+
+    def __eq__(self, other):
+        if self.psbt != other.psbt:
+            return False
+        if self.total_amount != other.total_amount:
+            return False
+        if self.estimated_fee != other.estimated_fee:
+            return False
+        if self.utxos_count != other.utxos_count:
+            return False
+        if self.destination_address != other.destination_address:
+            return False
+        if self.amount_after_fees != other.amount_after_fees:
+            return False
+        return True
+
+class _UniffiConverterTypeSweepTransactionPreview(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return SweepTransactionPreview(
+            psbt=_UniffiConverterString.read(buf),
+            total_amount=_UniffiConverterUInt64.read(buf),
+            estimated_fee=_UniffiConverterUInt64.read(buf),
+            utxos_count=_UniffiConverterUInt32.read(buf),
+            destination_address=_UniffiConverterString.read(buf),
+            amount_after_fees=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.psbt)
+        _UniffiConverterUInt64.check_lower(value.total_amount)
+        _UniffiConverterUInt64.check_lower(value.estimated_fee)
+        _UniffiConverterUInt32.check_lower(value.utxos_count)
+        _UniffiConverterString.check_lower(value.destination_address)
+        _UniffiConverterUInt64.check_lower(value.amount_after_fees)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.psbt, buf)
+        _UniffiConverterUInt64.write(value.total_amount, buf)
+        _UniffiConverterUInt64.write(value.estimated_fee, buf)
+        _UniffiConverterUInt32.write(value.utxos_count, buf)
+        _UniffiConverterString.write(value.destination_address, buf)
+        _UniffiConverterUInt64.write(value.amount_after_fees, buf)
+
+
+class SweepableBalances:
+    legacy_balance: "int"
+    """
+    Balance in legacy (P2PKH) addresses (in satoshis)
+    """
+
+    p2sh_balance: "int"
+    """
+    Balance in P2SH-SegWit (P2SH-P2WPKH) addresses (in satoshis)
+    """
+
+    taproot_balance: "int"
+    """
+    Balance in Taproot (P2TR) addresses (in satoshis)
+    """
+
+    total_balance: "int"
+    """
+    Total balance across all wallet types (in satoshis)
+    """
+
+    legacy_utxos_count: "int"
+    """
+    Number of UTXOs in legacy wallet
+    """
+
+    p2sh_utxos_count: "int"
+    """
+    Number of UTXOs in P2SH-SegWit wallet
+    """
+
+    taproot_utxos_count: "int"
+    """
+    Number of UTXOs in Taproot wallet
+    """
+
+    total_utxos_count: "int"
+    """
+    Total number of UTXOs across all wallet types
+    """
+
+    def __init__(self, *, legacy_balance: "int", p2sh_balance: "int", taproot_balance: "int", total_balance: "int", legacy_utxos_count: "int", p2sh_utxos_count: "int", taproot_utxos_count: "int", total_utxos_count: "int"):
+        self.legacy_balance = legacy_balance
+        self.p2sh_balance = p2sh_balance
+        self.taproot_balance = taproot_balance
+        self.total_balance = total_balance
+        self.legacy_utxos_count = legacy_utxos_count
+        self.p2sh_utxos_count = p2sh_utxos_count
+        self.taproot_utxos_count = taproot_utxos_count
+        self.total_utxos_count = total_utxos_count
+
+    def __str__(self):
+        return "SweepableBalances(legacy_balance={}, p2sh_balance={}, taproot_balance={}, total_balance={}, legacy_utxos_count={}, p2sh_utxos_count={}, taproot_utxos_count={}, total_utxos_count={})".format(self.legacy_balance, self.p2sh_balance, self.taproot_balance, self.total_balance, self.legacy_utxos_count, self.p2sh_utxos_count, self.taproot_utxos_count, self.total_utxos_count)
+
+    def __eq__(self, other):
+        if self.legacy_balance != other.legacy_balance:
+            return False
+        if self.p2sh_balance != other.p2sh_balance:
+            return False
+        if self.taproot_balance != other.taproot_balance:
+            return False
+        if self.total_balance != other.total_balance:
+            return False
+        if self.legacy_utxos_count != other.legacy_utxos_count:
+            return False
+        if self.p2sh_utxos_count != other.p2sh_utxos_count:
+            return False
+        if self.taproot_utxos_count != other.taproot_utxos_count:
+            return False
+        if self.total_utxos_count != other.total_utxos_count:
+            return False
+        return True
+
+class _UniffiConverterTypeSweepableBalances(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return SweepableBalances(
+            legacy_balance=_UniffiConverterUInt64.read(buf),
+            p2sh_balance=_UniffiConverterUInt64.read(buf),
+            taproot_balance=_UniffiConverterUInt64.read(buf),
+            total_balance=_UniffiConverterUInt64.read(buf),
+            legacy_utxos_count=_UniffiConverterUInt32.read(buf),
+            p2sh_utxos_count=_UniffiConverterUInt32.read(buf),
+            taproot_utxos_count=_UniffiConverterUInt32.read(buf),
+            total_utxos_count=_UniffiConverterUInt32.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.legacy_balance)
+        _UniffiConverterUInt64.check_lower(value.p2sh_balance)
+        _UniffiConverterUInt64.check_lower(value.taproot_balance)
+        _UniffiConverterUInt64.check_lower(value.total_balance)
+        _UniffiConverterUInt32.check_lower(value.legacy_utxos_count)
+        _UniffiConverterUInt32.check_lower(value.p2sh_utxos_count)
+        _UniffiConverterUInt32.check_lower(value.taproot_utxos_count)
+        _UniffiConverterUInt32.check_lower(value.total_utxos_count)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.legacy_balance, buf)
+        _UniffiConverterUInt64.write(value.p2sh_balance, buf)
+        _UniffiConverterUInt64.write(value.taproot_balance, buf)
+        _UniffiConverterUInt64.write(value.total_balance, buf)
+        _UniffiConverterUInt32.write(value.legacy_utxos_count, buf)
+        _UniffiConverterUInt32.write(value.p2sh_utxos_count, buf)
+        _UniffiConverterUInt32.write(value.taproot_utxos_count, buf)
+        _UniffiConverterUInt32.write(value.total_utxos_count, buf)
+
+
 class TextMemo:
     """
     Text memo
@@ -11398,6 +11702,103 @@ class _UniffiConverterTypeSortDirection(_UniffiConverterRustBuffer):
 
 
 
+# SweepError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class SweepError(Exception):
+    pass
+
+_UniffiTempSweepError = SweepError
+
+class SweepError:  # type: ignore
+    class SweepFailed(_UniffiTempSweepError):
+        def __init__(self, *values):
+            if len(values) != 1:
+                raise TypeError(f"Expected 1 arguments, found {len(values)}")
+            if not isinstance(values[0], str):
+                raise TypeError(f"unexpected type for tuple element 0 - expected 'str', got '{type(values[0])}'")
+            super().__init__(", ".join(map(repr, values)))
+            self._values = values
+
+        def __getitem__(self, index):
+            return self._values[index]
+
+        def __repr__(self):
+            return "SweepError.SweepFailed({})".format(str(self))
+    _UniffiTempSweepError.SweepFailed = SweepFailed # type: ignore
+    class NoUtxosFound(_UniffiTempSweepError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "SweepError.NoUtxosFound({})".format(str(self))
+    _UniffiTempSweepError.NoUtxosFound = NoUtxosFound # type: ignore
+    class InsufficientFunds(_UniffiTempSweepError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "SweepError.InsufficientFunds({})".format(str(self))
+    _UniffiTempSweepError.InsufficientFunds = InsufficientFunds # type: ignore
+    class InvalidMnemonic(_UniffiTempSweepError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "SweepError.InvalidMnemonic({})".format(str(self))
+    _UniffiTempSweepError.InvalidMnemonic = InvalidMnemonic # type: ignore
+
+SweepError = _UniffiTempSweepError # type: ignore
+del _UniffiTempSweepError
+
+
+class _UniffiConverterTypeSweepError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return SweepError.SweepFailed(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 2:
+            return SweepError.NoUtxosFound(
+            )
+        if variant == 3:
+            return SweepError.InsufficientFunds(
+            )
+        if variant == 4:
+            return SweepError.InvalidMnemonic(
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, SweepError.SweepFailed):
+            _UniffiConverterString.check_lower(value._values[0])
+            return
+        if isinstance(value, SweepError.NoUtxosFound):
+            return
+        if isinstance(value, SweepError.InsufficientFunds):
+            return
+        if isinstance(value, SweepError.InvalidMnemonic):
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, SweepError.SweepFailed):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value._values[0], buf)
+        if isinstance(value, SweepError.NoUtxosFound):
+            buf.write_i32(2)
+        if isinstance(value, SweepError.InsufficientFunds):
+            buf.write_i32(3)
+        if isinstance(value, SweepError.InvalidMnemonic):
+            buf.write_i32(4)
+
+
 
 
 
@@ -14724,6 +15125,38 @@ async def blocktank_wipe_all() -> None:
 _UniffiConverterTypeBlocktankError,
 
     )
+async def broadcast_sweep_transaction(psbt: "str",fee_rate_sats_per_vbyte: "int",mnemonic_phrase: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",electrum_url: "str") -> "SweepResult":
+
+    _UniffiConverterString.check_lower(psbt)
+    
+    _UniffiConverterUInt32.check_lower(fee_rate_sats_per_vbyte)
+    
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+    
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+    
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+    
+    _UniffiConverterString.check_lower(electrum_url)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(
+        _UniffiConverterString.lower(psbt),
+        _UniffiConverterUInt32.lower(fee_rate_sats_per_vbyte),
+        _UniffiConverterString.lower(mnemonic_phrase),
+        _UniffiConverterOptionalTypeNetwork.lower(network),
+        _UniffiConverterOptionalString.lower(bip39_passphrase),
+        _UniffiConverterString.lower(electrum_url)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeSweepResult.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeSweepError,
+
+    )
 
 def calculate_channel_liquidity_options(params: "ChannelLiquidityParams") -> "ChannelLiquidityOptions":
     _UniffiConverterTypeChannelLiquidityParams.check_lower(params)
@@ -14731,6 +15164,32 @@ def calculate_channel_liquidity_options(params: "ChannelLiquidityParams") -> "Ch
     return _UniffiConverterTypeChannelLiquidityOptions.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options,
         _UniffiConverterTypeChannelLiquidityParams.lower(params)))
 
+async def check_sweepable_balances(mnemonic_phrase: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",electrum_url: "str") -> "SweepableBalances":
+
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+    
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+    
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+    
+    _UniffiConverterString.check_lower(electrum_url)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_check_sweepable_balances(
+        _UniffiConverterString.lower(mnemonic_phrase),
+        _UniffiConverterOptionalTypeNetwork.lower(network),
+        _UniffiConverterOptionalString.lower(bip39_passphrase),
+        _UniffiConverterString.lower(electrum_url)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeSweepableBalances.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeSweepError,
+
+    )
 
 def create_channel_request_url(k1: "str",callback: "str",local_node_id: "str",is_private: "bool",cancel: "bool") -> "str":
     _UniffiConverterString.check_lower(k1)
@@ -15379,6 +15838,38 @@ async def open_channel(order_id: "str",connection_string: "str") -> "IBtOrder":
         
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
+
+    )
+async def prepare_sweep_transaction(mnemonic_phrase: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",electrum_url: "str",destination_address: "str",fee_rate_sats_per_vbyte: "typing.Optional[int]") -> "SweepTransactionPreview":
+
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+    
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+    
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+    
+    _UniffiConverterString.check_lower(electrum_url)
+    
+    _UniffiConverterString.check_lower(destination_address)
+    
+    _UniffiConverterOptionalUInt32.check_lower(fee_rate_sats_per_vbyte)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_prepare_sweep_transaction(
+        _UniffiConverterString.lower(mnemonic_phrase),
+        _UniffiConverterOptionalTypeNetwork.lower(network),
+        _UniffiConverterOptionalString.lower(bip39_passphrase),
+        _UniffiConverterString.lower(electrum_url),
+        _UniffiConverterString.lower(destination_address),
+        _UniffiConverterOptionalUInt32.lower(fee_rate_sats_per_vbyte)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeSweepTransactionPreview.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeSweepError,
 
     )
 async def refresh_active_cjit_entries() -> "typing.List[IcJitEntry]":
@@ -16120,6 +16611,7 @@ __all__ = [
     "Scanner",
     "ScriptType",
     "SortDirection",
+    "SweepError",
     "TokenFilter",
     "TrezorConnectError",
     "TrezorEnvironment",
@@ -16199,6 +16691,9 @@ __all__ = [
     "RefTxOutput",
     "RefundMemo",
     "SignedTransactionResponse",
+    "SweepResult",
+    "SweepTransactionPreview",
+    "SweepableBalances",
     "TextMemo",
     "TransactionDetails",
     "TxAckPaymentRequest",
@@ -16217,7 +16712,9 @@ __all__ = [
     "blocktank_remove_all_cjit_entries",
     "blocktank_remove_all_orders",
     "blocktank_wipe_all",
+    "broadcast_sweep_transaction",
     "calculate_channel_liquidity_options",
+    "check_sweepable_balances",
     "create_channel_request_url",
     "create_cjit_entry",
     "create_order",
@@ -16267,6 +16764,7 @@ __all__ = [
     "mnemonic_to_entropy",
     "mnemonic_to_seed",
     "open_channel",
+    "prepare_sweep_transaction",
     "refresh_active_cjit_entries",
     "refresh_active_orders",
     "register_device",

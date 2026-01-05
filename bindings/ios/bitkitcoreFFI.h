@@ -290,9 +290,19 @@ uint64_t uniffi_bitkitcore_fn_func_blocktank_wipe_all(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BROADCAST_SWEEP_TRANSACTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BROADCAST_SWEEP_TRANSACTION
+uint64_t uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(RustBuffer psbt, uint32_t fee_rate_sats_per_vbyte, RustBuffer mnemonic_phrase, RustBuffer network, RustBuffer bip39_passphrase, RustBuffer electrum_url
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CALCULATE_CHANNEL_LIQUIDITY_OPTIONS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CALCULATE_CHANNEL_LIQUIDITY_OPTIONS
 RustBuffer uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options(RustBuffer params, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CHECK_SWEEPABLE_BALANCES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CHECK_SWEEPABLE_BALANCES
+uint64_t uniffi_bitkitcore_fn_func_check_sweepable_balances(RustBuffer mnemonic_phrase, RustBuffer network, RustBuffer bip39_passphrase, RustBuffer electrum_url
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CREATE_CHANNEL_REQUEST_URL
@@ -543,6 +553,11 @@ RustBuffer uniffi_bitkitcore_fn_func_mnemonic_to_seed(RustBuffer mnemonic_phrase
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_OPEN_CHANNEL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_OPEN_CHANNEL
 uint64_t uniffi_bitkitcore_fn_func_open_channel(RustBuffer order_id, RustBuffer connection_string
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PREPARE_SWEEP_TRANSACTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PREPARE_SWEEP_TRANSACTION
+uint64_t uniffi_bitkitcore_fn_func_prepare_sweep_transaction(RustBuffer mnemonic_phrase, RustBuffer network, RustBuffer bip39_passphrase, RustBuffer electrum_url, RustBuffer destination_address, RustBuffer fee_rate_sats_per_vbyte
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REFRESH_ACTIVE_CJIT_ENTRIES
@@ -1072,9 +1087,21 @@ uint16_t uniffi_bitkitcore_checksum_func_blocktank_wipe_all(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BROADCAST_SWEEP_TRANSACTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BROADCAST_SWEEP_TRANSACTION
+uint16_t uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CALCULATE_CHANNEL_LIQUIDITY_OPTIONS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CALCULATE_CHANNEL_LIQUIDITY_OPTIONS
 uint16_t uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CHECK_SWEEPABLE_BALANCES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CHECK_SWEEPABLE_BALANCES
+uint16_t uniffi_bitkitcore_checksum_func_check_sweepable_balances(void
     
 );
 #endif
@@ -1369,6 +1396,12 @@ uint16_t uniffi_bitkitcore_checksum_func_mnemonic_to_seed(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_OPEN_CHANNEL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_OPEN_CHANNEL
 uint16_t uniffi_bitkitcore_checksum_func_open_channel(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PREPARE_SWEEP_TRANSACTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PREPARE_SWEEP_TRANSACTION
+uint16_t uniffi_bitkitcore_checksum_func_prepare_sweep_transaction(void
     
 );
 #endif

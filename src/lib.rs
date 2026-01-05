@@ -12,7 +12,7 @@ pub use modules::onchain;
 pub use modules::activity;
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
-use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse};
+use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances};
 pub use crate::onchain::WordCount;
 
 use std::sync::Mutex as StdMutex;
@@ -241,6 +241,77 @@ pub fn entropy_to_mnemonic(entropy: Vec<u8>) -> Result<String, AddressError> {
 #[uniffi::export]
 pub fn mnemonic_to_seed(mnemonic_phrase: String, passphrase: Option<String>) -> Result<Vec<u8>, AddressError> {
     onchain::BitcoinAddressValidator::mnemonic_to_seed(&mnemonic_phrase, passphrase.as_deref())
+}
+
+#[uniffi::export]
+pub async fn check_sweepable_balances(
+    mnemonic_phrase: String,
+    network: Option<Network>,
+    bip39_passphrase: Option<String>,
+    electrum_url: String,
+) -> Result<SweepableBalances, SweepError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        onchain::BitcoinAddressValidator::check_sweepable_balances(
+            &mnemonic_phrase,
+            network.unwrap_or(Network::Bitcoin).into(),
+            bip39_passphrase.as_deref(),
+            &electrum_url,
+        )
+        .await
+    })
+    .await
+    .unwrap()
+}
+
+#[uniffi::export]
+pub async fn prepare_sweep_transaction(
+    mnemonic_phrase: String,
+    network: Option<Network>,
+    bip39_passphrase: Option<String>,
+    electrum_url: String,
+    destination_address: String,
+    fee_rate_sats_per_vbyte: Option<u32>,
+) -> Result<SweepTransactionPreview, SweepError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        onchain::BitcoinAddressValidator::prepare_sweep_transaction(
+            &mnemonic_phrase,
+            network.unwrap_or(Network::Bitcoin).into(),
+            bip39_passphrase.as_deref(),
+            &electrum_url,
+            &destination_address,
+            fee_rate_sats_per_vbyte,
+        )
+        .await
+    })
+    .await
+    .unwrap()
+}
+
+#[uniffi::export]
+pub async fn broadcast_sweep_transaction(
+    psbt: String,
+    fee_rate_sats_per_vbyte: u32,
+    mnemonic_phrase: String,
+    network: Option<Network>,
+    bip39_passphrase: Option<String>,
+    electrum_url: String,
+) -> Result<SweepResult, SweepError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        onchain::BitcoinAddressValidator::broadcast_sweep_transaction(
+            &psbt,
+            fee_rate_sats_per_vbyte,
+            &mnemonic_phrase,
+            network.unwrap_or(Network::Bitcoin).into(),
+            bip39_passphrase.as_deref(),
+            &electrum_url,
+        )
+        .await
+    })
+    .await
+    .unwrap()
 }
 
 #[uniffi::export]
