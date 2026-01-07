@@ -150,3 +150,51 @@ pub struct ValidationResult {
     pub network: NetworkType,
     pub address_type: AddressType,
 }
+
+#[derive(uniffi::Record, Debug)]
+pub struct SweepResult {
+    /// The transaction ID of the sweep transaction
+    pub txid: String,
+    /// The total amount swept (in satoshis)
+    pub amount_swept: u64,
+    /// The fee paid (in satoshis)
+    pub fee_paid: u64,
+    /// The number of UTXOs swept
+    pub utxos_swept: u32,
+}
+
+#[derive(uniffi::Record, Debug)]
+pub struct SweepTransactionPreview {
+    /// The PSBT (Partially Signed Bitcoin Transaction) in base64 format
+    pub psbt: String,
+    /// The total amount available to sweep (in satoshis)
+    pub total_amount: u64,
+    /// The estimated fee for the transaction (in satoshis) - calculated with provided or default fee rate
+    pub estimated_fee: u64,
+    /// The number of UTXOs that will be swept
+    pub utxos_count: u32,
+    /// The destination address
+    pub destination_address: String,
+    /// The amount that will be sent to destination after fees (in satoshis)
+    pub amount_after_fees: u64,
+}
+
+#[derive(uniffi::Record, Debug)]
+pub struct SweepableBalances {
+    /// Balance in legacy (P2PKH) addresses (in satoshis)
+    pub legacy_balance: u64,
+    /// Balance in P2SH-SegWit (P2SH-P2WPKH) addresses (in satoshis)
+    pub p2sh_balance: u64,
+    /// Balance in Taproot (P2TR) addresses (in satoshis)
+    pub taproot_balance: u64,
+    /// Total balance across all wallet types (in satoshis)
+    pub total_balance: u64,
+    /// Number of UTXOs in legacy wallet
+    pub legacy_utxos_count: u32,
+    /// Number of UTXOs in P2SH-SegWit wallet
+    pub p2sh_utxos_count: u32,
+    /// Number of UTXOs in Taproot wallet
+    pub taproot_utxos_count: u32,
+    /// Total number of UTXOs across all wallet types
+    pub total_utxos_count: u32,
+}

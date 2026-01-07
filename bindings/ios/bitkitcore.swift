@@ -8933,6 +8933,426 @@ public func FfiConverterTypeSignedTransactionResponse_lower(_ value: SignedTrans
 }
 
 
+public struct SweepResult {
+    /**
+     * The transaction ID of the sweep transaction
+     */
+    public var txid: String
+    /**
+     * The total amount swept (in satoshis)
+     */
+    public var amountSwept: UInt64
+    /**
+     * The fee paid (in satoshis)
+     */
+    public var feePaid: UInt64
+    /**
+     * The number of UTXOs swept
+     */
+    public var utxosSwept: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The transaction ID of the sweep transaction
+         */txid: String, 
+        /**
+         * The total amount swept (in satoshis)
+         */amountSwept: UInt64, 
+        /**
+         * The fee paid (in satoshis)
+         */feePaid: UInt64, 
+        /**
+         * The number of UTXOs swept
+         */utxosSwept: UInt32) {
+        self.txid = txid
+        self.amountSwept = amountSwept
+        self.feePaid = feePaid
+        self.utxosSwept = utxosSwept
+    }
+}
+
+#if compiler(>=6)
+extension SweepResult: Sendable {}
+#endif
+
+
+extension SweepResult: Equatable, Hashable {
+    public static func ==(lhs: SweepResult, rhs: SweepResult) -> Bool {
+        if lhs.txid != rhs.txid {
+            return false
+        }
+        if lhs.amountSwept != rhs.amountSwept {
+            return false
+        }
+        if lhs.feePaid != rhs.feePaid {
+            return false
+        }
+        if lhs.utxosSwept != rhs.utxosSwept {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(txid)
+        hasher.combine(amountSwept)
+        hasher.combine(feePaid)
+        hasher.combine(utxosSwept)
+    }
+}
+
+extension SweepResult: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSweepResult: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SweepResult {
+        return
+            try SweepResult(
+                txid: FfiConverterString.read(from: &buf), 
+                amountSwept: FfiConverterUInt64.read(from: &buf), 
+                feePaid: FfiConverterUInt64.read(from: &buf), 
+                utxosSwept: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SweepResult, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.txid, into: &buf)
+        FfiConverterUInt64.write(value.amountSwept, into: &buf)
+        FfiConverterUInt64.write(value.feePaid, into: &buf)
+        FfiConverterUInt32.write(value.utxosSwept, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSweepResult_lift(_ buf: RustBuffer) throws -> SweepResult {
+    return try FfiConverterTypeSweepResult.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSweepResult_lower(_ value: SweepResult) -> RustBuffer {
+    return FfiConverterTypeSweepResult.lower(value)
+}
+
+
+public struct SweepTransactionPreview {
+    /**
+     * The PSBT (Partially Signed Bitcoin Transaction) in base64 format
+     */
+    public var psbt: String
+    /**
+     * The total amount available to sweep (in satoshis)
+     */
+    public var totalAmount: UInt64
+    /**
+     * The estimated fee for the transaction (in satoshis) - calculated with provided or default fee rate
+     */
+    public var estimatedFee: UInt64
+    /**
+     * The number of UTXOs that will be swept
+     */
+    public var utxosCount: UInt32
+    /**
+     * The destination address
+     */
+    public var destinationAddress: String
+    /**
+     * The amount that will be sent to destination after fees (in satoshis)
+     */
+    public var amountAfterFees: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The PSBT (Partially Signed Bitcoin Transaction) in base64 format
+         */psbt: String, 
+        /**
+         * The total amount available to sweep (in satoshis)
+         */totalAmount: UInt64, 
+        /**
+         * The estimated fee for the transaction (in satoshis) - calculated with provided or default fee rate
+         */estimatedFee: UInt64, 
+        /**
+         * The number of UTXOs that will be swept
+         */utxosCount: UInt32, 
+        /**
+         * The destination address
+         */destinationAddress: String, 
+        /**
+         * The amount that will be sent to destination after fees (in satoshis)
+         */amountAfterFees: UInt64) {
+        self.psbt = psbt
+        self.totalAmount = totalAmount
+        self.estimatedFee = estimatedFee
+        self.utxosCount = utxosCount
+        self.destinationAddress = destinationAddress
+        self.amountAfterFees = amountAfterFees
+    }
+}
+
+#if compiler(>=6)
+extension SweepTransactionPreview: Sendable {}
+#endif
+
+
+extension SweepTransactionPreview: Equatable, Hashable {
+    public static func ==(lhs: SweepTransactionPreview, rhs: SweepTransactionPreview) -> Bool {
+        if lhs.psbt != rhs.psbt {
+            return false
+        }
+        if lhs.totalAmount != rhs.totalAmount {
+            return false
+        }
+        if lhs.estimatedFee != rhs.estimatedFee {
+            return false
+        }
+        if lhs.utxosCount != rhs.utxosCount {
+            return false
+        }
+        if lhs.destinationAddress != rhs.destinationAddress {
+            return false
+        }
+        if lhs.amountAfterFees != rhs.amountAfterFees {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(psbt)
+        hasher.combine(totalAmount)
+        hasher.combine(estimatedFee)
+        hasher.combine(utxosCount)
+        hasher.combine(destinationAddress)
+        hasher.combine(amountAfterFees)
+    }
+}
+
+extension SweepTransactionPreview: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSweepTransactionPreview: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SweepTransactionPreview {
+        return
+            try SweepTransactionPreview(
+                psbt: FfiConverterString.read(from: &buf), 
+                totalAmount: FfiConverterUInt64.read(from: &buf), 
+                estimatedFee: FfiConverterUInt64.read(from: &buf), 
+                utxosCount: FfiConverterUInt32.read(from: &buf), 
+                destinationAddress: FfiConverterString.read(from: &buf), 
+                amountAfterFees: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SweepTransactionPreview, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.psbt, into: &buf)
+        FfiConverterUInt64.write(value.totalAmount, into: &buf)
+        FfiConverterUInt64.write(value.estimatedFee, into: &buf)
+        FfiConverterUInt32.write(value.utxosCount, into: &buf)
+        FfiConverterString.write(value.destinationAddress, into: &buf)
+        FfiConverterUInt64.write(value.amountAfterFees, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSweepTransactionPreview_lift(_ buf: RustBuffer) throws -> SweepTransactionPreview {
+    return try FfiConverterTypeSweepTransactionPreview.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSweepTransactionPreview_lower(_ value: SweepTransactionPreview) -> RustBuffer {
+    return FfiConverterTypeSweepTransactionPreview.lower(value)
+}
+
+
+public struct SweepableBalances {
+    /**
+     * Balance in legacy (P2PKH) addresses (in satoshis)
+     */
+    public var legacyBalance: UInt64
+    /**
+     * Balance in P2SH-SegWit (P2SH-P2WPKH) addresses (in satoshis)
+     */
+    public var p2shBalance: UInt64
+    /**
+     * Balance in Taproot (P2TR) addresses (in satoshis)
+     */
+    public var taprootBalance: UInt64
+    /**
+     * Total balance across all wallet types (in satoshis)
+     */
+    public var totalBalance: UInt64
+    /**
+     * Number of UTXOs in legacy wallet
+     */
+    public var legacyUtxosCount: UInt32
+    /**
+     * Number of UTXOs in P2SH-SegWit wallet
+     */
+    public var p2shUtxosCount: UInt32
+    /**
+     * Number of UTXOs in Taproot wallet
+     */
+    public var taprootUtxosCount: UInt32
+    /**
+     * Total number of UTXOs across all wallet types
+     */
+    public var totalUtxosCount: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Balance in legacy (P2PKH) addresses (in satoshis)
+         */legacyBalance: UInt64, 
+        /**
+         * Balance in P2SH-SegWit (P2SH-P2WPKH) addresses (in satoshis)
+         */p2shBalance: UInt64, 
+        /**
+         * Balance in Taproot (P2TR) addresses (in satoshis)
+         */taprootBalance: UInt64, 
+        /**
+         * Total balance across all wallet types (in satoshis)
+         */totalBalance: UInt64, 
+        /**
+         * Number of UTXOs in legacy wallet
+         */legacyUtxosCount: UInt32, 
+        /**
+         * Number of UTXOs in P2SH-SegWit wallet
+         */p2shUtxosCount: UInt32, 
+        /**
+         * Number of UTXOs in Taproot wallet
+         */taprootUtxosCount: UInt32, 
+        /**
+         * Total number of UTXOs across all wallet types
+         */totalUtxosCount: UInt32) {
+        self.legacyBalance = legacyBalance
+        self.p2shBalance = p2shBalance
+        self.taprootBalance = taprootBalance
+        self.totalBalance = totalBalance
+        self.legacyUtxosCount = legacyUtxosCount
+        self.p2shUtxosCount = p2shUtxosCount
+        self.taprootUtxosCount = taprootUtxosCount
+        self.totalUtxosCount = totalUtxosCount
+    }
+}
+
+#if compiler(>=6)
+extension SweepableBalances: Sendable {}
+#endif
+
+
+extension SweepableBalances: Equatable, Hashable {
+    public static func ==(lhs: SweepableBalances, rhs: SweepableBalances) -> Bool {
+        if lhs.legacyBalance != rhs.legacyBalance {
+            return false
+        }
+        if lhs.p2shBalance != rhs.p2shBalance {
+            return false
+        }
+        if lhs.taprootBalance != rhs.taprootBalance {
+            return false
+        }
+        if lhs.totalBalance != rhs.totalBalance {
+            return false
+        }
+        if lhs.legacyUtxosCount != rhs.legacyUtxosCount {
+            return false
+        }
+        if lhs.p2shUtxosCount != rhs.p2shUtxosCount {
+            return false
+        }
+        if lhs.taprootUtxosCount != rhs.taprootUtxosCount {
+            return false
+        }
+        if lhs.totalUtxosCount != rhs.totalUtxosCount {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(legacyBalance)
+        hasher.combine(p2shBalance)
+        hasher.combine(taprootBalance)
+        hasher.combine(totalBalance)
+        hasher.combine(legacyUtxosCount)
+        hasher.combine(p2shUtxosCount)
+        hasher.combine(taprootUtxosCount)
+        hasher.combine(totalUtxosCount)
+    }
+}
+
+extension SweepableBalances: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSweepableBalances: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SweepableBalances {
+        return
+            try SweepableBalances(
+                legacyBalance: FfiConverterUInt64.read(from: &buf), 
+                p2shBalance: FfiConverterUInt64.read(from: &buf), 
+                taprootBalance: FfiConverterUInt64.read(from: &buf), 
+                totalBalance: FfiConverterUInt64.read(from: &buf), 
+                legacyUtxosCount: FfiConverterUInt32.read(from: &buf), 
+                p2shUtxosCount: FfiConverterUInt32.read(from: &buf), 
+                taprootUtxosCount: FfiConverterUInt32.read(from: &buf), 
+                totalUtxosCount: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SweepableBalances, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.legacyBalance, into: &buf)
+        FfiConverterUInt64.write(value.p2shBalance, into: &buf)
+        FfiConverterUInt64.write(value.taprootBalance, into: &buf)
+        FfiConverterUInt64.write(value.totalBalance, into: &buf)
+        FfiConverterUInt32.write(value.legacyUtxosCount, into: &buf)
+        FfiConverterUInt32.write(value.p2shUtxosCount, into: &buf)
+        FfiConverterUInt32.write(value.taprootUtxosCount, into: &buf)
+        FfiConverterUInt32.write(value.totalUtxosCount, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSweepableBalances_lift(_ buf: RustBuffer) throws -> SweepableBalances {
+    return try FfiConverterTypeSweepableBalances.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSweepableBalances_lower(_ value: SweepableBalances) -> RustBuffer {
+    return FfiConverterTypeSweepableBalances.lower(value)
+}
+
+
 /**
  * Text memo
  */
@@ -13638,6 +14058,96 @@ extension SortDirection: Codable {}
 
 
 
+
+public enum SweepError: Swift.Error {
+
+    
+    
+    case SweepFailed(String
+    )
+    case NoUtxosFound
+    case InvalidMnemonic
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSweepError: FfiConverterRustBuffer {
+    typealias SwiftType = SweepError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SweepError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .SweepFailed(
+            try FfiConverterString.read(from: &buf)
+            )
+        case 2: return .NoUtxosFound
+        case 3: return .InvalidMnemonic
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: SweepError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .SweepFailed(v1):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(v1, into: &buf)
+            
+        
+        case .NoUtxosFound:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .InvalidMnemonic:
+            writeInt(&buf, Int32(3))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSweepError_lift(_ buf: RustBuffer) throws -> SweepError {
+    return try FfiConverterTypeSweepError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSweepError_lower(_ value: SweepError) -> RustBuffer {
+    return FfiConverterTypeSweepError.lower(value)
+}
+
+
+extension SweepError: Equatable, Hashable {}
+
+extension SweepError: Codable {}
+
+
+
+
+extension SweepError: Foundation.LocalizedError {
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+
+
+
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
@@ -16653,12 +17163,40 @@ public func blocktankWipeAll()async throws   {
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
+public func broadcastSweepTransaction(psbt: String, mnemonicPhrase: String, network: Network?, bip39Passphrase: String?, electrumUrl: String)async throws  -> SweepResult  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(FfiConverterString.lower(psbt),FfiConverterString.lower(mnemonicPhrase),FfiConverterOptionTypeNetwork.lower(network),FfiConverterOptionString.lower(bip39Passphrase),FfiConverterString.lower(electrumUrl)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeSweepResult_lift,
+            errorHandler: FfiConverterTypeSweepError_lift
+        )
+}
 public func calculateChannelLiquidityOptions(params: ChannelLiquidityParams) -> ChannelLiquidityOptions  {
     return try!  FfiConverterTypeChannelLiquidityOptions_lift(try! rustCall() {
     uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options(
         FfiConverterTypeChannelLiquidityParams_lower(params),$0
     )
 })
+}
+public func checkSweepableBalances(mnemonicPhrase: String, network: Network?, bip39Passphrase: String?, electrumUrl: String)async throws  -> SweepableBalances  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_check_sweepable_balances(FfiConverterString.lower(mnemonicPhrase),FfiConverterOptionTypeNetwork.lower(network),FfiConverterOptionString.lower(bip39Passphrase),FfiConverterString.lower(electrumUrl)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeSweepableBalances_lift,
+            errorHandler: FfiConverterTypeSweepError_lift
+        )
 }
 public func createChannelRequestUrl(k1: String, callback: String, localNodeId: String, isPrivate: Bool, cancel: Bool)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeLnurlError_lift) {
@@ -17136,6 +17674,20 @@ public func openChannel(orderId: String, connectionString: String)async throws  
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeIBtOrder_lift,
             errorHandler: FfiConverterTypeBlocktankError_lift
+        )
+}
+public func prepareSweepTransaction(mnemonicPhrase: String, network: Network?, bip39Passphrase: String?, electrumUrl: String, destinationAddress: String, feeRateSatsPerVbyte: UInt32?)async throws  -> SweepTransactionPreview  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_prepare_sweep_transaction(FfiConverterString.lower(mnemonicPhrase),FfiConverterOptionTypeNetwork.lower(network),FfiConverterOptionString.lower(bip39Passphrase),FfiConverterString.lower(electrumUrl),FfiConverterString.lower(destinationAddress),FfiConverterOptionUInt32.lower(feeRateSatsPerVbyte)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeSweepTransactionPreview_lift,
+            errorHandler: FfiConverterTypeSweepError_lift
         )
 }
 /**
@@ -17622,7 +18174,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 43422) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_check_sweepable_balances() != 64201) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305) {
@@ -17770,6 +18328,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_open_channel() != 21402) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries() != 5324) {

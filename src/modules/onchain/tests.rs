@@ -258,4 +258,256 @@ mod tests {
 
         assert_ne!(seed1, seed2);
     }
+
+    const REGTEST_ELECTRUM_URL: &str = "ssl://fulcrum.bitkit.stag0.blocktank.to:18484";
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_check_sweepable_balances_no_utxos() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let electrum_url = REGTEST_ELECTRUM_URL;
+
+        let result = BitcoinAddressValidator::check_sweepable_balances(
+            mnemonic,
+            Network::Regtest,
+            None,
+            electrum_url,
+        )
+        .await;
+
+        assert!(result.is_ok());
+        let balances = result.unwrap();
+        assert_eq!(balances.legacy_balance, 0);
+        assert_eq!(balances.p2sh_balance, 0);
+        assert_eq!(balances.taproot_balance, 0);
+        assert_eq!(balances.total_balance, 0);
+        assert_eq!(balances.legacy_utxos_count, 0);
+        assert_eq!(balances.p2sh_utxos_count, 0);
+        assert_eq!(balances.taproot_utxos_count, 0);
+        assert_eq!(balances.total_utxos_count, 0);
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_check_sweepable_balances_invalid_electrum_url() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let invalid_url = "invalid://url";
+
+        let result = BitcoinAddressValidator::check_sweepable_balances(
+            mnemonic,
+            Network::Regtest,
+            None,
+            invalid_url,
+        )
+        .await;
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_check_sweepable_balances_invalid_mnemonic() {
+        let invalid_mnemonic = "invalid mnemonic phrase";
+        let electrum_url = REGTEST_ELECTRUM_URL;
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let result = rt.block_on(BitcoinAddressValidator::check_sweepable_balances(
+            invalid_mnemonic,
+            Network::Regtest,
+            None,
+            electrum_url,
+        ));
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            crate::onchain::SweepError::InvalidMnemonic => {}
+            crate::onchain::SweepError::SweepFailed(_) => {}
+            _ => {}
+        }
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_prepare_sweep_transaction_no_utxos() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let electrum_url = REGTEST_ELECTRUM_URL;
+        let destination = "bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"; // Regtest address
+
+        let result = BitcoinAddressValidator::prepare_sweep_transaction(
+            mnemonic,
+            Network::Regtest,
+            None,
+            electrum_url,
+            destination,
+            None,
+        )
+        .await;
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            crate::onchain::SweepError::NoUtxosFound => {}
+            _ => panic!("Expected NoUtxosFound error"),
+        }
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_prepare_sweep_transaction_invalid_electrum_url() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let invalid_url = "invalid://url";
+        let destination = "bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4";
+
+        let result = BitcoinAddressValidator::prepare_sweep_transaction(
+            mnemonic,
+            Network::Regtest,
+            None,
+            invalid_url,
+            destination,
+            None,
+        )
+        .await;
+
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_prepare_sweep_transaction_invalid_destination_address() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let electrum_url = REGTEST_ELECTRUM_URL;
+        let invalid_destination = "invalid-address";
+
+        let result = BitcoinAddressValidator::prepare_sweep_transaction(
+            mnemonic,
+            Network::Regtest,
+            None,
+            electrum_url,
+            invalid_destination,
+            None,
+        )
+        .await;
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            crate::onchain::SweepError::SweepFailed(msg)
+                if msg.contains("Invalid destination address") => {}
+            _ => panic!("Expected invalid destination address error"),
+        }
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_broadcast_sweep_transaction_invalid_psbt() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let electrum_url = REGTEST_ELECTRUM_URL;
+        let invalid_psbt = "invalid-base64-psbt";
+
+        let result = BitcoinAddressValidator::broadcast_sweep_transaction(
+            invalid_psbt,
+            mnemonic,
+            Network::Regtest,
+            None,
+            electrum_url,
+        )
+        .await;
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            crate::onchain::SweepError::SweepFailed(msg)
+                if msg.contains("Failed to decode PSBT") => {}
+            _ => panic!("Expected PSBT decode error"),
+        }
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_broadcast_sweep_transaction_invalid_electrum_url() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let invalid_url = "invalid://url";
+        let dummy_psbt = "cHNidP8BAH0CAAAAASu6BAgAAAAAGXapFGDDrd5by2g1111wz6DkNzqotA8jAQAAAAD9////AgAAAAAB6kQAAAAAGXapFNDrd5by2g1111wz6DkNzqotA8jAQAAAAD9////AAAAAAEBIICWmAAAAAAZAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/wAAAAD/////AQAAAAAAAAAAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/";
+
+        let result = BitcoinAddressValidator::broadcast_sweep_transaction(
+            dummy_psbt,
+            mnemonic,
+            Network::Regtest,
+            None,
+            invalid_url,
+        )
+        .await;
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_prepare_sweep_transaction_parameter_validation() {
+        let invalid_mnemonic = "invalid mnemonic phrase";
+        let electrum_url = REGTEST_ELECTRUM_URL;
+        let destination = "bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4";
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let result = rt.block_on(BitcoinAddressValidator::prepare_sweep_transaction(
+            invalid_mnemonic,
+            Network::Regtest,
+            None,
+            electrum_url,
+            destination,
+            None,
+        ));
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            crate::onchain::SweepError::InvalidMnemonic => {}
+            crate::onchain::SweepError::SweepFailed(_) => {}
+            _ => {}
+        }
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_sweep_success() {
+        // Requires: funded mnemonic on regtest with UTXOs in legacy/p2sh/taproot addresses
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let electrum_url = REGTEST_ELECTRUM_URL;
+        let destination = "bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt080";
+
+        let balances = BitcoinAddressValidator::check_sweepable_balances(
+            mnemonic,
+            Network::Regtest,
+            None,
+            electrum_url,
+        )
+        .await
+        .expect("Failed to check balances");
+
+        assert!(balances.total_balance > 0, "Mnemonic must be funded to run this test");
+
+        let preview = BitcoinAddressValidator::prepare_sweep_transaction(
+            mnemonic,
+            Network::Regtest,
+            None,
+            electrum_url,
+            destination,
+            Some(1),
+        )
+        .await
+        .expect("Failed to prepare sweep");
+
+        assert!(preview.total_amount > 0);
+        assert!(preview.estimated_fee > 0);
+        assert!(preview.amount_after_fees > 0);
+        assert!(preview.utxos_count > 0);
+
+        let result = BitcoinAddressValidator::broadcast_sweep_transaction(
+            &preview.psbt,
+            mnemonic,
+            Network::Regtest,
+            None,
+            electrum_url,
+        )
+        .await
+        .expect("Failed to broadcast sweep");
+
+        assert!(!result.txid.is_empty());
+        assert!(result.amount_swept > 0);
+        assert!(result.fee_paid > 0);
+    }
 }

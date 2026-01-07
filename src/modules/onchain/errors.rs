@@ -16,3 +16,14 @@ pub enum AddressError {
     #[error("Address derivation failed")]
     AddressDerivationFailed,
 }
+
+#[derive(uniffi::Error, Debug, Error)]
+#[non_exhaustive]
+pub enum SweepError {
+    #[error("Sweep operation failed: {0}")]
+    SweepFailed(String),
+    #[error("No UTXOs found to sweep")]
+    NoUtxosFound,
+    #[error("Invalid mnemonic format")]
+    InvalidMnemonic,
+}

@@ -1571,6 +1571,102 @@ public data class SignedTransactionResponse (
 
 
 
+@kotlinx.serialization.Serializable
+public data class SweepResult (
+    /**
+     * The transaction ID of the sweep transaction
+     */
+    val `txid`: kotlin.String, 
+    /**
+     * The total amount swept (in satoshis)
+     */
+    val `amountSwept`: kotlin.ULong, 
+    /**
+     * The fee paid (in satoshis)
+     */
+    val `feePaid`: kotlin.ULong, 
+    /**
+     * The number of UTXOs swept
+     */
+    val `utxosSwept`: kotlin.UInt
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class SweepTransactionPreview (
+    /**
+     * The PSBT (Partially Signed Bitcoin Transaction) in base64 format
+     */
+    val `psbt`: kotlin.String, 
+    /**
+     * The total amount available to sweep (in satoshis)
+     */
+    val `totalAmount`: kotlin.ULong, 
+    /**
+     * The estimated fee for the transaction (in satoshis) - calculated with provided or default fee rate
+     */
+    val `estimatedFee`: kotlin.ULong, 
+    /**
+     * The number of UTXOs that will be swept
+     */
+    val `utxosCount`: kotlin.UInt, 
+    /**
+     * The destination address
+     */
+    val `destinationAddress`: kotlin.String, 
+    /**
+     * The amount that will be sent to destination after fees (in satoshis)
+     */
+    val `amountAfterFees`: kotlin.ULong
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class SweepableBalances (
+    /**
+     * Balance in legacy (P2PKH) addresses (in satoshis)
+     */
+    val `legacyBalance`: kotlin.ULong, 
+    /**
+     * Balance in P2SH-SegWit (P2SH-P2WPKH) addresses (in satoshis)
+     */
+    val `p2shBalance`: kotlin.ULong, 
+    /**
+     * Balance in Taproot (P2TR) addresses (in satoshis)
+     */
+    val `taprootBalance`: kotlin.ULong, 
+    /**
+     * Total balance across all wallet types (in satoshis)
+     */
+    val `totalBalance`: kotlin.ULong, 
+    /**
+     * Number of UTXOs in legacy wallet
+     */
+    val `legacyUtxosCount`: kotlin.UInt, 
+    /**
+     * Number of UTXOs in P2SH-SegWit wallet
+     */
+    val `p2shUtxosCount`: kotlin.UInt, 
+    /**
+     * Number of UTXOs in Taproot wallet
+     */
+    val `taprootUtxosCount`: kotlin.UInt, 
+    /**
+     * Total number of UTXOs across all wallet types
+     */
+    val `totalUtxosCount`: kotlin.UInt
+) {
+    public companion object
+}
+
+
+
 /**
  * Text memo
  */
@@ -2871,6 +2967,33 @@ public enum class SortDirection {
 }
 
 
+
+
+
+
+
+public sealed class SweepException: kotlin.Exception() {
+    
+    public class SweepFailed(
+        public val v1: kotlin.String,
+    ) : SweepException() {
+        override val message: String
+            get() = "v1=${ v1 }"
+    }
+    
+    public class NoUtxosFound(
+    ) : SweepException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class InvalidMnemonic(
+    ) : SweepException() {
+        override val message: String
+            get() = ""
+    }
+    
+}
 
 
 

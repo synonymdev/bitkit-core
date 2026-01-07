@@ -1,10 +1,13 @@
+mod errors;
 mod implementation;
 mod types;
-mod errors;
 
+pub use errors::{AddressError, SweepError};
 pub use implementation::BitcoinAddressValidator;
-pub use types::{AddressType, ValidationResult, WordCount, GetAddressResponse, GetAddressesResponse, Network};
-pub use errors::AddressError;
+pub use types::{
+    AddressType, GetAddressResponse, GetAddressesResponse, Network, SweepResult,
+    SweepTransactionPreview, SweepableBalances, ValidationResult, WordCount,
+};
 
 #[cfg(test)]
 mod tests;
