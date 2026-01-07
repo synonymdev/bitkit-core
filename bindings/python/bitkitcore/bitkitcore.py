@@ -475,7 +475,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 36197:
+    if lib.uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 43422:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -799,7 +799,6 @@ _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_wipe_all.argtypes = (
 _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_wipe_all.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_broadcast_sweep_transaction.argtypes = (
     _UniffiRustBuffer,
-    ctypes.c_uint32,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -11736,13 +11735,6 @@ class SweepError:  # type: ignore
         def __repr__(self):
             return "SweepError.NoUtxosFound({})".format(str(self))
     _UniffiTempSweepError.NoUtxosFound = NoUtxosFound # type: ignore
-    class InsufficientFunds(_UniffiTempSweepError):
-        def __init__(self):
-            pass
-
-        def __repr__(self):
-            return "SweepError.InsufficientFunds({})".format(str(self))
-    _UniffiTempSweepError.InsufficientFunds = InsufficientFunds # type: ignore
     class InvalidMnemonic(_UniffiTempSweepError):
         def __init__(self):
             pass
@@ -11767,9 +11759,6 @@ class _UniffiConverterTypeSweepError(_UniffiConverterRustBuffer):
             return SweepError.NoUtxosFound(
             )
         if variant == 3:
-            return SweepError.InsufficientFunds(
-            )
-        if variant == 4:
             return SweepError.InvalidMnemonic(
             )
         raise InternalError("Raw enum value doesn't match any cases")
@@ -11781,8 +11770,6 @@ class _UniffiConverterTypeSweepError(_UniffiConverterRustBuffer):
             return
         if isinstance(value, SweepError.NoUtxosFound):
             return
-        if isinstance(value, SweepError.InsufficientFunds):
-            return
         if isinstance(value, SweepError.InvalidMnemonic):
             return
 
@@ -11793,10 +11780,8 @@ class _UniffiConverterTypeSweepError(_UniffiConverterRustBuffer):
             _UniffiConverterString.write(value._values[0], buf)
         if isinstance(value, SweepError.NoUtxosFound):
             buf.write_i32(2)
-        if isinstance(value, SweepError.InsufficientFunds):
-            buf.write_i32(3)
         if isinstance(value, SweepError.InvalidMnemonic):
-            buf.write_i32(4)
+            buf.write_i32(3)
 
 
 
@@ -15125,11 +15110,9 @@ async def blocktank_wipe_all() -> None:
 _UniffiConverterTypeBlocktankError,
 
     )
-async def broadcast_sweep_transaction(psbt: "str",fee_rate_sats_per_vbyte: "int",mnemonic_phrase: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",electrum_url: "str") -> "SweepResult":
+async def broadcast_sweep_transaction(psbt: "str",mnemonic_phrase: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",electrum_url: "str") -> "SweepResult":
 
     _UniffiConverterString.check_lower(psbt)
-    
-    _UniffiConverterUInt32.check_lower(fee_rate_sats_per_vbyte)
     
     _UniffiConverterString.check_lower(mnemonic_phrase)
     
@@ -15142,7 +15125,6 @@ async def broadcast_sweep_transaction(psbt: "str",fee_rate_sats_per_vbyte: "int"
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(
         _UniffiConverterString.lower(psbt),
-        _UniffiConverterUInt32.lower(fee_rate_sats_per_vbyte),
         _UniffiConverterString.lower(mnemonic_phrase),
         _UniffiConverterOptionalTypeNetwork.lower(network),
         _UniffiConverterOptionalString.lower(bip39_passphrase),

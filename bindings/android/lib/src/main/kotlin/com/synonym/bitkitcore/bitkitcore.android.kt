@@ -1214,7 +1214,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 36197.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 43422.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013.toShort()) {
@@ -1844,7 +1844,6 @@ internal object UniffiLib : Library {
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(
         `psbt`: RustBufferByValue,
-        `feeRateSatsPerVbyte`: Int,
         `mnemonicPhrase`: RustBufferByValue,
         `network`: RustBufferByValue,
         `bip39Passphrase`: RustBufferByValue,
@@ -7393,8 +7392,7 @@ public object FfiConverterTypeSweepError : FfiConverterRustBuffer<SweepException
                 FfiConverterString.read(buf),
                 )
             2 -> SweepException.NoUtxosFound()
-            3 -> SweepException.InsufficientFunds()
-            4 -> SweepException.InvalidMnemonic()
+            3 -> SweepException.InvalidMnemonic()
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
@@ -7407,10 +7405,6 @@ public object FfiConverterTypeSweepError : FfiConverterRustBuffer<SweepException
                 + FfiConverterString.allocationSize(value.v1)
             )
             is SweepException.NoUtxosFound -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-            )
-            is SweepException.InsufficientFunds -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
             )
@@ -7432,12 +7426,8 @@ public object FfiConverterTypeSweepError : FfiConverterRustBuffer<SweepException
                 buf.putInt(2)
                 Unit
             }
-            is SweepException.InsufficientFunds -> {
-                buf.putInt(3)
-                Unit
-            }
             is SweepException.InvalidMnemonic -> {
-                buf.putInt(4)
+                buf.putInt(3)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -10461,11 +10451,10 @@ public suspend fun `blocktankWipeAll`() {
 }
 
 @Throws(SweepException::class, kotlin.coroutines.cancellation.CancellationException::class)
-public suspend fun `broadcastSweepTransaction`(`psbt`: kotlin.String, `feeRateSatsPerVbyte`: kotlin.UInt, `mnemonicPhrase`: kotlin.String, `network`: Network?, `bip39Passphrase`: kotlin.String?, `electrumUrl`: kotlin.String): SweepResult {
+public suspend fun `broadcastSweepTransaction`(`psbt`: kotlin.String, `mnemonicPhrase`: kotlin.String, `network`: Network?, `bip39Passphrase`: kotlin.String?, `electrumUrl`: kotlin.String): SweepResult {
     return uniffiRustCallAsync(
         UniffiLib.uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(
             FfiConverterString.lower(`psbt`),
-            FfiConverterUInt.lower(`feeRateSatsPerVbyte`),
             FfiConverterString.lower(`mnemonicPhrase`),
             FfiConverterOptionalTypeNetwork.lower(`network`),
             FfiConverterOptionalString.lower(`bip39Passphrase`),

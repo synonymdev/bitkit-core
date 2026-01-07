@@ -523,13 +523,11 @@ impl BitcoinAddressValidator {
 
     pub async fn broadcast_sweep_transaction(
         psbt_base64: &str,
-        fee_rate_sats_per_vbyte: u32,
         mnemonic_phrase: &str,
         network: Network,
         bip39_passphrase: Option<&str>,
         electrum_url: &str,
     ) -> Result<SweepResult, SweepError> {
-        // Decode and validate PSBT
         let psbt_bytes = general_purpose::STANDARD
             .decode(psbt_base64)
             .map_err(|e| SweepError::SweepFailed(format!("Failed to decode PSBT: {}", e)))?;
@@ -544,62 +542,15 @@ impl BitcoinAddressValidator {
             )));
         }
 
-        // Calculate total input and count UTXO types for fee estimation
-        let mut total_input: u64 = 0;
-        let mut legacy_count = 0usize;
-        let mut p2sh_count = 0usize;
-        let mut taproot_count = 0usize;
+        // Calculate total input and fee from PSBT
+        let total_input: u64 = psbt.inputs.iter()
+            .filter_map(|i| i.witness_utxo.as_ref())
+            .map(|u| u.value)
+            .sum();
 
-        for input in &psbt.inputs {
-            if let Some(utxo) = &input.witness_utxo {
-                total_input += utxo.value;
-
-                // Detect UTXO type from scriptPubKey
-                let script = &utxo.script_pubkey;
-                if script.is_p2pkh() {
-                    legacy_count += 1;
-                } else if script.is_p2sh() {
-                    p2sh_count += 1;
-                } else if script.is_v1_p2tr() {
-                    taproot_count += 1;
-                }
-            }
-        }
-
-        // Estimate actual vsize with witness data
-        let base_vsize = psbt.unsigned_tx.weight().to_vbytes_ceil();
-        let actual_vsize =
-            Self::estimate_sweep_vsize(base_vsize, legacy_count, p2sh_count, taproot_count);
-
-        let fee_rate = FeeRate::from_sat_per_vb(fee_rate_sats_per_vbyte as f32);
-        let fee_amount = fee_rate.fee_vb(actual_vsize as usize);
-        let output_amount = total_input.saturating_sub(fee_amount);
-
-        if output_amount == 0 || output_amount > total_input {
-            return Err(SweepError::InsufficientFunds);
-        }
-
-        // Rebuild PSBT with updated output amount
-        let mut new_outputs = psbt.unsigned_tx.output.clone();
-        new_outputs[0].value = output_amount;
-
-        let updated_tx = Transaction {
-            version: psbt.unsigned_tx.version,
-            lock_time: psbt.unsigned_tx.lock_time,
-            input: psbt.unsigned_tx.input.clone(),
-            output: new_outputs,
-        };
-
-        let mut updated_psbt = Psbt::from_unsigned_tx(updated_tx)
-            .map_err(|e| SweepError::SweepFailed(format!("Failed to recreate PSBT: {}", e)))?;
-
-        // Copy UTXO data from original PSBT
-        for (i, input) in psbt.inputs.iter().enumerate() {
-            if i < updated_psbt.inputs.len() {
-                updated_psbt.inputs[i].witness_utxo = input.witness_utxo.clone();
-                updated_psbt.inputs[i].non_witness_utxo = input.non_witness_utxo.clone();
-            }
-        }
+        let output_amount = psbt.unsigned_tx.output[0].value;
+        let fee_amount = total_input.saturating_sub(output_amount);
+        let utxos_count = psbt.inputs.len() as u32;
 
         // Create wallets and sync before signing
         let wallets = Self::create_sweep_wallets(mnemonic_phrase, network, bip39_passphrase)?;
@@ -615,11 +566,11 @@ impl BitcoinAddressValidator {
         .map_err(|e| SweepError::SweepFailed(format!("Sync task failed: {}", e)))??;
 
         // Sign the PSBT
-        Self::sign_psbt(&wallets, &mut updated_psbt)?;
+        let mut signing_psbt = psbt;
+        Self::sign_psbt(&wallets, &mut signing_psbt)?;
 
         // Verify all inputs are finalized
-        let utxos_count = updated_psbt.inputs.len() as u32;
-        for input in &updated_psbt.inputs {
+        for input in &signing_psbt.inputs {
             if input.final_script_sig.is_none() && input.final_script_witness.is_none() {
                 return Err(SweepError::SweepFailed(
                     "Transaction signing incomplete - some inputs not finalized".to_string(),
@@ -628,7 +579,7 @@ impl BitcoinAddressValidator {
         }
 
         // Extract and broadcast
-        let final_tx = updated_psbt.extract_tx();
+        let final_tx = signing_psbt.extract_tx();
         let txid = final_tx.txid();
 
         let electrum_url_owned = electrum_url.to_string();
@@ -644,7 +595,7 @@ impl BitcoinAddressValidator {
 
         Ok(SweepResult {
             txid: txid.to_string(),
-            amount_swept: total_input,
+            amount_swept: output_amount,
             fee_paid: fee_amount,
             utxos_swept: utxos_count,
         })

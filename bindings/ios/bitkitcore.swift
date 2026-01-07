@@ -14066,7 +14066,6 @@ public enum SweepError: Swift.Error {
     case SweepFailed(String
     )
     case NoUtxosFound
-    case InsufficientFunds
     case InvalidMnemonic
 }
 
@@ -14088,8 +14087,7 @@ public struct FfiConverterTypeSweepError: FfiConverterRustBuffer {
             try FfiConverterString.read(from: &buf)
             )
         case 2: return .NoUtxosFound
-        case 3: return .InsufficientFunds
-        case 4: return .InvalidMnemonic
+        case 3: return .InvalidMnemonic
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -14111,12 +14109,8 @@ public struct FfiConverterTypeSweepError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(2))
         
         
-        case .InsufficientFunds:
-            writeInt(&buf, Int32(3))
-        
-        
         case .InvalidMnemonic:
-            writeInt(&buf, Int32(4))
+            writeInt(&buf, Int32(3))
         
         }
     }
@@ -17169,11 +17163,11 @@ public func blocktankWipeAll()async throws   {
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
-public func broadcastSweepTransaction(psbt: String, feeRateSatsPerVbyte: UInt32, mnemonicPhrase: String, network: Network?, bip39Passphrase: String?, electrumUrl: String)async throws  -> SweepResult  {
+public func broadcastSweepTransaction(psbt: String, mnemonicPhrase: String, network: Network?, bip39Passphrase: String?, electrumUrl: String)async throws  -> SweepResult  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(FfiConverterString.lower(psbt),FfiConverterUInt32.lower(feeRateSatsPerVbyte),FfiConverterString.lower(mnemonicPhrase),FfiConverterOptionTypeNetwork.lower(network),FfiConverterOptionString.lower(bip39Passphrase),FfiConverterString.lower(electrumUrl)
+                uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(FfiConverterString.lower(psbt),FfiConverterString.lower(mnemonicPhrase),FfiConverterOptionTypeNetwork.lower(network),FfiConverterOptionString.lower(bip39Passphrase),FfiConverterString.lower(electrumUrl)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
@@ -18180,7 +18174,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 36197) {
+    if (uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 43422) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013) {

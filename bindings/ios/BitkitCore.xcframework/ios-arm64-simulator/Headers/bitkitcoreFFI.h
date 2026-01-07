@@ -292,7 +292,7 @@ uint64_t uniffi_bitkitcore_fn_func_blocktank_wipe_all(void
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BROADCAST_SWEEP_TRANSACTION
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BROADCAST_SWEEP_TRANSACTION
-uint64_t uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(RustBuffer psbt, uint32_t fee_rate_sats_per_vbyte, RustBuffer mnemonic_phrase, RustBuffer network, RustBuffer bip39_passphrase, RustBuffer electrum_url
+uint64_t uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(RustBuffer psbt, RustBuffer mnemonic_phrase, RustBuffer network, RustBuffer bip39_passphrase, RustBuffer electrum_url
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CALCULATE_CHANNEL_LIQUIDITY_OPTIONS

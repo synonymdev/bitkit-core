@@ -292,7 +292,6 @@ pub async fn prepare_sweep_transaction(
 #[uniffi::export]
 pub async fn broadcast_sweep_transaction(
     psbt: String,
-    fee_rate_sats_per_vbyte: u32,
     mnemonic_phrase: String,
     network: Option<Network>,
     bip39_passphrase: Option<String>,
@@ -302,7 +301,6 @@ pub async fn broadcast_sweep_transaction(
     rt.spawn(async move {
         onchain::BitcoinAddressValidator::broadcast_sweep_transaction(
             &psbt,
-            fee_rate_sats_per_vbyte,
             &mnemonic_phrase,
             network.unwrap_or(Network::Bitcoin).into(),
             bip39_passphrase.as_deref(),

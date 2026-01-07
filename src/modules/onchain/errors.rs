@@ -24,8 +24,6 @@ pub enum SweepError {
     SweepFailed(String),
     #[error("No UTXOs found to sweep")]
     NoUtxosFound,
-    #[error("Insufficient funds to cover fees")]
-    InsufficientFunds,
     #[error("Invalid mnemonic format")]
     InvalidMnemonic,
 }

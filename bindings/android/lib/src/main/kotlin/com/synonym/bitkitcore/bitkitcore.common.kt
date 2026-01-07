@@ -2987,12 +2987,6 @@ public sealed class SweepException: kotlin.Exception() {
             get() = ""
     }
     
-    public class InsufficientFunds(
-    ) : SweepException() {
-        override val message: String
-            get() = ""
-    }
-    
     public class InvalidMnemonic(
     ) : SweepException() {
         override val message: String
