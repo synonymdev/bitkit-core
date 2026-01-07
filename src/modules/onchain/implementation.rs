@@ -207,7 +207,7 @@ impl BitcoinAddressValidator {
 
         let legacy_wallet = Wallet::new(
             Bip44(key.clone(), KeychainKind::External),
-            None,
+            Some(Bip44(key.clone(), KeychainKind::Internal)),
             bdk_network,
             MemoryDatabase::new(),
         )
@@ -215,15 +215,15 @@ impl BitcoinAddressValidator {
 
         let p2sh_wallet = Wallet::new(
             Bip49(key.clone(), KeychainKind::External),
-            None,
+            Some(Bip49(key.clone(), KeychainKind::Internal)),
             bdk_network,
             MemoryDatabase::new(),
         )
         .map_err(|e| SweepError::SweepFailed(format!("Failed to create P2SH wallet: {}", e)))?;
 
         let taproot_wallet = Wallet::new(
-            Bip86(key, KeychainKind::External),
-            None,
+            Bip86(key.clone(), KeychainKind::External),
+            Some(Bip86(key, KeychainKind::Internal)),
             bdk_network,
             MemoryDatabase::new(),
         )
