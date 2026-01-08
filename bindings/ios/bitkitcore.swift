@@ -9055,9 +9055,13 @@ public struct SweepTransactionPreview {
      */
     public var totalAmount: UInt64
     /**
-     * The estimated fee for the transaction (in satoshis) - calculated with provided or default fee rate
+     * The estimated fee for the transaction (in satoshis)
      */
     public var estimatedFee: UInt64
+    /**
+     * The estimated virtual size of the transaction (in vbytes)
+     */
+    public var estimatedVsize: UInt64
     /**
      * The number of UTXOs that will be swept
      */
@@ -9081,8 +9085,11 @@ public struct SweepTransactionPreview {
          * The total amount available to sweep (in satoshis)
          */totalAmount: UInt64, 
         /**
-         * The estimated fee for the transaction (in satoshis) - calculated with provided or default fee rate
+         * The estimated fee for the transaction (in satoshis)
          */estimatedFee: UInt64, 
+        /**
+         * The estimated virtual size of the transaction (in vbytes)
+         */estimatedVsize: UInt64, 
         /**
          * The number of UTXOs that will be swept
          */utxosCount: UInt32, 
@@ -9095,6 +9102,7 @@ public struct SweepTransactionPreview {
         self.psbt = psbt
         self.totalAmount = totalAmount
         self.estimatedFee = estimatedFee
+        self.estimatedVsize = estimatedVsize
         self.utxosCount = utxosCount
         self.destinationAddress = destinationAddress
         self.amountAfterFees = amountAfterFees
@@ -9117,6 +9125,9 @@ extension SweepTransactionPreview: Equatable, Hashable {
         if lhs.estimatedFee != rhs.estimatedFee {
             return false
         }
+        if lhs.estimatedVsize != rhs.estimatedVsize {
+            return false
+        }
         if lhs.utxosCount != rhs.utxosCount {
             return false
         }
@@ -9133,6 +9144,7 @@ extension SweepTransactionPreview: Equatable, Hashable {
         hasher.combine(psbt)
         hasher.combine(totalAmount)
         hasher.combine(estimatedFee)
+        hasher.combine(estimatedVsize)
         hasher.combine(utxosCount)
         hasher.combine(destinationAddress)
         hasher.combine(amountAfterFees)
@@ -9153,6 +9165,7 @@ public struct FfiConverterTypeSweepTransactionPreview: FfiConverterRustBuffer {
                 psbt: FfiConverterString.read(from: &buf), 
                 totalAmount: FfiConverterUInt64.read(from: &buf), 
                 estimatedFee: FfiConverterUInt64.read(from: &buf), 
+                estimatedVsize: FfiConverterUInt64.read(from: &buf), 
                 utxosCount: FfiConverterUInt32.read(from: &buf), 
                 destinationAddress: FfiConverterString.read(from: &buf), 
                 amountAfterFees: FfiConverterUInt64.read(from: &buf)
@@ -9163,6 +9176,7 @@ public struct FfiConverterTypeSweepTransactionPreview: FfiConverterRustBuffer {
         FfiConverterString.write(value.psbt, into: &buf)
         FfiConverterUInt64.write(value.totalAmount, into: &buf)
         FfiConverterUInt64.write(value.estimatedFee, into: &buf)
+        FfiConverterUInt64.write(value.estimatedVsize, into: &buf)
         FfiConverterUInt32.write(value.utxosCount, into: &buf)
         FfiConverterString.write(value.destinationAddress, into: &buf)
         FfiConverterUInt64.write(value.amountAfterFees, into: &buf)

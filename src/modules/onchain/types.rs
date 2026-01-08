@@ -104,7 +104,6 @@ impl From<BitcoinNetwork> for Network {
             BitcoinNetwork::Testnet4 => Network::Testnet4,
             BitcoinNetwork::Signet => Network::Signet,
             BitcoinNetwork::Regtest => Network::Regtest,
-            _ => Network::Bitcoin, // Default to Bitcoin mainnet
         }
     }
 }
@@ -169,8 +168,10 @@ pub struct SweepTransactionPreview {
     pub psbt: String,
     /// The total amount available to sweep (in satoshis)
     pub total_amount: u64,
-    /// The estimated fee for the transaction (in satoshis) - calculated with provided or default fee rate
+    /// The estimated fee for the transaction (in satoshis)
     pub estimated_fee: u64,
+    /// The estimated virtual size of the transaction (in vbytes)
+    pub estimated_vsize: u64,
     /// The number of UTXOs that will be swept
     pub utxos_count: u32,
     /// The destination address
