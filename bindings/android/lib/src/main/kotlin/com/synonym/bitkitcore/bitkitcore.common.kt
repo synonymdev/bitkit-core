@@ -1606,9 +1606,13 @@ public data class SweepTransactionPreview (
      */
     val `totalAmount`: kotlin.ULong, 
     /**
-     * The estimated fee for the transaction (in satoshis) - calculated with provided or default fee rate
+     * The estimated fee for the transaction (in satoshis)
      */
     val `estimatedFee`: kotlin.ULong, 
+    /**
+     * The estimated virtual size of the transaction (in vbytes)
+     */
+    val `estimatedVsize`: kotlin.ULong, 
     /**
      * The number of UTXOs that will be swept
      */

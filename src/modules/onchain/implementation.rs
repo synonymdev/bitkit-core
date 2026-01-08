@@ -15,7 +15,7 @@ use bdk::keys::bip39::Mnemonic;
 use bdk::template::{Bip44, Bip49, Bip86};
 use bdk::wallet::signer::SignOptions;
 use bdk::wallet::{SyncOptions, Wallet};
-use bdk::{FeeRate, KeychainKind};
+use bdk::KeychainKind;
 use bitcoin::address::{Address, NetworkUnchecked};
 use bitcoin::Network;
 use bitcoin_address_generator;
@@ -28,10 +28,6 @@ use crate::onchain::types::{
 };
 use crate::onchain::{AddressError, SweepError};
 
-const P2SH_P2WPKH_WITNESS_WU: u64 = 107;
-const P2TR_WITNESS_WU: u64 = 65;
-const P2PKH_SCRIPTSIG_WU: u64 = 107 * 4;
-const P2SH_P2WPKH_SCRIPTSIG_WU: u64 = 23 * 4;
 
 fn network_to_bdk(network: Network) -> BdkNetwork {
     match network {
@@ -303,24 +299,6 @@ impl BitcoinAddressValidator {
         Ok(())
     }
 
-    fn estimate_sweep_vsize(
-        base_vsize: u64,
-        legacy_count: usize,
-        p2sh_count: usize,
-        taproot_count: usize,
-    ) -> u64 {
-        let witness_weight =
-            (p2sh_count as u64 * P2SH_P2WPKH_WITNESS_WU) + (taproot_count as u64 * P2TR_WITNESS_WU);
-
-        let scriptsig_weight = (legacy_count as u64 * P2PKH_SCRIPTSIG_WU)
-            + (p2sh_count as u64 * P2SH_P2WPKH_SCRIPTSIG_WU);
-
-        let additional_weight = witness_weight + scriptsig_weight;
-        let additional_vsize = (additional_weight + 3) / 4; // Round up
-
-        base_vsize + additional_vsize
-    }
-
     pub async fn check_sweepable_balances(
         mnemonic_phrase: &str,
         network: Network,
@@ -388,7 +366,6 @@ impl BitcoinAddressValidator {
                 SweepError::SweepFailed(format!("Network mismatch for destination address: {}", e))
             })?;
 
-        // Sync wallets and get electrum client for fetching transactions
         let electrum_url_owned = electrum_url.to_string();
         let (wallets, electrum_client) = tokio::task::spawn_blocking(move || {
             let backend = Self::create_electrum_backend(&electrum_url_owned)?;
@@ -401,7 +378,6 @@ impl BitcoinAddressValidator {
         .await
         .map_err(|e| SweepError::SweepFailed(format!("Sync task failed: {}", e)))??;
 
-        // Collect UTXOs from all wallet types
         let legacy_utxos: Vec<_> = wallets
             .legacy_wallet
             .list_unspent()
@@ -426,95 +402,79 @@ impl BitcoinAddressValidator {
         }
 
         let total_amount: u64 = all_utxos.iter().map(|u| u.txout.value).sum();
-
-        // Build transaction inputs
-        let inputs: Vec<TxIn> = all_utxos
-            .iter()
-            .map(|utxo| TxIn {
-                previous_output: OutPoint {
-                    txid: utxo.outpoint.txid,
-                    vout: utxo.outpoint.vout,
-                },
-                script_sig: ScriptBuf::new(),
-                sequence: Sequence::MAX,
-                witness: Witness::new(),
-            })
-            .collect();
-
-        // Create placeholder transaction for size estimation
-        let placeholder_tx = Transaction {
-            version: 2,
-            lock_time: LockTime::from_consensus(0),
-            input: inputs.clone(),
-            output: vec![TxOut {
-                value: total_amount,
-                script_pubkey: dest_addr.script_pubkey(),
-            }],
-        };
-
-        // Estimate actual vsize with witness data
-        let base_vsize = placeholder_tx.weight().to_vbytes_ceil();
-        let actual_vsize = Self::estimate_sweep_vsize(
-            base_vsize,
-            legacy_utxos.len(),
-            p2sh_utxos.len(),
-            taproot_utxos.len(),
-        );
-
-        // Calculate fee and output amount
-        let fee_rate = FeeRate::from_sat_per_vb(fee_rate_sats_per_vbyte.unwrap_or(1) as f32);
-        let estimated_fee = fee_rate.fee_vb(actual_vsize as usize);
-        let amount_after_fees = total_amount.saturating_sub(estimated_fee);
-
-        // Build final transaction
-        let final_tx = Transaction {
-            version: 2,
-            lock_time: LockTime::from_consensus(0),
-            input: inputs,
-            output: vec![TxOut {
-                value: amount_after_fees,
-                script_pubkey: dest_addr.script_pubkey(),
-            }],
-        };
-
-        let mut psbt = Psbt::from_unsigned_tx(final_tx)
-            .map_err(|e| SweepError::SweepFailed(format!("Failed to create PSBT: {}", e)))?;
-
-        // Populate PSBT inputs with UTXO data
         let legacy_count = legacy_utxos.len();
         let p2sh_count = p2sh_utxos.len();
 
-        for (i, utxo) in all_utxos.iter().enumerate() {
-            psbt.inputs[i].witness_utxo = Some(utxo.txout.clone());
+        let build_psbt = |output_value: u64| -> Result<Psbt, SweepError> {
+            let inputs: Vec<TxIn> = all_utxos
+                .iter()
+                .map(|utxo| TxIn {
+                    previous_output: OutPoint {
+                        txid: utxo.outpoint.txid,
+                        vout: utxo.outpoint.vout,
+                    },
+                    script_sig: ScriptBuf::new(),
+                    sequence: Sequence::MAX,
+                    witness: Witness::new(),
+                })
+                .collect();
 
-            // Legacy and P2SH inputs require full previous transaction
-            if i < legacy_count + p2sh_count {
-                let tx_bytes = electrum_client
-                    .transaction_get_raw(&utxo.outpoint.txid)
-                    .map_err(|e| {
+            let tx = Transaction {
+                version: 2,
+                lock_time: LockTime::from_consensus(0),
+                input: inputs,
+                output: vec![TxOut {
+                    value: output_value,
+                    script_pubkey: dest_addr.script_pubkey(),
+                }],
+            };
+
+            let mut psbt = Psbt::from_unsigned_tx(tx)
+                .map_err(|e| SweepError::SweepFailed(format!("Failed to create PSBT: {}", e)))?;
+
+            for (i, utxo) in all_utxos.iter().enumerate() {
+                psbt.inputs[i].witness_utxo = Some(utxo.txout.clone());
+
+                if i < legacy_count + p2sh_count {
+                    let tx_bytes = electrum_client
+                        .transaction_get_raw(&utxo.outpoint.txid)
+                        .map_err(|e| {
+                            SweepError::SweepFailed(format!(
+                                "Failed to fetch tx {}: {}",
+                                utxo.outpoint.txid, e
+                            ))
+                        })?;
+
+                    let tx: Transaction = deserialize(&tx_bytes).map_err(|e| {
                         SweepError::SweepFailed(format!(
-                            "Failed to fetch tx {}: {}",
+                            "Failed to deserialize tx {}: {}",
                             utxo.outpoint.txid, e
                         ))
                     })?;
 
-                let tx: Transaction = deserialize(&tx_bytes).map_err(|e| {
-                    SweepError::SweepFailed(format!(
-                        "Failed to deserialize tx {}: {}",
-                        utxo.outpoint.txid, e
-                    ))
-                })?;
-
-                psbt.inputs[i].non_witness_utxo = Some(tx);
+                    psbt.inputs[i].non_witness_utxo = Some(tx);
+                }
             }
-        }
 
-        let psbt_base64 = general_purpose::STANDARD.encode(psbt.serialize());
+            Ok(psbt)
+        };
+
+        let mut probe_psbt = build_psbt(total_amount)?;
+        Self::sign_psbt(&wallets, &mut probe_psbt)?;
+        let actual_vsize = probe_psbt.extract_tx().weight().to_vbytes_ceil();
+
+        let fee_rate_sats = fee_rate_sats_per_vbyte.unwrap_or(1) as u64;
+        let estimated_fee = actual_vsize * fee_rate_sats;
+        let amount_after_fees = total_amount.saturating_sub(estimated_fee);
+
+        let final_psbt = build_psbt(amount_after_fees)?;
+        let psbt_base64 = general_purpose::STANDARD.encode(final_psbt.serialize());
 
         Ok(SweepTransactionPreview {
             psbt: psbt_base64,
             total_amount,
             estimated_fee,
+            estimated_vsize: actual_vsize,
             utxos_count: all_utxos.len() as u32,
             destination_address: dest_addr.to_string(),
             amount_after_fees,
@@ -542,7 +502,6 @@ impl BitcoinAddressValidator {
             )));
         }
 
-        // Calculate total input and fee from PSBT
         let total_input: u64 = psbt.inputs.iter()
             .filter_map(|i| i.witness_utxo.as_ref())
             .map(|u| u.value)
@@ -552,7 +511,6 @@ impl BitcoinAddressValidator {
         let fee_amount = total_input.saturating_sub(output_amount);
         let utxos_count = psbt.inputs.len() as u32;
 
-        // Create wallets and sync before signing
         let wallets = Self::create_sweep_wallets(mnemonic_phrase, network, bip39_passphrase)?;
 
         let electrum_url_owned = electrum_url.to_string();
@@ -565,11 +523,9 @@ impl BitcoinAddressValidator {
         .await
         .map_err(|e| SweepError::SweepFailed(format!("Sync task failed: {}", e)))??;
 
-        // Sign the PSBT
         let mut signing_psbt = psbt;
         Self::sign_psbt(&wallets, &mut signing_psbt)?;
 
-        // Verify all inputs are finalized
         for input in &signing_psbt.inputs {
             if input.final_script_sig.is_none() && input.final_script_witness.is_none() {
                 return Err(SweepError::SweepFailed(
@@ -578,7 +534,6 @@ impl BitcoinAddressValidator {
             }
         }
 
-        // Extract and broadcast
         let final_tx = signing_psbt.extract_tx();
         let txid = final_tx.txid();
 

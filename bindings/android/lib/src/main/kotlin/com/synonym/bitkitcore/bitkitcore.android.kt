@@ -5460,6 +5460,7 @@ public object FfiConverterTypeSweepTransactionPreview: FfiConverterRustBuffer<Sw
             FfiConverterString.read(buf),
             FfiConverterULong.read(buf),
             FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
             FfiConverterUInt.read(buf),
             FfiConverterString.read(buf),
             FfiConverterULong.read(buf),
@@ -5470,6 +5471,7 @@ public object FfiConverterTypeSweepTransactionPreview: FfiConverterRustBuffer<Sw
             FfiConverterString.allocationSize(value.`psbt`) +
             FfiConverterULong.allocationSize(value.`totalAmount`) +
             FfiConverterULong.allocationSize(value.`estimatedFee`) +
+            FfiConverterULong.allocationSize(value.`estimatedVsize`) +
             FfiConverterUInt.allocationSize(value.`utxosCount`) +
             FfiConverterString.allocationSize(value.`destinationAddress`) +
             FfiConverterULong.allocationSize(value.`amountAfterFees`)
@@ -5479,6 +5481,7 @@ public object FfiConverterTypeSweepTransactionPreview: FfiConverterRustBuffer<Sw
         FfiConverterString.write(value.`psbt`, buf)
         FfiConverterULong.write(value.`totalAmount`, buf)
         FfiConverterULong.write(value.`estimatedFee`, buf)
+        FfiConverterULong.write(value.`estimatedVsize`, buf)
         FfiConverterUInt.write(value.`utxosCount`, buf)
         FfiConverterString.write(value.`destinationAddress`, buf)
         FfiConverterULong.write(value.`amountAfterFees`, buf)

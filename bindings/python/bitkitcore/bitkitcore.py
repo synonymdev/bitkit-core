@@ -7419,7 +7419,12 @@ class SweepTransactionPreview:
 
     estimated_fee: "int"
     """
-    The estimated fee for the transaction (in satoshis) - calculated with provided or default fee rate
+    The estimated fee for the transaction (in satoshis)
+    """
+
+    estimated_vsize: "int"
+    """
+    The estimated virtual size of the transaction (in vbytes)
     """
 
     utxos_count: "int"
@@ -7437,16 +7442,17 @@ class SweepTransactionPreview:
     The amount that will be sent to destination after fees (in satoshis)
     """
 
-    def __init__(self, *, psbt: "str", total_amount: "int", estimated_fee: "int", utxos_count: "int", destination_address: "str", amount_after_fees: "int"):
+    def __init__(self, *, psbt: "str", total_amount: "int", estimated_fee: "int", estimated_vsize: "int", utxos_count: "int", destination_address: "str", amount_after_fees: "int"):
         self.psbt = psbt
         self.total_amount = total_amount
         self.estimated_fee = estimated_fee
+        self.estimated_vsize = estimated_vsize
         self.utxos_count = utxos_count
         self.destination_address = destination_address
         self.amount_after_fees = amount_after_fees
 
     def __str__(self):
-        return "SweepTransactionPreview(psbt={}, total_amount={}, estimated_fee={}, utxos_count={}, destination_address={}, amount_after_fees={})".format(self.psbt, self.total_amount, self.estimated_fee, self.utxos_count, self.destination_address, self.amount_after_fees)
+        return "SweepTransactionPreview(psbt={}, total_amount={}, estimated_fee={}, estimated_vsize={}, utxos_count={}, destination_address={}, amount_after_fees={})".format(self.psbt, self.total_amount, self.estimated_fee, self.estimated_vsize, self.utxos_count, self.destination_address, self.amount_after_fees)
 
     def __eq__(self, other):
         if self.psbt != other.psbt:
@@ -7454,6 +7460,8 @@ class SweepTransactionPreview:
         if self.total_amount != other.total_amount:
             return False
         if self.estimated_fee != other.estimated_fee:
+            return False
+        if self.estimated_vsize != other.estimated_vsize:
             return False
         if self.utxos_count != other.utxos_count:
             return False
@@ -7470,6 +7478,7 @@ class _UniffiConverterTypeSweepTransactionPreview(_UniffiConverterRustBuffer):
             psbt=_UniffiConverterString.read(buf),
             total_amount=_UniffiConverterUInt64.read(buf),
             estimated_fee=_UniffiConverterUInt64.read(buf),
+            estimated_vsize=_UniffiConverterUInt64.read(buf),
             utxos_count=_UniffiConverterUInt32.read(buf),
             destination_address=_UniffiConverterString.read(buf),
             amount_after_fees=_UniffiConverterUInt64.read(buf),
@@ -7480,6 +7489,7 @@ class _UniffiConverterTypeSweepTransactionPreview(_UniffiConverterRustBuffer):
         _UniffiConverterString.check_lower(value.psbt)
         _UniffiConverterUInt64.check_lower(value.total_amount)
         _UniffiConverterUInt64.check_lower(value.estimated_fee)
+        _UniffiConverterUInt64.check_lower(value.estimated_vsize)
         _UniffiConverterUInt32.check_lower(value.utxos_count)
         _UniffiConverterString.check_lower(value.destination_address)
         _UniffiConverterUInt64.check_lower(value.amount_after_fees)
@@ -7489,6 +7499,7 @@ class _UniffiConverterTypeSweepTransactionPreview(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.psbt, buf)
         _UniffiConverterUInt64.write(value.total_amount, buf)
         _UniffiConverterUInt64.write(value.estimated_fee, buf)
+        _UniffiConverterUInt64.write(value.estimated_vsize, buf)
         _UniffiConverterUInt32.write(value.utxos_count, buf)
         _UniffiConverterString.write(value.destination_address, buf)
         _UniffiConverterUInt64.write(value.amount_after_fees, buf)
