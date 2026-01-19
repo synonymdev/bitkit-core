@@ -38,6 +38,22 @@ impl LightningInvoice {
 }
 
 impl Scanner {
+    /// Normalizes a Bitcoin address for validation.
+    /// Only lowercases bech32 addresses (bc1, tb1, bcrt1) which are case-insensitive.
+    /// Preserves case for legacy addresses (P2PKH/P2SH) which are case-sensitive.
+    fn normalize_address_for_validation(address: &str) -> String {
+        let address_lower = address.to_lowercase();
+        // Check if it's a bech32 address (starts with bc1, tb1, bcrt1, etc.)
+        if address_lower.starts_with("bc1") || 
+           address_lower.starts_with("tb1") || 
+           address_lower.starts_with("bcrt1") {
+            address_lower
+        } else {
+            // Legacy address - preserve original case
+            address.to_string()
+        }
+    }
+
     pub async fn decode(invoice_str: String) -> Result<Self, DecodingError> {
         let invoice_str = invoice_str.trim();
         let invoice_str = invoice_str
@@ -83,21 +99,27 @@ impl Scanner {
             invoice_str.to_lowercase().starts_with("lntb") ||
             invoice_str.to_lowercase().starts_with("lnbc")
         {
-            let invoice = invoice_str
+            let invoice_lower = invoice_str.to_lowercase();
+            let invoice = invoice_lower
                 .strip_prefix("lightning:")
-                .unwrap_or(invoice_str);
+                .unwrap_or(&invoice_lower);
             Self::decode_lightning(invoice)
-        } else if invoice_str.starts_with("bitcoin:") {
-            let addr = invoice_str.strip_prefix("bitcoin:").unwrap_or(invoice_str);
-            // Strip any query parameters for address validation
-            let clean_addr = addr.split('?').next().unwrap_or(addr);
-            let res = match BitcoinAddressValidator::validate_address(clean_addr) {
-                Ok(res) => res,
-                Err(_) => { return Err(DecodingError::InvalidAddress); }
-            };
-
-            if BitcoinAddressValidator::validate_address(clean_addr).is_ok() {
-                Self::decode_onchain(invoice_str)
+        } else if invoice_str.to_lowercase().starts_with("bitcoin:") {
+            // Extract address and query params (preserve original case for query params)
+            let (address_part, query_part) = invoice_str[8..].split_once('?')
+                .map(|(addr, query)| (addr, Some(query)))
+                .unwrap_or((&invoice_str[8..], None));
+            
+            // Normalize address (only lowercase bech32, preserve legacy case)
+            let address_normalized = Self::normalize_address_for_validation(address_part);
+            
+            if BitcoinAddressValidator::validate_address(&address_normalized).is_ok() {
+                let normalized = if let Some(query) = query_part {
+                    format!("bitcoin:{}?{}", address_normalized, query)
+                } else {
+                    format!("bitcoin:{}", address_normalized)
+                };
+                Self::decode_onchain(&normalized)
             } else {
                 Err(DecodingError::InvalidAddress)
             }
@@ -111,8 +133,10 @@ impl Scanner {
             Self::decode_lnurl(invoice_str).await
         } else {
             // If no prefix, validate as a raw Bitcoin address
-            if BitcoinAddressValidator::validate_address(invoice_str).is_ok() {
-                Self::decode_onchain(&format!("bitcoin:{}", invoice_str))
+            // Normalize address (only lowercase bech32, preserve legacy case)
+            let address_normalized = Self::normalize_address_for_validation(invoice_str);
+            if BitcoinAddressValidator::validate_address(&address_normalized).is_ok() {
+                Self::decode_onchain(&format!("bitcoin:{}", address_normalized))
             } else {
                 Err(DecodingError::InvalidAddress)
             }
