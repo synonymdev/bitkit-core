@@ -191,7 +191,7 @@ impl Scanner {
                 LnUrlResponse::LnUrlChannelResponse(channel) => {
                     Ok(Scanner::LnurlChannel {
                         data: LnurlChannelData {
-                            uri,
+                            uri: channel.uri,
                             callback: channel.callback,
                             k1: channel.k1,
                             tag: channel.tag.to_string(),
