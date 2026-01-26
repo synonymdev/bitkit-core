@@ -170,6 +170,18 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_floating_point_amount_precision() {
+        let invoice = "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?amount=0.000035".to_string();
+        let decoded = Scanner::decode(invoice).await.unwrap();
+        match decoded {
+            Scanner::OnChain { invoice } => {
+                assert_eq!(invoice.amount_satoshis, 3500);
+            },
+            _ => assert!(false, "Should be an OnChain invoice"),
+        }
+    }
+
+    #[tokio::test]
     async fn test_uppercase_lightning_prefix() {
         // Test uppercase LIGHTNING: prefix (common in QR codes)
         let invoice = "LIGHTNING:LNBC543210N1PNJDRVFPP5S720F4Z6WZVJWPDNRLPFFGCT375L46YU9C6CPE7GDVVDFAY47CNSDQQCQZZSXQRRSSSP53UTY4KFW8K3WMW4GA802UDAVZ7E64TC7DMAZ2CMTKJ9SRFXAQ3PS9P4GQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQPQYSGQWL2TDHZM9E6MTEDT7A4263YW7DQXEHDWJNJK23R4G8TUPPK6RS994F6SCUNWSEV3W207TJLDWKPDT32RCEGZPHGK05C0LCTV8HE7SMGQYFN5XQ".to_string();
