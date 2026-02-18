@@ -1,259 +1,762 @@
-//! # trezor-connect-rs
+//! Trezor manager implementation.
 //!
-//! A Rust library for generating Trezor Connect deep links according to the
-//! Trezor Suite Lite deep linking specification.
+//! On desktop platforms, this uses the trezor-connect-rs library directly.
+//! On Android/iOS, this uses a callback-based transport implemented natively.
 
-use serde::{Serialize};
-use serde_json;
-use url::Url;
-use uuid::Uuid;
-use crate::modules::trezor::{AccountInfoResponse, AddressResponse, ComposeTransactionParams, ComposeTransactionResponse, DeepLinkResult, FeatureResponse, GetAccountInfoParams, GetAddressParams, GetPublicKeyParams, MessageSignatureResponse, PublicKeyResponse, SignedTransactionResponse, SignMessageParams, SignTransactionParams, TrezorConnectClient, TrezorConnectError, TrezorConnectResult, TrezorResponse, TrezorResponsePayload, VerifyMessageParams, VerifyMessageResponse};
-use crate::modules::trezor::types::{TrezorEnvironment, Empty};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
-impl TrezorEnvironment {
-    /// Get the base URL for the selected environment
-    pub fn base_url(&self) -> Result<Url, TrezorConnectError> {
-        match self {
-            TrezorEnvironment::Production => {
-                Err(TrezorConnectError::EnvironmentError { error_details: "Production environment is not available".to_string() })
-            },
-            TrezorEnvironment::Development => {
-                Url::parse("https://dev.suite.sldev.cz/connect/develop/deeplink/1/")
-                    .map_err(|e| TrezorConnectError::UrlError { error_details: e.to_string() })
-            },
-            TrezorEnvironment::Local => {
-                Url::parse("trezorsuitelite://connect/1/")
-                    .map_err(|e| TrezorConnectError::UrlError { error_details: e.to_string() })
-            },
-        }
-    }
-}
+use crate::modules::trezor::{
+    TrezorAddressResponse, TrezorDeviceInfo, TrezorError, TrezorFeatures,
+    TrezorGetAddressParams, TrezorGetPublicKeyParams, TrezorPublicKeyResponse,
+    TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams,
+    TrezorSignTxParams, TrezorSignedTx, TrezorTxInput, TrezorTxOutput, TrezorScriptType,
+    TrezorTransportType,
+};
 
-impl TrezorConnectClient {
-    /// Create a new TrezorConnectClient
-    pub fn new(environment: TrezorEnvironment, callback_base: impl AsRef<str>) -> Result<Self, url::ParseError> {
-        let callback_base = Url::parse(callback_base.as_ref())?;
+// Desktop: use full trezor-connect-rs
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+use trezor_connect_rs::{
+    ConnectedDevice, DeviceInfo, GetAddressParams, GetPublicKeyParams,
+    SignMessageParams, SignTxParams, VerifyMessageParams, Trezor,
+};
 
-        Ok(Self {
-            environment,
-            callback_base,
-        })
-    }
+// Mobile: use callback transport from trezor-connect-rs
+#[cfg(any(target_os = "android", target_os = "ios"))]
+use trezor_connect_rs::{
+    CallbackTransport, CallbackDeviceInfo, CallbackReadResult, CallbackResult,
+    CallbackMessageResult, ConnectedDevice, GetAddressParams, GetPublicKeyParams,
+    SignMessageParams, SignTxParams, VerifyMessageParams, Transport, TransportCallback,
+};
 
-    /// Generate a deep link for a Trezor Connect method with a specific request ID
-    fn generate_deep_link<T: Serialize>(&self, method: &str, params: T, request_id: Option<String>) -> TrezorConnectResult<DeepLinkResult> {
-        // Serialize params to JSON
-        let params_json = serde_json::to_string(&params)?;
+#[cfg(any(target_os = "android", target_os = "ios"))]
+use trezor_connect_rs::device_info::{DeviceInfo, TransportType};
 
-        // Get base URL directly without re-parsing
-        let mut url = self.environment.base_url()?;
-
-        // Generate a UUID if request_id is None
-        let id = request_id.map(|s| s.to_string()).unwrap_or_else(|| Uuid::new_v4().to_string());
-
-        // Create callback URL with the request ID, preserving existing query params
-        let mut callback_url = self.callback_base.clone();
-        callback_url.query_pairs_mut().append_pair("id", &id);
-
-        // Add query parameters
-        url.query_pairs_mut()
-            .append_pair("method", method)
-            .append_pair("params", &params_json)
-            .append_pair("callback", &callback_url.to_string());
-
-        Ok(DeepLinkResult {
-            url: url.to_string(),
-            request_id: id,
-        })
-    }
-
-    /// Get device features
-    pub fn get_features(&self, request_id: Option<String>) -> TrezorConnectResult<DeepLinkResult> {
-        self.generate_deep_link("getFeatures", Empty {}, request_id)
-    }
-
-    /// Get address for the specified path
-    pub fn get_address(&self, params: GetAddressParams, request_id: Option<String>) -> TrezorConnectResult<DeepLinkResult> {
-        self.generate_deep_link("getAddress", params, request_id)
-    }
-
-    /// Get public key for the specified path
-    pub fn get_public_key(&self, params: GetPublicKeyParams, request_id: Option<String>) -> TrezorConnectResult<DeepLinkResult> {
-        self.generate_deep_link("getPublicKey", params, request_id)
-    }
-
-    /// Get account info for the specified parameters
-    ///
-    /// This method supports three modes of operation:
-    /// 1. Using path - provide path and coin
-    /// 2. Using descriptor - provide descriptor (public key or address) and coin
-    /// 3. Using discovery - provide only coin, BIP-0044 account discovery is performed
-    pub fn get_account_info(&self, params: GetAccountInfoParams, request_id: Option<String>) -> TrezorConnectResult<DeepLinkResult> {
-        // Validate that at least one valid configuration is present
-        if params.path.is_none() && params.descriptor.is_none() {
-            // This is discovery mode - just need the coin which is already required
-        } else if params.path.is_some() && params.descriptor.is_some() {
-            // This is ambiguous - both path and descriptor provided
-            return Err(TrezorConnectError::Other {
-                error_details: "Both path and descriptor provided. Use either path-based or descriptor-based parameters, not both.".to_string()
-            });
-        }
-
-        self.generate_deep_link("getAccountInfo", params, request_id)
-    }
-
-    /// Compose transaction for Bitcoin and Bitcoin-like coins
-    ///
-    /// This method works in two modes:
-    /// 1. Payment mode: Requests payment to outputs with account discovery and fee selection
-    /// 2. Precompose mode: Prepares transaction variants with provided account and fee levels
-    pub fn compose_transaction(&self, params: ComposeTransactionParams, request_id: Option<String>) -> TrezorConnectResult<DeepLinkResult> {
-        self.generate_deep_link("composeTransaction", params, request_id)
-    }
-
-    /// Verify message using the signer address and signature
-    ///
-    /// This method asks the device to verify a message using the provided signer address and signature.
-    /// The device will verify that the signature was created by the private key corresponding to the given address.
-    pub fn verify_message(&self, params: VerifyMessageParams, request_id: Option<String>) -> TrezorConnectResult<DeepLinkResult> {
-        self.generate_deep_link("verifyMessage", params, request_id)
-    }
-
-    /// Sign message using the private key derived by given BIP32 path
-    ///
-    /// This method asks the device to sign a message using the private key derived by the given BIP32 path.
-    /// The user is asked to confirm the message signing on the Trezor device.
-    pub fn sign_message(&self, params: SignMessageParams, request_id: Option<String>) -> TrezorConnectResult<DeepLinkResult> {
-        self.generate_deep_link("signMessage", params, request_id)
-    }
-
-    /// Sign transaction with the specified parameters
-    ///
-    /// This method asks the device to sign given inputs and outputs of a pre-composed transaction.
-    /// The user is asked to confirm all transaction details on the Trezor device.
-    pub fn sign_transaction(&self, params: SignTransactionParams, request_id: Option<String>) -> TrezorConnectResult<DeepLinkResult> {
-        self.generate_deep_link("signTransaction", params, request_id)
-    }
-}
-
-/// Handle a callback URL from Trezor
+/// Validate a BIP32 derivation path.
 ///
-/// This method should be called when your application receives a callback from Trezor,
-/// typically from your app's deep link handler.
+/// Valid paths must:
+/// - Start with "m/"
+/// - Contain only numeric indices (with optional ' for hardened)
+/// - Have a known purpose for Bitcoin (44, 49, 84, 86)
 ///
-/// # Arguments
-/// * `callback_url` - The callback URL that was opened by Trezor
-///
-/// # Returns
-/// * `TrezorConnectResult<TrezorResponseEnum>` - The parsed response from Trezor
-pub fn handle_deep_link<S: AsRef<str>>(callback_url: S) -> TrezorConnectResult<TrezorResponsePayload> {
-    // Parse the URL
-    let parsed_url = Url::parse(callback_url.as_ref())
-        .map_err(|e| TrezorConnectError::UrlError {
-            error_details: format!("Failed to parse callback URL: {}", e)
-        })?;
-
-    // Extract the request ID from the query parameters
-    let id = parsed_url.query_pairs()
-        .find(|(key, _)| key == "id")
-        .map(|(_, value)| value.to_string())
-        .ok_or_else(|| TrezorConnectError::Other {
-            error_details: "Missing 'id' parameter in callback URL".to_string()
-        })?;
-
-    // Extract the response parameter
-    let response_param = parsed_url.query_pairs()
-        .find(|(key, _)| key == "response")
-        .map(|(_, value)| value.to_string())
-        .ok_or_else(|| TrezorConnectError::Other {
-            error_details: "Missing 'response' parameter in callback URL".to_string()
-        })?;
-
-    // Parse the response JSON
-    let response: TrezorResponse = serde_json::from_str(&response_param)
-        .map_err(|e| TrezorConnectError::SerdeError {
-            error_details: format!("Failed to parse response JSON: {}", e)
-        })?;
-
-    // Check if there was an error
-    if !response.success {
-        return Err(TrezorConnectError::Other {
-            error_details: response.error.unwrap_or_else(|| "Unknown error from Trezor".to_string())
+/// # Examples
+/// - `m/84'/0'/0'/0/0` - valid native SegWit path
+/// - `m/44'/0'/0'/0/0` - valid legacy path
+/// - `m/49'/0'/0'/0/0` - valid nested SegWit path
+/// - `m/86'/0'/0'/0/0` - valid Taproot path
+pub(crate) fn validate_derivation_path(path: &str) -> Result<(), TrezorError> {
+    // Must start with "m/"
+    if !path.starts_with("m/") {
+        return Err(TrezorError::InvalidPath {
+            error_details: format!("Path must start with 'm/': {}", path),
         });
     }
 
-    // Get the payload or return an error
-    let payload = response.payload.ok_or_else(|| TrezorConnectError::Other {
-        error_details: "Success response but no payload".to_string()
-    })?;
+    let path_part = &path[2..]; // Skip "m/"
+    if path_part.is_empty() {
+        return Err(TrezorError::InvalidPath {
+            error_details: "Path cannot be empty after 'm/'".to_string(),
+        });
+    }
 
-    // Extract the method from the URL parameters to help with deserialization
-    let method = parsed_url.query_pairs()
-        .find(|(key, _)| key == "method")
-        .map(|(_, value)| value.to_string());
+    let components: Vec<&str> = path_part.split('/').collect();
 
-    // Try to deserialize into the appropriate type based on the method
-    match method.as_deref() {
-        Some("getFeatures") => {
-            let features: FeatureResponse = serde_json::from_value(payload)
-                .map_err(|e| TrezorConnectError::SerdeError {
-                    error_details: format!("Failed to parse Features response: {}", e)
-                })?;
-            Ok(TrezorResponsePayload::Features(features))
-        },
-        Some("getAddress") => {
-            let address: AddressResponse = serde_json::from_value(payload)
-                .map_err(|e| TrezorConnectError::SerdeError {
-                    error_details: format!("Failed to parse Address response: {}", e)
-                })?;
-            Ok(TrezorResponsePayload::Address(address))
-        },
-        Some("getPublicKey") => {
-            let public_key: PublicKeyResponse = serde_json::from_value(payload)
-                .map_err(|e| TrezorConnectError::SerdeError {
-                    error_details: format!("Failed to parse PublicKey response: {}", e)
-                })?;
-            Ok(TrezorResponsePayload::PublicKey(public_key))
-        },
-        Some("getAccountInfo") => {
-            let account_info: AccountInfoResponse = serde_json::from_value(payload)
-                .map_err(|e| TrezorConnectError::SerdeError {
-                    error_details: format!("Failed to parse AccountInfo response: {}", e)
-                })?;
-            Ok(TrezorResponsePayload::AccountInfo(account_info))
-        },
-        Some("composeTransaction") => {
-            let compose_tx: ComposeTransactionResponse = serde_json::from_value(payload)
-                .map_err(|e| TrezorConnectError::SerdeError {
-                    error_details: format!("Failed to parse ComposeTransaction response: {}", e)
-                })?;
-            Ok(TrezorResponsePayload::ComposeTransaction(compose_tx))
-        },
-        Some("verifyMessage") => {
-            let verify_message: VerifyMessageResponse = serde_json::from_value(payload)
-                .map_err(|e| TrezorConnectError::SerdeError {
-                    error_details: format!("Failed to parse VerifyMessage response: {}", e)
-                })?;
-            Ok(TrezorResponsePayload::VerifyMessage(verify_message))
-        },
-        Some("signMessage") => {
-            let message_signature: MessageSignatureResponse = serde_json::from_value(payload)
-                .map_err(|e| TrezorConnectError::SerdeError {
-                    error_details: format!("Failed to parse MessageSignature response: {}", e)
-                })?;
-            Ok(TrezorResponsePayload::MessageSignature(message_signature))
-        },
-        Some("signTransaction") => {
-            let signed_tx: SignedTransactionResponse = serde_json::from_value(payload)
-                .map_err(|e| TrezorConnectError::SerdeError {
-                    error_details: format!("Failed to parse SignedTransaction response: {}", e)
-                })?;
-            Ok(TrezorResponsePayload::SignedTransaction(signed_tx))
-        },
-        _ => {
-            Err(TrezorConnectError::Other {
-                error_details: format!("Unknown or unsupported method: {:?}", method).to_string()
-            })
+    // Validate each component
+    for (i, component) in components.iter().enumerate() {
+        if component.is_empty() {
+            return Err(TrezorError::InvalidPath {
+                error_details: format!("Empty path component at index {}", i),
+            });
         }
+
+        // Check if it's hardened (ends with ')
+        let num_str = if component.ends_with('\'') {
+            &component[..component.len() - 1]
+        } else {
+            *component
+        };
+
+        // Must be a valid number
+        if num_str.parse::<u32>().is_err() {
+            return Err(TrezorError::InvalidPath {
+                error_details: format!(
+                    "Invalid path component '{}' at index {}: must be a number",
+                    component, i
+                ),
+            });
+        }
+    }
+
+    // Note: We intentionally don't reject unknown purposes (like 48 for multisig)
+    // to maintain flexibility for advanced use cases. The device itself will
+    // validate if the path is appropriate for the requested operation.
+
+    Ok(())
+}
+
+/// Cached native device info for callback-based transport
+#[derive(Clone, Debug)]
+pub(crate) struct CachedNativeDevice {
+    pub(crate) path: String,
+    pub(crate) transport_type: TrezorTransportType,
+    pub(crate) name: Option<String>,
+}
+
+/// Adapter that implements trezor_connect_rs::TransportCallback using the UniFFI callback.
+/// This bridges the trezor-connect-rs library with the native Kotlin/Swift callback.
+#[cfg(any(target_os = "android", target_os = "ios"))]
+struct CallbackAdapter {
+    callback: Arc<dyn crate::TrezorTransportCallback>,
+}
+
+#[cfg(any(target_os = "android", target_os = "ios"))]
+impl TransportCallback for CallbackAdapter {
+    fn enumerate_devices(&self) -> Vec<CallbackDeviceInfo> {
+        let devices = self.callback.enumerate_devices();
+        devices
+            .into_iter()
+            .map(|d| CallbackDeviceInfo {
+                path: d.path,
+                transport_type: d.transport_type,
+                name: d.name,
+                vendor_id: d.vendor_id,
+                product_id: d.product_id,
+            })
+            .collect()
+    }
+
+    fn open_device(&self, path: &str) -> CallbackResult {
+        let result = self.callback.open_device(path.to_string());
+        CallbackResult {
+            success: result.success,
+            error: result.error,
+        }
+    }
+
+    fn close_device(&self, path: &str) -> CallbackResult {
+        let result = self.callback.close_device(path.to_string());
+        CallbackResult {
+            success: result.success,
+            error: result.error,
+        }
+    }
+
+    fn read_chunk(&self, path: &str) -> CallbackReadResult {
+        let result = self.callback.read_chunk(path.to_string());
+        CallbackReadResult {
+            success: result.success,
+            data: result.data,
+            error: result.error,
+        }
+    }
+
+    fn write_chunk(&self, path: &str, data: &[u8]) -> CallbackResult {
+        let result = self.callback.write_chunk(path.to_string(), data.to_vec());
+        CallbackResult {
+            success: result.success,
+            error: result.error,
+        }
+    }
+
+    fn get_chunk_size(&self, path: &str) -> u32 {
+        self.callback.get_chunk_size(path.to_string())
+    }
+
+    fn call_message(&self, path: &str, message_type: u16, data: &[u8]) -> Option<CallbackMessageResult> {
+        // Call the native layer's call_message implementation
+        let result = self.callback.call_message(
+            path.to_string(),
+            message_type,
+            data.to_vec(),
+        );
+
+        // Convert from TrezorCallMessageResult to CallbackMessageResult
+        result.map(|r| CallbackMessageResult {
+            success: r.success,
+            message_type: r.message_type,
+            data: r.data,
+            error: r.error,
+        })
+    }
+
+    fn get_pairing_code(&self) -> String {
+        // Call the native layer to get the pairing code from the user
+        self.callback.get_pairing_code()
+    }
+
+    fn save_thp_credential(&self, device_id: &str, credential_json: &str) -> bool {
+        self.callback.save_thp_credential(device_id.to_string(), credential_json.to_string())
+    }
+
+    fn load_thp_credential(&self, device_id: &str) -> Option<String> {
+        self.callback.load_thp_credential(device_id.to_string())
+    }
+
+    fn log_debug(&self, tag: &str, message: &str) {
+        self.callback.log_debug(tag.to_string(), message.to_string());
+    }
+}
+
+/// Main Trezor manager.
+///
+/// On desktop: uses trezor-connect-rs library for USB/Bluetooth.
+/// On mobile: uses native callbacks for USB/Bluetooth I/O.
+pub struct TrezorManager {
+    /// The underlying trezor-connect-rs manager (desktop only)
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    inner: Mutex<Option<Trezor>>,
+
+    /// Currently connected device (desktop only)
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    connected_device: Mutex<Option<ConnectedDevice>>,
+
+    /// Cached device list from last scan (desktop only)
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    device_list: Mutex<Vec<DeviceInfo>>,
+
+    /// Cached native device list (mobile only)
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    native_device_list: Mutex<Vec<CachedNativeDevice>>,
+
+    /// Currently connected device path (mobile only)
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    connected_path: Mutex<Option<String>>,
+
+    /// Currently connected device (mobile only) - reused for all operations
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    connected_device: Mutex<Option<ConnectedDevice>>,
+
+    /// Initialization state
+    initialized: Mutex<bool>,
+}
+
+impl TrezorManager {
+    /// Create a new TrezorManager instance.
+    pub fn new() -> Self {
+        Self {
+            #[cfg(not(any(target_os = "android", target_os = "ios")))]
+            inner: Mutex::new(None),
+            #[cfg(not(any(target_os = "android", target_os = "ios")))]
+            connected_device: Mutex::new(None),
+            #[cfg(not(any(target_os = "android", target_os = "ios")))]
+            device_list: Mutex::new(Vec::new()),
+            #[cfg(any(target_os = "android", target_os = "ios"))]
+            native_device_list: Mutex::new(Vec::new()),
+            #[cfg(any(target_os = "android", target_os = "ios"))]
+            connected_path: Mutex::new(None),
+            #[cfg(any(target_os = "android", target_os = "ios"))]
+            connected_device: Mutex::new(None),
+            initialized: Mutex::new(false),
+        }
+    }
+
+    /// Initialize the Trezor manager.
+    ///
+    /// On mobile: Verifies that the transport callback is set.
+    /// On desktop: Initializes trezor-connect-rs library.
+    pub async fn initialize(&self, _credential_path: Option<String>) -> Result<(), TrezorError> {
+        // Mobile: Just verify callback is set
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        {
+            use crate::get_transport_callback;
+            if get_transport_callback().is_none() {
+                return Err(TrezorError::NotInitialized);
+            }
+            let mut initialized = self.initialized.lock().await;
+            *initialized = true;
+            Ok(())
+        }
+
+        // Desktop: Initialize trezor-connect-rs
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        {
+            let mut builder = Trezor::new()
+                .with_app_identity("Bitkit", "Bitkit");
+
+            if let Some(ref path) = _credential_path {
+                builder = builder.with_credential_store(path);
+            }
+
+            let trezor = builder.build().await.map_err(TrezorError::from)?;
+
+            let mut inner = self.inner.lock().await;
+            *inner = Some(trezor);
+
+            let mut initialized = self.initialized.lock().await;
+            *initialized = true;
+
+            Ok(())
+        }
+    }
+
+    /// Check if the manager is initialized.
+    pub async fn is_initialized(&self) -> bool {
+        *self.initialized.lock().await
+    }
+
+    /// Scan for available Trezor devices (USB + Bluetooth).
+    ///
+    /// On mobile: Uses native callback to enumerate devices.
+    /// On desktop: Uses trezor-connect-rs library.
+    pub async fn scan(&self) -> Result<Vec<TrezorDeviceInfo>, TrezorError> {
+        if !*self.initialized.lock().await {
+            return Err(TrezorError::NotInitialized);
+        }
+
+        // Mobile: Use callback-based enumeration
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        {
+            use crate::get_transport_callback;
+
+            let callback = get_transport_callback()
+                .ok_or(TrezorError::NotInitialized)?;
+
+            let native_devices = callback.enumerate_devices();
+
+            // Cache the device list
+            let mut device_list = self.native_device_list.lock().await;
+            device_list.clear();
+
+            let result: Vec<TrezorDeviceInfo> = native_devices
+                .into_iter()
+                .map(|d| {
+                    let transport_type = if d.transport_type == "bluetooth" {
+                        TrezorTransportType::Bluetooth
+                    } else {
+                        TrezorTransportType::Usb
+                    };
+
+                    // Cache for later connection
+                    device_list.push(CachedNativeDevice {
+                        path: d.path.clone(),
+                        transport_type: transport_type.clone(),
+                        name: d.name.clone(),
+                    });
+
+                    TrezorDeviceInfo {
+                        id: d.path.clone(),
+                        transport_type,
+                        name: d.name,
+                        path: d.path,
+                        label: None,
+                        model: None,
+                        is_bootloader: false,
+                    }
+                })
+                .collect();
+
+            Ok(result)
+        }
+
+        // Desktop: Use trezor-connect-rs
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        {
+            let mut inner = self.inner.lock().await;
+            let trezor = inner.as_mut().ok_or(TrezorError::NotInitialized)?;
+
+            let devices = trezor.scan().await.map_err(TrezorError::from)?;
+
+            // Cache the device list for later connection
+            let mut device_list = self.device_list.lock().await;
+            *device_list = devices.clone();
+
+            Ok(devices.into_iter().map(TrezorDeviceInfo::from).collect())
+        }
+    }
+
+    /// List previously discovered devices without triggering a new scan.
+    pub async fn list_devices(&self) -> Result<Vec<TrezorDeviceInfo>, TrezorError> {
+        if !*self.initialized.lock().await {
+            return Err(TrezorError::NotInitialized);
+        }
+
+        // Mobile: Return cached devices
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        {
+            let device_list = self.native_device_list.lock().await;
+            Ok(device_list
+                .iter()
+                .map(|d| TrezorDeviceInfo {
+                    id: d.path.clone(),
+                    transport_type: d.transport_type.clone(),
+                    name: d.name.clone(),
+                    path: d.path.clone(),
+                    label: None,
+                    model: None,
+                    is_bootloader: false,
+                })
+                .collect())
+        }
+
+        // Desktop: Use trezor-connect-rs
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        {
+            let inner = self.inner.lock().await;
+            let trezor = inner.as_ref().ok_or(TrezorError::NotInitialized)?;
+
+            let devices = trezor.list_devices().await.map_err(TrezorError::from)?;
+
+            Ok(devices.into_iter().map(TrezorDeviceInfo::from).collect())
+        }
+    }
+
+    /// Connect to a device by its ID.
+    ///
+    /// On mobile: Opens device connection via native callback.
+    /// On desktop: Uses trezor-connect-rs library.
+    pub async fn connect(&self, device_id: &str) -> Result<TrezorFeatures, TrezorError> {
+        if !*self.initialized.lock().await {
+            return Err(TrezorError::NotInitialized);
+        }
+
+        // Mobile: Use callback-based connection
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        {
+            use crate::get_transport_callback;
+
+            let callback = get_transport_callback()
+                .ok_or(TrezorError::NotInitialized)?;
+
+            // Find the device in cached list
+            let device = {
+                let device_list = self.native_device_list.lock().await;
+                device_list
+                    .iter()
+                    .find(|d| d.path == device_id)
+                    .cloned()
+                    .ok_or(TrezorError::DeviceNotFound)?
+            };
+
+            // Create transport and connect - this will be reused for all operations
+            let adapter = Arc::new(CallbackAdapter { callback: callback.clone() });
+            let mut transport = CallbackTransport::new(adapter)
+                .with_app_identity("Bitkit", "Bitkit");
+            transport.init().await.map_err(TrezorError::from)?;
+
+            // Acquire a session (this triggers THP handshake for BLE)
+            let session = transport.acquire(&device.path, None).await.map_err(TrezorError::from)?;
+
+            // Store connected path
+            {
+                let mut connected_path = self.connected_path.lock().await;
+                *connected_path = Some(device.path.clone());
+            }
+
+            // Determine transport type based on path
+            let transport_type = if device.path.starts_with("ble:") {
+                TransportType::Bluetooth
+            } else {
+                TransportType::Usb
+            };
+
+            // Create device info
+            let device_info = DeviceInfo {
+                id: device.path.clone(),
+                transport_type,
+                name: device.name.clone(),
+                path: device.path.clone(),
+                label: None,
+                model: None,
+                is_bootloader: false,
+            };
+
+            // Create connected device and initialize it
+            let mut connected = ConnectedDevice::new(device_info, Box::new(transport), session);
+            let features = connected.initialize().await.map_err(TrezorError::from)?;
+
+            // Store the connected device for reuse
+            {
+                let mut stored_device = self.connected_device.lock().await;
+                *stored_device = Some(connected);
+            }
+
+            Ok(TrezorFeatures::from(features))
+        }
+
+        // Desktop: Use trezor-connect-rs
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        {
+            // Find the device in the cached list
+            let device = {
+                let device_list = self.device_list.lock().await;
+                device_list
+                    .iter()
+                    .find(|d| d.id == device_id)
+                    .cloned()
+                    .ok_or(TrezorError::DeviceNotFound)?
+            };
+
+            // Connect to the device
+            let mut inner = self.inner.lock().await;
+            let trezor = inner.as_mut().ok_or(TrezorError::NotInitialized)?;
+
+            let mut connected = trezor.connect(&device).await.map_err(TrezorError::from)?;
+
+            // Initialize the device and get features
+            let features = connected.initialize().await.map_err(TrezorError::from)?;
+
+            // Store the connected device
+            let mut connected_device = self.connected_device.lock().await;
+            *connected_device = Some(connected);
+
+            Ok(TrezorFeatures::from(features))
+        }
+    }
+
+    /// Check if a device is currently connected.
+    pub async fn is_connected(&self) -> bool {
+        self.connected_device.lock().await.is_some()
+    }
+
+    /// Get a Bitcoin address from the connected device.
+    ///
+    /// # Arguments
+    /// * `params` - Address parameters including BIP32 path and display options
+    pub async fn get_address(
+        &self,
+        params: TrezorGetAddressParams,
+    ) -> Result<TrezorAddressResponse, TrezorError> {
+        // Validate the derivation path
+        validate_derivation_path(&params.path)?;
+
+        // Both mobile and desktop: use stored connected device
+        let mut connected_device = self.connected_device.lock().await;
+        let device = connected_device
+            .as_mut()
+            .ok_or(TrezorError::NotConnected)?;
+
+        let tc_params: GetAddressParams = params.into();
+        let response = device.get_address(tc_params).await.map_err(TrezorError::from)?;
+
+        Ok(TrezorAddressResponse::from(response))
+    }
+
+    /// Get a public key (xpub) from the connected device.
+    ///
+    /// # Arguments
+    /// * `params` - Public key parameters including BIP32 path
+    pub async fn get_public_key(
+        &self,
+        params: TrezorGetPublicKeyParams,
+    ) -> Result<TrezorPublicKeyResponse, TrezorError> {
+        // Validate the derivation path
+        validate_derivation_path(&params.path)?;
+
+        // Both mobile and desktop: use stored connected device
+        let mut connected_device = self.connected_device.lock().await;
+        let device = connected_device
+            .as_mut()
+            .ok_or(TrezorError::NotConnected)?;
+
+        let tc_params: GetPublicKeyParams = params.into();
+        let response = device.get_public_key(tc_params).await.map_err(TrezorError::from)?;
+
+        Ok(TrezorPublicKeyResponse::from(response))
+    }
+
+    /// Sign a message with the connected device.
+    ///
+    /// # Arguments
+    /// * `params` - Sign message parameters including BIP32 path and message
+    pub async fn sign_message(
+        &self,
+        params: TrezorSignMessageParams,
+    ) -> Result<TrezorSignedMessageResponse, TrezorError> {
+        // Validate the derivation path
+        validate_derivation_path(&params.path)?;
+
+        // Both mobile and desktop: use stored connected device
+        let mut connected_device = self.connected_device.lock().await;
+        let device = connected_device
+            .as_mut()
+            .ok_or(TrezorError::NotConnected)?;
+
+        let tc_params: SignMessageParams = params.into();
+        let response = device.sign_message(tc_params).await.map_err(TrezorError::from)?;
+
+        Ok(TrezorSignedMessageResponse::from(response))
+    }
+
+    /// Verify a message signature with the connected device.
+    ///
+    /// # Arguments
+    /// * `params` - Verify message parameters including address, signature, and message
+    pub async fn verify_message(
+        &self,
+        params: TrezorVerifyMessageParams,
+    ) -> Result<bool, TrezorError> {
+        // Both mobile and desktop: use stored connected device
+        let mut connected_device = self.connected_device.lock().await;
+        let device = connected_device
+            .as_mut()
+            .ok_or(TrezorError::NotConnected)?;
+
+        let tc_params: VerifyMessageParams = params.into();
+        device.verify_message(tc_params).await.map_err(TrezorError::from)
+    }
+
+    /// Sign a Bitcoin transaction with the connected device.
+    ///
+    /// # Arguments
+    /// * `params` - Transaction parameters including inputs, outputs, and options
+    pub async fn sign_tx(
+        &self,
+        params: TrezorSignTxParams,
+    ) -> Result<TrezorSignedTx, TrezorError> {
+        // Validate all input paths
+        for (i, input) in params.inputs.iter().enumerate() {
+            validate_derivation_path(&input.path).map_err(|e| match e {
+                TrezorError::InvalidPath { error_details } => TrezorError::InvalidPath {
+                    error_details: format!("Input {}: {}", i, error_details),
+                },
+                other => other,
+            })?;
+        }
+
+        // Validate change output paths
+        for (i, output) in params.outputs.iter().enumerate() {
+            if let Some(ref path) = output.path {
+                validate_derivation_path(path).map_err(|e| match e {
+                    TrezorError::InvalidPath { error_details } => TrezorError::InvalidPath {
+                        error_details: format!("Output {} (change): {}", i, error_details),
+                    },
+                    other => other,
+                })?;
+            }
+        }
+
+        // Both mobile and desktop: use stored connected device
+        let mut connected_device = self.connected_device.lock().await;
+        let device = connected_device
+            .as_mut()
+            .ok_or(TrezorError::NotConnected)?;
+
+        let tc_params: SignTxParams = params.into();
+        let response = device.sign_transaction(tc_params).await.map_err(TrezorError::from)?;
+
+        Ok(TrezorSignedTx::from(response))
+    }
+
+    /// Disconnect from the currently connected device.
+    pub async fn disconnect(&self) -> Result<(), TrezorError> {
+        // Clear stored connected device (both mobile and desktop)
+        {
+            let mut connected_device = self.connected_device.lock().await;
+            if let Some(mut device) = connected_device.take() {
+                device.disconnect().await.map_err(TrezorError::from)?;
+            }
+        }
+
+        // Mobile: Also clear connected path and close native device
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        {
+            use crate::get_transport_callback;
+
+            let mut connected_path = self.connected_path.lock().await;
+            if let Some(path) = connected_path.take() {
+                if let Some(callback) = get_transport_callback() {
+                    let result = callback.close_device(path);
+                    if !result.success {
+                        return Err(TrezorError::ConnectionError {
+                            error_details: result.error,
+                        });
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Get the currently connected device info.
+    pub async fn get_connected_device(&self) -> Option<TrezorDeviceInfo> {
+        // Mobile: Return cached device info
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        {
+            let connected_path = self.connected_path.lock().await;
+            if let Some(ref path) = *connected_path {
+                let device_list = self.native_device_list.lock().await;
+                device_list
+                    .iter()
+                    .find(|d| &d.path == path)
+                    .map(|d| TrezorDeviceInfo {
+                        id: d.path.clone(),
+                        transport_type: d.transport_type.clone(),
+                        name: d.name.clone(),
+                        path: d.path.clone(),
+                        label: None,
+                        model: None,
+                        is_bootloader: false,
+                    })
+            } else {
+                None
+            }
+        }
+
+        // Desktop: Use trezor-connect-rs
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        {
+            let connected_device = self.connected_device.lock().await;
+            connected_device
+                .as_ref()
+                .map(|d| TrezorDeviceInfo::from(d.info().clone()))
+        }
+    }
+
+    /// Get the cached features of the currently connected Trezor device.
+    ///
+    /// Returns the features that were obtained during `connect()`, without
+    /// triggering any device interaction. Returns None if no device is connected.
+    pub async fn get_features(&self) -> Option<TrezorFeatures> {
+        let connected_device = self.connected_device.lock().await;
+        connected_device
+            .as_ref()
+            .and_then(|device| device.features())
+            .map(|f| TrezorFeatures::from(f.clone()))
+    }
+
+    /// Clear stored credentials for a device.
+    ///
+    /// This removes any stored Bluetooth pairing credentials for the specified device,
+    /// requiring re-pairing on the next connection.
+    ///
+    /// # Arguments
+    /// * `device_id` - The device identifier (e.g., BLE address like "ble:AA:BB:CC:DD:EE:FF")
+    pub async fn clear_credentials(&self, device_id: &str) -> Result<(), TrezorError> {
+        // Mobile: Use the transport callback to clear credentials
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        {
+            use crate::get_transport_callback;
+
+            let callback = get_transport_callback()
+                .ok_or(TrezorError::NotInitialized)?;
+
+            // The native layer's save_thp_credential with empty string can be used
+            // to clear, or we can define a new method. For now, we'll save empty
+            // credentials which the native layer should interpret as deletion.
+            // Alternatively, the native layer can implement a dedicated delete method.
+            let success = callback.save_thp_credential(device_id.to_string(), "".to_string());
+            if !success {
+                return Err(TrezorError::IoError {
+                    error_details: format!("Failed to clear credentials for device: {}", device_id),
+                });
+            }
+            Ok(())
+        }
+
+        // Desktop: Clear credentials from the credential store
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        {
+            let mut inner = self.inner.lock().await;
+            let trezor = inner.as_mut().ok_or(TrezorError::NotInitialized)?;
+
+            trezor.clear_credentials(device_id).await.map_err(TrezorError::from)
+        }
+    }
+}
+
+impl Default for TrezorManager {
+    fn default() -> Self {
+        Self::new()
     }
 }

@@ -251,6 +251,232 @@ typedef void (*UniffiForeignFutureCompleteVoid)(uint64_t, UniffiForeignFutureStr
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod0)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD1
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD1
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod1)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD2
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD2
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod2)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD3
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD3
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod3)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD4
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD4
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod4)(uint64_t, RustBuffer, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD5
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD5
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod5)(uint64_t, RustBuffer, uint32_t* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD6
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD6
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod6)(uint64_t, RustBuffer, uint16_t, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD7
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD7
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod7)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD8
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD8
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod8)(uint64_t, RustBuffer, RustBuffer, int8_t* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD9
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD9
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod9)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD10
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD10
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod10)(uint64_t, RustBuffer, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD0
+typedef void (*UniffiCallbackInterfaceTrezorUiCallbackMethod0)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD1
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD1
+typedef void (*UniffiCallbackInterfaceTrezorUiCallbackMethod1)(uint64_t, int8_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD2
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD2
+typedef void (*UniffiCallbackInterfaceTrezorUiCallbackMethod2)(uint64_t, RustBuffer, int8_t* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK
+typedef struct UniffiVTableCallbackInterfaceTrezorTransportCallback {
+    UniffiCallbackInterfaceTrezorTransportCallbackMethod0 _Nonnull enumerateDevices;
+    UniffiCallbackInterfaceTrezorTransportCallbackMethod1 _Nonnull openDevice;
+    UniffiCallbackInterfaceTrezorTransportCallbackMethod2 _Nonnull closeDevice;
+    UniffiCallbackInterfaceTrezorTransportCallbackMethod3 _Nonnull readChunk;
+    UniffiCallbackInterfaceTrezorTransportCallbackMethod4 _Nonnull writeChunk;
+    UniffiCallbackInterfaceTrezorTransportCallbackMethod5 _Nonnull getChunkSize;
+    UniffiCallbackInterfaceTrezorTransportCallbackMethod6 _Nonnull callMessage;
+    UniffiCallbackInterfaceTrezorTransportCallbackMethod7 _Nonnull getPairingCode;
+    UniffiCallbackInterfaceTrezorTransportCallbackMethod8 _Nonnull saveThpCredential;
+    UniffiCallbackInterfaceTrezorTransportCallbackMethod9 _Nonnull loadThpCredential;
+    UniffiCallbackInterfaceTrezorTransportCallbackMethod10 _Nonnull logDebug;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfaceTrezorTransportCallback;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK
+typedef struct UniffiVTableCallbackInterfaceTrezorUiCallback {
+    UniffiCallbackInterfaceTrezorUiCallbackMethod0 _Nonnull onPinRequest;
+    UniffiCallbackInterfaceTrezorUiCallbackMethod1 _Nonnull onPassphraseRequest;
+    UniffiCallbackInterfaceTrezorUiCallbackMethod2 _Nonnull onButtonRequest;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfaceTrezorUiCallback;
+
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_TREZORTRANSPORTCALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_TREZORTRANSPORTCALLBACK
+void*_Nonnull uniffi_bitkitcore_fn_clone_trezortransportcallback(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_TREZORTRANSPORTCALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_TREZORTRANSPORTCALLBACK
+void uniffi_bitkitcore_fn_free_trezortransportcallback(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_TREZORTRANSPORTCALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_TREZORTRANSPORTCALLBACK
+void uniffi_bitkitcore_fn_init_callback_vtable_trezortransportcallback(const UniffiVTableCallbackInterfaceTrezorTransportCallback* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_ENUMERATE_DEVICES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_ENUMERATE_DEVICES
+RustBuffer uniffi_bitkitcore_fn_method_trezortransportcallback_enumerate_devices(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_OPEN_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_OPEN_DEVICE
+RustBuffer uniffi_bitkitcore_fn_method_trezortransportcallback_open_device(void*_Nonnull ptr, RustBuffer path, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_CLOSE_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_CLOSE_DEVICE
+RustBuffer uniffi_bitkitcore_fn_method_trezortransportcallback_close_device(void*_Nonnull ptr, RustBuffer path, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_READ_CHUNK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_READ_CHUNK
+RustBuffer uniffi_bitkitcore_fn_method_trezortransportcallback_read_chunk(void*_Nonnull ptr, RustBuffer path, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_WRITE_CHUNK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_WRITE_CHUNK
+RustBuffer uniffi_bitkitcore_fn_method_trezortransportcallback_write_chunk(void*_Nonnull ptr, RustBuffer path, RustBuffer data, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_GET_CHUNK_SIZE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_GET_CHUNK_SIZE
+uint32_t uniffi_bitkitcore_fn_method_trezortransportcallback_get_chunk_size(void*_Nonnull ptr, RustBuffer path, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_CALL_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_CALL_MESSAGE
+RustBuffer uniffi_bitkitcore_fn_method_trezortransportcallback_call_message(void*_Nonnull ptr, RustBuffer path, uint16_t message_type, RustBuffer data, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_GET_PAIRING_CODE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_GET_PAIRING_CODE
+RustBuffer uniffi_bitkitcore_fn_method_trezortransportcallback_get_pairing_code(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_SAVE_THP_CREDENTIAL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_SAVE_THP_CREDENTIAL
+int8_t uniffi_bitkitcore_fn_method_trezortransportcallback_save_thp_credential(void*_Nonnull ptr, RustBuffer device_id, RustBuffer credential_json, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_LOAD_THP_CREDENTIAL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_LOAD_THP_CREDENTIAL
+RustBuffer uniffi_bitkitcore_fn_method_trezortransportcallback_load_thp_credential(void*_Nonnull ptr, RustBuffer device_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_LOG_DEBUG
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORTRANSPORTCALLBACK_LOG_DEBUG
+void uniffi_bitkitcore_fn_method_trezortransportcallback_log_debug(void*_Nonnull ptr, RustBuffer tag, RustBuffer message, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_TREZORUICALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_TREZORUICALLBACK
+void*_Nonnull uniffi_bitkitcore_fn_clone_trezoruicallback(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_TREZORUICALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_TREZORUICALLBACK
+void uniffi_bitkitcore_fn_free_trezoruicallback(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_TREZORUICALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_TREZORUICALLBACK
+void uniffi_bitkitcore_fn_init_callback_vtable_trezoruicallback(const UniffiVTableCallbackInterfaceTrezorUiCallback* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORUICALLBACK_ON_PIN_REQUEST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORUICALLBACK_ON_PIN_REQUEST
+RustBuffer uniffi_bitkitcore_fn_method_trezoruicallback_on_pin_request(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORUICALLBACK_ON_PASSPHRASE_REQUEST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORUICALLBACK_ON_PASSPHRASE_REQUEST
+RustBuffer uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request(void*_Nonnull ptr, int8_t on_device, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORUICALLBACK_ON_BUTTON_REQUEST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORUICALLBACK_ON_BUTTON_REQUEST
+int8_t uniffi_bitkitcore_fn_method_trezoruicallback_on_button_request(void*_Nonnull ptr, RustBuffer code, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITY_WIPE_ALL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITY_WIPE_ALL
 void uniffi_bitkitcore_fn_func_activity_wipe_all(RustCallStatus *_Nonnull out_status
@@ -627,44 +853,108 @@ void uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags(RustBuffer payme
 uint64_t uniffi_bitkitcore_fn_func_test_notification(RustBuffer device_token, RustBuffer secret_message, RustBuffer notification_type, RustBuffer custom_url
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_COMPOSE_TRANSACTION
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_COMPOSE_TRANSACTION
-RustBuffer uniffi_bitkitcore_fn_func_trezor_compose_transaction(RustBuffer outputs, RustBuffer coin, RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustBuffer push, RustBuffer sequence, RustBuffer account, RustBuffer fee_levels, RustBuffer skip_permutation, RustBuffer common, RustCallStatus *_Nonnull out_status
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_CLEAR_CREDENTIALS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_CLEAR_CREDENTIALS
+uint64_t uniffi_bitkitcore_fn_func_trezor_clear_credentials(RustBuffer device_id
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_ACCOUNT_INFO
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_ACCOUNT_INFO
-RustBuffer uniffi_bitkitcore_fn_func_trezor_get_account_info(RustBuffer coin, RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustBuffer path, RustBuffer descriptor, RustBuffer details, RustBuffer tokens, RustBuffer page, RustBuffer pageSize, RustBuffer from, RustBuffer to, RustBuffer gap, RustBuffer contractFilter, RustBuffer marker, RustBuffer defaultAccountType, RustBuffer suppressBackupWarning, RustBuffer common, RustCallStatus *_Nonnull out_status
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_CONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_CONNECT
+uint64_t uniffi_bitkitcore_fn_func_trezor_connect(RustBuffer device_id
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_DISCONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_DISCONNECT
+uint64_t uniffi_bitkitcore_fn_func_trezor_disconnect(void
+    
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_ADDRESS
-RustBuffer uniffi_bitkitcore_fn_func_trezor_get_address(RustBuffer path, RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustBuffer address, RustBuffer showOnTrezor, RustBuffer chunkify, RustBuffer useEventListener, RustBuffer coin, RustBuffer crossChain, RustBuffer multisig, RustBuffer scriptType, RustBuffer unlockPath, RustBuffer common, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_trezor_get_address(RustBuffer params
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_CONNECTED_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_CONNECTED_DEVICE
+uint64_t uniffi_bitkitcore_fn_func_trezor_get_connected_device(void
+    
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_FEATURES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_FEATURES
-RustBuffer uniffi_bitkitcore_fn_func_trezor_get_features(RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_trezor_get_features(void
+    
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_HANDLE_DEEP_LINK
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_HANDLE_DEEP_LINK
-RustBuffer uniffi_bitkitcore_fn_func_trezor_handle_deep_link(RustBuffer callback_url, RustCallStatus *_Nonnull out_status
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_PUBLIC_KEY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_PUBLIC_KEY
+uint64_t uniffi_bitkitcore_fn_func_trezor_get_public_key(RustBuffer params
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_INIT_BLE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_INIT_BLE
+void uniffi_bitkitcore_fn_func_trezor_init_ble(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_INITIALIZE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_INITIALIZE
+uint64_t uniffi_bitkitcore_fn_func_trezor_initialize(RustBuffer credential_path
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_IS_BLE_AVAILABLE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_IS_BLE_AVAILABLE
+int8_t uniffi_bitkitcore_fn_func_trezor_is_ble_available(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_IS_CONNECTED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_IS_CONNECTED
+uint64_t uniffi_bitkitcore_fn_func_trezor_is_connected(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_IS_INITIALIZED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_IS_INITIALIZED
+uint64_t uniffi_bitkitcore_fn_func_trezor_is_initialized(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_LIST_DEVICES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_LIST_DEVICES
+uint64_t uniffi_bitkitcore_fn_func_trezor_list_devices(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SCAN
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SCAN
+uint64_t uniffi_bitkitcore_fn_func_trezor_scan(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SET_TRANSPORT_CALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SET_TRANSPORT_CALLBACK
+void uniffi_bitkitcore_fn_func_trezor_set_transport_callback(void*_Nonnull callback, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SET_UI_CALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SET_UI_CALLBACK
+void uniffi_bitkitcore_fn_func_trezor_set_ui_callback(void*_Nonnull callback, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_MESSAGE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_MESSAGE
-RustBuffer uniffi_bitkitcore_fn_func_trezor_sign_message(RustBuffer path, RustBuffer message, RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustBuffer coin, RustBuffer hex, RustBuffer no_script_type, RustBuffer common, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_trezor_sign_message(RustBuffer params
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_TRANSACTION
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_TRANSACTION
-RustBuffer uniffi_bitkitcore_fn_func_trezor_sign_transaction(RustBuffer coin, RustBuffer inputs, RustBuffer outputs, RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustBuffer ref_txs, RustBuffer payment_requests, RustBuffer locktime, RustBuffer version, RustBuffer expiry, RustBuffer version_group_id, RustBuffer overwintered, RustBuffer timestamp, RustBuffer branch_id, RustBuffer push, RustBuffer amount_unit, RustBuffer unlock_path, RustBuffer serialize, RustBuffer chunkify, RustBuffer common, RustCallStatus *_Nonnull out_status
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_TX
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_TX
+uint64_t uniffi_bitkitcore_fn_func_trezor_sign_tx(RustBuffer params
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_VERIFY_MESSAGE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_VERIFY_MESSAGE
-RustBuffer uniffi_bitkitcore_fn_func_trezor_verify_message(RustBuffer address, RustBuffer signature, RustBuffer message, RustBuffer coin, RustBuffer callback_url, RustBuffer request_id, RustBuffer trezor_environment, RustBuffer hex, RustBuffer common, RustCallStatus *_Nonnull out_status
+uint64_t uniffi_bitkitcore_fn_func_trezor_verify_message(RustBuffer params
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPDATE_ACTIVITY
@@ -1483,15 +1773,21 @@ uint16_t uniffi_bitkitcore_checksum_func_test_notification(void
     
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_COMPOSE_TRANSACTION
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_COMPOSE_TRANSACTION
-uint16_t uniffi_bitkitcore_checksum_func_trezor_compose_transaction(void
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_CLEAR_CREDENTIALS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_CLEAR_CREDENTIALS
+uint16_t uniffi_bitkitcore_checksum_func_trezor_clear_credentials(void
     
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_ACCOUNT_INFO
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_ACCOUNT_INFO
-uint16_t uniffi_bitkitcore_checksum_func_trezor_get_account_info(void
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_CONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_CONNECT
+uint16_t uniffi_bitkitcore_checksum_func_trezor_connect(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_DISCONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_DISCONNECT
+uint16_t uniffi_bitkitcore_checksum_func_trezor_disconnect(void
     
 );
 #endif
@@ -1501,15 +1797,75 @@ uint16_t uniffi_bitkitcore_checksum_func_trezor_get_address(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_CONNECTED_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_CONNECTED_DEVICE
+uint16_t uniffi_bitkitcore_checksum_func_trezor_get_connected_device(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_FEATURES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_FEATURES
 uint16_t uniffi_bitkitcore_checksum_func_trezor_get_features(void
     
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_HANDLE_DEEP_LINK
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_HANDLE_DEEP_LINK
-uint16_t uniffi_bitkitcore_checksum_func_trezor_handle_deep_link(void
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_PUBLIC_KEY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_PUBLIC_KEY
+uint16_t uniffi_bitkitcore_checksum_func_trezor_get_public_key(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_INIT_BLE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_INIT_BLE
+uint16_t uniffi_bitkitcore_checksum_func_trezor_init_ble(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_INITIALIZE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_INITIALIZE
+uint16_t uniffi_bitkitcore_checksum_func_trezor_initialize(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_IS_BLE_AVAILABLE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_IS_BLE_AVAILABLE
+uint16_t uniffi_bitkitcore_checksum_func_trezor_is_ble_available(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_IS_CONNECTED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_IS_CONNECTED
+uint16_t uniffi_bitkitcore_checksum_func_trezor_is_connected(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_IS_INITIALIZED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_IS_INITIALIZED
+uint16_t uniffi_bitkitcore_checksum_func_trezor_is_initialized(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_LIST_DEVICES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_LIST_DEVICES
+uint16_t uniffi_bitkitcore_checksum_func_trezor_list_devices(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SCAN
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SCAN
+uint16_t uniffi_bitkitcore_checksum_func_trezor_scan(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SET_TRANSPORT_CALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SET_TRANSPORT_CALLBACK
+uint16_t uniffi_bitkitcore_checksum_func_trezor_set_transport_callback(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SET_UI_CALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SET_UI_CALLBACK
+uint16_t uniffi_bitkitcore_checksum_func_trezor_set_ui_callback(void
     
 );
 #endif
@@ -1519,9 +1875,9 @@ uint16_t uniffi_bitkitcore_checksum_func_trezor_sign_message(void
     
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TRANSACTION
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TRANSACTION
-uint16_t uniffi_bitkitcore_checksum_func_trezor_sign_transaction(void
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TX
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TX
+uint16_t uniffi_bitkitcore_checksum_func_trezor_sign_tx(void
     
 );
 #endif
@@ -1642,6 +1998,90 @@ uint16_t uniffi_bitkitcore_checksum_func_wipe_all_databases(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_TRANSACTION_DETAILS
 uint16_t uniffi_bitkitcore_checksum_func_wipe_all_transaction_details(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_ENUMERATE_DEVICES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_ENUMERATE_DEVICES
+uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_OPEN_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_OPEN_DEVICE
+uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_open_device(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_CLOSE_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_CLOSE_DEVICE
+uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_close_device(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_READ_CHUNK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_READ_CHUNK
+uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_read_chunk(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_WRITE_CHUNK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_WRITE_CHUNK
+uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_write_chunk(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_GET_CHUNK_SIZE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_GET_CHUNK_SIZE
+uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_get_chunk_size(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_CALL_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_CALL_MESSAGE
+uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_call_message(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_GET_PAIRING_CODE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_GET_PAIRING_CODE
+uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_get_pairing_code(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_SAVE_THP_CREDENTIAL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_SAVE_THP_CREDENTIAL
+uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_save_thp_credential(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_LOAD_THP_CREDENTIAL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_LOAD_THP_CREDENTIAL
+uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_load_thp_credential(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_LOG_DEBUG
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_LOG_DEBUG
+uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_log_debug(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_PIN_REQUEST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_PIN_REQUEST
+uint16_t uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_PASSPHRASE_REQUEST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_PASSPHRASE_REQUEST
+uint16_t uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_BUTTON_REQUEST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_BUTTON_REQUEST
+uint16_t uniffi_bitkitcore_checksum_method_trezoruicallback_on_button_request(void
     
 );
 #endif

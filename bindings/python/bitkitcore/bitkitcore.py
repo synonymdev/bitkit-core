@@ -607,21 +607,43 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_test_notification() != 32857:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_compose_transaction() != 25990:
+    if lib.uniffi_bitkitcore_checksum_func_trezor_clear_credentials() != 41940:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_get_account_info() != 14813:
+    if lib.uniffi_bitkitcore_checksum_func_trezor_connect() != 6551:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_get_address() != 42202:
+    if lib.uniffi_bitkitcore_checksum_func_trezor_disconnect() != 48780:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_get_features() != 52582:
+    if lib.uniffi_bitkitcore_checksum_func_trezor_get_address() != 12910:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_handle_deep_link() != 32721:
+    if lib.uniffi_bitkitcore_checksum_func_trezor_get_connected_device() != 48383:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_sign_message() != 18023:
+    if lib.uniffi_bitkitcore_checksum_func_trezor_get_features() != 13970:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_sign_transaction() != 59932:
+    if lib.uniffi_bitkitcore_checksum_func_trezor_get_public_key() != 13743:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_verify_message() != 44040:
+    if lib.uniffi_bitkitcore_checksum_func_trezor_init_ble() != 11207:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_trezor_initialize() != 16053:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_trezor_is_ble_available() != 12897:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_trezor_is_connected() != 42092:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_trezor_is_initialized() != 59329:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_trezor_list_devices() != 32859:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_trezor_scan() != 54763:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_trezor_set_transport_callback() != 30209:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_trezor_set_ui_callback() != 28036:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_trezor_sign_message() != 2925:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_trezor_sign_tx() != 42467:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_trezor_verify_message() != 50739:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_update_activity() != 42510:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -660,6 +682,34 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_wipe_all_transaction_details() != 65339:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices() != 18766:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_open_device() != 44156:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_close_device() != 47933:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_read_chunk() != 7645:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_write_chunk() != 55967:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_get_chunk_size() != 4994:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_call_message() != 19414:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_get_pairing_code() != 43475:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_save_thp_credential() != 16694:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_load_thp_credential() != 48790:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_log_debug() != 44848:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 9322:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 51926:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_button_request() != 58299:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
 
 # A ctypes library to expose the extern-C FFI definitions.
@@ -767,6 +817,184 @@ class _UniffiForeignFutureStructVoid(ctypes.Structure):
     ]
 _UNIFFI_FOREIGN_FUTURE_COMPLETE_VOID = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiForeignFutureStructVoid,
 )
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD1 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD2 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD3 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD4 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD5 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.POINTER(ctypes.c_uint32),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD6 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.c_uint16,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD7 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD8 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,_UniffiRustBuffer,ctypes.POINTER(ctypes.c_int8),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD9 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD10 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,_UniffiRustBuffer,ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD1 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,ctypes.c_int8,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD2 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.POINTER(ctypes.c_int8),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+class _UniffiVTableCallbackInterfaceTrezorTransportCallback(ctypes.Structure):
+    _fields_ = [
+        ("enumerate_devices", _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0),
+        ("open_device", _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD1),
+        ("close_device", _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD2),
+        ("read_chunk", _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD3),
+        ("write_chunk", _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD4),
+        ("get_chunk_size", _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD5),
+        ("call_message", _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD6),
+        ("get_pairing_code", _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD7),
+        ("save_thp_credential", _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD8),
+        ("load_thp_credential", _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD9),
+        ("log_debug", _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD10),
+        ("uniffi_free", _UNIFFI_CALLBACK_INTERFACE_FREE),
+    ]
+class _UniffiVTableCallbackInterfaceTrezorUiCallback(ctypes.Structure):
+    _fields_ = [
+        ("on_pin_request", _UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD0),
+        ("on_passphrase_request", _UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD1),
+        ("on_button_request", _UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD2),
+        ("uniffi_free", _UNIFFI_CALLBACK_INTERFACE_FREE),
+    ]
+_UniffiLib.uniffi_bitkitcore_fn_clone_trezortransportcallback.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_clone_trezortransportcallback.restype = ctypes.c_void_p
+_UniffiLib.uniffi_bitkitcore_fn_free_trezortransportcallback.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_free_trezortransportcallback.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_trezortransportcallback.argtypes = (
+    ctypes.POINTER(_UniffiVTableCallbackInterfaceTrezorTransportCallback),
+)
+_UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_trezortransportcallback.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_enumerate_devices.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_enumerate_devices.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_open_device.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_open_device.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_close_device.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_close_device.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_read_chunk.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_read_chunk.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_write_chunk.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_write_chunk.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_get_chunk_size.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_get_chunk_size.restype = ctypes.c_uint32
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_call_message.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.c_uint16,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_call_message.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_get_pairing_code.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_get_pairing_code.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_save_thp_credential.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_save_thp_credential.restype = ctypes.c_int8
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_load_thp_credential.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_load_thp_credential.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_log_debug.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_log_debug.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_clone_trezoruicallback.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_clone_trezoruicallback.restype = ctypes.c_void_p
+_UniffiLib.uniffi_bitkitcore_fn_free_trezoruicallback.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_free_trezoruicallback.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_trezoruicallback.argtypes = (
+    ctypes.POINTER(_UniffiVTableCallbackInterfaceTrezorUiCallback),
+)
+_UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_trezoruicallback.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_pin_request.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_pin_request.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request.argtypes = (
+    ctypes.c_void_p,
+    ctypes.c_int8,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_button_request.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_button_request.restype = ctypes.c_int8
 _UniffiLib.uniffi_bitkitcore_fn_func_activity_wipe_all.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -1174,124 +1402,77 @@ _UniffiLib.uniffi_bitkitcore_fn_func_test_notification.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_test_notification.restype = ctypes.c_uint64
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_compose_transaction.argtypes = (
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_clear_credentials.argtypes = (
     _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_compose_transaction.restype = _UniffiRustBuffer
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_account_info.argtypes = (
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_clear_credentials.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_connect.argtypes = (
     _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_account_info.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_connect.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_disconnect.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_disconnect.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_address.argtypes = (
     _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_address.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_address.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_connected_device.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_connected_device.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_features.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_features.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_public_key.argtypes = (
     _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_public_key.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_init_ble.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_features.restype = _UniffiRustBuffer
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_handle_deep_link.argtypes = (
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_init_ble.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_initialize.argtypes = (
     _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_initialize.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_is_ble_available.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_handle_deep_link.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_is_ble_available.restype = ctypes.c_int8
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_is_connected.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_is_connected.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_is_initialized.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_is_initialized.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_list_devices.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_list_devices.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_scan.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_scan.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_set_transport_callback.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_set_transport_callback.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_set_ui_callback.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_set_ui_callback.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_message.argtypes = (
     _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_message.restype = _UniffiRustBuffer
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_transaction.argtypes = (
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_message.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_tx.argtypes = (
     _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_transaction.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_tx.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_verify_message.argtypes = (
     _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    ctypes.POINTER(_UniffiRustCallStatus),
 )
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_verify_message.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_verify_message.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_update_activity.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1867,27 +2048,60 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags.rest
 _UniffiLib.uniffi_bitkitcore_checksum_func_test_notification.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_test_notification.restype = ctypes.c_uint16
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_compose_transaction.argtypes = (
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_clear_credentials.argtypes = (
 )
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_compose_transaction.restype = ctypes.c_uint16
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_account_info.argtypes = (
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_clear_credentials.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_connect.argtypes = (
 )
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_account_info.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_connect.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_disconnect.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_disconnect.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_address.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_address.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_connected_device.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_connected_device.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_features.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_features.restype = ctypes.c_uint16
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_handle_deep_link.argtypes = (
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_public_key.argtypes = (
 )
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_handle_deep_link.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_public_key.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_init_ble.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_init_ble.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_initialize.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_initialize.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_is_ble_available.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_is_ble_available.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_is_connected.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_is_connected.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_is_initialized.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_is_initialized.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_list_devices.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_list_devices.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_scan.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_scan.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_set_transport_callback.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_set_transport_callback.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_set_ui_callback.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_set_ui_callback.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_sign_message.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_sign_message.restype = ctypes.c_uint16
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_sign_transaction.argtypes = (
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_sign_tx.argtypes = (
 )
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_sign_transaction.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_sign_tx.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_verify_message.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_verify_message.restype = ctypes.c_uint16
@@ -1948,6 +2162,48 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_databases.restype = ctypes.c
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_transaction_details.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_transaction_details.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_open_device.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_open_device.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_close_device.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_close_device.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_read_chunk.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_read_chunk.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_write_chunk.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_write_chunk.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_get_chunk_size.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_get_chunk_size.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_call_message.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_call_message.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_get_pairing_code.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_get_pairing_code.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_save_thp_credential.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_save_thp_credential.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_load_thp_credential.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_load_thp_credential.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_log_debug.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_log_debug.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_button_request.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_button_request.restype = ctypes.c_uint16
 _UniffiLib.ffi_bitkitcore_uniffi_contract_version.argtypes = (
 )
 _UniffiLib.ffi_bitkitcore_uniffi_contract_version.restype = ctypes.c_uint32
@@ -1956,20 +2212,51 @@ _uniffi_check_contract_api_version(_UniffiLib)
 # _uniffi_check_api_checksums(_UniffiLib)
 
 # Public interface members begin here.
+# Magic number for the Rust proxy to call using the same mechanism as every other method,
+# to free the callback once it's dropped by Rust.
+_UNIFFI_IDX_CALLBACK_FREE = 0
+# Return codes for callback calls
+_UNIFFI_CALLBACK_SUCCESS = 0
+_UNIFFI_CALLBACK_ERROR = 1
+_UNIFFI_CALLBACK_UNEXPECTED_ERROR = 2
 
+class _UniffiCallbackInterfaceFfiConverter:
+    _handle_map = _UniffiHandleMap()
 
-class _UniffiConverterUInt8(_UniffiConverterPrimitiveInt):
-    CLASS_NAME = "u8"
+    @classmethod
+    def lift(cls, handle):
+        return cls._handle_map.get(handle)
+
+    @classmethod
+    def read(cls, buf):
+        handle = buf.read_u64()
+        cls.lift(handle)
+
+    @classmethod
+    def check_lower(cls, cb):
+        pass
+
+    @classmethod
+    def lower(cls, cb):
+        handle = cls._handle_map.insert(cb)
+        return handle
+
+    @classmethod
+    def write(cls, cb, buf):
+        buf.write_u64(cls.lower(cb))
+
+class _UniffiConverterUInt16(_UniffiConverterPrimitiveInt):
+    CLASS_NAME = "u16"
     VALUE_MIN = 0
-    VALUE_MAX = 2**8
+    VALUE_MAX = 2**16
 
     @staticmethod
     def read(buf):
-        return buf.read_u8()
+        return buf.read_u16()
 
     @staticmethod
     def write(value, buf):
-        buf.write_u8(value)
+        buf.write_u16(value)
 
 class _UniffiConverterUInt32(_UniffiConverterPrimitiveInt):
     CLASS_NAME = "u32"
@@ -2093,234 +2380,8 @@ class _UniffiConverterBytes(_UniffiConverterRustBuffer):
         buf.write(value)
 
 
-class AccountAddresses:
-    """
-    Account addresses
-    """
-
-    used: "typing.List[AddressInfo]"
-    """
-    Used addresses
-    """
-
-    unused: "typing.List[AddressInfo]"
-    """
-    Unused addresses
-    """
-
-    change: "typing.List[AddressInfo]"
-    """
-    Change addresses
-    """
-
-    def __init__(self, *, used: "typing.List[AddressInfo]", unused: "typing.List[AddressInfo]", change: "typing.List[AddressInfo]"):
-        self.used = used
-        self.unused = unused
-        self.change = change
-
-    def __str__(self):
-        return "AccountAddresses(used={}, unused={}, change={})".format(self.used, self.unused, self.change)
-
-    def __eq__(self, other):
-        if self.used != other.used:
-            return False
-        if self.unused != other.unused:
-            return False
-        if self.change != other.change:
-            return False
-        return True
-
-class _UniffiConverterTypeAccountAddresses(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return AccountAddresses(
-            used=_UniffiConverterSequenceTypeAddressInfo.read(buf),
-            unused=_UniffiConverterSequenceTypeAddressInfo.read(buf),
-            change=_UniffiConverterSequenceTypeAddressInfo.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterSequenceTypeAddressInfo.check_lower(value.used)
-        _UniffiConverterSequenceTypeAddressInfo.check_lower(value.unused)
-        _UniffiConverterSequenceTypeAddressInfo.check_lower(value.change)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterSequenceTypeAddressInfo.write(value.used, buf)
-        _UniffiConverterSequenceTypeAddressInfo.write(value.unused, buf)
-        _UniffiConverterSequenceTypeAddressInfo.write(value.change, buf)
 
 
-class AccountInfoResponse:
-    """
-    Account info response
-    """
-
-    id: "int"
-    path: "str"
-    descriptor: "str"
-    legacy_xpub: "typing.Optional[str]"
-    balance: "str"
-    available_balance: "str"
-    def __init__(self, *, id: "int", path: "str", descriptor: "str", legacy_xpub: "typing.Optional[str]", balance: "str", available_balance: "str"):
-        self.id = id
-        self.path = path
-        self.descriptor = descriptor
-        self.legacy_xpub = legacy_xpub
-        self.balance = balance
-        self.available_balance = available_balance
-
-    def __str__(self):
-        return "AccountInfoResponse(id={}, path={}, descriptor={}, legacy_xpub={}, balance={}, available_balance={})".format(self.id, self.path, self.descriptor, self.legacy_xpub, self.balance, self.available_balance)
-
-    def __eq__(self, other):
-        if self.id != other.id:
-            return False
-        if self.path != other.path:
-            return False
-        if self.descriptor != other.descriptor:
-            return False
-        if self.legacy_xpub != other.legacy_xpub:
-            return False
-        if self.balance != other.balance:
-            return False
-        if self.available_balance != other.available_balance:
-            return False
-        return True
-
-class _UniffiConverterTypeAccountInfoResponse(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return AccountInfoResponse(
-            id=_UniffiConverterUInt32.read(buf),
-            path=_UniffiConverterString.read(buf),
-            descriptor=_UniffiConverterString.read(buf),
-            legacy_xpub=_UniffiConverterOptionalString.read(buf),
-            balance=_UniffiConverterString.read(buf),
-            available_balance=_UniffiConverterString.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterUInt32.check_lower(value.id)
-        _UniffiConverterString.check_lower(value.path)
-        _UniffiConverterString.check_lower(value.descriptor)
-        _UniffiConverterOptionalString.check_lower(value.legacy_xpub)
-        _UniffiConverterString.check_lower(value.balance)
-        _UniffiConverterString.check_lower(value.available_balance)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterUInt32.write(value.id, buf)
-        _UniffiConverterString.write(value.path, buf)
-        _UniffiConverterString.write(value.descriptor, buf)
-        _UniffiConverterOptionalString.write(value.legacy_xpub, buf)
-        _UniffiConverterString.write(value.balance, buf)
-        _UniffiConverterString.write(value.available_balance, buf)
-
-
-class AccountUtxo:
-    """
-    UTXO information for account
-    """
-
-    txid: "str"
-    """
-    Transaction ID
-    """
-
-    vout: "int"
-    """
-    Output index
-    """
-
-    amount: "str"
-    """
-    Amount in satoshis
-    """
-
-    block_height: "typing.Optional[int]"
-    """
-    Block height
-    """
-
-    address: "str"
-    """
-    Address
-    """
-
-    path: "str"
-    """
-    Derivation path
-    """
-
-    confirmations: "typing.Optional[int]"
-    """
-    Number of confirmations
-    """
-
-    def __init__(self, *, txid: "str", vout: "int", amount: "str", block_height: "typing.Optional[int]", address: "str", path: "str", confirmations: "typing.Optional[int]"):
-        self.txid = txid
-        self.vout = vout
-        self.amount = amount
-        self.block_height = block_height
-        self.address = address
-        self.path = path
-        self.confirmations = confirmations
-
-    def __str__(self):
-        return "AccountUtxo(txid={}, vout={}, amount={}, block_height={}, address={}, path={}, confirmations={})".format(self.txid, self.vout, self.amount, self.block_height, self.address, self.path, self.confirmations)
-
-    def __eq__(self, other):
-        if self.txid != other.txid:
-            return False
-        if self.vout != other.vout:
-            return False
-        if self.amount != other.amount:
-            return False
-        if self.block_height != other.block_height:
-            return False
-        if self.address != other.address:
-            return False
-        if self.path != other.path:
-            return False
-        if self.confirmations != other.confirmations:
-            return False
-        return True
-
-class _UniffiConverterTypeAccountUtxo(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return AccountUtxo(
-            txid=_UniffiConverterString.read(buf),
-            vout=_UniffiConverterUInt32.read(buf),
-            amount=_UniffiConverterString.read(buf),
-            block_height=_UniffiConverterOptionalUInt32.read(buf),
-            address=_UniffiConverterString.read(buf),
-            path=_UniffiConverterString.read(buf),
-            confirmations=_UniffiConverterOptionalUInt32.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.txid)
-        _UniffiConverterUInt32.check_lower(value.vout)
-        _UniffiConverterString.check_lower(value.amount)
-        _UniffiConverterOptionalUInt32.check_lower(value.block_height)
-        _UniffiConverterString.check_lower(value.address)
-        _UniffiConverterString.check_lower(value.path)
-        _UniffiConverterOptionalUInt32.check_lower(value.confirmations)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.txid, buf)
-        _UniffiConverterUInt32.write(value.vout, buf)
-        _UniffiConverterString.write(value.amount, buf)
-        _UniffiConverterOptionalUInt32.write(value.block_height, buf)
-        _UniffiConverterString.write(value.address, buf)
-        _UniffiConverterString.write(value.path, buf)
-        _UniffiConverterOptionalUInt32.write(value.confirmations, buf)
 
 
 class ActivityTags:
@@ -2357,112 +2418,6 @@ class _UniffiConverterTypeActivityTags(_UniffiConverterRustBuffer):
     def write(value, buf):
         _UniffiConverterString.write(value.activity_id, buf)
         _UniffiConverterSequenceString.write(value.tags, buf)
-
-
-class AddressInfo:
-    """
-    Address information
-    """
-
-    address: "str"
-    """
-    Address string
-    """
-
-    path: "str"
-    """
-    Derivation path
-    """
-
-    transfers: "int"
-    """
-    Number of transfers
-    """
-
-    def __init__(self, *, address: "str", path: "str", transfers: "int"):
-        self.address = address
-        self.path = path
-        self.transfers = transfers
-
-    def __str__(self):
-        return "AddressInfo(address={}, path={}, transfers={})".format(self.address, self.path, self.transfers)
-
-    def __eq__(self, other):
-        if self.address != other.address:
-            return False
-        if self.path != other.path:
-            return False
-        if self.transfers != other.transfers:
-            return False
-        return True
-
-class _UniffiConverterTypeAddressInfo(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return AddressInfo(
-            address=_UniffiConverterString.read(buf),
-            path=_UniffiConverterString.read(buf),
-            transfers=_UniffiConverterUInt32.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.address)
-        _UniffiConverterString.check_lower(value.path)
-        _UniffiConverterUInt32.check_lower(value.transfers)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.address, buf)
-        _UniffiConverterString.write(value.path, buf)
-        _UniffiConverterUInt32.write(value.transfers, buf)
-
-
-class AddressResponse:
-    """
-    Address response containing the derived address information
-    """
-
-    address: "str"
-    path: "typing.List[int]"
-    serialized_path: "str"
-    def __init__(self, *, address: "str", path: "typing.List[int]", serialized_path: "str"):
-        self.address = address
-        self.path = path
-        self.serialized_path = serialized_path
-
-    def __str__(self):
-        return "AddressResponse(address={}, path={}, serialized_path={})".format(self.address, self.path, self.serialized_path)
-
-    def __eq__(self, other):
-        if self.address != other.address:
-            return False
-        if self.path != other.path:
-            return False
-        if self.serialized_path != other.serialized_path:
-            return False
-        return True
-
-class _UniffiConverterTypeAddressResponse(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return AddressResponse(
-            address=_UniffiConverterString.read(buf),
-            path=_UniffiConverterSequenceUInt32.read(buf),
-            serialized_path=_UniffiConverterString.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.address)
-        _UniffiConverterSequenceUInt32.check_lower(value.path)
-        _UniffiConverterString.check_lower(value.serialized_path)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.address, buf)
-        _UniffiConverterSequenceUInt32.write(value.path, buf)
-        _UniffiConverterString.write(value.serialized_path, buf)
 
 
 class ChannelLiquidityOptions:
@@ -2692,205 +2647,6 @@ class _UniffiConverterTypeClosedChannelDetails(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.channel_closure_reason, buf)
 
 
-class CoinPurchaseMemo:
-    """
-    Coin purchase memo
-    """
-
-    coin_type: "int"
-    """
-    Coin type
-    """
-
-    amount: "int"
-    """
-    Amount
-    """
-
-    address: "str"
-    """
-    Address
-    """
-
-    mac: "str"
-    """
-    MAC
-    """
-
-    def __init__(self, *, coin_type: "int", amount: "int", address: "str", mac: "str"):
-        self.coin_type = coin_type
-        self.amount = amount
-        self.address = address
-        self.mac = mac
-
-    def __str__(self):
-        return "CoinPurchaseMemo(coin_type={}, amount={}, address={}, mac={})".format(self.coin_type, self.amount, self.address, self.mac)
-
-    def __eq__(self, other):
-        if self.coin_type != other.coin_type:
-            return False
-        if self.amount != other.amount:
-            return False
-        if self.address != other.address:
-            return False
-        if self.mac != other.mac:
-            return False
-        return True
-
-class _UniffiConverterTypeCoinPurchaseMemo(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return CoinPurchaseMemo(
-            coin_type=_UniffiConverterUInt32.read(buf),
-            amount=_UniffiConverterUInt64.read(buf),
-            address=_UniffiConverterString.read(buf),
-            mac=_UniffiConverterString.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterUInt32.check_lower(value.coin_type)
-        _UniffiConverterUInt64.check_lower(value.amount)
-        _UniffiConverterString.check_lower(value.address)
-        _UniffiConverterString.check_lower(value.mac)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterUInt32.write(value.coin_type, buf)
-        _UniffiConverterUInt64.write(value.amount, buf)
-        _UniffiConverterString.write(value.address, buf)
-        _UniffiConverterString.write(value.mac, buf)
-
-
-class CommonParams:
-    """
-    Common parameters for all Trezor Connect methods
-    """
-
-    device: "typing.Optional[DeviceParams]"
-    """
-    Specific device instance to use
-    """
-
-    use_empty_passphrase: "typing.Optional[bool]"
-    """
-    Set to true if method should use empty passphrase
-    """
-
-    allow_seedless_device: "typing.Optional[bool]"
-    """
-    Allow seedless device
-    """
-
-    skip_final_reload: "typing.Optional[bool]"
-    """
-    Skip final reload
-    """
-
-    def __init__(self, *, device: "typing.Optional[DeviceParams]", use_empty_passphrase: "typing.Optional[bool]", allow_seedless_device: "typing.Optional[bool]", skip_final_reload: "typing.Optional[bool]"):
-        self.device = device
-        self.use_empty_passphrase = use_empty_passphrase
-        self.allow_seedless_device = allow_seedless_device
-        self.skip_final_reload = skip_final_reload
-
-    def __str__(self):
-        return "CommonParams(device={}, use_empty_passphrase={}, allow_seedless_device={}, skip_final_reload={})".format(self.device, self.use_empty_passphrase, self.allow_seedless_device, self.skip_final_reload)
-
-    def __eq__(self, other):
-        if self.device != other.device:
-            return False
-        if self.use_empty_passphrase != other.use_empty_passphrase:
-            return False
-        if self.allow_seedless_device != other.allow_seedless_device:
-            return False
-        if self.skip_final_reload != other.skip_final_reload:
-            return False
-        return True
-
-class _UniffiConverterTypeCommonParams(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return CommonParams(
-            device=_UniffiConverterOptionalTypeDeviceParams.read(buf),
-            use_empty_passphrase=_UniffiConverterOptionalBool.read(buf),
-            allow_seedless_device=_UniffiConverterOptionalBool.read(buf),
-            skip_final_reload=_UniffiConverterOptionalBool.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterOptionalTypeDeviceParams.check_lower(value.device)
-        _UniffiConverterOptionalBool.check_lower(value.use_empty_passphrase)
-        _UniffiConverterOptionalBool.check_lower(value.allow_seedless_device)
-        _UniffiConverterOptionalBool.check_lower(value.skip_final_reload)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterOptionalTypeDeviceParams.write(value.device, buf)
-        _UniffiConverterOptionalBool.write(value.use_empty_passphrase, buf)
-        _UniffiConverterOptionalBool.write(value.allow_seedless_device, buf)
-        _UniffiConverterOptionalBool.write(value.skip_final_reload, buf)
-
-
-class ComposeAccount:
-    """
-    Account information for compose transaction
-    """
-
-    path: "str"
-    """
-    Derivation path
-    """
-
-    addresses: "AccountAddresses"
-    """
-    Account addresses
-    """
-
-    utxo: "typing.List[AccountUtxo]"
-    """
-    UTXOs
-    """
-
-    def __init__(self, *, path: "str", addresses: "AccountAddresses", utxo: "typing.List[AccountUtxo]"):
-        self.path = path
-        self.addresses = addresses
-        self.utxo = utxo
-
-    def __str__(self):
-        return "ComposeAccount(path={}, addresses={}, utxo={})".format(self.path, self.addresses, self.utxo)
-
-    def __eq__(self, other):
-        if self.path != other.path:
-            return False
-        if self.addresses != other.addresses:
-            return False
-        if self.utxo != other.utxo:
-            return False
-        return True
-
-class _UniffiConverterTypeComposeAccount(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return ComposeAccount(
-            path=_UniffiConverterString.read(buf),
-            addresses=_UniffiConverterTypeAccountAddresses.read(buf),
-            utxo=_UniffiConverterSequenceTypeAccountUtxo.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.path)
-        _UniffiConverterTypeAccountAddresses.check_lower(value.addresses)
-        _UniffiConverterSequenceTypeAccountUtxo.check_lower(value.utxo)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.path, buf)
-        _UniffiConverterTypeAccountAddresses.write(value.addresses, buf)
-        _UniffiConverterSequenceTypeAccountUtxo.write(value.utxo, buf)
-
-
 class CreateCjitOptions:
     source: "typing.Optional[str]"
     discount_code: "typing.Optional[str]"
@@ -3040,54 +2796,6 @@ class _UniffiConverterTypeCreateOrderOptions(_UniffiConverterRustBuffer):
         _UniffiConverterBool.write(value.announce_channel, buf)
 
 
-class DeepLinkResult:
-    """
-    Result type for deep link generation, including the URL and the ID used
-    """
-
-    url: "str"
-    """
-    The generated deep link URL
-    """
-
-    request_id: "str"
-    """
-    The request ID used (either provided or auto-generated)
-    """
-
-    def __init__(self, *, url: "str", request_id: "str"):
-        self.url = url
-        self.request_id = request_id
-
-    def __str__(self):
-        return "DeepLinkResult(url={}, request_id={})".format(self.url, self.request_id)
-
-    def __eq__(self, other):
-        if self.url != other.url:
-            return False
-        if self.request_id != other.request_id:
-            return False
-        return True
-
-class _UniffiConverterTypeDeepLinkResult(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return DeepLinkResult(
-            url=_UniffiConverterString.read(buf),
-            request_id=_UniffiConverterString.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.url)
-        _UniffiConverterString.check_lower(value.request_id)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.url, buf)
-        _UniffiConverterString.write(value.request_id, buf)
-
-
 class DefaultLspBalanceParams:
     client_balance_sat: "int"
     max_channel_size_sat: "int"
@@ -3131,54 +2839,6 @@ class _UniffiConverterTypeDefaultLspBalanceParams(_UniffiConverterRustBuffer):
         _UniffiConverterUInt64.write(value.sats_per_eur, buf)
 
 
-class DeviceParams:
-    """
-    Parameters for specifying a particular device
-    """
-
-    path: "typing.Optional[str]"
-    """
-    Device instance path
-    """
-
-    instance: "typing.Optional[int]"
-    """
-    Device instance ID
-    """
-
-    def __init__(self, *, path: "typing.Optional[str]", instance: "typing.Optional[int]"):
-        self.path = path
-        self.instance = instance
-
-    def __str__(self):
-        return "DeviceParams(path={}, instance={})".format(self.path, self.instance)
-
-    def __eq__(self, other):
-        if self.path != other.path:
-            return False
-        if self.instance != other.instance:
-            return False
-        return True
-
-class _UniffiConverterTypeDeviceParams(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return DeviceParams(
-            path=_UniffiConverterOptionalString.read(buf),
-            instance=_UniffiConverterOptionalUInt32.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterOptionalString.check_lower(value.path)
-        _UniffiConverterOptionalUInt32.check_lower(value.instance)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterOptionalString.write(value.path, buf)
-        _UniffiConverterOptionalUInt32.write(value.instance, buf)
-
-
 class ErrorData:
     error_details: "str"
     def __init__(self, *, error_details: "str"):
@@ -3206,133 +2866,6 @@ class _UniffiConverterTypeErrorData(_UniffiConverterRustBuffer):
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.error_details, buf)
-
-
-class FeatureResponse:
-    """
-    Feature response containing device capabilities and information
-    """
-
-    vendor: "str"
-    major_version: "int"
-    minor_version: "int"
-    patch_version: "int"
-    device_id: "str"
-    capabilities: "typing.Optional[typing.List[str]]"
-    def __init__(self, *, vendor: "str", major_version: "int", minor_version: "int", patch_version: "int", device_id: "str", capabilities: "typing.Optional[typing.List[str]]"):
-        self.vendor = vendor
-        self.major_version = major_version
-        self.minor_version = minor_version
-        self.patch_version = patch_version
-        self.device_id = device_id
-        self.capabilities = capabilities
-
-    def __str__(self):
-        return "FeatureResponse(vendor={}, major_version={}, minor_version={}, patch_version={}, device_id={}, capabilities={})".format(self.vendor, self.major_version, self.minor_version, self.patch_version, self.device_id, self.capabilities)
-
-    def __eq__(self, other):
-        if self.vendor != other.vendor:
-            return False
-        if self.major_version != other.major_version:
-            return False
-        if self.minor_version != other.minor_version:
-            return False
-        if self.patch_version != other.patch_version:
-            return False
-        if self.device_id != other.device_id:
-            return False
-        if self.capabilities != other.capabilities:
-            return False
-        return True
-
-class _UniffiConverterTypeFeatureResponse(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return FeatureResponse(
-            vendor=_UniffiConverterString.read(buf),
-            major_version=_UniffiConverterUInt32.read(buf),
-            minor_version=_UniffiConverterUInt32.read(buf),
-            patch_version=_UniffiConverterUInt32.read(buf),
-            device_id=_UniffiConverterString.read(buf),
-            capabilities=_UniffiConverterOptionalSequenceString.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.vendor)
-        _UniffiConverterUInt32.check_lower(value.major_version)
-        _UniffiConverterUInt32.check_lower(value.minor_version)
-        _UniffiConverterUInt32.check_lower(value.patch_version)
-        _UniffiConverterString.check_lower(value.device_id)
-        _UniffiConverterOptionalSequenceString.check_lower(value.capabilities)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.vendor, buf)
-        _UniffiConverterUInt32.write(value.major_version, buf)
-        _UniffiConverterUInt32.write(value.minor_version, buf)
-        _UniffiConverterUInt32.write(value.patch_version, buf)
-        _UniffiConverterString.write(value.device_id, buf)
-        _UniffiConverterOptionalSequenceString.write(value.capabilities, buf)
-
-
-class FeeLevel:
-    """
-    Fee level for compose transaction
-    """
-
-    fee_per_unit: "str"
-    """
-    Fee per unit (satoshi/byte or satoshi/vbyte)
-    """
-
-    base_fee: "typing.Optional[int]"
-    """
-    Base fee in satoshi (optional, used in RBF and DOGE)
-    """
-
-    floor_base_fee: "typing.Optional[bool]"
-    """
-    Floor base fee (optional, used in DOGE)
-    """
-
-    def __init__(self, *, fee_per_unit: "str", base_fee: "typing.Optional[int]", floor_base_fee: "typing.Optional[bool]"):
-        self.fee_per_unit = fee_per_unit
-        self.base_fee = base_fee
-        self.floor_base_fee = floor_base_fee
-
-    def __str__(self):
-        return "FeeLevel(fee_per_unit={}, base_fee={}, floor_base_fee={})".format(self.fee_per_unit, self.base_fee, self.floor_base_fee)
-
-    def __eq__(self, other):
-        if self.fee_per_unit != other.fee_per_unit:
-            return False
-        if self.base_fee != other.base_fee:
-            return False
-        if self.floor_base_fee != other.floor_base_fee:
-            return False
-        return True
-
-class _UniffiConverterTypeFeeLevel(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return FeeLevel(
-            fee_per_unit=_UniffiConverterString.read(buf),
-            base_fee=_UniffiConverterOptionalUInt32.read(buf),
-            floor_base_fee=_UniffiConverterOptionalBool.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.fee_per_unit)
-        _UniffiConverterOptionalUInt32.check_lower(value.base_fee)
-        _UniffiConverterOptionalBool.check_lower(value.floor_base_fee)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.fee_per_unit, buf)
-        _UniffiConverterOptionalUInt32.write(value.base_fee, buf)
-        _UniffiConverterOptionalBool.write(value.floor_base_fee, buf)
 
 
 class FeeRates:
@@ -3500,157 +3033,6 @@ class _UniffiConverterTypeGetAddressesResponse(_UniffiConverterRustBuffer):
     @staticmethod
     def write(value, buf):
         _UniffiConverterSequenceTypeGetAddressResponse.write(value.addresses, buf)
-
-
-class HdNodePathType:
-    """
-    HD Node Path Type
-    """
-
-    node: "HdNodeTypeOrString"
-    """
-    Node data (can be String or HDNodeType)
-    """
-
-    address_n: "typing.List[int]"
-    """
-    BIP32 derivation path
-    """
-
-    def __init__(self, *, node: "HdNodeTypeOrString", address_n: "typing.List[int]"):
-        self.node = node
-        self.address_n = address_n
-
-    def __str__(self):
-        return "HdNodePathType(node={}, address_n={})".format(self.node, self.address_n)
-
-    def __eq__(self, other):
-        if self.node != other.node:
-            return False
-        if self.address_n != other.address_n:
-            return False
-        return True
-
-class _UniffiConverterTypeHdNodePathType(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return HdNodePathType(
-            node=_UniffiConverterTypeHdNodeTypeOrString.read(buf),
-            address_n=_UniffiConverterSequenceUInt32.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterTypeHdNodeTypeOrString.check_lower(value.node)
-        _UniffiConverterSequenceUInt32.check_lower(value.address_n)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterTypeHdNodeTypeOrString.write(value.node, buf)
-        _UniffiConverterSequenceUInt32.write(value.address_n, buf)
-
-
-class HdNodeType:
-    """
-    HD Node Type
-    """
-
-    depth: "int"
-    """
-    Depth
-    """
-
-    fingerprint: "int"
-    """
-    Fingerprint
-    """
-
-    child_num: "int"
-    """
-    Child number
-    """
-
-    chain_code: "str"
-    """
-    Chain code
-    """
-
-    public_key: "str"
-    """
-    Public key
-    """
-
-    private_key: "typing.Optional[str]"
-    """
-    Private key (optional)
-    """
-
-    address_n: "typing.Optional[typing.List[int]]"
-    """
-    BIP32 derivation path (optional)
-    """
-
-    def __init__(self, *, depth: "int", fingerprint: "int", child_num: "int", chain_code: "str", public_key: "str", private_key: "typing.Optional[str]", address_n: "typing.Optional[typing.List[int]]"):
-        self.depth = depth
-        self.fingerprint = fingerprint
-        self.child_num = child_num
-        self.chain_code = chain_code
-        self.public_key = public_key
-        self.private_key = private_key
-        self.address_n = address_n
-
-    def __str__(self):
-        return "HdNodeType(depth={}, fingerprint={}, child_num={}, chain_code={}, public_key={}, private_key={}, address_n={})".format(self.depth, self.fingerprint, self.child_num, self.chain_code, self.public_key, self.private_key, self.address_n)
-
-    def __eq__(self, other):
-        if self.depth != other.depth:
-            return False
-        if self.fingerprint != other.fingerprint:
-            return False
-        if self.child_num != other.child_num:
-            return False
-        if self.chain_code != other.chain_code:
-            return False
-        if self.public_key != other.public_key:
-            return False
-        if self.private_key != other.private_key:
-            return False
-        if self.address_n != other.address_n:
-            return False
-        return True
-
-class _UniffiConverterTypeHdNodeType(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return HdNodeType(
-            depth=_UniffiConverterUInt32.read(buf),
-            fingerprint=_UniffiConverterUInt32.read(buf),
-            child_num=_UniffiConverterUInt32.read(buf),
-            chain_code=_UniffiConverterString.read(buf),
-            public_key=_UniffiConverterString.read(buf),
-            private_key=_UniffiConverterOptionalString.read(buf),
-            address_n=_UniffiConverterOptionalSequenceUInt32.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterUInt32.check_lower(value.depth)
-        _UniffiConverterUInt32.check_lower(value.fingerprint)
-        _UniffiConverterUInt32.check_lower(value.child_num)
-        _UniffiConverterString.check_lower(value.chain_code)
-        _UniffiConverterString.check_lower(value.public_key)
-        _UniffiConverterOptionalString.check_lower(value.private_key)
-        _UniffiConverterOptionalSequenceUInt32.check_lower(value.address_n)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterUInt32.write(value.depth, buf)
-        _UniffiConverterUInt32.write(value.fingerprint, buf)
-        _UniffiConverterUInt32.write(value.child_num, buf)
-        _UniffiConverterString.write(value.chain_code, buf)
-        _UniffiConverterString.write(value.public_key, buf)
-        _UniffiConverterOptionalString.write(value.private_key, buf)
-        _UniffiConverterOptionalSequenceUInt32.write(value.address_n, buf)
 
 
 class IBt0ConfMinTxFeeWindow:
@@ -6086,133 +5468,85 @@ class _UniffiConverterTypeLnurlWithdrawData(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.tag, buf)
 
 
-class MessageSignatureResponse:
+class NativeDeviceInfo:
     """
-    Message signature response
-    """
-
-    address: "str"
-    """
-    Signer address
+    Native device information returned from enumeration
     """
 
-    signature: "str"
+    path: "str"
     """
-    Signature in base64 format
+    Unique path/identifier for this device
     """
 
-    def __init__(self, *, address: "str", signature: "str"):
-        self.address = address
-        self.signature = signature
+    transport_type: "str"
+    """
+    Transport type: "usb" or "bluetooth"
+    """
+
+    name: "typing.Optional[str]"
+    """
+    Optional device name (from BLE advertisement or USB descriptor)
+    """
+
+    vendor_id: "typing.Optional[int]"
+    """
+    USB Vendor ID (for USB devices)
+    """
+
+    product_id: "typing.Optional[int]"
+    """
+    USB Product ID (for USB devices)
+    """
+
+    def __init__(self, *, path: "str", transport_type: "str", name: "typing.Optional[str]", vendor_id: "typing.Optional[int]", product_id: "typing.Optional[int]"):
+        self.path = path
+        self.transport_type = transport_type
+        self.name = name
+        self.vendor_id = vendor_id
+        self.product_id = product_id
 
     def __str__(self):
-        return "MessageSignatureResponse(address={}, signature={})".format(self.address, self.signature)
+        return "NativeDeviceInfo(path={}, transport_type={}, name={}, vendor_id={}, product_id={})".format(self.path, self.transport_type, self.name, self.vendor_id, self.product_id)
 
     def __eq__(self, other):
-        if self.address != other.address:
+        if self.path != other.path:
             return False
-        if self.signature != other.signature:
+        if self.transport_type != other.transport_type:
+            return False
+        if self.name != other.name:
+            return False
+        if self.vendor_id != other.vendor_id:
+            return False
+        if self.product_id != other.product_id:
             return False
         return True
 
-class _UniffiConverterTypeMessageSignatureResponse(_UniffiConverterRustBuffer):
+class _UniffiConverterTypeNativeDeviceInfo(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
-        return MessageSignatureResponse(
-            address=_UniffiConverterString.read(buf),
-            signature=_UniffiConverterString.read(buf),
+        return NativeDeviceInfo(
+            path=_UniffiConverterString.read(buf),
+            transport_type=_UniffiConverterString.read(buf),
+            name=_UniffiConverterOptionalString.read(buf),
+            vendor_id=_UniffiConverterOptionalUInt16.read(buf),
+            product_id=_UniffiConverterOptionalUInt16.read(buf),
         )
 
     @staticmethod
     def check_lower(value):
-        _UniffiConverterString.check_lower(value.address)
-        _UniffiConverterString.check_lower(value.signature)
+        _UniffiConverterString.check_lower(value.path)
+        _UniffiConverterString.check_lower(value.transport_type)
+        _UniffiConverterOptionalString.check_lower(value.name)
+        _UniffiConverterOptionalUInt16.check_lower(value.vendor_id)
+        _UniffiConverterOptionalUInt16.check_lower(value.product_id)
 
     @staticmethod
     def write(value, buf):
-        _UniffiConverterString.write(value.address, buf)
-        _UniffiConverterString.write(value.signature, buf)
-
-
-class MultisigRedeemScriptType:
-    """
-    Multisig Redeem Script Type
-    """
-
-    pubkeys: "typing.List[HdNodePathType]"
-    """
-    Public keys
-    """
-
-    signatures: "typing.List[str]"
-    """
-    Signatures
-    """
-
-    m: "int"
-    """
-    M-of-N threshold
-    """
-
-    nodes: "typing.Optional[typing.List[HdNodeType]]"
-    """
-    Nodes (optional)
-    """
-
-    pubkeys_order: "typing.Optional[int]"
-    """
-    Pubkeys order (optional): 0 for PRESERVED, 1 for LEXICOGRAPHIC
-    """
-
-    def __init__(self, *, pubkeys: "typing.List[HdNodePathType]", signatures: "typing.List[str]", m: "int", nodes: "typing.Optional[typing.List[HdNodeType]]", pubkeys_order: "typing.Optional[int]"):
-        self.pubkeys = pubkeys
-        self.signatures = signatures
-        self.m = m
-        self.nodes = nodes
-        self.pubkeys_order = pubkeys_order
-
-    def __str__(self):
-        return "MultisigRedeemScriptType(pubkeys={}, signatures={}, m={}, nodes={}, pubkeys_order={})".format(self.pubkeys, self.signatures, self.m, self.nodes, self.pubkeys_order)
-
-    def __eq__(self, other):
-        if self.pubkeys != other.pubkeys:
-            return False
-        if self.signatures != other.signatures:
-            return False
-        if self.m != other.m:
-            return False
-        if self.nodes != other.nodes:
-            return False
-        if self.pubkeys_order != other.pubkeys_order:
-            return False
-        return True
-
-class _UniffiConverterTypeMultisigRedeemScriptType(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return MultisigRedeemScriptType(
-            pubkeys=_UniffiConverterSequenceTypeHdNodePathType.read(buf),
-            signatures=_UniffiConverterSequenceString.read(buf),
-            m=_UniffiConverterUInt32.read(buf),
-            nodes=_UniffiConverterOptionalSequenceTypeHdNodeType.read(buf),
-            pubkeys_order=_UniffiConverterOptionalUInt8.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterSequenceTypeHdNodePathType.check_lower(value.pubkeys)
-        _UniffiConverterSequenceString.check_lower(value.signatures)
-        _UniffiConverterUInt32.check_lower(value.m)
-        _UniffiConverterOptionalSequenceTypeHdNodeType.check_lower(value.nodes)
-        _UniffiConverterOptionalUInt8.check_lower(value.pubkeys_order)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterSequenceTypeHdNodePathType.write(value.pubkeys, buf)
-        _UniffiConverterSequenceString.write(value.signatures, buf)
-        _UniffiConverterUInt32.write(value.m, buf)
-        _UniffiConverterOptionalSequenceTypeHdNodeType.write(value.nodes, buf)
-        _UniffiConverterOptionalUInt8.write(value.pubkeys_order, buf)
+        _UniffiConverterString.write(value.path, buf)
+        _UniffiConverterString.write(value.transport_type, buf)
+        _UniffiConverterOptionalString.write(value.name, buf)
+        _UniffiConverterOptionalUInt16.write(value.vendor_id, buf)
+        _UniffiConverterOptionalUInt16.write(value.product_id, buf)
 
 
 class OnChainInvoice:
@@ -6427,65 +5761,6 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalUInt64.write(value.seen_at, buf)
 
 
-class PaymentRequestMemo:
-    """
-    Payment request memo types
-    """
-
-    text_memo: "typing.Optional[TextMemo]"
-    """
-    Text memo
-    """
-
-    refund_memo: "typing.Optional[RefundMemo]"
-    """
-    Refund memo
-    """
-
-    coin_purchase_memo: "typing.Optional[CoinPurchaseMemo]"
-    """
-    Coin purchase memo
-    """
-
-    def __init__(self, *, text_memo: "typing.Optional[TextMemo]", refund_memo: "typing.Optional[RefundMemo]", coin_purchase_memo: "typing.Optional[CoinPurchaseMemo]"):
-        self.text_memo = text_memo
-        self.refund_memo = refund_memo
-        self.coin_purchase_memo = coin_purchase_memo
-
-    def __str__(self):
-        return "PaymentRequestMemo(text_memo={}, refund_memo={}, coin_purchase_memo={})".format(self.text_memo, self.refund_memo, self.coin_purchase_memo)
-
-    def __eq__(self, other):
-        if self.text_memo != other.text_memo:
-            return False
-        if self.refund_memo != other.refund_memo:
-            return False
-        if self.coin_purchase_memo != other.coin_purchase_memo:
-            return False
-        return True
-
-class _UniffiConverterTypePaymentRequestMemo(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return PaymentRequestMemo(
-            text_memo=_UniffiConverterOptionalTypeTextMemo.read(buf),
-            refund_memo=_UniffiConverterOptionalTypeRefundMemo.read(buf),
-            coin_purchase_memo=_UniffiConverterOptionalTypeCoinPurchaseMemo.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterOptionalTypeTextMemo.check_lower(value.text_memo)
-        _UniffiConverterOptionalTypeRefundMemo.check_lower(value.refund_memo)
-        _UniffiConverterOptionalTypeCoinPurchaseMemo.check_lower(value.coin_purchase_memo)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterOptionalTypeTextMemo.write(value.text_memo, buf)
-        _UniffiConverterOptionalTypeRefundMemo.write(value.refund_memo, buf)
-        _UniffiConverterOptionalTypeCoinPurchaseMemo.write(value.coin_purchase_memo, buf)
-
-
 class PreActivityMetadata:
     payment_id: "str"
     tags: "typing.List[str]"
@@ -6578,271 +5853,6 @@ class _UniffiConverterTypePreActivityMetadata(_UniffiConverterRustBuffer):
         _UniffiConverterUInt64.write(value.created_at, buf)
 
 
-class PrecomposedInput:
-    """
-    Precomposed transaction input
-    """
-
-    address_n: "typing.List[int]"
-    """
-    BIP32 derivation path
-    """
-
-    amount: "str"
-    """
-    Amount in satoshis
-    """
-
-    prev_hash: "str"
-    """
-    Previous transaction hash
-    """
-
-    prev_index: "int"
-    """
-    Previous output index
-    """
-
-    script_type: "ScriptType"
-    """
-    Script type
-    """
-
-    def __init__(self, *, address_n: "typing.List[int]", amount: "str", prev_hash: "str", prev_index: "int", script_type: "ScriptType"):
-        self.address_n = address_n
-        self.amount = amount
-        self.prev_hash = prev_hash
-        self.prev_index = prev_index
-        self.script_type = script_type
-
-    def __str__(self):
-        return "PrecomposedInput(address_n={}, amount={}, prev_hash={}, prev_index={}, script_type={})".format(self.address_n, self.amount, self.prev_hash, self.prev_index, self.script_type)
-
-    def __eq__(self, other):
-        if self.address_n != other.address_n:
-            return False
-        if self.amount != other.amount:
-            return False
-        if self.prev_hash != other.prev_hash:
-            return False
-        if self.prev_index != other.prev_index:
-            return False
-        if self.script_type != other.script_type:
-            return False
-        return True
-
-class _UniffiConverterTypePrecomposedInput(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return PrecomposedInput(
-            address_n=_UniffiConverterSequenceUInt32.read(buf),
-            amount=_UniffiConverterString.read(buf),
-            prev_hash=_UniffiConverterString.read(buf),
-            prev_index=_UniffiConverterUInt32.read(buf),
-            script_type=_UniffiConverterTypeScriptType.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterSequenceUInt32.check_lower(value.address_n)
-        _UniffiConverterString.check_lower(value.amount)
-        _UniffiConverterString.check_lower(value.prev_hash)
-        _UniffiConverterUInt32.check_lower(value.prev_index)
-        _UniffiConverterTypeScriptType.check_lower(value.script_type)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterSequenceUInt32.write(value.address_n, buf)
-        _UniffiConverterString.write(value.amount, buf)
-        _UniffiConverterString.write(value.prev_hash, buf)
-        _UniffiConverterUInt32.write(value.prev_index, buf)
-        _UniffiConverterTypeScriptType.write(value.script_type, buf)
-
-
-class PrecomposedOutput:
-    """
-    Precomposed transaction output
-    """
-
-    address_n: "typing.Optional[typing.List[int]]"
-    """
-    BIP32 derivation path (for change outputs)
-    """
-
-    amount: "str"
-    """
-    Amount in satoshis
-    """
-
-    address: "typing.Optional[str]"
-    """
-    Address (for regular outputs)
-    """
-
-    script_type: "ScriptType"
-    """
-    Script type
-    """
-
-    def __init__(self, *, address_n: "typing.Optional[typing.List[int]]", amount: "str", address: "typing.Optional[str]", script_type: "ScriptType"):
-        self.address_n = address_n
-        self.amount = amount
-        self.address = address
-        self.script_type = script_type
-
-    def __str__(self):
-        return "PrecomposedOutput(address_n={}, amount={}, address={}, script_type={})".format(self.address_n, self.amount, self.address, self.script_type)
-
-    def __eq__(self, other):
-        if self.address_n != other.address_n:
-            return False
-        if self.amount != other.amount:
-            return False
-        if self.address != other.address:
-            return False
-        if self.script_type != other.script_type:
-            return False
-        return True
-
-class _UniffiConverterTypePrecomposedOutput(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return PrecomposedOutput(
-            address_n=_UniffiConverterOptionalSequenceUInt32.read(buf),
-            amount=_UniffiConverterString.read(buf),
-            address=_UniffiConverterOptionalString.read(buf),
-            script_type=_UniffiConverterTypeScriptType.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterOptionalSequenceUInt32.check_lower(value.address_n)
-        _UniffiConverterString.check_lower(value.amount)
-        _UniffiConverterOptionalString.check_lower(value.address)
-        _UniffiConverterTypeScriptType.check_lower(value.script_type)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterOptionalSequenceUInt32.write(value.address_n, buf)
-        _UniffiConverterString.write(value.amount, buf)
-        _UniffiConverterOptionalString.write(value.address, buf)
-        _UniffiConverterTypeScriptType.write(value.script_type, buf)
-
-
-class PrecomposedTransaction:
-    """
-    Precomposed transaction
-    """
-
-    tx_type: "str"
-    """
-    Transaction type (usually "final" or "error")
-    """
-
-    total_spent: "typing.Optional[str]"
-    """
-    Total amount spent (including fee)
-    """
-
-    fee: "typing.Optional[str]"
-    """
-    Transaction fee
-    """
-
-    fee_per_byte: "typing.Optional[str]"
-    """
-    Fee per byte
-    """
-
-    bytes: "typing.Optional[int]"
-    """
-    Transaction size in bytes
-    """
-
-    inputs: "typing.Optional[typing.List[PrecomposedInput]]"
-    """
-    Transaction inputs
-    """
-
-    outputs: "typing.Optional[typing.List[PrecomposedOutput]]"
-    """
-    Transaction outputs
-    """
-
-    outputs_permutation: "typing.Optional[typing.List[int]]"
-    """
-    Output permutation indices
-    """
-
-    def __init__(self, *, tx_type: "str", total_spent: "typing.Optional[str]", fee: "typing.Optional[str]", fee_per_byte: "typing.Optional[str]", bytes: "typing.Optional[int]", inputs: "typing.Optional[typing.List[PrecomposedInput]]", outputs: "typing.Optional[typing.List[PrecomposedOutput]]", outputs_permutation: "typing.Optional[typing.List[int]]"):
-        self.tx_type = tx_type
-        self.total_spent = total_spent
-        self.fee = fee
-        self.fee_per_byte = fee_per_byte
-        self.bytes = bytes
-        self.inputs = inputs
-        self.outputs = outputs
-        self.outputs_permutation = outputs_permutation
-
-    def __str__(self):
-        return "PrecomposedTransaction(tx_type={}, total_spent={}, fee={}, fee_per_byte={}, bytes={}, inputs={}, outputs={}, outputs_permutation={})".format(self.tx_type, self.total_spent, self.fee, self.fee_per_byte, self.bytes, self.inputs, self.outputs, self.outputs_permutation)
-
-    def __eq__(self, other):
-        if self.tx_type != other.tx_type:
-            return False
-        if self.total_spent != other.total_spent:
-            return False
-        if self.fee != other.fee:
-            return False
-        if self.fee_per_byte != other.fee_per_byte:
-            return False
-        if self.bytes != other.bytes:
-            return False
-        if self.inputs != other.inputs:
-            return False
-        if self.outputs != other.outputs:
-            return False
-        if self.outputs_permutation != other.outputs_permutation:
-            return False
-        return True
-
-class _UniffiConverterTypePrecomposedTransaction(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return PrecomposedTransaction(
-            tx_type=_UniffiConverterString.read(buf),
-            total_spent=_UniffiConverterOptionalString.read(buf),
-            fee=_UniffiConverterOptionalString.read(buf),
-            fee_per_byte=_UniffiConverterOptionalString.read(buf),
-            bytes=_UniffiConverterOptionalUInt32.read(buf),
-            inputs=_UniffiConverterOptionalSequenceTypePrecomposedInput.read(buf),
-            outputs=_UniffiConverterOptionalSequenceTypePrecomposedOutput.read(buf),
-            outputs_permutation=_UniffiConverterOptionalSequenceUInt32.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.tx_type)
-        _UniffiConverterOptionalString.check_lower(value.total_spent)
-        _UniffiConverterOptionalString.check_lower(value.fee)
-        _UniffiConverterOptionalString.check_lower(value.fee_per_byte)
-        _UniffiConverterOptionalUInt32.check_lower(value.bytes)
-        _UniffiConverterOptionalSequenceTypePrecomposedInput.check_lower(value.inputs)
-        _UniffiConverterOptionalSequenceTypePrecomposedOutput.check_lower(value.outputs)
-        _UniffiConverterOptionalSequenceUInt32.check_lower(value.outputs_permutation)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.tx_type, buf)
-        _UniffiConverterOptionalString.write(value.total_spent, buf)
-        _UniffiConverterOptionalString.write(value.fee, buf)
-        _UniffiConverterOptionalString.write(value.fee_per_byte, buf)
-        _UniffiConverterOptionalUInt32.write(value.bytes, buf)
-        _UniffiConverterOptionalSequenceTypePrecomposedInput.write(value.inputs, buf)
-        _UniffiConverterOptionalSequenceTypePrecomposedOutput.write(value.outputs, buf)
-        _UniffiConverterOptionalSequenceUInt32.write(value.outputs_permutation, buf)
-
-
 class PubkyAuth:
     data: "str"
     def __init__(self, *, data: "str"):
@@ -6870,474 +5880,6 @@ class _UniffiConverterTypePubkyAuth(_UniffiConverterRustBuffer):
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.data, buf)
-
-
-class PublicKeyResponse:
-    """
-    Public key response containing the derived public key information
-    """
-
-    path: "typing.List[int]"
-    serialized_path: "str"
-    xpub: "str"
-    xpub_segwit: "typing.Optional[str]"
-    chain_code: "str"
-    child_num: "int"
-    public_key: "str"
-    fingerprint: "int"
-    depth: "int"
-    descriptor: "typing.Optional[str]"
-    def __init__(self, *, path: "typing.List[int]", serialized_path: "str", xpub: "str", xpub_segwit: "typing.Optional[str]", chain_code: "str", child_num: "int", public_key: "str", fingerprint: "int", depth: "int", descriptor: "typing.Optional[str]"):
-        self.path = path
-        self.serialized_path = serialized_path
-        self.xpub = xpub
-        self.xpub_segwit = xpub_segwit
-        self.chain_code = chain_code
-        self.child_num = child_num
-        self.public_key = public_key
-        self.fingerprint = fingerprint
-        self.depth = depth
-        self.descriptor = descriptor
-
-    def __str__(self):
-        return "PublicKeyResponse(path={}, serialized_path={}, xpub={}, xpub_segwit={}, chain_code={}, child_num={}, public_key={}, fingerprint={}, depth={}, descriptor={})".format(self.path, self.serialized_path, self.xpub, self.xpub_segwit, self.chain_code, self.child_num, self.public_key, self.fingerprint, self.depth, self.descriptor)
-
-    def __eq__(self, other):
-        if self.path != other.path:
-            return False
-        if self.serialized_path != other.serialized_path:
-            return False
-        if self.xpub != other.xpub:
-            return False
-        if self.xpub_segwit != other.xpub_segwit:
-            return False
-        if self.chain_code != other.chain_code:
-            return False
-        if self.child_num != other.child_num:
-            return False
-        if self.public_key != other.public_key:
-            return False
-        if self.fingerprint != other.fingerprint:
-            return False
-        if self.depth != other.depth:
-            return False
-        if self.descriptor != other.descriptor:
-            return False
-        return True
-
-class _UniffiConverterTypePublicKeyResponse(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return PublicKeyResponse(
-            path=_UniffiConverterSequenceUInt32.read(buf),
-            serialized_path=_UniffiConverterString.read(buf),
-            xpub=_UniffiConverterString.read(buf),
-            xpub_segwit=_UniffiConverterOptionalString.read(buf),
-            chain_code=_UniffiConverterString.read(buf),
-            child_num=_UniffiConverterUInt32.read(buf),
-            public_key=_UniffiConverterString.read(buf),
-            fingerprint=_UniffiConverterUInt32.read(buf),
-            depth=_UniffiConverterUInt32.read(buf),
-            descriptor=_UniffiConverterOptionalString.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterSequenceUInt32.check_lower(value.path)
-        _UniffiConverterString.check_lower(value.serialized_path)
-        _UniffiConverterString.check_lower(value.xpub)
-        _UniffiConverterOptionalString.check_lower(value.xpub_segwit)
-        _UniffiConverterString.check_lower(value.chain_code)
-        _UniffiConverterUInt32.check_lower(value.child_num)
-        _UniffiConverterString.check_lower(value.public_key)
-        _UniffiConverterUInt32.check_lower(value.fingerprint)
-        _UniffiConverterUInt32.check_lower(value.depth)
-        _UniffiConverterOptionalString.check_lower(value.descriptor)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterSequenceUInt32.write(value.path, buf)
-        _UniffiConverterString.write(value.serialized_path, buf)
-        _UniffiConverterString.write(value.xpub, buf)
-        _UniffiConverterOptionalString.write(value.xpub_segwit, buf)
-        _UniffiConverterString.write(value.chain_code, buf)
-        _UniffiConverterUInt32.write(value.child_num, buf)
-        _UniffiConverterString.write(value.public_key, buf)
-        _UniffiConverterUInt32.write(value.fingerprint, buf)
-        _UniffiConverterUInt32.write(value.depth, buf)
-        _UniffiConverterOptionalString.write(value.descriptor, buf)
-
-
-class RefTransaction:
-    """
-    Reference transaction for transaction signing
-    """
-
-    hash: "str"
-    """
-    Transaction hash
-    """
-
-    version: "typing.Optional[int]"
-    """
-    Transaction version
-    """
-
-    inputs: "typing.List[RefTxInput]"
-    """
-    Transaction inputs
-    """
-
-    bin_outputs: "typing.List[RefTxOutput]"
-    """
-    Transaction outputs (binary format)
-    """
-
-    lock_time: "typing.Optional[int]"
-    """
-    Lock time
-    """
-
-    expiry: "typing.Optional[int]"
-    """
-    Expiry (for Zcash/Decred)
-    """
-
-    version_group_id: "typing.Optional[int]"
-    """
-    Version group ID (for Zcash)
-    """
-
-    overwintered: "typing.Optional[bool]"
-    """
-    Overwintered flag (for Zcash)
-    """
-
-    timestamp: "typing.Optional[int]"
-    """
-    Timestamp (for Capricoin)
-    """
-
-    branch_id: "typing.Optional[int]"
-    """
-    Branch ID (for Zcash)
-    """
-
-    extra_data: "typing.Optional[str]"
-    """
-    Extra data
-    """
-
-    def __init__(self, *, hash: "str", version: "typing.Optional[int]", inputs: "typing.List[RefTxInput]", bin_outputs: "typing.List[RefTxOutput]", lock_time: "typing.Optional[int]", expiry: "typing.Optional[int]", version_group_id: "typing.Optional[int]", overwintered: "typing.Optional[bool]", timestamp: "typing.Optional[int]", branch_id: "typing.Optional[int]", extra_data: "typing.Optional[str]"):
-        self.hash = hash
-        self.version = version
-        self.inputs = inputs
-        self.bin_outputs = bin_outputs
-        self.lock_time = lock_time
-        self.expiry = expiry
-        self.version_group_id = version_group_id
-        self.overwintered = overwintered
-        self.timestamp = timestamp
-        self.branch_id = branch_id
-        self.extra_data = extra_data
-
-    def __str__(self):
-        return "RefTransaction(hash={}, version={}, inputs={}, bin_outputs={}, lock_time={}, expiry={}, version_group_id={}, overwintered={}, timestamp={}, branch_id={}, extra_data={})".format(self.hash, self.version, self.inputs, self.bin_outputs, self.lock_time, self.expiry, self.version_group_id, self.overwintered, self.timestamp, self.branch_id, self.extra_data)
-
-    def __eq__(self, other):
-        if self.hash != other.hash:
-            return False
-        if self.version != other.version:
-            return False
-        if self.inputs != other.inputs:
-            return False
-        if self.bin_outputs != other.bin_outputs:
-            return False
-        if self.lock_time != other.lock_time:
-            return False
-        if self.expiry != other.expiry:
-            return False
-        if self.version_group_id != other.version_group_id:
-            return False
-        if self.overwintered != other.overwintered:
-            return False
-        if self.timestamp != other.timestamp:
-            return False
-        if self.branch_id != other.branch_id:
-            return False
-        if self.extra_data != other.extra_data:
-            return False
-        return True
-
-class _UniffiConverterTypeRefTransaction(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return RefTransaction(
-            hash=_UniffiConverterString.read(buf),
-            version=_UniffiConverterOptionalUInt32.read(buf),
-            inputs=_UniffiConverterSequenceTypeRefTxInput.read(buf),
-            bin_outputs=_UniffiConverterSequenceTypeRefTxOutput.read(buf),
-            lock_time=_UniffiConverterOptionalUInt32.read(buf),
-            expiry=_UniffiConverterOptionalUInt32.read(buf),
-            version_group_id=_UniffiConverterOptionalUInt32.read(buf),
-            overwintered=_UniffiConverterOptionalBool.read(buf),
-            timestamp=_UniffiConverterOptionalUInt32.read(buf),
-            branch_id=_UniffiConverterOptionalUInt32.read(buf),
-            extra_data=_UniffiConverterOptionalString.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.hash)
-        _UniffiConverterOptionalUInt32.check_lower(value.version)
-        _UniffiConverterSequenceTypeRefTxInput.check_lower(value.inputs)
-        _UniffiConverterSequenceTypeRefTxOutput.check_lower(value.bin_outputs)
-        _UniffiConverterOptionalUInt32.check_lower(value.lock_time)
-        _UniffiConverterOptionalUInt32.check_lower(value.expiry)
-        _UniffiConverterOptionalUInt32.check_lower(value.version_group_id)
-        _UniffiConverterOptionalBool.check_lower(value.overwintered)
-        _UniffiConverterOptionalUInt32.check_lower(value.timestamp)
-        _UniffiConverterOptionalUInt32.check_lower(value.branch_id)
-        _UniffiConverterOptionalString.check_lower(value.extra_data)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.hash, buf)
-        _UniffiConverterOptionalUInt32.write(value.version, buf)
-        _UniffiConverterSequenceTypeRefTxInput.write(value.inputs, buf)
-        _UniffiConverterSequenceTypeRefTxOutput.write(value.bin_outputs, buf)
-        _UniffiConverterOptionalUInt32.write(value.lock_time, buf)
-        _UniffiConverterOptionalUInt32.write(value.expiry, buf)
-        _UniffiConverterOptionalUInt32.write(value.version_group_id, buf)
-        _UniffiConverterOptionalBool.write(value.overwintered, buf)
-        _UniffiConverterOptionalUInt32.write(value.timestamp, buf)
-        _UniffiConverterOptionalUInt32.write(value.branch_id, buf)
-        _UniffiConverterOptionalString.write(value.extra_data, buf)
-
-
-class RefTxInput:
-    """
-    Reference transaction input
-    """
-
-    prev_hash: "str"
-    """
-    Previous transaction hash
-    """
-
-    prev_index: "int"
-    """
-    Previous transaction output index
-    """
-
-    script_sig: "str"
-    """
-    Script signature
-    """
-
-    sequence: "int"
-    """
-    Sequence number
-    """
-
-    def __init__(self, *, prev_hash: "str", prev_index: "int", script_sig: "str", sequence: "int"):
-        self.prev_hash = prev_hash
-        self.prev_index = prev_index
-        self.script_sig = script_sig
-        self.sequence = sequence
-
-    def __str__(self):
-        return "RefTxInput(prev_hash={}, prev_index={}, script_sig={}, sequence={})".format(self.prev_hash, self.prev_index, self.script_sig, self.sequence)
-
-    def __eq__(self, other):
-        if self.prev_hash != other.prev_hash:
-            return False
-        if self.prev_index != other.prev_index:
-            return False
-        if self.script_sig != other.script_sig:
-            return False
-        if self.sequence != other.sequence:
-            return False
-        return True
-
-class _UniffiConverterTypeRefTxInput(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return RefTxInput(
-            prev_hash=_UniffiConverterString.read(buf),
-            prev_index=_UniffiConverterUInt32.read(buf),
-            script_sig=_UniffiConverterString.read(buf),
-            sequence=_UniffiConverterUInt32.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.prev_hash)
-        _UniffiConverterUInt32.check_lower(value.prev_index)
-        _UniffiConverterString.check_lower(value.script_sig)
-        _UniffiConverterUInt32.check_lower(value.sequence)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.prev_hash, buf)
-        _UniffiConverterUInt32.write(value.prev_index, buf)
-        _UniffiConverterString.write(value.script_sig, buf)
-        _UniffiConverterUInt32.write(value.sequence, buf)
-
-
-class RefTxOutput:
-    """
-    Reference transaction output (binary format)
-    """
-
-    amount: "int"
-    """
-    Amount in satoshis
-    """
-
-    script_pubkey: "str"
-    """
-    Script public key (binary hex)
-    """
-
-    def __init__(self, *, amount: "int", script_pubkey: "str"):
-        self.amount = amount
-        self.script_pubkey = script_pubkey
-
-    def __str__(self):
-        return "RefTxOutput(amount={}, script_pubkey={})".format(self.amount, self.script_pubkey)
-
-    def __eq__(self, other):
-        if self.amount != other.amount:
-            return False
-        if self.script_pubkey != other.script_pubkey:
-            return False
-        return True
-
-class _UniffiConverterTypeRefTxOutput(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return RefTxOutput(
-            amount=_UniffiConverterUInt64.read(buf),
-            script_pubkey=_UniffiConverterString.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterUInt64.check_lower(value.amount)
-        _UniffiConverterString.check_lower(value.script_pubkey)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterUInt64.write(value.amount, buf)
-        _UniffiConverterString.write(value.script_pubkey, buf)
-
-
-class RefundMemo:
-    """
-    Refund memo
-    """
-
-    address: "str"
-    """
-    Refund address
-    """
-
-    mac: "str"
-    """
-    MAC
-    """
-
-    def __init__(self, *, address: "str", mac: "str"):
-        self.address = address
-        self.mac = mac
-
-    def __str__(self):
-        return "RefundMemo(address={}, mac={})".format(self.address, self.mac)
-
-    def __eq__(self, other):
-        if self.address != other.address:
-            return False
-        if self.mac != other.mac:
-            return False
-        return True
-
-class _UniffiConverterTypeRefundMemo(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return RefundMemo(
-            address=_UniffiConverterString.read(buf),
-            mac=_UniffiConverterString.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.address)
-        _UniffiConverterString.check_lower(value.mac)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.address, buf)
-        _UniffiConverterString.write(value.mac, buf)
-
-
-class SignedTransactionResponse:
-    """
-    Signed transaction response
-    """
-
-    signatures: "typing.List[str]"
-    """
-    Array of signer signatures
-    """
-
-    serialized_tx: "str"
-    """
-    Serialized transaction
-    """
-
-    txid: "typing.Optional[str]"
-    """
-    Broadcasted transaction ID (if push was true)
-    """
-
-    def __init__(self, *, signatures: "typing.List[str]", serialized_tx: "str", txid: "typing.Optional[str]"):
-        self.signatures = signatures
-        self.serialized_tx = serialized_tx
-        self.txid = txid
-
-    def __str__(self):
-        return "SignedTransactionResponse(signatures={}, serialized_tx={}, txid={})".format(self.signatures, self.serialized_tx, self.txid)
-
-    def __eq__(self, other):
-        if self.signatures != other.signatures:
-            return False
-        if self.serialized_tx != other.serialized_tx:
-            return False
-        if self.txid != other.txid:
-            return False
-        return True
-
-class _UniffiConverterTypeSignedTransactionResponse(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return SignedTransactionResponse(
-            signatures=_UniffiConverterSequenceString.read(buf),
-            serialized_tx=_UniffiConverterString.read(buf),
-            txid=_UniffiConverterOptionalString.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterSequenceString.check_lower(value.signatures)
-        _UniffiConverterString.check_lower(value.serialized_tx)
-        _UniffiConverterOptionalString.check_lower(value.txid)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterSequenceString.write(value.signatures, buf)
-        _UniffiConverterString.write(value.serialized_tx, buf)
-        _UniffiConverterOptionalString.write(value.txid, buf)
 
 
 class SweepResult:
@@ -7615,43 +6157,6 @@ class _UniffiConverterTypeSweepableBalances(_UniffiConverterRustBuffer):
         _UniffiConverterUInt32.write(value.total_utxos_count, buf)
 
 
-class TextMemo:
-    """
-    Text memo
-    """
-
-    text: "str"
-    """
-    Text content
-    """
-
-    def __init__(self, *, text: "str"):
-        self.text = text
-
-    def __str__(self):
-        return "TextMemo(text={})".format(self.text)
-
-    def __eq__(self, other):
-        if self.text != other.text:
-            return False
-        return True
-
-class _UniffiConverterTypeTextMemo(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return TextMemo(
-            text=_UniffiConverterString.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.text)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.text, buf)
-
-
 class TransactionDetails:
     """
     Details about an onchain transaction.
@@ -7727,85 +6232,1157 @@ class _UniffiConverterTypeTransactionDetails(_UniffiConverterRustBuffer):
         _UniffiConverterSequenceTypeTxOutput.write(value.outputs, buf)
 
 
-class TxAckPaymentRequest:
+class TrezorAddressResponse:
     """
-    Payment request
-    """
-
-    nonce: "typing.Optional[str]"
-    """
-    Nonce
+    Address response from device.
     """
 
-    recipient_name: "str"
+    address: "str"
     """
-    Recipient name
-    """
-
-    memos: "typing.Optional[typing.List[PaymentRequestMemo]]"
-    """
-    Memos
+    The Bitcoin address
     """
 
-    amount: "typing.Optional[int]"
+    path: "str"
     """
-    Amount
+    The serialized path (e.g., "m/84'/0'/0'/0/0")
+    """
+
+    def __init__(self, *, address: "str", path: "str"):
+        self.address = address
+        self.path = path
+
+    def __str__(self):
+        return "TrezorAddressResponse(address={}, path={})".format(self.address, self.path)
+
+    def __eq__(self, other):
+        if self.address != other.address:
+            return False
+        if self.path != other.path:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorAddressResponse(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorAddressResponse(
+            address=_UniffiConverterString.read(buf),
+            path=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.address)
+        _UniffiConverterString.check_lower(value.path)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.address, buf)
+        _UniffiConverterString.write(value.path, buf)
+
+
+class TrezorCallMessageResult:
+    """
+    Result from a high-level message call (for BLE/THP devices)
+    """
+
+    success: "bool"
+    """
+    Whether the call succeeded
+    """
+
+    message_type: "int"
+    """
+    Response message type
+    """
+
+    data: "bytes"
+    """
+    Response protobuf data
+    """
+
+    error: "str"
+    """
+    Error message (empty on success)
+    """
+
+    def __init__(self, *, success: "bool", message_type: "int", data: "bytes", error: "str"):
+        self.success = success
+        self.message_type = message_type
+        self.data = data
+        self.error = error
+
+    def __str__(self):
+        return "TrezorCallMessageResult(success={}, message_type={}, data={}, error={})".format(self.success, self.message_type, self.data, self.error)
+
+    def __eq__(self, other):
+        if self.success != other.success:
+            return False
+        if self.message_type != other.message_type:
+            return False
+        if self.data != other.data:
+            return False
+        if self.error != other.error:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorCallMessageResult(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorCallMessageResult(
+            success=_UniffiConverterBool.read(buf),
+            message_type=_UniffiConverterUInt16.read(buf),
+            data=_UniffiConverterBytes.read(buf),
+            error=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterBool.check_lower(value.success)
+        _UniffiConverterUInt16.check_lower(value.message_type)
+        _UniffiConverterBytes.check_lower(value.data)
+        _UniffiConverterString.check_lower(value.error)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterBool.write(value.success, buf)
+        _UniffiConverterUInt16.write(value.message_type, buf)
+        _UniffiConverterBytes.write(value.data, buf)
+        _UniffiConverterString.write(value.error, buf)
+
+
+class TrezorDeviceInfo:
+    """
+    Device information exposed to FFI.
+    """
+
+    id: "str"
+    """
+    Unique identifier for the device
+    """
+
+    transport_type: "TrezorTransportType"
+    """
+    Transport type (USB or Bluetooth)
+    """
+
+    name: "typing.Optional[str]"
+    """
+    Device name (from BLE advertisement or USB descriptor)
+    """
+
+    path: "str"
+    """
+    Transport-specific path (used internally for connection)
+    """
+
+    label: "typing.Optional[str]"
+    """
+    Device label (set by user during device setup)
+    """
+
+    model: "typing.Optional[str]"
+    """
+    Device model (e.g., "T2", "Safe 5", "Safe 7")
+    """
+
+    is_bootloader: "bool"
+    """
+    Whether the device is in bootloader mode
+    """
+
+    def __init__(self, *, id: "str", transport_type: "TrezorTransportType", name: "typing.Optional[str]", path: "str", label: "typing.Optional[str]", model: "typing.Optional[str]", is_bootloader: "bool"):
+        self.id = id
+        self.transport_type = transport_type
+        self.name = name
+        self.path = path
+        self.label = label
+        self.model = model
+        self.is_bootloader = is_bootloader
+
+    def __str__(self):
+        return "TrezorDeviceInfo(id={}, transport_type={}, name={}, path={}, label={}, model={}, is_bootloader={})".format(self.id, self.transport_type, self.name, self.path, self.label, self.model, self.is_bootloader)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.transport_type != other.transport_type:
+            return False
+        if self.name != other.name:
+            return False
+        if self.path != other.path:
+            return False
+        if self.label != other.label:
+            return False
+        if self.model != other.model:
+            return False
+        if self.is_bootloader != other.is_bootloader:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorDeviceInfo(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorDeviceInfo(
+            id=_UniffiConverterString.read(buf),
+            transport_type=_UniffiConverterTypeTrezorTransportType.read(buf),
+            name=_UniffiConverterOptionalString.read(buf),
+            path=_UniffiConverterString.read(buf),
+            label=_UniffiConverterOptionalString.read(buf),
+            model=_UniffiConverterOptionalString.read(buf),
+            is_bootloader=_UniffiConverterBool.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterTypeTrezorTransportType.check_lower(value.transport_type)
+        _UniffiConverterOptionalString.check_lower(value.name)
+        _UniffiConverterString.check_lower(value.path)
+        _UniffiConverterOptionalString.check_lower(value.label)
+        _UniffiConverterOptionalString.check_lower(value.model)
+        _UniffiConverterBool.check_lower(value.is_bootloader)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterTypeTrezorTransportType.write(value.transport_type, buf)
+        _UniffiConverterOptionalString.write(value.name, buf)
+        _UniffiConverterString.write(value.path, buf)
+        _UniffiConverterOptionalString.write(value.label, buf)
+        _UniffiConverterOptionalString.write(value.model, buf)
+        _UniffiConverterBool.write(value.is_bootloader, buf)
+
+
+class TrezorFeatures:
+    """
+    Device features after initialization.
+    """
+
+    vendor: "typing.Optional[str]"
+    """
+    Vendor string
+    """
+
+    model: "typing.Optional[str]"
+    """
+    Device model
+    """
+
+    label: "typing.Optional[str]"
+    """
+    Device label (set by user during device setup)
+    """
+
+    device_id: "typing.Optional[str]"
+    """
+    Device ID (unique per device)
+    """
+
+    major_version: "typing.Optional[int]"
+    """
+    Major firmware version
+    """
+
+    minor_version: "typing.Optional[int]"
+    """
+    Minor firmware version
+    """
+
+    patch_version: "typing.Optional[int]"
+    """
+    Patch firmware version
+    """
+
+    pin_protection: "typing.Optional[bool]"
+    """
+    Whether PIN protection is enabled
+    """
+
+    passphrase_protection: "typing.Optional[bool]"
+    """
+    Whether passphrase protection is enabled
+    """
+
+    initialized: "typing.Optional[bool]"
+    """
+    Whether the device is initialized with a seed
+    """
+
+    needs_backup: "typing.Optional[bool]"
+    """
+    Whether the device needs backup
+    """
+
+    def __init__(self, *, vendor: "typing.Optional[str]", model: "typing.Optional[str]", label: "typing.Optional[str]", device_id: "typing.Optional[str]", major_version: "typing.Optional[int]", minor_version: "typing.Optional[int]", patch_version: "typing.Optional[int]", pin_protection: "typing.Optional[bool]", passphrase_protection: "typing.Optional[bool]", initialized: "typing.Optional[bool]", needs_backup: "typing.Optional[bool]"):
+        self.vendor = vendor
+        self.model = model
+        self.label = label
+        self.device_id = device_id
+        self.major_version = major_version
+        self.minor_version = minor_version
+        self.patch_version = patch_version
+        self.pin_protection = pin_protection
+        self.passphrase_protection = passphrase_protection
+        self.initialized = initialized
+        self.needs_backup = needs_backup
+
+    def __str__(self):
+        return "TrezorFeatures(vendor={}, model={}, label={}, device_id={}, major_version={}, minor_version={}, patch_version={}, pin_protection={}, passphrase_protection={}, initialized={}, needs_backup={})".format(self.vendor, self.model, self.label, self.device_id, self.major_version, self.minor_version, self.patch_version, self.pin_protection, self.passphrase_protection, self.initialized, self.needs_backup)
+
+    def __eq__(self, other):
+        if self.vendor != other.vendor:
+            return False
+        if self.model != other.model:
+            return False
+        if self.label != other.label:
+            return False
+        if self.device_id != other.device_id:
+            return False
+        if self.major_version != other.major_version:
+            return False
+        if self.minor_version != other.minor_version:
+            return False
+        if self.patch_version != other.patch_version:
+            return False
+        if self.pin_protection != other.pin_protection:
+            return False
+        if self.passphrase_protection != other.passphrase_protection:
+            return False
+        if self.initialized != other.initialized:
+            return False
+        if self.needs_backup != other.needs_backup:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorFeatures(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorFeatures(
+            vendor=_UniffiConverterOptionalString.read(buf),
+            model=_UniffiConverterOptionalString.read(buf),
+            label=_UniffiConverterOptionalString.read(buf),
+            device_id=_UniffiConverterOptionalString.read(buf),
+            major_version=_UniffiConverterOptionalUInt32.read(buf),
+            minor_version=_UniffiConverterOptionalUInt32.read(buf),
+            patch_version=_UniffiConverterOptionalUInt32.read(buf),
+            pin_protection=_UniffiConverterOptionalBool.read(buf),
+            passphrase_protection=_UniffiConverterOptionalBool.read(buf),
+            initialized=_UniffiConverterOptionalBool.read(buf),
+            needs_backup=_UniffiConverterOptionalBool.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterOptionalString.check_lower(value.vendor)
+        _UniffiConverterOptionalString.check_lower(value.model)
+        _UniffiConverterOptionalString.check_lower(value.label)
+        _UniffiConverterOptionalString.check_lower(value.device_id)
+        _UniffiConverterOptionalUInt32.check_lower(value.major_version)
+        _UniffiConverterOptionalUInt32.check_lower(value.minor_version)
+        _UniffiConverterOptionalUInt32.check_lower(value.patch_version)
+        _UniffiConverterOptionalBool.check_lower(value.pin_protection)
+        _UniffiConverterOptionalBool.check_lower(value.passphrase_protection)
+        _UniffiConverterOptionalBool.check_lower(value.initialized)
+        _UniffiConverterOptionalBool.check_lower(value.needs_backup)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterOptionalString.write(value.vendor, buf)
+        _UniffiConverterOptionalString.write(value.model, buf)
+        _UniffiConverterOptionalString.write(value.label, buf)
+        _UniffiConverterOptionalString.write(value.device_id, buf)
+        _UniffiConverterOptionalUInt32.write(value.major_version, buf)
+        _UniffiConverterOptionalUInt32.write(value.minor_version, buf)
+        _UniffiConverterOptionalUInt32.write(value.patch_version, buf)
+        _UniffiConverterOptionalBool.write(value.pin_protection, buf)
+        _UniffiConverterOptionalBool.write(value.passphrase_protection, buf)
+        _UniffiConverterOptionalBool.write(value.initialized, buf)
+        _UniffiConverterOptionalBool.write(value.needs_backup, buf)
+
+
+class TrezorGetAddressParams:
+    """
+    Parameters for getting an address from the device.
+    """
+
+    path: "str"
+    """
+    BIP32 path (e.g., "m/84'/0'/0'/0/0")
+    """
+
+    coin: "typing.Optional[str]"
+    """
+    Coin name (default: "Bitcoin")
+    """
+
+    show_on_trezor: "bool"
+    """
+    Whether to display the address on the device for confirmation
+    """
+
+    script_type: "typing.Optional[TrezorScriptType]"
+    """
+    Script type (auto-detected from path if not specified)
+    """
+
+    def __init__(self, *, path: "str", coin: "typing.Optional[str]", show_on_trezor: "bool", script_type: "typing.Optional[TrezorScriptType]"):
+        self.path = path
+        self.coin = coin
+        self.show_on_trezor = show_on_trezor
+        self.script_type = script_type
+
+    def __str__(self):
+        return "TrezorGetAddressParams(path={}, coin={}, show_on_trezor={}, script_type={})".format(self.path, self.coin, self.show_on_trezor, self.script_type)
+
+    def __eq__(self, other):
+        if self.path != other.path:
+            return False
+        if self.coin != other.coin:
+            return False
+        if self.show_on_trezor != other.show_on_trezor:
+            return False
+        if self.script_type != other.script_type:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorGetAddressParams(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorGetAddressParams(
+            path=_UniffiConverterString.read(buf),
+            coin=_UniffiConverterOptionalString.read(buf),
+            show_on_trezor=_UniffiConverterBool.read(buf),
+            script_type=_UniffiConverterOptionalTypeTrezorScriptType.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.path)
+        _UniffiConverterOptionalString.check_lower(value.coin)
+        _UniffiConverterBool.check_lower(value.show_on_trezor)
+        _UniffiConverterOptionalTypeTrezorScriptType.check_lower(value.script_type)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.path, buf)
+        _UniffiConverterOptionalString.write(value.coin, buf)
+        _UniffiConverterBool.write(value.show_on_trezor, buf)
+        _UniffiConverterOptionalTypeTrezorScriptType.write(value.script_type, buf)
+
+
+class TrezorGetPublicKeyParams:
+    """
+    Parameters for getting a public key from the device.
+    """
+
+    path: "str"
+    """
+    BIP32 path (e.g., "m/84'/0'/0'")
+    """
+
+    coin: "typing.Optional[str]"
+    """
+    Coin name (default: "Bitcoin")
+    """
+
+    show_on_trezor: "bool"
+    """
+    Whether to display on device for confirmation
+    """
+
+    def __init__(self, *, path: "str", coin: "typing.Optional[str]", show_on_trezor: "bool"):
+        self.path = path
+        self.coin = coin
+        self.show_on_trezor = show_on_trezor
+
+    def __str__(self):
+        return "TrezorGetPublicKeyParams(path={}, coin={}, show_on_trezor={})".format(self.path, self.coin, self.show_on_trezor)
+
+    def __eq__(self, other):
+        if self.path != other.path:
+            return False
+        if self.coin != other.coin:
+            return False
+        if self.show_on_trezor != other.show_on_trezor:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorGetPublicKeyParams(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorGetPublicKeyParams(
+            path=_UniffiConverterString.read(buf),
+            coin=_UniffiConverterOptionalString.read(buf),
+            show_on_trezor=_UniffiConverterBool.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.path)
+        _UniffiConverterOptionalString.check_lower(value.coin)
+        _UniffiConverterBool.check_lower(value.show_on_trezor)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.path, buf)
+        _UniffiConverterOptionalString.write(value.coin, buf)
+        _UniffiConverterBool.write(value.show_on_trezor, buf)
+
+
+class TrezorPublicKeyResponse:
+    """
+    Public key response from device.
+    """
+
+    xpub: "str"
+    """
+    Extended public key (xpub)
+    """
+
+    path: "str"
+    """
+    The serialized path (e.g., "m/84'/0'/0'")
+    """
+
+    public_key: "str"
+    """
+    Compressed public key (hex encoded)
+    """
+
+    chain_code: "str"
+    """
+    Chain code (hex encoded)
+    """
+
+    def __init__(self, *, xpub: "str", path: "str", public_key: "str", chain_code: "str"):
+        self.xpub = xpub
+        self.path = path
+        self.public_key = public_key
+        self.chain_code = chain_code
+
+    def __str__(self):
+        return "TrezorPublicKeyResponse(xpub={}, path={}, public_key={}, chain_code={})".format(self.xpub, self.path, self.public_key, self.chain_code)
+
+    def __eq__(self, other):
+        if self.xpub != other.xpub:
+            return False
+        if self.path != other.path:
+            return False
+        if self.public_key != other.public_key:
+            return False
+        if self.chain_code != other.chain_code:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorPublicKeyResponse(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorPublicKeyResponse(
+            xpub=_UniffiConverterString.read(buf),
+            path=_UniffiConverterString.read(buf),
+            public_key=_UniffiConverterString.read(buf),
+            chain_code=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.xpub)
+        _UniffiConverterString.check_lower(value.path)
+        _UniffiConverterString.check_lower(value.public_key)
+        _UniffiConverterString.check_lower(value.chain_code)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.xpub, buf)
+        _UniffiConverterString.write(value.path, buf)
+        _UniffiConverterString.write(value.public_key, buf)
+        _UniffiConverterString.write(value.chain_code, buf)
+
+
+class TrezorSignMessageParams:
+    """
+    Parameters for signing a message.
+    """
+
+    path: "str"
+    """
+    BIP32 path for the signing key (e.g., "m/84'/0'/0'/0/0")
+    """
+
+    message: "str"
+    """
+    Message to sign
+    """
+
+    coin: "typing.Optional[str]"
+    """
+    Coin name (default: "Bitcoin")
+    """
+
+    def __init__(self, *, path: "str", message: "str", coin: "typing.Optional[str]"):
+        self.path = path
+        self.message = message
+        self.coin = coin
+
+    def __str__(self):
+        return "TrezorSignMessageParams(path={}, message={}, coin={})".format(self.path, self.message, self.coin)
+
+    def __eq__(self, other):
+        if self.path != other.path:
+            return False
+        if self.message != other.message:
+            return False
+        if self.coin != other.coin:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorSignMessageParams(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorSignMessageParams(
+            path=_UniffiConverterString.read(buf),
+            message=_UniffiConverterString.read(buf),
+            coin=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.path)
+        _UniffiConverterString.check_lower(value.message)
+        _UniffiConverterOptionalString.check_lower(value.coin)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.path, buf)
+        _UniffiConverterString.write(value.message, buf)
+        _UniffiConverterOptionalString.write(value.coin, buf)
+
+
+class TrezorSignTxParams:
+    """
+    Parameters for signing a transaction.
+    """
+
+    inputs: "typing.List[TrezorTxInput]"
+    """
+    Transaction inputs
+    """
+
+    outputs: "typing.List[TrezorTxOutput]"
+    """
+    Transaction outputs
+    """
+
+    coin: "typing.Optional[str]"
+    """
+    Coin name (default: "Bitcoin")
+    """
+
+    lock_time: "typing.Optional[int]"
+    """
+    Lock time (default: 0)
+    """
+
+    version: "typing.Optional[int]"
+    """
+    Version (default: 2)
+    """
+
+    def __init__(self, *, inputs: "typing.List[TrezorTxInput]", outputs: "typing.List[TrezorTxOutput]", coin: "typing.Optional[str]", lock_time: "typing.Optional[int]", version: "typing.Optional[int]"):
+        self.inputs = inputs
+        self.outputs = outputs
+        self.coin = coin
+        self.lock_time = lock_time
+        self.version = version
+
+    def __str__(self):
+        return "TrezorSignTxParams(inputs={}, outputs={}, coin={}, lock_time={}, version={})".format(self.inputs, self.outputs, self.coin, self.lock_time, self.version)
+
+    def __eq__(self, other):
+        if self.inputs != other.inputs:
+            return False
+        if self.outputs != other.outputs:
+            return False
+        if self.coin != other.coin:
+            return False
+        if self.lock_time != other.lock_time:
+            return False
+        if self.version != other.version:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorSignTxParams(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorSignTxParams(
+            inputs=_UniffiConverterSequenceTypeTrezorTxInput.read(buf),
+            outputs=_UniffiConverterSequenceTypeTrezorTxOutput.read(buf),
+            coin=_UniffiConverterOptionalString.read(buf),
+            lock_time=_UniffiConverterOptionalUInt32.read(buf),
+            version=_UniffiConverterOptionalUInt32.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterSequenceTypeTrezorTxInput.check_lower(value.inputs)
+        _UniffiConverterSequenceTypeTrezorTxOutput.check_lower(value.outputs)
+        _UniffiConverterOptionalString.check_lower(value.coin)
+        _UniffiConverterOptionalUInt32.check_lower(value.lock_time)
+        _UniffiConverterOptionalUInt32.check_lower(value.version)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterSequenceTypeTrezorTxInput.write(value.inputs, buf)
+        _UniffiConverterSequenceTypeTrezorTxOutput.write(value.outputs, buf)
+        _UniffiConverterOptionalString.write(value.coin, buf)
+        _UniffiConverterOptionalUInt32.write(value.lock_time, buf)
+        _UniffiConverterOptionalUInt32.write(value.version, buf)
+
+
+class TrezorSignedMessageResponse:
+    """
+    Response from signing a message.
+    """
+
+    address: "str"
+    """
+    Bitcoin address that signed the message
     """
 
     signature: "str"
     """
-    Signature
+    Signature (base64 encoded)
     """
 
-    def __init__(self, *, nonce: "typing.Optional[str]", recipient_name: "str", memos: "typing.Optional[typing.List[PaymentRequestMemo]]", amount: "typing.Optional[int]", signature: "str"):
-        self.nonce = nonce
-        self.recipient_name = recipient_name
-        self.memos = memos
-        self.amount = amount
+    def __init__(self, *, address: "str", signature: "str"):
+        self.address = address
         self.signature = signature
 
     def __str__(self):
-        return "TxAckPaymentRequest(nonce={}, recipient_name={}, memos={}, amount={}, signature={})".format(self.nonce, self.recipient_name, self.memos, self.amount, self.signature)
+        return "TrezorSignedMessageResponse(address={}, signature={})".format(self.address, self.signature)
 
     def __eq__(self, other):
-        if self.nonce != other.nonce:
-            return False
-        if self.recipient_name != other.recipient_name:
-            return False
-        if self.memos != other.memos:
-            return False
-        if self.amount != other.amount:
+        if self.address != other.address:
             return False
         if self.signature != other.signature:
             return False
         return True
 
-class _UniffiConverterTypeTxAckPaymentRequest(_UniffiConverterRustBuffer):
+class _UniffiConverterTypeTrezorSignedMessageResponse(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
-        return TxAckPaymentRequest(
-            nonce=_UniffiConverterOptionalString.read(buf),
-            recipient_name=_UniffiConverterString.read(buf),
-            memos=_UniffiConverterOptionalSequenceTypePaymentRequestMemo.read(buf),
-            amount=_UniffiConverterOptionalUInt64.read(buf),
+        return TrezorSignedMessageResponse(
+            address=_UniffiConverterString.read(buf),
             signature=_UniffiConverterString.read(buf),
         )
 
     @staticmethod
     def check_lower(value):
-        _UniffiConverterOptionalString.check_lower(value.nonce)
-        _UniffiConverterString.check_lower(value.recipient_name)
-        _UniffiConverterOptionalSequenceTypePaymentRequestMemo.check_lower(value.memos)
-        _UniffiConverterOptionalUInt64.check_lower(value.amount)
+        _UniffiConverterString.check_lower(value.address)
         _UniffiConverterString.check_lower(value.signature)
 
     @staticmethod
     def write(value, buf):
-        _UniffiConverterOptionalString.write(value.nonce, buf)
-        _UniffiConverterString.write(value.recipient_name, buf)
-        _UniffiConverterOptionalSequenceTypePaymentRequestMemo.write(value.memos, buf)
-        _UniffiConverterOptionalUInt64.write(value.amount, buf)
+        _UniffiConverterString.write(value.address, buf)
         _UniffiConverterString.write(value.signature, buf)
+
+
+class TrezorSignedTx:
+    """
+    Signed transaction result.
+    """
+
+    signatures: "typing.List[str]"
+    """
+    Signatures for each input (hex encoded)
+    """
+
+    serialized_tx: "str"
+    """
+    Serialized transaction (hex)
+    """
+
+    def __init__(self, *, signatures: "typing.List[str]", serialized_tx: "str"):
+        self.signatures = signatures
+        self.serialized_tx = serialized_tx
+
+    def __str__(self):
+        return "TrezorSignedTx(signatures={}, serialized_tx={})".format(self.signatures, self.serialized_tx)
+
+    def __eq__(self, other):
+        if self.signatures != other.signatures:
+            return False
+        if self.serialized_tx != other.serialized_tx:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorSignedTx(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorSignedTx(
+            signatures=_UniffiConverterSequenceString.read(buf),
+            serialized_tx=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterSequenceString.check_lower(value.signatures)
+        _UniffiConverterString.check_lower(value.serialized_tx)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterSequenceString.write(value.signatures, buf)
+        _UniffiConverterString.write(value.serialized_tx, buf)
+
+
+class TrezorTransportReadResult:
+    """
+    Result from a transport read operation
+    """
+
+    success: "bool"
+    """
+    Whether the read succeeded
+    """
+
+    data: "bytes"
+    """
+    Data read (empty on failure)
+    """
+
+    error: "str"
+    """
+    Error message (empty on success)
+    """
+
+    def __init__(self, *, success: "bool", data: "bytes", error: "str"):
+        self.success = success
+        self.data = data
+        self.error = error
+
+    def __str__(self):
+        return "TrezorTransportReadResult(success={}, data={}, error={})".format(self.success, self.data, self.error)
+
+    def __eq__(self, other):
+        if self.success != other.success:
+            return False
+        if self.data != other.data:
+            return False
+        if self.error != other.error:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorTransportReadResult(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorTransportReadResult(
+            success=_UniffiConverterBool.read(buf),
+            data=_UniffiConverterBytes.read(buf),
+            error=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterBool.check_lower(value.success)
+        _UniffiConverterBytes.check_lower(value.data)
+        _UniffiConverterString.check_lower(value.error)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterBool.write(value.success, buf)
+        _UniffiConverterBytes.write(value.data, buf)
+        _UniffiConverterString.write(value.error, buf)
+
+
+class TrezorTransportWriteResult:
+    """
+    Result from a transport write or open operation
+    """
+
+    success: "bool"
+    """
+    Whether the operation succeeded
+    """
+
+    error: "str"
+    """
+    Error message (empty on success)
+    """
+
+    def __init__(self, *, success: "bool", error: "str"):
+        self.success = success
+        self.error = error
+
+    def __str__(self):
+        return "TrezorTransportWriteResult(success={}, error={})".format(self.success, self.error)
+
+    def __eq__(self, other):
+        if self.success != other.success:
+            return False
+        if self.error != other.error:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorTransportWriteResult(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorTransportWriteResult(
+            success=_UniffiConverterBool.read(buf),
+            error=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterBool.check_lower(value.success)
+        _UniffiConverterString.check_lower(value.error)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterBool.write(value.success, buf)
+        _UniffiConverterString.write(value.error, buf)
+
+
+class TrezorTxInput:
+    """
+    Transaction input for signing.
+    """
+
+    prev_hash: "str"
+    """
+    Previous transaction hash (hex, 32 bytes)
+    """
+
+    prev_index: "int"
+    """
+    Previous output index
+    """
+
+    path: "str"
+    """
+    BIP32 derivation path (e.g., "m/84'/0'/0'/0/0")
+    """
+
+    amount: "int"
+    """
+    Amount in satoshis
+    """
+
+    script_type: "TrezorScriptType"
+    """
+    Script type
+    """
+
+    sequence: "typing.Optional[int]"
+    """
+    Sequence number (default: 0xFFFFFFFD for RBF)
+    """
+
+    def __init__(self, *, prev_hash: "str", prev_index: "int", path: "str", amount: "int", script_type: "TrezorScriptType", sequence: "typing.Optional[int]"):
+        self.prev_hash = prev_hash
+        self.prev_index = prev_index
+        self.path = path
+        self.amount = amount
+        self.script_type = script_type
+        self.sequence = sequence
+
+    def __str__(self):
+        return "TrezorTxInput(prev_hash={}, prev_index={}, path={}, amount={}, script_type={}, sequence={})".format(self.prev_hash, self.prev_index, self.path, self.amount, self.script_type, self.sequence)
+
+    def __eq__(self, other):
+        if self.prev_hash != other.prev_hash:
+            return False
+        if self.prev_index != other.prev_index:
+            return False
+        if self.path != other.path:
+            return False
+        if self.amount != other.amount:
+            return False
+        if self.script_type != other.script_type:
+            return False
+        if self.sequence != other.sequence:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorTxInput(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorTxInput(
+            prev_hash=_UniffiConverterString.read(buf),
+            prev_index=_UniffiConverterUInt32.read(buf),
+            path=_UniffiConverterString.read(buf),
+            amount=_UniffiConverterUInt64.read(buf),
+            script_type=_UniffiConverterTypeTrezorScriptType.read(buf),
+            sequence=_UniffiConverterOptionalUInt32.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.prev_hash)
+        _UniffiConverterUInt32.check_lower(value.prev_index)
+        _UniffiConverterString.check_lower(value.path)
+        _UniffiConverterUInt64.check_lower(value.amount)
+        _UniffiConverterTypeTrezorScriptType.check_lower(value.script_type)
+        _UniffiConverterOptionalUInt32.check_lower(value.sequence)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.prev_hash, buf)
+        _UniffiConverterUInt32.write(value.prev_index, buf)
+        _UniffiConverterString.write(value.path, buf)
+        _UniffiConverterUInt64.write(value.amount, buf)
+        _UniffiConverterTypeTrezorScriptType.write(value.script_type, buf)
+        _UniffiConverterOptionalUInt32.write(value.sequence, buf)
+
+
+class TrezorTxOutput:
+    """
+    Transaction output for signing.
+    """
+
+    address: "typing.Optional[str]"
+    """
+    Destination address (for external outputs)
+    """
+
+    path: "typing.Optional[str]"
+    """
+    BIP32 path (for change outputs)
+    """
+
+    amount: "int"
+    """
+    Amount in satoshis
+    """
+
+    script_type: "typing.Optional[TrezorScriptType]"
+    """
+    Script type (for change outputs)
+    """
+
+    op_return_data: "typing.Optional[str]"
+    """
+    OP_RETURN data (hex encoded, for data outputs)
+    """
+
+    def __init__(self, *, address: "typing.Optional[str]", path: "typing.Optional[str]", amount: "int", script_type: "typing.Optional[TrezorScriptType]", op_return_data: "typing.Optional[str]"):
+        self.address = address
+        self.path = path
+        self.amount = amount
+        self.script_type = script_type
+        self.op_return_data = op_return_data
+
+    def __str__(self):
+        return "TrezorTxOutput(address={}, path={}, amount={}, script_type={}, op_return_data={})".format(self.address, self.path, self.amount, self.script_type, self.op_return_data)
+
+    def __eq__(self, other):
+        if self.address != other.address:
+            return False
+        if self.path != other.path:
+            return False
+        if self.amount != other.amount:
+            return False
+        if self.script_type != other.script_type:
+            return False
+        if self.op_return_data != other.op_return_data:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorTxOutput(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorTxOutput(
+            address=_UniffiConverterOptionalString.read(buf),
+            path=_UniffiConverterOptionalString.read(buf),
+            amount=_UniffiConverterUInt64.read(buf),
+            script_type=_UniffiConverterOptionalTypeTrezorScriptType.read(buf),
+            op_return_data=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterOptionalString.check_lower(value.address)
+        _UniffiConverterOptionalString.check_lower(value.path)
+        _UniffiConverterUInt64.check_lower(value.amount)
+        _UniffiConverterOptionalTypeTrezorScriptType.check_lower(value.script_type)
+        _UniffiConverterOptionalString.check_lower(value.op_return_data)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterOptionalString.write(value.address, buf)
+        _UniffiConverterOptionalString.write(value.path, buf)
+        _UniffiConverterUInt64.write(value.amount, buf)
+        _UniffiConverterOptionalTypeTrezorScriptType.write(value.script_type, buf)
+        _UniffiConverterOptionalString.write(value.op_return_data, buf)
+
+
+class TrezorVerifyMessageParams:
+    """
+    Parameters for verifying a message signature.
+    """
+
+    address: "str"
+    """
+    Bitcoin address that signed the message
+    """
+
+    signature: "str"
+    """
+    Signature (base64 encoded)
+    """
+
+    message: "str"
+    """
+    Original message
+    """
+
+    coin: "typing.Optional[str]"
+    """
+    Coin name (default: "Bitcoin")
+    """
+
+    def __init__(self, *, address: "str", signature: "str", message: "str", coin: "typing.Optional[str]"):
+        self.address = address
+        self.signature = signature
+        self.message = message
+        self.coin = coin
+
+    def __str__(self):
+        return "TrezorVerifyMessageParams(address={}, signature={}, message={}, coin={})".format(self.address, self.signature, self.message, self.coin)
+
+    def __eq__(self, other):
+        if self.address != other.address:
+            return False
+        if self.signature != other.signature:
+            return False
+        if self.message != other.message:
+            return False
+        if self.coin != other.coin:
+            return False
+        return True
+
+class _UniffiConverterTypeTrezorVerifyMessageParams(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TrezorVerifyMessageParams(
+            address=_UniffiConverterString.read(buf),
+            signature=_UniffiConverterString.read(buf),
+            message=_UniffiConverterString.read(buf),
+            coin=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.address)
+        _UniffiConverterString.check_lower(value.signature)
+        _UniffiConverterString.check_lower(value.message)
+        _UniffiConverterOptionalString.check_lower(value.coin)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.address, buf)
+        _UniffiConverterString.write(value.signature, buf)
+        _UniffiConverterString.write(value.message, buf)
+        _UniffiConverterOptionalString.write(value.coin, buf)
 
 
 class TxInput:
@@ -7889,197 +7466,6 @@ class _UniffiConverterTypeTxInput(_UniffiConverterRustBuffer):
         _UniffiConverterUInt32.write(value.sequence, buf)
 
 
-class TxInputType:
-    """
-    Transaction input type
-    """
-
-    prev_hash: "str"
-    """
-    Previous transaction hash
-    """
-
-    prev_index: "int"
-    """
-    Previous transaction output index
-    """
-
-    amount: "int"
-    """
-    Amount in satoshis
-    """
-
-    sequence: "typing.Optional[int]"
-    """
-    Transaction sequence
-    """
-
-    address_n: "typing.Optional[typing.List[int]]"
-    """
-    BIP32 derivation path
-    """
-
-    script_type: "typing.Optional[ScriptType]"
-    """
-    Script type
-    """
-
-    multisig: "typing.Optional[MultisigRedeemScriptType]"
-    """
-    Multisig information
-    """
-
-    script_pubkey: "typing.Optional[str]"
-    """
-    Script public key (for external inputs)
-    """
-
-    script_sig: "typing.Optional[str]"
-    """
-    Script signature
-    """
-
-    witness: "typing.Optional[str]"
-    """
-    Witness data
-    """
-
-    ownership_proof: "typing.Optional[str]"
-    """
-    Ownership proof
-    """
-
-    commitment_data: "typing.Optional[str]"
-    """
-    Commitment data
-    """
-
-    orig_hash: "typing.Optional[str]"
-    """
-    Original hash for RBF
-    """
-
-    orig_index: "typing.Optional[int]"
-    """
-    Original index for RBF
-    """
-
-    coinjoin_flags: "typing.Optional[int]"
-    """
-    Coinjoin flags
-    """
-
-    def __init__(self, *, prev_hash: "str", prev_index: "int", amount: "int", sequence: "typing.Optional[int]", address_n: "typing.Optional[typing.List[int]]", script_type: "typing.Optional[ScriptType]", multisig: "typing.Optional[MultisigRedeemScriptType]", script_pubkey: "typing.Optional[str]", script_sig: "typing.Optional[str]", witness: "typing.Optional[str]", ownership_proof: "typing.Optional[str]", commitment_data: "typing.Optional[str]", orig_hash: "typing.Optional[str]", orig_index: "typing.Optional[int]", coinjoin_flags: "typing.Optional[int]"):
-        self.prev_hash = prev_hash
-        self.prev_index = prev_index
-        self.amount = amount
-        self.sequence = sequence
-        self.address_n = address_n
-        self.script_type = script_type
-        self.multisig = multisig
-        self.script_pubkey = script_pubkey
-        self.script_sig = script_sig
-        self.witness = witness
-        self.ownership_proof = ownership_proof
-        self.commitment_data = commitment_data
-        self.orig_hash = orig_hash
-        self.orig_index = orig_index
-        self.coinjoin_flags = coinjoin_flags
-
-    def __str__(self):
-        return "TxInputType(prev_hash={}, prev_index={}, amount={}, sequence={}, address_n={}, script_type={}, multisig={}, script_pubkey={}, script_sig={}, witness={}, ownership_proof={}, commitment_data={}, orig_hash={}, orig_index={}, coinjoin_flags={})".format(self.prev_hash, self.prev_index, self.amount, self.sequence, self.address_n, self.script_type, self.multisig, self.script_pubkey, self.script_sig, self.witness, self.ownership_proof, self.commitment_data, self.orig_hash, self.orig_index, self.coinjoin_flags)
-
-    def __eq__(self, other):
-        if self.prev_hash != other.prev_hash:
-            return False
-        if self.prev_index != other.prev_index:
-            return False
-        if self.amount != other.amount:
-            return False
-        if self.sequence != other.sequence:
-            return False
-        if self.address_n != other.address_n:
-            return False
-        if self.script_type != other.script_type:
-            return False
-        if self.multisig != other.multisig:
-            return False
-        if self.script_pubkey != other.script_pubkey:
-            return False
-        if self.script_sig != other.script_sig:
-            return False
-        if self.witness != other.witness:
-            return False
-        if self.ownership_proof != other.ownership_proof:
-            return False
-        if self.commitment_data != other.commitment_data:
-            return False
-        if self.orig_hash != other.orig_hash:
-            return False
-        if self.orig_index != other.orig_index:
-            return False
-        if self.coinjoin_flags != other.coinjoin_flags:
-            return False
-        return True
-
-class _UniffiConverterTypeTxInputType(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return TxInputType(
-            prev_hash=_UniffiConverterString.read(buf),
-            prev_index=_UniffiConverterUInt32.read(buf),
-            amount=_UniffiConverterUInt64.read(buf),
-            sequence=_UniffiConverterOptionalUInt32.read(buf),
-            address_n=_UniffiConverterOptionalSequenceUInt32.read(buf),
-            script_type=_UniffiConverterOptionalTypeScriptType.read(buf),
-            multisig=_UniffiConverterOptionalTypeMultisigRedeemScriptType.read(buf),
-            script_pubkey=_UniffiConverterOptionalString.read(buf),
-            script_sig=_UniffiConverterOptionalString.read(buf),
-            witness=_UniffiConverterOptionalString.read(buf),
-            ownership_proof=_UniffiConverterOptionalString.read(buf),
-            commitment_data=_UniffiConverterOptionalString.read(buf),
-            orig_hash=_UniffiConverterOptionalString.read(buf),
-            orig_index=_UniffiConverterOptionalUInt32.read(buf),
-            coinjoin_flags=_UniffiConverterOptionalUInt32.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.prev_hash)
-        _UniffiConverterUInt32.check_lower(value.prev_index)
-        _UniffiConverterUInt64.check_lower(value.amount)
-        _UniffiConverterOptionalUInt32.check_lower(value.sequence)
-        _UniffiConverterOptionalSequenceUInt32.check_lower(value.address_n)
-        _UniffiConverterOptionalTypeScriptType.check_lower(value.script_type)
-        _UniffiConverterOptionalTypeMultisigRedeemScriptType.check_lower(value.multisig)
-        _UniffiConverterOptionalString.check_lower(value.script_pubkey)
-        _UniffiConverterOptionalString.check_lower(value.script_sig)
-        _UniffiConverterOptionalString.check_lower(value.witness)
-        _UniffiConverterOptionalString.check_lower(value.ownership_proof)
-        _UniffiConverterOptionalString.check_lower(value.commitment_data)
-        _UniffiConverterOptionalString.check_lower(value.orig_hash)
-        _UniffiConverterOptionalUInt32.check_lower(value.orig_index)
-        _UniffiConverterOptionalUInt32.check_lower(value.coinjoin_flags)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.prev_hash, buf)
-        _UniffiConverterUInt32.write(value.prev_index, buf)
-        _UniffiConverterUInt64.write(value.amount, buf)
-        _UniffiConverterOptionalUInt32.write(value.sequence, buf)
-        _UniffiConverterOptionalSequenceUInt32.write(value.address_n, buf)
-        _UniffiConverterOptionalTypeScriptType.write(value.script_type, buf)
-        _UniffiConverterOptionalTypeMultisigRedeemScriptType.write(value.multisig, buf)
-        _UniffiConverterOptionalString.write(value.script_pubkey, buf)
-        _UniffiConverterOptionalString.write(value.script_sig, buf)
-        _UniffiConverterOptionalString.write(value.witness, buf)
-        _UniffiConverterOptionalString.write(value.ownership_proof, buf)
-        _UniffiConverterOptionalString.write(value.commitment_data, buf)
-        _UniffiConverterOptionalString.write(value.orig_hash, buf)
-        _UniffiConverterOptionalUInt32.write(value.orig_index, buf)
-        _UniffiConverterOptionalUInt32.write(value.coinjoin_flags, buf)
-
-
 class TxOutput:
     """
     Details about a transaction output.
@@ -8161,179 +7547,6 @@ class _UniffiConverterTypeTxOutput(_UniffiConverterRustBuffer):
         _UniffiConverterUInt32.write(value.n, buf)
 
 
-class TxOutputType:
-    """
-    Transaction output type
-    """
-
-    address: "typing.Optional[str]"
-    """
-    Output address (for address outputs)
-    """
-
-    address_n: "typing.Optional[typing.List[int]]"
-    """
-    BIP32 derivation path (for change outputs)
-    """
-
-    amount: "int"
-    """
-    Amount in satoshis
-    """
-
-    script_type: "ScriptType"
-    """
-    Script type
-    """
-
-    multisig: "typing.Optional[MultisigRedeemScriptType]"
-    """
-    Multisig information
-    """
-
-    op_return_data: "typing.Optional[str]"
-    """
-    OP_RETURN data
-    """
-
-    orig_hash: "typing.Optional[str]"
-    """
-    Original hash for RBF
-    """
-
-    orig_index: "typing.Optional[int]"
-    """
-    Original index for RBF
-    """
-
-    payment_req_index: "typing.Optional[int]"
-    """
-    Payment request index
-    """
-
-    def __init__(self, *, address: "typing.Optional[str]", address_n: "typing.Optional[typing.List[int]]", amount: "int", script_type: "ScriptType", multisig: "typing.Optional[MultisigRedeemScriptType]", op_return_data: "typing.Optional[str]", orig_hash: "typing.Optional[str]", orig_index: "typing.Optional[int]", payment_req_index: "typing.Optional[int]"):
-        self.address = address
-        self.address_n = address_n
-        self.amount = amount
-        self.script_type = script_type
-        self.multisig = multisig
-        self.op_return_data = op_return_data
-        self.orig_hash = orig_hash
-        self.orig_index = orig_index
-        self.payment_req_index = payment_req_index
-
-    def __str__(self):
-        return "TxOutputType(address={}, address_n={}, amount={}, script_type={}, multisig={}, op_return_data={}, orig_hash={}, orig_index={}, payment_req_index={})".format(self.address, self.address_n, self.amount, self.script_type, self.multisig, self.op_return_data, self.orig_hash, self.orig_index, self.payment_req_index)
-
-    def __eq__(self, other):
-        if self.address != other.address:
-            return False
-        if self.address_n != other.address_n:
-            return False
-        if self.amount != other.amount:
-            return False
-        if self.script_type != other.script_type:
-            return False
-        if self.multisig != other.multisig:
-            return False
-        if self.op_return_data != other.op_return_data:
-            return False
-        if self.orig_hash != other.orig_hash:
-            return False
-        if self.orig_index != other.orig_index:
-            return False
-        if self.payment_req_index != other.payment_req_index:
-            return False
-        return True
-
-class _UniffiConverterTypeTxOutputType(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return TxOutputType(
-            address=_UniffiConverterOptionalString.read(buf),
-            address_n=_UniffiConverterOptionalSequenceUInt32.read(buf),
-            amount=_UniffiConverterUInt64.read(buf),
-            script_type=_UniffiConverterTypeScriptType.read(buf),
-            multisig=_UniffiConverterOptionalTypeMultisigRedeemScriptType.read(buf),
-            op_return_data=_UniffiConverterOptionalString.read(buf),
-            orig_hash=_UniffiConverterOptionalString.read(buf),
-            orig_index=_UniffiConverterOptionalUInt32.read(buf),
-            payment_req_index=_UniffiConverterOptionalUInt32.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterOptionalString.check_lower(value.address)
-        _UniffiConverterOptionalSequenceUInt32.check_lower(value.address_n)
-        _UniffiConverterUInt64.check_lower(value.amount)
-        _UniffiConverterTypeScriptType.check_lower(value.script_type)
-        _UniffiConverterOptionalTypeMultisigRedeemScriptType.check_lower(value.multisig)
-        _UniffiConverterOptionalString.check_lower(value.op_return_data)
-        _UniffiConverterOptionalString.check_lower(value.orig_hash)
-        _UniffiConverterOptionalUInt32.check_lower(value.orig_index)
-        _UniffiConverterOptionalUInt32.check_lower(value.payment_req_index)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterOptionalString.write(value.address, buf)
-        _UniffiConverterOptionalSequenceUInt32.write(value.address_n, buf)
-        _UniffiConverterUInt64.write(value.amount, buf)
-        _UniffiConverterTypeScriptType.write(value.script_type, buf)
-        _UniffiConverterOptionalTypeMultisigRedeemScriptType.write(value.multisig, buf)
-        _UniffiConverterOptionalString.write(value.op_return_data, buf)
-        _UniffiConverterOptionalString.write(value.orig_hash, buf)
-        _UniffiConverterOptionalUInt32.write(value.orig_index, buf)
-        _UniffiConverterOptionalUInt32.write(value.payment_req_index, buf)
-
-
-class UnlockPath:
-    """
-    Unlock Path parameters
-    """
-
-    address_n: "typing.List[int]"
-    """
-    BIP32 derivation path
-    """
-
-    mac: "typing.Optional[str]"
-    """
-    MAC (optional)
-    """
-
-    def __init__(self, *, address_n: "typing.List[int]", mac: "typing.Optional[str]"):
-        self.address_n = address_n
-        self.mac = mac
-
-    def __str__(self):
-        return "UnlockPath(address_n={}, mac={})".format(self.address_n, self.mac)
-
-    def __eq__(self, other):
-        if self.address_n != other.address_n:
-            return False
-        if self.mac != other.mac:
-            return False
-        return True
-
-class _UniffiConverterTypeUnlockPath(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return UnlockPath(
-            address_n=_UniffiConverterSequenceUInt32.read(buf),
-            mac=_UniffiConverterOptionalString.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterSequenceUInt32.check_lower(value.address_n)
-        _UniffiConverterOptionalString.check_lower(value.mac)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterSequenceUInt32.write(value.address_n, buf)
-        _UniffiConverterOptionalString.write(value.mac, buf)
-
-
 class ValidationResult:
     address: "str"
     network: "NetworkType"
@@ -8375,165 +7588,6 @@ class _UniffiConverterTypeValidationResult(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.address, buf)
         _UniffiConverterTypeNetworkType.write(value.network, buf)
         _UniffiConverterTypeAddressType.write(value.address_type, buf)
-
-
-class VerifyMessageResponse:
-    """
-    Verify message response
-    """
-
-    message: "str"
-    """
-    Verification result message
-    """
-
-    def __init__(self, *, message: "str"):
-        self.message = message
-
-    def __str__(self):
-        return "VerifyMessageResponse(message={})".format(self.message)
-
-    def __eq__(self, other):
-        if self.message != other.message:
-            return False
-        return True
-
-class _UniffiConverterTypeVerifyMessageResponse(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return VerifyMessageResponse(
-            message=_UniffiConverterString.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterString.check_lower(value.message)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterString.write(value.message, buf)
-
-
-class XrpMarker:
-    """
-    Marker object for XRP accounts
-    """
-
-    ledger: "int"
-    """
-    Ledger number
-    """
-
-    seq: "int"
-    """
-    Sequence number
-    """
-
-    def __init__(self, *, ledger: "int", seq: "int"):
-        self.ledger = ledger
-        self.seq = seq
-
-    def __str__(self):
-        return "XrpMarker(ledger={}, seq={})".format(self.ledger, self.seq)
-
-    def __eq__(self, other):
-        if self.ledger != other.ledger:
-            return False
-        if self.seq != other.seq:
-            return False
-        return True
-
-class _UniffiConverterTypeXrpMarker(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        return XrpMarker(
-            ledger=_UniffiConverterUInt64.read(buf),
-            seq=_UniffiConverterUInt64.read(buf),
-        )
-
-    @staticmethod
-    def check_lower(value):
-        _UniffiConverterUInt64.check_lower(value.ledger)
-        _UniffiConverterUInt64.check_lower(value.seq)
-
-    @staticmethod
-    def write(value, buf):
-        _UniffiConverterUInt64.write(value.ledger, buf)
-        _UniffiConverterUInt64.write(value.seq, buf)
-
-
-
-
-
-class AccountInfoDetails(enum.Enum):
-    """
-    Level of details to be returned by getAccountInfo
-    """
-
-    BASIC = 0
-    """
-    Return only account balances (default)
-    """
-
-    
-    TOKENS = 1
-    """
-    Return with derived addresses or ERC20 tokens
-    """
-
-    
-    TOKEN_BALANCES = 2
-    """
-    Same as tokens with balances
-    """
-
-    
-    TXS = 3
-    """
-    TokenBalances + complete account transaction history
-    """
-
-    
-
-
-class _UniffiConverterTypeAccountInfoDetails(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        variant = buf.read_i32()
-        if variant == 1:
-            return AccountInfoDetails.BASIC
-        if variant == 2:
-            return AccountInfoDetails.TOKENS
-        if variant == 3:
-            return AccountInfoDetails.TOKEN_BALANCES
-        if variant == 4:
-            return AccountInfoDetails.TXS
-        raise InternalError("Raw enum value doesn't match any cases")
-
-    @staticmethod
-    def check_lower(value):
-        if value == AccountInfoDetails.BASIC:
-            return
-        if value == AccountInfoDetails.TOKENS:
-            return
-        if value == AccountInfoDetails.TOKEN_BALANCES:
-            return
-        if value == AccountInfoDetails.TXS:
-            return
-        raise ValueError(value)
-
-    @staticmethod
-    def write(value, buf):
-        if value == AccountInfoDetails.BASIC:
-            buf.write_i32(1)
-        if value == AccountInfoDetails.TOKENS:
-            buf.write_i32(2)
-        if value == AccountInfoDetails.TOKEN_BALANCES:
-            buf.write_i32(3)
-        if value == AccountInfoDetails.TXS:
-            buf.write_i32(4)
-
-
 
 
 
@@ -9069,64 +8123,6 @@ class _UniffiConverterTypeAddressType(_UniffiConverterRustBuffer):
             buf.write_i32(5)
         if value == AddressType.UNKNOWN:
             buf.write_i32(6)
-
-
-
-
-
-
-
-class AmountUnit(enum.Enum):
-    """
-    Amount unit for display
-    """
-
-    BITCOIN = 0
-    
-    MILLI_BITCOIN = 1
-    
-    MICRO_BITCOIN = 2
-    
-    SATOSHI = 3
-    
-
-
-class _UniffiConverterTypeAmountUnit(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        variant = buf.read_i32()
-        if variant == 1:
-            return AmountUnit.BITCOIN
-        if variant == 2:
-            return AmountUnit.MILLI_BITCOIN
-        if variant == 3:
-            return AmountUnit.MICRO_BITCOIN
-        if variant == 4:
-            return AmountUnit.SATOSHI
-        raise InternalError("Raw enum value doesn't match any cases")
-
-    @staticmethod
-    def check_lower(value):
-        if value == AmountUnit.BITCOIN:
-            return
-        if value == AmountUnit.MILLI_BITCOIN:
-            return
-        if value == AmountUnit.MICRO_BITCOIN:
-            return
-        if value == AmountUnit.SATOSHI:
-            return
-        raise ValueError(value)
-
-    @staticmethod
-    def write(value, buf):
-        if value == AmountUnit.BITCOIN:
-            buf.write_i32(1)
-        if value == AmountUnit.MILLI_BITCOIN:
-            buf.write_i32(2)
-        if value == AmountUnit.MICRO_BITCOIN:
-            buf.write_i32(3)
-        if value == AmountUnit.SATOSHI:
-            buf.write_i32(4)
 
 
 
@@ -9928,354 +8924,6 @@ class _UniffiConverterTypeCJitStateEnum(_UniffiConverterRustBuffer):
 
 
 
-
-
-
-class ComposeOutput:
-    """
-    Output type for compose transaction
-    """
-
-    def __init__(self):
-        raise RuntimeError("ComposeOutput cannot be instantiated directly")
-
-    # Each enum variant is a nested class of the enum itself.
-    class REGULAR:
-        """
-        Regular output with amount and address
-        """
-
-        amount: "str"
-        """
-        Amount in satoshis
-        """
-
-        address: "str"
-        """
-        Recipient address
-        """
-
-
-        def __init__(self,amount: "str", address: "str"):
-            self.amount = amount
-            self.address = address
-
-        def __str__(self):
-            return "ComposeOutput.REGULAR(amount={}, address={})".format(self.amount, self.address)
-
-        def __eq__(self, other):
-            if not other.is_REGULAR():
-                return False
-            if self.amount != other.amount:
-                return False
-            if self.address != other.address:
-                return False
-            return True
-    
-    class SEND_MAX:
-        """
-        Send max output
-        """
-
-        address: "str"
-        """
-        Recipient address
-        """
-
-
-        def __init__(self,address: "str"):
-            self.address = address
-
-        def __str__(self):
-            return "ComposeOutput.SEND_MAX(address={})".format(self.address)
-
-        def __eq__(self, other):
-            if not other.is_SEND_MAX():
-                return False
-            if self.address != other.address:
-                return False
-            return True
-    
-    class OP_RETURN:
-        """
-        OP_RETURN output
-        """
-
-        data_hex: "str"
-        """
-        Hexadecimal string with arbitrary data
-        """
-
-
-        def __init__(self,data_hex: "str"):
-            self.data_hex = data_hex
-
-        def __str__(self):
-            return "ComposeOutput.OP_RETURN(data_hex={})".format(self.data_hex)
-
-        def __eq__(self, other):
-            if not other.is_OP_RETURN():
-                return False
-            if self.data_hex != other.data_hex:
-                return False
-            return True
-    
-    class PAYMENT_NO_ADDRESS:
-        """
-        Payment without address (precompose only)
-        """
-
-        amount: "str"
-        """
-        Amount in satoshis
-        """
-
-
-        def __init__(self,amount: "str"):
-            self.amount = amount
-
-        def __str__(self):
-            return "ComposeOutput.PAYMENT_NO_ADDRESS(amount={})".format(self.amount)
-
-        def __eq__(self, other):
-            if not other.is_PAYMENT_NO_ADDRESS():
-                return False
-            if self.amount != other.amount:
-                return False
-            return True
-    
-    class SEND_MAX_NO_ADDRESS:
-        """
-        Send max without address (precompose only)
-        """
-
-
-        def __init__(self,):
-            pass
-
-        def __str__(self):
-            return "ComposeOutput.SEND_MAX_NO_ADDRESS()".format()
-
-        def __eq__(self, other):
-            if not other.is_SEND_MAX_NO_ADDRESS():
-                return False
-            return True
-    
-    
-
-    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
-    # whether an instance is that variant.
-    def is_REGULAR(self) -> bool:
-        return isinstance(self, ComposeOutput.REGULAR)
-    def is_regular(self) -> bool:
-        return isinstance(self, ComposeOutput.REGULAR)
-    def is_SEND_MAX(self) -> bool:
-        return isinstance(self, ComposeOutput.SEND_MAX)
-    def is_send_max(self) -> bool:
-        return isinstance(self, ComposeOutput.SEND_MAX)
-    def is_OP_RETURN(self) -> bool:
-        return isinstance(self, ComposeOutput.OP_RETURN)
-    def is_op_return(self) -> bool:
-        return isinstance(self, ComposeOutput.OP_RETURN)
-    def is_PAYMENT_NO_ADDRESS(self) -> bool:
-        return isinstance(self, ComposeOutput.PAYMENT_NO_ADDRESS)
-    def is_payment_no_address(self) -> bool:
-        return isinstance(self, ComposeOutput.PAYMENT_NO_ADDRESS)
-    def is_SEND_MAX_NO_ADDRESS(self) -> bool:
-        return isinstance(self, ComposeOutput.SEND_MAX_NO_ADDRESS)
-    def is_send_max_no_address(self) -> bool:
-        return isinstance(self, ComposeOutput.SEND_MAX_NO_ADDRESS)
-    
-
-# Now, a little trick - we make each nested variant class be a subclass of the main
-# enum class, so that method calls and instance checks etc will work intuitively.
-# We might be able to do this a little more neatly with a metaclass, but this'll do.
-ComposeOutput.REGULAR = type("ComposeOutput.REGULAR", (ComposeOutput.REGULAR, ComposeOutput,), {})  # type: ignore
-ComposeOutput.SEND_MAX = type("ComposeOutput.SEND_MAX", (ComposeOutput.SEND_MAX, ComposeOutput,), {})  # type: ignore
-ComposeOutput.OP_RETURN = type("ComposeOutput.OP_RETURN", (ComposeOutput.OP_RETURN, ComposeOutput,), {})  # type: ignore
-ComposeOutput.PAYMENT_NO_ADDRESS = type("ComposeOutput.PAYMENT_NO_ADDRESS", (ComposeOutput.PAYMENT_NO_ADDRESS, ComposeOutput,), {})  # type: ignore
-ComposeOutput.SEND_MAX_NO_ADDRESS = type("ComposeOutput.SEND_MAX_NO_ADDRESS", (ComposeOutput.SEND_MAX_NO_ADDRESS, ComposeOutput,), {})  # type: ignore
-
-
-
-
-class _UniffiConverterTypeComposeOutput(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        variant = buf.read_i32()
-        if variant == 1:
-            return ComposeOutput.REGULAR(
-                _UniffiConverterString.read(buf),
-                _UniffiConverterString.read(buf),
-            )
-        if variant == 2:
-            return ComposeOutput.SEND_MAX(
-                _UniffiConverterString.read(buf),
-            )
-        if variant == 3:
-            return ComposeOutput.OP_RETURN(
-                _UniffiConverterString.read(buf),
-            )
-        if variant == 4:
-            return ComposeOutput.PAYMENT_NO_ADDRESS(
-                _UniffiConverterString.read(buf),
-            )
-        if variant == 5:
-            return ComposeOutput.SEND_MAX_NO_ADDRESS(
-            )
-        raise InternalError("Raw enum value doesn't match any cases")
-
-    @staticmethod
-    def check_lower(value):
-        if value.is_REGULAR():
-            _UniffiConverterString.check_lower(value.amount)
-            _UniffiConverterString.check_lower(value.address)
-            return
-        if value.is_SEND_MAX():
-            _UniffiConverterString.check_lower(value.address)
-            return
-        if value.is_OP_RETURN():
-            _UniffiConverterString.check_lower(value.data_hex)
-            return
-        if value.is_PAYMENT_NO_ADDRESS():
-            _UniffiConverterString.check_lower(value.amount)
-            return
-        if value.is_SEND_MAX_NO_ADDRESS():
-            return
-        raise ValueError(value)
-
-    @staticmethod
-    def write(value, buf):
-        if value.is_REGULAR():
-            buf.write_i32(1)
-            _UniffiConverterString.write(value.amount, buf)
-            _UniffiConverterString.write(value.address, buf)
-        if value.is_SEND_MAX():
-            buf.write_i32(2)
-            _UniffiConverterString.write(value.address, buf)
-        if value.is_OP_RETURN():
-            buf.write_i32(3)
-            _UniffiConverterString.write(value.data_hex, buf)
-        if value.is_PAYMENT_NO_ADDRESS():
-            buf.write_i32(4)
-            _UniffiConverterString.write(value.amount, buf)
-        if value.is_SEND_MAX_NO_ADDRESS():
-            buf.write_i32(5)
-
-
-
-
-
-
-
-class ComposeTransactionResponse:
-    """
-    Compose transaction response
-    """
-
-    def __init__(self):
-        raise RuntimeError("ComposeTransactionResponse cannot be instantiated directly")
-
-    # Each enum variant is a nested class of the enum itself.
-    class SIGNED_TRANSACTION:
-        """
-        Signed transaction (payment mode)
-        """
-
-        def __init__(self, *values):
-            if len(values) != 1:
-                raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            self._values = values
-
-        def __getitem__(self, index):
-            return self._values[index]
-
-        def __str__(self):
-            return f"ComposeTransactionResponse.SIGNED_TRANSACTION{self._values!r}"
-
-        def __eq__(self, other):
-            if not other.is_SIGNED_TRANSACTION():
-                return False
-            return self._values == other._values
-    class PRECOMPOSED_TRANSACTIONS:
-        """
-        Precomposed transactions (precompose mode)
-        """
-
-        def __init__(self, *values):
-            if len(values) != 1:
-                raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            self._values = values
-
-        def __getitem__(self, index):
-            return self._values[index]
-
-        def __str__(self):
-            return f"ComposeTransactionResponse.PRECOMPOSED_TRANSACTIONS{self._values!r}"
-
-        def __eq__(self, other):
-            if not other.is_PRECOMPOSED_TRANSACTIONS():
-                return False
-            return self._values == other._values
-    
-
-    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
-    # whether an instance is that variant.
-    def is_SIGNED_TRANSACTION(self) -> bool:
-        return isinstance(self, ComposeTransactionResponse.SIGNED_TRANSACTION)
-    def is_signed_transaction(self) -> bool:
-        return isinstance(self, ComposeTransactionResponse.SIGNED_TRANSACTION)
-    def is_PRECOMPOSED_TRANSACTIONS(self) -> bool:
-        return isinstance(self, ComposeTransactionResponse.PRECOMPOSED_TRANSACTIONS)
-    def is_precomposed_transactions(self) -> bool:
-        return isinstance(self, ComposeTransactionResponse.PRECOMPOSED_TRANSACTIONS)
-    
-
-# Now, a little trick - we make each nested variant class be a subclass of the main
-# enum class, so that method calls and instance checks etc will work intuitively.
-# We might be able to do this a little more neatly with a metaclass, but this'll do.
-ComposeTransactionResponse.SIGNED_TRANSACTION = type("ComposeTransactionResponse.SIGNED_TRANSACTION", (ComposeTransactionResponse.SIGNED_TRANSACTION, ComposeTransactionResponse,), {})  # type: ignore
-ComposeTransactionResponse.PRECOMPOSED_TRANSACTIONS = type("ComposeTransactionResponse.PRECOMPOSED_TRANSACTIONS", (ComposeTransactionResponse.PRECOMPOSED_TRANSACTIONS, ComposeTransactionResponse,), {})  # type: ignore
-
-
-
-
-class _UniffiConverterTypeComposeTransactionResponse(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        variant = buf.read_i32()
-        if variant == 1:
-            return ComposeTransactionResponse.SIGNED_TRANSACTION(
-                _UniffiConverterTypeSignedTransactionResponse.read(buf),
-            )
-        if variant == 2:
-            return ComposeTransactionResponse.PRECOMPOSED_TRANSACTIONS(
-                _UniffiConverterSequenceTypePrecomposedTransaction.read(buf),
-            )
-        raise InternalError("Raw enum value doesn't match any cases")
-
-    @staticmethod
-    def check_lower(value):
-        if value.is_SIGNED_TRANSACTION():
-            _UniffiConverterTypeSignedTransactionResponse.check_lower(value._values[0])
-            return
-        if value.is_PRECOMPOSED_TRANSACTIONS():
-            _UniffiConverterSequenceTypePrecomposedTransaction.check_lower(value._values[0])
-            return
-        raise ValueError(value)
-
-    @staticmethod
-    def write(value, buf):
-        if value.is_SIGNED_TRANSACTION():
-            buf.write_i32(1)
-            _UniffiConverterTypeSignedTransactionResponse.write(value._values[0], buf)
-        if value.is_PRECOMPOSED_TRANSACTIONS():
-            buf.write_i32(2)
-            _UniffiConverterSequenceTypePrecomposedTransaction.write(value._values[0], buf)
-
-
-
-
 # DbError
 # We want to define each variant as a nested class that's also a subclass,
 # which is tricky in Python.  To accomplish this we're going to create each
@@ -10584,179 +9232,6 @@ class _UniffiConverterTypeDecodingError(_UniffiConverterRustBuffer):
         if isinstance(value, DecodingError.InvoiceCreationFailed):
             buf.write_i32(12)
             _UniffiConverterString.write(value.error_message, buf)
-
-
-
-
-
-class DefaultAccountType(enum.Enum):
-    """
-    Bitcoin account types for default display
-    """
-
-    NORMAL = 0
-    """
-    Normal account
-    """
-
-    
-    SEGWIT = 1
-    """
-    SegWit account
-    """
-
-    
-    LEGACY = 2
-    """
-    Legacy account
-    """
-
-    
-
-
-class _UniffiConverterTypeDefaultAccountType(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        variant = buf.read_i32()
-        if variant == 1:
-            return DefaultAccountType.NORMAL
-        if variant == 2:
-            return DefaultAccountType.SEGWIT
-        if variant == 3:
-            return DefaultAccountType.LEGACY
-        raise InternalError("Raw enum value doesn't match any cases")
-
-    @staticmethod
-    def check_lower(value):
-        if value == DefaultAccountType.NORMAL:
-            return
-        if value == DefaultAccountType.SEGWIT:
-            return
-        if value == DefaultAccountType.LEGACY:
-            return
-        raise ValueError(value)
-
-    @staticmethod
-    def write(value, buf):
-        if value == DefaultAccountType.NORMAL:
-            buf.write_i32(1)
-        if value == DefaultAccountType.SEGWIT:
-            buf.write_i32(2)
-        if value == DefaultAccountType.LEGACY:
-            buf.write_i32(3)
-
-
-
-
-
-
-
-class HdNodeTypeOrString:
-    """
-    Union type for HD Node (either a String or HDNodeType)
-    """
-
-    def __init__(self):
-        raise RuntimeError("HdNodeTypeOrString cannot be instantiated directly")
-
-    # Each enum variant is a nested class of the enum itself.
-    class STRING:
-        """
-        HD Node as a string
-        """
-
-        def __init__(self, *values):
-            if len(values) != 1:
-                raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            self._values = values
-
-        def __getitem__(self, index):
-            return self._values[index]
-
-        def __str__(self):
-            return f"HdNodeTypeOrString.STRING{self._values!r}"
-
-        def __eq__(self, other):
-            if not other.is_STRING():
-                return False
-            return self._values == other._values
-    class NODE:
-        """
-        HD Node as an object
-        """
-
-        def __init__(self, *values):
-            if len(values) != 1:
-                raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            self._values = values
-
-        def __getitem__(self, index):
-            return self._values[index]
-
-        def __str__(self):
-            return f"HdNodeTypeOrString.NODE{self._values!r}"
-
-        def __eq__(self, other):
-            if not other.is_NODE():
-                return False
-            return self._values == other._values
-    
-
-    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
-    # whether an instance is that variant.
-    def is_STRING(self) -> bool:
-        return isinstance(self, HdNodeTypeOrString.STRING)
-    def is_string(self) -> bool:
-        return isinstance(self, HdNodeTypeOrString.STRING)
-    def is_NODE(self) -> bool:
-        return isinstance(self, HdNodeTypeOrString.NODE)
-    def is_node(self) -> bool:
-        return isinstance(self, HdNodeTypeOrString.NODE)
-    
-
-# Now, a little trick - we make each nested variant class be a subclass of the main
-# enum class, so that method calls and instance checks etc will work intuitively.
-# We might be able to do this a little more neatly with a metaclass, but this'll do.
-HdNodeTypeOrString.STRING = type("HdNodeTypeOrString.STRING", (HdNodeTypeOrString.STRING, HdNodeTypeOrString,), {})  # type: ignore
-HdNodeTypeOrString.NODE = type("HdNodeTypeOrString.NODE", (HdNodeTypeOrString.NODE, HdNodeTypeOrString,), {})  # type: ignore
-
-
-
-
-class _UniffiConverterTypeHdNodeTypeOrString(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        variant = buf.read_i32()
-        if variant == 1:
-            return HdNodeTypeOrString.STRING(
-                _UniffiConverterString.read(buf),
-            )
-        if variant == 2:
-            return HdNodeTypeOrString.NODE(
-                _UniffiConverterTypeHdNodeType.read(buf),
-            )
-        raise InternalError("Raw enum value doesn't match any cases")
-
-    @staticmethod
-    def check_lower(value):
-        if value.is_STRING():
-            _UniffiConverterString.check_lower(value._values[0])
-            return
-        if value.is_NODE():
-            _UniffiConverterTypeHdNodeType.check_lower(value._values[0])
-            return
-        raise ValueError(value)
-
-    @staticmethod
-    def write(value, buf):
-        if value.is_STRING():
-            buf.write_i32(1)
-            _UniffiConverterString.write(value._values[0], buf)
-        if value.is_NODE():
-            buf.write_i32(2)
-            _UniffiConverterTypeHdNodeType.write(value._values[0], buf)
-
-
 
 
 # LnurlError
@@ -11547,136 +10022,6 @@ class _UniffiConverterTypeScanner(_UniffiConverterRustBuffer):
 
 
 
-class ScriptType(enum.Enum):
-    """
-    Script type for inputs and outputs
-    """
-
-    SPEND_ADDRESS = 0
-    
-    SPEND_MULTISIG = 1
-    
-    SPEND_WITNESS = 2
-    
-    SPEND_P2SH_WITNESS = 3
-    
-    SPEND_TAPROOT = 4
-    
-    EXTERNAL = 5
-    
-    PAY_TO_ADDRESS = 6
-    
-    PAY_TO_SCRIPT_HASH = 7
-    
-    PAY_TO_MULTISIG = 8
-    
-    PAY_TO_WITNESS = 9
-    
-    PAY_TO_P2SH_WITNESS = 10
-    
-    PAY_TO_TAPROOT = 11
-    
-    PAY_TO_OP_RETURN = 12
-    
-
-
-class _UniffiConverterTypeScriptType(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        variant = buf.read_i32()
-        if variant == 1:
-            return ScriptType.SPEND_ADDRESS
-        if variant == 2:
-            return ScriptType.SPEND_MULTISIG
-        if variant == 3:
-            return ScriptType.SPEND_WITNESS
-        if variant == 4:
-            return ScriptType.SPEND_P2SH_WITNESS
-        if variant == 5:
-            return ScriptType.SPEND_TAPROOT
-        if variant == 6:
-            return ScriptType.EXTERNAL
-        if variant == 7:
-            return ScriptType.PAY_TO_ADDRESS
-        if variant == 8:
-            return ScriptType.PAY_TO_SCRIPT_HASH
-        if variant == 9:
-            return ScriptType.PAY_TO_MULTISIG
-        if variant == 10:
-            return ScriptType.PAY_TO_WITNESS
-        if variant == 11:
-            return ScriptType.PAY_TO_P2SH_WITNESS
-        if variant == 12:
-            return ScriptType.PAY_TO_TAPROOT
-        if variant == 13:
-            return ScriptType.PAY_TO_OP_RETURN
-        raise InternalError("Raw enum value doesn't match any cases")
-
-    @staticmethod
-    def check_lower(value):
-        if value == ScriptType.SPEND_ADDRESS:
-            return
-        if value == ScriptType.SPEND_MULTISIG:
-            return
-        if value == ScriptType.SPEND_WITNESS:
-            return
-        if value == ScriptType.SPEND_P2SH_WITNESS:
-            return
-        if value == ScriptType.SPEND_TAPROOT:
-            return
-        if value == ScriptType.EXTERNAL:
-            return
-        if value == ScriptType.PAY_TO_ADDRESS:
-            return
-        if value == ScriptType.PAY_TO_SCRIPT_HASH:
-            return
-        if value == ScriptType.PAY_TO_MULTISIG:
-            return
-        if value == ScriptType.PAY_TO_WITNESS:
-            return
-        if value == ScriptType.PAY_TO_P2SH_WITNESS:
-            return
-        if value == ScriptType.PAY_TO_TAPROOT:
-            return
-        if value == ScriptType.PAY_TO_OP_RETURN:
-            return
-        raise ValueError(value)
-
-    @staticmethod
-    def write(value, buf):
-        if value == ScriptType.SPEND_ADDRESS:
-            buf.write_i32(1)
-        if value == ScriptType.SPEND_MULTISIG:
-            buf.write_i32(2)
-        if value == ScriptType.SPEND_WITNESS:
-            buf.write_i32(3)
-        if value == ScriptType.SPEND_P2SH_WITNESS:
-            buf.write_i32(4)
-        if value == ScriptType.SPEND_TAPROOT:
-            buf.write_i32(5)
-        if value == ScriptType.EXTERNAL:
-            buf.write_i32(6)
-        if value == ScriptType.PAY_TO_ADDRESS:
-            buf.write_i32(7)
-        if value == ScriptType.PAY_TO_SCRIPT_HASH:
-            buf.write_i32(8)
-        if value == ScriptType.PAY_TO_MULTISIG:
-            buf.write_i32(9)
-        if value == ScriptType.PAY_TO_WITNESS:
-            buf.write_i32(10)
-        if value == ScriptType.PAY_TO_P2SH_WITNESS:
-            buf.write_i32(11)
-        if value == ScriptType.PAY_TO_TAPROOT:
-            buf.write_i32(12)
-        if value == ScriptType.PAY_TO_OP_RETURN:
-            buf.write_i32(13)
-
-
-
-
-
-
-
 class SortDirection(enum.Enum):
     ASC = 0
     
@@ -11795,105 +10140,29 @@ class _UniffiConverterTypeSweepError(_UniffiConverterRustBuffer):
             buf.write_i32(3)
 
 
-
-
-
-class TokenFilter(enum.Enum):
-    """
-    Token filter options for getAccountInfo
-    """
-
-    NONZERO = 0
-    """
-    Return only addresses with nonzero balance (default)
-    """
-
-    
-    USED = 1
-    """
-    Return addresses with at least one transaction
-    """
-
-    
-    DERIVED = 2
-    """
-    Return all derived addresses
-    """
-
-    
-
-
-class _UniffiConverterTypeTokenFilter(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        variant = buf.read_i32()
-        if variant == 1:
-            return TokenFilter.NONZERO
-        if variant == 2:
-            return TokenFilter.USED
-        if variant == 3:
-            return TokenFilter.DERIVED
-        raise InternalError("Raw enum value doesn't match any cases")
-
-    @staticmethod
-    def check_lower(value):
-        if value == TokenFilter.NONZERO:
-            return
-        if value == TokenFilter.USED:
-            return
-        if value == TokenFilter.DERIVED:
-            return
-        raise ValueError(value)
-
-    @staticmethod
-    def write(value, buf):
-        if value == TokenFilter.NONZERO:
-            buf.write_i32(1)
-        if value == TokenFilter.USED:
-            buf.write_i32(2)
-        if value == TokenFilter.DERIVED:
-            buf.write_i32(3)
-
-
-
-
-# TrezorConnectError
+# TrezorError
 # We want to define each variant as a nested class that's also a subclass,
 # which is tricky in Python.  To accomplish this we're going to create each
 # class separately, then manually add the child classes to the base class's
 # __dict__.  All of this happens in dummy class to avoid polluting the module
 # namespace.
-class TrezorConnectError(Exception):
+class TrezorError(Exception):
     """
-    Error types for Trezor Connect operations
+    Trezor-related errors exposed via FFI.
     """
 
     pass
 
-_UniffiTempTrezorConnectError = TrezorConnectError
+_UniffiTempTrezorError = TrezorError
 
-class TrezorConnectError:  # type: ignore
+class TrezorError:  # type: ignore
     """
-    Error types for Trezor Connect operations
+    Trezor-related errors exposed via FFI.
     """
 
-    class SerdeError(_UniffiTempTrezorConnectError):
+    class TransportError(_UniffiTempTrezorError):
         """
-        Error during serialization/deserialization
-        """
-
-        def __init__(self, error_details):
-            super().__init__(", ".join([
-                "error_details={!r}".format(error_details),
-            ]))
-            self.error_details = error_details
-
-        def __repr__(self):
-            return "TrezorConnectError.SerdeError({})".format(str(self))
-    _UniffiTempTrezorConnectError.SerdeError = SerdeError # type: ignore
-    class UrlError(_UniffiTempTrezorConnectError):
-        """
-        Error with URL parsing or formatting
+        Transport layer error (USB/Bluetooth communication)
         """
 
         def __init__(self, error_details):
@@ -11903,11 +10172,33 @@ class TrezorConnectError:  # type: ignore
             self.error_details = error_details
 
         def __repr__(self):
-            return "TrezorConnectError.UrlError({})".format(str(self))
-    _UniffiTempTrezorConnectError.UrlError = UrlError # type: ignore
-    class EnvironmentError(_UniffiTempTrezorConnectError):
+            return "TrezorError.TransportError({})".format(str(self))
+    _UniffiTempTrezorError.TransportError = TransportError # type: ignore
+    class DeviceNotFound(_UniffiTempTrezorError):
         """
-        Environment-related errors
+        No Trezor device found
+        """
+
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.DeviceNotFound({})".format(str(self))
+    _UniffiTempTrezorError.DeviceNotFound = DeviceNotFound # type: ignore
+    class DeviceDisconnected(_UniffiTempTrezorError):
+        """
+        Device disconnected during operation
+        """
+
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.DeviceDisconnected({})".format(str(self))
+    _UniffiTempTrezorError.DeviceDisconnected = DeviceDisconnected # type: ignore
+    class ConnectionError(_UniffiTempTrezorError):
+        """
+        Connection error
         """
 
         def __init__(self, error_details):
@@ -11917,11 +10208,11 @@ class TrezorConnectError:  # type: ignore
             self.error_details = error_details
 
         def __repr__(self):
-            return "TrezorConnectError.EnvironmentError({})".format(str(self))
-    _UniffiTempTrezorConnectError.EnvironmentError = EnvironmentError # type: ignore
-    class Other(_UniffiTempTrezorConnectError):
+            return "TrezorError.ConnectionError({})".format(str(self))
+    _UniffiTempTrezorError.ConnectionError = ConnectionError # type: ignore
+    class ProtocolError(_UniffiTempTrezorError):
         """
-        General errors
+        Protocol error (encoding/decoding)
         """
 
         def __init__(self, error_details):
@@ -11931,9 +10222,24 @@ class TrezorConnectError:  # type: ignore
             self.error_details = error_details
 
         def __repr__(self):
-            return "TrezorConnectError.Other({})".format(str(self))
-    _UniffiTempTrezorConnectError.Other = Other # type: ignore
-    class ClientError(_UniffiTempTrezorConnectError):
+            return "TrezorError.ProtocolError({})".format(str(self))
+    _UniffiTempTrezorError.ProtocolError = ProtocolError # type: ignore
+    class PairingRequired(_UniffiTempTrezorError):
+        """
+        Pairing required for Bluetooth connection
+        """
+
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.PairingRequired({})".format(str(self))
+    _UniffiTempTrezorError.PairingRequired = PairingRequired # type: ignore
+    class PairingFailed(_UniffiTempTrezorError):
+        """
+        Pairing failed
+        """
+
         def __init__(self, error_details):
             super().__init__(", ".join([
                 "error_details={!r}".format(error_details),
@@ -11941,455 +10247,447 @@ class TrezorConnectError:  # type: ignore
             self.error_details = error_details
 
         def __repr__(self):
-            return "TrezorConnectError.ClientError({})".format(str(self))
-    _UniffiTempTrezorConnectError.ClientError = ClientError # type: ignore
+            return "TrezorError.PairingFailed({})".format(str(self))
+    _UniffiTempTrezorError.PairingFailed = PairingFailed # type: ignore
+    class PinRequired(_UniffiTempTrezorError):
+        """
+        PIN is required
+        """
 
-TrezorConnectError = _UniffiTempTrezorConnectError # type: ignore
-del _UniffiTempTrezorConnectError
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.PinRequired({})".format(str(self))
+    _UniffiTempTrezorError.PinRequired = PinRequired # type: ignore
+    class PinCancelled(_UniffiTempTrezorError):
+        """
+        PIN entry cancelled
+        """
+
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.PinCancelled({})".format(str(self))
+    _UniffiTempTrezorError.PinCancelled = PinCancelled # type: ignore
+    class InvalidPin(_UniffiTempTrezorError):
+        """
+        Invalid PIN entered
+        """
+
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.InvalidPin({})".format(str(self))
+    _UniffiTempTrezorError.InvalidPin = InvalidPin # type: ignore
+    class PassphraseRequired(_UniffiTempTrezorError):
+        """
+        Passphrase is required
+        """
+
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.PassphraseRequired({})".format(str(self))
+    _UniffiTempTrezorError.PassphraseRequired = PassphraseRequired # type: ignore
+    class UserCancelled(_UniffiTempTrezorError):
+        """
+        Action cancelled by user on device
+        """
+
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.UserCancelled({})".format(str(self))
+    _UniffiTempTrezorError.UserCancelled = UserCancelled # type: ignore
+    class Timeout(_UniffiTempTrezorError):
+        """
+        Operation timed out
+        """
+
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.Timeout({})".format(str(self))
+    _UniffiTempTrezorError.Timeout = Timeout # type: ignore
+    class InvalidPath(_UniffiTempTrezorError):
+        """
+        Invalid derivation path
+        """
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "TrezorError.InvalidPath({})".format(str(self))
+    _UniffiTempTrezorError.InvalidPath = InvalidPath # type: ignore
+    class DeviceError(_UniffiTempTrezorError):
+        """
+        Device returned an error
+        """
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "TrezorError.DeviceError({})".format(str(self))
+    _UniffiTempTrezorError.DeviceError = DeviceError # type: ignore
+    class NotInitialized(_UniffiTempTrezorError):
+        """
+        Trezor manager not initialized
+        """
+
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.NotInitialized({})".format(str(self))
+    _UniffiTempTrezorError.NotInitialized = NotInitialized # type: ignore
+    class NotConnected(_UniffiTempTrezorError):
+        """
+        No device connected
+        """
+
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.NotConnected({})".format(str(self))
+    _UniffiTempTrezorError.NotConnected = NotConnected # type: ignore
+    class SessionError(_UniffiTempTrezorError):
+        """
+        Session error
+        """
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "TrezorError.SessionError({})".format(str(self))
+    _UniffiTempTrezorError.SessionError = SessionError # type: ignore
+    class IoError(_UniffiTempTrezorError):
+        """
+        IO error
+        """
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "TrezorError.IoError({})".format(str(self))
+    _UniffiTempTrezorError.IoError = IoError # type: ignore
+
+TrezorError = _UniffiTempTrezorError # type: ignore
+del _UniffiTempTrezorError
 
 
-class _UniffiConverterTypeTrezorConnectError(_UniffiConverterRustBuffer):
+class _UniffiConverterTypeTrezorError(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
         variant = buf.read_i32()
         if variant == 1:
-            return TrezorConnectError.SerdeError(
+            return TrezorError.TransportError(
                 _UniffiConverterString.read(buf),
             )
         if variant == 2:
-            return TrezorConnectError.UrlError(
-                _UniffiConverterString.read(buf),
+            return TrezorError.DeviceNotFound(
             )
         if variant == 3:
-            return TrezorConnectError.EnvironmentError(
-                _UniffiConverterString.read(buf),
+            return TrezorError.DeviceDisconnected(
             )
         if variant == 4:
-            return TrezorConnectError.Other(
+            return TrezorError.ConnectionError(
                 _UniffiConverterString.read(buf),
             )
         if variant == 5:
-            return TrezorConnectError.ClientError(
+            return TrezorError.ProtocolError(
                 _UniffiConverterString.read(buf),
-            )
-        raise InternalError("Raw enum value doesn't match any cases")
-
-    @staticmethod
-    def check_lower(value):
-        if isinstance(value, TrezorConnectError.SerdeError):
-            _UniffiConverterString.check_lower(value.error_details)
-            return
-        if isinstance(value, TrezorConnectError.UrlError):
-            _UniffiConverterString.check_lower(value.error_details)
-            return
-        if isinstance(value, TrezorConnectError.EnvironmentError):
-            _UniffiConverterString.check_lower(value.error_details)
-            return
-        if isinstance(value, TrezorConnectError.Other):
-            _UniffiConverterString.check_lower(value.error_details)
-            return
-        if isinstance(value, TrezorConnectError.ClientError):
-            _UniffiConverterString.check_lower(value.error_details)
-            return
-
-    @staticmethod
-    def write(value, buf):
-        if isinstance(value, TrezorConnectError.SerdeError):
-            buf.write_i32(1)
-            _UniffiConverterString.write(value.error_details, buf)
-        if isinstance(value, TrezorConnectError.UrlError):
-            buf.write_i32(2)
-            _UniffiConverterString.write(value.error_details, buf)
-        if isinstance(value, TrezorConnectError.EnvironmentError):
-            buf.write_i32(3)
-            _UniffiConverterString.write(value.error_details, buf)
-        if isinstance(value, TrezorConnectError.Other):
-            buf.write_i32(4)
-            _UniffiConverterString.write(value.error_details, buf)
-        if isinstance(value, TrezorConnectError.ClientError):
-            buf.write_i32(5)
-            _UniffiConverterString.write(value.error_details, buf)
-
-
-
-
-
-class TrezorEnvironment(enum.Enum):
-    """
-    Environment options for Trezor deep linking
-    """
-
-    PRODUCTION = 0
-    """
-    Production environment (currently unavailable according to docs)
-    """
-
-    
-    DEVELOPMENT = 1
-    """
-    Development environment
-    """
-
-    
-    LOCAL = 2
-    """
-    Local environment
-    """
-
-    
-
-
-class _UniffiConverterTypeTrezorEnvironment(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        variant = buf.read_i32()
-        if variant == 1:
-            return TrezorEnvironment.PRODUCTION
-        if variant == 2:
-            return TrezorEnvironment.DEVELOPMENT
-        if variant == 3:
-            return TrezorEnvironment.LOCAL
-        raise InternalError("Raw enum value doesn't match any cases")
-
-    @staticmethod
-    def check_lower(value):
-        if value == TrezorEnvironment.PRODUCTION:
-            return
-        if value == TrezorEnvironment.DEVELOPMENT:
-            return
-        if value == TrezorEnvironment.LOCAL:
-            return
-        raise ValueError(value)
-
-    @staticmethod
-    def write(value, buf):
-        if value == TrezorEnvironment.PRODUCTION:
-            buf.write_i32(1)
-        if value == TrezorEnvironment.DEVELOPMENT:
-            buf.write_i32(2)
-        if value == TrezorEnvironment.LOCAL:
-            buf.write_i32(3)
-
-
-
-
-
-
-
-class TrezorResponsePayload:
-    """
-    Enum representing the different types of Trezor responses
-    """
-
-    def __init__(self):
-        raise RuntimeError("TrezorResponsePayload cannot be instantiated directly")
-
-    # Each enum variant is a nested class of the enum itself.
-    class FEATURES:
-        """
-        Response from getFeatures method
-        """
-
-        def __init__(self, *values):
-            if len(values) != 1:
-                raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            self._values = values
-
-        def __getitem__(self, index):
-            return self._values[index]
-
-        def __str__(self):
-            return f"TrezorResponsePayload.FEATURES{self._values!r}"
-
-        def __eq__(self, other):
-            if not other.is_FEATURES():
-                return False
-            return self._values == other._values
-    class ADDRESS:
-        """
-        Response from getAddress method
-        """
-
-        def __init__(self, *values):
-            if len(values) != 1:
-                raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            self._values = values
-
-        def __getitem__(self, index):
-            return self._values[index]
-
-        def __str__(self):
-            return f"TrezorResponsePayload.ADDRESS{self._values!r}"
-
-        def __eq__(self, other):
-            if not other.is_ADDRESS():
-                return False
-            return self._values == other._values
-    class PUBLIC_KEY:
-        """
-        Response from getPublicKey method
-        """
-
-        def __init__(self, *values):
-            if len(values) != 1:
-                raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            self._values = values
-
-        def __getitem__(self, index):
-            return self._values[index]
-
-        def __str__(self):
-            return f"TrezorResponsePayload.PUBLIC_KEY{self._values!r}"
-
-        def __eq__(self, other):
-            if not other.is_PUBLIC_KEY():
-                return False
-            return self._values == other._values
-    class ACCOUNT_INFO:
-        """
-        Response from getAccountInfo method
-        """
-
-        def __init__(self, *values):
-            if len(values) != 1:
-                raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            self._values = values
-
-        def __getitem__(self, index):
-            return self._values[index]
-
-        def __str__(self):
-            return f"TrezorResponsePayload.ACCOUNT_INFO{self._values!r}"
-
-        def __eq__(self, other):
-            if not other.is_ACCOUNT_INFO():
-                return False
-            return self._values == other._values
-    class COMPOSE_TRANSACTION:
-        """
-        Response from composeTransaction method
-        """
-
-        def __init__(self, *values):
-            if len(values) != 1:
-                raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            self._values = values
-
-        def __getitem__(self, index):
-            return self._values[index]
-
-        def __str__(self):
-            return f"TrezorResponsePayload.COMPOSE_TRANSACTION{self._values!r}"
-
-        def __eq__(self, other):
-            if not other.is_COMPOSE_TRANSACTION():
-                return False
-            return self._values == other._values
-    class VERIFY_MESSAGE:
-        """
-        Response from verifyMessage method
-        """
-
-        def __init__(self, *values):
-            if len(values) != 1:
-                raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            self._values = values
-
-        def __getitem__(self, index):
-            return self._values[index]
-
-        def __str__(self):
-            return f"TrezorResponsePayload.VERIFY_MESSAGE{self._values!r}"
-
-        def __eq__(self, other):
-            if not other.is_VERIFY_MESSAGE():
-                return False
-            return self._values == other._values
-    class MESSAGE_SIGNATURE:
-        """
-        Response from signMessage method
-        """
-
-        def __init__(self, *values):
-            if len(values) != 1:
-                raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            self._values = values
-
-        def __getitem__(self, index):
-            return self._values[index]
-
-        def __str__(self):
-            return f"TrezorResponsePayload.MESSAGE_SIGNATURE{self._values!r}"
-
-        def __eq__(self, other):
-            if not other.is_MESSAGE_SIGNATURE():
-                return False
-            return self._values == other._values
-    class SIGNED_TRANSACTION:
-        """
-        Response from signTransaction method
-        """
-
-        def __init__(self, *values):
-            if len(values) != 1:
-                raise TypeError(f"Expected 1 arguments, found {len(values)}")
-            self._values = values
-
-        def __getitem__(self, index):
-            return self._values[index]
-
-        def __str__(self):
-            return f"TrezorResponsePayload.SIGNED_TRANSACTION{self._values!r}"
-
-        def __eq__(self, other):
-            if not other.is_SIGNED_TRANSACTION():
-                return False
-            return self._values == other._values
-    
-
-    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
-    # whether an instance is that variant.
-    def is_FEATURES(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.FEATURES)
-    def is_features(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.FEATURES)
-    def is_ADDRESS(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.ADDRESS)
-    def is_address(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.ADDRESS)
-    def is_PUBLIC_KEY(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.PUBLIC_KEY)
-    def is_public_key(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.PUBLIC_KEY)
-    def is_ACCOUNT_INFO(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.ACCOUNT_INFO)
-    def is_account_info(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.ACCOUNT_INFO)
-    def is_COMPOSE_TRANSACTION(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.COMPOSE_TRANSACTION)
-    def is_compose_transaction(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.COMPOSE_TRANSACTION)
-    def is_VERIFY_MESSAGE(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.VERIFY_MESSAGE)
-    def is_verify_message(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.VERIFY_MESSAGE)
-    def is_MESSAGE_SIGNATURE(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.MESSAGE_SIGNATURE)
-    def is_message_signature(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.MESSAGE_SIGNATURE)
-    def is_SIGNED_TRANSACTION(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.SIGNED_TRANSACTION)
-    def is_signed_transaction(self) -> bool:
-        return isinstance(self, TrezorResponsePayload.SIGNED_TRANSACTION)
-    
-
-# Now, a little trick - we make each nested variant class be a subclass of the main
-# enum class, so that method calls and instance checks etc will work intuitively.
-# We might be able to do this a little more neatly with a metaclass, but this'll do.
-TrezorResponsePayload.FEATURES = type("TrezorResponsePayload.FEATURES", (TrezorResponsePayload.FEATURES, TrezorResponsePayload,), {})  # type: ignore
-TrezorResponsePayload.ADDRESS = type("TrezorResponsePayload.ADDRESS", (TrezorResponsePayload.ADDRESS, TrezorResponsePayload,), {})  # type: ignore
-TrezorResponsePayload.PUBLIC_KEY = type("TrezorResponsePayload.PUBLIC_KEY", (TrezorResponsePayload.PUBLIC_KEY, TrezorResponsePayload,), {})  # type: ignore
-TrezorResponsePayload.ACCOUNT_INFO = type("TrezorResponsePayload.ACCOUNT_INFO", (TrezorResponsePayload.ACCOUNT_INFO, TrezorResponsePayload,), {})  # type: ignore
-TrezorResponsePayload.COMPOSE_TRANSACTION = type("TrezorResponsePayload.COMPOSE_TRANSACTION", (TrezorResponsePayload.COMPOSE_TRANSACTION, TrezorResponsePayload,), {})  # type: ignore
-TrezorResponsePayload.VERIFY_MESSAGE = type("TrezorResponsePayload.VERIFY_MESSAGE", (TrezorResponsePayload.VERIFY_MESSAGE, TrezorResponsePayload,), {})  # type: ignore
-TrezorResponsePayload.MESSAGE_SIGNATURE = type("TrezorResponsePayload.MESSAGE_SIGNATURE", (TrezorResponsePayload.MESSAGE_SIGNATURE, TrezorResponsePayload,), {})  # type: ignore
-TrezorResponsePayload.SIGNED_TRANSACTION = type("TrezorResponsePayload.SIGNED_TRANSACTION", (TrezorResponsePayload.SIGNED_TRANSACTION, TrezorResponsePayload,), {})  # type: ignore
-
-
-
-
-class _UniffiConverterTypeTrezorResponsePayload(_UniffiConverterRustBuffer):
-    @staticmethod
-    def read(buf):
-        variant = buf.read_i32()
-        if variant == 1:
-            return TrezorResponsePayload.FEATURES(
-                _UniffiConverterTypeFeatureResponse.read(buf),
-            )
-        if variant == 2:
-            return TrezorResponsePayload.ADDRESS(
-                _UniffiConverterTypeAddressResponse.read(buf),
-            )
-        if variant == 3:
-            return TrezorResponsePayload.PUBLIC_KEY(
-                _UniffiConverterTypePublicKeyResponse.read(buf),
-            )
-        if variant == 4:
-            return TrezorResponsePayload.ACCOUNT_INFO(
-                _UniffiConverterTypeAccountInfoResponse.read(buf),
-            )
-        if variant == 5:
-            return TrezorResponsePayload.COMPOSE_TRANSACTION(
-                _UniffiConverterTypeComposeTransactionResponse.read(buf),
             )
         if variant == 6:
-            return TrezorResponsePayload.VERIFY_MESSAGE(
-                _UniffiConverterTypeVerifyMessageResponse.read(buf),
+            return TrezorError.PairingRequired(
             )
         if variant == 7:
-            return TrezorResponsePayload.MESSAGE_SIGNATURE(
-                _UniffiConverterTypeMessageSignatureResponse.read(buf),
+            return TrezorError.PairingFailed(
+                _UniffiConverterString.read(buf),
             )
         if variant == 8:
-            return TrezorResponsePayload.SIGNED_TRANSACTION(
-                _UniffiConverterTypeSignedTransactionResponse.read(buf),
+            return TrezorError.PinRequired(
+            )
+        if variant == 9:
+            return TrezorError.PinCancelled(
+            )
+        if variant == 10:
+            return TrezorError.InvalidPin(
+            )
+        if variant == 11:
+            return TrezorError.PassphraseRequired(
+            )
+        if variant == 12:
+            return TrezorError.UserCancelled(
+            )
+        if variant == 13:
+            return TrezorError.Timeout(
+            )
+        if variant == 14:
+            return TrezorError.InvalidPath(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 15:
+            return TrezorError.DeviceError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 16:
+            return TrezorError.NotInitialized(
+            )
+        if variant == 17:
+            return TrezorError.NotConnected(
+            )
+        if variant == 18:
+            return TrezorError.SessionError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 19:
+            return TrezorError.IoError(
+                _UniffiConverterString.read(buf),
             )
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
     def check_lower(value):
-        if value.is_FEATURES():
-            _UniffiConverterTypeFeatureResponse.check_lower(value._values[0])
+        if isinstance(value, TrezorError.TransportError):
+            _UniffiConverterString.check_lower(value.error_details)
             return
-        if value.is_ADDRESS():
-            _UniffiConverterTypeAddressResponse.check_lower(value._values[0])
+        if isinstance(value, TrezorError.DeviceNotFound):
             return
-        if value.is_PUBLIC_KEY():
-            _UniffiConverterTypePublicKeyResponse.check_lower(value._values[0])
+        if isinstance(value, TrezorError.DeviceDisconnected):
             return
-        if value.is_ACCOUNT_INFO():
-            _UniffiConverterTypeAccountInfoResponse.check_lower(value._values[0])
+        if isinstance(value, TrezorError.ConnectionError):
+            _UniffiConverterString.check_lower(value.error_details)
             return
-        if value.is_COMPOSE_TRANSACTION():
-            _UniffiConverterTypeComposeTransactionResponse.check_lower(value._values[0])
+        if isinstance(value, TrezorError.ProtocolError):
+            _UniffiConverterString.check_lower(value.error_details)
             return
-        if value.is_VERIFY_MESSAGE():
-            _UniffiConverterTypeVerifyMessageResponse.check_lower(value._values[0])
+        if isinstance(value, TrezorError.PairingRequired):
             return
-        if value.is_MESSAGE_SIGNATURE():
-            _UniffiConverterTypeMessageSignatureResponse.check_lower(value._values[0])
+        if isinstance(value, TrezorError.PairingFailed):
+            _UniffiConverterString.check_lower(value.error_details)
             return
-        if value.is_SIGNED_TRANSACTION():
-            _UniffiConverterTypeSignedTransactionResponse.check_lower(value._values[0])
+        if isinstance(value, TrezorError.PinRequired):
+            return
+        if isinstance(value, TrezorError.PinCancelled):
+            return
+        if isinstance(value, TrezorError.InvalidPin):
+            return
+        if isinstance(value, TrezorError.PassphraseRequired):
+            return
+        if isinstance(value, TrezorError.UserCancelled):
+            return
+        if isinstance(value, TrezorError.Timeout):
+            return
+        if isinstance(value, TrezorError.InvalidPath):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, TrezorError.DeviceError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, TrezorError.NotInitialized):
+            return
+        if isinstance(value, TrezorError.NotConnected):
+            return
+        if isinstance(value, TrezorError.SessionError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, TrezorError.IoError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, TrezorError.TransportError):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, TrezorError.DeviceNotFound):
+            buf.write_i32(2)
+        if isinstance(value, TrezorError.DeviceDisconnected):
+            buf.write_i32(3)
+        if isinstance(value, TrezorError.ConnectionError):
+            buf.write_i32(4)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, TrezorError.ProtocolError):
+            buf.write_i32(5)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, TrezorError.PairingRequired):
+            buf.write_i32(6)
+        if isinstance(value, TrezorError.PairingFailed):
+            buf.write_i32(7)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, TrezorError.PinRequired):
+            buf.write_i32(8)
+        if isinstance(value, TrezorError.PinCancelled):
+            buf.write_i32(9)
+        if isinstance(value, TrezorError.InvalidPin):
+            buf.write_i32(10)
+        if isinstance(value, TrezorError.PassphraseRequired):
+            buf.write_i32(11)
+        if isinstance(value, TrezorError.UserCancelled):
+            buf.write_i32(12)
+        if isinstance(value, TrezorError.Timeout):
+            buf.write_i32(13)
+        if isinstance(value, TrezorError.InvalidPath):
+            buf.write_i32(14)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, TrezorError.DeviceError):
+            buf.write_i32(15)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, TrezorError.NotInitialized):
+            buf.write_i32(16)
+        if isinstance(value, TrezorError.NotConnected):
+            buf.write_i32(17)
+        if isinstance(value, TrezorError.SessionError):
+            buf.write_i32(18)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, TrezorError.IoError):
+            buf.write_i32(19)
+            _UniffiConverterString.write(value.error_details, buf)
+
+
+
+
+
+class TrezorScriptType(enum.Enum):
+    """
+    Script types for address derivation.
+    """
+
+    SPEND_ADDRESS = 0
+    """
+    P2PKH (legacy)
+    """
+
+    
+    SPEND_P2SH_WITNESS = 1
+    """
+    P2SH-P2WPKH (nested SegWit)
+    """
+
+    
+    SPEND_WITNESS = 2
+    """
+    P2WPKH (native SegWit)
+    """
+
+    
+    SPEND_TAPROOT = 3
+    """
+    P2TR (Taproot)
+    """
+
+    
+
+
+class _UniffiConverterTypeTrezorScriptType(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return TrezorScriptType.SPEND_ADDRESS
+        if variant == 2:
+            return TrezorScriptType.SPEND_P2SH_WITNESS
+        if variant == 3:
+            return TrezorScriptType.SPEND_WITNESS
+        if variant == 4:
+            return TrezorScriptType.SPEND_TAPROOT
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == TrezorScriptType.SPEND_ADDRESS:
+            return
+        if value == TrezorScriptType.SPEND_P2SH_WITNESS:
+            return
+        if value == TrezorScriptType.SPEND_WITNESS:
+            return
+        if value == TrezorScriptType.SPEND_TAPROOT:
             return
         raise ValueError(value)
 
     @staticmethod
     def write(value, buf):
-        if value.is_FEATURES():
+        if value == TrezorScriptType.SPEND_ADDRESS:
             buf.write_i32(1)
-            _UniffiConverterTypeFeatureResponse.write(value._values[0], buf)
-        if value.is_ADDRESS():
+        if value == TrezorScriptType.SPEND_P2SH_WITNESS:
             buf.write_i32(2)
-            _UniffiConverterTypeAddressResponse.write(value._values[0], buf)
-        if value.is_PUBLIC_KEY():
+        if value == TrezorScriptType.SPEND_WITNESS:
             buf.write_i32(3)
-            _UniffiConverterTypePublicKeyResponse.write(value._values[0], buf)
-        if value.is_ACCOUNT_INFO():
+        if value == TrezorScriptType.SPEND_TAPROOT:
             buf.write_i32(4)
-            _UniffiConverterTypeAccountInfoResponse.write(value._values[0], buf)
-        if value.is_COMPOSE_TRANSACTION():
-            buf.write_i32(5)
-            _UniffiConverterTypeComposeTransactionResponse.write(value._values[0], buf)
-        if value.is_VERIFY_MESSAGE():
-            buf.write_i32(6)
-            _UniffiConverterTypeVerifyMessageResponse.write(value._values[0], buf)
-        if value.is_MESSAGE_SIGNATURE():
-            buf.write_i32(7)
-            _UniffiConverterTypeMessageSignatureResponse.write(value._values[0], buf)
-        if value.is_SIGNED_TRANSACTION():
-            buf.write_i32(8)
-            _UniffiConverterTypeSignedTransactionResponse.write(value._values[0], buf)
+
+
+
+
+
+
+
+class TrezorTransportType(enum.Enum):
+    """
+    Transport type for Trezor devices.
+    """
+
+    USB = 0
+    """
+    USB connection
+    """
+
+    
+    BLUETOOTH = 1
+    """
+    Bluetooth connection
+    """
+
+    
+
+
+class _UniffiConverterTypeTrezorTransportType(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return TrezorTransportType.USB
+        if variant == 2:
+            return TrezorTransportType.BLUETOOTH
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == TrezorTransportType.USB:
+            return
+        if value == TrezorTransportType.BLUETOOTH:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == TrezorTransportType.USB:
+            buf.write_i32(1)
+        if value == TrezorTransportType.BLUETOOTH:
+            buf.write_i32(2)
 
 
 
@@ -12477,11 +10775,11 @@ class _UniffiConverterTypeWordCount(_UniffiConverterRustBuffer):
 
 
 
-class _UniffiConverterOptionalUInt8(_UniffiConverterRustBuffer):
+class _UniffiConverterOptionalUInt16(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
         if value is not None:
-            _UniffiConverterUInt8.check_lower(value)
+            _UniffiConverterUInt16.check_lower(value)
 
     @classmethod
     def write(cls, value, buf):
@@ -12490,7 +10788,7 @@ class _UniffiConverterOptionalUInt8(_UniffiConverterRustBuffer):
             return
 
         buf.write_u8(1)
-        _UniffiConverterUInt8.write(value, buf)
+        _UniffiConverterUInt16.write(value, buf)
 
     @classmethod
     def read(cls, buf):
@@ -12498,7 +10796,7 @@ class _UniffiConverterOptionalUInt8(_UniffiConverterRustBuffer):
         if flag == 0:
             return None
         elif flag == 1:
-            return _UniffiConverterUInt8.read(buf)
+            return _UniffiConverterUInt16.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -12666,87 +10964,6 @@ class _UniffiConverterOptionalTypeClosedChannelDetails(_UniffiConverterRustBuffe
 
 
 
-class _UniffiConverterOptionalTypeCoinPurchaseMemo(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterTypeCoinPurchaseMemo.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterTypeCoinPurchaseMemo.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterTypeCoinPurchaseMemo.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
-class _UniffiConverterOptionalTypeCommonParams(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterTypeCommonParams.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterTypeCommonParams.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterTypeCommonParams.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
-class _UniffiConverterOptionalTypeComposeAccount(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterTypeComposeAccount.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterTypeComposeAccount.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterTypeComposeAccount.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
 class _UniffiConverterOptionalTypeCreateCjitOptions(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -12796,33 +11013,6 @@ class _UniffiConverterOptionalTypeCreateOrderOptions(_UniffiConverterRustBuffer)
             return None
         elif flag == 1:
             return _UniffiConverterTypeCreateOrderOptions.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
-class _UniffiConverterOptionalTypeDeviceParams(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterTypeDeviceParams.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterTypeDeviceParams.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterTypeDeviceParams.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -13206,33 +11396,6 @@ class _UniffiConverterOptionalTypeILspNode(_UniffiConverterRustBuffer):
 
 
 
-class _UniffiConverterOptionalTypeMultisigRedeemScriptType(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterTypeMultisigRedeemScriptType.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterTypeMultisigRedeemScriptType.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterTypeMultisigRedeemScriptType.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
 class _UniffiConverterOptionalTypeOnchainActivity(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -13287,60 +11450,6 @@ class _UniffiConverterOptionalTypePreActivityMetadata(_UniffiConverterRustBuffer
 
 
 
-class _UniffiConverterOptionalTypeRefundMemo(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterTypeRefundMemo.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterTypeRefundMemo.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterTypeRefundMemo.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
-class _UniffiConverterOptionalTypeTextMemo(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterTypeTextMemo.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterTypeTextMemo.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterTypeTextMemo.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
 class _UniffiConverterOptionalTypeTransactionDetails(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -13368,11 +11477,11 @@ class _UniffiConverterOptionalTypeTransactionDetails(_UniffiConverterRustBuffer)
 
 
 
-class _UniffiConverterOptionalTypeUnlockPath(_UniffiConverterRustBuffer):
+class _UniffiConverterOptionalTypeTrezorCallMessageResult(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
         if value is not None:
-            _UniffiConverterTypeUnlockPath.check_lower(value)
+            _UniffiConverterTypeTrezorCallMessageResult.check_lower(value)
 
     @classmethod
     def write(cls, value, buf):
@@ -13381,7 +11490,7 @@ class _UniffiConverterOptionalTypeUnlockPath(_UniffiConverterRustBuffer):
             return
 
         buf.write_u8(1)
-        _UniffiConverterTypeUnlockPath.write(value, buf)
+        _UniffiConverterTypeTrezorCallMessageResult.write(value, buf)
 
     @classmethod
     def read(cls, buf):
@@ -13389,17 +11498,17 @@ class _UniffiConverterOptionalTypeUnlockPath(_UniffiConverterRustBuffer):
         if flag == 0:
             return None
         elif flag == 1:
-            return _UniffiConverterTypeUnlockPath.read(buf)
+            return _UniffiConverterTypeTrezorCallMessageResult.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
 
 
-class _UniffiConverterOptionalTypeXrpMarker(_UniffiConverterRustBuffer):
+class _UniffiConverterOptionalTypeTrezorDeviceInfo(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
         if value is not None:
-            _UniffiConverterTypeXrpMarker.check_lower(value)
+            _UniffiConverterTypeTrezorDeviceInfo.check_lower(value)
 
     @classmethod
     def write(cls, value, buf):
@@ -13408,7 +11517,7 @@ class _UniffiConverterOptionalTypeXrpMarker(_UniffiConverterRustBuffer):
             return
 
         buf.write_u8(1)
-        _UniffiConverterTypeXrpMarker.write(value, buf)
+        _UniffiConverterTypeTrezorDeviceInfo.write(value, buf)
 
     @classmethod
     def read(cls, buf):
@@ -13416,17 +11525,17 @@ class _UniffiConverterOptionalTypeXrpMarker(_UniffiConverterRustBuffer):
         if flag == 0:
             return None
         elif flag == 1:
-            return _UniffiConverterTypeXrpMarker.read(buf)
+            return _UniffiConverterTypeTrezorDeviceInfo.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
 
 
-class _UniffiConverterOptionalTypeAccountInfoDetails(_UniffiConverterRustBuffer):
+class _UniffiConverterOptionalTypeTrezorFeatures(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
         if value is not None:
-            _UniffiConverterTypeAccountInfoDetails.check_lower(value)
+            _UniffiConverterTypeTrezorFeatures.check_lower(value)
 
     @classmethod
     def write(cls, value, buf):
@@ -13435,7 +11544,7 @@ class _UniffiConverterOptionalTypeAccountInfoDetails(_UniffiConverterRustBuffer)
             return
 
         buf.write_u8(1)
-        _UniffiConverterTypeAccountInfoDetails.write(value, buf)
+        _UniffiConverterTypeTrezorFeatures.write(value, buf)
 
     @classmethod
     def read(cls, buf):
@@ -13443,7 +11552,7 @@ class _UniffiConverterOptionalTypeAccountInfoDetails(_UniffiConverterRustBuffer)
         if flag == 0:
             return None
         elif flag == 1:
-            return _UniffiConverterTypeAccountInfoDetails.read(buf)
+            return _UniffiConverterTypeTrezorFeatures.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -13498,33 +11607,6 @@ class _UniffiConverterOptionalTypeActivityFilter(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterTypeActivityFilter.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
-class _UniffiConverterOptionalTypeAmountUnit(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterTypeAmountUnit.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterTypeAmountUnit.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterTypeAmountUnit.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -13611,33 +11693,6 @@ class _UniffiConverterOptionalTypeCJitStateEnum(_UniffiConverterRustBuffer):
 
 
 
-class _UniffiConverterOptionalTypeDefaultAccountType(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterTypeDefaultAccountType.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterTypeDefaultAccountType.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterTypeDefaultAccountType.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
 class _UniffiConverterOptionalTypeNetwork(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -13692,33 +11747,6 @@ class _UniffiConverterOptionalTypePaymentType(_UniffiConverterRustBuffer):
 
 
 
-class _UniffiConverterOptionalTypeScriptType(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterTypeScriptType.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterTypeScriptType.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterTypeScriptType.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
 class _UniffiConverterOptionalTypeSortDirection(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -13746,11 +11774,11 @@ class _UniffiConverterOptionalTypeSortDirection(_UniffiConverterRustBuffer):
 
 
 
-class _UniffiConverterOptionalTypeTokenFilter(_UniffiConverterRustBuffer):
+class _UniffiConverterOptionalTypeTrezorScriptType(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
         if value is not None:
-            _UniffiConverterTypeTokenFilter.check_lower(value)
+            _UniffiConverterTypeTrezorScriptType.check_lower(value)
 
     @classmethod
     def write(cls, value, buf):
@@ -13759,7 +11787,7 @@ class _UniffiConverterOptionalTypeTokenFilter(_UniffiConverterRustBuffer):
             return
 
         buf.write_u8(1)
-        _UniffiConverterTypeTokenFilter.write(value, buf)
+        _UniffiConverterTypeTrezorScriptType.write(value, buf)
 
     @classmethod
     def read(cls, buf):
@@ -13767,34 +11795,7 @@ class _UniffiConverterOptionalTypeTokenFilter(_UniffiConverterRustBuffer):
         if flag == 0:
             return None
         elif flag == 1:
-            return _UniffiConverterTypeTokenFilter.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
-class _UniffiConverterOptionalTypeTrezorEnvironment(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterTypeTrezorEnvironment.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterTypeTrezorEnvironment.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterTypeTrezorEnvironment.read(buf)
+            return _UniffiConverterTypeTrezorScriptType.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -13827,33 +11828,6 @@ class _UniffiConverterOptionalTypeWordCount(_UniffiConverterRustBuffer):
 
 
 
-class _UniffiConverterOptionalSequenceUInt32(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterSequenceUInt32.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterSequenceUInt32.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterSequenceUInt32.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
 class _UniffiConverterOptionalSequenceString(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -13876,60 +11850,6 @@ class _UniffiConverterOptionalSequenceString(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterSequenceString.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
-class _UniffiConverterOptionalSequenceTypeFeeLevel(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterSequenceTypeFeeLevel.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterSequenceTypeFeeLevel.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterSequenceTypeFeeLevel.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
-class _UniffiConverterOptionalSequenceTypeHdNodeType(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterSequenceTypeHdNodeType.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterSequenceTypeHdNodeType.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterSequenceTypeHdNodeType.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -13962,141 +11882,6 @@ class _UniffiConverterOptionalSequenceTypeIManualRefund(_UniffiConverterRustBuff
 
 
 
-class _UniffiConverterOptionalSequenceTypePaymentRequestMemo(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterSequenceTypePaymentRequestMemo.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterSequenceTypePaymentRequestMemo.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterSequenceTypePaymentRequestMemo.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
-class _UniffiConverterOptionalSequenceTypePrecomposedInput(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterSequenceTypePrecomposedInput.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterSequenceTypePrecomposedInput.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterSequenceTypePrecomposedInput.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
-class _UniffiConverterOptionalSequenceTypePrecomposedOutput(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterSequenceTypePrecomposedOutput.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterSequenceTypePrecomposedOutput.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterSequenceTypePrecomposedOutput.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
-class _UniffiConverterOptionalSequenceTypeRefTransaction(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterSequenceTypeRefTransaction.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterSequenceTypeRefTransaction.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterSequenceTypeRefTransaction.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
-class _UniffiConverterOptionalSequenceTypeTxAckPaymentRequest(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        if value is not None:
-            _UniffiConverterSequenceTypeTxAckPaymentRequest.check_lower(value)
-
-    @classmethod
-    def write(cls, value, buf):
-        if value is None:
-            buf.write_u8(0)
-            return
-
-        buf.write_u8(1)
-        _UniffiConverterSequenceTypeTxAckPaymentRequest.write(value, buf)
-
-    @classmethod
-    def read(cls, buf):
-        flag = buf.read_u8()
-        if flag == 0:
-            return None
-        elif flag == 1:
-            return _UniffiConverterSequenceTypeTxAckPaymentRequest.read(buf)
-        else:
-            raise InternalError("Unexpected flag byte for optional type")
-
-
-
 class _UniffiConverterOptionalMapStringString(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14124,31 +11909,6 @@ class _UniffiConverterOptionalMapStringString(_UniffiConverterRustBuffer):
 
 
 
-class _UniffiConverterSequenceUInt32(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterUInt32.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterUInt32.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterUInt32.read(buf) for i in range(count)
-        ]
-
-
-
 class _UniffiConverterSequenceString(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14170,31 +11930,6 @@ class _UniffiConverterSequenceString(_UniffiConverterRustBuffer):
 
         return [
             _UniffiConverterString.read(buf) for i in range(count)
-        ]
-
-
-
-class _UniffiConverterSequenceTypeAccountUtxo(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypeAccountUtxo.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypeAccountUtxo.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypeAccountUtxo.read(buf) for i in range(count)
         ]
 
 
@@ -14224,31 +11959,6 @@ class _UniffiConverterSequenceTypeActivityTags(_UniffiConverterRustBuffer):
 
 
 
-class _UniffiConverterSequenceTypeAddressInfo(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypeAddressInfo.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypeAddressInfo.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypeAddressInfo.read(buf) for i in range(count)
-        ]
-
-
-
 class _UniffiConverterSequenceTypeClosedChannelDetails(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14274,31 +11984,6 @@ class _UniffiConverterSequenceTypeClosedChannelDetails(_UniffiConverterRustBuffe
 
 
 
-class _UniffiConverterSequenceTypeFeeLevel(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypeFeeLevel.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypeFeeLevel.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypeFeeLevel.read(buf) for i in range(count)
-        ]
-
-
-
 class _UniffiConverterSequenceTypeGetAddressResponse(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14320,56 +12005,6 @@ class _UniffiConverterSequenceTypeGetAddressResponse(_UniffiConverterRustBuffer)
 
         return [
             _UniffiConverterTypeGetAddressResponse.read(buf) for i in range(count)
-        ]
-
-
-
-class _UniffiConverterSequenceTypeHdNodePathType(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypeHdNodePathType.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypeHdNodePathType.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypeHdNodePathType.read(buf) for i in range(count)
-        ]
-
-
-
-class _UniffiConverterSequenceTypeHdNodeType(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypeHdNodeType.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypeHdNodeType.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypeHdNodeType.read(buf) for i in range(count)
         ]
 
 
@@ -14524,6 +12159,31 @@ class _UniffiConverterSequenceTypeLightningActivity(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterSequenceTypeNativeDeviceInfo(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeNativeDeviceInfo.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeNativeDeviceInfo.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeNativeDeviceInfo.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypeOnchainActivity(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14545,31 +12205,6 @@ class _UniffiConverterSequenceTypeOnchainActivity(_UniffiConverterRustBuffer):
 
         return [
             _UniffiConverterTypeOnchainActivity.read(buf) for i in range(count)
-        ]
-
-
-
-class _UniffiConverterSequenceTypePaymentRequestMemo(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypePaymentRequestMemo.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypePaymentRequestMemo.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypePaymentRequestMemo.read(buf) for i in range(count)
         ]
 
 
@@ -14599,156 +12234,6 @@ class _UniffiConverterSequenceTypePreActivityMetadata(_UniffiConverterRustBuffer
 
 
 
-class _UniffiConverterSequenceTypePrecomposedInput(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypePrecomposedInput.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypePrecomposedInput.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypePrecomposedInput.read(buf) for i in range(count)
-        ]
-
-
-
-class _UniffiConverterSequenceTypePrecomposedOutput(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypePrecomposedOutput.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypePrecomposedOutput.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypePrecomposedOutput.read(buf) for i in range(count)
-        ]
-
-
-
-class _UniffiConverterSequenceTypePrecomposedTransaction(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypePrecomposedTransaction.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypePrecomposedTransaction.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypePrecomposedTransaction.read(buf) for i in range(count)
-        ]
-
-
-
-class _UniffiConverterSequenceTypeRefTransaction(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypeRefTransaction.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypeRefTransaction.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypeRefTransaction.read(buf) for i in range(count)
-        ]
-
-
-
-class _UniffiConverterSequenceTypeRefTxInput(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypeRefTxInput.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypeRefTxInput.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypeRefTxInput.read(buf) for i in range(count)
-        ]
-
-
-
-class _UniffiConverterSequenceTypeRefTxOutput(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypeRefTxOutput.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypeRefTxOutput.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypeRefTxOutput.read(buf) for i in range(count)
-        ]
-
-
-
 class _UniffiConverterSequenceTypeTransactionDetails(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14774,18 +12259,18 @@ class _UniffiConverterSequenceTypeTransactionDetails(_UniffiConverterRustBuffer)
 
 
 
-class _UniffiConverterSequenceTypeTxAckPaymentRequest(_UniffiConverterRustBuffer):
+class _UniffiConverterSequenceTypeTrezorDeviceInfo(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
         for item in value:
-            _UniffiConverterTypeTxAckPaymentRequest.check_lower(item)
+            _UniffiConverterTypeTrezorDeviceInfo.check_lower(item)
 
     @classmethod
     def write(cls, value, buf):
         items = len(value)
         buf.write_i32(items)
         for item in value:
-            _UniffiConverterTypeTxAckPaymentRequest.write(item, buf)
+            _UniffiConverterTypeTrezorDeviceInfo.write(item, buf)
 
     @classmethod
     def read(cls, buf):
@@ -14794,7 +12279,57 @@ class _UniffiConverterSequenceTypeTxAckPaymentRequest(_UniffiConverterRustBuffer
             raise InternalError("Unexpected negative sequence length")
 
         return [
-            _UniffiConverterTypeTxAckPaymentRequest.read(buf) for i in range(count)
+            _UniffiConverterTypeTrezorDeviceInfo.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeTrezorTxInput(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeTrezorTxInput.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeTrezorTxInput.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeTrezorTxInput.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeTrezorTxOutput(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeTrezorTxOutput.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeTrezorTxOutput.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeTrezorTxOutput.read(buf) for i in range(count)
         ]
 
 
@@ -14824,31 +12359,6 @@ class _UniffiConverterSequenceTypeTxInput(_UniffiConverterRustBuffer):
 
 
 
-class _UniffiConverterSequenceTypeTxInputType(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypeTxInputType.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypeTxInputType.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypeTxInputType.read(buf) for i in range(count)
-        ]
-
-
-
 class _UniffiConverterSequenceTypeTxOutput(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14874,31 +12384,6 @@ class _UniffiConverterSequenceTypeTxOutput(_UniffiConverterRustBuffer):
 
 
 
-class _UniffiConverterSequenceTypeTxOutputType(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypeTxOutputType.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypeTxOutputType.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypeTxOutputType.read(buf) for i in range(count)
-        ]
-
-
-
 class _UniffiConverterSequenceTypeActivity(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14920,31 +12405,6 @@ class _UniffiConverterSequenceTypeActivity(_UniffiConverterRustBuffer):
 
         return [
             _UniffiConverterTypeActivity.read(buf) for i in range(count)
-        ]
-
-
-
-class _UniffiConverterSequenceTypeComposeOutput(_UniffiConverterRustBuffer):
-    @classmethod
-    def check_lower(cls, value):
-        for item in value:
-            _UniffiConverterTypeComposeOutput.check_lower(item)
-
-    @classmethod
-    def write(cls, value, buf):
-        items = len(value)
-        buf.write_i32(items)
-        for item in value:
-            _UniffiConverterTypeComposeOutput.write(item, buf)
-
-    @classmethod
-    def read(cls, buf):
-        count = buf.read_i32()
-        if count < 0:
-            raise InternalError("Unexpected negative sequence length")
-
-        return [
-            _UniffiConverterTypeComposeOutput.read(buf) for i in range(count)
         ]
 
 
@@ -14981,6 +12441,1109 @@ class _UniffiConverterMapStringString(_UniffiConverterRustBuffer):
         return d
 
 # objects.
+class TrezorTransportCallbackProtocol(typing.Protocol):
+    """
+    Callback interface for native Trezor transport operations
+
+    This trait must be implemented by the native iOS/Android code.
+    The implementation handles actual USB or Bluetooth communication.
+
+    # Android Implementation
+    Use Android USB Host API for USB devices:
+    - Enumerate devices with vendorId 0x1209 (0x534c for older), productId 0x53c1
+    - Request USB permission, claim interface, get endpoints
+    - Chunk size: 64 bytes for USB
+
+    Use Android BLE API for Bluetooth:
+    - Scan for Trezor BLE service UUID: 8c000001-a59b-4d58-a9ad-073df69fa1b1
+    - Connect and discover characteristics
+    - Read from: 8c000002-a59b-4d58-a9ad-073df69fa1b1
+    - Write to: 8c000003-a59b-4d58-a9ad-073df69fa1b1
+    - Chunk size: 244 bytes for BLE
+
+    # iOS Implementation
+    Use IOKit/CoreBluetooth with same service/characteristic UUIDs.
+    """
+
+    def enumerate_devices(self, ):
+        """
+        Enumerate all connected Trezor devices
+        """
+
+        raise NotImplementedError
+    def open_device(self, path: "str"):
+        """
+        Open a connection to a device
+        """
+
+        raise NotImplementedError
+    def close_device(self, path: "str"):
+        """
+        Close the connection to a device
+        """
+
+        raise NotImplementedError
+    def read_chunk(self, path: "str"):
+        """
+        Read a chunk of data from the device
+        """
+
+        raise NotImplementedError
+    def write_chunk(self, path: "str",data: "bytes"):
+        """
+        Write a chunk of data to the device
+        """
+
+        raise NotImplementedError
+    def get_chunk_size(self, path: "str"):
+        """
+        Get the chunk size for a device (64 for USB, 244 for Bluetooth)
+        """
+
+        raise NotImplementedError
+    def call_message(self, path: "str",message_type: "int",data: "bytes"):
+        """
+        High-level message call for BLE/THP devices.
+
+        For BLE devices that use THP protocol (encrypted communication),
+        the native layer should handle encryption/decryption via
+        android-trezor-connect and return the raw protobuf response.
+
+        Returns None if not supported (will fall back to Protocol V1 chunks).
+        Returns Some(result) to use native THP handling.
+
+        # Arguments
+        * `path` - Device path
+        * `message_type` - Protobuf message type (e.g., GetAddress = 29)
+        * `data` - Serialized protobuf message data
+        """
+
+        raise NotImplementedError
+    def get_pairing_code(self, ):
+        """
+        Get pairing code from user during BLE THP pairing.
+
+        This is called when the Trezor device displays a 6-digit code
+        that must be entered to complete Bluetooth pairing.
+
+        The native layer should display a UI for the user to enter the code
+        shown on the Trezor screen.
+
+        Returns the 6-digit code as a string, or empty string to cancel.
+        """
+
+        raise NotImplementedError
+    def save_thp_credential(self, device_id: "str",credential_json: "str"):
+        """
+        Save THP pairing credentials for a device.
+
+        Called after successful BLE pairing to store credentials for reconnection.
+        The credential_json is a JSON string containing the serialized ThpCredentials.
+
+        # Arguments
+        * `device_id` - Device identifier (e.g., BLE address like "ble:AA:BB:CC:DD:EE:FF")
+        * `credential_json` - JSON string with credential data
+
+        Returns true if credentials were saved successfully.
+        """
+
+        raise NotImplementedError
+    def load_thp_credential(self, device_id: "str"):
+        """
+        Load THP pairing credentials for a device.
+
+        Called before BLE handshake to check for stored credentials.
+        If credentials are found, they will be used to skip the pairing dialog.
+
+        # Arguments
+        * `device_id` - Device identifier (e.g., BLE address like "ble:AA:BB:CC:DD:EE:FF")
+
+        Returns the JSON string containing ThpCredentials, or None if not found.
+        """
+
+        raise NotImplementedError
+    def log_debug(self, tag: "str",message: "str"):
+        """
+        Log a debug message from the Rust THP handshake layer.
+
+        This forwards Rust-level errors and state information to the native
+        debug UI (e.g., TrezorDebugLog on Android) so they are visible
+        alongside the Kotlin-level logs.
+
+        # Arguments
+        * `tag` - Short tag identifying the subsystem (e.g., "HANDSHAKE", "THP")
+        * `message` - Human-readable debug message
+        """
+
+        raise NotImplementedError
+# TrezorTransportCallback is a foreign trait so treated like a callback interface, where the
+# primary use-case is the trait being implemented locally.
+# It is a base-class local implementations might subclass.
+
+
+class TrezorTransportCallback():
+    """
+    Callback interface for native Trezor transport operations
+
+    This trait must be implemented by the native iOS/Android code.
+    The implementation handles actual USB or Bluetooth communication.
+
+    # Android Implementation
+    Use Android USB Host API for USB devices:
+    - Enumerate devices with vendorId 0x1209 (0x534c for older), productId 0x53c1
+    - Request USB permission, claim interface, get endpoints
+    - Chunk size: 64 bytes for USB
+
+    Use Android BLE API for Bluetooth:
+    - Scan for Trezor BLE service UUID: 8c000001-a59b-4d58-a9ad-073df69fa1b1
+    - Connect and discover characteristics
+    - Read from: 8c000002-a59b-4d58-a9ad-073df69fa1b1
+    - Write to: 8c000003-a59b-4d58-a9ad-073df69fa1b1
+    - Chunk size: 244 bytes for BLE
+
+    # iOS Implementation
+    Use IOKit/CoreBluetooth with same service/characteristic UUIDs.
+    """
+
+    def enumerate_devices(self, ):
+        """
+        Enumerate all connected Trezor devices
+        """
+
+        raise NotImplementedError
+    def open_device(self, path: "str"):
+        """
+        Open a connection to a device
+        """
+
+        raise NotImplementedError
+    def close_device(self, path: "str"):
+        """
+        Close the connection to a device
+        """
+
+        raise NotImplementedError
+    def read_chunk(self, path: "str"):
+        """
+        Read a chunk of data from the device
+        """
+
+        raise NotImplementedError
+    def write_chunk(self, path: "str",data: "bytes"):
+        """
+        Write a chunk of data to the device
+        """
+
+        raise NotImplementedError
+    def get_chunk_size(self, path: "str"):
+        """
+        Get the chunk size for a device (64 for USB, 244 for Bluetooth)
+        """
+
+        raise NotImplementedError
+    def call_message(self, path: "str",message_type: "int",data: "bytes"):
+        """
+        High-level message call for BLE/THP devices.
+
+        For BLE devices that use THP protocol (encrypted communication),
+        the native layer should handle encryption/decryption via
+        android-trezor-connect and return the raw protobuf response.
+
+        Returns None if not supported (will fall back to Protocol V1 chunks).
+        Returns Some(result) to use native THP handling.
+
+        # Arguments
+        * `path` - Device path
+        * `message_type` - Protobuf message type (e.g., GetAddress = 29)
+        * `data` - Serialized protobuf message data
+        """
+
+        raise NotImplementedError
+    def get_pairing_code(self, ):
+        """
+        Get pairing code from user during BLE THP pairing.
+
+        This is called when the Trezor device displays a 6-digit code
+        that must be entered to complete Bluetooth pairing.
+
+        The native layer should display a UI for the user to enter the code
+        shown on the Trezor screen.
+
+        Returns the 6-digit code as a string, or empty string to cancel.
+        """
+
+        raise NotImplementedError
+    def save_thp_credential(self, device_id: "str",credential_json: "str"):
+        """
+        Save THP pairing credentials for a device.
+
+        Called after successful BLE pairing to store credentials for reconnection.
+        The credential_json is a JSON string containing the serialized ThpCredentials.
+
+        # Arguments
+        * `device_id` - Device identifier (e.g., BLE address like "ble:AA:BB:CC:DD:EE:FF")
+        * `credential_json` - JSON string with credential data
+
+        Returns true if credentials were saved successfully.
+        """
+
+        raise NotImplementedError
+    def load_thp_credential(self, device_id: "str"):
+        """
+        Load THP pairing credentials for a device.
+
+        Called before BLE handshake to check for stored credentials.
+        If credentials are found, they will be used to skip the pairing dialog.
+
+        # Arguments
+        * `device_id` - Device identifier (e.g., BLE address like "ble:AA:BB:CC:DD:EE:FF")
+
+        Returns the JSON string containing ThpCredentials, or None if not found.
+        """
+
+        raise NotImplementedError
+    def log_debug(self, tag: "str",message: "str"):
+        """
+        Log a debug message from the Rust THP handshake layer.
+
+        This forwards Rust-level errors and state information to the native
+        debug UI (e.g., TrezorDebugLog on Android) so they are visible
+        alongside the Kotlin-level logs.
+
+        # Arguments
+        * `tag` - Short tag identifying the subsystem (e.g., "HANDSHAKE", "THP")
+        * `message` - Human-readable debug message
+        """
+
+        raise NotImplementedError
+# `TrezorTransportCallbackImpl` is the implementation for a Rust implemented version.
+class TrezorTransportCallbackImpl():
+    """
+    Callback interface for native Trezor transport operations
+
+    This trait must be implemented by the native iOS/Android code.
+    The implementation handles actual USB or Bluetooth communication.
+
+    # Android Implementation
+    Use Android USB Host API for USB devices:
+    - Enumerate devices with vendorId 0x1209 (0x534c for older), productId 0x53c1
+    - Request USB permission, claim interface, get endpoints
+    - Chunk size: 64 bytes for USB
+
+    Use Android BLE API for Bluetooth:
+    - Scan for Trezor BLE service UUID: 8c000001-a59b-4d58-a9ad-073df69fa1b1
+    - Connect and discover characteristics
+    - Read from: 8c000002-a59b-4d58-a9ad-073df69fa1b1
+    - Write to: 8c000003-a59b-4d58-a9ad-073df69fa1b1
+    - Chunk size: 244 bytes for BLE
+
+    # iOS Implementation
+    Use IOKit/CoreBluetooth with same service/characteristic UUIDs.
+    """
+
+    _pointer: ctypes.c_void_p
+    
+    def __init__(self, *args, **kwargs):
+        raise ValueError("This class has no default constructor")
+
+    def __del__(self):
+        # In case of partial initialization of instances.
+        pointer = getattr(self, "_pointer", None)
+        if pointer is not None:
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_free_trezortransportcallback, pointer)
+
+    def _uniffi_clone_pointer(self):
+        return _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_clone_trezortransportcallback, self._pointer)
+
+    # Used by alternative constructors or any methods which return this type.
+    @classmethod
+    def _make_instance_(cls, pointer):
+        # Lightly yucky way to bypass the usual __init__ logic
+        # and just create a new instance with the required pointer.
+        inst = cls.__new__(cls)
+        inst._pointer = pointer
+        return inst
+
+
+    def enumerate_devices(self, ) -> "typing.List[NativeDeviceInfo]":
+        """
+        Enumerate all connected Trezor devices
+        """
+
+        return _UniffiConverterSequenceTypeNativeDeviceInfo.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_enumerate_devices,self._uniffi_clone_pointer(),)
+        )
+
+
+
+
+
+    def open_device(self, path: "str") -> "TrezorTransportWriteResult":
+        """
+        Open a connection to a device
+        """
+
+        _UniffiConverterString.check_lower(path)
+        
+        return _UniffiConverterTypeTrezorTransportWriteResult.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_open_device,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(path))
+        )
+
+
+
+
+
+    def close_device(self, path: "str") -> "TrezorTransportWriteResult":
+        """
+        Close the connection to a device
+        """
+
+        _UniffiConverterString.check_lower(path)
+        
+        return _UniffiConverterTypeTrezorTransportWriteResult.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_close_device,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(path))
+        )
+
+
+
+
+
+    def read_chunk(self, path: "str") -> "TrezorTransportReadResult":
+        """
+        Read a chunk of data from the device
+        """
+
+        _UniffiConverterString.check_lower(path)
+        
+        return _UniffiConverterTypeTrezorTransportReadResult.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_read_chunk,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(path))
+        )
+
+
+
+
+
+    def write_chunk(self, path: "str",data: "bytes") -> "TrezorTransportWriteResult":
+        """
+        Write a chunk of data to the device
+        """
+
+        _UniffiConverterString.check_lower(path)
+        
+        _UniffiConverterBytes.check_lower(data)
+        
+        return _UniffiConverterTypeTrezorTransportWriteResult.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_write_chunk,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(path),
+        _UniffiConverterBytes.lower(data))
+        )
+
+
+
+
+
+    def get_chunk_size(self, path: "str") -> "int":
+        """
+        Get the chunk size for a device (64 for USB, 244 for Bluetooth)
+        """
+
+        _UniffiConverterString.check_lower(path)
+        
+        return _UniffiConverterUInt32.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_get_chunk_size,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(path))
+        )
+
+
+
+
+
+    def call_message(self, path: "str",message_type: "int",data: "bytes") -> "typing.Optional[TrezorCallMessageResult]":
+        """
+        High-level message call for BLE/THP devices.
+
+        For BLE devices that use THP protocol (encrypted communication),
+        the native layer should handle encryption/decryption via
+        android-trezor-connect and return the raw protobuf response.
+
+        Returns None if not supported (will fall back to Protocol V1 chunks).
+        Returns Some(result) to use native THP handling.
+
+        # Arguments
+        * `path` - Device path
+        * `message_type` - Protobuf message type (e.g., GetAddress = 29)
+        * `data` - Serialized protobuf message data
+        """
+
+        _UniffiConverterString.check_lower(path)
+        
+        _UniffiConverterUInt16.check_lower(message_type)
+        
+        _UniffiConverterBytes.check_lower(data)
+        
+        return _UniffiConverterOptionalTypeTrezorCallMessageResult.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_call_message,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(path),
+        _UniffiConverterUInt16.lower(message_type),
+        _UniffiConverterBytes.lower(data))
+        )
+
+
+
+
+
+    def get_pairing_code(self, ) -> "str":
+        """
+        Get pairing code from user during BLE THP pairing.
+
+        This is called when the Trezor device displays a 6-digit code
+        that must be entered to complete Bluetooth pairing.
+
+        The native layer should display a UI for the user to enter the code
+        shown on the Trezor screen.
+
+        Returns the 6-digit code as a string, or empty string to cancel.
+        """
+
+        return _UniffiConverterString.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_get_pairing_code,self._uniffi_clone_pointer(),)
+        )
+
+
+
+
+
+    def save_thp_credential(self, device_id: "str",credential_json: "str") -> "bool":
+        """
+        Save THP pairing credentials for a device.
+
+        Called after successful BLE pairing to store credentials for reconnection.
+        The credential_json is a JSON string containing the serialized ThpCredentials.
+
+        # Arguments
+        * `device_id` - Device identifier (e.g., BLE address like "ble:AA:BB:CC:DD:EE:FF")
+        * `credential_json` - JSON string with credential data
+
+        Returns true if credentials were saved successfully.
+        """
+
+        _UniffiConverterString.check_lower(device_id)
+        
+        _UniffiConverterString.check_lower(credential_json)
+        
+        return _UniffiConverterBool.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_save_thp_credential,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(device_id),
+        _UniffiConverterString.lower(credential_json))
+        )
+
+
+
+
+
+    def load_thp_credential(self, device_id: "str") -> "typing.Optional[str]":
+        """
+        Load THP pairing credentials for a device.
+
+        Called before BLE handshake to check for stored credentials.
+        If credentials are found, they will be used to skip the pairing dialog.
+
+        # Arguments
+        * `device_id` - Device identifier (e.g., BLE address like "ble:AA:BB:CC:DD:EE:FF")
+
+        Returns the JSON string containing ThpCredentials, or None if not found.
+        """
+
+        _UniffiConverterString.check_lower(device_id)
+        
+        return _UniffiConverterOptionalString.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_load_thp_credential,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(device_id))
+        )
+
+
+
+
+
+    def log_debug(self, tag: "str",message: "str") -> None:
+        """
+        Log a debug message from the Rust THP handshake layer.
+
+        This forwards Rust-level errors and state information to the native
+        debug UI (e.g., TrezorDebugLog on Android) so they are visible
+        alongside the Kotlin-level logs.
+
+        # Arguments
+        * `tag` - Short tag identifying the subsystem (e.g., "HANDSHAKE", "THP")
+        * `message` - Human-readable debug message
+        """
+
+        _UniffiConverterString.check_lower(tag)
+        
+        _UniffiConverterString.check_lower(message)
+        
+        _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_log_debug,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(tag),
+        _UniffiConverterString.lower(message))
+
+
+
+
+
+
+# Put all the bits inside a class to keep the top-level namespace clean
+class _UniffiTraitImplTrezorTransportCallback:
+    # For each method, generate a callback function to pass to Rust
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0
+    def enumerate_devices(
+            uniffi_handle,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = ()
+            method = uniffi_obj.enumerate_devices
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterSequenceTypeNativeDeviceInfo.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD1
+    def open_device(
+            uniffi_handle,
+            path,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(path), )
+            method = uniffi_obj.open_device
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterTypeTrezorTransportWriteResult.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD2
+    def close_device(
+            uniffi_handle,
+            path,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(path), )
+            method = uniffi_obj.close_device
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterTypeTrezorTransportWriteResult.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD3
+    def read_chunk(
+            uniffi_handle,
+            path,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(path), )
+            method = uniffi_obj.read_chunk
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterTypeTrezorTransportReadResult.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD4
+    def write_chunk(
+            uniffi_handle,
+            path,
+            data,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(path), _UniffiConverterBytes.lift(data), )
+            method = uniffi_obj.write_chunk
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterTypeTrezorTransportWriteResult.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD5
+    def get_chunk_size(
+            uniffi_handle,
+            path,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(path), )
+            method = uniffi_obj.get_chunk_size
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterUInt32.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD6
+    def call_message(
+            uniffi_handle,
+            path,
+            message_type,
+            data,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(path), _UniffiConverterUInt16.lift(message_type), _UniffiConverterBytes.lift(data), )
+            method = uniffi_obj.call_message
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterOptionalTypeTrezorCallMessageResult.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD7
+    def get_pairing_code(
+            uniffi_handle,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = ()
+            method = uniffi_obj.get_pairing_code
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterString.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD8
+    def save_thp_credential(
+            uniffi_handle,
+            device_id,
+            credential_json,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(device_id), _UniffiConverterString.lift(credential_json), )
+            method = uniffi_obj.save_thp_credential
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterBool.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD9
+    def load_thp_credential(
+            uniffi_handle,
+            device_id,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(device_id), )
+            method = uniffi_obj.load_thp_credential
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterOptionalString.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD10
+    def log_debug(
+            uniffi_handle,
+            tag,
+            message,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(tag), _UniffiConverterString.lift(message), )
+            method = uniffi_obj.log_debug
+            return method(*args)
+
+        
+        write_return_value = lambda v: None
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_FREE
+    def _uniffi_free(uniffi_handle):
+        _UniffiConverterTypeTrezorTransportCallback._handle_map.remove(uniffi_handle)
+
+    # Generate the FFI VTable.  This has a field for each callback interface method.
+    _uniffi_vtable = _UniffiVTableCallbackInterfaceTrezorTransportCallback(
+        enumerate_devices,
+        open_device,
+        close_device,
+        read_chunk,
+        write_chunk,
+        get_chunk_size,
+        call_message,
+        get_pairing_code,
+        save_thp_credential,
+        load_thp_credential,
+        log_debug,
+        _uniffi_free
+    )
+    # Send Rust a pointer to the VTable.  Note: this means we need to keep the struct alive forever,
+    # or else bad things will happen when Rust tries to access it.
+    _UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_trezortransportcallback(ctypes.byref(_uniffi_vtable))
+
+
+
+class _UniffiConverterTypeTrezorTransportCallback:
+    _handle_map = _UniffiHandleMap()
+
+    @staticmethod
+    def lift(value: int):
+        return TrezorTransportCallbackImpl._make_instance_(value)
+
+    @staticmethod
+    def check_lower(value: TrezorTransportCallback):
+        pass
+
+    @staticmethod
+    def lower(value: TrezorTransportCallbackProtocol):
+        return _UniffiConverterTypeTrezorTransportCallback._handle_map.insert(value)
+
+    @classmethod
+    def read(cls, buf: _UniffiRustBuffer):
+        ptr = buf.read_u64()
+        if ptr == 0:
+            raise InternalError("Raw pointer value was null")
+        return cls.lift(ptr)
+
+    @classmethod
+    def write(cls, value: TrezorTransportCallbackProtocol, buf: _UniffiRustBuffer):
+        buf.write_u64(cls.lower(value))
+class TrezorUiCallbackProtocol(typing.Protocol):
+    """
+    Callback interface for Trezor UI operations (PIN, passphrase, button)
+    """
+
+    def on_pin_request(self, ):
+        """
+        Called when the device requests PIN entry
+        Returns the PIN entered by the user, or empty string to cancel
+        """
+
+        raise NotImplementedError
+    def on_passphrase_request(self, on_device: "bool"):
+        """
+        Called when the device requests passphrase entry
+        on_device: true if passphrase should be entered on device
+        Returns the passphrase entered by the user, or empty string to cancel
+        """
+
+        raise NotImplementedError
+    def on_button_request(self, code: "str"):
+        """
+        Called when the device requests button confirmation
+        code: the button request code (e.g., "ButtonRequest_ConfirmOutput")
+        Returns true if user confirmed, false if cancelled
+        """
+
+        raise NotImplementedError
+# TrezorUiCallback is a foreign trait so treated like a callback interface, where the
+# primary use-case is the trait being implemented locally.
+# It is a base-class local implementations might subclass.
+
+
+class TrezorUiCallback():
+    """
+    Callback interface for Trezor UI operations (PIN, passphrase, button)
+    """
+
+    def on_pin_request(self, ):
+        """
+        Called when the device requests PIN entry
+        Returns the PIN entered by the user, or empty string to cancel
+        """
+
+        raise NotImplementedError
+    def on_passphrase_request(self, on_device: "bool"):
+        """
+        Called when the device requests passphrase entry
+        on_device: true if passphrase should be entered on device
+        Returns the passphrase entered by the user, or empty string to cancel
+        """
+
+        raise NotImplementedError
+    def on_button_request(self, code: "str"):
+        """
+        Called when the device requests button confirmation
+        code: the button request code (e.g., "ButtonRequest_ConfirmOutput")
+        Returns true if user confirmed, false if cancelled
+        """
+
+        raise NotImplementedError
+# `TrezorUiCallbackImpl` is the implementation for a Rust implemented version.
+class TrezorUiCallbackImpl():
+    """
+    Callback interface for Trezor UI operations (PIN, passphrase, button)
+    """
+
+    _pointer: ctypes.c_void_p
+    
+    def __init__(self, *args, **kwargs):
+        raise ValueError("This class has no default constructor")
+
+    def __del__(self):
+        # In case of partial initialization of instances.
+        pointer = getattr(self, "_pointer", None)
+        if pointer is not None:
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_free_trezoruicallback, pointer)
+
+    def _uniffi_clone_pointer(self):
+        return _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_clone_trezoruicallback, self._pointer)
+
+    # Used by alternative constructors or any methods which return this type.
+    @classmethod
+    def _make_instance_(cls, pointer):
+        # Lightly yucky way to bypass the usual __init__ logic
+        # and just create a new instance with the required pointer.
+        inst = cls.__new__(cls)
+        inst._pointer = pointer
+        return inst
+
+
+    def on_pin_request(self, ) -> "str":
+        """
+        Called when the device requests PIN entry
+        Returns the PIN entered by the user, or empty string to cancel
+        """
+
+        return _UniffiConverterString.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_pin_request,self._uniffi_clone_pointer(),)
+        )
+
+
+
+
+
+    def on_passphrase_request(self, on_device: "bool") -> "str":
+        """
+        Called when the device requests passphrase entry
+        on_device: true if passphrase should be entered on device
+        Returns the passphrase entered by the user, or empty string to cancel
+        """
+
+        _UniffiConverterBool.check_lower(on_device)
+        
+        return _UniffiConverterString.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request,self._uniffi_clone_pointer(),
+        _UniffiConverterBool.lower(on_device))
+        )
+
+
+
+
+
+    def on_button_request(self, code: "str") -> "bool":
+        """
+        Called when the device requests button confirmation
+        code: the button request code (e.g., "ButtonRequest_ConfirmOutput")
+        Returns true if user confirmed, false if cancelled
+        """
+
+        _UniffiConverterString.check_lower(code)
+        
+        return _UniffiConverterBool.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_button_request,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(code))
+        )
+
+
+
+
+
+# Put all the bits inside a class to keep the top-level namespace clean
+class _UniffiTraitImplTrezorUiCallback:
+    # For each method, generate a callback function to pass to Rust
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD0
+    def on_pin_request(
+            uniffi_handle,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorUiCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = ()
+            method = uniffi_obj.on_pin_request
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterString.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD1
+    def on_passphrase_request(
+            uniffi_handle,
+            on_device,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorUiCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterBool.lift(on_device), )
+            method = uniffi_obj.on_passphrase_request
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterString.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD2
+    def on_button_request(
+            uniffi_handle,
+            code,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeTrezorUiCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(code), )
+            method = uniffi_obj.on_button_request
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterBool.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_FREE
+    def _uniffi_free(uniffi_handle):
+        _UniffiConverterTypeTrezorUiCallback._handle_map.remove(uniffi_handle)
+
+    # Generate the FFI VTable.  This has a field for each callback interface method.
+    _uniffi_vtable = _UniffiVTableCallbackInterfaceTrezorUiCallback(
+        on_pin_request,
+        on_passphrase_request,
+        on_button_request,
+        _uniffi_free
+    )
+    # Send Rust a pointer to the VTable.  Note: this means we need to keep the struct alive forever,
+    # or else bad things will happen when Rust tries to access it.
+    _UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_trezoruicallback(ctypes.byref(_uniffi_vtable))
+
+
+
+class _UniffiConverterTypeTrezorUiCallback:
+    _handle_map = _UniffiHandleMap()
+
+    @staticmethod
+    def lift(value: int):
+        return TrezorUiCallbackImpl._make_instance_(value)
+
+    @staticmethod
+    def check_lower(value: TrezorUiCallback):
+        pass
+
+    @staticmethod
+    def lower(value: TrezorUiCallbackProtocol):
+        return _UniffiConverterTypeTrezorUiCallback._handle_map.insert(value)
+
+    @classmethod
+    def read(cls, buf: _UniffiRustBuffer):
+        ptr = buf.read_u64()
+        if ptr == 0:
+            raise InternalError("Raw pointer value was null")
+        return cls.lift(ptr)
+
+    @classmethod
+    def write(cls, value: TrezorUiCallbackProtocol, buf: _UniffiRustBuffer):
+        buf.write_u64(cls.lower(value))
 
 # Async support# RustFuturePoll values
 _UNIFFI_RUST_FUTURE_POLL_READY = 0
@@ -16097,296 +14660,371 @@ async def test_notification(device_token: "str",secret_message: "str",notificati
 _UniffiConverterTypeBlocktankError,
 
     )
+async def trezor_clear_credentials(device_id: "str") -> None:
 
-def trezor_compose_transaction(outputs: "typing.List[ComposeOutput]",coin: "str",callback_url: "str",request_id: "typing.Optional[str]",trezor_environment: "typing.Optional[TrezorEnvironment]",push: "typing.Optional[bool]",sequence: "typing.Optional[int]",account: "typing.Optional[ComposeAccount]",fee_levels: "typing.Optional[typing.List[FeeLevel]]",skip_permutation: "typing.Optional[bool]",common: "typing.Optional[CommonParams]") -> "DeepLinkResult":
-    _UniffiConverterSequenceTypeComposeOutput.check_lower(outputs)
+    """
+    Clear stored Bluetooth pairing credentials for a specific Trezor device.
+
+    This removes any stored credentials, requiring re-pairing on the next connection.
+    Useful when a device has been reset or credentials have become stale.
+    """
+
+    _UniffiConverterString.check_lower(device_id)
     
-    _UniffiConverterString.check_lower(coin)
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_clear_credentials(
+        _UniffiConverterString.lower(device_id)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeTrezorError,
+
+    )
+async def trezor_connect(device_id: "str") -> "TrezorFeatures":
+
+    """
+    Connect to a Trezor device by its ID.
+
+    For Bluetooth devices, this will use stored credentials if available,
+    or trigger pairing if needed.
+    """
+
+    _UniffiConverterString.check_lower(device_id)
     
-    _UniffiConverterString.check_lower(callback_url)
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_connect(
+        _UniffiConverterString.lower(device_id)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeTrezorFeatures.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeTrezorError,
+
+    )
+async def trezor_disconnect() -> None:
+
+    """
+    Disconnect from the currently connected Trezor device.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_disconnect(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeTrezorError,
+
+    )
+async def trezor_get_address(params: "TrezorGetAddressParams") -> "TrezorAddressResponse":
+
+    """
+    Get a Bitcoin address from the connected Trezor device.
+    """
+
+    _UniffiConverterTypeTrezorGetAddressParams.check_lower(params)
     
-    _UniffiConverterOptionalString.check_lower(request_id)
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_address(
+        _UniffiConverterTypeTrezorGetAddressParams.lower(params)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeTrezorAddressResponse.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeTrezorError,
+
+    )
+async def trezor_get_connected_device() -> "typing.Optional[TrezorDeviceInfo]":
+
+    """
+    Get information about the currently connected Trezor device.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_connected_device(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterOptionalTypeTrezorDeviceInfo.lift,
+        
+    # Error FFI converter
+
+    None,
+
+    )
+async def trezor_get_features() -> "typing.Optional[TrezorFeatures]":
+
+    """
+    Get the cached features of the currently connected Trezor device.
+
+    Returns the features that were obtained during `trezor_connect()`, without
+    triggering any device interaction. Returns None if no device is connected.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_features(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterOptionalTypeTrezorFeatures.lift,
+        
+    # Error FFI converter
+
+    None,
+
+    )
+async def trezor_get_public_key(params: "TrezorGetPublicKeyParams") -> "TrezorPublicKeyResponse":
+
+    """
+    Get a public key (xpub) from the connected Trezor device.
+    """
+
+    _UniffiConverterTypeTrezorGetPublicKeyParams.check_lower(params)
     
-    _UniffiConverterOptionalTypeTrezorEnvironment.check_lower(trezor_environment)
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_public_key(
+        _UniffiConverterTypeTrezorGetPublicKeyParams.lower(params)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeTrezorPublicKeyResponse.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeTrezorError,
+
+    )
+
+def trezor_init_ble() -> None:
+    """
+    Initialize the Bluetooth (BLE) subsystem.
+
+    On Android: This is a no-op as BLE is initialized via JNI (BluetoothInit.nativeInit).
+    On other platforms: BLE works natively without special initialization.
+    """
+
+    _uniffi_rust_call_with_error(_UniffiConverterTypeTrezorError,_UniffiLib.uniffi_bitkitcore_fn_func_trezor_init_ble,)
+
+async def trezor_initialize(credential_path: "typing.Optional[str]") -> None:
+
+    """
+    Initialize the Trezor manager with optional credential storage.
+
+    The credential_path is used to persist Bluetooth pairing credentials,
+    allowing reconnection without re-pairing.
+
+    NOTE: On Android, you must call the native initBle() function first!
+    """
+
+    _UniffiConverterOptionalString.check_lower(credential_path)
     
-    _UniffiConverterOptionalBool.check_lower(push)
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_initialize(
+        _UniffiConverterOptionalString.lower(credential_path)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeTrezorError,
+
+    )
+
+def trezor_is_ble_available() -> "bool":
+    """
+    Check if BLE has been initialized.
+
+    On Android: Returns true if BluetoothInit.nativeInit() was called successfully.
+    On other platforms: Always returns true (BLE works natively).
+    """
+
+    return _UniffiConverterBool.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_trezor_is_ble_available,))
+
+async def trezor_is_connected() -> "bool":
+
+    """
+    Check if a Trezor device is currently connected.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_is_connected(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_i8,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_i8,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_i8,
+        # lift function
+        _UniffiConverterBool.lift,
+        
+    # Error FFI converter
+
+    None,
+
+    )
+async def trezor_is_initialized() -> "bool":
+
+    """
+    Check if the Trezor manager is initialized.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_is_initialized(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_i8,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_i8,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_i8,
+        # lift function
+        _UniffiConverterBool.lift,
+        
+    # Error FFI converter
+
+    None,
+
+    )
+async def trezor_list_devices() -> "typing.List[TrezorDeviceInfo]":
+
+    """
+    List previously discovered devices without triggering a new scan.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_list_devices(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterSequenceTypeTrezorDeviceInfo.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeTrezorError,
+
+    )
+async def trezor_scan() -> "typing.List[TrezorDeviceInfo]":
+
+    """
+    Scan for available Trezor devices (USB + Bluetooth).
+
+    This performs an active Bluetooth scan and enumerates USB devices.
+    Returns a list of discovered devices.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_scan(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterSequenceTypeTrezorDeviceInfo.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeTrezorError,
+
+    )
+
+def trezor_set_transport_callback(callback: "TrezorTransportCallback") -> None:
+    """
+    Initialize the Trezor transport with a native callback implementation
+
+    This must be called before any Trezor scanning/connection operations.
+    The native layer (iOS/Android) must implement the TrezorTransportCallback interface.
+    """
+
+    _UniffiConverterTypeTrezorTransportCallback.check_lower(callback)
     
-    _UniffiConverterOptionalUInt32.check_lower(sequence)
-    
-    _UniffiConverterOptionalTypeComposeAccount.check_lower(account)
-    
-    _UniffiConverterOptionalSequenceTypeFeeLevel.check_lower(fee_levels)
-    
-    _UniffiConverterOptionalBool.check_lower(skip_permutation)
-    
-    _UniffiConverterOptionalTypeCommonParams.check_lower(common)
-    
-    return _UniffiConverterTypeDeepLinkResult.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeTrezorConnectError,_UniffiLib.uniffi_bitkitcore_fn_func_trezor_compose_transaction,
-        _UniffiConverterSequenceTypeComposeOutput.lower(outputs),
-        _UniffiConverterString.lower(coin),
-        _UniffiConverterString.lower(callback_url),
-        _UniffiConverterOptionalString.lower(request_id),
-        _UniffiConverterOptionalTypeTrezorEnvironment.lower(trezor_environment),
-        _UniffiConverterOptionalBool.lower(push),
-        _UniffiConverterOptionalUInt32.lower(sequence),
-        _UniffiConverterOptionalTypeComposeAccount.lower(account),
-        _UniffiConverterOptionalSequenceTypeFeeLevel.lower(fee_levels),
-        _UniffiConverterOptionalBool.lower(skip_permutation),
-        _UniffiConverterOptionalTypeCommonParams.lower(common)))
+    _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_trezor_set_transport_callback,
+        _UniffiConverterTypeTrezorTransportCallback.lower(callback))
 
 
-def trezor_get_account_info(coin: "str",callback_url: "str",request_id: "typing.Optional[str]",trezor_environment: "typing.Optional[TrezorEnvironment]",path: "typing.Optional[str]",descriptor: "typing.Optional[str]",details: "typing.Optional[AccountInfoDetails]",tokens: "typing.Optional[TokenFilter]",page: "typing.Optional[int]",page_size: "typing.Optional[int]",_from: "typing.Optional[int]",to: "typing.Optional[int]",gap: "typing.Optional[int]",contract_filter: "typing.Optional[str]",marker: "typing.Optional[XrpMarker]",default_account_type: "typing.Optional[DefaultAccountType]",suppress_backup_warning: "typing.Optional[bool]",common: "typing.Optional[CommonParams]") -> "DeepLinkResult":
-    _UniffiConverterString.check_lower(coin)
-    
-    _UniffiConverterString.check_lower(callback_url)
-    
-    _UniffiConverterOptionalString.check_lower(request_id)
-    
-    _UniffiConverterOptionalTypeTrezorEnvironment.check_lower(trezor_environment)
-    
-    _UniffiConverterOptionalString.check_lower(path)
-    
-    _UniffiConverterOptionalString.check_lower(descriptor)
-    
-    _UniffiConverterOptionalTypeAccountInfoDetails.check_lower(details)
-    
-    _UniffiConverterOptionalTypeTokenFilter.check_lower(tokens)
-    
-    _UniffiConverterOptionalUInt32.check_lower(page)
-    
-    _UniffiConverterOptionalUInt32.check_lower(page_size)
-    
-    _UniffiConverterOptionalUInt32.check_lower(_from)
-    
-    _UniffiConverterOptionalUInt32.check_lower(to)
-    
-    _UniffiConverterOptionalUInt32.check_lower(gap)
-    
-    _UniffiConverterOptionalString.check_lower(contract_filter)
-    
-    _UniffiConverterOptionalTypeXrpMarker.check_lower(marker)
-    
-    _UniffiConverterOptionalTypeDefaultAccountType.check_lower(default_account_type)
-    
-    _UniffiConverterOptionalBool.check_lower(suppress_backup_warning)
-    
-    _UniffiConverterOptionalTypeCommonParams.check_lower(common)
-    
-    return _UniffiConverterTypeDeepLinkResult.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeTrezorConnectError,_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_account_info,
-        _UniffiConverterString.lower(coin),
-        _UniffiConverterString.lower(callback_url),
-        _UniffiConverterOptionalString.lower(request_id),
-        _UniffiConverterOptionalTypeTrezorEnvironment.lower(trezor_environment),
-        _UniffiConverterOptionalString.lower(path),
-        _UniffiConverterOptionalString.lower(descriptor),
-        _UniffiConverterOptionalTypeAccountInfoDetails.lower(details),
-        _UniffiConverterOptionalTypeTokenFilter.lower(tokens),
-        _UniffiConverterOptionalUInt32.lower(page),
-        _UniffiConverterOptionalUInt32.lower(page_size),
-        _UniffiConverterOptionalUInt32.lower(_from),
-        _UniffiConverterOptionalUInt32.lower(to),
-        _UniffiConverterOptionalUInt32.lower(gap),
-        _UniffiConverterOptionalString.lower(contract_filter),
-        _UniffiConverterOptionalTypeXrpMarker.lower(marker),
-        _UniffiConverterOptionalTypeDefaultAccountType.lower(default_account_type),
-        _UniffiConverterOptionalBool.lower(suppress_backup_warning),
-        _UniffiConverterOptionalTypeCommonParams.lower(common)))
+def trezor_set_ui_callback(callback: "TrezorUiCallback") -> None:
+    """
+    Set the UI callback for PIN/passphrase/button requests
+    """
 
+    _UniffiConverterTypeTrezorUiCallback.check_lower(callback)
+    
+    _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_trezor_set_ui_callback,
+        _UniffiConverterTypeTrezorUiCallback.lower(callback))
 
-def trezor_get_address(path: "str",callback_url: "str",request_id: "typing.Optional[str]",trezor_environment: "typing.Optional[TrezorEnvironment]",address: "typing.Optional[str]",show_on_trezor: "typing.Optional[bool]",chunkify: "typing.Optional[bool]",use_event_listener: "typing.Optional[bool]",coin: "typing.Optional[str]",cross_chain: "typing.Optional[bool]",multisig: "typing.Optional[MultisigRedeemScriptType]",script_type: "typing.Optional[str]",unlock_path: "typing.Optional[UnlockPath]",common: "typing.Optional[CommonParams]") -> "DeepLinkResult":
-    _UniffiConverterString.check_lower(path)
-    
-    _UniffiConverterString.check_lower(callback_url)
-    
-    _UniffiConverterOptionalString.check_lower(request_id)
-    
-    _UniffiConverterOptionalTypeTrezorEnvironment.check_lower(trezor_environment)
-    
-    _UniffiConverterOptionalString.check_lower(address)
-    
-    _UniffiConverterOptionalBool.check_lower(show_on_trezor)
-    
-    _UniffiConverterOptionalBool.check_lower(chunkify)
-    
-    _UniffiConverterOptionalBool.check_lower(use_event_listener)
-    
-    _UniffiConverterOptionalString.check_lower(coin)
-    
-    _UniffiConverterOptionalBool.check_lower(cross_chain)
-    
-    _UniffiConverterOptionalTypeMultisigRedeemScriptType.check_lower(multisig)
-    
-    _UniffiConverterOptionalString.check_lower(script_type)
-    
-    _UniffiConverterOptionalTypeUnlockPath.check_lower(unlock_path)
-    
-    _UniffiConverterOptionalTypeCommonParams.check_lower(common)
-    
-    return _UniffiConverterTypeDeepLinkResult.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeTrezorConnectError,_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_address,
-        _UniffiConverterString.lower(path),
-        _UniffiConverterString.lower(callback_url),
-        _UniffiConverterOptionalString.lower(request_id),
-        _UniffiConverterOptionalTypeTrezorEnvironment.lower(trezor_environment),
-        _UniffiConverterOptionalString.lower(address),
-        _UniffiConverterOptionalBool.lower(show_on_trezor),
-        _UniffiConverterOptionalBool.lower(chunkify),
-        _UniffiConverterOptionalBool.lower(use_event_listener),
-        _UniffiConverterOptionalString.lower(coin),
-        _UniffiConverterOptionalBool.lower(cross_chain),
-        _UniffiConverterOptionalTypeMultisigRedeemScriptType.lower(multisig),
-        _UniffiConverterOptionalString.lower(script_type),
-        _UniffiConverterOptionalTypeUnlockPath.lower(unlock_path),
-        _UniffiConverterOptionalTypeCommonParams.lower(common)))
+async def trezor_sign_message(params: "TrezorSignMessageParams") -> "TrezorSignedMessageResponse":
 
+    """
+    Sign a message with the connected Trezor device.
+    """
 
-def trezor_get_features(callback_url: "str",request_id: "typing.Optional[str]",trezor_environment: "typing.Optional[TrezorEnvironment]") -> "DeepLinkResult":
-    _UniffiConverterString.check_lower(callback_url)
+    _UniffiConverterTypeTrezorSignMessageParams.check_lower(params)
     
-    _UniffiConverterOptionalString.check_lower(request_id)
-    
-    _UniffiConverterOptionalTypeTrezorEnvironment.check_lower(trezor_environment)
-    
-    return _UniffiConverterTypeDeepLinkResult.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeTrezorConnectError,_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_features,
-        _UniffiConverterString.lower(callback_url),
-        _UniffiConverterOptionalString.lower(request_id),
-        _UniffiConverterOptionalTypeTrezorEnvironment.lower(trezor_environment)))
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_message(
+        _UniffiConverterTypeTrezorSignMessageParams.lower(params)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeTrezorSignedMessageResponse.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeTrezorError,
 
+    )
+async def trezor_sign_tx(params: "TrezorSignTxParams") -> "TrezorSignedTx":
 
-def trezor_handle_deep_link(callback_url: "str") -> "TrezorResponsePayload":
-    _UniffiConverterString.check_lower(callback_url)
-    
-    return _UniffiConverterTypeTrezorResponsePayload.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeTrezorConnectError,_UniffiLib.uniffi_bitkitcore_fn_func_trezor_handle_deep_link,
-        _UniffiConverterString.lower(callback_url)))
+    """
+    Sign a Bitcoin transaction with the connected Trezor device.
+    """
 
+    _UniffiConverterTypeTrezorSignTxParams.check_lower(params)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_tx(
+        _UniffiConverterTypeTrezorSignTxParams.lower(params)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeTrezorSignedTx.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeTrezorError,
 
-def trezor_sign_message(path: "str",message: "str",callback_url: "str",request_id: "typing.Optional[str]",trezor_environment: "typing.Optional[TrezorEnvironment]",coin: "typing.Optional[str]",hex: "typing.Optional[bool]",no_script_type: "typing.Optional[bool]",common: "typing.Optional[CommonParams]") -> "DeepLinkResult":
-    _UniffiConverterString.check_lower(path)
-    
-    _UniffiConverterString.check_lower(message)
-    
-    _UniffiConverterString.check_lower(callback_url)
-    
-    _UniffiConverterOptionalString.check_lower(request_id)
-    
-    _UniffiConverterOptionalTypeTrezorEnvironment.check_lower(trezor_environment)
-    
-    _UniffiConverterOptionalString.check_lower(coin)
-    
-    _UniffiConverterOptionalBool.check_lower(hex)
-    
-    _UniffiConverterOptionalBool.check_lower(no_script_type)
-    
-    _UniffiConverterOptionalTypeCommonParams.check_lower(common)
-    
-    return _UniffiConverterTypeDeepLinkResult.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeTrezorConnectError,_UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_message,
-        _UniffiConverterString.lower(path),
-        _UniffiConverterString.lower(message),
-        _UniffiConverterString.lower(callback_url),
-        _UniffiConverterOptionalString.lower(request_id),
-        _UniffiConverterOptionalTypeTrezorEnvironment.lower(trezor_environment),
-        _UniffiConverterOptionalString.lower(coin),
-        _UniffiConverterOptionalBool.lower(hex),
-        _UniffiConverterOptionalBool.lower(no_script_type),
-        _UniffiConverterOptionalTypeCommonParams.lower(common)))
+    )
+async def trezor_verify_message(params: "TrezorVerifyMessageParams") -> "bool":
 
+    """
+    Verify a message signature with the connected Trezor device.
+    """
 
-def trezor_sign_transaction(coin: "str",inputs: "typing.List[TxInputType]",outputs: "typing.List[TxOutputType]",callback_url: "str",request_id: "typing.Optional[str]",trezor_environment: "typing.Optional[TrezorEnvironment]",ref_txs: "typing.Optional[typing.List[RefTransaction]]",payment_requests: "typing.Optional[typing.List[TxAckPaymentRequest]]",locktime: "typing.Optional[int]",version: "typing.Optional[int]",expiry: "typing.Optional[int]",version_group_id: "typing.Optional[int]",overwintered: "typing.Optional[bool]",timestamp: "typing.Optional[int]",branch_id: "typing.Optional[int]",push: "typing.Optional[bool]",amount_unit: "typing.Optional[AmountUnit]",unlock_path: "typing.Optional[UnlockPath]",serialize: "typing.Optional[bool]",chunkify: "typing.Optional[bool]",common: "typing.Optional[CommonParams]") -> "DeepLinkResult":
-    _UniffiConverterString.check_lower(coin)
+    _UniffiConverterTypeTrezorVerifyMessageParams.check_lower(params)
     
-    _UniffiConverterSequenceTypeTxInputType.check_lower(inputs)
-    
-    _UniffiConverterSequenceTypeTxOutputType.check_lower(outputs)
-    
-    _UniffiConverterString.check_lower(callback_url)
-    
-    _UniffiConverterOptionalString.check_lower(request_id)
-    
-    _UniffiConverterOptionalTypeTrezorEnvironment.check_lower(trezor_environment)
-    
-    _UniffiConverterOptionalSequenceTypeRefTransaction.check_lower(ref_txs)
-    
-    _UniffiConverterOptionalSequenceTypeTxAckPaymentRequest.check_lower(payment_requests)
-    
-    _UniffiConverterOptionalUInt32.check_lower(locktime)
-    
-    _UniffiConverterOptionalUInt32.check_lower(version)
-    
-    _UniffiConverterOptionalUInt32.check_lower(expiry)
-    
-    _UniffiConverterOptionalUInt32.check_lower(version_group_id)
-    
-    _UniffiConverterOptionalBool.check_lower(overwintered)
-    
-    _UniffiConverterOptionalUInt32.check_lower(timestamp)
-    
-    _UniffiConverterOptionalUInt32.check_lower(branch_id)
-    
-    _UniffiConverterOptionalBool.check_lower(push)
-    
-    _UniffiConverterOptionalTypeAmountUnit.check_lower(amount_unit)
-    
-    _UniffiConverterOptionalTypeUnlockPath.check_lower(unlock_path)
-    
-    _UniffiConverterOptionalBool.check_lower(serialize)
-    
-    _UniffiConverterOptionalBool.check_lower(chunkify)
-    
-    _UniffiConverterOptionalTypeCommonParams.check_lower(common)
-    
-    return _UniffiConverterTypeDeepLinkResult.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeTrezorConnectError,_UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_transaction,
-        _UniffiConverterString.lower(coin),
-        _UniffiConverterSequenceTypeTxInputType.lower(inputs),
-        _UniffiConverterSequenceTypeTxOutputType.lower(outputs),
-        _UniffiConverterString.lower(callback_url),
-        _UniffiConverterOptionalString.lower(request_id),
-        _UniffiConverterOptionalTypeTrezorEnvironment.lower(trezor_environment),
-        _UniffiConverterOptionalSequenceTypeRefTransaction.lower(ref_txs),
-        _UniffiConverterOptionalSequenceTypeTxAckPaymentRequest.lower(payment_requests),
-        _UniffiConverterOptionalUInt32.lower(locktime),
-        _UniffiConverterOptionalUInt32.lower(version),
-        _UniffiConverterOptionalUInt32.lower(expiry),
-        _UniffiConverterOptionalUInt32.lower(version_group_id),
-        _UniffiConverterOptionalBool.lower(overwintered),
-        _UniffiConverterOptionalUInt32.lower(timestamp),
-        _UniffiConverterOptionalUInt32.lower(branch_id),
-        _UniffiConverterOptionalBool.lower(push),
-        _UniffiConverterOptionalTypeAmountUnit.lower(amount_unit),
-        _UniffiConverterOptionalTypeUnlockPath.lower(unlock_path),
-        _UniffiConverterOptionalBool.lower(serialize),
-        _UniffiConverterOptionalBool.lower(chunkify),
-        _UniffiConverterOptionalTypeCommonParams.lower(common)))
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_verify_message(
+        _UniffiConverterTypeTrezorVerifyMessageParams.lower(params)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_i8,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_i8,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_i8,
+        # lift function
+        _UniffiConverterBool.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeTrezorError,
 
-
-def trezor_verify_message(address: "str",signature: "str",message: "str",coin: "str",callback_url: "str",request_id: "typing.Optional[str]",trezor_environment: "typing.Optional[TrezorEnvironment]",hex: "typing.Optional[bool]",common: "typing.Optional[CommonParams]") -> "DeepLinkResult":
-    _UniffiConverterString.check_lower(address)
-    
-    _UniffiConverterString.check_lower(signature)
-    
-    _UniffiConverterString.check_lower(message)
-    
-    _UniffiConverterString.check_lower(coin)
-    
-    _UniffiConverterString.check_lower(callback_url)
-    
-    _UniffiConverterOptionalString.check_lower(request_id)
-    
-    _UniffiConverterOptionalTypeTrezorEnvironment.check_lower(trezor_environment)
-    
-    _UniffiConverterOptionalBool.check_lower(hex)
-    
-    _UniffiConverterOptionalTypeCommonParams.check_lower(common)
-    
-    return _UniffiConverterTypeDeepLinkResult.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeTrezorConnectError,_UniffiLib.uniffi_bitkitcore_fn_func_trezor_verify_message,
-        _UniffiConverterString.lower(address),
-        _UniffiConverterString.lower(signature),
-        _UniffiConverterString.lower(message),
-        _UniffiConverterString.lower(coin),
-        _UniffiConverterString.lower(callback_url),
-        _UniffiConverterOptionalString.lower(request_id),
-        _UniffiConverterOptionalTypeTrezorEnvironment.lower(trezor_environment),
-        _UniffiConverterOptionalBool.lower(hex),
-        _UniffiConverterOptionalTypeCommonParams.lower(common)))
-
+    )
 
 def update_activity(activity_id: "str",activity: "Activity") -> None:
     _UniffiConverterString.check_lower(activity_id)
@@ -16571,14 +15209,12 @@ def wipe_all_transaction_details() -> None:
 
 __all__ = [
     "InternalError",
-    "AccountInfoDetails",
     "Activity",
     "ActivityError",
     "ActivityFilter",
     "ActivityType",
     "AddressError",
     "AddressType",
-    "AmountUnit",
     "BitcoinNetworkEnum",
     "BlocktankError",
     "BtBolt11InvoiceState",
@@ -16589,12 +15225,8 @@ __all__ = [
     "BtPaymentState",
     "BtPaymentState2",
     "CJitStateEnum",
-    "ComposeOutput",
-    "ComposeTransactionResponse",
     "DbError",
     "DecodingError",
-    "DefaultAccountType",
-    "HdNodeTypeOrString",
     "LnurlError",
     "ManualRefundStateEnum",
     "Network",
@@ -16602,40 +15234,24 @@ __all__ = [
     "PaymentState",
     "PaymentType",
     "Scanner",
-    "ScriptType",
     "SortDirection",
     "SweepError",
-    "TokenFilter",
-    "TrezorConnectError",
-    "TrezorEnvironment",
-    "TrezorResponsePayload",
+    "TrezorError",
+    "TrezorScriptType",
+    "TrezorTransportType",
     "WordCount",
-    "AccountAddresses",
-    "AccountInfoResponse",
-    "AccountUtxo",
     "ActivityTags",
-    "AddressInfo",
-    "AddressResponse",
     "ChannelLiquidityOptions",
     "ChannelLiquidityParams",
     "ClosedChannelDetails",
-    "CoinPurchaseMemo",
-    "CommonParams",
-    "ComposeAccount",
     "CreateCjitOptions",
     "CreateOrderOptions",
-    "DeepLinkResult",
     "DefaultLspBalanceParams",
-    "DeviceParams",
     "ErrorData",
-    "FeatureResponse",
-    "FeeLevel",
     "FeeRates",
     "FundingTx",
     "GetAddressResponse",
     "GetAddressesResponse",
-    "HdNodePathType",
-    "HdNodeType",
     "IBt0ConfMinTxFeeWindow",
     "IBtBolt11Invoice",
     "IBtChannel",
@@ -16668,36 +15284,34 @@ __all__ = [
     "LnurlChannelData",
     "LnurlPayData",
     "LnurlWithdrawData",
-    "MessageSignatureResponse",
-    "MultisigRedeemScriptType",
+    "NativeDeviceInfo",
     "OnChainInvoice",
     "OnchainActivity",
-    "PaymentRequestMemo",
     "PreActivityMetadata",
-    "PrecomposedInput",
-    "PrecomposedOutput",
-    "PrecomposedTransaction",
     "PubkyAuth",
-    "PublicKeyResponse",
-    "RefTransaction",
-    "RefTxInput",
-    "RefTxOutput",
-    "RefundMemo",
-    "SignedTransactionResponse",
     "SweepResult",
     "SweepTransactionPreview",
     "SweepableBalances",
-    "TextMemo",
     "TransactionDetails",
-    "TxAckPaymentRequest",
+    "TrezorAddressResponse",
+    "TrezorCallMessageResult",
+    "TrezorDeviceInfo",
+    "TrezorFeatures",
+    "TrezorGetAddressParams",
+    "TrezorGetPublicKeyParams",
+    "TrezorPublicKeyResponse",
+    "TrezorSignMessageParams",
+    "TrezorSignTxParams",
+    "TrezorSignedMessageResponse",
+    "TrezorSignedTx",
+    "TrezorTransportReadResult",
+    "TrezorTransportWriteResult",
+    "TrezorTxInput",
+    "TrezorTxOutput",
+    "TrezorVerifyMessageParams",
     "TxInput",
-    "TxInputType",
     "TxOutput",
-    "TxOutputType",
-    "UnlockPath",
     "ValidationResult",
-    "VerifyMessageResponse",
-    "XrpMarker",
     "activity_wipe_all",
     "add_pre_activity_metadata",
     "add_pre_activity_metadata_tags",
@@ -16771,13 +15385,24 @@ __all__ = [
     "remove_tags",
     "reset_pre_activity_metadata_tags",
     "test_notification",
-    "trezor_compose_transaction",
-    "trezor_get_account_info",
+    "trezor_clear_credentials",
+    "trezor_connect",
+    "trezor_disconnect",
     "trezor_get_address",
+    "trezor_get_connected_device",
     "trezor_get_features",
-    "trezor_handle_deep_link",
+    "trezor_get_public_key",
+    "trezor_init_ble",
+    "trezor_initialize",
+    "trezor_is_ble_available",
+    "trezor_is_connected",
+    "trezor_is_initialized",
+    "trezor_list_devices",
+    "trezor_scan",
+    "trezor_set_transport_callback",
+    "trezor_set_ui_callback",
     "trezor_sign_message",
-    "trezor_sign_transaction",
+    "trezor_sign_tx",
     "trezor_verify_message",
     "update_activity",
     "update_blocktank_url",
@@ -16798,5 +15423,7 @@ __all__ = [
     "wipe_all_closed_channels",
     "wipe_all_databases",
     "wipe_all_transaction_details",
+    "TrezorTransportCallback",
+    "TrezorUiCallback",
 ]
 
