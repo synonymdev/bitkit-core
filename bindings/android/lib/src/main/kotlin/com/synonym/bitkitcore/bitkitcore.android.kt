@@ -1691,7 +1691,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_trezor_sign_tx() != 42467.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt() != 20171.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt() != 18852.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_verify_message() != 50739.toShort()) {
@@ -6361,7 +6361,7 @@ public object FfiConverterTypeTrezorGetAddressParams: FfiConverterRustBuffer<Tre
     override fun read(buf: ByteBuffer): TrezorGetAddressParams {
         return TrezorGetAddressParams(
             FfiConverterString.read(buf),
-            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalTypeTrezorCoinType.read(buf),
             FfiConverterBoolean.read(buf),
             FfiConverterOptionalTypeTrezorScriptType.read(buf),
         )
@@ -6369,14 +6369,14 @@ public object FfiConverterTypeTrezorGetAddressParams: FfiConverterRustBuffer<Tre
 
     override fun allocationSize(value: TrezorGetAddressParams): ULong = (
             FfiConverterString.allocationSize(value.`path`) +
-            FfiConverterOptionalString.allocationSize(value.`coin`) +
+            FfiConverterOptionalTypeTrezorCoinType.allocationSize(value.`coin`) +
             FfiConverterBoolean.allocationSize(value.`showOnTrezor`) +
             FfiConverterOptionalTypeTrezorScriptType.allocationSize(value.`scriptType`)
     )
 
     override fun write(value: TrezorGetAddressParams, buf: ByteBuffer) {
         FfiConverterString.write(value.`path`, buf)
-        FfiConverterOptionalString.write(value.`coin`, buf)
+        FfiConverterOptionalTypeTrezorCoinType.write(value.`coin`, buf)
         FfiConverterBoolean.write(value.`showOnTrezor`, buf)
         FfiConverterOptionalTypeTrezorScriptType.write(value.`scriptType`, buf)
     }
@@ -6389,20 +6389,20 @@ public object FfiConverterTypeTrezorGetPublicKeyParams: FfiConverterRustBuffer<T
     override fun read(buf: ByteBuffer): TrezorGetPublicKeyParams {
         return TrezorGetPublicKeyParams(
             FfiConverterString.read(buf),
-            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalTypeTrezorCoinType.read(buf),
             FfiConverterBoolean.read(buf),
         )
     }
 
     override fun allocationSize(value: TrezorGetPublicKeyParams): ULong = (
             FfiConverterString.allocationSize(value.`path`) +
-            FfiConverterOptionalString.allocationSize(value.`coin`) +
+            FfiConverterOptionalTypeTrezorCoinType.allocationSize(value.`coin`) +
             FfiConverterBoolean.allocationSize(value.`showOnTrezor`)
     )
 
     override fun write(value: TrezorGetPublicKeyParams, buf: ByteBuffer) {
         FfiConverterString.write(value.`path`, buf)
-        FfiConverterOptionalString.write(value.`coin`, buf)
+        FfiConverterOptionalTypeTrezorCoinType.write(value.`coin`, buf)
         FfiConverterBoolean.write(value.`showOnTrezor`, buf)
     }
 }
@@ -6533,20 +6533,20 @@ public object FfiConverterTypeTrezorSignMessageParams: FfiConverterRustBuffer<Tr
         return TrezorSignMessageParams(
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
-            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalTypeTrezorCoinType.read(buf),
         )
     }
 
     override fun allocationSize(value: TrezorSignMessageParams): ULong = (
             FfiConverterString.allocationSize(value.`path`) +
             FfiConverterString.allocationSize(value.`message`) +
-            FfiConverterOptionalString.allocationSize(value.`coin`)
+            FfiConverterOptionalTypeTrezorCoinType.allocationSize(value.`coin`)
     )
 
     override fun write(value: TrezorSignMessageParams, buf: ByteBuffer) {
         FfiConverterString.write(value.`path`, buf)
         FfiConverterString.write(value.`message`, buf)
-        FfiConverterOptionalString.write(value.`coin`, buf)
+        FfiConverterOptionalTypeTrezorCoinType.write(value.`coin`, buf)
     }
 }
 
@@ -6558,7 +6558,7 @@ public object FfiConverterTypeTrezorSignTxParams: FfiConverterRustBuffer<TrezorS
         return TrezorSignTxParams(
             FfiConverterSequenceTypeTrezorTxInput.read(buf),
             FfiConverterSequenceTypeTrezorTxOutput.read(buf),
-            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalTypeTrezorCoinType.read(buf),
             FfiConverterOptionalUInt.read(buf),
             FfiConverterOptionalUInt.read(buf),
             FfiConverterSequenceTypeTrezorPrevTx.read(buf),
@@ -6568,7 +6568,7 @@ public object FfiConverterTypeTrezorSignTxParams: FfiConverterRustBuffer<TrezorS
     override fun allocationSize(value: TrezorSignTxParams): ULong = (
             FfiConverterSequenceTypeTrezorTxInput.allocationSize(value.`inputs`) +
             FfiConverterSequenceTypeTrezorTxOutput.allocationSize(value.`outputs`) +
-            FfiConverterOptionalString.allocationSize(value.`coin`) +
+            FfiConverterOptionalTypeTrezorCoinType.allocationSize(value.`coin`) +
             FfiConverterOptionalUInt.allocationSize(value.`lockTime`) +
             FfiConverterOptionalUInt.allocationSize(value.`version`) +
             FfiConverterSequenceTypeTrezorPrevTx.allocationSize(value.`prevTxs`)
@@ -6577,7 +6577,7 @@ public object FfiConverterTypeTrezorSignTxParams: FfiConverterRustBuffer<TrezorS
     override fun write(value: TrezorSignTxParams, buf: ByteBuffer) {
         FfiConverterSequenceTypeTrezorTxInput.write(value.`inputs`, buf)
         FfiConverterSequenceTypeTrezorTxOutput.write(value.`outputs`, buf)
-        FfiConverterOptionalString.write(value.`coin`, buf)
+        FfiConverterOptionalTypeTrezorCoinType.write(value.`coin`, buf)
         FfiConverterOptionalUInt.write(value.`lockTime`, buf)
         FfiConverterOptionalUInt.write(value.`version`, buf)
         FfiConverterSequenceTypeTrezorPrevTx.write(value.`prevTxs`, buf)
@@ -6761,7 +6761,7 @@ public object FfiConverterTypeTrezorVerifyMessageParams: FfiConverterRustBuffer<
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
-            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalTypeTrezorCoinType.read(buf),
         )
     }
 
@@ -6769,14 +6769,14 @@ public object FfiConverterTypeTrezorVerifyMessageParams: FfiConverterRustBuffer<
             FfiConverterString.allocationSize(value.`address`) +
             FfiConverterString.allocationSize(value.`signature`) +
             FfiConverterString.allocationSize(value.`message`) +
-            FfiConverterOptionalString.allocationSize(value.`coin`)
+            FfiConverterOptionalTypeTrezorCoinType.allocationSize(value.`coin`)
     )
 
     override fun write(value: TrezorVerifyMessageParams, buf: ByteBuffer) {
         FfiConverterString.write(value.`address`, buf)
         FfiConverterString.write(value.`signature`, buf)
         FfiConverterString.write(value.`message`, buf)
-        FfiConverterOptionalString.write(value.`coin`, buf)
+        FfiConverterOptionalTypeTrezorCoinType.write(value.`coin`, buf)
     }
 }
 
@@ -8181,6 +8181,24 @@ public object FfiConverterTypeSweepError : FfiConverterRustBuffer<SweepException
 
 
 
+
+public object FfiConverterTypeTrezorCoinType: FfiConverterRustBuffer<TrezorCoinType> {
+    override fun read(buf: ByteBuffer): TrezorCoinType = try {
+        TrezorCoinType.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: TrezorCoinType): ULong = 4UL
+
+    override fun write(value: TrezorCoinType, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
 public object TrezorExceptionErrorHandler : UniffiRustCallStatusErrorHandler<TrezorException> {
     override fun lift(errorBuf: RustBufferByValue): TrezorException = FfiConverterTypeTrezorError.lift(errorBuf)
 }
@@ -9529,6 +9547,35 @@ public object FfiConverterOptionalTypeSortDirection: FfiConverterRustBuffer<Sort
         } else {
             buf.put(1)
             FfiConverterTypeSortDirection.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeTrezorCoinType: FfiConverterRustBuffer<TrezorCoinType?> {
+    override fun read(buf: ByteBuffer): TrezorCoinType? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeTrezorCoinType.read(buf)
+    }
+
+    override fun allocationSize(value: TrezorCoinType?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeTrezorCoinType.allocationSize(value)
+        }
+    }
+
+    override fun write(value: TrezorCoinType?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeTrezorCoinType.write(value, buf)
         }
     }
 }
@@ -11688,15 +11735,14 @@ public suspend fun `trezorSignTx`(`params`: TrezorSignTxParams): TrezorSignedTx 
  *
  * # Arguments
  * * `psbt_base64` - Base64-encoded PSBT data
- * * `network` - Bitcoin network name: "bitcoin", "testnet", "signet", "regtest".
- * Defaults to "bitcoin" (mainnet) if None.
+ * * `network` - Bitcoin network type. Defaults to Bitcoin (mainnet) if None.
  */
 @Throws(TrezorException::class, kotlin.coroutines.cancellation.CancellationException::class)
-public suspend fun `trezorSignTxFromPsbt`(`psbtBase64`: kotlin.String, `network`: kotlin.String?): TrezorSignedTx {
+public suspend fun `trezorSignTxFromPsbt`(`psbtBase64`: kotlin.String, `network`: TrezorCoinType?): TrezorSignedTx {
     return uniffiRustCallAsync(
         UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_tx_from_psbt(
             FfiConverterString.lower(`psbtBase64`),
-            FfiConverterOptionalString.lower(`network`),
+            FfiConverterOptionalTypeTrezorCoinType.lower(`network`),
         ),
         { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },

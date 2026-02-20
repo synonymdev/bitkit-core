@@ -38,7 +38,7 @@ pub use modules::activity;
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
 use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances};
-use crate::modules::trezor::{TrezorError, TrezorDeviceInfo, TrezorTransportType, TrezorFeatures, TrezorGetAddressParams, TrezorAddressResponse, TrezorGetPublicKeyParams, TrezorPublicKeyResponse, TrezorScriptType, TrezorManager, TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams, TrezorSignTxParams, TrezorSignedTx, TrezorTxInput, TrezorTxOutput};
+use crate::modules::trezor::{TrezorError, TrezorDeviceInfo, TrezorTransportType, TrezorFeatures, TrezorGetAddressParams, TrezorAddressResponse, TrezorGetPublicKeyParams, TrezorPublicKeyResponse, TrezorScriptType, TrezorManager, TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams, TrezorSignTxParams, TrezorSignedTx, TrezorTxInput, TrezorTxOutput, TrezorCoinType};
 pub use crate::onchain::WordCount;
 
 use std::sync::Mutex as StdMutex;
@@ -1653,10 +1653,9 @@ pub async fn trezor_get_device_fingerprint() -> Result<String, TrezorError> {
 ///
 /// # Arguments
 /// * `psbt_base64` - Base64-encoded PSBT data
-/// * `network` - Bitcoin network name: "bitcoin", "testnet", "signet", "regtest".
-///   Defaults to "bitcoin" (mainnet) if None.
+/// * `network` - Bitcoin network type. Defaults to Bitcoin (mainnet) if None.
 #[uniffi::export]
-pub async fn trezor_sign_tx_from_psbt(psbt_base64: String, network: Option<String>) -> Result<TrezorSignedTx, TrezorError> {
+pub async fn trezor_sign_tx_from_psbt(psbt_base64: String, network: Option<TrezorCoinType>) -> Result<TrezorSignedTx, TrezorError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().sign_tx_from_psbt(psbt_base64, network).await

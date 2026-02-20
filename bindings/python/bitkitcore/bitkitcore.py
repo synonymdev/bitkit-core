@@ -643,7 +643,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_sign_tx() != 42467:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt() != 20171:
+    if lib.uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt() != 18852:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_verify_message() != 50739:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -6604,9 +6604,9 @@ class TrezorGetAddressParams:
     BIP32 path (e.g., "m/84'/0'/0'/0/0")
     """
 
-    coin: "typing.Optional[str]"
+    coin: "typing.Optional[TrezorCoinType]"
     """
-    Coin name (default: "Bitcoin")
+    Coin network (default: Bitcoin)
     """
 
     show_on_trezor: "bool"
@@ -6619,7 +6619,7 @@ class TrezorGetAddressParams:
     Script type (auto-detected from path if not specified)
     """
 
-    def __init__(self, *, path: "str", coin: "typing.Optional[str]", show_on_trezor: "bool", script_type: "typing.Optional[TrezorScriptType]"):
+    def __init__(self, *, path: "str", coin: "typing.Optional[TrezorCoinType]", show_on_trezor: "bool", script_type: "typing.Optional[TrezorScriptType]"):
         self.path = path
         self.coin = coin
         self.show_on_trezor = show_on_trezor
@@ -6644,7 +6644,7 @@ class _UniffiConverterTypeTrezorGetAddressParams(_UniffiConverterRustBuffer):
     def read(buf):
         return TrezorGetAddressParams(
             path=_UniffiConverterString.read(buf),
-            coin=_UniffiConverterOptionalString.read(buf),
+            coin=_UniffiConverterOptionalTypeTrezorCoinType.read(buf),
             show_on_trezor=_UniffiConverterBool.read(buf),
             script_type=_UniffiConverterOptionalTypeTrezorScriptType.read(buf),
         )
@@ -6652,14 +6652,14 @@ class _UniffiConverterTypeTrezorGetAddressParams(_UniffiConverterRustBuffer):
     @staticmethod
     def check_lower(value):
         _UniffiConverterString.check_lower(value.path)
-        _UniffiConverterOptionalString.check_lower(value.coin)
+        _UniffiConverterOptionalTypeTrezorCoinType.check_lower(value.coin)
         _UniffiConverterBool.check_lower(value.show_on_trezor)
         _UniffiConverterOptionalTypeTrezorScriptType.check_lower(value.script_type)
 
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.path, buf)
-        _UniffiConverterOptionalString.write(value.coin, buf)
+        _UniffiConverterOptionalTypeTrezorCoinType.write(value.coin, buf)
         _UniffiConverterBool.write(value.show_on_trezor, buf)
         _UniffiConverterOptionalTypeTrezorScriptType.write(value.script_type, buf)
 
@@ -6674,9 +6674,9 @@ class TrezorGetPublicKeyParams:
     BIP32 path (e.g., "m/84'/0'/0'")
     """
 
-    coin: "typing.Optional[str]"
+    coin: "typing.Optional[TrezorCoinType]"
     """
-    Coin name (default: "Bitcoin")
+    Coin network (default: Bitcoin)
     """
 
     show_on_trezor: "bool"
@@ -6684,7 +6684,7 @@ class TrezorGetPublicKeyParams:
     Whether to display on device for confirmation
     """
 
-    def __init__(self, *, path: "str", coin: "typing.Optional[str]", show_on_trezor: "bool"):
+    def __init__(self, *, path: "str", coin: "typing.Optional[TrezorCoinType]", show_on_trezor: "bool"):
         self.path = path
         self.coin = coin
         self.show_on_trezor = show_on_trezor
@@ -6706,20 +6706,20 @@ class _UniffiConverterTypeTrezorGetPublicKeyParams(_UniffiConverterRustBuffer):
     def read(buf):
         return TrezorGetPublicKeyParams(
             path=_UniffiConverterString.read(buf),
-            coin=_UniffiConverterOptionalString.read(buf),
+            coin=_UniffiConverterOptionalTypeTrezorCoinType.read(buf),
             show_on_trezor=_UniffiConverterBool.read(buf),
         )
 
     @staticmethod
     def check_lower(value):
         _UniffiConverterString.check_lower(value.path)
-        _UniffiConverterOptionalString.check_lower(value.coin)
+        _UniffiConverterOptionalTypeTrezorCoinType.check_lower(value.coin)
         _UniffiConverterBool.check_lower(value.show_on_trezor)
 
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.path, buf)
-        _UniffiConverterOptionalString.write(value.coin, buf)
+        _UniffiConverterOptionalTypeTrezorCoinType.write(value.coin, buf)
         _UniffiConverterBool.write(value.show_on_trezor, buf)
 
 
@@ -7040,12 +7040,12 @@ class TrezorSignMessageParams:
     Message to sign
     """
 
-    coin: "typing.Optional[str]"
+    coin: "typing.Optional[TrezorCoinType]"
     """
-    Coin name (default: "Bitcoin")
+    Coin network (default: Bitcoin)
     """
 
-    def __init__(self, *, path: "str", message: "str", coin: "typing.Optional[str]"):
+    def __init__(self, *, path: "str", message: "str", coin: "typing.Optional[TrezorCoinType]"):
         self.path = path
         self.message = message
         self.coin = coin
@@ -7068,20 +7068,20 @@ class _UniffiConverterTypeTrezorSignMessageParams(_UniffiConverterRustBuffer):
         return TrezorSignMessageParams(
             path=_UniffiConverterString.read(buf),
             message=_UniffiConverterString.read(buf),
-            coin=_UniffiConverterOptionalString.read(buf),
+            coin=_UniffiConverterOptionalTypeTrezorCoinType.read(buf),
         )
 
     @staticmethod
     def check_lower(value):
         _UniffiConverterString.check_lower(value.path)
         _UniffiConverterString.check_lower(value.message)
-        _UniffiConverterOptionalString.check_lower(value.coin)
+        _UniffiConverterOptionalTypeTrezorCoinType.check_lower(value.coin)
 
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.path, buf)
         _UniffiConverterString.write(value.message, buf)
-        _UniffiConverterOptionalString.write(value.coin, buf)
+        _UniffiConverterOptionalTypeTrezorCoinType.write(value.coin, buf)
 
 
 class TrezorSignTxParams:
@@ -7099,9 +7099,9 @@ class TrezorSignTxParams:
     Transaction outputs
     """
 
-    coin: "typing.Optional[str]"
+    coin: "typing.Optional[TrezorCoinType]"
     """
-    Coin name (default: "Bitcoin")
+    Coin network (default: Bitcoin)
     """
 
     lock_time: "typing.Optional[int]"
@@ -7119,7 +7119,7 @@ class TrezorSignTxParams:
     Previous transactions (for non-SegWit input verification)
     """
 
-    def __init__(self, *, inputs: "typing.List[TrezorTxInput]", outputs: "typing.List[TrezorTxOutput]", coin: "typing.Optional[str]", lock_time: "typing.Optional[int]", version: "typing.Optional[int]", prev_txs: "typing.List[TrezorPrevTx]"):
+    def __init__(self, *, inputs: "typing.List[TrezorTxInput]", outputs: "typing.List[TrezorTxOutput]", coin: "typing.Optional[TrezorCoinType]", lock_time: "typing.Optional[int]", version: "typing.Optional[int]", prev_txs: "typing.List[TrezorPrevTx]"):
         self.inputs = inputs
         self.outputs = outputs
         self.coin = coin
@@ -7151,7 +7151,7 @@ class _UniffiConverterTypeTrezorSignTxParams(_UniffiConverterRustBuffer):
         return TrezorSignTxParams(
             inputs=_UniffiConverterSequenceTypeTrezorTxInput.read(buf),
             outputs=_UniffiConverterSequenceTypeTrezorTxOutput.read(buf),
-            coin=_UniffiConverterOptionalString.read(buf),
+            coin=_UniffiConverterOptionalTypeTrezorCoinType.read(buf),
             lock_time=_UniffiConverterOptionalUInt32.read(buf),
             version=_UniffiConverterOptionalUInt32.read(buf),
             prev_txs=_UniffiConverterSequenceTypeTrezorPrevTx.read(buf),
@@ -7161,7 +7161,7 @@ class _UniffiConverterTypeTrezorSignTxParams(_UniffiConverterRustBuffer):
     def check_lower(value):
         _UniffiConverterSequenceTypeTrezorTxInput.check_lower(value.inputs)
         _UniffiConverterSequenceTypeTrezorTxOutput.check_lower(value.outputs)
-        _UniffiConverterOptionalString.check_lower(value.coin)
+        _UniffiConverterOptionalTypeTrezorCoinType.check_lower(value.coin)
         _UniffiConverterOptionalUInt32.check_lower(value.lock_time)
         _UniffiConverterOptionalUInt32.check_lower(value.version)
         _UniffiConverterSequenceTypeTrezorPrevTx.check_lower(value.prev_txs)
@@ -7170,7 +7170,7 @@ class _UniffiConverterTypeTrezorSignTxParams(_UniffiConverterRustBuffer):
     def write(value, buf):
         _UniffiConverterSequenceTypeTrezorTxInput.write(value.inputs, buf)
         _UniffiConverterSequenceTypeTrezorTxOutput.write(value.outputs, buf)
-        _UniffiConverterOptionalString.write(value.coin, buf)
+        _UniffiConverterOptionalTypeTrezorCoinType.write(value.coin, buf)
         _UniffiConverterOptionalUInt32.write(value.lock_time, buf)
         _UniffiConverterOptionalUInt32.write(value.version, buf)
         _UniffiConverterSequenceTypeTrezorPrevTx.write(value.prev_txs, buf)
@@ -7616,12 +7616,12 @@ class TrezorVerifyMessageParams:
     Original message
     """
 
-    coin: "typing.Optional[str]"
+    coin: "typing.Optional[TrezorCoinType]"
     """
-    Coin name (default: "Bitcoin")
+    Coin network (default: Bitcoin)
     """
 
-    def __init__(self, *, address: "str", signature: "str", message: "str", coin: "typing.Optional[str]"):
+    def __init__(self, *, address: "str", signature: "str", message: "str", coin: "typing.Optional[TrezorCoinType]"):
         self.address = address
         self.signature = signature
         self.message = message
@@ -7648,7 +7648,7 @@ class _UniffiConverterTypeTrezorVerifyMessageParams(_UniffiConverterRustBuffer):
             address=_UniffiConverterString.read(buf),
             signature=_UniffiConverterString.read(buf),
             message=_UniffiConverterString.read(buf),
-            coin=_UniffiConverterOptionalString.read(buf),
+            coin=_UniffiConverterOptionalTypeTrezorCoinType.read(buf),
         )
 
     @staticmethod
@@ -7656,14 +7656,14 @@ class _UniffiConverterTypeTrezorVerifyMessageParams(_UniffiConverterRustBuffer):
         _UniffiConverterString.check_lower(value.address)
         _UniffiConverterString.check_lower(value.signature)
         _UniffiConverterString.check_lower(value.message)
-        _UniffiConverterOptionalString.check_lower(value.coin)
+        _UniffiConverterOptionalTypeTrezorCoinType.check_lower(value.coin)
 
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.address, buf)
         _UniffiConverterString.write(value.signature, buf)
         _UniffiConverterString.write(value.message, buf)
-        _UniffiConverterOptionalString.write(value.coin, buf)
+        _UniffiConverterOptionalTypeTrezorCoinType.write(value.coin, buf)
 
 
 class TxInput:
@@ -10421,6 +10421,80 @@ class _UniffiConverterTypeSweepError(_UniffiConverterRustBuffer):
             buf.write_i32(3)
 
 
+
+
+
+class TrezorCoinType(enum.Enum):
+    """
+    Bitcoin network / coin type for Trezor operations.
+    """
+
+    BITCOIN = 0
+    """
+    Bitcoin mainnet
+    """
+
+    
+    TESTNET = 1
+    """
+    Bitcoin testnet
+    """
+
+    
+    SIGNET = 2
+    """
+    Bitcoin signet (treated as testnet by the device)
+    """
+
+    
+    REGTEST = 3
+    """
+    Bitcoin regtest
+    """
+
+    
+
+
+class _UniffiConverterTypeTrezorCoinType(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return TrezorCoinType.BITCOIN
+        if variant == 2:
+            return TrezorCoinType.TESTNET
+        if variant == 3:
+            return TrezorCoinType.SIGNET
+        if variant == 4:
+            return TrezorCoinType.REGTEST
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == TrezorCoinType.BITCOIN:
+            return
+        if value == TrezorCoinType.TESTNET:
+            return
+        if value == TrezorCoinType.SIGNET:
+            return
+        if value == TrezorCoinType.REGTEST:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == TrezorCoinType.BITCOIN:
+            buf.write_i32(1)
+        if value == TrezorCoinType.TESTNET:
+            buf.write_i32(2)
+        if value == TrezorCoinType.SIGNET:
+            buf.write_i32(3)
+        if value == TrezorCoinType.REGTEST:
+            buf.write_i32(4)
+
+
+
+
 # TrezorError
 # We want to define each variant as a nested class that's also a subclass,
 # which is tricky in Python.  To accomplish this we're going to create each
@@ -10887,6 +10961,12 @@ class TrezorScriptType(enum.Enum):
     """
 
     
+    EXTERNAL = 5
+    """
+    External/watch-only input (not signed by device)
+    """
+
+    
 
 
 class _UniffiConverterTypeTrezorScriptType(_UniffiConverterRustBuffer):
@@ -10903,6 +10983,8 @@ class _UniffiConverterTypeTrezorScriptType(_UniffiConverterRustBuffer):
             return TrezorScriptType.SPEND_TAPROOT
         if variant == 5:
             return TrezorScriptType.SPEND_MULTISIG
+        if variant == 6:
+            return TrezorScriptType.EXTERNAL
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
@@ -10916,6 +10998,8 @@ class _UniffiConverterTypeTrezorScriptType(_UniffiConverterRustBuffer):
         if value == TrezorScriptType.SPEND_TAPROOT:
             return
         if value == TrezorScriptType.SPEND_MULTISIG:
+            return
+        if value == TrezorScriptType.EXTERNAL:
             return
         raise ValueError(value)
 
@@ -10931,6 +11015,8 @@ class _UniffiConverterTypeTrezorScriptType(_UniffiConverterRustBuffer):
             buf.write_i32(4)
         if value == TrezorScriptType.SPEND_MULTISIG:
             buf.write_i32(5)
+        if value == TrezorScriptType.EXTERNAL:
+            buf.write_i32(6)
 
 
 
@@ -12062,6 +12148,33 @@ class _UniffiConverterOptionalTypeSortDirection(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterTypeSortDirection.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeTrezorCoinType(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeTrezorCoinType.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeTrezorCoinType.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeTrezorCoinType.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -15374,7 +15487,7 @@ async def trezor_sign_tx(params: "TrezorSignTxParams") -> "TrezorSignedTx":
 _UniffiConverterTypeTrezorError,
 
     )
-async def trezor_sign_tx_from_psbt(psbt_base64: "str",network: "typing.Optional[str]") -> "TrezorSignedTx":
+async def trezor_sign_tx_from_psbt(psbt_base64: "str",network: "typing.Optional[TrezorCoinType]") -> "TrezorSignedTx":
 
     """
     Sign a Bitcoin transaction from a PSBT (base64-encoded).
@@ -15384,18 +15497,17 @@ async def trezor_sign_tx_from_psbt(psbt_base64: "str",network: "typing.Optional[
 
     # Arguments
     * `psbt_base64` - Base64-encoded PSBT data
-    * `network` - Bitcoin network name: "bitcoin", "testnet", "signet", "regtest".
-    Defaults to "bitcoin" (mainnet) if None.
+    * `network` - Bitcoin network type. Defaults to Bitcoin (mainnet) if None.
     """
 
     _UniffiConverterString.check_lower(psbt_base64)
     
-    _UniffiConverterOptionalString.check_lower(network)
+    _UniffiConverterOptionalTypeTrezorCoinType.check_lower(network)
     
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_tx_from_psbt(
         _UniffiConverterString.lower(psbt_base64),
-        _UniffiConverterOptionalString.lower(network)),
+        _UniffiConverterOptionalTypeTrezorCoinType.lower(network)),
         _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
         _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
@@ -15638,6 +15750,7 @@ __all__ = [
     "Scanner",
     "SortDirection",
     "SweepError",
+    "TrezorCoinType",
     "TrezorError",
     "TrezorScriptType",
     "TrezorTransportType",

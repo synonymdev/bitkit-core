@@ -8209,9 +8209,9 @@ public struct TrezorGetAddressParams {
      */
     public var path: String
     /**
-     * Coin name (default: "Bitcoin")
+     * Coin network (default: Bitcoin)
      */
-    public var coin: String?
+    public var coin: TrezorCoinType?
     /**
      * Whether to display the address on the device for confirmation
      */
@@ -8228,8 +8228,8 @@ public struct TrezorGetAddressParams {
          * BIP32 path (e.g., "m/84'/0'/0'/0/0")
          */path: String, 
         /**
-         * Coin name (default: "Bitcoin")
-         */coin: String?, 
+         * Coin network (default: Bitcoin)
+         */coin: TrezorCoinType?, 
         /**
          * Whether to display the address on the device for confirmation
          */showOnTrezor: Bool, 
@@ -8285,7 +8285,7 @@ public struct FfiConverterTypeTrezorGetAddressParams: FfiConverterRustBuffer {
         return
             try TrezorGetAddressParams(
                 path: FfiConverterString.read(from: &buf), 
-                coin: FfiConverterOptionString.read(from: &buf), 
+                coin: FfiConverterOptionTypeTrezorCoinType.read(from: &buf), 
                 showOnTrezor: FfiConverterBool.read(from: &buf), 
                 scriptType: FfiConverterOptionTypeTrezorScriptType.read(from: &buf)
         )
@@ -8293,7 +8293,7 @@ public struct FfiConverterTypeTrezorGetAddressParams: FfiConverterRustBuffer {
 
     public static func write(_ value: TrezorGetAddressParams, into buf: inout [UInt8]) {
         FfiConverterString.write(value.path, into: &buf)
-        FfiConverterOptionString.write(value.coin, into: &buf)
+        FfiConverterOptionTypeTrezorCoinType.write(value.coin, into: &buf)
         FfiConverterBool.write(value.showOnTrezor, into: &buf)
         FfiConverterOptionTypeTrezorScriptType.write(value.scriptType, into: &buf)
     }
@@ -8324,9 +8324,9 @@ public struct TrezorGetPublicKeyParams {
      */
     public var path: String
     /**
-     * Coin name (default: "Bitcoin")
+     * Coin network (default: Bitcoin)
      */
-    public var coin: String?
+    public var coin: TrezorCoinType?
     /**
      * Whether to display on device for confirmation
      */
@@ -8339,8 +8339,8 @@ public struct TrezorGetPublicKeyParams {
          * BIP32 path (e.g., "m/84'/0'/0'")
          */path: String, 
         /**
-         * Coin name (default: "Bitcoin")
-         */coin: String?, 
+         * Coin network (default: Bitcoin)
+         */coin: TrezorCoinType?, 
         /**
          * Whether to display on device for confirmation
          */showOnTrezor: Bool) {
@@ -8388,14 +8388,14 @@ public struct FfiConverterTypeTrezorGetPublicKeyParams: FfiConverterRustBuffer {
         return
             try TrezorGetPublicKeyParams(
                 path: FfiConverterString.read(from: &buf), 
-                coin: FfiConverterOptionString.read(from: &buf), 
+                coin: FfiConverterOptionTypeTrezorCoinType.read(from: &buf), 
                 showOnTrezor: FfiConverterBool.read(from: &buf)
         )
     }
 
     public static func write(_ value: TrezorGetPublicKeyParams, into buf: inout [UInt8]) {
         FfiConverterString.write(value.path, into: &buf)
-        FfiConverterOptionString.write(value.coin, into: &buf)
+        FfiConverterOptionTypeTrezorCoinType.write(value.coin, into: &buf)
         FfiConverterBool.write(value.showOnTrezor, into: &buf)
     }
 }
@@ -8917,9 +8917,9 @@ public struct TrezorSignMessageParams {
      */
     public var message: String
     /**
-     * Coin name (default: "Bitcoin")
+     * Coin network (default: Bitcoin)
      */
-    public var coin: String?
+    public var coin: TrezorCoinType?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -8931,8 +8931,8 @@ public struct TrezorSignMessageParams {
          * Message to sign
          */message: String, 
         /**
-         * Coin name (default: "Bitcoin")
-         */coin: String?) {
+         * Coin network (default: Bitcoin)
+         */coin: TrezorCoinType?) {
         self.path = path
         self.message = message
         self.coin = coin
@@ -8978,14 +8978,14 @@ public struct FfiConverterTypeTrezorSignMessageParams: FfiConverterRustBuffer {
             try TrezorSignMessageParams(
                 path: FfiConverterString.read(from: &buf), 
                 message: FfiConverterString.read(from: &buf), 
-                coin: FfiConverterOptionString.read(from: &buf)
+                coin: FfiConverterOptionTypeTrezorCoinType.read(from: &buf)
         )
     }
 
     public static func write(_ value: TrezorSignMessageParams, into buf: inout [UInt8]) {
         FfiConverterString.write(value.path, into: &buf)
         FfiConverterString.write(value.message, into: &buf)
-        FfiConverterOptionString.write(value.coin, into: &buf)
+        FfiConverterOptionTypeTrezorCoinType.write(value.coin, into: &buf)
     }
 }
 
@@ -9018,9 +9018,9 @@ public struct TrezorSignTxParams {
      */
     public var outputs: [TrezorTxOutput]
     /**
-     * Coin name (default: "Bitcoin")
+     * Coin network (default: Bitcoin)
      */
-    public var coin: String?
+    public var coin: TrezorCoinType?
     /**
      * Lock time (default: 0)
      */
@@ -9044,8 +9044,8 @@ public struct TrezorSignTxParams {
          * Transaction outputs
          */outputs: [TrezorTxOutput], 
         /**
-         * Coin name (default: "Bitcoin")
-         */coin: String?, 
+         * Coin network (default: Bitcoin)
+         */coin: TrezorCoinType?, 
         /**
          * Lock time (default: 0)
          */lockTime: UInt32?, 
@@ -9115,7 +9115,7 @@ public struct FfiConverterTypeTrezorSignTxParams: FfiConverterRustBuffer {
             try TrezorSignTxParams(
                 inputs: FfiConverterSequenceTypeTrezorTxInput.read(from: &buf), 
                 outputs: FfiConverterSequenceTypeTrezorTxOutput.read(from: &buf), 
-                coin: FfiConverterOptionString.read(from: &buf), 
+                coin: FfiConverterOptionTypeTrezorCoinType.read(from: &buf), 
                 lockTime: FfiConverterOptionUInt32.read(from: &buf), 
                 version: FfiConverterOptionUInt32.read(from: &buf), 
                 prevTxs: FfiConverterSequenceTypeTrezorPrevTx.read(from: &buf)
@@ -9125,7 +9125,7 @@ public struct FfiConverterTypeTrezorSignTxParams: FfiConverterRustBuffer {
     public static func write(_ value: TrezorSignTxParams, into buf: inout [UInt8]) {
         FfiConverterSequenceTypeTrezorTxInput.write(value.inputs, into: &buf)
         FfiConverterSequenceTypeTrezorTxOutput.write(value.outputs, into: &buf)
-        FfiConverterOptionString.write(value.coin, into: &buf)
+        FfiConverterOptionTypeTrezorCoinType.write(value.coin, into: &buf)
         FfiConverterOptionUInt32.write(value.lockTime, into: &buf)
         FfiConverterOptionUInt32.write(value.version, into: &buf)
         FfiConverterSequenceTypeTrezorPrevTx.write(value.prevTxs, into: &buf)
@@ -9855,9 +9855,9 @@ public struct TrezorVerifyMessageParams {
      */
     public var message: String
     /**
-     * Coin name (default: "Bitcoin")
+     * Coin network (default: Bitcoin)
      */
-    public var coin: String?
+    public var coin: TrezorCoinType?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -9872,8 +9872,8 @@ public struct TrezorVerifyMessageParams {
          * Original message
          */message: String, 
         /**
-         * Coin name (default: "Bitcoin")
-         */coin: String?) {
+         * Coin network (default: Bitcoin)
+         */coin: TrezorCoinType?) {
         self.address = address
         self.signature = signature
         self.message = message
@@ -9925,7 +9925,7 @@ public struct FfiConverterTypeTrezorVerifyMessageParams: FfiConverterRustBuffer 
                 address: FfiConverterString.read(from: &buf), 
                 signature: FfiConverterString.read(from: &buf), 
                 message: FfiConverterString.read(from: &buf), 
-                coin: FfiConverterOptionString.read(from: &buf)
+                coin: FfiConverterOptionTypeTrezorCoinType.read(from: &buf)
         )
     }
 
@@ -9933,7 +9933,7 @@ public struct FfiConverterTypeTrezorVerifyMessageParams: FfiConverterRustBuffer 
         FfiConverterString.write(value.address, into: &buf)
         FfiConverterString.write(value.signature, into: &buf)
         FfiConverterString.write(value.message, into: &buf)
-        FfiConverterOptionString.write(value.coin, into: &buf)
+        FfiConverterOptionTypeTrezorCoinType.write(value.coin, into: &buf)
     }
 }
 
@@ -12974,6 +12974,107 @@ extension SweepError: Foundation.LocalizedError {
 
 
 
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Bitcoin network / coin type for Trezor operations.
+ */
+
+public enum TrezorCoinType {
+    
+    /**
+     * Bitcoin mainnet
+     */
+    case bitcoin
+    /**
+     * Bitcoin testnet
+     */
+    case testnet
+    /**
+     * Bitcoin signet (treated as testnet by the device)
+     */
+    case signet
+    /**
+     * Bitcoin regtest
+     */
+    case regtest
+}
+
+
+#if compiler(>=6)
+extension TrezorCoinType: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTrezorCoinType: FfiConverterRustBuffer {
+    typealias SwiftType = TrezorCoinType
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorCoinType {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .bitcoin
+        
+        case 2: return .testnet
+        
+        case 3: return .signet
+        
+        case 4: return .regtest
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: TrezorCoinType, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .bitcoin:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .testnet:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .signet:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .regtest:
+            writeInt(&buf, Int32(4))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTrezorCoinType_lift(_ buf: RustBuffer) throws -> TrezorCoinType {
+    return try FfiConverterTypeTrezorCoinType.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTrezorCoinType_lower(_ value: TrezorCoinType) -> RustBuffer {
+    return FfiConverterTypeTrezorCoinType.lower(value)
+}
+
+
+extension TrezorCoinType: Equatable, Hashable {}
+
+extension TrezorCoinType: Codable {}
+
+
+
+
+
+
 
 /**
  * Trezor-related errors exposed via FFI.
@@ -13276,6 +13377,10 @@ public enum TrezorScriptType {
      * P2SH multisig
      */
     case spendMultisig
+    /**
+     * External/watch-only input (not signed by device)
+     */
+    case external
 }
 
 
@@ -13303,6 +13408,8 @@ public struct FfiConverterTypeTrezorScriptType: FfiConverterRustBuffer {
         
         case 5: return .spendMultisig
         
+        case 6: return .external
+        
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
@@ -13329,6 +13436,10 @@ public struct FfiConverterTypeTrezorScriptType: FfiConverterRustBuffer {
         
         case .spendMultisig:
             writeInt(&buf, Int32(5))
+        
+        
+        case .external:
+            writeInt(&buf, Int32(6))
         
         }
     }
@@ -14431,6 +14542,30 @@ fileprivate struct FfiConverterOptionTypeSortDirection: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeSortDirection.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeTrezorCoinType: FfiConverterRustBuffer {
+    typealias SwiftType = TrezorCoinType?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeTrezorCoinType.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeTrezorCoinType.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -16279,14 +16414,13 @@ public func trezorSignTx(params: TrezorSignTxParams)async throws  -> TrezorSigne
  *
  * # Arguments
  * * `psbt_base64` - Base64-encoded PSBT data
- * * `network` - Bitcoin network name: "bitcoin", "testnet", "signet", "regtest".
- * Defaults to "bitcoin" (mainnet) if None.
+ * * `network` - Bitcoin network type. Defaults to Bitcoin (mainnet) if None.
  */
-public func trezorSignTxFromPsbt(psbtBase64: String, network: String?)async throws  -> TrezorSignedTx  {
+public func trezorSignTxFromPsbt(psbtBase64: String, network: TrezorCoinType?)async throws  -> TrezorSignedTx  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_trezor_sign_tx_from_psbt(FfiConverterString.lower(psbtBase64),FfiConverterOptionString.lower(network)
+                uniffi_bitkitcore_fn_func_trezor_sign_tx_from_psbt(FfiConverterString.lower(psbtBase64),FfiConverterOptionTypeTrezorCoinType.lower(network)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
@@ -16756,7 +16890,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_trezor_sign_tx() != 42467) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt() != 20171) {
+    if (uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt() != 18852) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_verify_message() != 50739) {

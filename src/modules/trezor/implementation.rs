@@ -12,7 +12,7 @@ use crate::modules::trezor::{
     TrezorGetAddressParams, TrezorGetPublicKeyParams, TrezorPublicKeyResponse,
     TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams,
     TrezorSignTxParams, TrezorSignedTx, TrezorTxInput, TrezorTxOutput, TrezorScriptType,
-    TrezorTransportType,
+    TrezorTransportType, TrezorCoinType,
 };
 
 // Desktop: use full trezor-connect-rs
@@ -37,7 +37,7 @@ use trezor_connect_rs::device_info::{DeviceInfo, TransportType};
 ///
 /// Valid paths must:
 /// - Start with "m/"
-/// - Contain only numeric indices (with optional ' for hardened)
+/// - Contain only numeric indices (with optional ' or h for hardened)
 /// - Have a known purpose for Bitcoin (44, 49, 84, 86)
 ///
 /// # Examples
@@ -70,8 +70,8 @@ pub(crate) fn validate_derivation_path(path: &str) -> Result<(), TrezorError> {
             });
         }
 
-        // Check if it's hardened (ends with ')
-        let num_str = if component.ends_with('\'') {
+        // Check if it's hardened (ends with ' or h)
+        let num_str = if component.ends_with('\'') || component.ends_with('h') {
             &component[..component.len() - 1]
         } else {
             *component
@@ -652,6 +652,9 @@ impl TrezorManager {
                 TrezorScriptType::SpendMultisig => return Err(TrezorError::DeviceError {
                     error_details: format!("Input {}: Multisig inputs are not currently supported.", i),
                 }),
+                TrezorScriptType::External => return Err(TrezorError::DeviceError {
+                    error_details: format!("Input {}: External inputs are not currently supported.", i),
+                }),
                 _ => {}
             }
         }
@@ -736,17 +739,16 @@ impl TrezorManager {
     ///
     /// # Arguments
     /// * `psbt_base64` - Base64-encoded PSBT data
-    /// * `network` - Bitcoin network name: "bitcoin", "testnet", "signet", "regtest".
-    ///   Defaults to "bitcoin" (mainnet) if None.
+    /// * `network` - Bitcoin network type. Defaults to Bitcoin (mainnet) if None.
     pub async fn sign_tx_from_psbt(
         &self,
         psbt_base64: String,
-        network: Option<String>,
+        network: Option<TrezorCoinType>,
     ) -> Result<TrezorSignedTx, TrezorError> {
-        let btc_network = match network.as_deref() {
-            Some("testnet") => bitcoin::Network::Testnet,
-            Some("signet") => bitcoin::Network::Signet,
-            Some("regtest") => bitcoin::Network::Regtest,
+        let btc_network = match network {
+            Some(TrezorCoinType::Testnet) => bitcoin::Network::Testnet,
+            Some(TrezorCoinType::Signet) => bitcoin::Network::Signet,
+            Some(TrezorCoinType::Regtest) => bitcoin::Network::Regtest,
             _ => bitcoin::Network::Bitcoin,
         };
 

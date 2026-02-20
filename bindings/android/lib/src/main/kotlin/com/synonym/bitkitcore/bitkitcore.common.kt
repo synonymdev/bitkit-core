@@ -1405,9 +1405,9 @@ public data class TrezorGetAddressParams (
      */
     val `path`: kotlin.String, 
     /**
-     * Coin name (default: "Bitcoin")
+     * Coin network (default: Bitcoin)
      */
-    val `coin`: kotlin.String?, 
+    val `coin`: TrezorCoinType?, 
     /**
      * Whether to display the address on the device for confirmation
      */
@@ -1432,9 +1432,9 @@ public data class TrezorGetPublicKeyParams (
      */
     val `path`: kotlin.String, 
     /**
-     * Coin name (default: "Bitcoin")
+     * Coin network (default: Bitcoin)
      */
-    val `coin`: kotlin.String?, 
+    val `coin`: TrezorCoinType?, 
     /**
      * Whether to display on device for confirmation
      */
@@ -1575,9 +1575,9 @@ public data class TrezorSignMessageParams (
      */
     val `message`: kotlin.String, 
     /**
-     * Coin name (default: "Bitcoin")
+     * Coin network (default: Bitcoin)
      */
-    val `coin`: kotlin.String?
+    val `coin`: TrezorCoinType?
 ) {
     public companion object
 }
@@ -1598,9 +1598,9 @@ public data class TrezorSignTxParams (
      */
     val `outputs`: List<TrezorTxOutput>, 
     /**
-     * Coin name (default: "Bitcoin")
+     * Coin network (default: Bitcoin)
      */
-    val `coin`: kotlin.String?, 
+    val `coin`: TrezorCoinType?, 
     /**
      * Lock time (default: 0)
      */
@@ -1816,9 +1816,9 @@ public data class TrezorVerifyMessageParams (
      */
     val `message`: kotlin.String, 
     /**
-     * Coin name (default: "Bitcoin")
+     * Coin network (default: Bitcoin)
      */
-    val `coin`: kotlin.String?
+    val `coin`: TrezorCoinType?
 ) {
     public companion object
 }
@@ -2676,6 +2676,37 @@ public sealed class SweepException: kotlin.Exception() {
 
 
 
+/**
+ * Bitcoin network / coin type for Trezor operations.
+ */
+
+@kotlinx.serialization.Serializable
+public enum class TrezorCoinType {
+    
+    /**
+     * Bitcoin mainnet
+     */
+    BITCOIN,
+    /**
+     * Bitcoin testnet
+     */
+    TESTNET,
+    /**
+     * Bitcoin signet (treated as testnet by the device)
+     */
+    SIGNET,
+    /**
+     * Bitcoin regtest
+     */
+    REGTEST;
+    public companion object
+}
+
+
+
+
+
+
 
 /**
  * Trezor-related errors exposed via FFI.
@@ -2892,7 +2923,11 @@ public enum class TrezorScriptType {
     /**
      * P2SH multisig
      */
-    SPEND_MULTISIG;
+    SPEND_MULTISIG,
+    /**
+     * External/watch-only input (not signed by device)
+     */
+    EXTERNAL;
     public companion object
 }
 
@@ -2950,6 +2985,8 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
 
 
 

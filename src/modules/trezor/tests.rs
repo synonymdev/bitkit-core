@@ -4,7 +4,7 @@
 mod tests {
     use crate::modules::trezor::{
         TrezorDeviceInfo, TrezorError, TrezorFeatures, TrezorScriptType, TrezorTransportType,
-        TrezorTxInput, TrezorTxOutput, TrezorSignTxParams, TrezorSignedTx,
+        TrezorTxInput, TrezorTxOutput, TrezorSignTxParams, TrezorSignedTx, TrezorCoinType,
     };
 
     // ========================================================================
@@ -242,6 +242,13 @@ mod tests {
     }
 
     #[test]
+    fn test_script_type_conversion_external() {
+        let trezor_type = TrezorScriptType::External;
+        let tc_type: trezor_connect_rs::ScriptType = trezor_type.into();
+        assert!(matches!(tc_type, trezor_connect_rs::ScriptType::External));
+    }
+
+    #[test]
     fn test_transport_type_from_trezor_connect() {
         use trezor_connect_rs::TransportType;
 
@@ -358,7 +365,7 @@ mod tests {
                 orig_hash: None,
                 orig_index: None,
             }],
-            coin: Some("Bitcoin".to_string()),
+            coin: Some(TrezorCoinType::Bitcoin),
             lock_time: Some(0),
             version: Some(2),
             prev_txs: vec![],
@@ -368,7 +375,7 @@ mod tests {
 
         assert_eq!(tc_params.inputs.len(), 1);
         assert_eq!(tc_params.outputs.len(), 1);
-        assert_eq!(tc_params.coin, Some("Bitcoin".to_string()));
+        assert_eq!(tc_params.coin, Some(trezor_connect_rs::Network::Bitcoin));
         assert_eq!(tc_params.lock_time, Some(0));
         assert_eq!(tc_params.version, Some(2));
     }
@@ -482,6 +489,15 @@ mod tests {
         use crate::modules::trezor::implementation::validate_derivation_path;
 
         assert!(validate_derivation_path("m/86'/0'/0'/0/0").is_ok());
+    }
+
+    #[test]
+    fn test_valid_bip84_path_h_notation() {
+        use crate::modules::trezor::implementation::validate_derivation_path;
+
+        assert!(validate_derivation_path("m/84h/0h/0h/0/0").is_ok());
+        assert!(validate_derivation_path("m/84h/0h/0h/1/0").is_ok());
+        assert!(validate_derivation_path("m/84h/0h/0h").is_ok());
     }
 
     #[test]

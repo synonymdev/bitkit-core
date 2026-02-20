@@ -110,6 +110,8 @@ pub enum TrezorScriptType {
     SpendTaproot,
     /// P2SH multisig
     SpendMultisig,
+    /// External/watch-only input (not signed by device)
+    External,
 }
 
 impl From<TrezorScriptType> for trezor_connect_rs::ScriptType {
@@ -120,6 +122,30 @@ impl From<TrezorScriptType> for trezor_connect_rs::ScriptType {
             TrezorScriptType::SpendWitness => trezor_connect_rs::ScriptType::SpendWitness,
             TrezorScriptType::SpendTaproot => trezor_connect_rs::ScriptType::SpendTaproot,
             TrezorScriptType::SpendMultisig => trezor_connect_rs::ScriptType::SpendMultisig,
+            TrezorScriptType::External => trezor_connect_rs::ScriptType::External,
+        }
+    }
+}
+
+/// Bitcoin network / coin type for Trezor operations.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum TrezorCoinType {
+    /// Bitcoin mainnet
+    Bitcoin,
+    /// Bitcoin testnet
+    Testnet,
+    /// Bitcoin signet (treated as testnet by the device)
+    Signet,
+    /// Bitcoin regtest
+    Regtest,
+}
+
+impl From<TrezorCoinType> for trezor_connect_rs::Network {
+    fn from(c: TrezorCoinType) -> Self {
+        match c {
+            TrezorCoinType::Bitcoin => trezor_connect_rs::Network::Bitcoin,
+            TrezorCoinType::Testnet | TrezorCoinType::Signet => trezor_connect_rs::Network::Testnet,
+            TrezorCoinType::Regtest => trezor_connect_rs::Network::Regtest,
         }
     }
 }
@@ -129,8 +155,8 @@ impl From<TrezorScriptType> for trezor_connect_rs::ScriptType {
 pub struct TrezorGetAddressParams {
     /// BIP32 path (e.g., "m/84'/0'/0'/0/0")
     pub path: String,
-    /// Coin name (default: "Bitcoin")
-    pub coin: Option<String>,
+    /// Coin network (default: Bitcoin)
+    pub coin: Option<TrezorCoinType>,
     /// Whether to display the address on the device for confirmation
     pub show_on_trezor: bool,
     /// Script type (auto-detected from path if not specified)
@@ -141,7 +167,7 @@ impl From<TrezorGetAddressParams> for trezor_connect_rs::GetAddressParams {
     fn from(p: TrezorGetAddressParams) -> Self {
         Self {
             path: p.path,
-            coin: p.coin,
+            coin: p.coin.map(|c| c.into()),
             show_on_trezor: p.show_on_trezor,
             script_type: p.script_type.map(|s| s.into()),
             multisig: None,
@@ -172,8 +198,8 @@ impl From<trezor_connect_rs::AddressResponse> for TrezorAddressResponse {
 pub struct TrezorGetPublicKeyParams {
     /// BIP32 path (e.g., "m/84'/0'/0'")
     pub path: String,
-    /// Coin name (default: "Bitcoin")
-    pub coin: Option<String>,
+    /// Coin network (default: Bitcoin)
+    pub coin: Option<TrezorCoinType>,
     /// Whether to display on device for confirmation
     pub show_on_trezor: bool,
 }
@@ -182,7 +208,7 @@ impl From<TrezorGetPublicKeyParams> for trezor_connect_rs::GetPublicKeyParams {
     fn from(p: TrezorGetPublicKeyParams) -> Self {
         Self {
             path: p.path,
-            coin: p.coin,
+            coin: p.coin.map(|c| c.into()),
             show_on_trezor: p.show_on_trezor,
             script_type: None,
         }
@@ -229,8 +255,8 @@ pub struct TrezorSignMessageParams {
     pub path: String,
     /// Message to sign
     pub message: String,
-    /// Coin name (default: "Bitcoin")
-    pub coin: Option<String>,
+    /// Coin network (default: Bitcoin)
+    pub coin: Option<TrezorCoinType>,
 }
 
 impl From<TrezorSignMessageParams> for trezor_connect_rs::SignMessageParams {
@@ -238,7 +264,7 @@ impl From<TrezorSignMessageParams> for trezor_connect_rs::SignMessageParams {
         Self {
             path: p.path,
             message: p.message,
-            coin: p.coin,
+            coin: p.coin.map(|c| c.into()),
             no_script_type: false,
         }
     }
@@ -271,8 +297,8 @@ pub struct TrezorVerifyMessageParams {
     pub signature: String,
     /// Original message
     pub message: String,
-    /// Coin name (default: "Bitcoin")
-    pub coin: Option<String>,
+    /// Coin network (default: Bitcoin)
+    pub coin: Option<TrezorCoinType>,
 }
 
 impl From<TrezorVerifyMessageParams> for trezor_connect_rs::VerifyMessageParams {
@@ -281,7 +307,7 @@ impl From<TrezorVerifyMessageParams> for trezor_connect_rs::VerifyMessageParams 
             address: p.address,
             signature: p.signature,
             message: p.message,
-            coin: p.coin,
+            coin: p.coin.map(|c| c.into()),
         }
     }
 }
@@ -370,8 +396,8 @@ pub struct TrezorSignTxParams {
     pub inputs: Vec<TrezorTxInput>,
     /// Transaction outputs
     pub outputs: Vec<TrezorTxOutput>,
-    /// Coin name (default: "Bitcoin")
-    pub coin: Option<String>,
+    /// Coin network (default: Bitcoin)
+    pub coin: Option<TrezorCoinType>,
     /// Lock time (default: 0)
     pub lock_time: Option<u32>,
     /// Version (default: 2)
@@ -455,7 +481,7 @@ impl From<TrezorSignTxParams> for trezor_connect_rs::SignTxParams {
         Self {
             inputs: params.inputs.into_iter().map(|i| i.into()).collect(),
             outputs: params.outputs.into_iter().map(|o| o.into()).collect(),
-            coin: params.coin,
+            coin: params.coin.map(|c| c.into()),
             lock_time: params.lock_time,
             version: params.version,
             prev_txs: params.prev_txs.into_iter().map(|t| t.into()).collect(),
