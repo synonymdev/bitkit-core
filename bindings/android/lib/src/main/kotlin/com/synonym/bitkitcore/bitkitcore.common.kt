@@ -242,29 +242,37 @@ public interface TrezorTransportCallback {
 
 
 /**
- * Callback interface for Trezor UI operations (PIN, passphrase, button)
+ * Callback interface for handling PIN and passphrase requests from the Trezor device.
+ *
+ * The native layer (iOS/Android) should implement this to show PIN/passphrase
+ * input UI when the device requests it during operations like signing.
+ *
+ * Methods return `String`:
+ * - Empty string (`""`) = cancel the request
+ * - Non-empty string = the user's input (PIN or passphrase)
+ *
+ * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
 public interface TrezorUiCallback {
     
     /**
-     * Called when the device requests PIN entry
-     * Returns the PIN entered by the user, or empty string to cancel
+     * Called when the device requests a PIN.
+     *
+     * Show a PIN matrix UI and return the matrix-encoded PIN string.
+     * Return empty string to cancel.
      */
     public fun `onPinRequest`(): kotlin.String
     
     /**
-     * Called when the device requests passphrase entry
-     * on_device: true if passphrase should be entered on device
-     * Returns the passphrase entered by the user, or empty string to cancel
+     * Called when the device requests a passphrase.
+     *
+     * If `on_device` is true, the user should enter on the Trezor itself —
+     * return any non-empty string (e.g., "ok") to acknowledge.
+     *
+     * If `on_device` is false, show a passphrase input UI and return the value.
+     * Return empty string to cancel.
      */
     public fun `onPassphraseRequest`(`onDevice`: kotlin.Boolean): kotlin.String
-    
-    /**
-     * Called when the device requests button confirmation
-     * code: the button request code (e.g., "ButtonRequest_ConfirmOutput")
-     * Returns true if user confirmed, false if cancelled
-     */
-    public fun `onButtonRequest`(`code`: kotlin.String): kotlin.Boolean
     
     public companion object
 }
@@ -1438,6 +1446,83 @@ public data class TrezorGetPublicKeyParams (
 
 
 /**
+ * Previous transaction data (for non-SegWit input verification).
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorPrevTx (
+    /**
+     * Transaction hash (hex encoded)
+     */
+    val `hash`: kotlin.String, 
+    /**
+     * Transaction version
+     */
+    val `version`: kotlin.UInt, 
+    /**
+     * Lock time
+     */
+    val `lockTime`: kotlin.UInt, 
+    /**
+     * Transaction inputs
+     */
+    val `inputs`: List<TrezorPrevTxInput>, 
+    /**
+     * Transaction outputs
+     */
+    val `outputs`: List<TrezorPrevTxOutput>
+) {
+    public companion object
+}
+
+
+
+/**
+ * Input of a previous transaction.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorPrevTxInput (
+    /**
+     * Previous transaction hash (hex encoded)
+     */
+    val `prevHash`: kotlin.String, 
+    /**
+     * Previous output index
+     */
+    val `prevIndex`: kotlin.UInt, 
+    /**
+     * Script signature (hex encoded)
+     */
+    val `scriptSig`: kotlin.String, 
+    /**
+     * Sequence number
+     */
+    val `sequence`: kotlin.UInt
+) {
+    public companion object
+}
+
+
+
+/**
+ * Output of a previous transaction.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorPrevTxOutput (
+    /**
+     * Amount in satoshis
+     */
+    val `amount`: kotlin.ULong, 
+    /**
+     * Script pubkey (hex encoded)
+     */
+    val `scriptPubkey`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+/**
  * Public key response from device.
  */
 @kotlinx.serialization.Serializable
@@ -1457,7 +1542,19 @@ public data class TrezorPublicKeyResponse (
     /**
      * Chain code (hex encoded)
      */
-    val `chainCode`: kotlin.String
+    val `chainCode`: kotlin.String, 
+    /**
+     * Parent key fingerprint
+     */
+    val `fingerprint`: kotlin.UInt, 
+    /**
+     * Derivation depth
+     */
+    val `depth`: kotlin.UInt, 
+    /**
+     * Master root fingerprint (from the device's master seed)
+     */
+    val `rootFingerprint`: kotlin.UInt?
 ) {
     public companion object
 }
@@ -1511,7 +1608,11 @@ public data class TrezorSignTxParams (
     /**
      * Version (default: 2)
      */
-    val `version`: kotlin.UInt?
+    val `version`: kotlin.UInt?, 
+    /**
+     * Previous transactions (for non-SegWit input verification)
+     */
+    val `prevTxs`: List<TrezorPrevTx>
 ) {
     public companion object
 }
@@ -1643,7 +1744,15 @@ public data class TrezorTxInput (
     /**
      * Sequence number (default: 0xFFFFFFFD for RBF)
      */
-    val `sequence`: kotlin.UInt?
+    val `sequence`: kotlin.UInt?, 
+    /**
+     * Original transaction hash for RBF replacement (hex encoded)
+     */
+    val `origHash`: kotlin.String?, 
+    /**
+     * Original input index for RBF replacement
+     */
+    val `origIndex`: kotlin.UInt?
 ) {
     public companion object
 }
@@ -1674,7 +1783,15 @@ public data class TrezorTxOutput (
     /**
      * OP_RETURN data (hex encoded, for data outputs)
      */
-    val `opReturnData`: kotlin.String?
+    val `opReturnData`: kotlin.String?, 
+    /**
+     * Original transaction hash for RBF replacement (hex encoded)
+     */
+    val `origHash`: kotlin.String?, 
+    /**
+     * Original output index for RBF replacement
+     */
+    val `origIndex`: kotlin.UInt?
 ) {
     public companion object
 }
@@ -2771,7 +2888,11 @@ public enum class TrezorScriptType {
     /**
      * P2TR (Taproot)
      */
-    SPEND_TAPROOT;
+    SPEND_TAPROOT,
+    /**
+     * P2SH multisig
+     */
+    SPEND_MULTISIG;
     public companion object
 }
 
@@ -2829,6 +2950,12 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
+
+
+
+
 
 
 

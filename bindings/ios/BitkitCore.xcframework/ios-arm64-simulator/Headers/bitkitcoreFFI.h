@@ -342,13 +342,6 @@ typedef void (*UniffiCallbackInterfaceTrezorUiCallbackMethod1)(uint64_t, int8_t,
     );
 
 #endif
-#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD2
-#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD2
-typedef void (*UniffiCallbackInterfaceTrezorUiCallbackMethod2)(uint64_t, RustBuffer, int8_t* _Nonnull, 
-        RustCallStatus *_Nonnull uniffiCallStatus
-    );
-
-#endif
 #ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK
 #define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK
 typedef struct UniffiVTableCallbackInterfaceTrezorTransportCallback {
@@ -372,7 +365,6 @@ typedef struct UniffiVTableCallbackInterfaceTrezorTransportCallback {
 typedef struct UniffiVTableCallbackInterfaceTrezorUiCallback {
     UniffiCallbackInterfaceTrezorUiCallbackMethod0 _Nonnull onPinRequest;
     UniffiCallbackInterfaceTrezorUiCallbackMethod1 _Nonnull onPassphraseRequest;
-    UniffiCallbackInterfaceTrezorUiCallbackMethod2 _Nonnull onButtonRequest;
     UniffiCallbackInterfaceFree _Nonnull uniffiFree;
 } UniffiVTableCallbackInterfaceTrezorUiCallback;
 
@@ -470,11 +462,6 @@ RustBuffer uniffi_bitkitcore_fn_method_trezoruicallback_on_pin_request(void*_Non
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORUICALLBACK_ON_PASSPHRASE_REQUEST
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORUICALLBACK_ON_PASSPHRASE_REQUEST
 RustBuffer uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request(void*_Nonnull ptr, int8_t on_device, RustCallStatus *_Nonnull out_status
-);
-#endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORUICALLBACK_ON_BUTTON_REQUEST
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_TREZORUICALLBACK_ON_BUTTON_REQUEST
-int8_t uniffi_bitkitcore_fn_method_trezoruicallback_on_button_request(void*_Nonnull ptr, RustBuffer code, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITY_WIPE_ALL
@@ -880,6 +867,12 @@ uint64_t uniffi_bitkitcore_fn_func_trezor_get_connected_device(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_DEVICE_FINGERPRINT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_DEVICE_FINGERPRINT
+uint64_t uniffi_bitkitcore_fn_func_trezor_get_device_fingerprint(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_FEATURES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_FEATURES
 uint64_t uniffi_bitkitcore_fn_func_trezor_get_features(void
@@ -889,12 +882,6 @@ uint64_t uniffi_bitkitcore_fn_func_trezor_get_features(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_PUBLIC_KEY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_PUBLIC_KEY
 uint64_t uniffi_bitkitcore_fn_func_trezor_get_public_key(RustBuffer params
-);
-#endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_INIT_BLE
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_INIT_BLE
-void uniffi_bitkitcore_fn_func_trezor_init_ble(RustCallStatus *_Nonnull out_status
-    
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_INITIALIZE
@@ -950,6 +937,11 @@ uint64_t uniffi_bitkitcore_fn_func_trezor_sign_message(RustBuffer params
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_TX
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_TX
 uint64_t uniffi_bitkitcore_fn_func_trezor_sign_tx(RustBuffer params
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_TX_FROM_PSBT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SIGN_TX_FROM_PSBT
+uint64_t uniffi_bitkitcore_fn_func_trezor_sign_tx_from_psbt(RustBuffer psbt_base64, RustBuffer network
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_VERIFY_MESSAGE
@@ -1803,6 +1795,12 @@ uint16_t uniffi_bitkitcore_checksum_func_trezor_get_connected_device(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_DEVICE_FINGERPRINT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_DEVICE_FINGERPRINT
+uint16_t uniffi_bitkitcore_checksum_func_trezor_get_device_fingerprint(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_FEATURES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_FEATURES
 uint16_t uniffi_bitkitcore_checksum_func_trezor_get_features(void
@@ -1812,12 +1810,6 @@ uint16_t uniffi_bitkitcore_checksum_func_trezor_get_features(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_PUBLIC_KEY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_PUBLIC_KEY
 uint16_t uniffi_bitkitcore_checksum_func_trezor_get_public_key(void
-    
-);
-#endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_INIT_BLE
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_INIT_BLE
-uint16_t uniffi_bitkitcore_checksum_func_trezor_init_ble(void
     
 );
 #endif
@@ -1878,6 +1870,12 @@ uint16_t uniffi_bitkitcore_checksum_func_trezor_sign_message(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TX
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TX
 uint16_t uniffi_bitkitcore_checksum_func_trezor_sign_tx(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TX_FROM_PSBT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TX_FROM_PSBT
+uint16_t uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt(void
     
 );
 #endif
@@ -2076,12 +2074,6 @@ uint16_t uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_PASSPHRASE_REQUEST
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_PASSPHRASE_REQUEST
 uint16_t uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request(void
-    
-);
-#endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_BUTTON_REQUEST
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_BUTTON_REQUEST
-uint16_t uniffi_bitkitcore_checksum_method_trezoruicallback_on_button_request(void
     
 );
 #endif

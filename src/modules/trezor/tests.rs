@@ -263,6 +263,8 @@ mod tests {
             amount: 100000,
             script_type: TrezorScriptType::SpendWitness,
             sequence: Some(0xFFFFFFFD),
+            orig_hash: None,
+            orig_index: None,
         };
 
         let tc_input: trezor_connect_rs::SignTxInput = input.into();
@@ -283,6 +285,8 @@ mod tests {
             amount: 90000,
             script_type: None,
             op_return_data: None,
+            orig_hash: None,
+            orig_index: None,
         };
 
         let tc_output: trezor_connect_rs::SignTxOutput = output.into();
@@ -300,6 +304,8 @@ mod tests {
             amount: 5000,
             script_type: Some(TrezorScriptType::SpendWitness),
             op_return_data: None,
+            orig_hash: None,
+            orig_index: None,
         };
 
         let tc_output: trezor_connect_rs::SignTxOutput = output.into();
@@ -318,6 +324,8 @@ mod tests {
             amount: 0,
             script_type: None,
             op_return_data: Some("deadbeef".to_string()),
+            orig_hash: None,
+            orig_index: None,
         };
 
         let tc_output: trezor_connect_rs::SignTxOutput = output.into();
@@ -338,6 +346,8 @@ mod tests {
                 amount: 100000,
                 script_type: TrezorScriptType::SpendWitness,
                 sequence: None,
+                orig_hash: None,
+                orig_index: None,
             }],
             outputs: vec![TrezorTxOutput {
                 address: Some("bc1q...".to_string()),
@@ -345,10 +355,13 @@ mod tests {
                 amount: 90000,
                 script_type: None,
                 op_return_data: None,
+                orig_hash: None,
+                orig_index: None,
             }],
             coin: Some("Bitcoin".to_string()),
             lock_time: Some(0),
             version: Some(2),
+            prev_txs: vec![],
         };
 
         let tc_params: trezor_connect_rs::SignTxParams = params.into();

@@ -108,6 +108,8 @@ pub enum TrezorScriptType {
     SpendWitness,
     /// P2TR (Taproot)
     SpendTaproot,
+    /// P2SH multisig
+    SpendMultisig,
 }
 
 impl From<TrezorScriptType> for trezor_connect_rs::ScriptType {
@@ -117,6 +119,7 @@ impl From<TrezorScriptType> for trezor_connect_rs::ScriptType {
             TrezorScriptType::SpendP2shWitness => trezor_connect_rs::ScriptType::SpendP2SHWitness,
             TrezorScriptType::SpendWitness => trezor_connect_rs::ScriptType::SpendWitness,
             TrezorScriptType::SpendTaproot => trezor_connect_rs::ScriptType::SpendTaproot,
+            TrezorScriptType::SpendMultisig => trezor_connect_rs::ScriptType::SpendMultisig,
         }
     }
 }
@@ -197,6 +200,12 @@ pub struct TrezorPublicKeyResponse {
     pub public_key: String,
     /// Chain code (hex encoded)
     pub chain_code: String,
+    /// Parent key fingerprint
+    pub fingerprint: u32,
+    /// Derivation depth
+    pub depth: u32,
+    /// Master root fingerprint (from the device's master seed)
+    pub root_fingerprint: Option<u32>,
 }
 
 impl From<trezor_connect_rs::PublicKeyResponse> for TrezorPublicKeyResponse {
@@ -206,6 +215,9 @@ impl From<trezor_connect_rs::PublicKeyResponse> for TrezorPublicKeyResponse {
             path: r.serialized_path,
             public_key: r.public_key,
             chain_code: r.chain_code,
+            fingerprint: r.fingerprint,
+            depth: r.depth,
+            root_fingerprint: r.root_fingerprint,
         }
     }
 }
@@ -289,6 +301,10 @@ pub struct TrezorTxInput {
     pub script_type: TrezorScriptType,
     /// Sequence number (default: 0xFFFFFFFD for RBF)
     pub sequence: Option<u32>,
+    /// Original transaction hash for RBF replacement (hex encoded)
+    pub orig_hash: Option<String>,
+    /// Original input index for RBF replacement
+    pub orig_index: Option<u32>,
 }
 
 /// Transaction output for signing.
@@ -304,6 +320,47 @@ pub struct TrezorTxOutput {
     pub script_type: Option<TrezorScriptType>,
     /// OP_RETURN data (hex encoded, for data outputs)
     pub op_return_data: Option<String>,
+    /// Original transaction hash for RBF replacement (hex encoded)
+    pub orig_hash: Option<String>,
+    /// Original output index for RBF replacement
+    pub orig_index: Option<u32>,
+}
+
+/// Previous transaction data (for non-SegWit input verification).
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct TrezorPrevTx {
+    /// Transaction hash (hex encoded)
+    pub hash: String,
+    /// Transaction version
+    pub version: u32,
+    /// Lock time
+    pub lock_time: u32,
+    /// Transaction inputs
+    pub inputs: Vec<TrezorPrevTxInput>,
+    /// Transaction outputs
+    pub outputs: Vec<TrezorPrevTxOutput>,
+}
+
+/// Input of a previous transaction.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct TrezorPrevTxInput {
+    /// Previous transaction hash (hex encoded)
+    pub prev_hash: String,
+    /// Previous output index
+    pub prev_index: u32,
+    /// Script signature (hex encoded)
+    pub script_sig: String,
+    /// Sequence number
+    pub sequence: u32,
+}
+
+/// Output of a previous transaction.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct TrezorPrevTxOutput {
+    /// Amount in satoshis
+    pub amount: u64,
+    /// Script pubkey (hex encoded)
+    pub script_pubkey: String,
 }
 
 /// Parameters for signing a transaction.
@@ -319,6 +376,8 @@ pub struct TrezorSignTxParams {
     pub lock_time: Option<u32>,
     /// Version (default: 2)
     pub version: Option<u32>,
+    /// Previous transactions (for non-SegWit input verification)
+    pub prev_txs: Vec<TrezorPrevTx>,
 }
 
 /// Signed transaction result.
@@ -339,6 +398,8 @@ impl From<TrezorTxInput> for trezor_connect_rs::SignTxInput {
             amount: input.amount,
             script_type: input.script_type.into(),
             sequence: input.sequence,
+            orig_hash: input.orig_hash,
+            orig_index: input.orig_index,
         }
     }
 }
@@ -351,6 +412,40 @@ impl From<TrezorTxOutput> for trezor_connect_rs::SignTxOutput {
             amount: output.amount,
             script_type: output.script_type.map(|s| s.into()),
             op_return_data: output.op_return_data,
+            orig_hash: output.orig_hash,
+            orig_index: output.orig_index,
+        }
+    }
+}
+
+impl From<TrezorPrevTxInput> for trezor_connect_rs::SignTxPrevTxInput {
+    fn from(input: TrezorPrevTxInput) -> Self {
+        Self {
+            prev_hash: input.prev_hash,
+            prev_index: input.prev_index,
+            script_sig: input.script_sig,
+            sequence: input.sequence,
+        }
+    }
+}
+
+impl From<TrezorPrevTxOutput> for trezor_connect_rs::SignTxPrevTxOutput {
+    fn from(output: TrezorPrevTxOutput) -> Self {
+        Self {
+            amount: output.amount,
+            script_pubkey: output.script_pubkey,
+        }
+    }
+}
+
+impl From<TrezorPrevTx> for trezor_connect_rs::SignTxPrevTx {
+    fn from(tx: TrezorPrevTx) -> Self {
+        Self {
+            hash: tx.hash,
+            version: tx.version,
+            lock_time: tx.lock_time,
+            inputs: tx.inputs.into_iter().map(|i| i.into()).collect(),
+            outputs: tx.outputs.into_iter().map(|o| o.into()).collect(),
         }
     }
 }
@@ -363,6 +458,7 @@ impl From<TrezorSignTxParams> for trezor_connect_rs::SignTxParams {
             coin: params.coin,
             lock_time: params.lock_time,
             version: params.version,
+            prev_txs: params.prev_txs.into_iter().map(|t| t.into()).collect(),
         }
     }
 }

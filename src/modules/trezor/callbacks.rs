@@ -6,8 +6,6 @@
 use std::sync::Arc;
 use once_cell::sync::OnceCell;
 
-use super::TrezorError;
-
 // ============================================================================
 // Transport callback types
 // ============================================================================
@@ -165,22 +163,36 @@ pub trait TrezorTransportCallback: Send + Sync {
     fn log_debug(&self, tag: String, message: String);
 }
 
-/// Callback interface for Trezor UI operations (PIN, passphrase, button)
+// ============================================================================
+// UI callback trait
+// ============================================================================
+
+/// Callback interface for handling PIN and passphrase requests from the Trezor device.
+///
+/// The native layer (iOS/Android) should implement this to show PIN/passphrase
+/// input UI when the device requests it during operations like signing.
+///
+/// Methods return `String`:
+/// - Empty string (`""`) = cancel the request
+/// - Non-empty string = the user's input (PIN or passphrase)
+///
+/// This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
 #[uniffi::export(with_foreign)]
 pub trait TrezorUiCallback: Send + Sync {
-    /// Called when the device requests PIN entry
-    /// Returns the PIN entered by the user, or empty string to cancel
+    /// Called when the device requests a PIN.
+    ///
+    /// Show a PIN matrix UI and return the matrix-encoded PIN string.
+    /// Return empty string to cancel.
     fn on_pin_request(&self) -> String;
 
-    /// Called when the device requests passphrase entry
-    /// on_device: true if passphrase should be entered on device
-    /// Returns the passphrase entered by the user, or empty string to cancel
+    /// Called when the device requests a passphrase.
+    ///
+    /// If `on_device` is true, the user should enter on the Trezor itself —
+    /// return any non-empty string (e.g., "ok") to acknowledge.
+    ///
+    /// If `on_device` is false, show a passphrase input UI and return the value.
+    /// Return empty string to cancel.
     fn on_passphrase_request(&self, on_device: bool) -> String;
-
-    /// Called when the device requests button confirmation
-    /// code: the button request code (e.g., "ButtonRequest_ConfirmOutput")
-    /// Returns true if user confirmed, false if cancelled
-    fn on_button_request(&self, code: String) -> bool;
 }
 
 // ============================================================================
@@ -204,15 +216,19 @@ pub fn trezor_set_transport_callback(callback: Arc<dyn TrezorTransportCallback>)
     let _ = TRANSPORT_CALLBACK.set(callback);
 }
 
-/// Set the UI callback for PIN/passphrase/button requests
-#[uniffi::export]
-pub fn trezor_set_ui_callback(callback: Arc<dyn TrezorUiCallback>) {
-    let _ = UI_CALLBACK.set(callback);
-}
-
 /// Get the transport callback (internal use)
 pub fn get_transport_callback() -> Option<&'static Arc<dyn TrezorTransportCallback>> {
     TRANSPORT_CALLBACK.get()
+}
+
+/// Set the UI callback for handling PIN and passphrase requests.
+///
+/// This should be called before connecting to a Trezor device if you want
+/// the library to handle PIN/passphrase requests via your UI instead of
+/// returning errors.
+#[uniffi::export]
+pub fn trezor_set_ui_callback(callback: Arc<dyn TrezorUiCallback>) {
+    let _ = UI_CALLBACK.set(callback);
 }
 
 /// Get the UI callback (internal use)
@@ -227,17 +243,6 @@ pub fn get_ui_callback() -> Option<&'static Arc<dyn TrezorUiCallback>> {
 /// Track if BLE has been initialized on Android
 #[cfg(target_os = "android")]
 static BLE_INITIALIZED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-
-/// Initialize the Bluetooth (BLE) subsystem.
-///
-/// On Android: This is a no-op as BLE is initialized via JNI (BluetoothInit.nativeInit).
-/// On other platforms: BLE works natively without special initialization.
-#[uniffi::export]
-pub fn trezor_init_ble() -> Result<(), TrezorError> {
-    // On Android, BLE is initialized via JNI in BluetoothInit.nativeInit()
-    // On other platforms, BLE works natively without special init.
-    Ok(())
-}
 
 /// Check if BLE has been initialized.
 ///

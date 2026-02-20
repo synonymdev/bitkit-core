@@ -5,6 +5,7 @@
 
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use base64::{engine::general_purpose, Engine as _};
 
 use crate::modules::trezor::{
     TrezorAddressResponse, TrezorDeviceInfo, TrezorError, TrezorFeatures,
@@ -194,6 +195,26 @@ impl TransportCallback for CallbackAdapter {
 
     fn log_debug(&self, tag: &str, message: &str) {
         self.callback.log_debug(tag.to_string(), message.to_string());
+    }
+}
+
+/// Adapter bridging bitkit-core's `TrezorUiCallback` (String-based, UniFFI compatible)
+/// to trezor-connect-rs's `TrezorUiCallback` (Option-based).
+///
+/// Conversion: empty string → `None` (cancel), non-empty → `Some(value)` (user input).
+struct UiCallbackAdapter {
+    callback: Arc<dyn crate::TrezorUiCallback>,
+}
+
+impl trezor_connect_rs::TrezorUiCallback for UiCallbackAdapter {
+    fn on_pin_request(&self) -> Option<String> {
+        let result = self.callback.on_pin_request();
+        if result.is_empty() { None } else { Some(result) }
+    }
+
+    fn on_passphrase_request(&self, on_device: bool) -> Option<String> {
+        let result = self.callback.on_passphrase_request(on_device);
+        if result.is_empty() { None } else { Some(result) }
     }
 }
 
@@ -442,11 +463,10 @@ impl TrezorManager {
                 *connected_path = Some(device.path.clone());
             }
 
-            // Determine transport type based on path
-            let transport_type = if device.path.starts_with("ble:") {
-                TransportType::Bluetooth
-            } else {
-                TransportType::Usb
+            // Determine transport type from cached device info
+            let transport_type = match device.transport_type {
+                TrezorTransportType::Bluetooth => TransportType::Bluetooth,
+                TrezorTransportType::Usb => TransportType::Usb,
             };
 
             // Create device info
@@ -462,6 +482,13 @@ impl TrezorManager {
 
             // Create connected device and initialize it
             let mut connected = ConnectedDevice::new(device_info, Box::new(transport), session);
+
+            // Wire UI callback if set
+            if let Some(ui_cb) = crate::modules::trezor::get_ui_callback() {
+                let adapter = Arc::new(UiCallbackAdapter { callback: ui_cb.clone() });
+                connected.set_ui_callback(adapter);
+            }
+
             let features = connected.initialize().await.map_err(TrezorError::from)?;
 
             // Store the connected device for reuse
@@ -491,6 +518,12 @@ impl TrezorManager {
             let trezor = inner.as_mut().ok_or(TrezorError::NotInitialized)?;
 
             let mut connected = trezor.connect(&device).await.map_err(TrezorError::from)?;
+
+            // Wire UI callback if set
+            if let Some(ui_cb) = crate::modules::trezor::get_ui_callback() {
+                let adapter = Arc::new(UiCallbackAdapter { callback: ui_cb.clone() });
+                connected.set_ui_callback(adapter);
+            }
 
             // Initialize the device and get features
             let features = connected.initialize().await.map_err(TrezorError::from)?;
@@ -613,6 +646,65 @@ impl TrezorManager {
             })?;
         }
 
+        // Reject unsupported input script types
+        for (i, input) in params.inputs.iter().enumerate() {
+            match input.script_type {
+                TrezorScriptType::SpendMultisig => return Err(TrezorError::DeviceError {
+                    error_details: format!("Input {}: Multisig inputs are not currently supported.", i),
+                }),
+                _ => {}
+            }
+        }
+
+        // Validate at least 1 input and 1 output
+        if params.inputs.is_empty() {
+            return Err(TrezorError::DeviceError {
+                error_details: "Transaction must have at least one input.".to_string(),
+            });
+        }
+        if params.outputs.is_empty() {
+            return Err(TrezorError::DeviceError {
+                error_details: "Transaction must have at least one output.".to_string(),
+            });
+        }
+
+        // Validate each output is exactly one mode: External, Change, or OpReturn
+        for (i, output) in params.outputs.iter().enumerate() {
+            let has_address = output.address.is_some();
+            let has_path = output.path.is_some();
+            let has_op_return = output.op_return_data.is_some();
+
+            match (has_address, has_path, has_op_return) {
+                (true, false, false) => {
+                    // External output - valid
+                }
+                (false, true, false) => {
+                    // Change output - must have script_type
+                    if output.script_type.is_none() {
+                        return Err(TrezorError::DeviceError {
+                            error_details: format!("Output {}: change output must specify script_type.", i),
+                        });
+                    }
+                }
+                (false, false, true) => {
+                    // OP_RETURN output - amount must be 0
+                    if output.amount != 0 {
+                        return Err(TrezorError::DeviceError {
+                            error_details: format!("Output {}: OP_RETURN output must have amount 0.", i),
+                        });
+                    }
+                }
+                _ => {
+                    return Err(TrezorError::DeviceError {
+                        error_details: format!(
+                            "Output {}: must be exactly one of: external (address only), change (path only), or OP_RETURN (op_return_data only).",
+                            i
+                        ),
+                    });
+                }
+            }
+        }
+
         // Validate change output paths
         for (i, output) in params.outputs.iter().enumerate() {
             if let Some(ref path) = output.path {
@@ -634,6 +726,54 @@ impl TrezorManager {
         let tc_params: SignTxParams = params.into();
         let response = device.sign_transaction(tc_params).await.map_err(TrezorError::from)?;
 
+        Ok(TrezorSignedTx::from(response))
+    }
+
+    /// Sign a Bitcoin transaction from a base64-encoded PSBT.
+    ///
+    /// Parses the PSBT, extracts inputs/outputs/prev_txs, and signs via the
+    /// connected Trezor device.
+    ///
+    /// # Arguments
+    /// * `psbt_base64` - Base64-encoded PSBT data
+    /// * `network` - Bitcoin network name: "bitcoin", "testnet", "signet", "regtest".
+    ///   Defaults to "bitcoin" (mainnet) if None.
+    pub async fn sign_tx_from_psbt(
+        &self,
+        psbt_base64: String,
+        network: Option<String>,
+    ) -> Result<TrezorSignedTx, TrezorError> {
+        let btc_network = match network.as_deref() {
+            Some("testnet") => bitcoin::Network::Testnet,
+            Some("signet") => bitcoin::Network::Signet,
+            Some("regtest") => bitcoin::Network::Regtest,
+            _ => bitcoin::Network::Bitcoin,
+        };
+
+        let psbt_bytes = general_purpose::STANDARD.decode(&psbt_base64).map_err(|e| TrezorError::DeviceError {
+            error_details: format!("Invalid PSBT base64: {}", e),
+        })?;
+        let sign_params = trezor_connect_rs::psbt::psbt_to_sign_tx_params(&psbt_bytes, btc_network)
+            .map_err(|e| TrezorError::DeviceError {
+                error_details: format!("PSBT conversion error: {}", e),
+            })?;
+
+        // Reject unsupported script types from PSBT
+        for (i, input) in sign_params.inputs.iter().enumerate() {
+            match input.script_type {
+                trezor_connect_rs::ScriptType::SpendMultisig => return Err(TrezorError::DeviceError {
+                    error_details: format!("PSBT input {}: Multisig inputs are not currently supported.", i),
+                }),
+                _ => {}
+            }
+        }
+
+        let mut connected_device = self.connected_device.lock().await;
+        let device = connected_device
+            .as_mut()
+            .ok_or(TrezorError::NotConnected)?;
+
+        let response = device.sign_transaction(sign_params).await.map_err(TrezorError::from)?;
         Ok(TrezorSignedTx::from(response))
     }
 
@@ -713,6 +853,27 @@ impl TrezorManager {
             .as_ref()
             .and_then(|device| device.features())
             .map(|f| TrezorFeatures::from(f.clone()))
+    }
+
+    /// Get the device's master root fingerprint as an 8-character hex string.
+    ///
+    /// This is a convenience wrapper around `get_public_key()` that returns
+    /// the root fingerprint in the standard format used in output descriptors
+    /// (4 bytes, 8 hex chars, e.g., "73c5da0a").
+    ///
+    /// Internally calls `get_public_key` with `m/84'/0'/0'` and
+    /// `show_on_trezor: false`.
+    pub async fn get_device_fingerprint(&self) -> Result<String, TrezorError> {
+        let params = TrezorGetPublicKeyParams {
+            path: "m/84'/0'/0'".to_string(),
+            show_on_trezor: false,
+            coin: None,
+        };
+        let response = self.get_public_key(params).await?;
+        let fingerprint = response.root_fingerprint.ok_or(TrezorError::DeviceError {
+            error_details: "Device did not return root fingerprint".to_string(),
+        })?;
+        Ok(format!("{:08x}", fingerprint))
     }
 
     /// Clear stored credentials for a device.

@@ -937,9 +937,6 @@ internal interface UniffiCallbackInterfaceTrezorUiCallbackMethod0: com.sun.jna.C
 internal interface UniffiCallbackInterfaceTrezorUiCallbackMethod1: com.sun.jna.Callback {
     public fun callback(`uniffiHandle`: Long,`onDevice`: Byte,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
 }
-internal interface UniffiCallbackInterfaceTrezorUiCallbackMethod2: com.sun.jna.Callback {
-    public fun callback(`uniffiHandle`: Long,`code`: RustBufferByValue,`uniffiOutReturn`: ByteByReference,uniffiCallStatus: UniffiRustCallStatus,)
-}
 @Structure.FieldOrder("enumerateDevices", "openDevice", "closeDevice", "readChunk", "writeChunk", "getChunkSize", "callMessage", "getPairingCode", "saveThpCredential", "loadThpCredential", "logDebug", "uniffiFree")
 internal open class UniffiVTableCallbackInterfaceTrezorTransportCallbackStruct(
     @JvmField public var `enumerateDevices`: UniffiCallbackInterfaceTrezorTransportCallbackMethod0?,
@@ -1031,11 +1028,10 @@ internal fun UniffiVTableCallbackInterfaceTrezorTransportCallback.uniffiSetValue
 }
 
 internal typealias UniffiVTableCallbackInterfaceTrezorTransportCallbackUniffiByValue = UniffiVTableCallbackInterfaceTrezorTransportCallbackStruct.UniffiByValue
-@Structure.FieldOrder("onPinRequest", "onPassphraseRequest", "onButtonRequest", "uniffiFree")
+@Structure.FieldOrder("onPinRequest", "onPassphraseRequest", "uniffiFree")
 internal open class UniffiVTableCallbackInterfaceTrezorUiCallbackStruct(
     @JvmField public var `onPinRequest`: UniffiCallbackInterfaceTrezorUiCallbackMethod0?,
     @JvmField public var `onPassphraseRequest`: UniffiCallbackInterfaceTrezorUiCallbackMethod1?,
-    @JvmField public var `onButtonRequest`: UniffiCallbackInterfaceTrezorUiCallbackMethod2?,
     @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
@@ -1044,8 +1040,6 @@ internal open class UniffiVTableCallbackInterfaceTrezorUiCallbackStruct(
         
         `onPassphraseRequest` = null,
         
-        `onButtonRequest` = null,
-        
         `uniffiFree` = null,
         
     )
@@ -1053,9 +1047,8 @@ internal open class UniffiVTableCallbackInterfaceTrezorUiCallbackStruct(
     internal class UniffiByValue(
         `onPinRequest`: UniffiCallbackInterfaceTrezorUiCallbackMethod0?,
         `onPassphraseRequest`: UniffiCallbackInterfaceTrezorUiCallbackMethod1?,
-        `onButtonRequest`: UniffiCallbackInterfaceTrezorUiCallbackMethod2?,
         `uniffiFree`: UniffiCallbackInterfaceFree?,
-    ): UniffiVTableCallbackInterfaceTrezorUiCallback(`onPinRequest`,`onPassphraseRequest`,`onButtonRequest`,`uniffiFree`,), Structure.ByValue
+    ): UniffiVTableCallbackInterfaceTrezorUiCallback(`onPinRequest`,`onPassphraseRequest`,`uniffiFree`,), Structure.ByValue
 }
 
 internal typealias UniffiVTableCallbackInterfaceTrezorUiCallback = UniffiVTableCallbackInterfaceTrezorUiCallbackStruct
@@ -1063,13 +1056,11 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallback = UniffiVTableC
 internal fun UniffiVTableCallbackInterfaceTrezorUiCallback.uniffiSetValue(other: UniffiVTableCallbackInterfaceTrezorUiCallback) {
     `onPinRequest` = other.`onPinRequest`
     `onPassphraseRequest` = other.`onPassphraseRequest`
-    `onButtonRequest` = other.`onButtonRequest`
     `uniffiFree` = other.`uniffiFree`
 }
 internal fun UniffiVTableCallbackInterfaceTrezorUiCallback.uniffiSetValue(other: UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue) {
     `onPinRequest` = other.`onPinRequest`
     `onPassphraseRequest` = other.`onPassphraseRequest`
-    `onButtonRequest` = other.`onButtonRequest`
     `uniffiFree` = other.`uniffiFree`
 }
 
@@ -1661,13 +1652,13 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_trezor_get_connected_device() != 48383.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_trezor_get_device_fingerprint() != 20344.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_trezor_get_features() != 13970.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_get_public_key() != 13743.toShort()) {
-            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-        }
-        if (uniffi_bitkitcore_checksum_func_trezor_init_ble() != 11207.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_initialize() != 16053.toShort()) {
@@ -1691,13 +1682,16 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_trezor_set_transport_callback() != 30209.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_set_ui_callback() != 28036.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_set_ui_callback() != 52321.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_sign_message() != 2925.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_sign_tx() != 42467.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt() != 20171.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_verify_message() != 50739.toShort()) {
@@ -1793,13 +1787,10 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_method_trezortransportcallback_log_debug() != 44848.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 9322.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 50474.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 51926.toShort()) {
-            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-        }
-        if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_button_request() != 58299.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 63487.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
     }
@@ -2040,13 +2031,13 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_trezor_get_connected_device(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_trezor_get_device_fingerprint(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_get_features(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_get_public_key(
-    ): Short
-    @JvmStatic
-    external fun uniffi_bitkitcore_checksum_func_trezor_init_ble(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_initialize(
@@ -2077,6 +2068,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_sign_tx(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_verify_message(
@@ -2176,9 +2170,6 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request(
-    ): Short
-    @JvmStatic
-    external fun uniffi_bitkitcore_checksum_method_trezoruicallback_on_button_request(
     ): Short
     @JvmStatic
     external fun ffi_bitkitcore_uniffi_contract_version(
@@ -2309,12 +2300,6 @@ internal object UniffiLib : Library {
         `onDevice`: Byte,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
-    @JvmStatic
-    external fun uniffi_bitkitcore_fn_method_trezoruicallback_on_button_request(
-        `ptr`: Pointer?,
-        `code`: RustBufferByValue,
-        uniffiCallStatus: UniffiRustCallStatus,
-    ): Byte
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_activity_wipe_all(
         uniffiCallStatus: UniffiRustCallStatus,
@@ -2741,16 +2726,15 @@ internal object UniffiLib : Library {
     external fun uniffi_bitkitcore_fn_func_trezor_get_connected_device(
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_trezor_get_device_fingerprint(
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_get_features(
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_get_public_key(
         `params`: RustBufferByValue,
     ): Long
-    @JvmStatic
-    external fun uniffi_bitkitcore_fn_func_trezor_init_ble(
-        uniffiCallStatus: UniffiRustCallStatus,
-    ): Unit
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_initialize(
         `credentialPath`: RustBufferByValue,
@@ -2788,6 +2772,11 @@ internal object UniffiLib : Library {
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_sign_tx(
         `params`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_trezor_sign_tx_from_psbt(
+        `psbtBase64`: RustBufferByValue,
+        `network`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_verify_message(
@@ -4056,7 +4045,16 @@ internal object uniffiCallbackInterfaceTrezorTransportCallback {
 
 
 /**
- * Callback interface for Trezor UI operations (PIN, passphrase, button)
+ * Callback interface for handling PIN and passphrase requests from the Trezor device.
+ *
+ * The native layer (iOS/Android) should implement this to show PIN/passphrase
+ * input UI when the device requests it during operations like signing.
+ *
+ * Methods return `String`:
+ * - Empty string (`""`) = cancel the request
+ * - Non-empty string = the user's input (PIN or passphrase)
+ *
+ * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
 public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
 
@@ -4150,8 +4148,10 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
 
     
     /**
-     * Called when the device requests PIN entry
-     * Returns the PIN entered by the user, or empty string to cancel
+     * Called when the device requests a PIN.
+     *
+     * Show a PIN matrix UI and return the matrix-encoded PIN string.
+     * Return empty string to cancel.
      */
     public override fun `onPinRequest`(): kotlin.String {
         return FfiConverterString.lift(callWithPointer {
@@ -4165,9 +4165,13 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
     }
 
     /**
-     * Called when the device requests passphrase entry
-     * on_device: true if passphrase should be entered on device
-     * Returns the passphrase entered by the user, or empty string to cancel
+     * Called when the device requests a passphrase.
+     *
+     * If `on_device` is true, the user should enter on the Trezor itself —
+     * return any non-empty string (e.g., "ok") to acknowledge.
+     *
+     * If `on_device` is false, show a passphrase input UI and return the value.
+     * Return empty string to cancel.
      */
     public override fun `onPassphraseRequest`(`onDevice`: kotlin.Boolean): kotlin.String {
         return FfiConverterString.lift(callWithPointer {
@@ -4175,23 +4179,6 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
                 UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request(
                     it,
                     FfiConverterBoolean.lower(`onDevice`),
-                    uniffiRustCallStatus,
-                )
-            }
-        })
-    }
-
-    /**
-     * Called when the device requests button confirmation
-     * code: the button request code (e.g., "ButtonRequest_ConfirmOutput")
-     * Returns true if user confirmed, false if cancelled
-     */
-    public override fun `onButtonRequest`(`code`: kotlin.String): kotlin.Boolean {
-        return FfiConverterBoolean.lift(callWithPointer {
-            uniffiRustCall { uniffiRustCallStatus ->
-                UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_button_request(
-                    it,
-                    FfiConverterString.lower(`code`),
                     uniffiRustCallStatus,
                 )
             }
@@ -4277,25 +4264,6 @@ internal object uniffiCallbackInterfaceTrezorUiCallback {
             uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
         }
     }
-    internal object `onButtonRequest`: UniffiCallbackInterfaceTrezorUiCallbackMethod2 {
-        override fun callback (
-            `uniffiHandle`: Long,
-            `code`: RustBufferByValue,
-            `uniffiOutReturn`: ByteByReference,
-            uniffiCallStatus: UniffiRustCallStatus,
-        ) {
-            val uniffiObj = FfiConverterTypeTrezorUiCallback.handleMap.get(uniffiHandle)
-            val makeCall = { ->
-                uniffiObj.`onButtonRequest`(
-                    FfiConverterString.lift(`code`),
-                )
-            }
-            val writeReturn = { uniffiResultValue: kotlin.Boolean ->
-                uniffiOutReturn.setValue(FfiConverterBoolean.lower(uniffiResultValue))
-            }
-            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
-        }
-    }
     internal object uniffiFree: UniffiCallbackInterfaceFree {
         override fun callback(handle: Long) {
             FfiConverterTypeTrezorUiCallback.handleMap.remove(handle)
@@ -4305,7 +4273,6 @@ internal object uniffiCallbackInterfaceTrezorUiCallback {
     internal val vtable = UniffiVTableCallbackInterfaceTrezorUiCallback(
         `onPinRequest`,
         `onPassphraseRequest`,
-        `onButtonRequest`,
         uniffiFree,
     )
 
@@ -6443,6 +6410,87 @@ public object FfiConverterTypeTrezorGetPublicKeyParams: FfiConverterRustBuffer<T
 
 
 
+public object FfiConverterTypeTrezorPrevTx: FfiConverterRustBuffer<TrezorPrevTx> {
+    override fun read(buf: ByteBuffer): TrezorPrevTx {
+        return TrezorPrevTx(
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterSequenceTypeTrezorPrevTxInput.read(buf),
+            FfiConverterSequenceTypeTrezorPrevTxOutput.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: TrezorPrevTx): ULong = (
+            FfiConverterString.allocationSize(value.`hash`) +
+            FfiConverterUInt.allocationSize(value.`version`) +
+            FfiConverterUInt.allocationSize(value.`lockTime`) +
+            FfiConverterSequenceTypeTrezorPrevTxInput.allocationSize(value.`inputs`) +
+            FfiConverterSequenceTypeTrezorPrevTxOutput.allocationSize(value.`outputs`)
+    )
+
+    override fun write(value: TrezorPrevTx, buf: ByteBuffer) {
+        FfiConverterString.write(value.`hash`, buf)
+        FfiConverterUInt.write(value.`version`, buf)
+        FfiConverterUInt.write(value.`lockTime`, buf)
+        FfiConverterSequenceTypeTrezorPrevTxInput.write(value.`inputs`, buf)
+        FfiConverterSequenceTypeTrezorPrevTxOutput.write(value.`outputs`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeTrezorPrevTxInput: FfiConverterRustBuffer<TrezorPrevTxInput> {
+    override fun read(buf: ByteBuffer): TrezorPrevTxInput {
+        return TrezorPrevTxInput(
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: TrezorPrevTxInput): ULong = (
+            FfiConverterString.allocationSize(value.`prevHash`) +
+            FfiConverterUInt.allocationSize(value.`prevIndex`) +
+            FfiConverterString.allocationSize(value.`scriptSig`) +
+            FfiConverterUInt.allocationSize(value.`sequence`)
+    )
+
+    override fun write(value: TrezorPrevTxInput, buf: ByteBuffer) {
+        FfiConverterString.write(value.`prevHash`, buf)
+        FfiConverterUInt.write(value.`prevIndex`, buf)
+        FfiConverterString.write(value.`scriptSig`, buf)
+        FfiConverterUInt.write(value.`sequence`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeTrezorPrevTxOutput: FfiConverterRustBuffer<TrezorPrevTxOutput> {
+    override fun read(buf: ByteBuffer): TrezorPrevTxOutput {
+        return TrezorPrevTxOutput(
+            FfiConverterULong.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: TrezorPrevTxOutput): ULong = (
+            FfiConverterULong.allocationSize(value.`amount`) +
+            FfiConverterString.allocationSize(value.`scriptPubkey`)
+    )
+
+    override fun write(value: TrezorPrevTxOutput, buf: ByteBuffer) {
+        FfiConverterULong.write(value.`amount`, buf)
+        FfiConverterString.write(value.`scriptPubkey`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypeTrezorPublicKeyResponse: FfiConverterRustBuffer<TrezorPublicKeyResponse> {
     override fun read(buf: ByteBuffer): TrezorPublicKeyResponse {
         return TrezorPublicKeyResponse(
@@ -6450,6 +6498,9 @@ public object FfiConverterTypeTrezorPublicKeyResponse: FfiConverterRustBuffer<Tr
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterOptionalUInt.read(buf),
         )
     }
 
@@ -6457,7 +6508,10 @@ public object FfiConverterTypeTrezorPublicKeyResponse: FfiConverterRustBuffer<Tr
             FfiConverterString.allocationSize(value.`xpub`) +
             FfiConverterString.allocationSize(value.`path`) +
             FfiConverterString.allocationSize(value.`publicKey`) +
-            FfiConverterString.allocationSize(value.`chainCode`)
+            FfiConverterString.allocationSize(value.`chainCode`) +
+            FfiConverterUInt.allocationSize(value.`fingerprint`) +
+            FfiConverterUInt.allocationSize(value.`depth`) +
+            FfiConverterOptionalUInt.allocationSize(value.`rootFingerprint`)
     )
 
     override fun write(value: TrezorPublicKeyResponse, buf: ByteBuffer) {
@@ -6465,6 +6519,9 @@ public object FfiConverterTypeTrezorPublicKeyResponse: FfiConverterRustBuffer<Tr
         FfiConverterString.write(value.`path`, buf)
         FfiConverterString.write(value.`publicKey`, buf)
         FfiConverterString.write(value.`chainCode`, buf)
+        FfiConverterUInt.write(value.`fingerprint`, buf)
+        FfiConverterUInt.write(value.`depth`, buf)
+        FfiConverterOptionalUInt.write(value.`rootFingerprint`, buf)
     }
 }
 
@@ -6504,6 +6561,7 @@ public object FfiConverterTypeTrezorSignTxParams: FfiConverterRustBuffer<TrezorS
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalUInt.read(buf),
             FfiConverterOptionalUInt.read(buf),
+            FfiConverterSequenceTypeTrezorPrevTx.read(buf),
         )
     }
 
@@ -6512,7 +6570,8 @@ public object FfiConverterTypeTrezorSignTxParams: FfiConverterRustBuffer<TrezorS
             FfiConverterSequenceTypeTrezorTxOutput.allocationSize(value.`outputs`) +
             FfiConverterOptionalString.allocationSize(value.`coin`) +
             FfiConverterOptionalUInt.allocationSize(value.`lockTime`) +
-            FfiConverterOptionalUInt.allocationSize(value.`version`)
+            FfiConverterOptionalUInt.allocationSize(value.`version`) +
+            FfiConverterSequenceTypeTrezorPrevTx.allocationSize(value.`prevTxs`)
     )
 
     override fun write(value: TrezorSignTxParams, buf: ByteBuffer) {
@@ -6521,6 +6580,7 @@ public object FfiConverterTypeTrezorSignTxParams: FfiConverterRustBuffer<TrezorS
         FfiConverterOptionalString.write(value.`coin`, buf)
         FfiConverterOptionalUInt.write(value.`lockTime`, buf)
         FfiConverterOptionalUInt.write(value.`version`, buf)
+        FfiConverterSequenceTypeTrezorPrevTx.write(value.`prevTxs`, buf)
     }
 }
 
@@ -6627,6 +6687,8 @@ public object FfiConverterTypeTrezorTxInput: FfiConverterRustBuffer<TrezorTxInpu
             FfiConverterULong.read(buf),
             FfiConverterTypeTrezorScriptType.read(buf),
             FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalUInt.read(buf),
         )
     }
 
@@ -6636,7 +6698,9 @@ public object FfiConverterTypeTrezorTxInput: FfiConverterRustBuffer<TrezorTxInpu
             FfiConverterString.allocationSize(value.`path`) +
             FfiConverterULong.allocationSize(value.`amount`) +
             FfiConverterTypeTrezorScriptType.allocationSize(value.`scriptType`) +
-            FfiConverterOptionalUInt.allocationSize(value.`sequence`)
+            FfiConverterOptionalUInt.allocationSize(value.`sequence`) +
+            FfiConverterOptionalString.allocationSize(value.`origHash`) +
+            FfiConverterOptionalUInt.allocationSize(value.`origIndex`)
     )
 
     override fun write(value: TrezorTxInput, buf: ByteBuffer) {
@@ -6646,6 +6710,8 @@ public object FfiConverterTypeTrezorTxInput: FfiConverterRustBuffer<TrezorTxInpu
         FfiConverterULong.write(value.`amount`, buf)
         FfiConverterTypeTrezorScriptType.write(value.`scriptType`, buf)
         FfiConverterOptionalUInt.write(value.`sequence`, buf)
+        FfiConverterOptionalString.write(value.`origHash`, buf)
+        FfiConverterOptionalUInt.write(value.`origIndex`, buf)
     }
 }
 
@@ -6660,6 +6726,8 @@ public object FfiConverterTypeTrezorTxOutput: FfiConverterRustBuffer<TrezorTxOut
             FfiConverterULong.read(buf),
             FfiConverterOptionalTypeTrezorScriptType.read(buf),
             FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalUInt.read(buf),
         )
     }
 
@@ -6668,7 +6736,9 @@ public object FfiConverterTypeTrezorTxOutput: FfiConverterRustBuffer<TrezorTxOut
             FfiConverterOptionalString.allocationSize(value.`path`) +
             FfiConverterULong.allocationSize(value.`amount`) +
             FfiConverterOptionalTypeTrezorScriptType.allocationSize(value.`scriptType`) +
-            FfiConverterOptionalString.allocationSize(value.`opReturnData`)
+            FfiConverterOptionalString.allocationSize(value.`opReturnData`) +
+            FfiConverterOptionalString.allocationSize(value.`origHash`) +
+            FfiConverterOptionalUInt.allocationSize(value.`origIndex`)
     )
 
     override fun write(value: TrezorTxOutput, buf: ByteBuffer) {
@@ -6677,6 +6747,8 @@ public object FfiConverterTypeTrezorTxOutput: FfiConverterRustBuffer<TrezorTxOut
         FfiConverterULong.write(value.`amount`, buf)
         FfiConverterOptionalTypeTrezorScriptType.write(value.`scriptType`, buf)
         FfiConverterOptionalString.write(value.`opReturnData`, buf)
+        FfiConverterOptionalString.write(value.`origHash`, buf)
+        FfiConverterOptionalUInt.write(value.`origIndex`, buf)
     }
 }
 
@@ -9984,6 +10056,81 @@ public object FfiConverterSequenceTypeTrezorDeviceInfo: FfiConverterRustBuffer<L
 
 
 
+public object FfiConverterSequenceTypeTrezorPrevTx: FfiConverterRustBuffer<List<TrezorPrevTx>> {
+    override fun read(buf: ByteBuffer): List<TrezorPrevTx> {
+        val len = buf.getInt()
+        return List<TrezorPrevTx>(len) {
+            FfiConverterTypeTrezorPrevTx.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<TrezorPrevTx>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeTrezorPrevTx.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<TrezorPrevTx>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeTrezorPrevTx.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeTrezorPrevTxInput: FfiConverterRustBuffer<List<TrezorPrevTxInput>> {
+    override fun read(buf: ByteBuffer): List<TrezorPrevTxInput> {
+        val len = buf.getInt()
+        return List<TrezorPrevTxInput>(len) {
+            FfiConverterTypeTrezorPrevTxInput.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<TrezorPrevTxInput>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeTrezorPrevTxInput.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<TrezorPrevTxInput>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeTrezorPrevTxInput.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeTrezorPrevTxOutput: FfiConverterRustBuffer<List<TrezorPrevTxOutput>> {
+    override fun read(buf: ByteBuffer): List<TrezorPrevTxOutput> {
+        val len = buf.getInt()
+        return List<TrezorPrevTxOutput>(len) {
+            FfiConverterTypeTrezorPrevTxOutput.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<TrezorPrevTxOutput>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeTrezorPrevTxOutput.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<TrezorPrevTxOutput>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeTrezorPrevTxOutput.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceTypeTrezorTxInput: FfiConverterRustBuffer<List<TrezorTxInput>> {
     override fun read(buf: ByteBuffer): List<TrezorTxInput> {
         val len = buf.getInt()
@@ -11283,6 +11430,28 @@ public suspend fun `trezorGetConnectedDevice`(): TrezorDeviceInfo? {
 }
 
 /**
+ * Get the device's master root fingerprint as an 8-character hex string.
+ *
+ * Returns the root fingerprint in the standard descriptor format (e.g., "73c5da0a").
+ * Requires a connected device.
+ */
+@Throws(TrezorException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `trezorGetDeviceFingerprint`(): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_device_fingerprint(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
+        // Error FFI converter
+        TrezorExceptionErrorHandler,
+    )
+}
+
+/**
  * Get the cached features of the currently connected Trezor device.
  *
  * Returns the features that were obtained during `trezor_connect()`, without
@@ -11321,21 +11490,6 @@ public suspend fun `trezorGetPublicKey`(`params`: TrezorGetPublicKeyParams): Tre
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
-}
-
-/**
- * Initialize the Bluetooth (BLE) subsystem.
- *
- * On Android: This is a no-op as BLE is initialized via JNI (BluetoothInit.nativeInit).
- * On other platforms: BLE works natively without special initialization.
- */
-@Throws(TrezorException::class)
-public fun `trezorInitBle`() {
-    uniffiRustCallWithError(TrezorExceptionErrorHandler) { uniffiRustCallStatus ->
-        UniffiLib.uniffi_bitkitcore_fn_func_trezor_init_ble(
-            uniffiRustCallStatus,
-        )
-    }
 }
 
 /**
@@ -11471,7 +11625,11 @@ public fun `trezorSetTransportCallback`(`callback`: TrezorTransportCallback) {
 }
 
 /**
- * Set the UI callback for PIN/passphrase/button requests
+ * Set the UI callback for handling PIN and passphrase requests.
+ *
+ * This should be called before connecting to a Trezor device if you want
+ * the library to handle PIN/passphrase requests via your UI instead of
+ * returning errors.
  */
 public fun `trezorSetUiCallback`(`callback`: TrezorUiCallback) {
     uniffiRustCall { uniffiRustCallStatus ->
@@ -11510,6 +11668,35 @@ public suspend fun `trezorSignTx`(`params`: TrezorSignTxParams): TrezorSignedTx 
     return uniffiRustCallAsync(
         UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_tx(
             FfiConverterTypeTrezorSignTxParams.lower(`params`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeTrezorSignedTx.lift(it) },
+        // Error FFI converter
+        TrezorExceptionErrorHandler,
+    )
+}
+
+/**
+ * Sign a Bitcoin transaction from a PSBT (base64-encoded).
+ *
+ * Parses the PSBT, extracts inputs/outputs/prev_txs, signs via the connected
+ * Trezor device, and returns the signed transaction.
+ *
+ * # Arguments
+ * * `psbt_base64` - Base64-encoded PSBT data
+ * * `network` - Bitcoin network name: "bitcoin", "testnet", "signet", "regtest".
+ * Defaults to "bitcoin" (mainnet) if None.
+ */
+@Throws(TrezorException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `trezorSignTxFromPsbt`(`psbtBase64`: kotlin.String, `network`: kotlin.String?): TrezorSignedTx {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_tx_from_psbt(
+            FfiConverterString.lower(`psbtBase64`),
+            FfiConverterOptionalString.lower(`network`),
         ),
         { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },

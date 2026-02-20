@@ -23,10 +23,10 @@ use once_cell::sync::OnceCell;
 // Re-export Trezor callback types and traits so UniFFI discovers them at the crate root
 pub use crate::modules::trezor::{
     TrezorTransportReadResult, TrezorTransportWriteResult, TrezorCallMessageResult,
-    NativeDeviceInfo, TrezorTransportCallback, TrezorUiCallback,
-    trezor_set_transport_callback, trezor_set_ui_callback,
-    get_transport_callback, get_ui_callback,
-    trezor_init_ble, trezor_is_ble_available,
+    NativeDeviceInfo, TrezorTransportCallback,
+    trezor_set_transport_callback, get_transport_callback,
+    trezor_is_ble_available,
+    TrezorUiCallback, trezor_set_ui_callback,
 };
 pub use modules::scanner::{
     Scanner,
@@ -1505,7 +1505,7 @@ pub async fn trezor_initialize(credential_path: Option<String>) -> Result<(), Tr
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().initialize(credential_path).await
-    }).await.unwrap()
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
 }
 
 /// Scan for available Trezor devices (USB + Bluetooth).
@@ -1517,7 +1517,7 @@ pub async fn trezor_scan() -> Result<Vec<TrezorDeviceInfo>, TrezorError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().scan().await
-    }).await.unwrap()
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
 }
 
 /// List previously discovered devices without triggering a new scan.
@@ -1526,7 +1526,7 @@ pub async fn trezor_list_devices() -> Result<Vec<TrezorDeviceInfo>, TrezorError>
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().list_devices().await
-    }).await.unwrap()
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
 }
 
 /// Connect to a Trezor device by its ID.
@@ -1538,7 +1538,7 @@ pub async fn trezor_connect(device_id: String) -> Result<TrezorFeatures, TrezorE
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().connect(&device_id).await
-    }).await.unwrap()
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
 }
 
 /// Get a Bitcoin address from the connected Trezor device.
@@ -1547,7 +1547,7 @@ pub async fn trezor_get_address(params: TrezorGetAddressParams) -> Result<Trezor
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().get_address(params).await
-    }).await.unwrap()
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
 }
 
 /// Get a public key (xpub) from the connected Trezor device.
@@ -1556,7 +1556,7 @@ pub async fn trezor_get_public_key(params: TrezorGetPublicKeyParams) -> Result<T
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().get_public_key(params).await
-    }).await.unwrap()
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
 }
 
 /// Disconnect from the currently connected Trezor device.
@@ -1565,7 +1565,7 @@ pub async fn trezor_disconnect() -> Result<(), TrezorError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().disconnect().await
-    }).await.unwrap()
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
 }
 
 /// Check if the Trezor manager is initialized.
@@ -1574,7 +1574,7 @@ pub async fn trezor_is_initialized() -> bool {
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().is_initialized().await
-    }).await.unwrap()
+    }).await.unwrap_or(false)
 }
 
 /// Check if a Trezor device is currently connected.
@@ -1583,7 +1583,7 @@ pub async fn trezor_is_connected() -> bool {
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().is_connected().await
-    }).await.unwrap()
+    }).await.unwrap_or(false)
 }
 
 /// Get information about the currently connected Trezor device.
@@ -1592,7 +1592,7 @@ pub async fn trezor_get_connected_device() -> Option<TrezorDeviceInfo> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().get_connected_device().await
-    }).await.unwrap()
+    }).await.unwrap_or(None)
 }
 
 /// Get the cached features of the currently connected Trezor device.
@@ -1604,7 +1604,7 @@ pub async fn trezor_get_features() -> Option<TrezorFeatures> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().get_features().await
-    }).await.unwrap()
+    }).await.unwrap_or(None)
 }
 
 /// Sign a message with the connected Trezor device.
@@ -1613,7 +1613,7 @@ pub async fn trezor_sign_message(params: TrezorSignMessageParams) -> Result<Trez
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().sign_message(params).await
-    }).await.unwrap()
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
 }
 
 /// Verify a message signature with the connected Trezor device.
@@ -1622,7 +1622,7 @@ pub async fn trezor_verify_message(params: TrezorVerifyMessageParams) -> Result<
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().verify_message(params).await
-    }).await.unwrap()
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
 }
 
 /// Sign a Bitcoin transaction with the connected Trezor device.
@@ -1631,7 +1631,36 @@ pub async fn trezor_sign_tx(params: TrezorSignTxParams) -> Result<TrezorSignedTx
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().sign_tx(params).await
-    }).await.unwrap()
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// Get the device's master root fingerprint as an 8-character hex string.
+///
+/// Returns the root fingerprint in the standard descriptor format (e.g., "73c5da0a").
+/// Requires a connected device.
+#[uniffi::export]
+pub async fn trezor_get_device_fingerprint() -> Result<String, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().get_device_fingerprint().await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// Sign a Bitcoin transaction from a PSBT (base64-encoded).
+///
+/// Parses the PSBT, extracts inputs/outputs/prev_txs, signs via the connected
+/// Trezor device, and returns the signed transaction.
+///
+/// # Arguments
+/// * `psbt_base64` - Base64-encoded PSBT data
+/// * `network` - Bitcoin network name: "bitcoin", "testnet", "signet", "regtest".
+///   Defaults to "bitcoin" (mainnet) if None.
+#[uniffi::export]
+pub async fn trezor_sign_tx_from_psbt(psbt_base64: String, network: Option<String>) -> Result<TrezorSignedTx, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().sign_tx_from_psbt(psbt_base64, network).await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
 }
 
 /// Clear stored Bluetooth pairing credentials for a specific Trezor device.
@@ -1643,5 +1672,5 @@ pub async fn trezor_clear_credentials(device_id: String) -> Result<(), TrezorErr
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_trezor_manager().clear_credentials(&device_id).await
-    }).await.unwrap()
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
 }

@@ -1292,33 +1292,50 @@ public func FfiConverterTypeTrezorTransportCallback_lower(_ value: TrezorTranspo
 
 
 /**
- * Callback interface for Trezor UI operations (PIN, passphrase, button)
+ * Callback interface for handling PIN and passphrase requests from the Trezor device.
+ *
+ * The native layer (iOS/Android) should implement this to show PIN/passphrase
+ * input UI when the device requests it during operations like signing.
+ *
+ * Methods return `String`:
+ * - Empty string (`""`) = cancel the request
+ * - Non-empty string = the user's input (PIN or passphrase)
+ *
+ * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
 public protocol TrezorUiCallback: AnyObject, Sendable {
     
     /**
-     * Called when the device requests PIN entry
-     * Returns the PIN entered by the user, or empty string to cancel
+     * Called when the device requests a PIN.
+     *
+     * Show a PIN matrix UI and return the matrix-encoded PIN string.
+     * Return empty string to cancel.
      */
     func onPinRequest()  -> String
     
     /**
-     * Called when the device requests passphrase entry
-     * on_device: true if passphrase should be entered on device
-     * Returns the passphrase entered by the user, or empty string to cancel
+     * Called when the device requests a passphrase.
+     *
+     * If `on_device` is true, the user should enter on the Trezor itself —
+     * return any non-empty string (e.g., "ok") to acknowledge.
+     *
+     * If `on_device` is false, show a passphrase input UI and return the value.
+     * Return empty string to cancel.
      */
     func onPassphraseRequest(onDevice: Bool)  -> String
     
-    /**
-     * Called when the device requests button confirmation
-     * code: the button request code (e.g., "ButtonRequest_ConfirmOutput")
-     * Returns true if user confirmed, false if cancelled
-     */
-    func onButtonRequest(code: String)  -> Bool
-    
 }
 /**
- * Callback interface for Trezor UI operations (PIN, passphrase, button)
+ * Callback interface for handling PIN and passphrase requests from the Trezor device.
+ *
+ * The native layer (iOS/Android) should implement this to show PIN/passphrase
+ * input UI when the device requests it during operations like signing.
+ *
+ * Methods return `String`:
+ * - Empty string (`""`) = cancel the request
+ * - Non-empty string = the user's input (PIN or passphrase)
+ *
+ * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
 open class TrezorUiCallbackImpl: TrezorUiCallback, @unchecked Sendable {
     fileprivate let pointer: UnsafeMutableRawPointer!
@@ -1373,8 +1390,10 @@ open class TrezorUiCallbackImpl: TrezorUiCallback, @unchecked Sendable {
 
     
     /**
-     * Called when the device requests PIN entry
-     * Returns the PIN entered by the user, or empty string to cancel
+     * Called when the device requests a PIN.
+     *
+     * Show a PIN matrix UI and return the matrix-encoded PIN string.
+     * Return empty string to cancel.
      */
 open func onPinRequest() -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
@@ -1384,27 +1403,18 @@ open func onPinRequest() -> String  {
 }
     
     /**
-     * Called when the device requests passphrase entry
-     * on_device: true if passphrase should be entered on device
-     * Returns the passphrase entered by the user, or empty string to cancel
+     * Called when the device requests a passphrase.
+     *
+     * If `on_device` is true, the user should enter on the Trezor itself —
+     * return any non-empty string (e.g., "ok") to acknowledge.
+     *
+     * If `on_device` is false, show a passphrase input UI and return the value.
+     * Return empty string to cancel.
      */
 open func onPassphraseRequest(onDevice: Bool) -> String  {
     return try!  FfiConverterString.lift(try! rustCall() {
     uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request(self.uniffiClonePointer(),
         FfiConverterBool.lower(onDevice),$0
-    )
-})
-}
-    
-    /**
-     * Called when the device requests button confirmation
-     * code: the button request code (e.g., "ButtonRequest_ConfirmOutput")
-     * Returns true if user confirmed, false if cancelled
-     */
-open func onButtonRequest(code: String) -> Bool  {
-    return try!  FfiConverterBool.lift(try! rustCall() {
-    uniffi_bitkitcore_fn_method_trezoruicallback_on_button_request(self.uniffiClonePointer(),
-        FfiConverterString.lower(code),$0
     )
 })
 }
@@ -1462,30 +1472,6 @@ fileprivate struct UniffiCallbackInterfaceTrezorUiCallback {
 
             
             let writeReturn = { uniffiOutReturn.pointee = FfiConverterString.lower($0) }
-            uniffiTraitInterfaceCall(
-                callStatus: uniffiCallStatus,
-                makeCall: makeCall,
-                writeReturn: writeReturn
-            )
-        },
-        onButtonRequest: { (
-            uniffiHandle: UInt64,
-            code: RustBuffer,
-            uniffiOutReturn: UnsafeMutablePointer<Int8>,
-            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
-        ) in
-            let makeCall = {
-                () throws -> Bool in
-                guard let uniffiObj = try? FfiConverterTypeTrezorUiCallback.handleMap.get(handle: uniffiHandle) else {
-                    throw UniffiInternalError.unexpectedStaleHandle
-                }
-                return uniffiObj.onButtonRequest(
-                     code: try FfiConverterString.lift(code)
-                )
-            }
-
-            
-            let writeReturn = { uniffiOutReturn.pointee = FfiConverterBool.lower($0) }
             uniffiTraitInterfaceCall(
                 callStatus: uniffiCallStatus,
                 makeCall: makeCall,
@@ -8431,6 +8417,337 @@ public func FfiConverterTypeTrezorGetPublicKeyParams_lower(_ value: TrezorGetPub
 
 
 /**
+ * Previous transaction data (for non-SegWit input verification).
+ */
+public struct TrezorPrevTx {
+    /**
+     * Transaction hash (hex encoded)
+     */
+    public var hash: String
+    /**
+     * Transaction version
+     */
+    public var version: UInt32
+    /**
+     * Lock time
+     */
+    public var lockTime: UInt32
+    /**
+     * Transaction inputs
+     */
+    public var inputs: [TrezorPrevTxInput]
+    /**
+     * Transaction outputs
+     */
+    public var outputs: [TrezorPrevTxOutput]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Transaction hash (hex encoded)
+         */hash: String, 
+        /**
+         * Transaction version
+         */version: UInt32, 
+        /**
+         * Lock time
+         */lockTime: UInt32, 
+        /**
+         * Transaction inputs
+         */inputs: [TrezorPrevTxInput], 
+        /**
+         * Transaction outputs
+         */outputs: [TrezorPrevTxOutput]) {
+        self.hash = hash
+        self.version = version
+        self.lockTime = lockTime
+        self.inputs = inputs
+        self.outputs = outputs
+    }
+}
+
+#if compiler(>=6)
+extension TrezorPrevTx: Sendable {}
+#endif
+
+
+extension TrezorPrevTx: Equatable, Hashable {
+    public static func ==(lhs: TrezorPrevTx, rhs: TrezorPrevTx) -> Bool {
+        if lhs.hash != rhs.hash {
+            return false
+        }
+        if lhs.version != rhs.version {
+            return false
+        }
+        if lhs.lockTime != rhs.lockTime {
+            return false
+        }
+        if lhs.inputs != rhs.inputs {
+            return false
+        }
+        if lhs.outputs != rhs.outputs {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(hash)
+        hasher.combine(version)
+        hasher.combine(lockTime)
+        hasher.combine(inputs)
+        hasher.combine(outputs)
+    }
+}
+
+extension TrezorPrevTx: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTrezorPrevTx: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorPrevTx {
+        return
+            try TrezorPrevTx(
+                hash: FfiConverterString.read(from: &buf), 
+                version: FfiConverterUInt32.read(from: &buf), 
+                lockTime: FfiConverterUInt32.read(from: &buf), 
+                inputs: FfiConverterSequenceTypeTrezorPrevTxInput.read(from: &buf), 
+                outputs: FfiConverterSequenceTypeTrezorPrevTxOutput.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TrezorPrevTx, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.hash, into: &buf)
+        FfiConverterUInt32.write(value.version, into: &buf)
+        FfiConverterUInt32.write(value.lockTime, into: &buf)
+        FfiConverterSequenceTypeTrezorPrevTxInput.write(value.inputs, into: &buf)
+        FfiConverterSequenceTypeTrezorPrevTxOutput.write(value.outputs, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTrezorPrevTx_lift(_ buf: RustBuffer) throws -> TrezorPrevTx {
+    return try FfiConverterTypeTrezorPrevTx.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTrezorPrevTx_lower(_ value: TrezorPrevTx) -> RustBuffer {
+    return FfiConverterTypeTrezorPrevTx.lower(value)
+}
+
+
+/**
+ * Input of a previous transaction.
+ */
+public struct TrezorPrevTxInput {
+    /**
+     * Previous transaction hash (hex encoded)
+     */
+    public var prevHash: String
+    /**
+     * Previous output index
+     */
+    public var prevIndex: UInt32
+    /**
+     * Script signature (hex encoded)
+     */
+    public var scriptSig: String
+    /**
+     * Sequence number
+     */
+    public var sequence: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Previous transaction hash (hex encoded)
+         */prevHash: String, 
+        /**
+         * Previous output index
+         */prevIndex: UInt32, 
+        /**
+         * Script signature (hex encoded)
+         */scriptSig: String, 
+        /**
+         * Sequence number
+         */sequence: UInt32) {
+        self.prevHash = prevHash
+        self.prevIndex = prevIndex
+        self.scriptSig = scriptSig
+        self.sequence = sequence
+    }
+}
+
+#if compiler(>=6)
+extension TrezorPrevTxInput: Sendable {}
+#endif
+
+
+extension TrezorPrevTxInput: Equatable, Hashable {
+    public static func ==(lhs: TrezorPrevTxInput, rhs: TrezorPrevTxInput) -> Bool {
+        if lhs.prevHash != rhs.prevHash {
+            return false
+        }
+        if lhs.prevIndex != rhs.prevIndex {
+            return false
+        }
+        if lhs.scriptSig != rhs.scriptSig {
+            return false
+        }
+        if lhs.sequence != rhs.sequence {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(prevHash)
+        hasher.combine(prevIndex)
+        hasher.combine(scriptSig)
+        hasher.combine(sequence)
+    }
+}
+
+extension TrezorPrevTxInput: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTrezorPrevTxInput: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorPrevTxInput {
+        return
+            try TrezorPrevTxInput(
+                prevHash: FfiConverterString.read(from: &buf), 
+                prevIndex: FfiConverterUInt32.read(from: &buf), 
+                scriptSig: FfiConverterString.read(from: &buf), 
+                sequence: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TrezorPrevTxInput, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.prevHash, into: &buf)
+        FfiConverterUInt32.write(value.prevIndex, into: &buf)
+        FfiConverterString.write(value.scriptSig, into: &buf)
+        FfiConverterUInt32.write(value.sequence, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTrezorPrevTxInput_lift(_ buf: RustBuffer) throws -> TrezorPrevTxInput {
+    return try FfiConverterTypeTrezorPrevTxInput.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTrezorPrevTxInput_lower(_ value: TrezorPrevTxInput) -> RustBuffer {
+    return FfiConverterTypeTrezorPrevTxInput.lower(value)
+}
+
+
+/**
+ * Output of a previous transaction.
+ */
+public struct TrezorPrevTxOutput {
+    /**
+     * Amount in satoshis
+     */
+    public var amount: UInt64
+    /**
+     * Script pubkey (hex encoded)
+     */
+    public var scriptPubkey: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Amount in satoshis
+         */amount: UInt64, 
+        /**
+         * Script pubkey (hex encoded)
+         */scriptPubkey: String) {
+        self.amount = amount
+        self.scriptPubkey = scriptPubkey
+    }
+}
+
+#if compiler(>=6)
+extension TrezorPrevTxOutput: Sendable {}
+#endif
+
+
+extension TrezorPrevTxOutput: Equatable, Hashable {
+    public static func ==(lhs: TrezorPrevTxOutput, rhs: TrezorPrevTxOutput) -> Bool {
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.scriptPubkey != rhs.scriptPubkey {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(amount)
+        hasher.combine(scriptPubkey)
+    }
+}
+
+extension TrezorPrevTxOutput: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTrezorPrevTxOutput: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorPrevTxOutput {
+        return
+            try TrezorPrevTxOutput(
+                amount: FfiConverterUInt64.read(from: &buf), 
+                scriptPubkey: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TrezorPrevTxOutput, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.amount, into: &buf)
+        FfiConverterString.write(value.scriptPubkey, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTrezorPrevTxOutput_lift(_ buf: RustBuffer) throws -> TrezorPrevTxOutput {
+    return try FfiConverterTypeTrezorPrevTxOutput.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTrezorPrevTxOutput_lower(_ value: TrezorPrevTxOutput) -> RustBuffer {
+    return FfiConverterTypeTrezorPrevTxOutput.lower(value)
+}
+
+
+/**
  * Public key response from device.
  */
 public struct TrezorPublicKeyResponse {
@@ -8450,6 +8767,18 @@ public struct TrezorPublicKeyResponse {
      * Chain code (hex encoded)
      */
     public var chainCode: String
+    /**
+     * Parent key fingerprint
+     */
+    public var fingerprint: UInt32
+    /**
+     * Derivation depth
+     */
+    public var depth: UInt32
+    /**
+     * Master root fingerprint (from the device's master seed)
+     */
+    public var rootFingerprint: UInt32?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -8465,11 +8794,23 @@ public struct TrezorPublicKeyResponse {
          */publicKey: String, 
         /**
          * Chain code (hex encoded)
-         */chainCode: String) {
+         */chainCode: String, 
+        /**
+         * Parent key fingerprint
+         */fingerprint: UInt32, 
+        /**
+         * Derivation depth
+         */depth: UInt32, 
+        /**
+         * Master root fingerprint (from the device's master seed)
+         */rootFingerprint: UInt32?) {
         self.xpub = xpub
         self.path = path
         self.publicKey = publicKey
         self.chainCode = chainCode
+        self.fingerprint = fingerprint
+        self.depth = depth
+        self.rootFingerprint = rootFingerprint
     }
 }
 
@@ -8492,6 +8833,15 @@ extension TrezorPublicKeyResponse: Equatable, Hashable {
         if lhs.chainCode != rhs.chainCode {
             return false
         }
+        if lhs.fingerprint != rhs.fingerprint {
+            return false
+        }
+        if lhs.depth != rhs.depth {
+            return false
+        }
+        if lhs.rootFingerprint != rhs.rootFingerprint {
+            return false
+        }
         return true
     }
 
@@ -8500,6 +8850,9 @@ extension TrezorPublicKeyResponse: Equatable, Hashable {
         hasher.combine(path)
         hasher.combine(publicKey)
         hasher.combine(chainCode)
+        hasher.combine(fingerprint)
+        hasher.combine(depth)
+        hasher.combine(rootFingerprint)
     }
 }
 
@@ -8517,7 +8870,10 @@ public struct FfiConverterTypeTrezorPublicKeyResponse: FfiConverterRustBuffer {
                 xpub: FfiConverterString.read(from: &buf), 
                 path: FfiConverterString.read(from: &buf), 
                 publicKey: FfiConverterString.read(from: &buf), 
-                chainCode: FfiConverterString.read(from: &buf)
+                chainCode: FfiConverterString.read(from: &buf), 
+                fingerprint: FfiConverterUInt32.read(from: &buf), 
+                depth: FfiConverterUInt32.read(from: &buf), 
+                rootFingerprint: FfiConverterOptionUInt32.read(from: &buf)
         )
     }
 
@@ -8526,6 +8882,9 @@ public struct FfiConverterTypeTrezorPublicKeyResponse: FfiConverterRustBuffer {
         FfiConverterString.write(value.path, into: &buf)
         FfiConverterString.write(value.publicKey, into: &buf)
         FfiConverterString.write(value.chainCode, into: &buf)
+        FfiConverterUInt32.write(value.fingerprint, into: &buf)
+        FfiConverterUInt32.write(value.depth, into: &buf)
+        FfiConverterOptionUInt32.write(value.rootFingerprint, into: &buf)
     }
 }
 
@@ -8670,6 +9029,10 @@ public struct TrezorSignTxParams {
      * Version (default: 2)
      */
     public var version: UInt32?
+    /**
+     * Previous transactions (for non-SegWit input verification)
+     */
+    public var prevTxs: [TrezorPrevTx]
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -8688,12 +9051,16 @@ public struct TrezorSignTxParams {
          */lockTime: UInt32?, 
         /**
          * Version (default: 2)
-         */version: UInt32?) {
+         */version: UInt32?, 
+        /**
+         * Previous transactions (for non-SegWit input verification)
+         */prevTxs: [TrezorPrevTx]) {
         self.inputs = inputs
         self.outputs = outputs
         self.coin = coin
         self.lockTime = lockTime
         self.version = version
+        self.prevTxs = prevTxs
     }
 }
 
@@ -8719,6 +9086,9 @@ extension TrezorSignTxParams: Equatable, Hashable {
         if lhs.version != rhs.version {
             return false
         }
+        if lhs.prevTxs != rhs.prevTxs {
+            return false
+        }
         return true
     }
 
@@ -8728,6 +9098,7 @@ extension TrezorSignTxParams: Equatable, Hashable {
         hasher.combine(coin)
         hasher.combine(lockTime)
         hasher.combine(version)
+        hasher.combine(prevTxs)
     }
 }
 
@@ -8746,7 +9117,8 @@ public struct FfiConverterTypeTrezorSignTxParams: FfiConverterRustBuffer {
                 outputs: FfiConverterSequenceTypeTrezorTxOutput.read(from: &buf), 
                 coin: FfiConverterOptionString.read(from: &buf), 
                 lockTime: FfiConverterOptionUInt32.read(from: &buf), 
-                version: FfiConverterOptionUInt32.read(from: &buf)
+                version: FfiConverterOptionUInt32.read(from: &buf), 
+                prevTxs: FfiConverterSequenceTypeTrezorPrevTx.read(from: &buf)
         )
     }
 
@@ -8756,6 +9128,7 @@ public struct FfiConverterTypeTrezorSignTxParams: FfiConverterRustBuffer {
         FfiConverterOptionString.write(value.coin, into: &buf)
         FfiConverterOptionUInt32.write(value.lockTime, into: &buf)
         FfiConverterOptionUInt32.write(value.version, into: &buf)
+        FfiConverterSequenceTypeTrezorPrevTx.write(value.prevTxs, into: &buf)
     }
 }
 
@@ -9165,6 +9538,14 @@ public struct TrezorTxInput {
      * Sequence number (default: 0xFFFFFFFD for RBF)
      */
     public var sequence: UInt32?
+    /**
+     * Original transaction hash for RBF replacement (hex encoded)
+     */
+    public var origHash: String?
+    /**
+     * Original input index for RBF replacement
+     */
+    public var origIndex: UInt32?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -9186,13 +9567,21 @@ public struct TrezorTxInput {
          */scriptType: TrezorScriptType, 
         /**
          * Sequence number (default: 0xFFFFFFFD for RBF)
-         */sequence: UInt32?) {
+         */sequence: UInt32?, 
+        /**
+         * Original transaction hash for RBF replacement (hex encoded)
+         */origHash: String?, 
+        /**
+         * Original input index for RBF replacement
+         */origIndex: UInt32?) {
         self.prevHash = prevHash
         self.prevIndex = prevIndex
         self.path = path
         self.amount = amount
         self.scriptType = scriptType
         self.sequence = sequence
+        self.origHash = origHash
+        self.origIndex = origIndex
     }
 }
 
@@ -9221,6 +9610,12 @@ extension TrezorTxInput: Equatable, Hashable {
         if lhs.sequence != rhs.sequence {
             return false
         }
+        if lhs.origHash != rhs.origHash {
+            return false
+        }
+        if lhs.origIndex != rhs.origIndex {
+            return false
+        }
         return true
     }
 
@@ -9231,6 +9626,8 @@ extension TrezorTxInput: Equatable, Hashable {
         hasher.combine(amount)
         hasher.combine(scriptType)
         hasher.combine(sequence)
+        hasher.combine(origHash)
+        hasher.combine(origIndex)
     }
 }
 
@@ -9250,7 +9647,9 @@ public struct FfiConverterTypeTrezorTxInput: FfiConverterRustBuffer {
                 path: FfiConverterString.read(from: &buf), 
                 amount: FfiConverterUInt64.read(from: &buf), 
                 scriptType: FfiConverterTypeTrezorScriptType.read(from: &buf), 
-                sequence: FfiConverterOptionUInt32.read(from: &buf)
+                sequence: FfiConverterOptionUInt32.read(from: &buf), 
+                origHash: FfiConverterOptionString.read(from: &buf), 
+                origIndex: FfiConverterOptionUInt32.read(from: &buf)
         )
     }
 
@@ -9261,6 +9660,8 @@ public struct FfiConverterTypeTrezorTxInput: FfiConverterRustBuffer {
         FfiConverterUInt64.write(value.amount, into: &buf)
         FfiConverterTypeTrezorScriptType.write(value.scriptType, into: &buf)
         FfiConverterOptionUInt32.write(value.sequence, into: &buf)
+        FfiConverterOptionString.write(value.origHash, into: &buf)
+        FfiConverterOptionUInt32.write(value.origIndex, into: &buf)
     }
 }
 
@@ -9304,6 +9705,14 @@ public struct TrezorTxOutput {
      * OP_RETURN data (hex encoded, for data outputs)
      */
     public var opReturnData: String?
+    /**
+     * Original transaction hash for RBF replacement (hex encoded)
+     */
+    public var origHash: String?
+    /**
+     * Original output index for RBF replacement
+     */
+    public var origIndex: UInt32?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -9322,12 +9731,20 @@ public struct TrezorTxOutput {
          */scriptType: TrezorScriptType?, 
         /**
          * OP_RETURN data (hex encoded, for data outputs)
-         */opReturnData: String?) {
+         */opReturnData: String?, 
+        /**
+         * Original transaction hash for RBF replacement (hex encoded)
+         */origHash: String?, 
+        /**
+         * Original output index for RBF replacement
+         */origIndex: UInt32?) {
         self.address = address
         self.path = path
         self.amount = amount
         self.scriptType = scriptType
         self.opReturnData = opReturnData
+        self.origHash = origHash
+        self.origIndex = origIndex
     }
 }
 
@@ -9353,6 +9770,12 @@ extension TrezorTxOutput: Equatable, Hashable {
         if lhs.opReturnData != rhs.opReturnData {
             return false
         }
+        if lhs.origHash != rhs.origHash {
+            return false
+        }
+        if lhs.origIndex != rhs.origIndex {
+            return false
+        }
         return true
     }
 
@@ -9362,6 +9785,8 @@ extension TrezorTxOutput: Equatable, Hashable {
         hasher.combine(amount)
         hasher.combine(scriptType)
         hasher.combine(opReturnData)
+        hasher.combine(origHash)
+        hasher.combine(origIndex)
     }
 }
 
@@ -9380,7 +9805,9 @@ public struct FfiConverterTypeTrezorTxOutput: FfiConverterRustBuffer {
                 path: FfiConverterOptionString.read(from: &buf), 
                 amount: FfiConverterUInt64.read(from: &buf), 
                 scriptType: FfiConverterOptionTypeTrezorScriptType.read(from: &buf), 
-                opReturnData: FfiConverterOptionString.read(from: &buf)
+                opReturnData: FfiConverterOptionString.read(from: &buf), 
+                origHash: FfiConverterOptionString.read(from: &buf), 
+                origIndex: FfiConverterOptionUInt32.read(from: &buf)
         )
     }
 
@@ -9390,6 +9817,8 @@ public struct FfiConverterTypeTrezorTxOutput: FfiConverterRustBuffer {
         FfiConverterUInt64.write(value.amount, into: &buf)
         FfiConverterOptionTypeTrezorScriptType.write(value.scriptType, into: &buf)
         FfiConverterOptionString.write(value.opReturnData, into: &buf)
+        FfiConverterOptionString.write(value.origHash, into: &buf)
+        FfiConverterOptionUInt32.write(value.origIndex, into: &buf)
     }
 }
 
@@ -12843,6 +13272,10 @@ public enum TrezorScriptType {
      * P2TR (Taproot)
      */
     case spendTaproot
+    /**
+     * P2SH multisig
+     */
+    case spendMultisig
 }
 
 
@@ -12868,6 +13301,8 @@ public struct FfiConverterTypeTrezorScriptType: FfiConverterRustBuffer {
         
         case 4: return .spendTaproot
         
+        case 5: return .spendMultisig
+        
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
@@ -12890,6 +13325,10 @@ public struct FfiConverterTypeTrezorScriptType: FfiConverterRustBuffer {
         
         case .spendTaproot:
             writeInt(&buf, Int32(4))
+        
+        
+        case .spendMultisig:
+            writeInt(&buf, Int32(5))
         
         }
     }
@@ -14495,6 +14934,81 @@ fileprivate struct FfiConverterSequenceTypeTrezorDeviceInfo: FfiConverterRustBuf
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeTrezorPrevTx: FfiConverterRustBuffer {
+    typealias SwiftType = [TrezorPrevTx]
+
+    public static func write(_ value: [TrezorPrevTx], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTrezorPrevTx.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TrezorPrevTx] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TrezorPrevTx]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTrezorPrevTx.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeTrezorPrevTxInput: FfiConverterRustBuffer {
+    typealias SwiftType = [TrezorPrevTxInput]
+
+    public static func write(_ value: [TrezorPrevTxInput], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTrezorPrevTxInput.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TrezorPrevTxInput] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TrezorPrevTxInput]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTrezorPrevTxInput.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeTrezorPrevTxOutput: FfiConverterRustBuffer {
+    typealias SwiftType = [TrezorPrevTxOutput]
+
+    public static func write(_ value: [TrezorPrevTxOutput], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTrezorPrevTxOutput.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TrezorPrevTxOutput] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TrezorPrevTxOutput]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTrezorPrevTxOutput.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeTrezorTxInput: FfiConverterRustBuffer {
     typealias SwiftType = [TrezorTxInput]
 
@@ -15534,6 +16048,26 @@ public func trezorGetConnectedDevice()async  -> TrezorDeviceInfo?  {
         )
 }
 /**
+ * Get the device's master root fingerprint as an 8-character hex string.
+ *
+ * Returns the root fingerprint in the standard descriptor format (e.g., "73c5da0a").
+ * Requires a connected device.
+ */
+public func trezorGetDeviceFingerprint()async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_trezor_get_device_fingerprint(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeTrezorError_lift
+        )
+}
+/**
  * Get the cached features of the currently connected Trezor device.
  *
  * Returns the features that were obtained during `trezor_connect()`, without
@@ -15570,17 +16104,6 @@ public func trezorGetPublicKey(params: TrezorGetPublicKeyParams)async throws  ->
             liftFunc: FfiConverterTypeTrezorPublicKeyResponse_lift,
             errorHandler: FfiConverterTypeTrezorError_lift
         )
-}
-/**
- * Initialize the Bluetooth (BLE) subsystem.
- *
- * On Android: This is a no-op as BLE is initialized via JNI (BluetoothInit.nativeInit).
- * On other platforms: BLE works natively without special initialization.
- */
-public func trezorInitBle()throws   {try rustCallWithError(FfiConverterTypeTrezorError_lift) {
-    uniffi_bitkitcore_fn_func_trezor_init_ble($0
-    )
-}
 }
 /**
  * Initialize the Trezor manager with optional credential storage.
@@ -15702,7 +16225,11 @@ public func trezorSetTransportCallback(callback: TrezorTransportCallback)  {try!
 }
 }
 /**
- * Set the UI callback for PIN/passphrase/button requests
+ * Set the UI callback for handling PIN and passphrase requests.
+ *
+ * This should be called before connecting to a Trezor device if you want
+ * the library to handle PIN/passphrase requests via your UI instead of
+ * returning errors.
  */
 public func trezorSetUiCallback(callback: TrezorUiCallback)  {try! rustCall() {
     uniffi_bitkitcore_fn_func_trezor_set_ui_callback(
@@ -15735,6 +16262,31 @@ public func trezorSignTx(params: TrezorSignTxParams)async throws  -> TrezorSigne
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
                 uniffi_bitkitcore_fn_func_trezor_sign_tx(FfiConverterTypeTrezorSignTxParams_lower(params)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeTrezorSignedTx_lift,
+            errorHandler: FfiConverterTypeTrezorError_lift
+        )
+}
+/**
+ * Sign a Bitcoin transaction from a PSBT (base64-encoded).
+ *
+ * Parses the PSBT, extracts inputs/outputs/prev_txs, signs via the connected
+ * Trezor device, and returns the signed transaction.
+ *
+ * # Arguments
+ * * `psbt_base64` - Base64-encoded PSBT data
+ * * `network` - Bitcoin network name: "bitcoin", "testnet", "signet", "regtest".
+ * Defaults to "bitcoin" (mainnet) if None.
+ */
+public func trezorSignTxFromPsbt(psbtBase64: String, network: String?)async throws  -> TrezorSignedTx  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_trezor_sign_tx_from_psbt(FfiConverterString.lower(psbtBase64),FfiConverterOptionString.lower(network)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
@@ -16165,13 +16717,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_trezor_get_connected_device() != 48383) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_trezor_get_device_fingerprint() != 20344) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_trezor_get_features() != 13970) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_get_public_key() != 13743) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_bitkitcore_checksum_func_trezor_init_ble() != 11207) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_initialize() != 16053) {
@@ -16195,13 +16747,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_trezor_set_transport_callback() != 30209) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_trezor_set_ui_callback() != 28036) {
+    if (uniffi_bitkitcore_checksum_func_trezor_set_ui_callback() != 52321) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_sign_message() != 2925) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_sign_tx() != 42467) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt() != 20171) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_verify_message() != 50739) {
@@ -16297,13 +16852,10 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_trezortransportcallback_log_debug() != 44848) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 9322) {
+    if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 50474) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 51926) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_button_request() != 58299) {
+    if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 63487) {
         return InitializationResult.apiChecksumMismatch
     }
 
