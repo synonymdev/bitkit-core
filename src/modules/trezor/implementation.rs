@@ -11,7 +11,7 @@ use crate::modules::trezor::{
     TrezorAddressResponse, TrezorDeviceInfo, TrezorError, TrezorFeatures,
     TrezorGetAddressParams, TrezorGetPublicKeyParams, TrezorPublicKeyResponse,
     TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams,
-    TrezorSignTxParams, TrezorSignedTx, TrezorTxInput, TrezorTxOutput, TrezorScriptType,
+    TrezorSignTxParams, TrezorSignedTx,
     TrezorTransportType, TrezorCoinType,
 };
 
@@ -91,6 +91,98 @@ pub(crate) fn validate_derivation_path(path: &str) -> Result<(), TrezorError> {
     // Note: We intentionally don't reject unknown purposes (like 48 for multisig)
     // to maintain flexibility for advanced use cases. The device itself will
     // validate if the path is appropriate for the requested operation.
+
+    Ok(())
+}
+
+/// Validate sign transaction parameters before sending to the device.
+///
+/// Checks input paths, script types, output structure, and change output paths.
+/// Used by both `sign_tx` and `sign_tx_from_psbt` to ensure consistent validation.
+fn validate_sign_tx_params(params: &SignTxParams) -> Result<(), TrezorError> {
+    // Validate all input paths
+    for (i, input) in params.inputs.iter().enumerate() {
+        validate_derivation_path(&input.path).map_err(|e| match e {
+            TrezorError::InvalidPath { error_details } => TrezorError::InvalidPath {
+                error_details: format!("Input {}: {}", i, error_details),
+            },
+            other => other,
+        })?;
+    }
+
+    // Reject unsupported input script types
+    for (i, input) in params.inputs.iter().enumerate() {
+        match input.script_type {
+            trezor_connect_rs::ScriptType::SpendMultisig => return Err(TrezorError::DeviceError {
+                error_details: format!("Input {}: Multisig inputs are not currently supported.", i),
+            }),
+            trezor_connect_rs::ScriptType::External => return Err(TrezorError::DeviceError {
+                error_details: format!("Input {}: External inputs are not currently supported.", i),
+            }),
+            _ => {}
+        }
+    }
+
+    // Validate at least 1 input and 1 output
+    if params.inputs.is_empty() {
+        return Err(TrezorError::DeviceError {
+            error_details: "Transaction must have at least one input.".to_string(),
+        });
+    }
+    if params.outputs.is_empty() {
+        return Err(TrezorError::DeviceError {
+            error_details: "Transaction must have at least one output.".to_string(),
+        });
+    }
+
+    // Validate each output is exactly one mode: External, Change, or OpReturn
+    for (i, output) in params.outputs.iter().enumerate() {
+        let has_address = output.address.is_some();
+        let has_path = output.path.is_some();
+        let has_op_return = output.op_return_data.is_some();
+
+        match (has_address, has_path, has_op_return) {
+            (true, false, false) => {
+                // External output - valid
+            }
+            (false, true, false) => {
+                // Change output - must have script_type
+                if output.script_type.is_none() {
+                    return Err(TrezorError::DeviceError {
+                        error_details: format!("Output {}: change output must specify script_type.", i),
+                    });
+                }
+            }
+            (false, false, true) => {
+                // OP_RETURN output - amount must be 0
+                if output.amount != 0 {
+                    return Err(TrezorError::DeviceError {
+                        error_details: format!("Output {}: OP_RETURN output must have amount 0.", i),
+                    });
+                }
+            }
+            _ => {
+                return Err(TrezorError::DeviceError {
+                    error_details: format!(
+                        "Output {}: must be exactly one of: external (address only), change (path only), or OP_RETURN (op_return_data only).",
+                        i
+                    ),
+                });
+            }
+        }
+    }
+
+    // Validate change output paths
+    for (i, output) in params.outputs.iter().enumerate() {
+        if let Some(ref path) = output.path {
+            validate_derivation_path(path).map_err(|e| match e {
+                TrezorError::InvalidPath { error_details } => TrezorError::InvalidPath {
+                    error_details: format!("Output {} (change): {}", i, error_details),
+                },
+                other => other,
+            })?;
+        }
+    }
 
     Ok(())
 }
@@ -636,89 +728,8 @@ impl TrezorManager {
         &self,
         params: TrezorSignTxParams,
     ) -> Result<TrezorSignedTx, TrezorError> {
-        // Validate all input paths
-        for (i, input) in params.inputs.iter().enumerate() {
-            validate_derivation_path(&input.path).map_err(|e| match e {
-                TrezorError::InvalidPath { error_details } => TrezorError::InvalidPath {
-                    error_details: format!("Input {}: {}", i, error_details),
-                },
-                other => other,
-            })?;
-        }
-
-        // Reject unsupported input script types
-        for (i, input) in params.inputs.iter().enumerate() {
-            match input.script_type {
-                TrezorScriptType::SpendMultisig => return Err(TrezorError::DeviceError {
-                    error_details: format!("Input {}: Multisig inputs are not currently supported.", i),
-                }),
-                TrezorScriptType::External => return Err(TrezorError::DeviceError {
-                    error_details: format!("Input {}: External inputs are not currently supported.", i),
-                }),
-                _ => {}
-            }
-        }
-
-        // Validate at least 1 input and 1 output
-        if params.inputs.is_empty() {
-            return Err(TrezorError::DeviceError {
-                error_details: "Transaction must have at least one input.".to_string(),
-            });
-        }
-        if params.outputs.is_empty() {
-            return Err(TrezorError::DeviceError {
-                error_details: "Transaction must have at least one output.".to_string(),
-            });
-        }
-
-        // Validate each output is exactly one mode: External, Change, or OpReturn
-        for (i, output) in params.outputs.iter().enumerate() {
-            let has_address = output.address.is_some();
-            let has_path = output.path.is_some();
-            let has_op_return = output.op_return_data.is_some();
-
-            match (has_address, has_path, has_op_return) {
-                (true, false, false) => {
-                    // External output - valid
-                }
-                (false, true, false) => {
-                    // Change output - must have script_type
-                    if output.script_type.is_none() {
-                        return Err(TrezorError::DeviceError {
-                            error_details: format!("Output {}: change output must specify script_type.", i),
-                        });
-                    }
-                }
-                (false, false, true) => {
-                    // OP_RETURN output - amount must be 0
-                    if output.amount != 0 {
-                        return Err(TrezorError::DeviceError {
-                            error_details: format!("Output {}: OP_RETURN output must have amount 0.", i),
-                        });
-                    }
-                }
-                _ => {
-                    return Err(TrezorError::DeviceError {
-                        error_details: format!(
-                            "Output {}: must be exactly one of: external (address only), change (path only), or OP_RETURN (op_return_data only).",
-                            i
-                        ),
-                    });
-                }
-            }
-        }
-
-        // Validate change output paths
-        for (i, output) in params.outputs.iter().enumerate() {
-            if let Some(ref path) = output.path {
-                validate_derivation_path(path).map_err(|e| match e {
-                    TrezorError::InvalidPath { error_details } => TrezorError::InvalidPath {
-                        error_details: format!("Output {} (change): {}", i, error_details),
-                    },
-                    other => other,
-                })?;
-            }
-        }
+        let tc_params: SignTxParams = params.into();
+        validate_sign_tx_params(&tc_params)?;
 
         // Both mobile and desktop: use stored connected device
         let mut connected_device = self.connected_device.lock().await;
@@ -726,7 +737,6 @@ impl TrezorManager {
             .as_mut()
             .ok_or(TrezorError::NotConnected)?;
 
-        let tc_params: SignTxParams = params.into();
         let response = device.sign_transaction(tc_params).await.map_err(TrezorError::from)?;
 
         Ok(TrezorSignedTx::from(response))
@@ -760,15 +770,7 @@ impl TrezorManager {
                 error_details: format!("PSBT conversion error: {}", e),
             })?;
 
-        // Reject unsupported script types from PSBT
-        for (i, input) in sign_params.inputs.iter().enumerate() {
-            match input.script_type {
-                trezor_connect_rs::ScriptType::SpendMultisig => return Err(TrezorError::DeviceError {
-                    error_details: format!("PSBT input {}: Multisig inputs are not currently supported.", i),
-                }),
-                _ => {}
-            }
-        }
+        validate_sign_tx_params(&sign_params)?;
 
         let mut connected_device = self.connected_device.lock().await;
         let device = connected_device
