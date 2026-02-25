@@ -112,81 +112,171 @@ public object NoPointer
 
 
 /**
- * Account addresses
+ * Callback interface for native Trezor transport operations
+ *
+ * This trait must be implemented by the native iOS/Android code.
+ * The implementation handles actual USB or Bluetooth communication.
+ *
+ * # Android Implementation
+ * Use Android USB Host API for USB devices:
+ * - Enumerate devices with vendorId 0x1209 (0x534c for older), productId 0x53c1
+ * - Request USB permission, claim interface, get endpoints
+ * - Chunk size: 64 bytes for USB
+ *
+ * Use Android BLE API for Bluetooth:
+ * - Scan for Trezor BLE service UUID: 8c000001-a59b-4d58-a9ad-073df69fa1b1
+ * - Connect and discover characteristics
+ * - Read from: 8c000002-a59b-4d58-a9ad-073df69fa1b1
+ * - Write to: 8c000003-a59b-4d58-a9ad-073df69fa1b1
+ * - Chunk size: 244 bytes for BLE
+ *
+ * # iOS Implementation
+ * Use IOKit/CoreBluetooth with same service/characteristic UUIDs.
  */
-@kotlinx.serialization.Serializable
-public data class AccountAddresses (
+public interface TrezorTransportCallback {
+    
     /**
-     * Used addresses
+     * Enumerate all connected Trezor devices
      */
-    val `used`: List<AddressInfo>, 
+    public fun `enumerateDevices`(): List<NativeDeviceInfo>
+    
     /**
-     * Unused addresses
+     * Open a connection to a device
      */
-    val `unused`: List<AddressInfo>, 
+    public fun `openDevice`(`path`: kotlin.String): TrezorTransportWriteResult
+    
     /**
-     * Change addresses
+     * Close the connection to a device
      */
-    val `change`: List<AddressInfo>
-) {
+    public fun `closeDevice`(`path`: kotlin.String): TrezorTransportWriteResult
+    
+    /**
+     * Read a chunk of data from the device
+     */
+    public fun `readChunk`(`path`: kotlin.String): TrezorTransportReadResult
+    
+    /**
+     * Write a chunk of data to the device
+     */
+    public fun `writeChunk`(`path`: kotlin.String, `data`: kotlin.ByteArray): TrezorTransportWriteResult
+    
+    /**
+     * Get the chunk size for a device (64 for USB, 244 for Bluetooth)
+     */
+    public fun `getChunkSize`(`path`: kotlin.String): kotlin.UInt
+    
+    /**
+     * High-level message call for BLE/THP devices.
+     *
+     * For BLE devices that use THP protocol (encrypted communication),
+     * the native layer should handle encryption/decryption via
+     * android-trezor-connect and return the raw protobuf response.
+     *
+     * Returns None if not supported (will fall back to Protocol V1 chunks).
+     * Returns Some(result) to use native THP handling.
+     *
+     * # Arguments
+     * * `path` - Device path
+     * * `message_type` - Protobuf message type (e.g., GetAddress = 29)
+     * * `data` - Serialized protobuf message data
+     */
+    public fun `callMessage`(`path`: kotlin.String, `messageType`: kotlin.UShort, `data`: kotlin.ByteArray): TrezorCallMessageResult?
+    
+    /**
+     * Get pairing code from user during BLE THP pairing.
+     *
+     * This is called when the Trezor device displays a 6-digit code
+     * that must be entered to complete Bluetooth pairing.
+     *
+     * The native layer should display a UI for the user to enter the code
+     * shown on the Trezor screen.
+     *
+     * Returns the 6-digit code as a string, or empty string to cancel.
+     */
+    public fun `getPairingCode`(): kotlin.String
+    
+    /**
+     * Save THP pairing credentials for a device.
+     *
+     * Called after successful BLE pairing to store credentials for reconnection.
+     * The credential_json is a JSON string containing the serialized ThpCredentials.
+     *
+     * # Arguments
+     * * `device_id` - Device identifier (e.g., BLE address like "ble:AA:BB:CC:DD:EE:FF")
+     * * `credential_json` - JSON string with credential data
+     *
+     * Returns true if credentials were saved successfully.
+     */
+    public fun `saveThpCredential`(`deviceId`: kotlin.String, `credentialJson`: kotlin.String): kotlin.Boolean
+    
+    /**
+     * Load THP pairing credentials for a device.
+     *
+     * Called before BLE handshake to check for stored credentials.
+     * If credentials are found, they will be used to skip the pairing dialog.
+     *
+     * # Arguments
+     * * `device_id` - Device identifier (e.g., BLE address like "ble:AA:BB:CC:DD:EE:FF")
+     *
+     * Returns the JSON string containing ThpCredentials, or None if not found.
+     */
+    public fun `loadThpCredential`(`deviceId`: kotlin.String): kotlin.String?
+    
+    /**
+     * Log a debug message from the Rust THP handshake layer.
+     *
+     * This forwards Rust-level errors and state information to the native
+     * debug UI (e.g., TrezorDebugLog on Android) so they are visible
+     * alongside the Kotlin-level logs.
+     *
+     * # Arguments
+     * * `tag` - Short tag identifying the subsystem (e.g., "HANDSHAKE", "THP")
+     * * `message` - Human-readable debug message
+     */
+    public fun `logDebug`(`tag`: kotlin.String, `message`: kotlin.String)
+    
     public companion object
 }
+
 
 
 
 /**
- * Account info response
+ * Callback interface for handling PIN and passphrase requests from the Trezor device.
+ *
+ * The native layer (iOS/Android) should implement this to show PIN/passphrase
+ * input UI when the device requests it during operations like signing.
+ *
+ * Methods return `String`:
+ * - Empty string (`""`) = cancel the request
+ * - Non-empty string = the user's input (PIN or passphrase)
+ *
+ * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
-@kotlinx.serialization.Serializable
-public data class AccountInfoResponse (
-    val `id`: kotlin.UInt, 
-    val `path`: kotlin.String, 
-    val `descriptor`: kotlin.String, 
-    val `legacyXpub`: kotlin.String?, 
-    val `balance`: kotlin.String, 
-    val `availableBalance`: kotlin.String
-) {
+public interface TrezorUiCallback {
+    
+    /**
+     * Called when the device requests a PIN.
+     *
+     * Show a PIN matrix UI and return the matrix-encoded PIN string.
+     * Return empty string to cancel.
+     */
+    public fun `onPinRequest`(): kotlin.String
+    
+    /**
+     * Called when the device requests a passphrase.
+     *
+     * If `on_device` is true, the user should enter on the Trezor itself —
+     * return any non-empty string (e.g., "ok") to acknowledge.
+     *
+     * If `on_device` is false, show a passphrase input UI and return the value.
+     * Return empty string to cancel.
+     */
+    public fun `onPassphraseRequest`(`onDevice`: kotlin.Boolean): kotlin.String
+    
     public companion object
 }
 
-
-
-/**
- * UTXO information for account
- */
-@kotlinx.serialization.Serializable
-public data class AccountUtxo (
-    /**
-     * Transaction ID
-     */
-    val `txid`: kotlin.String, 
-    /**
-     * Output index
-     */
-    val `vout`: kotlin.UInt, 
-    /**
-     * Amount in satoshis
-     */
-    val `amount`: kotlin.String, 
-    /**
-     * Block height
-     */
-    val `blockHeight`: kotlin.UInt?, 
-    /**
-     * Address
-     */
-    val `address`: kotlin.String, 
-    /**
-     * Derivation path
-     */
-    val `path`: kotlin.String, 
-    /**
-     * Number of confirmations
-     */
-    val `confirmations`: kotlin.UInt?
-) {
-    public companion object
-}
 
 
 
@@ -194,43 +284,6 @@ public data class AccountUtxo (
 public data class ActivityTags (
     val `activityId`: kotlin.String, 
     val `tags`: List<kotlin.String>
-) {
-    public companion object
-}
-
-
-
-/**
- * Address information
- */
-@kotlinx.serialization.Serializable
-public data class AddressInfo (
-    /**
-     * Address string
-     */
-    val `address`: kotlin.String, 
-    /**
-     * Derivation path
-     */
-    val `path`: kotlin.String, 
-    /**
-     * Number of transfers
-     */
-    val `transfers`: kotlin.UInt
-) {
-    public companion object
-}
-
-
-
-/**
- * Address response containing the derived address information
- */
-@kotlinx.serialization.Serializable
-public data class AddressResponse (
-    val `address`: kotlin.String, 
-    val `path`: List<kotlin.UInt>, 
-    val `serializedPath`: kotlin.String
 ) {
     public companion object
 }
@@ -284,83 +337,6 @@ public data class ClosedChannelDetails (
 
 
 
-/**
- * Coin purchase memo
- */
-@kotlinx.serialization.Serializable
-public data class CoinPurchaseMemo (
-    /**
-     * Coin type
-     */
-    val `coinType`: kotlin.UInt, 
-    /**
-     * Amount
-     */
-    val `amount`: kotlin.ULong, 
-    /**
-     * Address
-     */
-    val `address`: kotlin.String, 
-    /**
-     * MAC
-     */
-    val `mac`: kotlin.String
-) {
-    public companion object
-}
-
-
-
-/**
- * Common parameters for all Trezor Connect methods
- */
-@kotlinx.serialization.Serializable
-public data class CommonParams (
-    /**
-     * Specific device instance to use
-     */
-    val `device`: DeviceParams?, 
-    /**
-     * Set to true if method should use empty passphrase
-     */
-    val `useEmptyPassphrase`: kotlin.Boolean?, 
-    /**
-     * Allow seedless device
-     */
-    val `allowSeedlessDevice`: kotlin.Boolean?, 
-    /**
-     * Skip final reload
-     */
-    val `skipFinalReload`: kotlin.Boolean?
-) {
-    public companion object
-}
-
-
-
-/**
- * Account information for compose transaction
- */
-@kotlinx.serialization.Serializable
-public data class ComposeAccount (
-    /**
-     * Derivation path
-     */
-    val `path`: kotlin.String, 
-    /**
-     * Account addresses
-     */
-    val `addresses`: AccountAddresses, 
-    /**
-     * UTXOs
-     */
-    val `utxo`: List<AccountUtxo>
-) {
-    public companion object
-}
-
-
-
 @kotlinx.serialization.Serializable
 public data class CreateCjitOptions (
     val `source`: kotlin.String?, 
@@ -392,25 +368,6 @@ public data class CreateOrderOptions (
 
 
 
-/**
- * Result type for deep link generation, including the URL and the ID used
- */
-@kotlinx.serialization.Serializable
-public data class DeepLinkResult (
-    /**
-     * The generated deep link URL
-     */
-    val `url`: kotlin.String, 
-    /**
-     * The request ID used (either provided or auto-generated)
-     */
-    val `requestId`: kotlin.String
-) {
-    public companion object
-}
-
-
-
 @kotlinx.serialization.Serializable
 public data class DefaultLspBalanceParams (
     val `clientBalanceSat`: kotlin.ULong, 
@@ -422,68 +379,9 @@ public data class DefaultLspBalanceParams (
 
 
 
-/**
- * Parameters for specifying a particular device
- */
-@kotlinx.serialization.Serializable
-public data class DeviceParams (
-    /**
-     * Device instance path
-     */
-    val `path`: kotlin.String?, 
-    /**
-     * Device instance ID
-     */
-    val `instance`: kotlin.UInt?
-) {
-    public companion object
-}
-
-
-
 @kotlinx.serialization.Serializable
 public data class ErrorData (
     val `errorDetails`: kotlin.String
-) {
-    public companion object
-}
-
-
-
-/**
- * Feature response containing device capabilities and information
- */
-@kotlinx.serialization.Serializable
-public data class FeatureResponse (
-    val `vendor`: kotlin.String, 
-    val `majorVersion`: kotlin.UInt, 
-    val `minorVersion`: kotlin.UInt, 
-    val `patchVersion`: kotlin.UInt, 
-    val `deviceId`: kotlin.String, 
-    val `capabilities`: List<kotlin.String>?
-) {
-    public companion object
-}
-
-
-
-/**
- * Fee level for compose transaction
- */
-@kotlinx.serialization.Serializable
-public data class FeeLevel (
-    /**
-     * Fee per unit (satoshi/byte or satoshi/vbyte)
-     */
-    val `feePerUnit`: kotlin.String, 
-    /**
-     * Base fee in satoshi (optional, used in RBF and DOGE)
-     */
-    val `baseFee`: kotlin.UInt?, 
-    /**
-     * Floor base fee (optional, used in DOGE)
-     */
-    val `floorBaseFee`: kotlin.Boolean?
 ) {
     public companion object
 }
@@ -537,64 +435,6 @@ public data class GetAddressesResponse (
      * Vector of generated Bitcoin addresses
      */
     val `addresses`: List<GetAddressResponse>
-) {
-    public companion object
-}
-
-
-
-/**
- * HD Node Path Type
- */
-@kotlinx.serialization.Serializable
-public data class HdNodePathType (
-    /**
-     * Node data (can be String or HDNodeType)
-     */
-    val `node`: HdNodeTypeOrString, 
-    /**
-     * BIP32 derivation path
-     */
-    val `addressN`: List<kotlin.UInt>
-) {
-    public companion object
-}
-
-
-
-/**
- * HD Node Type
- */
-@kotlinx.serialization.Serializable
-public data class HdNodeType (
-    /**
-     * Depth
-     */
-    val `depth`: kotlin.UInt, 
-    /**
-     * Fingerprint
-     */
-    val `fingerprint`: kotlin.UInt, 
-    /**
-     * Child number
-     */
-    val `childNum`: kotlin.UInt, 
-    /**
-     * Chain code
-     */
-    val `chainCode`: kotlin.String, 
-    /**
-     * Public key
-     */
-    val `publicKey`: kotlin.String, 
-    /**
-     * Private key (optional)
-     */
-    val `privateKey`: kotlin.String?, 
-    /**
-     * BIP32 derivation path (optional)
-     */
-    val `addressN`: List<kotlin.UInt>?
 ) {
     public companion object
 }
@@ -1167,49 +1007,30 @@ public data class LnurlWithdrawData (
 
 
 /**
- * Message signature response
+ * Native device information returned from enumeration
  */
 @kotlinx.serialization.Serializable
-public data class MessageSignatureResponse (
+public data class NativeDeviceInfo (
     /**
-     * Signer address
+     * Unique path/identifier for this device
      */
-    val `address`: kotlin.String, 
+    val `path`: kotlin.String, 
     /**
-     * Signature in base64 format
+     * Transport type: "usb" or "bluetooth"
      */
-    val `signature`: kotlin.String
-) {
-    public companion object
-}
-
-
-
-/**
- * Multisig Redeem Script Type
- */
-@kotlinx.serialization.Serializable
-public data class MultisigRedeemScriptType (
+    val `transportType`: kotlin.String, 
     /**
-     * Public keys
+     * Optional device name (from BLE advertisement or USB descriptor)
      */
-    val `pubkeys`: List<HdNodePathType>, 
+    val `name`: kotlin.String?, 
     /**
-     * Signatures
+     * USB Vendor ID (for USB devices)
      */
-    val `signatures`: List<kotlin.String>, 
+    val `vendorId`: kotlin.UShort?, 
     /**
-     * M-of-N threshold
+     * USB Product ID (for USB devices)
      */
-    val `m`: kotlin.UInt, 
-    /**
-     * Nodes (optional)
-     */
-    val `nodes`: List<HdNodeType>?, 
-    /**
-     * Pubkeys order (optional): 0 for PRESERVED, 1 for LEXICOGRAPHIC
-     */
-    val `pubkeysOrder`: kotlin.UByte?
+    val `productId`: kotlin.UShort?
 ) {
     public companion object
 }
@@ -1256,29 +1077,6 @@ public data class OnchainActivity (
 
 
 
-/**
- * Payment request memo types
- */
-@kotlinx.serialization.Serializable
-public data class PaymentRequestMemo (
-    /**
-     * Text memo
-     */
-    val `textMemo`: TextMemo?, 
-    /**
-     * Refund memo
-     */
-    val `refundMemo`: RefundMemo?, 
-    /**
-     * Coin purchase memo
-     */
-    val `coinPurchaseMemo`: CoinPurchaseMemo?
-) {
-    public companion object
-}
-
-
-
 @kotlinx.serialization.Serializable
 public data class PreActivityMetadata (
     val `paymentId`: kotlin.String, 
@@ -1297,274 +1095,9 @@ public data class PreActivityMetadata (
 
 
 
-/**
- * Precomposed transaction input
- */
-@kotlinx.serialization.Serializable
-public data class PrecomposedInput (
-    /**
-     * BIP32 derivation path
-     */
-    val `addressN`: List<kotlin.UInt>, 
-    /**
-     * Amount in satoshis
-     */
-    val `amount`: kotlin.String, 
-    /**
-     * Previous transaction hash
-     */
-    val `prevHash`: kotlin.String, 
-    /**
-     * Previous output index
-     */
-    val `prevIndex`: kotlin.UInt, 
-    /**
-     * Script type
-     */
-    val `scriptType`: ScriptType
-) {
-    public companion object
-}
-
-
-
-/**
- * Precomposed transaction output
- */
-@kotlinx.serialization.Serializable
-public data class PrecomposedOutput (
-    /**
-     * BIP32 derivation path (for change outputs)
-     */
-    val `addressN`: List<kotlin.UInt>?, 
-    /**
-     * Amount in satoshis
-     */
-    val `amount`: kotlin.String, 
-    /**
-     * Address (for regular outputs)
-     */
-    val `address`: kotlin.String?, 
-    /**
-     * Script type
-     */
-    val `scriptType`: ScriptType
-) {
-    public companion object
-}
-
-
-
-/**
- * Precomposed transaction
- */
-@kotlinx.serialization.Serializable
-public data class PrecomposedTransaction (
-    /**
-     * Transaction type (usually "final" or "error")
-     */
-    val `txType`: kotlin.String, 
-    /**
-     * Total amount spent (including fee)
-     */
-    val `totalSpent`: kotlin.String?, 
-    /**
-     * Transaction fee
-     */
-    val `fee`: kotlin.String?, 
-    /**
-     * Fee per byte
-     */
-    val `feePerByte`: kotlin.String?, 
-    /**
-     * Transaction size in bytes
-     */
-    val `bytes`: kotlin.UInt?, 
-    /**
-     * Transaction inputs
-     */
-    val `inputs`: List<PrecomposedInput>?, 
-    /**
-     * Transaction outputs
-     */
-    val `outputs`: List<PrecomposedOutput>?, 
-    /**
-     * Output permutation indices
-     */
-    val `outputsPermutation`: List<kotlin.UInt>?
-) {
-    public companion object
-}
-
-
-
 @kotlinx.serialization.Serializable
 public data class PubkyAuth (
     val `data`: kotlin.String
-) {
-    public companion object
-}
-
-
-
-/**
- * Public key response containing the derived public key information
- */
-@kotlinx.serialization.Serializable
-public data class PublicKeyResponse (
-    val `path`: List<kotlin.UInt>, 
-    val `serializedPath`: kotlin.String, 
-    val `xpub`: kotlin.String, 
-    val `xpubSegwit`: kotlin.String?, 
-    val `chainCode`: kotlin.String, 
-    val `childNum`: kotlin.UInt, 
-    val `publicKey`: kotlin.String, 
-    val `fingerprint`: kotlin.UInt, 
-    val `depth`: kotlin.UInt, 
-    val `descriptor`: kotlin.String?
-) {
-    public companion object
-}
-
-
-
-/**
- * Reference transaction for transaction signing
- */
-@kotlinx.serialization.Serializable
-public data class RefTransaction (
-    /**
-     * Transaction hash
-     */
-    val `hash`: kotlin.String, 
-    /**
-     * Transaction version
-     */
-    val `version`: kotlin.UInt?, 
-    /**
-     * Transaction inputs
-     */
-    val `inputs`: List<RefTxInput>, 
-    /**
-     * Transaction outputs (binary format)
-     */
-    val `binOutputs`: List<RefTxOutput>, 
-    /**
-     * Lock time
-     */
-    val `lockTime`: kotlin.UInt?, 
-    /**
-     * Expiry (for Zcash/Decred)
-     */
-    val `expiry`: kotlin.UInt?, 
-    /**
-     * Version group ID (for Zcash)
-     */
-    val `versionGroupId`: kotlin.UInt?, 
-    /**
-     * Overwintered flag (for Zcash)
-     */
-    val `overwintered`: kotlin.Boolean?, 
-    /**
-     * Timestamp (for Capricoin)
-     */
-    val `timestamp`: kotlin.UInt?, 
-    /**
-     * Branch ID (for Zcash)
-     */
-    val `branchId`: kotlin.UInt?, 
-    /**
-     * Extra data
-     */
-    val `extraData`: kotlin.String?
-) {
-    public companion object
-}
-
-
-
-/**
- * Reference transaction input
- */
-@kotlinx.serialization.Serializable
-public data class RefTxInput (
-    /**
-     * Previous transaction hash
-     */
-    val `prevHash`: kotlin.String, 
-    /**
-     * Previous transaction output index
-     */
-    val `prevIndex`: kotlin.UInt, 
-    /**
-     * Script signature
-     */
-    val `scriptSig`: kotlin.String, 
-    /**
-     * Sequence number
-     */
-    val `sequence`: kotlin.UInt
-) {
-    public companion object
-}
-
-
-
-/**
- * Reference transaction output (binary format)
- */
-@kotlinx.serialization.Serializable
-public data class RefTxOutput (
-    /**
-     * Amount in satoshis
-     */
-    val `amount`: kotlin.ULong, 
-    /**
-     * Script public key (binary hex)
-     */
-    val `scriptPubkey`: kotlin.String
-) {
-    public companion object
-}
-
-
-
-/**
- * Refund memo
- */
-@kotlinx.serialization.Serializable
-public data class RefundMemo (
-    /**
-     * Refund address
-     */
-    val `address`: kotlin.String, 
-    /**
-     * MAC
-     */
-    val `mac`: kotlin.String
-) {
-    public companion object
-}
-
-
-
-/**
- * Signed transaction response
- */
-@kotlinx.serialization.Serializable
-public data class SignedTransactionResponse (
-    /**
-     * Array of signer signatures
-     */
-    val `signatures`: List<kotlin.String>, 
-    /**
-     * Serialized transaction
-     */
-    val `serializedTx`: kotlin.String, 
-    /**
-     * Broadcasted transaction ID (if push was true)
-     */
-    val `txid`: kotlin.String?
 ) {
     public companion object
 }
@@ -1672,21 +1205,6 @@ public data class SweepableBalances (
 
 
 /**
- * Text memo
- */
-@kotlinx.serialization.Serializable
-public data class TextMemo (
-    /**
-     * Text content
-     */
-    val `text`: kotlin.String
-) {
-    public companion object
-}
-
-
-
-/**
  * Details about an onchain transaction.
  */
 @kotlinx.serialization.Serializable
@@ -1719,30 +1237,588 @@ public data class TransactionDetails (
 
 
 /**
- * Payment request
+ * Address response from device.
  */
 @kotlinx.serialization.Serializable
-public data class TxAckPaymentRequest (
+public data class TrezorAddressResponse (
     /**
-     * Nonce
+     * The Bitcoin address
      */
-    val `nonce`: kotlin.String?, 
+    val `address`: kotlin.String, 
     /**
-     * Recipient name
+     * The serialized path (e.g., "m/84'/0'/0'/0/0")
      */
-    val `recipientName`: kotlin.String, 
+    val `path`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+/**
+ * Result from a high-level message call (for BLE/THP devices)
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorCallMessageResult (
     /**
-     * Memos
+     * Whether the call succeeded
      */
-    val `memos`: List<PaymentRequestMemo>?, 
+    val `success`: kotlin.Boolean, 
     /**
-     * Amount
+     * Response message type
      */
-    val `amount`: kotlin.ULong?, 
+    val `messageType`: kotlin.UShort, 
     /**
-     * Signature
+     * Response protobuf data
+     */
+    val `data`: kotlin.ByteArray, 
+    /**
+     * Error message (empty on success)
+     */
+    val `error`: kotlin.String
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as TrezorCallMessageResult
+        if (`success` != other.`success`) return false
+        if (`messageType` != other.`messageType`) return false
+        if (!`data`.contentEquals(other.`data`)) return false
+        if (`error` != other.`error`) return false
+
+        return true
+    }
+    override fun hashCode(): Int {
+        var result = `success`.hashCode()
+        result = 31 * result + `messageType`.hashCode()
+        result = 31 * result + `data`.contentHashCode()
+        result = 31 * result + `error`.hashCode()
+        return result
+    }
+    public companion object
+}
+
+
+
+/**
+ * Device information exposed to FFI.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorDeviceInfo (
+    /**
+     * Unique identifier for the device
+     */
+    val `id`: kotlin.String, 
+    /**
+     * Transport type (USB or Bluetooth)
+     */
+    val `transportType`: TrezorTransportType, 
+    /**
+     * Device name (from BLE advertisement or USB descriptor)
+     */
+    val `name`: kotlin.String?, 
+    /**
+     * Transport-specific path (used internally for connection)
+     */
+    val `path`: kotlin.String, 
+    /**
+     * Device label (set by user during device setup)
+     */
+    val `label`: kotlin.String?, 
+    /**
+     * Device model (e.g., "T2", "Safe 5", "Safe 7")
+     */
+    val `model`: kotlin.String?, 
+    /**
+     * Whether the device is in bootloader mode
+     */
+    val `isBootloader`: kotlin.Boolean
+) {
+    public companion object
+}
+
+
+
+/**
+ * Device features after initialization.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorFeatures (
+    /**
+     * Vendor string
+     */
+    val `vendor`: kotlin.String?, 
+    /**
+     * Device model
+     */
+    val `model`: kotlin.String?, 
+    /**
+     * Device label (set by user during device setup)
+     */
+    val `label`: kotlin.String?, 
+    /**
+     * Device ID (unique per device)
+     */
+    val `deviceId`: kotlin.String?, 
+    /**
+     * Major firmware version
+     */
+    val `majorVersion`: kotlin.UInt?, 
+    /**
+     * Minor firmware version
+     */
+    val `minorVersion`: kotlin.UInt?, 
+    /**
+     * Patch firmware version
+     */
+    val `patchVersion`: kotlin.UInt?, 
+    /**
+     * Whether PIN protection is enabled
+     */
+    val `pinProtection`: kotlin.Boolean?, 
+    /**
+     * Whether passphrase protection is enabled
+     */
+    val `passphraseProtection`: kotlin.Boolean?, 
+    /**
+     * Whether the device is initialized with a seed
+     */
+    val `initialized`: kotlin.Boolean?, 
+    /**
+     * Whether the device needs backup
+     */
+    val `needsBackup`: kotlin.Boolean?
+) {
+    public companion object
+}
+
+
+
+/**
+ * Parameters for getting an address from the device.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorGetAddressParams (
+    /**
+     * BIP32 path (e.g., "m/84'/0'/0'/0/0")
+     */
+    val `path`: kotlin.String, 
+    /**
+     * Coin network (default: Bitcoin)
+     */
+    val `coin`: TrezorCoinType?, 
+    /**
+     * Whether to display the address on the device for confirmation
+     */
+    val `showOnTrezor`: kotlin.Boolean, 
+    /**
+     * Script type (auto-detected from path if not specified)
+     */
+    val `scriptType`: TrezorScriptType?
+) {
+    public companion object
+}
+
+
+
+/**
+ * Parameters for getting a public key from the device.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorGetPublicKeyParams (
+    /**
+     * BIP32 path (e.g., "m/84'/0'/0'")
+     */
+    val `path`: kotlin.String, 
+    /**
+     * Coin network (default: Bitcoin)
+     */
+    val `coin`: TrezorCoinType?, 
+    /**
+     * Whether to display on device for confirmation
+     */
+    val `showOnTrezor`: kotlin.Boolean
+) {
+    public companion object
+}
+
+
+
+/**
+ * Previous transaction data (for non-SegWit input verification).
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorPrevTx (
+    /**
+     * Transaction hash (hex encoded)
+     */
+    val `hash`: kotlin.String, 
+    /**
+     * Transaction version
+     */
+    val `version`: kotlin.UInt, 
+    /**
+     * Lock time
+     */
+    val `lockTime`: kotlin.UInt, 
+    /**
+     * Transaction inputs
+     */
+    val `inputs`: List<TrezorPrevTxInput>, 
+    /**
+     * Transaction outputs
+     */
+    val `outputs`: List<TrezorPrevTxOutput>
+) {
+    public companion object
+}
+
+
+
+/**
+ * Input of a previous transaction.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorPrevTxInput (
+    /**
+     * Previous transaction hash (hex encoded)
+     */
+    val `prevHash`: kotlin.String, 
+    /**
+     * Previous output index
+     */
+    val `prevIndex`: kotlin.UInt, 
+    /**
+     * Script signature (hex encoded)
+     */
+    val `scriptSig`: kotlin.String, 
+    /**
+     * Sequence number
+     */
+    val `sequence`: kotlin.UInt
+) {
+    public companion object
+}
+
+
+
+/**
+ * Output of a previous transaction.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorPrevTxOutput (
+    /**
+     * Amount in satoshis
+     */
+    val `amount`: kotlin.ULong, 
+    /**
+     * Script pubkey (hex encoded)
+     */
+    val `scriptPubkey`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+/**
+ * Public key response from device.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorPublicKeyResponse (
+    /**
+     * Extended public key (xpub)
+     */
+    val `xpub`: kotlin.String, 
+    /**
+     * The serialized path (e.g., "m/84'/0'/0'")
+     */
+    val `path`: kotlin.String, 
+    /**
+     * Compressed public key (hex encoded)
+     */
+    val `publicKey`: kotlin.String, 
+    /**
+     * Chain code (hex encoded)
+     */
+    val `chainCode`: kotlin.String, 
+    /**
+     * Parent key fingerprint
+     */
+    val `fingerprint`: kotlin.UInt, 
+    /**
+     * Derivation depth
+     */
+    val `depth`: kotlin.UInt, 
+    /**
+     * Master root fingerprint (from the device's master seed)
+     */
+    val `rootFingerprint`: kotlin.UInt?
+) {
+    public companion object
+}
+
+
+
+/**
+ * Parameters for signing a message.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorSignMessageParams (
+    /**
+     * BIP32 path for the signing key (e.g., "m/84'/0'/0'/0/0")
+     */
+    val `path`: kotlin.String, 
+    /**
+     * Message to sign
+     */
+    val `message`: kotlin.String, 
+    /**
+     * Coin network (default: Bitcoin)
+     */
+    val `coin`: TrezorCoinType?
+) {
+    public companion object
+}
+
+
+
+/**
+ * Parameters for signing a transaction.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorSignTxParams (
+    /**
+     * Transaction inputs
+     */
+    val `inputs`: List<TrezorTxInput>, 
+    /**
+     * Transaction outputs
+     */
+    val `outputs`: List<TrezorTxOutput>, 
+    /**
+     * Coin network (default: Bitcoin)
+     */
+    val `coin`: TrezorCoinType?, 
+    /**
+     * Lock time (default: 0)
+     */
+    val `lockTime`: kotlin.UInt?, 
+    /**
+     * Version (default: 2)
+     */
+    val `version`: kotlin.UInt?, 
+    /**
+     * Previous transactions (for non-SegWit input verification)
+     */
+    val `prevTxs`: List<TrezorPrevTx>
+) {
+    public companion object
+}
+
+
+
+/**
+ * Response from signing a message.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorSignedMessageResponse (
+    /**
+     * Bitcoin address that signed the message
+     */
+    val `address`: kotlin.String, 
+    /**
+     * Signature (base64 encoded)
      */
     val `signature`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+/**
+ * Signed transaction result.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorSignedTx (
+    /**
+     * Signatures for each input (hex encoded)
+     */
+    val `signatures`: List<kotlin.String>, 
+    /**
+     * Serialized transaction (hex)
+     */
+    val `serializedTx`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+/**
+ * Result from a transport read operation
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorTransportReadResult (
+    /**
+     * Whether the read succeeded
+     */
+    val `success`: kotlin.Boolean, 
+    /**
+     * Data read (empty on failure)
+     */
+    val `data`: kotlin.ByteArray, 
+    /**
+     * Error message (empty on success)
+     */
+    val `error`: kotlin.String
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as TrezorTransportReadResult
+        if (`success` != other.`success`) return false
+        if (!`data`.contentEquals(other.`data`)) return false
+        if (`error` != other.`error`) return false
+
+        return true
+    }
+    override fun hashCode(): Int {
+        var result = `success`.hashCode()
+        result = 31 * result + `data`.contentHashCode()
+        result = 31 * result + `error`.hashCode()
+        return result
+    }
+    public companion object
+}
+
+
+
+/**
+ * Result from a transport write or open operation
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorTransportWriteResult (
+    /**
+     * Whether the operation succeeded
+     */
+    val `success`: kotlin.Boolean, 
+    /**
+     * Error message (empty on success)
+     */
+    val `error`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+/**
+ * Transaction input for signing.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorTxInput (
+    /**
+     * Previous transaction hash (hex, 32 bytes)
+     */
+    val `prevHash`: kotlin.String, 
+    /**
+     * Previous output index
+     */
+    val `prevIndex`: kotlin.UInt, 
+    /**
+     * BIP32 derivation path (e.g., "m/84'/0'/0'/0/0")
+     */
+    val `path`: kotlin.String, 
+    /**
+     * Amount in satoshis
+     */
+    val `amount`: kotlin.ULong, 
+    /**
+     * Script type
+     */
+    val `scriptType`: TrezorScriptType, 
+    /**
+     * Sequence number (default: 0xFFFFFFFD for RBF)
+     */
+    val `sequence`: kotlin.UInt?, 
+    /**
+     * Original transaction hash for RBF replacement (hex encoded)
+     */
+    val `origHash`: kotlin.String?, 
+    /**
+     * Original input index for RBF replacement
+     */
+    val `origIndex`: kotlin.UInt?
+) {
+    public companion object
+}
+
+
+
+/**
+ * Transaction output for signing.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorTxOutput (
+    /**
+     * Destination address (for external outputs)
+     */
+    val `address`: kotlin.String?, 
+    /**
+     * BIP32 path (for change outputs)
+     */
+    val `path`: kotlin.String?, 
+    /**
+     * Amount in satoshis
+     */
+    val `amount`: kotlin.ULong, 
+    /**
+     * Script type (for change outputs)
+     */
+    val `scriptType`: TrezorScriptType?, 
+    /**
+     * OP_RETURN data (hex encoded, for data outputs)
+     */
+    val `opReturnData`: kotlin.String?, 
+    /**
+     * Original transaction hash for RBF replacement (hex encoded)
+     */
+    val `origHash`: kotlin.String?, 
+    /**
+     * Original output index for RBF replacement
+     */
+    val `origIndex`: kotlin.UInt?
+) {
+    public companion object
+}
+
+
+
+/**
+ * Parameters for verifying a message signature.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorVerifyMessageParams (
+    /**
+     * Bitcoin address that signed the message
+     */
+    val `address`: kotlin.String, 
+    /**
+     * Signature (base64 encoded)
+     */
+    val `signature`: kotlin.String, 
+    /**
+     * Original message
+     */
+    val `message`: kotlin.String, 
+    /**
+     * Coin network (default: Bitcoin)
+     */
+    val `coin`: TrezorCoinType?
 ) {
     public companion object
 }
@@ -1781,77 +1857,6 @@ public data class TxInput (
 
 
 /**
- * Transaction input type
- */
-@kotlinx.serialization.Serializable
-public data class TxInputType (
-    /**
-     * Previous transaction hash
-     */
-    val `prevHash`: kotlin.String, 
-    /**
-     * Previous transaction output index
-     */
-    val `prevIndex`: kotlin.UInt, 
-    /**
-     * Amount in satoshis
-     */
-    val `amount`: kotlin.ULong, 
-    /**
-     * Transaction sequence
-     */
-    val `sequence`: kotlin.UInt?, 
-    /**
-     * BIP32 derivation path
-     */
-    val `addressN`: List<kotlin.UInt>?, 
-    /**
-     * Script type
-     */
-    val `scriptType`: ScriptType?, 
-    /**
-     * Multisig information
-     */
-    val `multisig`: MultisigRedeemScriptType?, 
-    /**
-     * Script public key (for external inputs)
-     */
-    val `scriptPubkey`: kotlin.String?, 
-    /**
-     * Script signature
-     */
-    val `scriptSig`: kotlin.String?, 
-    /**
-     * Witness data
-     */
-    val `witness`: kotlin.String?, 
-    /**
-     * Ownership proof
-     */
-    val `ownershipProof`: kotlin.String?, 
-    /**
-     * Commitment data
-     */
-    val `commitmentData`: kotlin.String?, 
-    /**
-     * Original hash for RBF
-     */
-    val `origHash`: kotlin.String?, 
-    /**
-     * Original index for RBF
-     */
-    val `origIndex`: kotlin.UInt?, 
-    /**
-     * Coinjoin flags
-     */
-    val `coinjoinFlags`: kotlin.UInt?
-) {
-    public companion object
-}
-
-
-
-/**
  * Details about a transaction output.
  */
 @kotlinx.serialization.Serializable
@@ -1882,72 +1887,6 @@ public data class TxOutput (
 
 
 
-/**
- * Transaction output type
- */
-@kotlinx.serialization.Serializable
-public data class TxOutputType (
-    /**
-     * Output address (for address outputs)
-     */
-    val `address`: kotlin.String?, 
-    /**
-     * BIP32 derivation path (for change outputs)
-     */
-    val `addressN`: List<kotlin.UInt>?, 
-    /**
-     * Amount in satoshis
-     */
-    val `amount`: kotlin.ULong, 
-    /**
-     * Script type
-     */
-    val `scriptType`: ScriptType, 
-    /**
-     * Multisig information
-     */
-    val `multisig`: MultisigRedeemScriptType?, 
-    /**
-     * OP_RETURN data
-     */
-    val `opReturnData`: kotlin.String?, 
-    /**
-     * Original hash for RBF
-     */
-    val `origHash`: kotlin.String?, 
-    /**
-     * Original index for RBF
-     */
-    val `origIndex`: kotlin.UInt?, 
-    /**
-     * Payment request index
-     */
-    val `paymentReqIndex`: kotlin.UInt?
-) {
-    public companion object
-}
-
-
-
-/**
- * Unlock Path parameters
- */
-@kotlinx.serialization.Serializable
-public data class UnlockPath (
-    /**
-     * BIP32 derivation path
-     */
-    val `addressN`: List<kotlin.UInt>, 
-    /**
-     * MAC (optional)
-     */
-    val `mac`: kotlin.String?
-) {
-    public companion object
-}
-
-
-
 @kotlinx.serialization.Serializable
 public data class ValidationResult (
     val `address`: kotlin.String, 
@@ -1956,71 +1895,6 @@ public data class ValidationResult (
 ) {
     public companion object
 }
-
-
-
-/**
- * Verify message response
- */
-@kotlinx.serialization.Serializable
-public data class VerifyMessageResponse (
-    /**
-     * Verification result message
-     */
-    val `message`: kotlin.String
-) {
-    public companion object
-}
-
-
-
-/**
- * Marker object for XRP accounts
- */
-@kotlinx.serialization.Serializable
-public data class XrpMarker (
-    /**
-     * Ledger number
-     */
-    val `ledger`: kotlin.ULong, 
-    /**
-     * Sequence number
-     */
-    val `seq`: kotlin.ULong
-) {
-    public companion object
-}
-
-
-
-
-/**
- * Level of details to be returned by getAccountInfo
- */
-
-@kotlinx.serialization.Serializable
-public enum class AccountInfoDetails {
-    
-    /**
-     * Return only account balances (default)
-     */
-    BASIC,
-    /**
-     * Return with derived addresses or ERC20 tokens
-     */
-    TOKENS,
-    /**
-     * Same as tokens with balances
-     */
-    TOKEN_BALANCES,
-    /**
-     * TokenBalances + complete account transaction history
-     */
-    TXS;
-    public companion object
-}
-
-
 
 
 
@@ -2185,25 +2059,6 @@ public enum class AddressType {
     P2WSH,
     P2TR,
     UNKNOWN;
-    public companion object
-}
-
-
-
-
-
-
-/**
- * Amount unit for display
- */
-
-@kotlinx.serialization.Serializable
-public enum class AmountUnit {
-    
-    BITCOIN,
-    MILLI_BITCOIN,
-    MICRO_BITCOIN,
-    SATOSHI;
     public companion object
 }
 
@@ -2458,103 +2313,6 @@ public enum class CJitStateEnum {
 
 
 
-/**
- * Output type for compose transaction
- */
-@kotlinx.serialization.Serializable
-public sealed class ComposeOutput {
-    
-    /**
-     * Regular output with amount and address
-     */@kotlinx.serialization.Serializable
-    public data class Regular(
-        /**
-         * Amount in satoshis
-         */
-        val `amount`: kotlin.String,
-        /**
-         * Recipient address
-         */
-        val `address`: kotlin.String,
-    ) : ComposeOutput() {
-    }
-    
-    /**
-     * Send max output
-     */@kotlinx.serialization.Serializable
-    public data class SendMax(
-        /**
-         * Recipient address
-         */
-        val `address`: kotlin.String,
-    ) : ComposeOutput() {
-    }
-    
-    /**
-     * OP_RETURN output
-     */@kotlinx.serialization.Serializable
-    public data class OpReturn(
-        /**
-         * Hexadecimal string with arbitrary data
-         */
-        val `dataHex`: kotlin.String,
-    ) : ComposeOutput() {
-    }
-    
-    /**
-     * Payment without address (precompose only)
-     */@kotlinx.serialization.Serializable
-    public data class PaymentNoAddress(
-        /**
-         * Amount in satoshis
-         */
-        val `amount`: kotlin.String,
-    ) : ComposeOutput() {
-    }
-    
-    /**
-     * Send max without address (precompose only)
-     */
-    @kotlinx.serialization.Serializable
-    public data object SendMaxNoAddress : ComposeOutput() 
-    
-    
-}
-
-
-
-
-
-
-/**
- * Compose transaction response
- */
-@kotlinx.serialization.Serializable
-public sealed class ComposeTransactionResponse {
-    
-    /**
-     * Signed transaction (payment mode)
-     */@kotlinx.serialization.Serializable
-    public data class SignedTransaction(
-        val v1: SignedTransactionResponse,
-    ) : ComposeTransactionResponse() {
-    }
-    
-    /**
-     * Precomposed transactions (precompose mode)
-     */@kotlinx.serialization.Serializable
-    public data class PrecomposedTransactions(
-        val v1: List<PrecomposedTransaction>,
-    ) : ComposeTransactionResponse() {
-    }
-    
-}
-
-
-
-
-
-
 
 public sealed class DbException: kotlin.Exception() {
     
@@ -2664,62 +2422,6 @@ public sealed class DecodingException: kotlin.Exception() {
     }
     
 }
-
-
-
-
-/**
- * Bitcoin account types for default display
- */
-
-@kotlinx.serialization.Serializable
-public enum class DefaultAccountType {
-    
-    /**
-     * Normal account
-     */
-    NORMAL,
-    /**
-     * SegWit account
-     */
-    SEGWIT,
-    /**
-     * Legacy account
-     */
-    LEGACY;
-    public companion object
-}
-
-
-
-
-
-
-/**
- * Union type for HD Node (either a String or HDNodeType)
- */
-@kotlinx.serialization.Serializable
-public sealed class HdNodeTypeOrString {
-    
-    /**
-     * HD Node as a string
-     */@kotlinx.serialization.Serializable
-    public data class String(
-        val v1: kotlin.String,
-    ) : HdNodeTypeOrString() {
-    }
-    
-    /**
-     * HD Node as an object
-     */@kotlinx.serialization.Serializable
-    public data class Node(
-        val v1: HdNodeType,
-    ) : HdNodeTypeOrString() {
-    }
-    
-}
-
-
 
 
 
@@ -2933,34 +2635,6 @@ public sealed class Scanner {
 
 
 
-/**
- * Script type for inputs and outputs
- */
-
-@kotlinx.serialization.Serializable
-public enum class ScriptType {
-    
-    SPEND_ADDRESS,
-    SPEND_MULTISIG,
-    SPEND_WITNESS,
-    SPEND_P2SH_WITNESS,
-    SPEND_TAPROOT,
-    EXTERNAL,
-    PAY_TO_ADDRESS,
-    PAY_TO_SCRIPT_HASH,
-    PAY_TO_MULTISIG,
-    PAY_TO_WITNESS,
-    PAY_TO_P2SH_WITNESS,
-    PAY_TO_TAPROOT,
-    PAY_TO_OP_RETURN;
-    public companion object
-}
-
-
-
-
-
-
 
 @kotlinx.serialization.Serializable
 public enum class SortDirection {
@@ -3003,24 +2677,28 @@ public sealed class SweepException: kotlin.Exception() {
 
 
 /**
- * Token filter options for getAccountInfo
+ * Bitcoin network / coin type for Trezor operations.
  */
 
 @kotlinx.serialization.Serializable
-public enum class TokenFilter {
+public enum class TrezorCoinType {
     
     /**
-     * Return only addresses with nonzero balance (default)
+     * Bitcoin mainnet
      */
-    NONZERO,
+    BITCOIN,
     /**
-     * Return addresses with at least one transaction
+     * Bitcoin testnet
      */
-    USED,
+    TESTNET,
     /**
-     * Return all derived addresses
+     * Bitcoin signet (treated as testnet by the device)
      */
-    DERIVED;
+    SIGNET,
+    /**
+     * Bitcoin regtest
+     */
+    REGTEST;
     public companion object
 }
 
@@ -3031,53 +2709,185 @@ public enum class TokenFilter {
 
 
 /**
- * Error types for Trezor Connect operations
+ * Trezor-related errors exposed via FFI.
  */
-public sealed class TrezorConnectException: kotlin.Exception() {
+public sealed class TrezorException: kotlin.Exception() {
     
     /**
-     * Error during serialization/deserialization
+     * Transport layer error (USB/Bluetooth communication)
      */
-    public class SerdeException(
+    public class TransportException(
         public val `errorDetails`: kotlin.String,
-    ) : TrezorConnectException() {
+    ) : TrezorException() {
         override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
     /**
-     * Error with URL parsing or formatting
+     * No Trezor device found
      */
-    public class UrlException(
+    public class DeviceNotFound(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
+     * Device disconnected during operation
+     */
+    public class DeviceDisconnected(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
+     * Connection error
+     */
+    public class ConnectionException(
         public val `errorDetails`: kotlin.String,
-    ) : TrezorConnectException() {
+    ) : TrezorException() {
         override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
     /**
-     * Environment-related errors
+     * Protocol error (encoding/decoding)
      */
-    public class EnvironmentException(
+    public class ProtocolException(
         public val `errorDetails`: kotlin.String,
-    ) : TrezorConnectException() {
+    ) : TrezorException() {
         override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
     /**
-     * General errors
+     * Pairing required for Bluetooth connection
      */
-    public class Other(
+    public class PairingRequired(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
+     * Pairing failed
+     */
+    public class PairingFailed(
         public val `errorDetails`: kotlin.String,
-    ) : TrezorConnectException() {
+    ) : TrezorException() {
         override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    public class ClientException(
+    /**
+     * PIN is required
+     */
+    public class PinRequired(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
+     * PIN entry cancelled
+     */
+    public class PinCancelled(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
+     * Invalid PIN entered
+     */
+    public class InvalidPin(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
+     * Passphrase is required
+     */
+    public class PassphraseRequired(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
+     * Action cancelled by user on device
+     */
+    public class UserCancelled(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
+     * Operation timed out
+     */
+    public class Timeout(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
+     * Invalid derivation path
+     */
+    public class InvalidPath(
         public val `errorDetails`: kotlin.String,
-    ) : TrezorConnectException() {
+    ) : TrezorException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * Device returned an error
+     */
+    public class DeviceException(
+        public val `errorDetails`: kotlin.String,
+    ) : TrezorException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * Trezor manager not initialized
+     */
+    public class NotInitialized(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
+     * No device connected
+     */
+    public class NotConnected(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
+     * Session error
+     */
+    public class SessionException(
+        public val `errorDetails`: kotlin.String,
+    ) : TrezorException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * IO error
+     */
+    public class IoException(
+        public val `errorDetails`: kotlin.String,
+    ) : TrezorException() {
         override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }
@@ -3088,24 +2898,36 @@ public sealed class TrezorConnectException: kotlin.Exception() {
 
 
 /**
- * Environment options for Trezor deep linking
+ * Script types for address derivation.
  */
 
 @kotlinx.serialization.Serializable
-public enum class TrezorEnvironment {
+public enum class TrezorScriptType {
     
     /**
-     * Production environment (currently unavailable according to docs)
+     * P2PKH (legacy)
      */
-    PRODUCTION,
+    SPEND_ADDRESS,
     /**
-     * Development environment
+     * P2SH-P2WPKH (nested SegWit)
      */
-    DEVELOPMENT,
+    SPEND_P2SH_WITNESS,
     /**
-     * Local environment
+     * P2WPKH (native SegWit)
      */
-    LOCAL;
+    SPEND_WITNESS,
+    /**
+     * P2TR (Taproot)
+     */
+    SPEND_TAPROOT,
+    /**
+     * P2SH multisig
+     */
+    SPEND_MULTISIG,
+    /**
+     * External/watch-only input (not signed by device)
+     */
+    EXTERNAL;
     public companion object
 }
 
@@ -3115,75 +2937,21 @@ public enum class TrezorEnvironment {
 
 
 /**
- * Enum representing the different types of Trezor responses
+ * Transport type for Trezor devices.
  */
+
 @kotlinx.serialization.Serializable
-public sealed class TrezorResponsePayload {
+public enum class TrezorTransportType {
     
     /**
-     * Response from getFeatures method
-     */@kotlinx.serialization.Serializable
-    public data class Features(
-        val v1: FeatureResponse,
-    ) : TrezorResponsePayload() {
-    }
-    
+     * USB connection
+     */
+    USB,
     /**
-     * Response from getAddress method
-     */@kotlinx.serialization.Serializable
-    public data class Address(
-        val v1: AddressResponse,
-    ) : TrezorResponsePayload() {
-    }
-    
-    /**
-     * Response from getPublicKey method
-     */@kotlinx.serialization.Serializable
-    public data class PublicKey(
-        val v1: PublicKeyResponse,
-    ) : TrezorResponsePayload() {
-    }
-    
-    /**
-     * Response from getAccountInfo method
-     */@kotlinx.serialization.Serializable
-    public data class AccountInfo(
-        val v1: AccountInfoResponse,
-    ) : TrezorResponsePayload() {
-    }
-    
-    /**
-     * Response from composeTransaction method
-     */@kotlinx.serialization.Serializable
-    public data class ComposeTransaction(
-        val v1: ComposeTransactionResponse,
-    ) : TrezorResponsePayload() {
-    }
-    
-    /**
-     * Response from verifyMessage method
-     */@kotlinx.serialization.Serializable
-    public data class VerifyMessage(
-        val v1: VerifyMessageResponse,
-    ) : TrezorResponsePayload() {
-    }
-    
-    /**
-     * Response from signMessage method
-     */@kotlinx.serialization.Serializable
-    public data class MessageSignature(
-        val v1: MessageSignatureResponse,
-    ) : TrezorResponsePayload() {
-    }
-    
-    /**
-     * Response from signTransaction method
-     */@kotlinx.serialization.Serializable
-    public data class SignedTransaction(
-        val v1: SignedTransactionResponse,
-    ) : TrezorResponsePayload() {
-    }
-    
+     * Bluetooth connection
+     */
+    BLUETOOTH;
+    public companion object
 }
 
 
@@ -3217,62 +2985,6 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

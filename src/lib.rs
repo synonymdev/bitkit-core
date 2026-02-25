@@ -1,8 +1,33 @@
 uniffi::setup_scaffolding!();
 
+// Initialize Android logger so Rust log::info! calls appear in logcat
+#[cfg(target_os = "android")]
+fn init_android_logger() {
+    use std::sync::Once;
+    static INIT: Once = Once::new();
+    INIT.call_once(|| {
+        android_logger::init_once(
+            android_logger::Config::default()
+                .with_max_level(log::LevelFilter::Debug)
+                .with_tag("BitkitRust"),
+        );
+        log::info!("[BitkitRust] Android logger initialized");
+    });
+}
+
 mod modules;
 
+use std::sync::Arc;
 use once_cell::sync::OnceCell;
+
+// Re-export Trezor callback types and traits so UniFFI discovers them at the crate root
+pub use crate::modules::trezor::{
+    TrezorTransportReadResult, TrezorTransportWriteResult, TrezorCallMessageResult,
+    NativeDeviceInfo, TrezorTransportCallback,
+    trezor_set_transport_callback, get_transport_callback,
+    trezor_is_ble_available,
+    TrezorUiCallback, trezor_set_ui_callback,
+};
 pub use modules::scanner::{
     Scanner,
     DecodingError
@@ -13,13 +38,12 @@ pub use modules::activity;
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
 use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances};
+use crate::modules::trezor::{TrezorError, TrezorDeviceInfo, TrezorTransportType, TrezorFeatures, TrezorGetAddressParams, TrezorAddressResponse, TrezorGetPublicKeyParams, TrezorPublicKeyResponse, TrezorScriptType, TrezorManager, TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams, TrezorSignTxParams, TrezorSignedTx, TrezorTxInput, TrezorTxOutput, TrezorCoinType};
 pub use crate::onchain::WordCount;
 
 use std::sync::Mutex as StdMutex;
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex as TokioMutex;
-use crate::modules::trezor;
-use crate::modules::trezor::{AccountInfoDetails, AmountUnit, CommonParams, ComposeAccount, ComposeOutput, ComposeTransactionParams, DeepLinkResult, DefaultAccountType, FeeLevel, GetAccountInfoParams, GetAddressParams, MultisigRedeemScriptType, RefTransaction, SignMessageParams, SignTransactionParams, TokenFilter, TrezorConnectError, TrezorEnvironment, TrezorResponsePayload, TxAckPaymentRequest, TxInputType, TxOutputType, UnlockPath, VerifyMessageParams, XrpMarker};
 use bip39::Mnemonic;
 use bitcoin::bip32::Xpriv;
 use bitcoin::Network as BitcoinNetwork;
@@ -36,6 +60,7 @@ pub struct AsyncDatabaseConnections {
 static DB: OnceCell<StdMutex<DatabaseConnections>> = OnceCell::new();
 static ASYNC_DB: OnceCell<TokioMutex<AsyncDatabaseConnections>> = OnceCell::new();
 static RUNTIME: OnceCell<Runtime> = OnceCell::new();
+static TREZOR_MANAGER: OnceCell<TrezorManager> = OnceCell::new();
 
 fn ensure_runtime() -> &'static Runtime {
     RUNTIME.get_or_init(|| {
@@ -1205,288 +1230,6 @@ pub async fn regtest_close_channel(
 }
 
 #[uniffi::export]
-pub fn trezor_get_features(
-    callback_url: String,
-    request_id: Option<String>,
-    trezor_environment: Option<TrezorEnvironment>
-) -> Result<DeepLinkResult, TrezorConnectError> {
-    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
-    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
-        Ok(client) => client,
-        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    };
-    match trezor_client.get_features(request_id) {
-        Ok(result) => Ok(result),
-        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    }
-}
-
-#[uniffi::export]
-pub fn trezor_get_address(
-    path: String,
-    callback_url: String,
-    request_id: Option<String>,
-    trezor_environment: Option<TrezorEnvironment>,
-    address: Option<String>,
-    showOnTrezor: Option<bool>,
-    chunkify: Option<bool>,
-    useEventListener: Option<bool>,
-    coin: Option<String>,
-    crossChain: Option<bool>,
-    multisig: Option<MultisigRedeemScriptType>,
-    scriptType: Option<String>,
-    unlockPath: Option<UnlockPath>,
-    common: Option<CommonParams>,
-) -> Result<DeepLinkResult, TrezorConnectError> {
-    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
-    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
-        Ok(client) => client,
-        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    };
-
-    let coin = Some(coin.unwrap_or_else(|| "btc".to_string()));
-    let params = GetAddressParams {
-        path,
-        address,
-        showOnTrezor,
-        chunkify,
-        useEventListener,
-        coin,
-        crossChain,
-        multisig,
-        scriptType,
-        unlockPath,
-        common,
-    };
-
-    match trezor_client.get_address(params, request_id) {
-        Ok(result) => Ok(result),
-        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    }
-}
-
-#[uniffi::export]
-pub fn trezor_get_account_info(
-    coin: String,
-    callback_url: String,
-    request_id: Option<String>,
-    trezor_environment: Option<TrezorEnvironment>,
-    path: Option<String>,
-    descriptor: Option<String>,
-    details: Option<AccountInfoDetails>,
-    tokens: Option<TokenFilter>,
-    page: Option<u32>,
-    pageSize: Option<u32>,
-    from: Option<u32>,
-    to: Option<u32>,
-    gap: Option<u32>,
-    contractFilter: Option<String>,
-    marker: Option<XrpMarker>,
-    defaultAccountType: Option<DefaultAccountType>,
-    suppressBackupWarning: Option<bool>,
-    common: Option<CommonParams>,
-) -> Result<DeepLinkResult, TrezorConnectError> {
-    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
-    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
-        Ok(client) => client,
-        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    };
-
-    let params = GetAccountInfoParams {
-        path,
-        descriptor,
-        coin,
-        details,
-        tokens,
-        page,
-        pageSize,
-        from,
-        to,
-        gap,
-        contractFilter,
-        marker,
-        defaultAccountType,
-        suppressBackupWarning,
-        common,
-    };
-
-    match trezor_client.get_account_info(params, request_id) {
-        Ok(result) => Ok(result),
-        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    }
-}
-
-#[uniffi::export]
-pub fn trezor_handle_deep_link(
-    callback_url: String,
-) -> Result<TrezorResponsePayload, TrezorConnectError> {
-    match trezor::handle_deep_link(callback_url) {
-        Ok(result) => Ok(result),
-        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    }
-}
-
-#[uniffi::export]
-pub fn trezor_verify_message(
-    address: String,
-    signature: String,
-    message: String,
-    coin: String,
-    callback_url: String,
-    request_id: Option<String>,
-    trezor_environment: Option<TrezorEnvironment>,
-    hex: Option<bool>,
-    common: Option<CommonParams>,
-) -> Result<DeepLinkResult, TrezorConnectError> {
-    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
-    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
-        Ok(client) => client,
-        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    };
-
-    let params = VerifyMessageParams {
-        address,
-        signature,
-        message,
-        coin,
-        hex,
-        common,
-    };
-
-    match trezor_client.verify_message(params, request_id) {
-        Ok(result) => Ok(result),
-        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    }
-}
-
-#[uniffi::export]
-pub fn trezor_sign_message(
-    path: String,
-    message: String,
-    callback_url: String,
-    request_id: Option<String>,
-    trezor_environment: Option<TrezorEnvironment>,
-    coin: Option<String>,
-    hex: Option<bool>,
-    no_script_type: Option<bool>,
-    common: Option<CommonParams>,
-) -> Result<DeepLinkResult, TrezorConnectError> {
-    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
-    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
-        Ok(client) => client,
-        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    };
-
-    let params = SignMessageParams {
-        path,
-        coin,
-        message,
-        hex,
-        no_script_type,
-        common,
-    };
-
-    match trezor_client.sign_message(params, request_id) {
-        Ok(result) => Ok(result),
-        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    }
-}
-
-#[uniffi::export]
-pub fn trezor_sign_transaction(
-    coin: String,
-    inputs: Vec<TxInputType>,
-    outputs: Vec<TxOutputType>,
-    callback_url: String,
-    request_id: Option<String>,
-    trezor_environment: Option<TrezorEnvironment>,
-    ref_txs: Option<Vec<RefTransaction>>,
-    payment_requests: Option<Vec<TxAckPaymentRequest>>,
-    locktime: Option<u32>,
-    version: Option<u32>,
-    expiry: Option<u32>,
-    version_group_id: Option<u32>,
-    overwintered: Option<bool>,
-    timestamp: Option<u32>,
-    branch_id: Option<u32>,
-    push: Option<bool>,
-    amount_unit: Option<AmountUnit>,
-    unlock_path: Option<UnlockPath>,
-    serialize: Option<bool>,
-    chunkify: Option<bool>,
-    common: Option<CommonParams>,
-) -> Result<DeepLinkResult, TrezorConnectError> {
-    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
-    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
-        Ok(client) => client,
-        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    };
-
-    let params = SignTransactionParams {
-        coin,
-        inputs,
-        outputs,
-        refTxs: ref_txs,
-        paymentRequests: payment_requests,
-        locktime,
-        version,
-        expiry,
-        versionGroupId: version_group_id,
-        overwintered,
-        timestamp,
-        branchId: branch_id,
-        push,
-        amountUnit: amount_unit,
-        unlockPath: unlock_path,
-        serialize,
-        chunkify,
-        common,
-    };
-
-    match trezor_client.sign_transaction(params, request_id) {
-        Ok(result) => Ok(result),
-        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    }
-}
-
-#[uniffi::export]
-pub fn trezor_compose_transaction(
-    outputs: Vec<ComposeOutput>,
-    coin: String,
-    callback_url: String,
-    request_id: Option<String>,
-    trezor_environment: Option<TrezorEnvironment>,
-    push: Option<bool>,
-    sequence: Option<u32>,
-    account: Option<ComposeAccount>,
-    fee_levels: Option<Vec<FeeLevel>>,
-    skip_permutation: Option<bool>,
-    common: Option<CommonParams>,
-) -> Result<DeepLinkResult, TrezorConnectError> {
-    let trezor_environment = trezor_environment.unwrap_or(TrezorEnvironment::Production);
-    let trezor_client = match trezor::TrezorConnectClient::new(trezor_environment, callback_url) {
-        Ok(client) => client,
-        Err(e) => return Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    };
-
-    let params = ComposeTransactionParams {
-        outputs,
-        coin,
-        push,
-        sequence,
-        account,
-        fee_levels,
-        skip_permutation,
-        common,
-    };
-
-    match trezor_client.compose_transaction(params, request_id) {
-        Ok(result) => Ok(result),
-        Err(e) => Err(TrezorConnectError::ClientError { error_details: e.to_string() }),
-    }
-}
-
-#[uniffi::export]
 pub fn activity_wipe_all() -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
@@ -1705,4 +1448,228 @@ pub fn calculate_channel_liquidity_options(
 #[uniffi::export]
 pub fn get_default_lsp_balance(params: DefaultLspBalanceParams) -> u64 {
     crate::modules::blocktank::get_default_lsp_balance(params)
+}
+
+// ============================================================================
+// Trezor Hardware Wallet Functions
+// ============================================================================
+
+fn get_trezor_manager() -> &'static TrezorManager {
+    TREZOR_MANAGER.get_or_init(TrezorManager::new)
+}
+
+// ============================================================================
+// Trezor / Bluetooth Functions
+// ============================================================================
+
+/// JNI function to initialize btleplug on Android.
+/// This is called from Java via BluetoothInit.nativeInit().
+///
+/// The function name follows JNI naming convention:
+/// Java_{package}_{class}_{method} where package dots become underscores
+#[cfg(target_os = "android")]
+#[no_mangle]
+pub extern "system" fn Java_to_bitkit_services_BluetoothInit_nativeInit(
+    env: jni::JNIEnv,
+    _class: jni::objects::JClass,
+) -> jni::sys::jboolean {
+    use crate::modules::trezor::{is_ble_initialized, set_ble_initialized};
+
+    // Already initialized
+    if is_ble_initialized() {
+        return jni::sys::JNI_TRUE;
+    }
+
+    // Initialize btleplug with the JNI environment
+    match btleplug::platform::init(&env) {
+        Ok(()) => {
+            set_ble_initialized(true);
+            jni::sys::JNI_TRUE
+        }
+        Err(e) => {
+            // Log the error - this will be visible in logcat
+            eprintln!("Failed to initialize btleplug: {:?}", e);
+            jni::sys::JNI_FALSE
+        }
+    }
+}
+
+/// Initialize the Trezor manager with optional credential storage.
+///
+/// The credential_path is used to persist Bluetooth pairing credentials,
+/// allowing reconnection without re-pairing.
+///
+/// NOTE: On Android, you must call the native initBle() function first!
+#[uniffi::export]
+pub async fn trezor_initialize(credential_path: Option<String>) -> Result<(), TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().initialize(credential_path).await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// Scan for available Trezor devices (USB + Bluetooth).
+///
+/// This performs an active Bluetooth scan and enumerates USB devices.
+/// Returns a list of discovered devices.
+#[uniffi::export]
+pub async fn trezor_scan() -> Result<Vec<TrezorDeviceInfo>, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().scan().await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// List previously discovered devices without triggering a new scan.
+#[uniffi::export]
+pub async fn trezor_list_devices() -> Result<Vec<TrezorDeviceInfo>, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().list_devices().await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// Connect to a Trezor device by its ID.
+///
+/// For Bluetooth devices, this will use stored credentials if available,
+/// or trigger pairing if needed.
+#[uniffi::export]
+pub async fn trezor_connect(device_id: String) -> Result<TrezorFeatures, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().connect(&device_id).await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// Get a Bitcoin address from the connected Trezor device.
+#[uniffi::export]
+pub async fn trezor_get_address(params: TrezorGetAddressParams) -> Result<TrezorAddressResponse, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().get_address(params).await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// Get a public key (xpub) from the connected Trezor device.
+#[uniffi::export]
+pub async fn trezor_get_public_key(params: TrezorGetPublicKeyParams) -> Result<TrezorPublicKeyResponse, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().get_public_key(params).await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// Disconnect from the currently connected Trezor device.
+#[uniffi::export]
+pub async fn trezor_disconnect() -> Result<(), TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().disconnect().await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// Check if the Trezor manager is initialized.
+#[uniffi::export]
+pub async fn trezor_is_initialized() -> bool {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().is_initialized().await
+    }).await.unwrap_or(false)
+}
+
+/// Check if a Trezor device is currently connected.
+#[uniffi::export]
+pub async fn trezor_is_connected() -> bool {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().is_connected().await
+    }).await.unwrap_or(false)
+}
+
+/// Get information about the currently connected Trezor device.
+#[uniffi::export]
+pub async fn trezor_get_connected_device() -> Option<TrezorDeviceInfo> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().get_connected_device().await
+    }).await.unwrap_or(None)
+}
+
+/// Get the cached features of the currently connected Trezor device.
+///
+/// Returns the features that were obtained during `trezor_connect()`, without
+/// triggering any device interaction. Returns None if no device is connected.
+#[uniffi::export]
+pub async fn trezor_get_features() -> Option<TrezorFeatures> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().get_features().await
+    }).await.unwrap_or(None)
+}
+
+/// Sign a message with the connected Trezor device.
+#[uniffi::export]
+pub async fn trezor_sign_message(params: TrezorSignMessageParams) -> Result<TrezorSignedMessageResponse, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().sign_message(params).await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// Verify a message signature with the connected Trezor device.
+#[uniffi::export]
+pub async fn trezor_verify_message(params: TrezorVerifyMessageParams) -> Result<bool, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().verify_message(params).await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// Sign a Bitcoin transaction with the connected Trezor device.
+#[uniffi::export]
+pub async fn trezor_sign_tx(params: TrezorSignTxParams) -> Result<TrezorSignedTx, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().sign_tx(params).await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// Get the device's master root fingerprint as an 8-character hex string.
+///
+/// Returns the root fingerprint in the standard descriptor format (e.g., "73c5da0a").
+/// Requires a connected device.
+#[uniffi::export]
+pub async fn trezor_get_device_fingerprint() -> Result<String, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().get_device_fingerprint().await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// Sign a Bitcoin transaction from a PSBT (base64-encoded).
+///
+/// Parses the PSBT, extracts inputs/outputs/prev_txs, signs via the connected
+/// Trezor device, and returns the signed transaction.
+///
+/// # Arguments
+/// * `psbt_base64` - Base64-encoded PSBT data
+/// * `network` - Bitcoin network type. Defaults to Bitcoin (mainnet) if None.
+#[uniffi::export]
+pub async fn trezor_sign_tx_from_psbt(psbt_base64: String, network: Option<TrezorCoinType>) -> Result<TrezorSignedTx, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().sign_tx_from_psbt(psbt_base64, network).await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+/// Clear stored Bluetooth pairing credentials for a specific Trezor device.
+///
+/// This removes any stored credentials, requiring re-pairing on the next connection.
+/// Useful when a device has been reset or credentials have become stale.
+#[uniffi::export]
+pub async fn trezor_clear_credentials(device_id: String) -> Result<(), TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_trezor_manager().clear_credentials(&device_id).await
+    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
 }
