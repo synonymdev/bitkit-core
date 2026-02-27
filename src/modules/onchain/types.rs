@@ -199,3 +199,25 @@ pub struct SweepableBalances {
     /// Total number of UTXOs across all wallet types
     pub total_utxos_count: u32,
 }
+
+/// Address information
+#[derive(Serialize, Deserialize, Debug, Clone, Record)]
+pub struct AddressInfo {
+    /// Address string
+    pub address: String,
+    /// Derivation path
+    pub path: String,
+    /// Number of transfers
+    pub transfers: u32,
+}
+
+/// Account addresses
+#[derive(Serialize, Deserialize, Debug, Clone, Record)]
+pub struct AccountAddresses {
+    /// Used addresses
+    pub used: Vec<AddressInfo>,
+    /// Unused addresses
+    pub unused: Vec<AddressInfo>,
+    /// Change addresses
+    pub change: Vec<AddressInfo>,
+}

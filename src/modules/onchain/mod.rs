@@ -5,8 +5,8 @@ mod types;
 pub use errors::{AddressError, SweepError};
 pub use implementation::BitcoinAddressValidator;
 pub use types::{
-    AddressType, GetAddressResponse, GetAddressesResponse, Network, SweepResult,
-    SweepTransactionPreview, SweepableBalances, ValidationResult, WordCount,
+    AccountAddresses, AddressInfo, AddressType, GetAddressResponse, GetAddressesResponse, Network,
+    SweepResult, SweepTransactionPreview, SweepableBalances, ValidationResult, WordCount,
 };
 
 #[cfg(test)]
