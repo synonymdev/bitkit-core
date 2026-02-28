@@ -2378,6 +2378,65 @@ class _UniffiConverterBytes(_UniffiConverterRustBuffer):
 
 
 
+class AccountAddresses:
+    """
+    Account addresses
+    """
+
+    used: "typing.List[AddressInfo]"
+    """
+    Used addresses
+    """
+
+    unused: "typing.List[AddressInfo]"
+    """
+    Unused addresses
+    """
+
+    change: "typing.List[AddressInfo]"
+    """
+    Change addresses
+    """
+
+    def __init__(self, *, used: "typing.List[AddressInfo]", unused: "typing.List[AddressInfo]", change: "typing.List[AddressInfo]"):
+        self.used = used
+        self.unused = unused
+        self.change = change
+
+    def __str__(self):
+        return "AccountAddresses(used={}, unused={}, change={})".format(self.used, self.unused, self.change)
+
+    def __eq__(self, other):
+        if self.used != other.used:
+            return False
+        if self.unused != other.unused:
+            return False
+        if self.change != other.change:
+            return False
+        return True
+
+class _UniffiConverterTypeAccountAddresses(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return AccountAddresses(
+            used=_UniffiConverterSequenceTypeAddressInfo.read(buf),
+            unused=_UniffiConverterSequenceTypeAddressInfo.read(buf),
+            change=_UniffiConverterSequenceTypeAddressInfo.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterSequenceTypeAddressInfo.check_lower(value.used)
+        _UniffiConverterSequenceTypeAddressInfo.check_lower(value.unused)
+        _UniffiConverterSequenceTypeAddressInfo.check_lower(value.change)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterSequenceTypeAddressInfo.write(value.used, buf)
+        _UniffiConverterSequenceTypeAddressInfo.write(value.unused, buf)
+        _UniffiConverterSequenceTypeAddressInfo.write(value.change, buf)
+
+
 class ActivityTags:
     activity_id: "str"
     tags: "typing.List[str]"
@@ -2412,6 +2471,65 @@ class _UniffiConverterTypeActivityTags(_UniffiConverterRustBuffer):
     def write(value, buf):
         _UniffiConverterString.write(value.activity_id, buf)
         _UniffiConverterSequenceString.write(value.tags, buf)
+
+
+class AddressInfo:
+    """
+    Address information
+    """
+
+    address: "str"
+    """
+    Address string
+    """
+
+    path: "str"
+    """
+    Derivation path
+    """
+
+    transfers: "int"
+    """
+    Number of transfers
+    """
+
+    def __init__(self, *, address: "str", path: "str", transfers: "int"):
+        self.address = address
+        self.path = path
+        self.transfers = transfers
+
+    def __str__(self):
+        return "AddressInfo(address={}, path={}, transfers={})".format(self.address, self.path, self.transfers)
+
+    def __eq__(self, other):
+        if self.address != other.address:
+            return False
+        if self.path != other.path:
+            return False
+        if self.transfers != other.transfers:
+            return False
+        return True
+
+class _UniffiConverterTypeAddressInfo(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return AddressInfo(
+            address=_UniffiConverterString.read(buf),
+            path=_UniffiConverterString.read(buf),
+            transfers=_UniffiConverterUInt32.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.address)
+        _UniffiConverterString.check_lower(value.path)
+        _UniffiConverterUInt32.check_lower(value.transfers)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.address, buf)
+        _UniffiConverterString.write(value.path, buf)
+        _UniffiConverterUInt32.write(value.transfers, buf)
 
 
 class ChannelLiquidityOptions:
@@ -12365,6 +12483,31 @@ class _UniffiConverterSequenceTypeActivityTags(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterSequenceTypeAddressInfo(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeAddressInfo.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeAddressInfo.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeAddressInfo.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypeClosedChannelDetails(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -15755,7 +15898,9 @@ __all__ = [
     "TrezorScriptType",
     "TrezorTransportType",
     "WordCount",
+    "AccountAddresses",
     "ActivityTags",
+    "AddressInfo",
     "ChannelLiquidityOptions",
     "ChannelLiquidityParams",
     "ClosedChannelDetails",

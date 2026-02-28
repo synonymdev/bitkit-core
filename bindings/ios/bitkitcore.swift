@@ -1548,6 +1548,107 @@ public func FfiConverterTypeTrezorUiCallback_lower(_ value: TrezorUiCallback) ->
 
 
 
+/**
+ * Account addresses
+ */
+public struct AccountAddresses {
+    /**
+     * Used addresses
+     */
+    public var used: [AddressInfo]
+    /**
+     * Unused addresses
+     */
+    public var unused: [AddressInfo]
+    /**
+     * Change addresses
+     */
+    public var change: [AddressInfo]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Used addresses
+         */used: [AddressInfo], 
+        /**
+         * Unused addresses
+         */unused: [AddressInfo], 
+        /**
+         * Change addresses
+         */change: [AddressInfo]) {
+        self.used = used
+        self.unused = unused
+        self.change = change
+    }
+}
+
+#if compiler(>=6)
+extension AccountAddresses: Sendable {}
+#endif
+
+
+extension AccountAddresses: Equatable, Hashable {
+    public static func ==(lhs: AccountAddresses, rhs: AccountAddresses) -> Bool {
+        if lhs.used != rhs.used {
+            return false
+        }
+        if lhs.unused != rhs.unused {
+            return false
+        }
+        if lhs.change != rhs.change {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(used)
+        hasher.combine(unused)
+        hasher.combine(change)
+    }
+}
+
+extension AccountAddresses: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeAccountAddresses: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> AccountAddresses {
+        return
+            try AccountAddresses(
+                used: FfiConverterSequenceTypeAddressInfo.read(from: &buf), 
+                unused: FfiConverterSequenceTypeAddressInfo.read(from: &buf), 
+                change: FfiConverterSequenceTypeAddressInfo.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: AccountAddresses, into buf: inout [UInt8]) {
+        FfiConverterSequenceTypeAddressInfo.write(value.used, into: &buf)
+        FfiConverterSequenceTypeAddressInfo.write(value.unused, into: &buf)
+        FfiConverterSequenceTypeAddressInfo.write(value.change, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeAccountAddresses_lift(_ buf: RustBuffer) throws -> AccountAddresses {
+    return try FfiConverterTypeAccountAddresses.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeAccountAddresses_lower(_ value: AccountAddresses) -> RustBuffer {
+    return FfiConverterTypeAccountAddresses.lower(value)
+}
+
+
 public struct ActivityTags {
     public var activityId: String
     public var tags: [String]
@@ -1617,6 +1718,107 @@ public func FfiConverterTypeActivityTags_lift(_ buf: RustBuffer) throws -> Activ
 #endif
 public func FfiConverterTypeActivityTags_lower(_ value: ActivityTags) -> RustBuffer {
     return FfiConverterTypeActivityTags.lower(value)
+}
+
+
+/**
+ * Address information
+ */
+public struct AddressInfo {
+    /**
+     * Address string
+     */
+    public var address: String
+    /**
+     * Derivation path
+     */
+    public var path: String
+    /**
+     * Number of transfers
+     */
+    public var transfers: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Address string
+         */address: String, 
+        /**
+         * Derivation path
+         */path: String, 
+        /**
+         * Number of transfers
+         */transfers: UInt32) {
+        self.address = address
+        self.path = path
+        self.transfers = transfers
+    }
+}
+
+#if compiler(>=6)
+extension AddressInfo: Sendable {}
+#endif
+
+
+extension AddressInfo: Equatable, Hashable {
+    public static func ==(lhs: AddressInfo, rhs: AddressInfo) -> Bool {
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.path != rhs.path {
+            return false
+        }
+        if lhs.transfers != rhs.transfers {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(address)
+        hasher.combine(path)
+        hasher.combine(transfers)
+    }
+}
+
+extension AddressInfo: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeAddressInfo: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> AddressInfo {
+        return
+            try AddressInfo(
+                address: FfiConverterString.read(from: &buf), 
+                path: FfiConverterString.read(from: &buf), 
+                transfers: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: AddressInfo, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.address, into: &buf)
+        FfiConverterString.write(value.path, into: &buf)
+        FfiConverterUInt32.write(value.transfers, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeAddressInfo_lift(_ buf: RustBuffer) throws -> AddressInfo {
+    return try FfiConverterTypeAddressInfo.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeAddressInfo_lower(_ value: AddressInfo) -> RustBuffer {
+    return FfiConverterTypeAddressInfo.lower(value)
 }
 
 
@@ -14736,6 +14938,31 @@ fileprivate struct FfiConverterSequenceTypeActivityTags: FfiConverterRustBuffer 
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeActivityTags.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeAddressInfo: FfiConverterRustBuffer {
+    typealias SwiftType = [AddressInfo]
+
+    public static func write(_ value: [AddressInfo], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeAddressInfo.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [AddressInfo] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [AddressInfo]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeAddressInfo.read(from: &buf))
         }
         return seq
     }
