@@ -497,3 +497,25 @@ impl From<trezor_connect_rs::SignedTxResponse> for TrezorSignedTx {
         }
     }
 }
+
+/// Address information
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, uniffi::Record)]
+pub struct AddressInfo {
+    /// Address string
+    pub address: String,
+    /// Derivation path
+    pub path: String,
+    /// Number of transfers
+    pub transfers: u32,
+}
+
+/// Account addresses
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, uniffi::Record)]
+pub struct AccountAddresses {
+    /// Used addresses
+    pub used: Vec<AddressInfo>,
+    /// Unused addresses
+    pub unused: Vec<AddressInfo>,
+    /// Change addresses
+    pub change: Vec<AddressInfo>,
+}

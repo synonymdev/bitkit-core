@@ -4284,6 +4284,31 @@ internal object uniffiCallbackInterfaceTrezorUiCallback {
 
 
 
+public object FfiConverterTypeAccountAddresses: FfiConverterRustBuffer<AccountAddresses> {
+    override fun read(buf: ByteBuffer): AccountAddresses {
+        return AccountAddresses(
+            FfiConverterSequenceTypeAddressInfo.read(buf),
+            FfiConverterSequenceTypeAddressInfo.read(buf),
+            FfiConverterSequenceTypeAddressInfo.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: AccountAddresses): ULong = (
+            FfiConverterSequenceTypeAddressInfo.allocationSize(value.`used`) +
+            FfiConverterSequenceTypeAddressInfo.allocationSize(value.`unused`) +
+            FfiConverterSequenceTypeAddressInfo.allocationSize(value.`change`)
+    )
+
+    override fun write(value: AccountAddresses, buf: ByteBuffer) {
+        FfiConverterSequenceTypeAddressInfo.write(value.`used`, buf)
+        FfiConverterSequenceTypeAddressInfo.write(value.`unused`, buf)
+        FfiConverterSequenceTypeAddressInfo.write(value.`change`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypeActivityTags: FfiConverterRustBuffer<ActivityTags> {
     override fun read(buf: ByteBuffer): ActivityTags {
         return ActivityTags(
@@ -4300,6 +4325,31 @@ public object FfiConverterTypeActivityTags: FfiConverterRustBuffer<ActivityTags>
     override fun write(value: ActivityTags, buf: ByteBuffer) {
         FfiConverterString.write(value.`activityId`, buf)
         FfiConverterSequenceString.write(value.`tags`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeAddressInfo: FfiConverterRustBuffer<AddressInfo> {
+    override fun read(buf: ByteBuffer): AddressInfo {
+        return AddressInfo(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: AddressInfo): ULong = (
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterString.allocationSize(value.`path`) +
+            FfiConverterUInt.allocationSize(value.`transfers`)
+    )
+
+    override fun write(value: AddressInfo, buf: ByteBuffer) {
+        FfiConverterString.write(value.`address`, buf)
+        FfiConverterString.write(value.`path`, buf)
+        FfiConverterUInt.write(value.`transfers`, buf)
     }
 }
 
@@ -9771,6 +9821,31 @@ public object FfiConverterSequenceTypeActivityTags: FfiConverterRustBuffer<List<
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeActivityTags.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeAddressInfo: FfiConverterRustBuffer<List<AddressInfo>> {
+    override fun read(buf: ByteBuffer): List<AddressInfo> {
+        val len = buf.getInt()
+        return List<AddressInfo>(len) {
+            FfiConverterTypeAddressInfo.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<AddressInfo>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeAddressInfo.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<AddressInfo>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeAddressInfo.write(it, buf)
         }
     }
 }

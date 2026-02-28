@@ -280,10 +280,56 @@ public interface TrezorUiCallback {
 
 
 
+/**
+ * Account addresses
+ */
+@kotlinx.serialization.Serializable
+public data class AccountAddresses (
+    /**
+     * Used addresses
+     */
+    val `used`: List<AddressInfo>, 
+    /**
+     * Unused addresses
+     */
+    val `unused`: List<AddressInfo>, 
+    /**
+     * Change addresses
+     */
+    val `change`: List<AddressInfo>
+) {
+    public companion object
+}
+
+
+
 @kotlinx.serialization.Serializable
 public data class ActivityTags (
     val `activityId`: kotlin.String, 
     val `tags`: List<kotlin.String>
+) {
+    public companion object
+}
+
+
+
+/**
+ * Address information
+ */
+@kotlinx.serialization.Serializable
+public data class AddressInfo (
+    /**
+     * Address string
+     */
+    val `address`: kotlin.String, 
+    /**
+     * Derivation path
+     */
+    val `path`: kotlin.String, 
+    /**
+     * Number of transfers
+     */
+    val `transfers`: kotlin.UInt
 ) {
     public companion object
 }
@@ -2985,6 +3031,8 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
 
 
 
