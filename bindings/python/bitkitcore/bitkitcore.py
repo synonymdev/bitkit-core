@@ -479,7 +479,11 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_cancel_pubky_auth() != 61962:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_check_sweepable_balances() != 64201:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_complete_pubky_auth() != 48191:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -508,6 +512,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_estimate_order_fee() != 9548:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_fetch_pubky_file() != 24890:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -604,6 +610,10 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_remove_tags() != 58873:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_resolve_pubky_url() != 43253:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_start_pubky_auth() != 18158:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_test_notification() != 32857:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -1028,6 +1038,9 @@ _UniffiLib.uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options.argtype
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_cancel_pubky_auth.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_cancel_pubky_auth.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_check_sweepable_balances.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1035,6 +1048,9 @@ _UniffiLib.uniffi_bitkitcore_fn_func_check_sweepable_balances.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_check_sweepable_balances.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_complete_pubky_auth.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_complete_pubky_auth.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_create_channel_request_url.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1129,6 +1145,10 @@ _UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee_full.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee_full.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_generate_mnemonic.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1385,6 +1405,15 @@ _UniffiLib.uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags.argtypes =
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_resolve_pubky_url.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_resolve_pubky_url.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_start_pubky_auth.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_start_pubky_auth.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_test_notification.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1850,9 +1879,15 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction.restype =
 _UniffiLib.uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_cancel_pubky_auth.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_cancel_pubky_auth.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_check_sweepable_balances.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_check_sweepable_balances.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_complete_pubky_auth.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_complete_pubky_auth.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_channel_request_url.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_create_channel_request_url.restype = ctypes.c_uint16
@@ -1895,6 +1930,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee.restype = ctypes.c
 _UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_file.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_file.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_generate_mnemonic.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_generate_mnemonic.restype = ctypes.c_uint16
@@ -2039,6 +2077,12 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_remove_tags.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_resolve_pubky_url.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_resolve_pubky_url.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_start_pubky_auth.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_start_pubky_auth.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_test_notification.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_test_notification.restype = ctypes.c_uint16
@@ -10057,6 +10101,110 @@ class _UniffiConverterTypePaymentType(_UniffiConverterRustBuffer):
 
 
 
+# PubkyError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class PubkyError(Exception):
+    pass
+
+_UniffiTempPubkyError = PubkyError
+
+class PubkyError:  # type: ignore
+    class InvalidCapabilities(_UniffiTempPubkyError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "PubkyError.InvalidCapabilities({})".format(str(self))
+    _UniffiTempPubkyError.InvalidCapabilities = InvalidCapabilities # type: ignore
+    class AuthFailed(_UniffiTempPubkyError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "PubkyError.AuthFailed({})".format(str(self))
+    _UniffiTempPubkyError.AuthFailed = AuthFailed # type: ignore
+    class NoActiveFlow(_UniffiTempPubkyError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "PubkyError.NoActiveFlow({})".format(str(self))
+    _UniffiTempPubkyError.NoActiveFlow = NoActiveFlow # type: ignore
+    class ResolutionFailed(_UniffiTempPubkyError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "PubkyError.ResolutionFailed({})".format(str(self))
+    _UniffiTempPubkyError.ResolutionFailed = ResolutionFailed # type: ignore
+
+PubkyError = _UniffiTempPubkyError # type: ignore
+del _UniffiTempPubkyError
+
+
+class _UniffiConverterTypePubkyError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return PubkyError.InvalidCapabilities(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 2:
+            return PubkyError.AuthFailed(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return PubkyError.NoActiveFlow(
+            )
+        if variant == 4:
+            return PubkyError.ResolutionFailed(
+                _UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, PubkyError.InvalidCapabilities):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+        if isinstance(value, PubkyError.AuthFailed):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+        if isinstance(value, PubkyError.NoActiveFlow):
+            return
+        if isinstance(value, PubkyError.ResolutionFailed):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, PubkyError.InvalidCapabilities):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, PubkyError.AuthFailed):
+            buf.write_i32(2)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, PubkyError.NoActiveFlow):
+            buf.write_i32(3)
+        if isinstance(value, PubkyError.ResolutionFailed):
+            buf.write_i32(4)
+            _UniffiConverterString.write(value.reason, buf)
+
+
 
 
 
@@ -14332,6 +14480,21 @@ def calculate_channel_liquidity_options(params: "ChannelLiquidityParams") -> "Ch
     return _UniffiConverterTypeChannelLiquidityOptions.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options,
         _UniffiConverterTypeChannelLiquidityParams.lower(params)))
 
+async def cancel_pubky_auth() -> None:
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_cancel_pubky_auth(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
+
+    )
 async def check_sweepable_balances(mnemonic_phrase: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",electrum_url: "str") -> "SweepableBalances":
 
     _UniffiConverterString.check_lower(mnemonic_phrase)
@@ -14356,6 +14519,20 @@ async def check_sweepable_balances(mnemonic_phrase: "str",network: "typing.Optio
         
     # Error FFI converter
 _UniffiConverterTypeSweepError,
+
+    )
+async def complete_pubky_auth() -> "str":
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_complete_pubky_auth(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
 
     )
 
@@ -14591,6 +14768,23 @@ async def estimate_order_fee_full(lsp_balance_sat: "int",channel_expiry_weeks: "
         
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
+
+    )
+async def fetch_pubky_file(uri: "str") -> "bytes":
+
+    _UniffiConverterString.check_lower(uri)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file(
+        _UniffiConverterString.lower(uri)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterBytes.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
 
     )
 
@@ -15246,6 +15440,30 @@ def reset_pre_activity_metadata_tags(payment_id: "str") -> None:
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags,
         _UniffiConverterString.lower(payment_id))
 
+
+def resolve_pubky_url(uri: "str") -> "str":
+    _UniffiConverterString.check_lower(uri)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePubkyError,_UniffiLib.uniffi_bitkitcore_fn_func_resolve_pubky_url,
+        _UniffiConverterString.lower(uri)))
+
+async def start_pubky_auth(caps: "str") -> "str":
+
+    _UniffiConverterString.check_lower(caps)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_start_pubky_auth(
+        _UniffiConverterString.lower(caps)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
+
+    )
 async def test_notification(device_token: "str",secret_message: "str",notification_type: "typing.Optional[str]",custom_url: "typing.Optional[str]") -> "str":
 
     _UniffiConverterString.check_lower(device_token)
@@ -15890,6 +16108,7 @@ __all__ = [
     "NetworkType",
     "PaymentState",
     "PaymentType",
+    "PubkyError",
     "Scanner",
     "SortDirection",
     "SweepError",
@@ -15984,7 +16203,9 @@ __all__ = [
     "blocktank_wipe_all",
     "broadcast_sweep_transaction",
     "calculate_channel_liquidity_options",
+    "cancel_pubky_auth",
     "check_sweepable_balances",
+    "complete_pubky_auth",
     "create_channel_request_url",
     "create_cjit_entry",
     "create_order",
@@ -15999,6 +16220,7 @@ __all__ = [
     "entropy_to_mnemonic",
     "estimate_order_fee",
     "estimate_order_fee_full",
+    "fetch_pubky_file",
     "generate_mnemonic",
     "get_activities",
     "get_activities_by_tag",
@@ -16047,6 +16269,8 @@ __all__ = [
     "remove_pre_activity_metadata_tags",
     "remove_tags",
     "reset_pre_activity_metadata_tags",
+    "resolve_pubky_url",
+    "start_pubky_auth",
     "test_notification",
     "trezor_clear_credentials",
     "trezor_connect",

@@ -4,3 +4,4 @@ pub mod onchain;
 pub mod activity;
 pub mod blocktank;
 pub mod trezor;
+pub mod pubky;

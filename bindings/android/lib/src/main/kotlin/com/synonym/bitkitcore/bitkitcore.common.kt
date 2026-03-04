@@ -2619,6 +2619,41 @@ public enum class PaymentType {
 
 
 
+
+public sealed class PubkyException: kotlin.Exception() {
+    
+    public class InvalidCapabilities(
+        public val `reason`: kotlin.String,
+    ) : PubkyException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class AuthFailed(
+        public val `reason`: kotlin.String,
+    ) : PubkyException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class NoActiveFlow(
+    ) : PubkyException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class ResolutionFailed(
+        public val `reason`: kotlin.String,
+    ) : PubkyException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+}
+
+
+
+
 @kotlinx.serialization.Serializable
 public sealed class Scanner {
     @kotlinx.serialization.Serializable

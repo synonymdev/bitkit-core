@@ -1,6 +1,6 @@
 [package]
 name = "bitkitcore"
-version = "0.1.41"
+version = "0.1.42"
 edition = "2021"
 
 [lib]
@@ -37,6 +37,7 @@ bip39 = "2.0"
 bdk = { version = "0.30.2", features = ["all-keys"] }
 base64 = "0.22"
 log = "0.4"
+pubky = "0.6.0"
 
 # Bluetooth (for Android JNI initialization)
 # btleplug is also pulled in transitively by trezor-connect-rs
