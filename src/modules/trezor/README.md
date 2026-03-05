@@ -62,6 +62,38 @@ FFI-compatible types exposed via UniFFI:
 #### `errors.rs`
 Error types with UniFFI support:
 - `TrezorError` - Main error enum with variants for transport, connection, device errors
+- `AccountInfoError` - Errors for blockchain query operations (not device-related):
+  - `InvalidExtendedKey` - Invalid xpub/ypub/zpub format
+  - `InvalidAddress` - Unparseable Bitcoin address
+  - `ElectrumError` - Electrum connection or query failures
+  - `WalletError` - BDK wallet creation/operation errors
+  - `SyncError` - Wallet sync failures
+  - `UnsupportedKeyType` - Unrecognized key prefix
+  - `NetworkMismatch` - Key prefix doesn't match specified network
+
+#### `account_info.rs`
+Blockchain query functions that do **not** require a connected Trezor device. These connect to an Electrum server via BDK to retrieve account and address data, returning structures compatible with Trezor's `composeTransaction` in precompose mode.
+
+Types (defined in `types.rs`):
+- `AccountType` - Enum: Legacy (BIP44), WrappedSegwit (BIP49), NativeSegwit (BIP84), Taproot (BIP86)
+- `AccountUtxo` - UTXO with txid, vout, amount (decimal string), block_height, address, path, confirmations
+- `AddressInfo` - Single address with derivation path and transaction count
+- `AccountAddresses` - Grouped address lists: used, unused, change
+- `ComposeAccount` - Account path, addresses, and UTXOs for Trezor compose
+- `AccountInfoResult` - Full query result: account, balance (string), utxo_count, account_type, block_height
+- `SingleAddressInfoResult` - Single address query result: address, balance, utxos, transfers, block_height
+
+Helper functions:
+- `detect_account_type(key)` - Identifies account type from xpub/ypub/zpub/tpub/upub/vpub prefix
+- `detect_network_from_key(key)` - Detects mainnet vs testnet from key prefix
+- `normalize_extended_key(key)` - Converts ypub/zpub/upub/vpub to standard xpub/tpub for BDK
+- `build_descriptors(xpub, account_type)` - Creates BDK descriptor strings (pkh, sh(wpkh), wpkh, tr)
+- `derive_base_path(account_type, network, account_index)` - Determines BIP derivation path (e.g., `m/84'/0'/0'`)
+- `account_type_to_script_type(account_type)` - Maps to `TrezorScriptType` for transaction inputs
+
+Main functions:
+- `get_account_info(extended_key, electrum_url, network, gap_limit)` - Queries full account data from an extended public key
+- `get_address_info(address, electrum_url, network)` - Queries balance and UTXOs for a single Bitcoin address
 
 #### `implementation.rs`
 Core `TrezorManager` struct:
@@ -94,6 +126,20 @@ pub async fn trezor_get_address(params: TrezorGetAddressParams) -> Result<Trezor
 pub async fn trezor_sign_message(params: TrezorSignMessageParams) -> Result<TrezorSignedMessageResponse, TrezorError>;
 pub async fn trezor_verify_message(params: TrezorVerifyMessageParams) -> Result<bool, TrezorError>;
 pub async fn trezor_disconnect() -> Result<(), TrezorError>;
+
+// Account info functions (no device required — queries Electrum directly)
+pub async fn get_account_info_from_xpub(
+    extended_key: String,
+    electrum_url: String,
+    network: Option<TrezorCoinType>,
+    gap_limit: Option<u32>,
+) -> Result<AccountInfoResult, AccountInfoError>;
+
+pub async fn get_address_info_from_address(
+    address: String,
+    electrum_url: String,
+    network: Option<TrezorCoinType>,
+) -> Result<SingleAddressInfoResult, AccountInfoError>;
 ```
 
 ## Connection Flow

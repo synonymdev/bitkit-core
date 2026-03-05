@@ -30,6 +30,9 @@
   - Derive addresses for specified paths
   - Retrieve account information
   - Handle responses from Trezor devices
+  - Query account info from extended public keys (xpub/ypub/zpub) via Electrum
+  - Query single address balance and UTXOs via Electrum
+  - Compose and sign transactions
 
 ## Available Modules: Methods
 - Scanner
@@ -435,6 +438,23 @@
         identity: Option<String>,
         common: Option<CommonParams>,
     ) -> Result<DeepLinkResult, TrezorConnectError>
+    ```
+  - [get_account_info_from_xpub](src/modules/trezor/README.md): Query account info from an extended public key via Electrum (no device required)
+    ```rust
+    async fn get_account_info_from_xpub(
+        extended_key: String,
+        electrum_url: String,
+        network: Option<TrezorCoinType>,
+        gap_limit: Option<u32>,
+    ) -> Result<AccountInfoResult, AccountInfoError>
+    ```
+  - [get_address_info_from_address](src/modules/trezor/README.md): Query balance and UTXOs for a single Bitcoin address via Electrum (no device required)
+    ```rust
+    async fn get_address_info_from_address(
+        address: String,
+        electrum_url: String,
+        network: Option<TrezorCoinType>,
+    ) -> Result<SingleAddressInfoResult, AccountInfoError>
     ```
 
 ## Building the Bindings

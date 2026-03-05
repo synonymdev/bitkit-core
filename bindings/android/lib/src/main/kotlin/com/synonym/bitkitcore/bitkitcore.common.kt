@@ -281,22 +281,104 @@ public interface TrezorUiCallback {
 
 
 /**
- * Account addresses
+ * Grouped address lists for an account.
  */
 @kotlinx.serialization.Serializable
 public data class AccountAddresses (
     /**
-     * Used addresses
+     * Used receive addresses (have at least one transaction)
      */
     val `used`: List<AddressInfo>, 
     /**
-     * Unused addresses
+     * Unused receive addresses (no transactions yet)
      */
     val `unused`: List<AddressInfo>, 
     /**
      * Change addresses
      */
     val `change`: List<AddressInfo>
+) {
+    public companion object
+}
+
+
+
+/**
+ * Result from querying an extended public key — ready for Trezor compose.
+ */
+@kotlinx.serialization.Serializable
+public data class AccountInfoResult (
+    /**
+     * The compose-compatible account structure
+     */
+    val `account`: ComposeAccount, 
+    /**
+     * Total confirmed balance in satoshis
+     */
+    val `balance`: kotlin.ULong, 
+    /**
+     * Number of UTXOs
+     */
+    val `utxoCount`: kotlin.UInt, 
+    /**
+     * The detected or specified account type
+     */
+    val `accountType`: AccountType, 
+    /**
+     * The current blockchain tip height
+     */
+    val `blockHeight`: kotlin.UInt
+) {
+    public companion object
+}
+
+
+
+/**
+ * A UTXO in the format expected by Trezor compose.
+ */
+@kotlinx.serialization.Serializable
+public data class AccountUtxo (
+    /**
+     * Transaction ID (hex)
+     */
+    val `txid`: kotlin.String, 
+    /**
+     * Output index
+     */
+    val `vout`: kotlin.UInt, 
+    /**
+     * Amount in satoshis
+     */
+    val `amount`: kotlin.ULong, 
+    /**
+     * Block height where the UTXO was confirmed (0 if unconfirmed)
+     */
+    val `blockHeight`: kotlin.UInt, 
+    /**
+     * Address holding this UTXO
+     */
+    val `address`: kotlin.String, 
+    /**
+     * BIP32 derivation path (e.g., "m/84'/0'/0'/0/0")
+     */
+    val `path`: kotlin.String, 
+    /**
+     * Number of confirmations (0 if unconfirmed)
+     */
+    val `confirmations`: kotlin.UInt, 
+    /**
+     * Whether this is a coinbase output
+     */
+    val `coinbase`: kotlin.Boolean, 
+    /**
+     * Whether this UTXO is owned by the account
+     */
+    val `own`: kotlin.Boolean, 
+    /**
+     * Whether this UTXO must be included in the transaction
+     */
+    val `required`: kotlin.Boolean?
 ) {
     public companion object
 }
@@ -314,20 +396,20 @@ public data class ActivityTags (
 
 
 /**
- * Address information
+ * Information about a single address in an account.
  */
 @kotlinx.serialization.Serializable
 public data class AddressInfo (
     /**
-     * Address string
+     * The Bitcoin address
      */
     val `address`: kotlin.String, 
     /**
-     * Derivation path
+     * BIP32 derivation path
      */
     val `path`: kotlin.String, 
     /**
-     * Number of transfers
+     * Number of transactions involving this address
      */
     val `transfers`: kotlin.UInt
 ) {
@@ -377,6 +459,32 @@ public data class ClosedChannelDetails (
     val `forwardingFeeBaseMsat`: kotlin.UInt, 
     val `channelName`: kotlin.String, 
     val `channelClosureReason`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+/**
+ * Full account structure for Trezor compose.
+ *
+ * This is the `account` object expected by `composeTransaction` in
+ * precompose mode.
+ */
+@kotlinx.serialization.Serializable
+public data class ComposeAccount (
+    /**
+     * Account derivation path (e.g., "m/84'/0'/0'")
+     */
+    val `path`: kotlin.String, 
+    /**
+     * Categorized addresses
+     */
+    val `addresses`: AccountAddresses, 
+    /**
+     * Unspent transaction outputs
+     */
+    val `utxo`: List<AccountUtxo>
 ) {
     public companion object
 }
@@ -1150,6 +1258,37 @@ public data class PubkyAuth (
 
 
 
+/**
+ * Result from querying a single Bitcoin address.
+ */
+@kotlinx.serialization.Serializable
+public data class SingleAddressInfoResult (
+    /**
+     * The queried address
+     */
+    val `address`: kotlin.String, 
+    /**
+     * Total confirmed balance in satoshis
+     */
+    val `balance`: kotlin.ULong, 
+    /**
+     * UTXOs for this address
+     */
+    val `utxos`: List<AccountUtxo>, 
+    /**
+     * Number of transactions involving this address
+     */
+    val `transfers`: kotlin.UInt, 
+    /**
+     * Current blockchain tip height
+     */
+    val `blockHeight`: kotlin.UInt
+) {
+    public companion object
+}
+
+
+
 @kotlinx.serialization.Serializable
 public data class SweepResult (
     /**
@@ -1442,6 +1581,29 @@ public data class TrezorFeatures (
 
 
 /**
+ * Fee level for transaction composition.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorFeeLevel (
+    /**
+     * Fee rate in sat/vB
+     */
+    val `feePerUnit`: kotlin.String, 
+    /**
+     * Base fee in satoshis (optional, added to calculated fee)
+     */
+    val `baseFee`: kotlin.ULong?, 
+    /**
+     * Whether to use floor for base fee calculation
+     */
+    val `floorBaseFee`: kotlin.Boolean?
+) {
+    public companion object
+}
+
+
+
+/**
  * Parameters for getting an address from the device.
  */
 @kotlinx.serialization.Serializable
@@ -1485,6 +1647,76 @@ public data class TrezorGetPublicKeyParams (
      * Whether to display on device for confirmation
      */
     val `showOnTrezor`: kotlin.Boolean
+) {
+    public companion object
+}
+
+
+
+/**
+ * Parameters for precompose transaction.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorPrecomposeParams (
+    /**
+     * Desired outputs
+     */
+    val `outputs`: List<TrezorPrecomposeOutput>, 
+    /**
+     * Coin name (e.g., "Bitcoin", "Regtest")
+     */
+    val `coin`: kotlin.String, 
+    /**
+     * Account with UTXOs and addresses
+     */
+    val `account`: ComposeAccount, 
+    /**
+     * Fee levels to evaluate
+     */
+    val `feeLevels`: List<TrezorFeeLevel>, 
+    /**
+     * Default sequence number
+     */
+    val `sequence`: kotlin.UInt?, 
+    /**
+     * Sorting strategy for inputs/outputs
+     */
+    val `sortingStrategy`: TrezorSortingStrategy?
+) {
+    public companion object
+}
+
+
+
+/**
+ * Input in a precomposed result.
+ */
+@kotlinx.serialization.Serializable
+public data class TrezorPrecomposedInput (
+    /**
+     * Transaction ID (hex)
+     */
+    val `txid`: kotlin.String, 
+    /**
+     * Output index
+     */
+    val `vout`: kotlin.UInt, 
+    /**
+     * Amount in satoshis (as string)
+     */
+    val `amount`: kotlin.String, 
+    /**
+     * Address
+     */
+    val `address`: kotlin.String, 
+    /**
+     * BIP32 derivation path
+     */
+    val `path`: kotlin.String, 
+    /**
+     * Script type
+     */
+    val `scriptType`: TrezorScriptType
 ) {
     public companion object
 }
@@ -1696,7 +1928,11 @@ public data class TrezorSignedTx (
     /**
      * Serialized transaction (hex)
      */
-    val `serializedTx`: kotlin.String
+    val `serializedTx`: kotlin.String, 
+    /**
+     * Broadcast transaction ID (populated when push=true)
+     */
+    val `txid`: kotlin.String?
 ) {
     public companion object
 }
@@ -1941,6 +2177,133 @@ public data class ValidationResult (
 ) {
     public companion object
 }
+
+
+
+
+
+/**
+ * Errors specific to account info operations (BDK/Electrum-based).
+ *
+ * These are separate from `TrezorError` because account info operations
+ * do not interact with a Trezor device — they only query the blockchain.
+ */
+public sealed class AccountInfoException: kotlin.Exception() {
+    
+    /**
+     * The provided extended public key is invalid or cannot be parsed
+     */
+    public class InvalidExtendedKey(
+        public val `errorDetails`: kotlin.String,
+    ) : AccountInfoException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * The provided address is invalid
+     */
+    public class InvalidAddress(
+        public val `errorDetails`: kotlin.String,
+    ) : AccountInfoException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * Electrum connection or query failed
+     */
+    public class ElectrumException(
+        public val `errorDetails`: kotlin.String,
+    ) : AccountInfoException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * BDK wallet creation or operation error
+     */
+    public class WalletException(
+        public val `errorDetails`: kotlin.String,
+    ) : AccountInfoException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * Wallet sync with Electrum failed
+     */
+    public class SyncException(
+        public val `errorDetails`: kotlin.String,
+    ) : AccountInfoException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * The key type/prefix is not recognized
+     */
+    public class UnsupportedKeyType(
+        public val `errorDetails`: kotlin.String,
+    ) : AccountInfoException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * Network mismatch between key prefix and specified network
+     */
+    public class NetworkMismatch(
+        public val `errorDetails`: kotlin.String,
+    ) : AccountInfoException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * Invalid transaction ID provided
+     */
+    public class InvalidTxid(
+        public val `errorDetails`: kotlin.String,
+    ) : AccountInfoException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+}
+
+
+
+
+/**
+ * Account type classification for extended public keys.
+ *
+ * Determines the BIP standard, derivation path purpose, and script type.
+ */
+
+@kotlinx.serialization.Serializable
+public enum class AccountType {
+    
+    /**
+     * BIP44 legacy (P2PKH) — xpub/tpub prefix
+     */
+    LEGACY,
+    /**
+     * BIP49 wrapped segwit (P2SH-P2WPKH) — ypub/upub prefix
+     */
+    WRAPPED_SEGWIT,
+    /**
+     * BIP84 native segwit (P2WPKH) — zpub/vpub prefix
+     */
+    NATIVE_SEGWIT,
+    /**
+     * BIP86 taproot (P2TR)
+     */
+    TAPROOT;
+    public companion object
+}
+
+
 
 
 
@@ -2944,6 +3307,147 @@ public sealed class TrezorException: kotlin.Exception() {
 
 
 /**
+ * Output specification for precompose.
+ */
+@kotlinx.serialization.Serializable
+public sealed class TrezorPrecomposeOutput {
+    
+    /**
+     * Payment to a specific address
+     */@kotlinx.serialization.Serializable
+    public data class Payment(
+        val `address`: kotlin.String,
+        val `amount`: kotlin.String,
+    ) : TrezorPrecomposeOutput() {
+    }
+    
+    /**
+     * Payment without address (estimation only)
+     */@kotlinx.serialization.Serializable
+    public data class PaymentNoAddress(
+        val `amount`: kotlin.String,
+    ) : TrezorPrecomposeOutput() {
+    }
+    
+    /**
+     * Send all remaining funds to an address
+     */@kotlinx.serialization.Serializable
+    public data class SendMax(
+        val `address`: kotlin.String,
+    ) : TrezorPrecomposeOutput() {
+    }
+    
+    /**
+     * Send all remaining funds (no address)
+     */
+    @kotlinx.serialization.Serializable
+    public data object SendMaxNoAddress : TrezorPrecomposeOutput() 
+    
+    
+    /**
+     * OP_RETURN data output
+     */@kotlinx.serialization.Serializable
+    public data class OpReturn(
+        val `dataHex`: kotlin.String,
+    ) : TrezorPrecomposeOutput() {
+    }
+    
+}
+
+
+
+
+
+
+/**
+ * Output in a precomposed result.
+ */
+@kotlinx.serialization.Serializable
+public sealed class TrezorPrecomposedOutput {
+    
+    /**
+     * Payment to an address
+     */@kotlinx.serialization.Serializable
+    public data class Payment(
+        val `address`: kotlin.String,
+        val `amount`: kotlin.String,
+    ) : TrezorPrecomposedOutput() {
+    }
+    
+    /**
+     * Change output
+     */@kotlinx.serialization.Serializable
+    public data class Change(
+        val `address`: kotlin.String,
+        val `path`: kotlin.String,
+        val `amount`: kotlin.String,
+        val `scriptType`: TrezorScriptType,
+    ) : TrezorPrecomposedOutput() {
+    }
+    
+    /**
+     * OP_RETURN data output
+     */@kotlinx.serialization.Serializable
+    public data class OpReturn(
+        val `dataHex`: kotlin.String,
+    ) : TrezorPrecomposedOutput() {
+    }
+    
+}
+
+
+
+
+
+
+/**
+ * Precomposed transaction result (one per fee level).
+ */
+@kotlinx.serialization.Serializable
+public sealed class TrezorPrecomposedResult {
+    
+    /**
+     * Successfully composed a sendable transaction
+     */@kotlinx.serialization.Serializable
+    public data class Final(
+        val `totalSpent`: kotlin.String,
+        val `fee`: kotlin.String,
+        val `feePerByte`: kotlin.String,
+        val `bytes`: kotlin.UInt,
+        val `inputs`: List<TrezorPrecomposedInput>,
+        val `outputs`: List<TrezorPrecomposedOutput>,
+        val `outputsPermutation`: List<kotlin.UInt>,
+    ) : TrezorPrecomposedResult() {
+    }
+    
+    /**
+     * Non-final result (e.g., send-max estimation)
+     */@kotlinx.serialization.Serializable
+    public data class NonFinal(
+        val `max`: kotlin.String?,
+        val `totalSpent`: kotlin.String,
+        val `fee`: kotlin.String,
+        val `feePerByte`: kotlin.String,
+        val `bytes`: kotlin.UInt,
+    ) : TrezorPrecomposedResult() {
+    }
+    
+    /**
+     * Composition failed
+     */@kotlinx.serialization.Serializable
+    public data class Error(
+        val `error`: kotlin.String,
+    ) : TrezorPrecomposedResult() {
+    }
+    
+}
+
+
+
+
+
+
+/**
  * Script types for address derivation.
  */
 
@@ -2974,6 +3478,33 @@ public enum class TrezorScriptType {
      * External/watch-only input (not signed by device)
      */
     EXTERNAL;
+    public companion object
+}
+
+
+
+
+
+
+/**
+ * Sorting strategy for transaction inputs and outputs.
+ */
+
+@kotlinx.serialization.Serializable
+public enum class TrezorSortingStrategy {
+    
+    /**
+     * BIP-69: deterministic lexicographic sorting
+     */
+    BIP69,
+    /**
+     * Random shuffle (better privacy)
+     */
+    RANDOM,
+    /**
+     * Keep original order
+     */
+    NONE;
     public companion object
 }
 
@@ -3031,6 +3562,22 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
