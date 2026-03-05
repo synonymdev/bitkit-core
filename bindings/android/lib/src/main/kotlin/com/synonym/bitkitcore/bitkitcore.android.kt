@@ -1393,6 +1393,16 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
+
+
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -11636,7 +11646,7 @@ public suspend fun `cancelPubkyAuth`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
