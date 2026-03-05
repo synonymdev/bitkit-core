@@ -14097,6 +14097,110 @@ extension PaymentType: Codable {}
 
 
 
+
+public enum PubkyError: Swift.Error {
+
+    
+    
+    case InvalidCapabilities(reason: String
+    )
+    case AuthFailed(reason: String
+    )
+    case NoActiveFlow
+    case ResolutionFailed(reason: String
+    )
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePubkyError: FfiConverterRustBuffer {
+    typealias SwiftType = PubkyError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PubkyError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .InvalidCapabilities(
+            reason: try FfiConverterString.read(from: &buf)
+            )
+        case 2: return .AuthFailed(
+            reason: try FfiConverterString.read(from: &buf)
+            )
+        case 3: return .NoActiveFlow
+        case 4: return .ResolutionFailed(
+            reason: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: PubkyError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .InvalidCapabilities(reason):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(reason, into: &buf)
+            
+        
+        case let .AuthFailed(reason):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(reason, into: &buf)
+            
+        
+        case .NoActiveFlow:
+            writeInt(&buf, Int32(3))
+        
+        
+        case let .ResolutionFailed(reason):
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(reason, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyError_lift(_ buf: RustBuffer) throws -> PubkyError {
+    return try FfiConverterTypePubkyError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyError_lower(_ value: PubkyError) -> RustBuffer {
+    return FfiConverterTypePubkyError.lower(value)
+}
+
+
+extension PubkyError: Equatable, Hashable {}
+
+extension PubkyError: Codable {}
+
+
+
+
+extension PubkyError: Foundation.LocalizedError {
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+
+
+
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
@@ -17523,6 +17627,20 @@ public func calculateChannelLiquidityOptions(params: ChannelLiquidityParams) -> 
     )
 })
 }
+public func cancelPubkyAuth()async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_cancel_pubky_auth(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypePubkyError_lift
+        )
+}
 public func checkSweepableBalances(mnemonicPhrase: String, network: Network?, bip39Passphrase: String?, electrumUrl: String)async throws  -> SweepableBalances  {
     return
         try  await uniffiRustCallAsync(
@@ -17535,6 +17653,20 @@ public func checkSweepableBalances(mnemonicPhrase: String, network: Network?, bi
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeSweepableBalances_lift,
             errorHandler: FfiConverterTypeSweepError_lift
+        )
+}
+public func completePubkyAuth()async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_complete_pubky_auth(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypePubkyError_lift
         )
 }
 public func createChannelRequestUrl(k1: String, callback: String, localNodeId: String, isPrivate: Bool, cancel: Bool)throws  -> String  {
@@ -17685,6 +17817,20 @@ public func estimateOrderFeeFull(lspBalanceSat: UInt64, channelExpiryWeeks: UInt
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeIBtEstimateFeeResponse2_lift,
             errorHandler: FfiConverterTypeBlocktankError_lift
+        )
+}
+public func fetchPubkyFile(uri: String)async throws  -> Data  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_fetch_pubky_file(FfiConverterString.lower(uri)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterData.lift,
+            errorHandler: FfiConverterTypePubkyError_lift
         )
 }
 public func generateMnemonic(wordCount: WordCount?)throws  -> String  {
@@ -18173,6 +18319,27 @@ public func resetPreActivityMetadataTags(paymentId: String)throws   {try rustCal
         FfiConverterString.lower(paymentId),$0
     )
 }
+}
+public func resolvePubkyUrl(uri: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypePubkyError_lift) {
+    uniffi_bitkitcore_fn_func_resolve_pubky_url(
+        FfiConverterString.lower(uri),$0
+    )
+})
+}
+public func startPubkyAuth(caps: String)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_start_pubky_auth(FfiConverterString.lower(caps)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypePubkyError_lift
+        )
 }
 public func testNotification(deviceToken: String, secretMessage: String, notificationType: String?, customUrl: String?)async throws  -> String  {
     return
@@ -18855,7 +19022,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_cancel_pubky_auth() != 61962) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_check_sweepable_balances() != 64201) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_complete_pubky_auth() != 48191) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305) {
@@ -18898,6 +19071,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_fetch_pubky_file() != 24890) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292) {
@@ -19042,6 +19218,12 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_resolve_pubky_url() != 43253) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_start_pubky_auth() != 18158) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_test_notification() != 32857) {

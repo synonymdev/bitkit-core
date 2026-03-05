@@ -35,6 +35,7 @@ pub use modules::scanner::{
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
+use crate::modules::pubky::PubkyError;
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
 use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances};
@@ -1449,6 +1450,55 @@ pub fn calculate_channel_liquidity_options(
 #[uniffi::export]
 pub fn get_default_lsp_balance(params: DefaultLspBalanceParams) -> u64 {
     crate::modules::blocktank::get_default_lsp_balance(params)
+}
+
+// ============================================================================
+// Pubky Functions
+// ============================================================================
+
+#[uniffi::export]
+pub fn resolve_pubky_url(uri: String) -> Result<String, PubkyError> {
+    crate::modules::pubky::resolve_pubky_url(uri)
+}
+
+#[uniffi::export]
+pub async fn fetch_pubky_file(uri: String) -> Result<Vec<u8>, PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::fetch_pubky_file(uri).await
+    }).await.unwrap_or_else(|e| Err(PubkyError::ResolutionFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn start_pubky_auth(caps: String) -> Result<String, PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::start_pubky_auth(caps).await
+    }).await.unwrap_or_else(|e| Err(PubkyError::AuthFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn cancel_pubky_auth() -> Result<(), PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::cancel_pubky_auth().await
+    }).await.unwrap_or_else(|e| Err(PubkyError::AuthFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn complete_pubky_auth() -> Result<String, PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::complete_pubky_auth().await
+    }).await.unwrap_or_else(|e| Err(PubkyError::AuthFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
 }
 
 // ============================================================================

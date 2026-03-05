@@ -513,9 +513,21 @@ uint64_t uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(RustBuffer psbt, 
 RustBuffer uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options(RustBuffer params, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CANCEL_PUBKY_AUTH
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CANCEL_PUBKY_AUTH
+uint64_t uniffi_bitkitcore_fn_func_cancel_pubky_auth(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CHECK_SWEEPABLE_BALANCES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CHECK_SWEEPABLE_BALANCES
 uint64_t uniffi_bitkitcore_fn_func_check_sweepable_balances(RustBuffer mnemonic_phrase, RustBuffer network, RustBuffer bip39_passphrase, RustBuffer electrum_url
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_COMPLETE_PUBKY_AUTH
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_COMPLETE_PUBKY_AUTH
+uint64_t uniffi_bitkitcore_fn_func_complete_pubky_auth(void
+    
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CREATE_CHANNEL_REQUEST_URL
@@ -586,6 +598,11 @@ uint64_t uniffi_bitkitcore_fn_func_estimate_order_fee(uint64_t lsp_balance_sat, 
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ESTIMATE_ORDER_FEE_FULL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ESTIMATE_ORDER_FEE_FULL
 uint64_t uniffi_bitkitcore_fn_func_estimate_order_fee_full(uint64_t lsp_balance_sat, uint32_t channel_expiry_weeks, RustBuffer options
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_FETCH_PUBKY_FILE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_FETCH_PUBKY_FILE
+uint64_t uniffi_bitkitcore_fn_func_fetch_pubky_file(RustBuffer uri
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GENERATE_MNEMONIC
@@ -833,6 +850,16 @@ void uniffi_bitkitcore_fn_func_remove_tags(RustBuffer activity_id, RustBuffer ta
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_RESET_PRE_ACTIVITY_METADATA_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_RESET_PRE_ACTIVITY_METADATA_TAGS
 void uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags(RustBuffer payment_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_RESOLVE_PUBKY_URL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_RESOLVE_PUBKY_URL
+RustBuffer uniffi_bitkitcore_fn_func_resolve_pubky_url(RustBuffer uri, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_START_PUBKY_AUTH
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_START_PUBKY_AUTH
+uint64_t uniffi_bitkitcore_fn_func_start_pubky_auth(RustBuffer caps
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TEST_NOTIFICATION
@@ -1416,9 +1443,21 @@ uint16_t uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options(voi
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CANCEL_PUBKY_AUTH
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CANCEL_PUBKY_AUTH
+uint16_t uniffi_bitkitcore_checksum_func_cancel_pubky_auth(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CHECK_SWEEPABLE_BALANCES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CHECK_SWEEPABLE_BALANCES
 uint16_t uniffi_bitkitcore_checksum_func_check_sweepable_balances(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_COMPLETE_PUBKY_AUTH
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_COMPLETE_PUBKY_AUTH
+uint16_t uniffi_bitkitcore_checksum_func_complete_pubky_auth(void
     
 );
 #endif
@@ -1503,6 +1542,12 @@ uint16_t uniffi_bitkitcore_checksum_func_estimate_order_fee(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ESTIMATE_ORDER_FEE_FULL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ESTIMATE_ORDER_FEE_FULL
 uint16_t uniffi_bitkitcore_checksum_func_estimate_order_fee_full(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_FILE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_FILE
+uint16_t uniffi_bitkitcore_checksum_func_fetch_pubky_file(void
     
 );
 #endif
@@ -1791,6 +1836,18 @@ uint16_t uniffi_bitkitcore_checksum_func_remove_tags(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_RESET_PRE_ACTIVITY_METADATA_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_RESET_PRE_ACTIVITY_METADATA_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_RESOLVE_PUBKY_URL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_RESOLVE_PUBKY_URL
+uint16_t uniffi_bitkitcore_checksum_func_resolve_pubky_url(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_START_PUBKY_AUTH
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_START_PUBKY_AUTH
+uint16_t uniffi_bitkitcore_checksum_func_start_pubky_auth(void
     
 );
 #endif

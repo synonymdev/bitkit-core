@@ -1459,7 +1459,13 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_cancel_pubky_auth() != 61962.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_check_sweepable_balances() != 64201.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_complete_pubky_auth() != 48191.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305.toShort()) {
@@ -1502,6 +1508,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_fetch_pubky_file() != 24890.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292.toShort()) {
@@ -1646,6 +1655,12 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_resolve_pubky_url() != 43253.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_start_pubky_auth() != 18158.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_test_notification() != 32857.toShort()) {
@@ -1859,7 +1874,13 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_cancel_pubky_auth(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_check_sweepable_balances(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_complete_pubky_auth(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_create_channel_request_url(
@@ -1902,6 +1923,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_estimate_order_fee_full(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_fetch_pubky_file(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_generate_mnemonic(
@@ -2046,6 +2070,12 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_resolve_pubky_url(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_start_pubky_auth(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_test_notification(
@@ -2400,11 +2430,17 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_cancel_pubky_auth(
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_check_sweepable_balances(
         `mnemonicPhrase`: RustBufferByValue,
         `network`: RustBufferByValue,
         `bip39Passphrase`: RustBufferByValue,
         `electrumUrl`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_complete_pubky_auth(
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_create_channel_request_url(
@@ -2499,6 +2535,10 @@ internal object UniffiLib : Library {
         `lspBalanceSat`: Long,
         `channelExpiryWeeks`: Int,
         `options`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_fetch_pubky_file(
+        `uri`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_generate_mnemonic(
@@ -2756,6 +2796,15 @@ internal object UniffiLib : Library {
         `paymentId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_resolve_pubky_url(
+        `uri`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_start_pubky_auth(
+        `caps`: RustBufferByValue,
+    ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_test_notification(
         `deviceToken`: RustBufferByValue,
@@ -8453,6 +8502,79 @@ public object FfiConverterTypePaymentType: FfiConverterRustBuffer<PaymentType> {
 
 
 
+public object PubkyExceptionErrorHandler : UniffiRustCallStatusErrorHandler<PubkyException> {
+    override fun lift(errorBuf: RustBufferByValue): PubkyException = FfiConverterTypePubkyError.lift(errorBuf)
+}
+
+public object FfiConverterTypePubkyError : FfiConverterRustBuffer<PubkyException> {
+    override fun read(buf: ByteBuffer): PubkyException {
+        return when (buf.getInt()) {
+            1 -> PubkyException.InvalidCapabilities(
+                FfiConverterString.read(buf),
+                )
+            2 -> PubkyException.AuthFailed(
+                FfiConverterString.read(buf),
+                )
+            3 -> PubkyException.NoActiveFlow()
+            4 -> PubkyException.ResolutionFailed(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: PubkyException): ULong {
+        return when (value) {
+            is PubkyException.InvalidCapabilities -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+            is PubkyException.AuthFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+            is PubkyException.NoActiveFlow -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is PubkyException.ResolutionFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+        }
+    }
+
+    override fun write(value: PubkyException, buf: ByteBuffer) {
+        when (value) {
+            is PubkyException.InvalidCapabilities -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is PubkyException.AuthFailed -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is PubkyException.NoActiveFlow -> {
+                buf.putInt(3)
+                Unit
+            }
+            is PubkyException.ResolutionFailed -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
 
 public object FfiConverterTypeScanner : FfiConverterRustBuffer<Scanner>{
     override fun read(buf: ByteBuffer): Scanner {
@@ -11503,6 +11625,23 @@ public fun `calculateChannelLiquidityOptions`(`params`: ChannelLiquidityParams):
     })
 }
 
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `cancelPubkyAuth`() {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_cancel_pubky_auth(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
+    )
+}
+
 @Throws(SweepException::class, kotlin.coroutines.cancellation.CancellationException::class)
 public suspend fun `checkSweepableBalances`(`mnemonicPhrase`: kotlin.String, `network`: Network?, `bip39Passphrase`: kotlin.String?, `electrumUrl`: kotlin.String): SweepableBalances {
     return uniffiRustCallAsync(
@@ -11520,6 +11659,22 @@ public suspend fun `checkSweepableBalances`(`mnemonicPhrase`: kotlin.String, `ne
         { FfiConverterTypeSweepableBalances.lift(it) },
         // Error FFI converter
         SweepExceptionErrorHandler,
+    )
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `completePubkyAuth`(): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_complete_pubky_auth(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
     )
 }
 
@@ -11724,6 +11879,23 @@ public suspend fun `estimateOrderFeeFull`(`lspBalanceSat`: kotlin.ULong, `channe
         { FfiConverterTypeIBtEstimateFeeResponse2.lift(it) },
         // Error FFI converter
         BlocktankExceptionErrorHandler,
+    )
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `fetchPubkyFile`(`uri`: kotlin.String): kotlin.ByteArray {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file(
+            FfiConverterString.lower(`uri`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterByteArray.lift(it) },
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
     )
 }
 
@@ -12384,6 +12556,33 @@ public fun `resetPreActivityMetadataTags`(`paymentId`: kotlin.String) {
             uniffiRustCallStatus,
         )
     }
+}
+
+@Throws(PubkyException::class)
+public fun `resolvePubkyUrl`(`uri`: kotlin.String): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(PubkyExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_resolve_pubky_url(
+            FfiConverterString.lower(`uri`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `startPubkyAuth`(`caps`: kotlin.String): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_start_pubky_auth(
+            FfiConverterString.lower(`caps`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
+    )
 }
 
 @Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
