@@ -178,6 +178,11 @@ const TRIGGER_STATEMENTS: &[&str] = &[
      END"
 ];
 
+const MIGRATION_STATEMENTS: &[&str] = &[
+    // Add seen_at column to activities table
+    "ALTER TABLE activities ADD COLUMN seen_at INTEGER CHECK (seen_at IS NULL OR seen_at > 0)",
+];
+
 impl ActivityDB {
     /// Creates a new ActivityDB instance with the specified database path.
     /// Initializes the database schema if it doesn't exist.
@@ -278,6 +283,21 @@ impl ActivityDB {
                 return Err(ActivityError::InitializationError {
                     error_details: format!("Error creating trigger: {}", e),
                 });
+            }
+        }
+
+        // Run migrations (idempotent — duplicate column errors are expected and ignored)
+        for statement in MIGRATION_STATEMENTS {
+            match self.conn.execute(statement, []) {
+                Ok(_) => {},
+                Err(e) => {
+                    let err_msg = e.to_string();
+                    if !err_msg.contains("duplicate column name") {
+                        return Err(ActivityError::InitializationError {
+                            error_details: format!("Error running migration: {}", e),
+                        });
+                    }
+                }
             }
         }
 
