@@ -38,9 +38,9 @@ pub use modules::activity;
 use crate::modules::pubky::PubkyError;
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
-use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances};
-use crate::modules::trezor::{TrezorError, TrezorDeviceInfo, TrezorTransportType, TrezorFeatures, TrezorGetAddressParams, TrezorAddressResponse, TrezorGetPublicKeyParams, TrezorPublicKeyResponse, TrezorScriptType, TrezorManager, TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams, TrezorSignTxParams, TrezorSignedTx, TrezorTxInput, TrezorTxOutput, TrezorCoinType, AddressInfo, AccountAddresses};
-use crate::modules::trezor::{AccountInfoError, AccountInfoResult, SingleAddressInfoResult, AccountType, AccountUtxo, ComposeAccount, get_account_info, get_address_info, account_type_to_script_type, fetch_prev_txs, broadcast_raw_tx, TrezorFeeLevel, TrezorSortingStrategy, TrezorPrecomposeOutput, TrezorPrecomposeParams, TrezorPrecomposedInput, TrezorPrecomposedOutput, TrezorPrecomposedResult, precompose_transaction, precomposed_to_sign_params, TrezorPrevTx};
+use crate::onchain::{AddressError, BroadcastError, AccountInfoError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances, broadcast_raw_tx, AccountInfoResult, SingleAddressInfoResult, AccountType, AccountUtxo, AddressInfo, AccountAddresses, ComposeAccount, get_account_info, get_address_info};
+use crate::modules::trezor::{TrezorError, TrezorDeviceInfo, TrezorTransportType, TrezorFeatures, TrezorGetAddressParams, TrezorAddressResponse, TrezorGetPublicKeyParams, TrezorPublicKeyResponse, TrezorScriptType, TrezorManager, TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams, TrezorSignTxParams, TrezorSignedTx, TrezorTxInput, TrezorTxOutput, TrezorCoinType};
+use crate::modules::trezor::{account_type_to_script_type, fetch_prev_txs, TrezorFeeLevel, TrezorSortingStrategy, TrezorPrecomposeOutput, TrezorPrecomposeParams, TrezorPrecomposedInput, TrezorPrecomposedOutput, TrezorPrecomposedResult, precompose_transaction, precomposed_to_sign_params, TrezorPrevTx};
 pub use crate::onchain::WordCount;
 
 use std::sync::Mutex as StdMutex;
@@ -1731,10 +1731,10 @@ pub async fn trezor_clear_credentials(device_id: String) -> Result<(), TrezorErr
 
 /// Query account information for an extended public key via Electrum.
 #[uniffi::export]
-pub async fn trezor_get_account_info(
+pub async fn onchain_get_account_info(
     extended_key: String,
     electrum_url: String,
-    network: Option<TrezorCoinType>,
+    network: Option<Network>,
     gap_limit: Option<u32>,
 ) -> Result<AccountInfoResult, AccountInfoError> {
     let rt = ensure_runtime();
@@ -1747,10 +1747,10 @@ pub async fn trezor_get_account_info(
 
 /// Query balance and UTXOs for a single Bitcoin address via Electrum.
 #[uniffi::export]
-pub async fn trezor_get_address_info(
+pub async fn onchain_get_address_info(
     address: String,
     electrum_url: String,
-    network: Option<TrezorCoinType>,
+    network: Option<Network>,
 ) -> Result<SingleAddressInfoResult, AccountInfoError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
@@ -1760,7 +1760,7 @@ pub async fn trezor_get_address_info(
     }))
 }
 
-/// Convert an account type to its corresponding script type.
+/// Convert an account type to its corresponding Trezor script type.
 #[uniffi::export]
 pub fn trezor_account_type_to_script_type(account_type: AccountType) -> TrezorScriptType {
     account_type_to_script_type(account_type)
@@ -1815,14 +1815,14 @@ pub async fn trezor_fetch_prev_txs(
 /// Takes a hex-encoded serialized transaction and an Electrum server URL.
 /// Returns the transaction ID on success.
 #[uniffi::export]
-pub async fn trezor_broadcast_raw_tx(
+pub async fn onchain_broadcast_raw_tx(
     serialized_tx: String,
     electrum_url: String,
-) -> Result<String, AccountInfoError> {
+) -> Result<String, BroadcastError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         broadcast_raw_tx(serialized_tx, &electrum_url).await
-    }).await.unwrap_or_else(|e| Err(AccountInfoError::SyncError {
+    }).await.unwrap_or_else(|e| Err(BroadcastError::TaskError {
         error_details: format!("Runtime error: {}", e),
     }))
 }

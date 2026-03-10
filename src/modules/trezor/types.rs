@@ -530,103 +530,12 @@ impl From<trezor_connect_rs::SignedTxResponse> for TrezorSignedTx {
 }
 
 // ============================================================================
-// Account info types for Trezor compose
+// From impls: onchain account types → trezor-connect-rs compose types
 // ============================================================================
 
-/// Account type classification for extended public keys.
-///
-/// Determines the BIP standard, derivation path purpose, and script type.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
-pub enum AccountType {
-    /// BIP44 legacy (P2PKH) — xpub/tpub prefix
-    Legacy,
-    /// BIP49 wrapped segwit (P2SH-P2WPKH) — ypub/upub prefix
-    WrappedSegwit,
-    /// BIP84 native segwit (P2WPKH) — zpub/vpub prefix
-    NativeSegwit,
-    /// BIP86 taproot (P2TR)
-    Taproot,
-}
-
-/// A UTXO in the format expected by Trezor compose.
-#[derive(Debug, Clone, uniffi::Record)]
-pub struct AccountUtxo {
-    /// Transaction ID (hex)
-    pub txid: String,
-    /// Output index
-    pub vout: u32,
-    /// Amount in satoshis
-    pub amount: u64,
-    /// Block height where the UTXO was confirmed (0 if unconfirmed)
-    pub block_height: u32,
-    /// Address holding this UTXO
-    pub address: String,
-    /// BIP32 derivation path (e.g., "m/84'/0'/0'/0/0")
-    pub path: String,
-    /// Number of confirmations (0 if unconfirmed)
-    pub confirmations: u32,
-    /// Whether this is a coinbase output
-    pub coinbase: bool,
-    /// Whether this UTXO is owned by the account
-    pub own: bool,
-    /// Whether this UTXO must be included in the transaction
-    pub required: Option<bool>,
-}
-
-/// Information about a single address in an account.
-#[derive(Debug, Clone, uniffi::Record)]
-pub struct AddressInfo {
-    /// The Bitcoin address
-    pub address: String,
-    /// BIP32 derivation path
-    pub path: String,
-    /// Number of transactions involving this address
-    pub transfers: u32,
-}
-
-/// Grouped address lists for an account.
-#[derive(Debug, Clone, uniffi::Record)]
-pub struct AccountAddresses {
-    /// Used receive addresses (have at least one transaction)
-    pub used: Vec<AddressInfo>,
-    /// Unused receive addresses (no transactions yet)
-    pub unused: Vec<AddressInfo>,
-    /// Change addresses
-    pub change: Vec<AddressInfo>,
-}
-
-/// Full account structure for Trezor compose.
-///
-/// This is the `account` object expected by `composeTransaction` in
-/// precompose mode.
-#[derive(Debug, Clone, uniffi::Record)]
-pub struct ComposeAccount {
-    /// Account derivation path (e.g., "m/84'/0'/0'")
-    pub path: String,
-    /// Categorized addresses
-    pub addresses: AccountAddresses,
-    /// Unspent transaction outputs
-    pub utxo: Vec<AccountUtxo>,
-}
-
-/// Result from querying an extended public key — ready for Trezor compose.
-#[derive(Debug, Clone, uniffi::Record)]
-pub struct AccountInfoResult {
-    /// The compose-compatible account structure
-    pub account: ComposeAccount,
-    /// Total confirmed balance in satoshis
-    pub balance: u64,
-    /// Number of UTXOs
-    pub utxo_count: u32,
-    /// The detected or specified account type
-    pub account_type: AccountType,
-    /// The current blockchain tip height
-    pub block_height: u32,
-}
-
-// ============================================================================
-// From impls: bitkit-core account types → trezor-connect-rs compose types
-// ============================================================================
+use crate::modules::onchain::{
+    AccountAddresses, AccountUtxo, AddressInfo, ComposeAccount,
+};
 
 impl From<AddressInfo> for trezor_connect_rs::api::compose::AccountAddress {
     fn from(a: AddressInfo) -> Self {
@@ -672,21 +581,6 @@ impl From<ComposeAccount> for trezor_connect_rs::api::compose::ComposeAccount {
             utxo: a.utxo.into_iter().map(|u| u.into()).collect(),
         }
     }
-}
-
-/// Result from querying a single Bitcoin address.
-#[derive(Debug, Clone, uniffi::Record)]
-pub struct SingleAddressInfoResult {
-    /// The queried address
-    pub address: String,
-    /// Total confirmed balance in satoshis
-    pub balance: u64,
-    /// UTXOs for this address
-    pub utxos: Vec<AccountUtxo>,
-    /// Number of transactions involving this address
-    pub transfers: u32,
-    /// Current blockchain tip height
-    pub block_height: u32,
 }
 
 // ============================================================================

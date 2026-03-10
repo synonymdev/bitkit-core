@@ -304,12 +304,12 @@ public data class AccountAddresses (
 
 
 /**
- * Result from querying an extended public key — ready for Trezor compose.
+ * Result from querying an extended public key via Electrum.
  */
 @kotlinx.serialization.Serializable
 public data class AccountInfoResult (
     /**
-     * The compose-compatible account structure
+     * The account structure with addresses and UTXOs
      */
     val `account`: ComposeAccount, 
     /**
@@ -335,7 +335,7 @@ public data class AccountInfoResult (
 
 
 /**
- * A UTXO in the format expected by Trezor compose.
+ * A UTXO associated with an account or address.
  */
 @kotlinx.serialization.Serializable
 public data class AccountUtxo (
@@ -466,10 +466,7 @@ public data class ClosedChannelDetails (
 
 
 /**
- * Full account structure for Trezor compose.
- *
- * This is the `account` object expected by `composeTransaction` in
- * precompose mode.
+ * Full account structure with addresses and UTXOs.
  */
 @kotlinx.serialization.Serializable
 public data class ComposeAccount (
@@ -2184,9 +2181,6 @@ public data class ValidationResult (
 
 /**
  * Errors specific to account info operations (BDK/Electrum-based).
- *
- * These are separate from `TrezorError` because account info operations
- * do not interact with a Trezor device — they only query the blockchain.
  */
 public sealed class AccountInfoException: kotlin.Exception() {
     
@@ -2583,6 +2577,42 @@ public sealed class BlocktankException: kotlin.Exception() {
     public class DatabaseException(
         public val `errorDetails`: kotlin.String,
     ) : BlocktankException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+}
+
+
+
+
+
+public sealed class BroadcastException: kotlin.Exception() {
+    
+    public class InvalidHex(
+        public val `errorDetails`: kotlin.String,
+    ) : BroadcastException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class InvalidTransaction(
+        public val `errorDetails`: kotlin.String,
+    ) : BroadcastException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class ElectrumException(
+        public val `errorDetails`: kotlin.String,
+    ) : BroadcastException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class TaskException(
+        public val `errorDetails`: kotlin.String,
+    ) : BroadcastException() {
         override val message: String
             get() = "errorDetails=${ `errorDetails` }"
     }

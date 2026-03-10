@@ -1650,11 +1650,11 @@ public func FfiConverterTypeAccountAddresses_lower(_ value: AccountAddresses) ->
 
 
 /**
- * Result from querying an extended public key — ready for Trezor compose.
+ * Result from querying an extended public key via Electrum.
  */
 public struct AccountInfoResult {
     /**
-     * The compose-compatible account structure
+     * The account structure with addresses and UTXOs
      */
     public var account: ComposeAccount
     /**
@@ -1678,7 +1678,7 @@ public struct AccountInfoResult {
     // declare one manually.
     public init(
         /**
-         * The compose-compatible account structure
+         * The account structure with addresses and UTXOs
          */account: ComposeAccount, 
         /**
          * Total confirmed balance in satoshis
@@ -1779,7 +1779,7 @@ public func FfiConverterTypeAccountInfoResult_lower(_ value: AccountInfoResult) 
 
 
 /**
- * A UTXO in the format expected by Trezor compose.
+ * A UTXO associated with an account or address.
  */
 public struct AccountUtxo {
     /**
@@ -2503,10 +2503,7 @@ public func FfiConverterTypeClosedChannelDetails_lower(_ value: ClosedChannelDet
 
 
 /**
- * Full account structure for Trezor compose.
- *
- * This is the `account` object expected by `composeTransaction` in
- * precompose mode.
+ * Full account structure with addresses and UTXOs.
  */
 public struct ComposeAccount {
     /**
@@ -11457,9 +11454,6 @@ public func FfiConverterTypeValidationResult_lower(_ value: ValidationResult) ->
 
 /**
  * Errors specific to account info operations (BDK/Electrum-based).
- *
- * These are separate from `TrezorError` because account info operations
- * do not interact with a Trezor device — they only query the blockchain.
  */
 public enum AccountInfoError: Swift.Error {
 
@@ -12584,6 +12578,114 @@ extension BlocktankError: Codable {}
 
 
 extension BlocktankError: Foundation.LocalizedError {
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+
+
+
+
+public enum BroadcastError: Swift.Error {
+
+    
+    
+    case InvalidHex(errorDetails: String
+    )
+    case InvalidTransaction(errorDetails: String
+    )
+    case ElectrumError(errorDetails: String
+    )
+    case TaskError(errorDetails: String
+    )
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeBroadcastError: FfiConverterRustBuffer {
+    typealias SwiftType = BroadcastError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> BroadcastError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .InvalidHex(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 2: return .InvalidTransaction(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 3: return .ElectrumError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 4: return .TaskError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: BroadcastError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .InvalidHex(errorDetails):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .InvalidTransaction(errorDetails):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .ElectrumError(errorDetails):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .TaskError(errorDetails):
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBroadcastError_lift(_ buf: RustBuffer) throws -> BroadcastError {
+    return try FfiConverterTypeBroadcastError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBroadcastError_lower(_ value: BroadcastError) -> RustBuffer {
+    return FfiConverterTypeBroadcastError.lower(value)
+}
+
+
+extension BroadcastError: Equatable, Hashable {}
+
+extension BroadcastError: Codable {}
+
+
+
+
+extension BroadcastError: Foundation.LocalizedError {
     public var errorDescription: String? {
         String(reflecting: self)
     }
@@ -18147,6 +18249,60 @@ public func mnemonicToSeed(mnemonicPhrase: String, passphrase: String?)throws  -
     )
 })
 }
+/**
+ * Broadcast a signed raw transaction via Electrum.
+ *
+ * Takes a hex-encoded serialized transaction and an Electrum server URL.
+ * Returns the transaction ID on success.
+ */
+public func onchainBroadcastRawTx(serializedTx: String, electrumUrl: String)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx(FfiConverterString.lower(serializedTx),FfiConverterString.lower(electrumUrl)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeBroadcastError_lift
+        )
+}
+/**
+ * Query account information for an extended public key via Electrum.
+ */
+public func onchainGetAccountInfo(extendedKey: String, electrumUrl: String, network: Network?, gapLimit: UInt32?)async throws  -> AccountInfoResult  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_onchain_get_account_info(FfiConverterString.lower(extendedKey),FfiConverterString.lower(electrumUrl),FfiConverterOptionTypeNetwork.lower(network),FfiConverterOptionUInt32.lower(gapLimit)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeAccountInfoResult_lift,
+            errorHandler: FfiConverterTypeAccountInfoError_lift
+        )
+}
+/**
+ * Query balance and UTXOs for a single Bitcoin address via Electrum.
+ */
+public func onchainGetAddressInfo(address: String, electrumUrl: String, network: Network?)async throws  -> SingleAddressInfoResult  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_onchain_get_address_info(FfiConverterString.lower(address),FfiConverterString.lower(electrumUrl),FfiConverterOptionTypeNetwork.lower(network)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeSingleAddressInfoResult_lift,
+            errorHandler: FfiConverterTypeAccountInfoError_lift
+        )
+}
 public func openChannel(orderId: String, connectionString: String)async throws  -> IBtOrder  {
     return
         try  await uniffiRustCallAsync(
@@ -18356,7 +18512,7 @@ public func testNotification(deviceToken: String, secretMessage: String, notific
         )
 }
 /**
- * Convert an account type to its corresponding script type.
+ * Convert an account type to its corresponding Trezor script type.
  */
 public func trezorAccountTypeToScriptType(accountType: AccountType) -> TrezorScriptType  {
     return try!  FfiConverterTypeTrezorScriptType_lift(try! rustCall() {
@@ -18364,26 +18520,6 @@ public func trezorAccountTypeToScriptType(accountType: AccountType) -> TrezorScr
         FfiConverterTypeAccountType_lower(accountType),$0
     )
 })
-}
-/**
- * Broadcast a signed raw transaction via Electrum.
- *
- * Takes a hex-encoded serialized transaction and an Electrum server URL.
- * Returns the transaction ID on success.
- */
-public func trezorBroadcastRawTx(serializedTx: String, electrumUrl: String)async throws  -> String  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_trezor_broadcast_raw_tx(FfiConverterString.lower(serializedTx),FfiConverterString.lower(electrumUrl)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
-            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
-            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterString.lift,
-            errorHandler: FfiConverterTypeAccountInfoError_lift
-        )
 }
 /**
  * Clear stored Bluetooth pairing credentials for a specific Trezor device.
@@ -18466,23 +18602,6 @@ public func trezorFetchPrevTxs(txids: [String], electrumUrl: String)async throws
         )
 }
 /**
- * Query account information for an extended public key via Electrum.
- */
-public func trezorGetAccountInfo(extendedKey: String, electrumUrl: String, network: TrezorCoinType?, gapLimit: UInt32?)async throws  -> AccountInfoResult  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_trezor_get_account_info(FfiConverterString.lower(extendedKey),FfiConverterString.lower(electrumUrl),FfiConverterOptionTypeTrezorCoinType.lower(network),FfiConverterOptionUInt32.lower(gapLimit)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
-            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
-            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterTypeAccountInfoResult_lift,
-            errorHandler: FfiConverterTypeAccountInfoError_lift
-        )
-}
-/**
  * Get a Bitcoin address from the connected Trezor device.
  */
 public func trezorGetAddress(params: TrezorGetAddressParams)async throws  -> TrezorAddressResponse  {
@@ -18497,23 +18616,6 @@ public func trezorGetAddress(params: TrezorGetAddressParams)async throws  -> Tre
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeTrezorAddressResponse_lift,
             errorHandler: FfiConverterTypeTrezorError_lift
-        )
-}
-/**
- * Query balance and UTXOs for a single Bitcoin address via Electrum.
- */
-public func trezorGetAddressInfo(address: String, electrumUrl: String, network: TrezorCoinType?)async throws  -> SingleAddressInfoResult  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_trezor_get_address_info(FfiConverterString.lower(address),FfiConverterString.lower(electrumUrl),FfiConverterOptionTypeTrezorCoinType.lower(network)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
-            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
-            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterTypeSingleAddressInfoResult_lift,
-            errorHandler: FfiConverterTypeAccountInfoError_lift
         )
 }
 /**
@@ -19178,6 +19280,15 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_mnemonic_to_seed() != 40039) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx() != 45163) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 34826) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_onchain_get_address_info() != 4749) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_open_channel() != 21402) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -19229,10 +19340,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_test_notification() != 32857) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type() != 48918) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_bitkitcore_checksum_func_trezor_broadcast_raw_tx() != 15100) {
+    if (uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type() != 16116) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_clear_credentials() != 41940) {
@@ -19247,13 +19355,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_trezor_fetch_prev_txs() != 46921) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_trezor_get_account_info() != 1783) {
-        return InitializationResult.apiChecksumMismatch
-    }
     if (uniffi_bitkitcore_checksum_func_trezor_get_address() != 12910) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_bitkitcore_checksum_func_trezor_get_address_info() != 1337) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_get_connected_device() != 48383) {

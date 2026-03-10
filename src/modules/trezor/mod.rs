@@ -16,5 +16,5 @@ pub use errors::*;
 pub use types::*;
 pub use implementation::*;
 pub use callbacks::*;
-pub use account_info::{get_account_info, get_address_info, account_type_to_script_type, fetch_prev_txs, broadcast_raw_tx};
+pub use account_info::{account_type_to_script_type, fetch_prev_txs};
 pub use compose::{precompose_transaction, precomposed_to_sign_params};

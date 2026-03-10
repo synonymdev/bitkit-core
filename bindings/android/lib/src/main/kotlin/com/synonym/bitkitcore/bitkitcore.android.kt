@@ -1625,6 +1625,15 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_mnemonic_to_seed() != 40039.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx() != 45163.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 34826.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_onchain_get_address_info() != 4749.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_open_channel() != 21402.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1676,10 +1685,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_test_notification() != 32857.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type() != 48918.toShort()) {
-            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-        }
-        if (uniffi_bitkitcore_checksum_func_trezor_broadcast_raw_tx() != 15100.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type() != 16116.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_clear_credentials() != 41940.toShort()) {
@@ -1694,13 +1700,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_trezor_fetch_prev_txs() != 46921.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_get_account_info() != 1783.toShort()) {
-            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-        }
         if (uniffi_bitkitcore_checksum_func_trezor_get_address() != 12910.toShort()) {
-            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-        }
-        if (uniffi_bitkitcore_checksum_func_trezor_get_address_info() != 1337.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_get_connected_device() != 48383.toShort()) {
@@ -2040,6 +2040,15 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_mnemonic_to_seed(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_onchain_get_account_info(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_onchain_get_address_info(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_open_channel(
     ): Short
     @JvmStatic
@@ -2094,9 +2103,6 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type(
     ): Short
     @JvmStatic
-    external fun uniffi_bitkitcore_checksum_func_trezor_broadcast_raw_tx(
-    ): Short
-    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_clear_credentials(
     ): Short
     @JvmStatic
@@ -2109,13 +2115,7 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_trezor_fetch_prev_txs(
     ): Short
     @JvmStatic
-    external fun uniffi_bitkitcore_checksum_func_trezor_get_account_info(
-    ): Short
-    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_get_address(
-    ): Short
-    @JvmStatic
-    external fun uniffi_bitkitcore_checksum_func_trezor_get_address_info(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_get_connected_device(
@@ -2730,6 +2730,24 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx(
+        `serializedTx`: RustBufferByValue,
+        `electrumUrl`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_onchain_get_account_info(
+        `extendedKey`: RustBufferByValue,
+        `electrumUrl`: RustBufferByValue,
+        `network`: RustBufferByValue,
+        `gapLimit`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_onchain_get_address_info(
+        `address`: RustBufferByValue,
+        `electrumUrl`: RustBufferByValue,
+        `network`: RustBufferByValue,
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_open_channel(
         `orderId`: RustBufferByValue,
         `connectionString`: RustBufferByValue,
@@ -2828,11 +2846,6 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
-    external fun uniffi_bitkitcore_fn_func_trezor_broadcast_raw_tx(
-        `serializedTx`: RustBufferByValue,
-        `electrumUrl`: RustBufferByValue,
-    ): Long
-    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_clear_credentials(
         `deviceId`: RustBufferByValue,
     ): Long
@@ -2849,21 +2862,8 @@ internal object UniffiLib : Library {
         `electrumUrl`: RustBufferByValue,
     ): Long
     @JvmStatic
-    external fun uniffi_bitkitcore_fn_func_trezor_get_account_info(
-        `extendedKey`: RustBufferByValue,
-        `electrumUrl`: RustBufferByValue,
-        `network`: RustBufferByValue,
-        `gapLimit`: RustBufferByValue,
-    ): Long
-    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_get_address(
         `params`: RustBufferByValue,
-    ): Long
-    @JvmStatic
-    external fun uniffi_bitkitcore_fn_func_trezor_get_address_info(
-        `address`: RustBufferByValue,
-        `electrumUrl`: RustBufferByValue,
-        `network`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_get_connected_device(
@@ -7965,6 +7965,83 @@ public object FfiConverterTypeBlocktankError : FfiConverterRustBuffer<BlocktankE
 
 
 
+public object BroadcastExceptionErrorHandler : UniffiRustCallStatusErrorHandler<BroadcastException> {
+    override fun lift(errorBuf: RustBufferByValue): BroadcastException = FfiConverterTypeBroadcastError.lift(errorBuf)
+}
+
+public object FfiConverterTypeBroadcastError : FfiConverterRustBuffer<BroadcastException> {
+    override fun read(buf: ByteBuffer): BroadcastException {
+        return when (buf.getInt()) {
+            1 -> BroadcastException.InvalidHex(
+                FfiConverterString.read(buf),
+                )
+            2 -> BroadcastException.InvalidTransaction(
+                FfiConverterString.read(buf),
+                )
+            3 -> BroadcastException.ElectrumException(
+                FfiConverterString.read(buf),
+                )
+            4 -> BroadcastException.TaskException(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: BroadcastException): ULong {
+        return when (value) {
+            is BroadcastException.InvalidHex -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is BroadcastException.InvalidTransaction -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is BroadcastException.ElectrumException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is BroadcastException.TaskException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+        }
+    }
+
+    override fun write(value: BroadcastException, buf: ByteBuffer) {
+        when (value) {
+            is BroadcastException.InvalidHex -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is BroadcastException.InvalidTransaction -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is BroadcastException.ElectrumException -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is BroadcastException.TaskException -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
 
 public object FfiConverterTypeBtBolt11InvoiceState: FfiConverterRustBuffer<BtBolt11InvoiceState> {
     override fun read(buf: ByteBuffer): BtBolt11InvoiceState = try {
@@ -12334,6 +12411,75 @@ public fun `mnemonicToSeed`(`mnemonicPhrase`: kotlin.String, `passphrase`: kotli
     })
 }
 
+/**
+ * Broadcast a signed raw transaction via Electrum.
+ *
+ * Takes a hex-encoded serialized transaction and an Electrum server URL.
+ * Returns the transaction ID on success.
+ */
+@Throws(BroadcastException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `onchainBroadcastRawTx`(`serializedTx`: kotlin.String, `electrumUrl`: kotlin.String): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx(
+            FfiConverterString.lower(`serializedTx`),
+            FfiConverterString.lower(`electrumUrl`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
+        // Error FFI converter
+        BroadcastExceptionErrorHandler,
+    )
+}
+
+/**
+ * Query account information for an extended public key via Electrum.
+ */
+@Throws(AccountInfoException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `onchainGetAccountInfo`(`extendedKey`: kotlin.String, `electrumUrl`: kotlin.String, `network`: Network?, `gapLimit`: kotlin.UInt?): AccountInfoResult {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_account_info(
+            FfiConverterString.lower(`extendedKey`),
+            FfiConverterString.lower(`electrumUrl`),
+            FfiConverterOptionalTypeNetwork.lower(`network`),
+            FfiConverterOptionalUInt.lower(`gapLimit`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeAccountInfoResult.lift(it) },
+        // Error FFI converter
+        AccountInfoExceptionErrorHandler,
+    )
+}
+
+/**
+ * Query balance and UTXOs for a single Bitcoin address via Electrum.
+ */
+@Throws(AccountInfoException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `onchainGetAddressInfo`(`address`: kotlin.String, `electrumUrl`: kotlin.String, `network`: Network?): SingleAddressInfoResult {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_address_info(
+            FfiConverterString.lower(`address`),
+            FfiConverterString.lower(`electrumUrl`),
+            FfiConverterOptionalTypeNetwork.lower(`network`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeSingleAddressInfoResult.lift(it) },
+        // Error FFI converter
+        AccountInfoExceptionErrorHandler,
+    )
+}
+
 @Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
 public suspend fun `openChannel`(`orderId`: kotlin.String, `connectionString`: kotlin.String): IBtOrder {
     return uniffiRustCallAsync(
@@ -12616,7 +12762,7 @@ public suspend fun `testNotification`(`deviceToken`: kotlin.String, `secretMessa
 }
 
 /**
- * Convert an account type to its corresponding script type.
+ * Convert an account type to its corresponding Trezor script type.
  */
 public fun `trezorAccountTypeToScriptType`(`accountType`: AccountType): TrezorScriptType {
     return FfiConverterTypeTrezorScriptType.lift(uniffiRustCall { uniffiRustCallStatus ->
@@ -12625,30 +12771,6 @@ public fun `trezorAccountTypeToScriptType`(`accountType`: AccountType): TrezorSc
             uniffiRustCallStatus,
         )
     })
-}
-
-/**
- * Broadcast a signed raw transaction via Electrum.
- *
- * Takes a hex-encoded serialized transaction and an Electrum server URL.
- * Returns the transaction ID on success.
- */
-@Throws(AccountInfoException::class, kotlin.coroutines.cancellation.CancellationException::class)
-public suspend fun `trezorBroadcastRawTx`(`serializedTx`: kotlin.String, `electrumUrl`: kotlin.String): kotlin.String {
-    return uniffiRustCallAsync(
-        UniffiLib.uniffi_bitkitcore_fn_func_trezor_broadcast_raw_tx(
-            FfiConverterString.lower(`serializedTx`),
-            FfiConverterString.lower(`electrumUrl`),
-        ),
-        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
-        // lift function
-        { FfiConverterString.lift(it) },
-        // Error FFI converter
-        AccountInfoExceptionErrorHandler,
-    )
 }
 
 /**
@@ -12746,29 +12868,6 @@ public suspend fun `trezorFetchPrevTxs`(`txids`: List<kotlin.String>, `electrumU
 }
 
 /**
- * Query account information for an extended public key via Electrum.
- */
-@Throws(AccountInfoException::class, kotlin.coroutines.cancellation.CancellationException::class)
-public suspend fun `trezorGetAccountInfo`(`extendedKey`: kotlin.String, `electrumUrl`: kotlin.String, `network`: TrezorCoinType?, `gapLimit`: kotlin.UInt?): AccountInfoResult {
-    return uniffiRustCallAsync(
-        UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_account_info(
-            FfiConverterString.lower(`extendedKey`),
-            FfiConverterString.lower(`electrumUrl`),
-            FfiConverterOptionalTypeTrezorCoinType.lower(`network`),
-            FfiConverterOptionalUInt.lower(`gapLimit`),
-        ),
-        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
-        // lift function
-        { FfiConverterTypeAccountInfoResult.lift(it) },
-        // Error FFI converter
-        AccountInfoExceptionErrorHandler,
-    )
-}
-
-/**
  * Get a Bitcoin address from the connected Trezor device.
  */
 @Throws(TrezorException::class, kotlin.coroutines.cancellation.CancellationException::class)
@@ -12785,28 +12884,6 @@ public suspend fun `trezorGetAddress`(`params`: TrezorGetAddressParams): TrezorA
         { FfiConverterTypeTrezorAddressResponse.lift(it) },
         // Error FFI converter
         TrezorExceptionErrorHandler,
-    )
-}
-
-/**
- * Query balance and UTXOs for a single Bitcoin address via Electrum.
- */
-@Throws(AccountInfoException::class, kotlin.coroutines.cancellation.CancellationException::class)
-public suspend fun `trezorGetAddressInfo`(`address`: kotlin.String, `electrumUrl`: kotlin.String, `network`: TrezorCoinType?): SingleAddressInfoResult {
-    return uniffiRustCallAsync(
-        UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_address_info(
-            FfiConverterString.lower(`address`),
-            FfiConverterString.lower(`electrumUrl`),
-            FfiConverterOptionalTypeTrezorCoinType.lower(`network`),
-        ),
-        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
-        // lift function
-        { FfiConverterTypeSingleAddressInfoResult.lift(it) },
-        // Error FFI converter
-        AccountInfoExceptionErrorHandler,
     )
 }
 

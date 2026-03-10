@@ -510,4 +510,436 @@ mod tests {
         assert!(result.amount_swept > 0);
         assert!(result.fee_paid > 0);
     }
+
+    #[test]
+    fn test_broadcast_raw_tx_invalid_hex() {
+        use crate::modules::onchain::broadcast_raw_tx;
+        use crate::modules::onchain::BroadcastError;
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let result = rt.block_on(broadcast_raw_tx(
+            "not_valid_hex".to_string(),
+            "ssl://electrum.blockstream.info:60002",
+        ));
+
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), BroadcastError::InvalidHex { .. }));
+    }
+
+    #[test]
+    fn test_broadcast_raw_tx_invalid_tx_data() {
+        use crate::modules::onchain::broadcast_raw_tx;
+        use crate::modules::onchain::BroadcastError;
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        // Valid hex but not a valid transaction
+        let result = rt.block_on(broadcast_raw_tx(
+            "deadbeef".to_string(),
+            "ssl://electrum.blockstream.info:60002",
+        ));
+
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), BroadcastError::InvalidTransaction { .. }));
+    }
+
+    // ========================================================================
+    // Account Info Tests
+    // ========================================================================
+
+    const ACCOUNT_INFO_ELECTRUM_URL: &str = "ssl://fulcrum.bitkit.stag0.blocktank.to:18484";
+
+    const TEST_TPUB: &str = "tpubDDWohsp5dx2iMJ9N7iHbgAEDhH4BJB9NWW1fEW3yA3AFNDREmpzteCXNqppMLUmKFY5q5e3PXtS5CuqWCQbYcGhpPqYAgQSYdwknW9J6sQv";
+    const TEST_UPUB: &str = "upub5DWPhYKrgLiETEmgLykymFzBK6gXUNvkE67HLSEh5zcWNRdx2Hxd8HypxaDaK1p62a1kXwe9eBcV3pGm7yEpHh4ebrspSoer4x8Ko29egtv";
+    const TEST_VPUB: &str = "vpub5ZgC33hDPuhHSDYrGeoi685MKtdAUB3pkS4rarJ5dv3RABneKLCbhJu2FNfcajo1GukBAwEMBXZWvU7fykTeyKEJrgV6E6NC7BZ3jzp3ffp";
+
+    const TEST_LEGACY_ADDR: &str = "mixttbUXpVWVpx3qHh7KUiVnxWiNxL2uu9";
+    const TEST_P2SH_ADDR: &str = "2N7mA1KBJX8iprzzoFjcbkY1Z2WRZ3bjnsK";
+    const TEST_REGTEST_BECH32_ADDR: &str = "bcrt1qj2gz3meule5mc4r4knv65vjds3g88rlxs0jlmq";
+
+    // --- Unit Tests: Helper Functions ---
+
+    #[test]
+    fn test_detect_account_type() {
+        use crate::modules::onchain::detect_account_type;
+        use crate::modules::onchain::AccountType;
+
+        // Standard prefixes
+        assert_eq!(detect_account_type("xpub6ABC").unwrap(), AccountType::Legacy);
+        assert_eq!(detect_account_type("tpub6ABC").unwrap(), AccountType::Legacy);
+        assert_eq!(detect_account_type("ypub6ABC").unwrap(), AccountType::WrappedSegwit);
+        assert_eq!(detect_account_type("upub6ABC").unwrap(), AccountType::WrappedSegwit);
+        assert_eq!(detect_account_type("zpub6ABC").unwrap(), AccountType::NativeSegwit);
+        assert_eq!(detect_account_type("vpub6ABC").unwrap(), AccountType::NativeSegwit);
+
+        // Actual test keys
+        assert_eq!(detect_account_type(TEST_TPUB).unwrap(), AccountType::Legacy);
+        assert_eq!(detect_account_type(TEST_UPUB).unwrap(), AccountType::WrappedSegwit);
+        assert_eq!(detect_account_type(TEST_VPUB).unwrap(), AccountType::NativeSegwit);
+
+        // Error cases
+        assert!(detect_account_type("invalid_key").is_err());
+        assert!(detect_account_type("ab").is_err()); // too short
+    }
+
+    #[test]
+    fn test_detect_network_from_key() {
+        use crate::modules::onchain::detect_network_from_key;
+        use bdk::bitcoin::Network as BdkNetwork;
+
+        // Mainnet prefixes
+        assert_eq!(detect_network_from_key("xpub6ABC").unwrap(), BdkNetwork::Bitcoin);
+        assert_eq!(detect_network_from_key("ypub6ABC").unwrap(), BdkNetwork::Bitcoin);
+        assert_eq!(detect_network_from_key("zpub6ABC").unwrap(), BdkNetwork::Bitcoin);
+
+        // Testnet prefixes
+        assert_eq!(detect_network_from_key("tpub6ABC").unwrap(), BdkNetwork::Testnet);
+        assert_eq!(detect_network_from_key("upub6ABC").unwrap(), BdkNetwork::Testnet);
+        assert_eq!(detect_network_from_key("vpub6ABC").unwrap(), BdkNetwork::Testnet);
+
+        // Actual test keys
+        assert_eq!(detect_network_from_key(TEST_TPUB).unwrap(), BdkNetwork::Testnet);
+        assert_eq!(detect_network_from_key(TEST_UPUB).unwrap(), BdkNetwork::Testnet);
+        assert_eq!(detect_network_from_key(TEST_VPUB).unwrap(), BdkNetwork::Testnet);
+
+        // Error cases
+        assert!(detect_network_from_key("invalid").is_err());
+        assert!(detect_network_from_key("ab").is_err());
+    }
+
+    #[test]
+    fn test_normalize_extended_key() {
+        use crate::modules::onchain::normalize_extended_key;
+
+        // tpub should remain unchanged
+        let normalized_tpub = normalize_extended_key(TEST_TPUB).unwrap();
+        assert!(normalized_tpub.starts_with("tpub"), "tpub should remain as tpub");
+        assert_eq!(normalized_tpub, TEST_TPUB);
+
+        // upub should be converted to tpub
+        let normalized_upub = normalize_extended_key(TEST_UPUB).unwrap();
+        assert!(normalized_upub.starts_with("tpub"), "upub should be converted to tpub, got: {}", &normalized_upub[..4]);
+
+        // vpub should be converted to tpub
+        let normalized_vpub = normalize_extended_key(TEST_VPUB).unwrap();
+        assert!(normalized_vpub.starts_with("tpub"), "vpub should be converted to tpub, got: {}", &normalized_vpub[..4]);
+
+        // Error cases
+        assert!(normalize_extended_key("ab").is_err());
+        assert!(normalize_extended_key("invalidkey").is_err());
+    }
+
+    #[test]
+    fn test_build_descriptors() {
+        use crate::modules::onchain::build_descriptors;
+        use crate::modules::onchain::AccountType;
+
+        let test_key = "tpub_test_key";
+
+        let (ext, int) = build_descriptors(test_key, AccountType::Legacy);
+        assert_eq!(ext, "pkh(tpub_test_key/0/*)");
+        assert_eq!(int, "pkh(tpub_test_key/1/*)");
+
+        let (ext, int) = build_descriptors(test_key, AccountType::WrappedSegwit);
+        assert_eq!(ext, "sh(wpkh(tpub_test_key/0/*))");
+        assert_eq!(int, "sh(wpkh(tpub_test_key/1/*))");
+
+        let (ext, int) = build_descriptors(test_key, AccountType::NativeSegwit);
+        assert_eq!(ext, "wpkh(tpub_test_key/0/*)");
+        assert_eq!(int, "wpkh(tpub_test_key/1/*)");
+
+        let (ext, int) = build_descriptors(test_key, AccountType::Taproot);
+        assert_eq!(ext, "tr(tpub_test_key/0/*)");
+        assert_eq!(int, "tr(tpub_test_key/1/*)");
+    }
+
+    #[test]
+    fn test_derive_base_path() {
+        use crate::modules::onchain::derive_base_path;
+        use crate::modules::onchain::AccountType;
+        use bdk::bitcoin::Network as BdkNetwork;
+
+        assert_eq!(derive_base_path(AccountType::Legacy, BdkNetwork::Bitcoin, 0), "m/44'/0'/0'");
+        assert_eq!(derive_base_path(AccountType::WrappedSegwit, BdkNetwork::Bitcoin, 0), "m/49'/0'/0'");
+        assert_eq!(derive_base_path(AccountType::NativeSegwit, BdkNetwork::Bitcoin, 0), "m/84'/0'/0'");
+        assert_eq!(derive_base_path(AccountType::Taproot, BdkNetwork::Bitcoin, 0), "m/86'/0'/0'");
+
+        // Testnet uses coin_type 1
+        assert_eq!(derive_base_path(AccountType::Legacy, BdkNetwork::Testnet, 0), "m/44'/1'/0'");
+        assert_eq!(derive_base_path(AccountType::NativeSegwit, BdkNetwork::Testnet, 0), "m/84'/1'/0'");
+
+        // Non-zero account index
+        assert_eq!(derive_base_path(AccountType::WrappedSegwit, BdkNetwork::Bitcoin, 2), "m/49'/0'/2'");
+        assert_eq!(derive_base_path(AccountType::NativeSegwit, BdkNetwork::Testnet, 5), "m/84'/1'/5'");
+    }
+
+    // --- Integration Tests: get_account_info ---
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_get_account_info_tpub() {
+        use crate::modules::onchain::get_account_info;
+        use crate::modules::onchain::AccountType;
+
+        let result = get_account_info(
+            TEST_TPUB,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            None,
+            None,
+        )
+        .await;
+
+        let info = result.expect("get_account_info(tpub) should succeed");
+        assert_eq!(info.account_type, AccountType::Legacy);
+        let balance: u64 = info.balance;
+        assert!(balance >= 100_000, "Expected balance >= 100,000 sats, got {}", balance);
+        assert!(info.utxo_count >= 1, "Expected at least 1 UTXO, got {}", info.utxo_count);
+        assert!(info.block_height > 0, "Expected block_height > 0");
+        assert!(info.account.path.starts_with("m/44'/1'/"), "Expected BIP44 testnet path, got {}", info.account.path);
+        assert!(!info.account.utxo.is_empty(), "Expected non-empty UTXOs");
+
+        // Verify address structure
+        assert!(!info.account.addresses.unused.is_empty(), "Expected unused addresses");
+        for addr in &info.account.addresses.used {
+            assert!(!addr.address.is_empty());
+            assert!(addr.path.starts_with("m/44'/1'/"));
+            assert!(addr.transfers > 0);
+        }
+
+        for utxo in &info.account.utxo {
+            assert!(!utxo.txid.is_empty(), "UTXO should have non-empty txid");
+            let amount: u64 = utxo.amount;
+            assert!(amount > 0, "UTXO amount should be > 0");
+            assert!(!utxo.path.is_empty(), "UTXO should have a derivation path");
+        }
+
+        println!("tpub account info: balance={}, utxos={}, path={}, block_height={}",
+            info.balance, info.utxo_count, info.account.path, info.block_height);
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_get_account_info_upub() {
+        use crate::modules::onchain::get_account_info;
+        use crate::modules::onchain::AccountType;
+
+        let result = get_account_info(
+            TEST_UPUB,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            None,
+            None,
+        )
+        .await;
+
+        let info = result.expect("get_account_info(upub) should succeed");
+        assert_eq!(info.account_type, AccountType::WrappedSegwit);
+        let balance: u64 = info.balance;
+        assert!(balance >= 100_000, "Expected balance >= 100,000 sats, got {}", balance);
+        assert!(info.utxo_count >= 1, "Expected at least 1 UTXO, got {}", info.utxo_count);
+        assert!(info.block_height > 0);
+        assert!(info.account.path.starts_with("m/49'/1'/"), "Expected BIP49 testnet path, got {}", info.account.path);
+        assert!(!info.account.utxo.is_empty());
+
+        for utxo in &info.account.utxo {
+            assert!(!utxo.txid.is_empty());
+            let amount: u64 = utxo.amount;
+            assert!(amount > 0);
+        }
+
+        println!("upub account info: balance={}, utxos={}, path={}, block_height={}",
+            info.balance, info.utxo_count, info.account.path, info.block_height);
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_get_account_info_vpub() {
+        use crate::modules::onchain::get_account_info;
+        use crate::modules::onchain::AccountType;
+
+        let result = get_account_info(
+            TEST_VPUB,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            None,
+            None,
+        )
+        .await;
+
+        let info = result.expect("get_account_info(vpub) should succeed");
+        assert_eq!(info.account_type, AccountType::NativeSegwit);
+        let balance: u64 = info.balance;
+        assert!(balance >= 100_000, "Expected balance >= 100,000 sats, got {}", balance);
+        assert!(info.utxo_count >= 1, "Expected at least 1 UTXO, got {}", info.utxo_count);
+        assert!(info.block_height > 0);
+        assert!(info.account.path.starts_with("m/84'/1'/"), "Expected BIP84 testnet path, got {}", info.account.path);
+        assert!(!info.account.utxo.is_empty());
+
+        for utxo in &info.account.utxo {
+            assert!(!utxo.txid.is_empty());
+            let amount: u64 = utxo.amount;
+            assert!(amount > 0);
+        }
+
+        println!("vpub account info: balance={}, utxos={}, path={}, block_height={}",
+            info.balance, info.utxo_count, info.account.path, info.block_height);
+    }
+
+    // --- Integration Tests: get_address_info ---
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_get_address_info_legacy() {
+        use crate::modules::onchain::get_address_info;
+
+        let result = get_address_info(
+            TEST_LEGACY_ADDR,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            None,
+        )
+        .await;
+
+        let info = result.expect("get_address_info(legacy) should succeed");
+        assert_eq!(info.address, TEST_LEGACY_ADDR);
+        let balance: u64 = info.balance;
+        assert!(balance >= 100_000, "Expected balance >= 100,000 sats, got {}", balance);
+        assert!(!info.utxos.is_empty(), "Expected non-empty UTXOs");
+        assert!(info.transfers >= 1, "Expected at least 1 transfer, got {}", info.transfers);
+        assert!(info.block_height > 0);
+
+        for utxo in &info.utxos {
+            assert_eq!(utxo.address, TEST_LEGACY_ADDR);
+            assert!(!utxo.txid.is_empty());
+            let amount: u64 = utxo.amount;
+            assert!(amount > 0);
+        }
+
+        println!("Legacy address info: balance={}, utxos={}, transfers={}, block_height={}",
+            info.balance, info.utxos.len(), info.transfers, info.block_height);
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_get_address_info_p2sh() {
+        use crate::modules::onchain::get_address_info;
+
+        let result = get_address_info(
+            TEST_P2SH_ADDR,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            None,
+        )
+        .await;
+
+        let info = result.expect("get_address_info(p2sh) should succeed");
+        assert_eq!(info.address, TEST_P2SH_ADDR);
+        let balance: u64 = info.balance;
+        assert!(balance >= 100_000, "Expected balance >= 100,000 sats, got {}", balance);
+        assert!(!info.utxos.is_empty());
+        assert!(info.transfers >= 1);
+        assert!(info.block_height > 0);
+
+        for utxo in &info.utxos {
+            assert_eq!(utxo.address, TEST_P2SH_ADDR);
+        }
+
+        println!("P2SH address info: balance={}, utxos={}, transfers={}, block_height={}",
+            info.balance, info.utxos.len(), info.transfers, info.block_height);
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_get_address_info_regtest_bech32() {
+        use crate::modules::onchain::get_address_info;
+
+        let result = get_address_info(
+            TEST_REGTEST_BECH32_ADDR,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            None,
+        )
+        .await;
+
+        let info = result.expect("get_address_info(regtest bech32) should succeed");
+        assert_eq!(info.address, TEST_REGTEST_BECH32_ADDR);
+        let balance: u64 = info.balance;
+        assert!(balance >= 100_000, "Expected balance >= 100,000 sats, got {}", balance);
+        assert!(!info.utxos.is_empty());
+        assert!(info.transfers >= 1);
+        assert!(info.block_height > 0);
+
+        for utxo in &info.utxos {
+            assert_eq!(utxo.address, TEST_REGTEST_BECH32_ADDR);
+        }
+
+        println!("Regtest bech32 address info: balance={}, utxos={}, transfers={}, block_height={}",
+            info.balance, info.utxos.len(), info.transfers, info.block_height);
+    }
+
+    // --- Error / Edge Case Tests ---
+
+    #[test]
+    fn test_get_account_info_invalid_key() {
+        use crate::modules::onchain::get_account_info;
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let result = rt.block_on(get_account_info(
+            "not_a_valid_xpub",
+            ACCOUNT_INFO_ELECTRUM_URL,
+            None,
+            None,
+        ));
+
+        assert!(result.is_err(), "Expected error for invalid key");
+    }
+
+    #[test]
+    fn test_get_account_info_network_mismatch() {
+        use crate::modules::onchain::get_account_info;
+        use crate::modules::onchain::{AccountInfoError, Network as OnchainNetwork};
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        // tpub is testnet, but we specify Bitcoin (mainnet) — should get NetworkMismatch
+        let result = rt.block_on(get_account_info(
+            TEST_TPUB,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            Some(OnchainNetwork::Bitcoin),
+            None,
+        ));
+
+        assert!(result.is_err(), "Expected NetworkMismatch error");
+        match result.unwrap_err() {
+            AccountInfoError::NetworkMismatch { .. } => {}
+            other => panic!("Expected NetworkMismatch, got: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_get_address_info_invalid_address() {
+        use crate::modules::onchain::get_address_info;
+        use crate::modules::onchain::AccountInfoError;
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let result = rt.block_on(get_address_info(
+            "not_a_valid_address",
+            ACCOUNT_INFO_ELECTRUM_URL,
+            None,
+        ));
+
+        assert!(result.is_err(), "Expected error for invalid address");
+        match result.unwrap_err() {
+            AccountInfoError::InvalidAddress { .. } => {}
+            other => panic!("Expected InvalidAddress, got: {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_get_address_info_invalid_electrum() {
+        use crate::modules::onchain::get_address_info;
+
+        let result = get_address_info(
+            TEST_LEGACY_ADDR,
+            "invalid://url",
+            None,
+        )
+        .await;
+
+        assert!(result.is_err(), "Expected error for invalid electrum URL");
+    }
 }

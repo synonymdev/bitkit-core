@@ -583,6 +583,12 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_mnemonic_to_seed() != 40039:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx() != 45163:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 34826:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_onchain_get_address_info() != 4749:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_open_channel() != 21402:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273:
@@ -617,9 +623,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_test_notification() != 32857:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type() != 48918:
-        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_broadcast_raw_tx() != 15100:
+    if lib.uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type() != 16116:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_clear_credentials() != 41940:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -629,11 +633,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_fetch_prev_txs() != 46921:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_get_account_info() != 1783:
-        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_get_address() != 12910:
-        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_get_address_info() != 1337:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_get_connected_device() != 48383:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -1342,6 +1342,24 @@ _UniffiLib.uniffi_bitkitcore_fn_func_mnemonic_to_seed.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_mnemonic_to_seed.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_account_info.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_account_info.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_address_info.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_address_info.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_open_channel.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1440,11 +1458,6 @@ _UniffiLib.uniffi_bitkitcore_fn_func_trezor_account_type_to_script_type.argtypes
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_account_type_to_script_type.restype = _UniffiRustBuffer
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_broadcast_raw_tx.argtypes = (
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-)
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_broadcast_raw_tx.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_clear_credentials.argtypes = (
     _UniffiRustBuffer,
 )
@@ -1461,23 +1474,10 @@ _UniffiLib.uniffi_bitkitcore_fn_func_trezor_fetch_prev_txs.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_fetch_prev_txs.restype = ctypes.c_uint64
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_account_info.argtypes = (
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-)
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_account_info.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_address.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_address.restype = ctypes.c_uint64
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_address_info.argtypes = (
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-)
-_UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_address_info.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_connected_device.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_connected_device.restype = ctypes.c_uint64
@@ -2089,6 +2089,15 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_mnemonic_to_entropy.restype = ctypes.
 _UniffiLib.uniffi_bitkitcore_checksum_func_mnemonic_to_seed.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_mnemonic_to_seed.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_account_info.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_account_info.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_address_info.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_address_info.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.restype = ctypes.c_uint16
@@ -2143,9 +2152,6 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_test_notification.restype = ctypes.c_
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type.restype = ctypes.c_uint16
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_broadcast_raw_tx.argtypes = (
-)
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_broadcast_raw_tx.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_clear_credentials.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_clear_credentials.restype = ctypes.c_uint16
@@ -2158,15 +2164,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_disconnect.restype = ctypes.c_
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_fetch_prev_txs.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_fetch_prev_txs.restype = ctypes.c_uint16
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_account_info.argtypes = (
-)
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_account_info.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_address.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_address.restype = ctypes.c_uint16
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_address_info.argtypes = (
-)
-_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_address_info.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_connected_device.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_connected_device.restype = ctypes.c_uint16
@@ -2558,12 +2558,12 @@ class _UniffiConverterTypeAccountAddresses(_UniffiConverterRustBuffer):
 
 class AccountInfoResult:
     """
-    Result from querying an extended public key — ready for Trezor compose.
+    Result from querying an extended public key via Electrum.
     """
 
     account: "ComposeAccount"
     """
-    The compose-compatible account structure
+    The account structure with addresses and UTXOs
     """
 
     balance: "int"
@@ -2639,7 +2639,7 @@ class _UniffiConverterTypeAccountInfoResult(_UniffiConverterRustBuffer):
 
 class AccountUtxo:
     """
-    A UTXO in the format expected by Trezor compose.
+    A UTXO associated with an account or address.
     """
 
     txid: "str"
@@ -3097,10 +3097,7 @@ class _UniffiConverterTypeClosedChannelDetails(_UniffiConverterRustBuffer):
 
 class ComposeAccount:
     """
-    Full account structure for Trezor compose.
-
-    This is the `account` object expected by `composeTransaction` in
-    precompose mode.
+    Full account structure with addresses and UTXOs.
     """
 
     path: "str"
@@ -8731,9 +8728,6 @@ class _UniffiConverterTypeValidationResult(_UniffiConverterRustBuffer):
 class AccountInfoError(Exception):
     """
     Errors specific to account info operations (BDK/Electrum-based).
-
-    These are separate from `TrezorError` because account info operations
-    do not interact with a Trezor device — they only query the blockchain.
     """
 
     pass
@@ -8743,9 +8737,6 @@ _UniffiTempAccountInfoError = AccountInfoError
 class AccountInfoError:  # type: ignore
     """
     Errors specific to account info operations (BDK/Electrum-based).
-
-    These are separate from `TrezorError` because account info operations
-    do not interact with a Trezor device — they only query the blockchain.
     """
 
     class InvalidExtendedKey(_UniffiTempAccountInfoError):
@@ -9917,6 +9908,116 @@ class _UniffiConverterTypeBlocktankError(_UniffiConverterRustBuffer):
             _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, BlocktankError.DatabaseError):
             buf.write_i32(13)
+            _UniffiConverterString.write(value.error_details, buf)
+
+
+# BroadcastError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class BroadcastError(Exception):
+    pass
+
+_UniffiTempBroadcastError = BroadcastError
+
+class BroadcastError:  # type: ignore
+    class InvalidHex(_UniffiTempBroadcastError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "BroadcastError.InvalidHex({})".format(str(self))
+    _UniffiTempBroadcastError.InvalidHex = InvalidHex # type: ignore
+    class InvalidTransaction(_UniffiTempBroadcastError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "BroadcastError.InvalidTransaction({})".format(str(self))
+    _UniffiTempBroadcastError.InvalidTransaction = InvalidTransaction # type: ignore
+    class ElectrumError(_UniffiTempBroadcastError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "BroadcastError.ElectrumError({})".format(str(self))
+    _UniffiTempBroadcastError.ElectrumError = ElectrumError # type: ignore
+    class TaskError(_UniffiTempBroadcastError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "BroadcastError.TaskError({})".format(str(self))
+    _UniffiTempBroadcastError.TaskError = TaskError # type: ignore
+
+BroadcastError = _UniffiTempBroadcastError # type: ignore
+del _UniffiTempBroadcastError
+
+
+class _UniffiConverterTypeBroadcastError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BroadcastError.InvalidHex(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 2:
+            return BroadcastError.InvalidTransaction(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return BroadcastError.ElectrumError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 4:
+            return BroadcastError.TaskError(
+                _UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, BroadcastError.InvalidHex):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BroadcastError.InvalidTransaction):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BroadcastError.ElectrumError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BroadcastError.TaskError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, BroadcastError.InvalidHex):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BroadcastError.InvalidTransaction):
+            buf.write_i32(2)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BroadcastError.ElectrumError):
+            buf.write_i32(3)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BroadcastError.TaskError):
+            buf.write_i32(4)
             _UniffiConverterString.write(value.error_details, buf)
 
 
@@ -17054,6 +17155,90 @@ def mnemonic_to_seed(mnemonic_phrase: "str",passphrase: "typing.Optional[str]") 
         _UniffiConverterString.lower(mnemonic_phrase),
         _UniffiConverterOptionalString.lower(passphrase)))
 
+async def onchain_broadcast_raw_tx(serialized_tx: "str",electrum_url: "str") -> "str":
+
+    """
+    Broadcast a signed raw transaction via Electrum.
+
+    Takes a hex-encoded serialized transaction and an Electrum server URL.
+    Returns the transaction ID on success.
+    """
+
+    _UniffiConverterString.check_lower(serialized_tx)
+    
+    _UniffiConverterString.check_lower(electrum_url)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx(
+        _UniffiConverterString.lower(serialized_tx),
+        _UniffiConverterString.lower(electrum_url)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBroadcastError,
+
+    )
+async def onchain_get_account_info(extended_key: "str",electrum_url: "str",network: "typing.Optional[Network]",gap_limit: "typing.Optional[int]") -> "AccountInfoResult":
+
+    """
+    Query account information for an extended public key via Electrum.
+    """
+
+    _UniffiConverterString.check_lower(extended_key)
+    
+    _UniffiConverterString.check_lower(electrum_url)
+    
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+    
+    _UniffiConverterOptionalUInt32.check_lower(gap_limit)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_account_info(
+        _UniffiConverterString.lower(extended_key),
+        _UniffiConverterString.lower(electrum_url),
+        _UniffiConverterOptionalTypeNetwork.lower(network),
+        _UniffiConverterOptionalUInt32.lower(gap_limit)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeAccountInfoResult.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeAccountInfoError,
+
+    )
+async def onchain_get_address_info(address: "str",electrum_url: "str",network: "typing.Optional[Network]") -> "SingleAddressInfoResult":
+
+    """
+    Query balance and UTXOs for a single Bitcoin address via Electrum.
+    """
+
+    _UniffiConverterString.check_lower(address)
+    
+    _UniffiConverterString.check_lower(electrum_url)
+    
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_address_info(
+        _UniffiConverterString.lower(address),
+        _UniffiConverterString.lower(electrum_url),
+        _UniffiConverterOptionalTypeNetwork.lower(network)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeSingleAddressInfoResult.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeAccountInfoError,
+
+    )
 async def open_channel(order_id: "str",connection_string: "str") -> "IBtOrder":
 
     _UniffiConverterString.check_lower(order_id)
@@ -17365,7 +17550,7 @@ _UniffiConverterTypeBlocktankError,
 
 def trezor_account_type_to_script_type(account_type: "AccountType") -> "TrezorScriptType":
     """
-    Convert an account type to its corresponding script type.
+    Convert an account type to its corresponding Trezor script type.
     """
 
     _UniffiConverterTypeAccountType.check_lower(account_type)
@@ -17373,33 +17558,6 @@ def trezor_account_type_to_script_type(account_type: "AccountType") -> "TrezorSc
     return _UniffiConverterTypeTrezorScriptType.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_trezor_account_type_to_script_type,
         _UniffiConverterTypeAccountType.lower(account_type)))
 
-async def trezor_broadcast_raw_tx(serialized_tx: "str",electrum_url: "str") -> "str":
-
-    """
-    Broadcast a signed raw transaction via Electrum.
-
-    Takes a hex-encoded serialized transaction and an Electrum server URL.
-    Returns the transaction ID on success.
-    """
-
-    _UniffiConverterString.check_lower(serialized_tx)
-    
-    _UniffiConverterString.check_lower(electrum_url)
-    
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_broadcast_raw_tx(
-        _UniffiConverterString.lower(serialized_tx),
-        _UniffiConverterString.lower(electrum_url)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
-        # lift function
-        _UniffiConverterString.lift,
-        
-    # Error FFI converter
-_UniffiConverterTypeAccountInfoError,
-
-    )
 async def trezor_clear_credentials(device_id: "str") -> None:
 
     """
@@ -17498,36 +17656,6 @@ async def trezor_fetch_prev_txs(txids: "typing.List[str]",electrum_url: "str") -
 _UniffiConverterTypeAccountInfoError,
 
     )
-async def trezor_get_account_info(extended_key: "str",electrum_url: "str",network: "typing.Optional[TrezorCoinType]",gap_limit: "typing.Optional[int]") -> "AccountInfoResult":
-
-    """
-    Query account information for an extended public key via Electrum.
-    """
-
-    _UniffiConverterString.check_lower(extended_key)
-    
-    _UniffiConverterString.check_lower(electrum_url)
-    
-    _UniffiConverterOptionalTypeTrezorCoinType.check_lower(network)
-    
-    _UniffiConverterOptionalUInt32.check_lower(gap_limit)
-    
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_account_info(
-        _UniffiConverterString.lower(extended_key),
-        _UniffiConverterString.lower(electrum_url),
-        _UniffiConverterOptionalTypeTrezorCoinType.lower(network),
-        _UniffiConverterOptionalUInt32.lower(gap_limit)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
-        # lift function
-        _UniffiConverterTypeAccountInfoResult.lift,
-        
-    # Error FFI converter
-_UniffiConverterTypeAccountInfoError,
-
-    )
 async def trezor_get_address(params: "TrezorGetAddressParams") -> "TrezorAddressResponse":
 
     """
@@ -17547,33 +17675,6 @@ async def trezor_get_address(params: "TrezorGetAddressParams") -> "TrezorAddress
         
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
-
-    )
-async def trezor_get_address_info(address: "str",electrum_url: "str",network: "typing.Optional[TrezorCoinType]") -> "SingleAddressInfoResult":
-
-    """
-    Query balance and UTXOs for a single Bitcoin address via Electrum.
-    """
-
-    _UniffiConverterString.check_lower(address)
-    
-    _UniffiConverterString.check_lower(electrum_url)
-    
-    _UniffiConverterOptionalTypeTrezorCoinType.check_lower(network)
-    
-    return await _uniffi_rust_call_async(
-        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_address_info(
-        _UniffiConverterString.lower(address),
-        _UniffiConverterString.lower(electrum_url),
-        _UniffiConverterOptionalTypeTrezorCoinType.lower(network)),
-        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
-        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
-        # lift function
-        _UniffiConverterTypeSingleAddressInfoResult.lift,
-        
-    # Error FFI converter
-_UniffiConverterTypeAccountInfoError,
 
     )
 async def trezor_get_connected_device() -> "typing.Optional[TrezorDeviceInfo]":
@@ -18123,6 +18224,7 @@ __all__ = [
     "AddressType",
     "BitcoinNetworkEnum",
     "BlocktankError",
+    "BroadcastError",
     "BtBolt11InvoiceState",
     "BtChannelOrderErrorType",
     "BtOpenChannelState",
@@ -18297,6 +18399,9 @@ __all__ = [
     "mark_activity_as_seen",
     "mnemonic_to_entropy",
     "mnemonic_to_seed",
+    "onchain_broadcast_raw_tx",
+    "onchain_get_account_info",
+    "onchain_get_address_info",
     "open_channel",
     "prepare_sweep_transaction",
     "refresh_active_cjit_entries",
@@ -18315,14 +18420,11 @@ __all__ = [
     "start_pubky_auth",
     "test_notification",
     "trezor_account_type_to_script_type",
-    "trezor_broadcast_raw_tx",
     "trezor_clear_credentials",
     "trezor_connect",
     "trezor_disconnect",
     "trezor_fetch_prev_txs",
-    "trezor_get_account_info",
     "trezor_get_address",
-    "trezor_get_address_info",
     "trezor_get_connected_device",
     "trezor_get_device_fingerprint",
     "trezor_get_features",
