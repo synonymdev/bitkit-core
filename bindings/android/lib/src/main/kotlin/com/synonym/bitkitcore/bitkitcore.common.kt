@@ -1151,6 +1151,29 @@ public data class PubkyAuth (
 
 
 @kotlinx.serialization.Serializable
+public data class PubkyProfile (
+    val `name`: kotlin.String, 
+    val `bio`: kotlin.String?, 
+    val `image`: kotlin.String?, 
+    val `links`: List<PubkyProfileLink>?, 
+    val `status`: kotlin.String?
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class PubkyProfileLink (
+    val `title`: kotlin.String, 
+    val `url`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
 public data class SweepResult (
     /**
      * The transaction ID of the sweep transaction
@@ -2649,6 +2672,26 @@ public sealed class PubkyException: kotlin.Exception() {
             get() = "reason=${ `reason` }"
     }
     
+    public class FetchFailed(
+        public val `reason`: kotlin.String,
+    ) : PubkyException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class ProfileNotFound(
+    ) : PubkyException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class ProfileParseFailed(
+        public val `reason`: kotlin.String,
+    ) : PubkyException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
 }
 
 
@@ -3066,6 +3109,10 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
+
+
 
 
 

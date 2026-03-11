@@ -1389,6 +1389,10 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1506,7 +1510,13 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_fetch_pubky_contacts() != 18744.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_fetch_pubky_file() != 24890.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_fetch_pubky_profile() != 19709.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292.toShort()) {
@@ -1900,7 +1910,13 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_estimate_order_fee_full(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_fetch_pubky_contacts(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_fetch_pubky_file(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_fetch_pubky_profile(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_generate_mnemonic(
@@ -2491,8 +2507,16 @@ internal object UniffiLib : Library {
         `options`: RustBufferByValue,
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_fetch_pubky_contacts(
+        `publicKey`: RustBufferByValue,
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_fetch_pubky_file(
         `uri`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_fetch_pubky_profile(
+        `publicKey`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_generate_mnemonic(
@@ -6197,6 +6221,59 @@ public object FfiConverterTypePubkyAuth: FfiConverterRustBuffer<PubkyAuth> {
 
 
 
+public object FfiConverterTypePubkyProfile: FfiConverterRustBuffer<PubkyProfile> {
+    override fun read(buf: ByteBuffer): PubkyProfile {
+        return PubkyProfile(
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalSequenceTypePubkyProfileLink.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PubkyProfile): ULong = (
+            FfiConverterString.allocationSize(value.`name`) +
+            FfiConverterOptionalString.allocationSize(value.`bio`) +
+            FfiConverterOptionalString.allocationSize(value.`image`) +
+            FfiConverterOptionalSequenceTypePubkyProfileLink.allocationSize(value.`links`) +
+            FfiConverterOptionalString.allocationSize(value.`status`)
+    )
+
+    override fun write(value: PubkyProfile, buf: ByteBuffer) {
+        FfiConverterString.write(value.`name`, buf)
+        FfiConverterOptionalString.write(value.`bio`, buf)
+        FfiConverterOptionalString.write(value.`image`, buf)
+        FfiConverterOptionalSequenceTypePubkyProfileLink.write(value.`links`, buf)
+        FfiConverterOptionalString.write(value.`status`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypePubkyProfileLink: FfiConverterRustBuffer<PubkyProfileLink> {
+    override fun read(buf: ByteBuffer): PubkyProfileLink {
+        return PubkyProfileLink(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PubkyProfileLink): ULong = (
+            FfiConverterString.allocationSize(value.`title`) +
+            FfiConverterString.allocationSize(value.`url`)
+    )
+
+    override fun write(value: PubkyProfileLink, buf: ByteBuffer) {
+        FfiConverterString.write(value.`title`, buf)
+        FfiConverterString.write(value.`url`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypeSweepResult: FfiConverterRustBuffer<SweepResult> {
     override fun read(buf: ByteBuffer): SweepResult {
         return SweepResult(
@@ -8057,6 +8134,13 @@ public object FfiConverterTypePubkyError : FfiConverterRustBuffer<PubkyException
             4 -> PubkyException.ResolutionFailed(
                 FfiConverterString.read(buf),
                 )
+            5 -> PubkyException.FetchFailed(
+                FfiConverterString.read(buf),
+                )
+            6 -> PubkyException.ProfileNotFound()
+            7 -> PubkyException.ProfileParseFailed(
+                FfiConverterString.read(buf),
+                )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
@@ -8082,6 +8166,20 @@ public object FfiConverterTypePubkyError : FfiConverterRustBuffer<PubkyException
                 4UL
                 + FfiConverterString.allocationSize(value.`reason`)
             )
+            is PubkyException.FetchFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+            is PubkyException.ProfileNotFound -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is PubkyException.ProfileParseFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
         }
     }
 
@@ -8103,6 +8201,20 @@ public object FfiConverterTypePubkyError : FfiConverterRustBuffer<PubkyException
             }
             is PubkyException.ResolutionFailed -> {
                 buf.putInt(4)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is PubkyException.FetchFailed -> {
+                buf.putInt(5)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is PubkyException.ProfileNotFound -> {
+                buf.putInt(6)
+                Unit
+            }
+            is PubkyException.ProfileParseFailed -> {
+                buf.putInt(7)
                 FfiConverterString.write(value.`reason`, buf)
                 Unit
             }
@@ -9881,6 +9993,35 @@ public object FfiConverterOptionalSequenceTypeIManualRefund: FfiConverterRustBuf
 
 
 
+public object FfiConverterOptionalSequenceTypePubkyProfileLink: FfiConverterRustBuffer<List<PubkyProfileLink>?> {
+    override fun read(buf: ByteBuffer): List<PubkyProfileLink>? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterSequenceTypePubkyProfileLink.read(buf)
+    }
+
+    override fun allocationSize(value: List<PubkyProfileLink>?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterSequenceTypePubkyProfileLink.allocationSize(value)
+        }
+    }
+
+    override fun write(value: List<PubkyProfileLink>?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterSequenceTypePubkyProfileLink.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalMapStringString: FfiConverterRustBuffer<Map<kotlin.String, kotlin.String>?> {
     override fun read(buf: ByteBuffer): Map<kotlin.String, kotlin.String>? {
         if (buf.get().toInt() == 0) {
@@ -10253,6 +10394,31 @@ public object FfiConverterSequenceTypePreActivityMetadata: FfiConverterRustBuffe
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypePreActivityMetadata.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypePubkyProfileLink: FfiConverterRustBuffer<List<PubkyProfileLink>> {
+    override fun read(buf: ByteBuffer): List<PubkyProfileLink> {
+        val len = buf.getInt()
+        return List<PubkyProfileLink>(len) {
+            FfiConverterTypePubkyProfileLink.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<PubkyProfileLink>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypePubkyProfileLink.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<PubkyProfileLink>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypePubkyProfileLink.write(it, buf)
         }
     }
 }
@@ -10933,6 +11099,23 @@ public suspend fun `estimateOrderFeeFull`(`lspBalanceSat`: kotlin.ULong, `channe
 }
 
 @Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `fetchPubkyContacts`(`publicKey`: kotlin.String): List<kotlin.String> {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_contacts(
+            FfiConverterString.lower(`publicKey`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterSequenceString.lift(it) },
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
+    )
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
 public suspend fun `fetchPubkyFile`(`uri`: kotlin.String): kotlin.ByteArray {
     return uniffiRustCallAsync(
         UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file(
@@ -10944,6 +11127,23 @@ public suspend fun `fetchPubkyFile`(`uri`: kotlin.String): kotlin.ByteArray {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
         // lift function
         { FfiConverterByteArray.lift(it) },
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
+    )
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `fetchPubkyProfile`(`publicKey`: kotlin.String): PubkyProfile {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_profile(
+            FfiConverterString.lower(`publicKey`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypePubkyProfile.lift(it) },
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
