@@ -1736,10 +1736,11 @@ pub async fn onchain_get_account_info(
     electrum_url: String,
     network: Option<Network>,
     gap_limit: Option<u32>,
+    script_type: Option<AccountType>,
 ) -> Result<AccountInfoResult, AccountInfoError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
-        get_account_info(&extended_key, &electrum_url, network, gap_limit).await
+        get_account_info(&extended_key, &electrum_url, network, gap_limit, script_type).await
     }).await.unwrap_or_else(|e| Err(AccountInfoError::SyncError {
         error_details: format!("Runtime error: {}", e),
     }))

@@ -685,6 +685,7 @@ mod tests {
             ACCOUNT_INFO_ELECTRUM_URL,
             None,
             None,
+            None,
         )
         .await;
 
@@ -727,6 +728,7 @@ mod tests {
             ACCOUNT_INFO_ELECTRUM_URL,
             None,
             None,
+            None,
         )
         .await;
 
@@ -758,6 +760,7 @@ mod tests {
         let result = get_account_info(
             TEST_VPUB,
             ACCOUNT_INFO_ELECTRUM_URL,
+            None,
             None,
             None,
         )
@@ -883,6 +886,7 @@ mod tests {
             ACCOUNT_INFO_ELECTRUM_URL,
             None,
             None,
+            None,
         ));
 
         assert!(result.is_err(), "Expected error for invalid key");
@@ -899,6 +903,7 @@ mod tests {
             TEST_TPUB,
             ACCOUNT_INFO_ELECTRUM_URL,
             Some(OnchainNetwork::Bitcoin),
+            None,
             None,
         ));
 

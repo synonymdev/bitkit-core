@@ -251,7 +251,7 @@ pub struct AddressInfo {
     pub address: String,
     /// BIP32 derivation path
     pub path: String,
-    /// Number of transactions involving this address
+    /// Whether this address has been used (1) or not (0)
     pub transfers: u32,
 }
 

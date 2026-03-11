@@ -734,8 +734,18 @@ pub async fn get_account_info(
     electrum_url: &str,
     network: Option<OnchainNetwork>,
     gap_limit: Option<u32>,
+    script_type: Option<AccountType>,
 ) -> Result<AccountInfoResult, AccountInfoError> {
-    let account_type = detect_account_type(extended_key)?;
+    // Use script_type override for ambiguous prefixes (xpub/tpub), otherwise use prefix detection
+    let account_type = match script_type {
+        Some(st) if extended_key.len() >= 4 => {
+            match &extended_key[..4] {
+                "xpub" | "tpub" => st,
+                _ => detect_account_type(extended_key)?,
+            }
+        }
+        _ => detect_account_type(extended_key)?,
+    };
     let detected_network = detect_network_from_key(extended_key)?;
 
     // Verify network matches if caller specified one
@@ -786,33 +796,25 @@ pub async fn get_account_info(
             error_details: format!("Failed to create wallet: {}", e),
         })?;
 
-        // Connect and sync
+        // Connect, get block tip height, then sync (single connection)
         let client = bdk::electrum_client::Client::new(&electrum_url_owned).map_err(|e| {
             AccountInfoError::ElectrumError {
                 error_details: format!("Failed to connect to Electrum: {}", e),
             }
         })?;
-        let blockchain = ElectrumBlockchain::from(client);
-
-        wallet
-            .sync(&blockchain, SyncOptions::default())
-            .map_err(|e| AccountInfoError::SyncError {
-                error_details: format!("Failed to sync wallet: {}", e),
-            })?;
-
-        // Get block tip height
-        let electrum_client =
-            bdk::electrum_client::Client::new(&electrum_url_owned).map_err(|e| {
-                AccountInfoError::ElectrumError {
-                    error_details: format!("Failed to connect to Electrum: {}", e),
-                }
-            })?;
-        let header = electrum_client.block_headers_subscribe().map_err(|e| {
+        let header = client.block_headers_subscribe().map_err(|e| {
             AccountInfoError::ElectrumError {
                 error_details: format!("Failed to get block height: {}", e),
             }
         })?;
         let tip_height = header.height as u32;
+
+        let blockchain = ElectrumBlockchain::from(client);
+        wallet
+            .sync(&blockchain, SyncOptions::default())
+            .map_err(|e| AccountInfoError::SyncError {
+                error_details: format!("Failed to sync wallet: {}", e),
+            })?;
 
         // Get the next unused external address index
         let next_external = wallet
@@ -830,8 +832,8 @@ pub async fn get_account_info(
             })?;
         let max_change = next_change.index + gap;
 
-        // Build address transfer counts via Electrum script_get_history
-        let mut address_paths: HashMap<String, String> = HashMap::new();
+        // Build address lists using BDK's LastUnused boundary (no extra Electrum calls)
+        let mut address_paths: HashMap<ScriptBuf, String> = HashMap::new();
 
         // External addresses
         let mut used_addresses: Vec<AddressInfo> = Vec::new();
@@ -846,27 +848,18 @@ pub async fn get_account_info(
 
             let addr_str = addr.address.to_string();
             let path = format!("{}/0/{}", base_path, index);
-
             let script = addr.address.script_pubkey();
-            let history = electrum_client.script_get_history(&script).map_err(|e| {
-                AccountInfoError::ElectrumError {
-                    error_details: format!(
-                        "Failed to get history for address {}: {}",
-                        addr_str, e
-                    ),
-                }
-            })?;
 
-            let transfer_count = history.len() as u32;
-            address_paths.insert(addr_str.clone(), path.clone());
+            address_paths.insert(script, path.clone());
 
+            let is_used = index < next_external.index;
             let info = AddressInfo {
                 address: addr_str,
                 path,
-                transfers: transfer_count,
+                transfers: if is_used { 1 } else { 0 },
             };
 
-            if transfer_count > 0 {
+            if is_used {
                 used_addresses.push(info);
             } else {
                 unused_addresses.push(info);
@@ -888,24 +881,15 @@ pub async fn get_account_info(
 
             let addr_str = addr.address.to_string();
             let path = format!("{}/1/{}", base_path, index);
-
             let script = addr.address.script_pubkey();
-            let history = electrum_client.script_get_history(&script).map_err(|e| {
-                AccountInfoError::ElectrumError {
-                    error_details: format!(
-                        "Failed to get history for change address {}: {}",
-                        addr_str, e
-                    ),
-                }
-            })?;
 
-            let transfer_count = history.len() as u32;
-            address_paths.insert(addr_str.clone(), path.clone());
+            address_paths.insert(script, path.clone());
 
+            let is_used = index < next_change.index;
             change_addresses.push(AddressInfo {
                 address: addr_str,
                 path,
-                transfers: transfer_count,
+                transfers: if is_used { 1 } else { 0 },
             });
         }
 
@@ -914,10 +898,10 @@ pub async fn get_account_info(
             error_details: format!("Failed to list UTXOs: {}", e),
         })?;
 
-        // Get transaction details for confirmation info
+        // Get transaction details for confirmation info and coinbase detection
         let transactions =
             wallet
-                .list_transactions(false)
+                .list_transactions(true)
                 .map_err(|e| AccountInfoError::WalletError {
                     error_details: format!("Failed to list transactions: {}", e),
                 })?;
@@ -925,19 +909,29 @@ pub async fn get_account_info(
         // Map UTXOs to AccountUtxo
         let mut account_utxos: Vec<AccountUtxo> = Vec::new();
         for utxo in &utxos {
-            let addr_str = BdkAddress::from_script(&utxo.txout.script_pubkey, bdk_network)
+            let utxo_script = &utxo.txout.script_pubkey;
+
+            let utxo_path = match address_paths.get(utxo_script) {
+                Some(path) => path.clone(),
+                None => {
+                    eprintln!(
+                        "Warning: No derivation path found for UTXO {}:{}",
+                        utxo.outpoint.txid, utxo.outpoint.vout,
+                    );
+                    String::new()
+                }
+            };
+
+            let addr_str = BdkAddress::from_script(utxo_script, bdk_network)
                 .map(|a| a.to_string())
                 .unwrap_or_default();
 
-            let utxo_path = address_paths
-                .get(&addr_str)
-                .cloned()
-                .unwrap_or_default();
-
-            // Get confirmation info from transaction details
-            let (block_height, confirmations) = transactions
+            // Get confirmation info and coinbase status from transaction details
+            let tx_detail = transactions
                 .iter()
-                .find(|tx| tx.txid == utxo.outpoint.txid)
+                .find(|tx| tx.txid == utxo.outpoint.txid);
+
+            let (block_height, confirmations) = tx_detail
                 .and_then(|tx| tx.confirmation_time.as_ref())
                 .map(|conf| {
                     let height = conf.height as u32;
@@ -945,6 +939,10 @@ pub async fn get_account_info(
                     (height, confs)
                 })
                 .unwrap_or((0, 0));
+
+            let coinbase = tx_detail
+                .and_then(|tx| tx.transaction.as_ref())
+                .map_or(false, |t| t.is_coin_base());
 
             account_utxos.push(AccountUtxo {
                 txid: utxo.outpoint.txid.to_string(),
@@ -954,7 +952,7 @@ pub async fn get_account_info(
                 address: addr_str,
                 path: utxo_path,
                 confirmations,
-                coinbase: false,
+                coinbase,
                 own: true,
                 required: None,
             });
