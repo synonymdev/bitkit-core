@@ -311,24 +311,19 @@ pub struct SingleAddressInfoResult {
 // Shared wallet parameters
 // ============================================================================
 
-/// Common parameters for creating a watch-only BDK wallet from an extended key.
-///
-/// Used by both `get_account_info` and `compose_transaction` to avoid
-/// duplicating wallet setup logic.
+/// Common parameters for creating and syncing a watch-only BDK wallet.
 #[derive(Debug, Clone, uniffi::Record)]
 pub struct WalletParams {
     /// Extended public key (xpub/ypub/zpub/tpub/upub/vpub)
     pub extended_key: String,
     /// Electrum server URL for wallet sync
     pub electrum_url: String,
-    /// Root fingerprint hex (e.g. "73c5da0a") for PSBT BIP32 derivation paths
+    /// Root fingerprint hex (e.g. "73c5da0a"). Required for hardware wallet signing.
     pub fingerprint: Option<String>,
     /// Bitcoin network (auto-detected from key prefix if not specified)
     pub network: Option<Network>,
     /// Override account type for ambiguous key prefixes (xpub/tpub)
     pub account_type: Option<AccountType>,
-    /// Address gap limit for wallet sync (default: 20)
-    pub gap_limit: Option<u32>,
 }
 
 // ============================================================================
@@ -357,11 +352,7 @@ pub enum ComposeOutput {
     OpReturn { data_hex: String },
 }
 
-/// Parameters for composing a transaction.
-///
-/// Builds PSBTs for each fee rate using BDK's TxBuilder. The resulting
-/// PSBTs are signer-agnostic and can be signed by any PSBT-compatible
-/// hardware or software wallet.
+/// Parameters for composing a signer-agnostic transaction.
 #[derive(Debug, Clone, uniffi::Record)]
 pub struct ComposeParams {
     /// Wallet configuration (key, server, network)
@@ -383,7 +374,7 @@ pub enum ComposeResult {
         psbt: String,
         /// Total fee in satoshis
         fee: u64,
-        /// Actual fee rate in sat/vB
+        /// Target fee rate in sat/vB (actual may differ slightly due to rounding)
         fee_rate: f32,
         /// Transaction virtual size in vbytes
         vsize: u64,

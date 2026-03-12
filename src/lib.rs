@@ -17,7 +17,6 @@ fn init_android_logger() {
 
 mod modules;
 
-use std::sync::Arc;
 use once_cell::sync::OnceCell;
 
 // Re-export Trezor callback types and traits so UniFFI discovers them at the crate root
@@ -36,10 +35,10 @@ pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
 use crate::modules::pubky::PubkyError;
-use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
+use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
-use crate::onchain::{AddressError, BroadcastError, AccountInfoError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances, broadcast_raw_tx, AccountInfoResult, SingleAddressInfoResult, AccountType, AccountUtxo, AddressInfo, AccountAddresses, ComposeAccount, get_account_info, get_address_info};
-use crate::modules::trezor::{TrezorError, TrezorDeviceInfo, TrezorTransportType, TrezorFeatures, TrezorGetAddressParams, TrezorAddressResponse, TrezorGetPublicKeyParams, TrezorPublicKeyResponse, TrezorScriptType, TrezorManager, TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams, TrezorSignTxParams, TrezorSignedTx, TrezorTxInput, TrezorTxOutput, TrezorCoinType};
+use crate::onchain::{AddressError, BroadcastError, AccountInfoError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances, broadcast_raw_tx, AccountInfoResult, SingleAddressInfoResult, AccountType, get_account_info, get_address_info};
+use crate::modules::trezor::{TrezorError, TrezorDeviceInfo, TrezorFeatures, TrezorGetAddressParams, TrezorAddressResponse, TrezorGetPublicKeyParams, TrezorPublicKeyResponse, TrezorScriptType, TrezorManager, TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams, TrezorSignTxParams, TrezorSignedTx, TrezorCoinType};
 use crate::modules::trezor::account_type_to_script_type;
 use crate::onchain::{compose_transaction, ComposeParams, ComposeResult};
 pub use crate::onchain::WordCount;
@@ -1781,14 +1780,16 @@ pub fn trezor_account_type_to_script_type(account_type: AccountType) -> TrezorSc
 #[uniffi::export]
 pub async fn onchain_compose_transaction(params: ComposeParams) -> Vec<ComposeResult> {
     let rt = ensure_runtime();
+    let num_rates = params.fee_rates.len();
     rt.spawn(async move {
         compose_transaction(params).await
     })
     .await
     .unwrap_or_else(|e| {
-        vec![ComposeResult::Error {
+        let err = ComposeResult::Error {
             error: format!("Runtime error: {}", e),
-        }]
+        };
+        vec![err; num_rates]
     })
 }
 

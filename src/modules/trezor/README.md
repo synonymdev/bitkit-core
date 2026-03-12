@@ -62,14 +62,6 @@ FFI-compatible types exposed via UniFFI:
 #### `errors.rs`
 Error types with UniFFI support:
 - `TrezorError` - Main error enum with variants for transport, connection, device errors
-- `AccountInfoError` - Errors for blockchain query operations (not device-related):
-  - `InvalidExtendedKey` - Invalid xpub/ypub/zpub format
-  - `InvalidAddress` - Unparseable Bitcoin address
-  - `ElectrumError` - Electrum connection or query failures
-  - `WalletError` - BDK wallet creation/operation errors
-  - `SyncError` - Wallet sync failures
-  - `UnsupportedKeyType` - Unrecognized key prefix
-  - `NetworkMismatch` - Key prefix doesn't match specified network
 
 #### `account_info.rs`
 Helper that maps generic `AccountType` to Trezor's `TrezorScriptType` for transaction signing.
@@ -109,20 +101,6 @@ pub async fn trezor_get_address(params: TrezorGetAddressParams) -> Result<Trezor
 pub async fn trezor_sign_message(params: TrezorSignMessageParams) -> Result<TrezorSignedMessageResponse, TrezorError>;
 pub async fn trezor_verify_message(params: TrezorVerifyMessageParams) -> Result<bool, TrezorError>;
 pub async fn trezor_disconnect() -> Result<(), TrezorError>;
-
-// Account info functions (no device required — queries Electrum directly)
-pub async fn get_account_info_from_xpub(
-    extended_key: String,
-    electrum_url: String,
-    network: Option<TrezorCoinType>,
-    gap_limit: Option<u32>,
-) -> Result<AccountInfoResult, AccountInfoError>;
-
-pub async fn get_address_info_from_address(
-    address: String,
-    electrum_url: String,
-    network: Option<TrezorCoinType>,
-) -> Result<SingleAddressInfoResult, AccountInfoError>;
 ```
 
 ## Connection Flow

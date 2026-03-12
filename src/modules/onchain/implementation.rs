@@ -35,16 +35,6 @@ use crate::onchain::types::{
 };
 use crate::onchain::{AddressError, BroadcastError, SweepError};
 
-
-fn network_to_bdk(network: Network) -> BdkNetwork {
-    match network {
-        Network::Bitcoin => BdkNetwork::Bitcoin,
-        Network::Testnet | Network::Testnet4 => BdkNetwork::Testnet,
-        Network::Signet => BdkNetwork::Signet,
-        Network::Regtest => BdkNetwork::Regtest,
-    }
-}
-
 struct SweepWallets {
     legacy_wallet: Wallet<MemoryDatabase>,
     p2sh_wallet: Wallet<MemoryDatabase>,
@@ -203,7 +193,7 @@ impl BitcoinAddressValidator {
         network: Network,
         bip39_passphrase: Option<&str>,
     ) -> Result<SweepWallets, SweepError> {
-        let bdk_network = network_to_bdk(network);
+        let bdk_network = onchain_to_bdk_network(network.into());
         let mnemonic =
             Mnemonic::from_str(mnemonic_phrase).map_err(|_| SweepError::InvalidMnemonic)?;
         let key = (mnemonic.clone(), bip39_passphrase.map(String::from));
@@ -363,7 +353,7 @@ impl BitcoinAddressValidator {
         destination_address: &str,
         fee_rate_sats_per_vbyte: Option<u32>,
     ) -> Result<SweepTransactionPreview, SweepError> {
-        let bdk_network = network_to_bdk(network);
+        let bdk_network = onchain_to_bdk_network(network.into());
         let wallets = Self::create_sweep_wallets(mnemonic_phrase, network, bip39_passphrase)?;
 
         let dest_addr = BdkAddress::from_str(destination_address)
@@ -737,7 +727,6 @@ pub fn derive_base_path(account_type: AccountType, network: BdkNetwork, account_
 // Shared wallet setup helper
 // ============================================================================
 
-/// Resolved wallet configuration ready for BDK wallet creation.
 pub(crate) struct WalletSetup {
     pub external_desc: String,
     pub internal_desc: String,
@@ -747,9 +736,6 @@ pub(crate) struct WalletSetup {
 }
 
 /// Resolve an extended key into descriptors, network, and derivation path.
-///
-/// Shared by `get_account_info` and `compose_transaction` to avoid
-/// duplicating key normalization, type detection, and descriptor building.
 pub(crate) fn resolve_wallet_setup(
     extended_key: &str,
     network: Option<OnchainNetwork>,
@@ -791,8 +777,23 @@ pub(crate) fn resolve_wallet_setup(
     };
     let base_path = derive_base_path(account_type, detected_network, account_index);
 
+    let normalized_fp = if let Some(fp) = fingerprint {
+        if fp.len() != 8 || !fp.chars().all(|c| c.is_ascii_hexdigit()) {
+            return Err(AccountInfoError::InvalidExtendedKey {
+                error_details: format!(
+                    "Fingerprint must be 8 hex characters (e.g. \"73c5da0a\"), got \"{}\"",
+                    fp
+                ),
+            });
+        }
+        Some(fp.to_ascii_lowercase())
+    } else {
+        None
+    };
+
     let derivation = base_path.strip_prefix("m/").unwrap_or(&base_path);
-    let key_origin: Option<(&str, &str)> = fingerprint.map(|fp| (fp, derivation));
+    let key_origin: Option<(&str, &str)> =
+        normalized_fp.as_deref().map(|fp| (fp, derivation));
     let (external_desc, internal_desc) =
         build_descriptors(&normalized_key, account_type, key_origin);
 
@@ -805,7 +806,7 @@ pub(crate) fn resolve_wallet_setup(
     })
 }
 
-/// Convert our Network enum to BDK's Network (used by both compose and account_info).
+/// Convert our Network enum to BDK's Network.
 pub(crate) fn onchain_to_bdk_network(network: OnchainNetwork) -> BdkNetwork {
     match network {
         OnchainNetwork::Bitcoin => BdkNetwork::Bitcoin,
@@ -815,7 +816,7 @@ pub(crate) fn onchain_to_bdk_network(network: OnchainNetwork) -> BdkNetwork {
     }
 }
 
-/// Connect to Electrum and return the raw client (blocking).
+/// Connect to Electrum and return the raw client.
 pub(crate) fn connect_electrum(
     electrum_url: &str,
 ) -> Result<bdk::electrum_client::Client, AccountInfoError> {
@@ -826,9 +827,8 @@ pub(crate) fn connect_electrum(
 
 /// Create a BDK wallet and sync it via the provided Electrum client.
 ///
-/// The client is consumed (wrapped into `ElectrumBlockchain`). If you need
-/// the client for other calls (e.g. `block_headers_subscribe`), do those
-/// before calling this function.
+/// The client is consumed; make any pre-sync calls (e.g. `block_headers_subscribe`)
+/// before passing it here.
 pub(crate) fn create_and_sync_wallet(
     setup: &WalletSetup,
     client: bdk::electrum_client::Client,
@@ -868,15 +868,12 @@ pub async fn get_account_info(
     let setup = resolve_wallet_setup(extended_key, network, script_type, None)?;
     let gap = gap_limit.unwrap_or(20);
     let base_path = setup.base_path.clone();
-    let account_type = setup.account_type.clone();
-    let bdk_network = setup.network;
+    let account_type = setup.account_type;
 
     let electrum_url_owned = electrum_url.to_string();
-    let base_path_inner = base_path.clone();
 
-    // All BDK + Electrum operations in a blocking task
     let result = tokio::task::spawn_blocking(move || {
-        let base_path = base_path_inner;
+        let base_path = &setup.base_path;
 
         // Single Electrum connection: get tip height first, then sync wallet
         let client = connect_electrum(&electrum_url_owned)?;
@@ -995,7 +992,7 @@ pub async fn get_account_info(
                 }
             };
 
-            let addr_str = BdkAddress::from_script(utxo_script, bdk_network)
+            let addr_str = BdkAddress::from_script(utxo_script, setup.network)
                 .map(|a| a.to_string())
                 .unwrap_or_default();
 
@@ -1095,7 +1092,7 @@ pub async fn get_address_info(
         })?;
     let bdk_addr = match network {
         Some(net) => {
-            let bdk_network = network_to_bdk(net.into());
+            let bdk_network = onchain_to_bdk_network(net);
             bdk_addr.require_network(bdk_network).map_err(|e| {
                 AccountInfoError::NetworkMismatch {
                     error_details: format!("Address network mismatch: {}", e),
@@ -1109,11 +1106,7 @@ pub async fn get_address_info(
     let addr_str = address.to_string();
 
     let result = tokio::task::spawn_blocking(move || {
-        let client = bdk::electrum_client::Client::new(&electrum_url_owned).map_err(|e| {
-            AccountInfoError::ElectrumError {
-                error_details: format!("Failed to connect to Electrum: {}", e),
-            }
-        })?;
+        let client = connect_electrum(&electrum_url_owned)?;
 
         let script = bdk_addr.script_pubkey();
 

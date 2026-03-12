@@ -1,7 +1,7 @@
 mod errors;
 mod implementation;
 mod types;
-pub mod compose;
+mod compose;
 
 pub use errors::{AccountInfoError, AddressError, BroadcastError, SweepError};
 pub use implementation::{

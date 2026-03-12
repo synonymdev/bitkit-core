@@ -555,6 +555,7 @@ mod tests {
     const TEST_LEGACY_ADDR: &str = "mixttbUXpVWVpx3qHh7KUiVnxWiNxL2uu9";
     const TEST_P2SH_ADDR: &str = "2N7mA1KBJX8iprzzoFjcbkY1Z2WRZ3bjnsK";
     const TEST_REGTEST_BECH32_ADDR: &str = "bcrt1qj2gz3meule5mc4r4knv65vjds3g88rlxs0jlmq";
+    const TEST_TESTNET_BECH32_ADDR: &str = "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx";
 
     // --- Unit Tests: Helper Functions ---
 
@@ -676,6 +677,160 @@ mod tests {
         // Non-zero account index
         assert_eq!(derive_base_path(AccountType::WrappedSegwit, BdkNetwork::Bitcoin, 2), "m/49'/0'/2'");
         assert_eq!(derive_base_path(AccountType::NativeSegwit, BdkNetwork::Testnet, 5), "m/84'/1'/5'");
+    }
+
+    #[test]
+    fn test_fingerprint_validation() {
+        use crate::modules::onchain::implementation::resolve_wallet_setup;
+
+        // Valid 8-char hex fingerprint
+        let result = resolve_wallet_setup(TEST_VPUB, None, None, Some("73c5da0a"));
+        assert!(result.is_ok(), "Valid fingerprint should be accepted");
+
+        // Too short
+        let result = resolve_wallet_setup(TEST_VPUB, None, None, Some("73c5"));
+        assert!(result.is_err(), "Short fingerprint should be rejected");
+
+        // Too long
+        let result = resolve_wallet_setup(TEST_VPUB, None, None, Some("73c5da0aff"));
+        assert!(result.is_err(), "Long fingerprint should be rejected");
+
+        // Non-hex characters
+        let result = resolve_wallet_setup(TEST_VPUB, None, None, Some("73c5zz0a"));
+        assert!(result.is_err(), "Non-hex fingerprint should be rejected");
+
+        // Empty string
+        let result = resolve_wallet_setup(TEST_VPUB, None, None, Some(""));
+        assert!(result.is_err(), "Empty fingerprint should be rejected");
+
+        // None fingerprint (valid — key origin omitted from descriptor)
+        let result = resolve_wallet_setup(TEST_VPUB, None, None, None);
+        assert!(result.is_ok(), "None fingerprint should be accepted");
+
+        // Uppercase hex is accepted and normalized to lowercase in descriptor
+        let result = resolve_wallet_setup(TEST_VPUB, None, None, Some("73C5DA0A"));
+        assert!(result.is_ok(), "Uppercase hex fingerprint should be accepted");
+        let setup = result.unwrap();
+        assert!(
+            setup.external_desc.contains("73c5da0a"),
+            "Fingerprint should be lowercased in descriptor, got: {}",
+            setup.external_desc
+        );
+    }
+
+    #[test]
+    fn test_validate_outputs() {
+        use crate::modules::onchain::compose::validate_outputs;
+        use crate::modules::onchain::ComposeOutput;
+        use bdk::bitcoin::Network as BdkNetwork;
+
+        let net = BdkNetwork::Testnet;
+        let valid_addr = TEST_TESTNET_BECH32_ADDR;
+
+        // Empty outputs
+        let r = validate_outputs(&[], net);
+        assert!(r.is_err());
+        assert!(r.unwrap_err().contains("At least one output"));
+
+        // OP_RETURN only (no recipient)
+        let r = validate_outputs(
+            &[ComposeOutput::OpReturn { data_hex: "cafe".into() }],
+            net,
+        );
+        assert!(r.is_err());
+        assert!(r.unwrap_err().contains("Payment or SendMax"));
+
+        // Zero-amount payment
+        let r = validate_outputs(
+            &[ComposeOutput::Payment { address: valid_addr.into(), amount_sats: 0 }],
+            net,
+        );
+        assert!(r.is_err());
+        assert!(r.unwrap_err().contains("greater than zero"));
+
+        // Multiple SendMax
+        let r = validate_outputs(
+            &[
+                ComposeOutput::SendMax { address: valid_addr.into() },
+                ComposeOutput::SendMax { address: valid_addr.into() },
+            ],
+            net,
+        );
+        assert!(r.is_err());
+        assert!(r.unwrap_err().contains("Only one SendMax"));
+
+        // Empty OP_RETURN data
+        let r = validate_outputs(
+            &[
+                ComposeOutput::Payment { address: valid_addr.into(), amount_sats: 1_000 },
+                ComposeOutput::OpReturn { data_hex: "".into() },
+            ],
+            net,
+        );
+        assert!(r.is_err());
+        assert!(r.unwrap_err().contains("must not be empty"));
+
+        // OP_RETURN > 80 bytes (81 bytes = 162 hex chars)
+        let r = validate_outputs(
+            &[
+                ComposeOutput::Payment { address: valid_addr.into(), amount_sats: 1_000 },
+                ComposeOutput::OpReturn { data_hex: "aa".repeat(81) },
+            ],
+            net,
+        );
+        assert!(r.is_err());
+        assert!(r.unwrap_err().contains("80-byte"));
+
+        // Invalid address for network (regtest addr on testnet)
+        let r = validate_outputs(
+            &[ComposeOutput::Payment {
+                address: TEST_REGTEST_BECH32_ADDR.into(),
+                amount_sats: 1_000,
+            }],
+            net,
+        );
+        assert!(r.is_err());
+        let err = r.unwrap_err();
+        assert!(err.contains("network mismatch") || err.contains("Address"));
+
+        // Valid outputs pass
+        let r = validate_outputs(
+            &[
+                ComposeOutput::Payment { address: valid_addr.into(), amount_sats: 5_000 },
+                ComposeOutput::OpReturn { data_hex: "deadbeef".into() },
+            ],
+            net,
+        );
+        assert!(r.is_ok());
+
+        // Valid SendMax + Payment + OpReturn
+        let r = validate_outputs(
+            &[
+                ComposeOutput::Payment { address: valid_addr.into(), amount_sats: 1_000 },
+                ComposeOutput::SendMax { address: valid_addr.into() },
+                ComposeOutput::OpReturn { data_hex: "cafe".into() },
+            ],
+            net,
+        );
+        assert!(r.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_compose_empty_fee_rates() {
+        use crate::modules::onchain::{ComposeParams, ComposeOutput};
+
+        let params = ComposeParams {
+            wallet: test_wallet_params(None),
+            outputs: vec![ComposeOutput::Payment {
+                address: TEST_TESTNET_BECH32_ADDR.to_string(),
+                amount_sats: 5_000,
+            }],
+            fee_rates: vec![],
+            coin_selection: None,
+        };
+
+        let results = crate::modules::onchain::compose_transaction(params).await;
+        assert!(results.is_empty(), "Empty fee_rates should return empty vec");
     }
 
     // --- Integration Tests: get_account_info ---
@@ -965,7 +1120,6 @@ mod tests {
             fingerprint,
             network: None,
             account_type: None,
-            gap_limit: None,
         }
     }
 
@@ -977,7 +1131,7 @@ mod tests {
         let params = ComposeParams {
             wallet: test_wallet_params(None),
             outputs: vec![ComposeOutput::Payment {
-                address: TEST_REGTEST_BECH32_ADDR.to_string(),
+                address: TEST_TESTNET_BECH32_ADDR.to_string(),
                 amount_sats: 5_000,
             }],
             fee_rates: vec![2.0],
@@ -1010,7 +1164,7 @@ mod tests {
         let params = ComposeParams {
             wallet: test_wallet_params(None),
             outputs: vec![ComposeOutput::SendMax {
-                address: TEST_REGTEST_BECH32_ADDR.to_string(),
+                address: TEST_TESTNET_BECH32_ADDR.to_string(),
             }],
             fee_rates: vec![1.0],
             coin_selection: None,
@@ -1030,13 +1184,45 @@ mod tests {
 
     #[tokio::test]
     #[ignore]
+    async fn test_compose_send_max_with_payment() {
+        use crate::modules::onchain::{compose_transaction, ComposeParams, ComposeOutput, ComposeResult};
+
+        let params = ComposeParams {
+            wallet: test_wallet_params(None),
+            outputs: vec![
+                ComposeOutput::Payment {
+                    address: TEST_TESTNET_BECH32_ADDR.to_string(),
+                    amount_sats: 1_000,
+                },
+                ComposeOutput::SendMax {
+                    address: TEST_TESTNET_BECH32_ADDR.to_string(),
+                },
+            ],
+            fee_rates: vec![1.0],
+            coin_selection: None,
+        };
+
+        let results = compose_transaction(params).await;
+        assert_eq!(results.len(), 1);
+
+        match &results[0] {
+            ComposeResult::Success { fee, total_spent, .. } => {
+                assert!(*fee > 0, "Fee should be > 0");
+                assert!(*total_spent >= 1_000 + fee, "total_spent should cover payment + fee");
+            }
+            ComposeResult::Error { error } => panic!("SendMax+Payment compose failed: {}", error),
+        }
+    }
+
+    #[tokio::test]
+    #[ignore]
     async fn test_compose_insufficient_funds() {
         use crate::modules::onchain::{compose_transaction, ComposeParams, ComposeOutput, ComposeResult};
 
         let params = ComposeParams {
             wallet: test_wallet_params(None),
             outputs: vec![ComposeOutput::Payment {
-                address: TEST_REGTEST_BECH32_ADDR.to_string(),
+                address: TEST_TESTNET_BECH32_ADDR.to_string(),
                 amount_sats: 999_999_999_999,
             }],
             fee_rates: vec![2.0],
@@ -1056,7 +1242,7 @@ mod tests {
         let params = ComposeParams {
             wallet: test_wallet_params(None),
             outputs: vec![ComposeOutput::Payment {
-                address: TEST_REGTEST_BECH32_ADDR.to_string(),
+                address: TEST_TESTNET_BECH32_ADDR.to_string(),
                 amount_sats: 5_000,
             }],
             fee_rates: vec![1.0, 5.0, 20.0],
@@ -1086,7 +1272,7 @@ mod tests {
         let params = ComposeParams {
             wallet: test_wallet_params(Some("73c5da0a".to_string())),
             outputs: vec![ComposeOutput::Payment {
-                address: TEST_REGTEST_BECH32_ADDR.to_string(),
+                address: TEST_TESTNET_BECH32_ADDR.to_string(),
                 amount_sats: 5_000,
             }],
             fee_rates: vec![2.0],
