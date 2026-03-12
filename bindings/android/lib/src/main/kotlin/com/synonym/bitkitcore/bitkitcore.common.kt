@@ -409,7 +409,7 @@ public data class AddressInfo (
      */
     val `path`: kotlin.String, 
     /**
-     * Number of transactions involving this address
+     * Whether this address has been used (1) or not (0)
      */
     val `transfers`: kotlin.UInt
 ) {
@@ -1660,9 +1660,9 @@ public data class TrezorPrecomposeParams (
      */
     val `outputs`: List<TrezorPrecomposeOutput>, 
     /**
-     * Coin name (e.g., "Bitcoin", "Regtest")
+     * Coin network (default: Bitcoin)
      */
-    val `coin`: kotlin.String, 
+    val `coin`: TrezorCoinType?, 
     /**
      * Account with UTXOs and addresses
      */
@@ -3627,6 +3627,8 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
 
 
 

@@ -585,7 +585,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx() != 45163:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 34826:
+    if lib.uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 30087:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_onchain_get_address_info() != 4749:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -655,7 +655,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_precompose_transaction() != 56637:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_precomposed_to_sign_params() != 30193:
+    if lib.uniffi_bitkitcore_checksum_func_trezor_precomposed_to_sign_params() != 45966:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_scan() != 54763:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -1348,6 +1348,7 @@ _UniffiLib.uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_account_info.argtypes = (
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -2826,7 +2827,7 @@ class AddressInfo:
 
     transfers: "int"
     """
-    Number of transactions involving this address
+    Whether this address has been used (1) or not (0)
     """
 
     def __init__(self, *, address: "str", path: "str", transfers: "int"):
@@ -7386,9 +7387,9 @@ class TrezorPrecomposeParams:
     Desired outputs
     """
 
-    coin: "str"
+    coin: "typing.Optional[TrezorCoinType]"
     """
-    Coin name (e.g., "Bitcoin", "Regtest")
+    Coin network (default: Bitcoin)
     """
 
     account: "ComposeAccount"
@@ -7411,7 +7412,7 @@ class TrezorPrecomposeParams:
     Sorting strategy for inputs/outputs
     """
 
-    def __init__(self, *, outputs: "typing.List[TrezorPrecomposeOutput]", coin: "str", account: "ComposeAccount", fee_levels: "typing.List[TrezorFeeLevel]", sequence: "typing.Optional[int]", sorting_strategy: "typing.Optional[TrezorSortingStrategy]"):
+    def __init__(self, *, outputs: "typing.List[TrezorPrecomposeOutput]", coin: "typing.Optional[TrezorCoinType]", account: "ComposeAccount", fee_levels: "typing.List[TrezorFeeLevel]", sequence: "typing.Optional[int]", sorting_strategy: "typing.Optional[TrezorSortingStrategy]"):
         self.outputs = outputs
         self.coin = coin
         self.account = account
@@ -7442,7 +7443,7 @@ class _UniffiConverterTypeTrezorPrecomposeParams(_UniffiConverterRustBuffer):
     def read(buf):
         return TrezorPrecomposeParams(
             outputs=_UniffiConverterSequenceTypeTrezorPrecomposeOutput.read(buf),
-            coin=_UniffiConverterString.read(buf),
+            coin=_UniffiConverterOptionalTypeTrezorCoinType.read(buf),
             account=_UniffiConverterTypeComposeAccount.read(buf),
             fee_levels=_UniffiConverterSequenceTypeTrezorFeeLevel.read(buf),
             sequence=_UniffiConverterOptionalUInt32.read(buf),
@@ -7452,7 +7453,7 @@ class _UniffiConverterTypeTrezorPrecomposeParams(_UniffiConverterRustBuffer):
     @staticmethod
     def check_lower(value):
         _UniffiConverterSequenceTypeTrezorPrecomposeOutput.check_lower(value.outputs)
-        _UniffiConverterString.check_lower(value.coin)
+        _UniffiConverterOptionalTypeTrezorCoinType.check_lower(value.coin)
         _UniffiConverterTypeComposeAccount.check_lower(value.account)
         _UniffiConverterSequenceTypeTrezorFeeLevel.check_lower(value.fee_levels)
         _UniffiConverterOptionalUInt32.check_lower(value.sequence)
@@ -7461,7 +7462,7 @@ class _UniffiConverterTypeTrezorPrecomposeParams(_UniffiConverterRustBuffer):
     @staticmethod
     def write(value, buf):
         _UniffiConverterSequenceTypeTrezorPrecomposeOutput.write(value.outputs, buf)
-        _UniffiConverterString.write(value.coin, buf)
+        _UniffiConverterOptionalTypeTrezorCoinType.write(value.coin, buf)
         _UniffiConverterTypeComposeAccount.write(value.account, buf)
         _UniffiConverterSequenceTypeTrezorFeeLevel.write(value.fee_levels, buf)
         _UniffiConverterOptionalUInt32.write(value.sequence, buf)
@@ -13974,6 +13975,33 @@ class _UniffiConverterOptionalTypeTrezorFeatures(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypeAccountType(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeAccountType.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeAccountType.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeAccountType.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypeActivity(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -17182,7 +17210,7 @@ async def onchain_broadcast_raw_tx(serialized_tx: "str",electrum_url: "str") -> 
 _UniffiConverterTypeBroadcastError,
 
     )
-async def onchain_get_account_info(extended_key: "str",electrum_url: "str",network: "typing.Optional[Network]",gap_limit: "typing.Optional[int]") -> "AccountInfoResult":
+async def onchain_get_account_info(extended_key: "str",electrum_url: "str",network: "typing.Optional[Network]",gap_limit: "typing.Optional[int]",script_type: "typing.Optional[AccountType]") -> "AccountInfoResult":
 
     """
     Query account information for an extended public key via Electrum.
@@ -17196,12 +17224,15 @@ async def onchain_get_account_info(extended_key: "str",electrum_url: "str",netwo
     
     _UniffiConverterOptionalUInt32.check_lower(gap_limit)
     
+    _UniffiConverterOptionalTypeAccountType.check_lower(script_type)
+    
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_account_info(
         _UniffiConverterString.lower(extended_key),
         _UniffiConverterString.lower(electrum_url),
         _UniffiConverterOptionalTypeNetwork.lower(network),
-        _UniffiConverterOptionalUInt32.lower(gap_limit)),
+        _UniffiConverterOptionalUInt32.lower(gap_limit),
+        _UniffiConverterOptionalTypeAccountType.lower(script_type)),
         _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
         _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
@@ -17881,7 +17912,7 @@ def trezor_precomposed_to_sign_params(inputs: "typing.List[TrezorPrecomposedInpu
     
     _UniffiConverterOptionalTypeTrezorCoinType.check_lower(coin)
     
-    return _UniffiConverterTypeTrezorSignTxParams.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_trezor_precomposed_to_sign_params,
+    return _UniffiConverterTypeTrezorSignTxParams.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeTrezorError,_UniffiLib.uniffi_bitkitcore_fn_func_trezor_precomposed_to_sign_params,
         _UniffiConverterSequenceTypeTrezorPrecomposedInput.lower(inputs),
         _UniffiConverterSequenceTypeTrezorPrecomposedOutput.lower(outputs),
         _UniffiConverterOptionalTypeTrezorCoinType.lower(coin)))

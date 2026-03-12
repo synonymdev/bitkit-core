@@ -2062,7 +2062,7 @@ public struct AddressInfo {
      */
     public var path: String
     /**
-     * Number of transactions involving this address
+     * Whether this address has been used (1) or not (0)
      */
     public var transfers: UInt32
 
@@ -2076,7 +2076,7 @@ public struct AddressInfo {
          * BIP32 derivation path
          */path: String, 
         /**
-         * Number of transactions involving this address
+         * Whether this address has been used (1) or not (0)
          */transfers: UInt32) {
         self.address = address
         self.path = path
@@ -9286,9 +9286,9 @@ public struct TrezorPrecomposeParams {
      */
     public var outputs: [TrezorPrecomposeOutput]
     /**
-     * Coin name (e.g., "Bitcoin", "Regtest")
+     * Coin network (default: Bitcoin)
      */
-    public var coin: String
+    public var coin: TrezorCoinType?
     /**
      * Account with UTXOs and addresses
      */
@@ -9313,8 +9313,8 @@ public struct TrezorPrecomposeParams {
          * Desired outputs
          */outputs: [TrezorPrecomposeOutput], 
         /**
-         * Coin name (e.g., "Bitcoin", "Regtest")
-         */coin: String, 
+         * Coin network (default: Bitcoin)
+         */coin: TrezorCoinType?, 
         /**
          * Account with UTXOs and addresses
          */account: ComposeAccount, 
@@ -9386,7 +9386,7 @@ public struct FfiConverterTypeTrezorPrecomposeParams: FfiConverterRustBuffer {
         return
             try TrezorPrecomposeParams(
                 outputs: FfiConverterSequenceTypeTrezorPrecomposeOutput.read(from: &buf), 
-                coin: FfiConverterString.read(from: &buf), 
+                coin: FfiConverterOptionTypeTrezorCoinType.read(from: &buf), 
                 account: FfiConverterTypeComposeAccount.read(from: &buf), 
                 feeLevels: FfiConverterSequenceTypeTrezorFeeLevel.read(from: &buf), 
                 sequence: FfiConverterOptionUInt32.read(from: &buf), 
@@ -9396,7 +9396,7 @@ public struct FfiConverterTypeTrezorPrecomposeParams: FfiConverterRustBuffer {
 
     public static func write(_ value: TrezorPrecomposeParams, into buf: inout [UInt8]) {
         FfiConverterSequenceTypeTrezorPrecomposeOutput.write(value.outputs, into: &buf)
-        FfiConverterString.write(value.coin, into: &buf)
+        FfiConverterOptionTypeTrezorCoinType.write(value.coin, into: &buf)
         FfiConverterTypeComposeAccount.write(value.account, into: &buf)
         FfiConverterSequenceTypeTrezorFeeLevel.write(value.feeLevels, into: &buf)
         FfiConverterOptionUInt32.write(value.sequence, into: &buf)
@@ -16438,6 +16438,30 @@ fileprivate struct FfiConverterOptionTypeTrezorFeatures: FfiConverterRustBuffer 
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeAccountType: FfiConverterRustBuffer {
+    typealias SwiftType = AccountType?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeAccountType.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeAccountType.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypeActivity: FfiConverterRustBuffer {
     typealias SwiftType = Activity?
 
@@ -18272,11 +18296,11 @@ public func onchainBroadcastRawTx(serializedTx: String, electrumUrl: String)asyn
 /**
  * Query account information for an extended public key via Electrum.
  */
-public func onchainGetAccountInfo(extendedKey: String, electrumUrl: String, network: Network?, gapLimit: UInt32?)async throws  -> AccountInfoResult  {
+public func onchainGetAccountInfo(extendedKey: String, electrumUrl: String, network: Network?, gapLimit: UInt32?, scriptType: AccountType?)async throws  -> AccountInfoResult  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_onchain_get_account_info(FfiConverterString.lower(extendedKey),FfiConverterString.lower(electrumUrl),FfiConverterOptionTypeNetwork.lower(network),FfiConverterOptionUInt32.lower(gapLimit)
+                uniffi_bitkitcore_fn_func_onchain_get_account_info(FfiConverterString.lower(extendedKey),FfiConverterString.lower(electrumUrl),FfiConverterOptionTypeNetwork.lower(network),FfiConverterOptionUInt32.lower(gapLimit),FfiConverterOptionTypeAccountType.lower(scriptType)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
@@ -18798,8 +18822,8 @@ public func trezorPrecomposeTransaction(params: TrezorPrecomposeParams) -> [Trez
  *
  * The returned params have empty prev_txs — add them before signing.
  */
-public func trezorPrecomposedToSignParams(inputs: [TrezorPrecomposedInput], outputs: [TrezorPrecomposedOutput], coin: TrezorCoinType?) -> TrezorSignTxParams  {
-    return try!  FfiConverterTypeTrezorSignTxParams_lift(try! rustCall() {
+public func trezorPrecomposedToSignParams(inputs: [TrezorPrecomposedInput], outputs: [TrezorPrecomposedOutput], coin: TrezorCoinType?)throws  -> TrezorSignTxParams  {
+    return try  FfiConverterTypeTrezorSignTxParams_lift(try rustCallWithError(FfiConverterTypeTrezorError_lift) {
     uniffi_bitkitcore_fn_func_trezor_precomposed_to_sign_params(
         FfiConverterSequenceTypeTrezorPrecomposedInput.lower(inputs),
         FfiConverterSequenceTypeTrezorPrecomposedOutput.lower(outputs),
@@ -19283,7 +19307,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx() != 45163) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 34826) {
+    if (uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 30087) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_onchain_get_address_info() != 4749) {
@@ -19388,7 +19412,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_trezor_precompose_transaction() != 56637) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_trezor_precomposed_to_sign_params() != 30193) {
+    if (uniffi_bitkitcore_checksum_func_trezor_precomposed_to_sign_params() != 45966) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_scan() != 54763) {

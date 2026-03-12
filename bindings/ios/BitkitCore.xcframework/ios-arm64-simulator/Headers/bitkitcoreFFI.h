@@ -787,7 +787,7 @@ uint64_t uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx(RustBuffer serialize
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_GET_ACCOUNT_INFO
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_GET_ACCOUNT_INFO
-uint64_t uniffi_bitkitcore_fn_func_onchain_get_account_info(RustBuffer extended_key, RustBuffer electrum_url, RustBuffer network, RustBuffer gap_limit
+uint64_t uniffi_bitkitcore_fn_func_onchain_get_account_info(RustBuffer extended_key, RustBuffer electrum_url, RustBuffer network, RustBuffer gap_limit, RustBuffer script_type
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_GET_ADDRESS_INFO

@@ -1628,7 +1628,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx() != 45163.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 34826.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 30087.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_onchain_get_address_info() != 4749.toShort()) {
@@ -1733,7 +1733,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_trezor_precompose_transaction() != 56637.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_precomposed_to_sign_params() != 30193.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_precomposed_to_sign_params() != 45966.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_scan() != 54763.toShort()) {
@@ -2740,6 +2740,7 @@ internal object UniffiLib : Library {
         `electrumUrl`: RustBufferByValue,
         `network`: RustBufferByValue,
         `gapLimit`: RustBufferByValue,
+        `scriptType`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_onchain_get_address_info(
@@ -6777,7 +6778,7 @@ public object FfiConverterTypeTrezorPrecomposeParams: FfiConverterRustBuffer<Tre
     override fun read(buf: ByteBuffer): TrezorPrecomposeParams {
         return TrezorPrecomposeParams(
             FfiConverterSequenceTypeTrezorPrecomposeOutput.read(buf),
-            FfiConverterString.read(buf),
+            FfiConverterOptionalTypeTrezorCoinType.read(buf),
             FfiConverterTypeComposeAccount.read(buf),
             FfiConverterSequenceTypeTrezorFeeLevel.read(buf),
             FfiConverterOptionalUInt.read(buf),
@@ -6787,7 +6788,7 @@ public object FfiConverterTypeTrezorPrecomposeParams: FfiConverterRustBuffer<Tre
 
     override fun allocationSize(value: TrezorPrecomposeParams): ULong = (
             FfiConverterSequenceTypeTrezorPrecomposeOutput.allocationSize(value.`outputs`) +
-            FfiConverterString.allocationSize(value.`coin`) +
+            FfiConverterOptionalTypeTrezorCoinType.allocationSize(value.`coin`) +
             FfiConverterTypeComposeAccount.allocationSize(value.`account`) +
             FfiConverterSequenceTypeTrezorFeeLevel.allocationSize(value.`feeLevels`) +
             FfiConverterOptionalUInt.allocationSize(value.`sequence`) +
@@ -6796,7 +6797,7 @@ public object FfiConverterTypeTrezorPrecomposeParams: FfiConverterRustBuffer<Tre
 
     override fun write(value: TrezorPrecomposeParams, buf: ByteBuffer) {
         FfiConverterSequenceTypeTrezorPrecomposeOutput.write(value.`outputs`, buf)
-        FfiConverterString.write(value.`coin`, buf)
+        FfiConverterOptionalTypeTrezorCoinType.write(value.`coin`, buf)
         FfiConverterTypeComposeAccount.write(value.`account`, buf)
         FfiConverterSequenceTypeTrezorFeeLevel.write(value.`feeLevels`, buf)
         FfiConverterOptionalUInt.write(value.`sequence`, buf)
@@ -10337,6 +10338,35 @@ public object FfiConverterOptionalTypeTrezorFeatures: FfiConverterRustBuffer<Tre
 
 
 
+public object FfiConverterOptionalTypeAccountType: FfiConverterRustBuffer<AccountType?> {
+    override fun read(buf: ByteBuffer): AccountType? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeAccountType.read(buf)
+    }
+
+    override fun allocationSize(value: AccountType?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeAccountType.allocationSize(value)
+        }
+    }
+
+    override fun write(value: AccountType?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeAccountType.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeActivity: FfiConverterRustBuffer<Activity?> {
     override fun read(buf: ByteBuffer): Activity? {
         if (buf.get().toInt() == 0) {
@@ -12439,13 +12469,14 @@ public suspend fun `onchainBroadcastRawTx`(`serializedTx`: kotlin.String, `elect
  * Query account information for an extended public key via Electrum.
  */
 @Throws(AccountInfoException::class, kotlin.coroutines.cancellation.CancellationException::class)
-public suspend fun `onchainGetAccountInfo`(`extendedKey`: kotlin.String, `electrumUrl`: kotlin.String, `network`: Network?, `gapLimit`: kotlin.UInt?): AccountInfoResult {
+public suspend fun `onchainGetAccountInfo`(`extendedKey`: kotlin.String, `electrumUrl`: kotlin.String, `network`: Network?, `gapLimit`: kotlin.UInt?, `scriptType`: AccountType?): AccountInfoResult {
     return uniffiRustCallAsync(
         UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_account_info(
             FfiConverterString.lower(`extendedKey`),
             FfiConverterString.lower(`electrumUrl`),
             FfiConverterOptionalTypeNetwork.lower(`network`),
             FfiConverterOptionalUInt.lower(`gapLimit`),
+            FfiConverterOptionalTypeAccountType.lower(`scriptType`),
         ),
         { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
@@ -13082,8 +13113,9 @@ public fun `trezorPrecomposeTransaction`(`params`: TrezorPrecomposeParams): List
  *
  * The returned params have empty prev_txs — add them before signing.
  */
+@Throws(TrezorException::class)
 public fun `trezorPrecomposedToSignParams`(`inputs`: List<TrezorPrecomposedInput>, `outputs`: List<TrezorPrecomposedOutput>, `coin`: TrezorCoinType?): TrezorSignTxParams {
-    return FfiConverterTypeTrezorSignTxParams.lift(uniffiRustCall { uniffiRustCallStatus ->
+    return FfiConverterTypeTrezorSignTxParams.lift(uniffiRustCallWithError(TrezorExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_trezor_precomposed_to_sign_params(
             FfiConverterSequenceTypeTrezorPrecomposedInput.lower(`inputs`),
             FfiConverterSequenceTypeTrezorPrecomposedOutput.lower(`outputs`),
