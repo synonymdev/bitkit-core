@@ -684,26 +684,35 @@ pub fn normalize_extended_key(extended_key: &str) -> Result<String, AccountInfoE
 }
 
 /// Build BDK descriptor strings for external and internal keychains.
+///
+/// When `key_origin` is provided as `(fingerprint_hex, derivation_path)`,
+/// the descriptors include key origin info needed for PSBT BIP32 derivation
+/// paths, e.g. `wpkh([73c5da0a/84'/0'/0']xpub.../0/*)`.
 pub fn build_descriptors(
     normalized_xpub: &str,
     account_type: AccountType,
+    key_origin: Option<(&str, &str)>,
 ) -> (String, String) {
+    let key_expr = match key_origin {
+        Some((fingerprint, path)) => format!("[{}/{}]{}", fingerprint, path, normalized_xpub),
+        None => normalized_xpub.to_string(),
+    };
     let (external, internal) = match account_type {
         AccountType::Legacy => (
-            format!("pkh({}/0/*)", normalized_xpub),
-            format!("pkh({}/1/*)", normalized_xpub),
+            format!("pkh({}/0/*)", key_expr),
+            format!("pkh({}/1/*)", key_expr),
         ),
         AccountType::WrappedSegwit => (
-            format!("sh(wpkh({}/0/*))", normalized_xpub),
-            format!("sh(wpkh({}/1/*))", normalized_xpub),
+            format!("sh(wpkh({}/0/*))", key_expr),
+            format!("sh(wpkh({}/1/*))", key_expr),
         ),
         AccountType::NativeSegwit => (
-            format!("wpkh({}/0/*)", normalized_xpub),
-            format!("wpkh({}/1/*)", normalized_xpub),
+            format!("wpkh({}/0/*)", key_expr),
+            format!("wpkh({}/1/*)", key_expr),
         ),
         AccountType::Taproot => (
-            format!("tr({}/0/*)", normalized_xpub),
-            format!("tr({}/1/*)", normalized_xpub),
+            format!("tr({}/0/*)", key_expr),
+            format!("tr({}/1/*)", key_expr),
         ),
     };
     (external, internal)
@@ -725,6 +734,126 @@ pub fn derive_base_path(account_type: AccountType, network: BdkNetwork, account_
 }
 
 // ============================================================================
+// Shared wallet setup helper
+// ============================================================================
+
+/// Resolved wallet configuration ready for BDK wallet creation.
+pub(crate) struct WalletSetup {
+    pub external_desc: String,
+    pub internal_desc: String,
+    pub network: BdkNetwork,
+    pub base_path: String,
+    pub account_type: AccountType,
+}
+
+/// Resolve an extended key into descriptors, network, and derivation path.
+///
+/// Shared by `get_account_info` and `compose_transaction` to avoid
+/// duplicating key normalization, type detection, and descriptor building.
+pub(crate) fn resolve_wallet_setup(
+    extended_key: &str,
+    network: Option<OnchainNetwork>,
+    account_type_override: Option<AccountType>,
+    fingerprint: Option<&str>,
+) -> Result<WalletSetup, AccountInfoError> {
+    let account_type = match account_type_override {
+        Some(st) if extended_key.len() >= 4 => match &extended_key[..4] {
+            "xpub" | "tpub" => st,
+            _ => detect_account_type(extended_key)?,
+        },
+        _ => detect_account_type(extended_key)?,
+    };
+
+    let detected_network = detect_network_from_key(extended_key)?;
+
+    if let Some(net) = network {
+        let specified = onchain_to_bdk_network(net);
+        if specified != detected_network {
+            return Err(AccountInfoError::NetworkMismatch {
+                error_details: format!(
+                    "Key prefix suggests {:?} but {:?} was specified",
+                    detected_network, specified
+                ),
+            });
+        }
+    }
+
+    let normalized_key = normalize_extended_key(extended_key)?;
+
+    let xpub = ExtendedPubKey::from_str(&normalized_key).map_err(|e| {
+        AccountInfoError::InvalidExtendedKey {
+            error_details: format!("Failed to parse extended key: {}", e),
+        }
+    })?;
+    let account_index = match xpub.child_number {
+        bdk::bitcoin::bip32::ChildNumber::Hardened { index } => index,
+        bdk::bitcoin::bip32::ChildNumber::Normal { index } => index,
+    };
+    let base_path = derive_base_path(account_type, detected_network, account_index);
+
+    let derivation = base_path.strip_prefix("m/").unwrap_or(&base_path);
+    let key_origin: Option<(&str, &str)> = fingerprint.map(|fp| (fp, derivation));
+    let (external_desc, internal_desc) =
+        build_descriptors(&normalized_key, account_type, key_origin);
+
+    Ok(WalletSetup {
+        external_desc,
+        internal_desc,
+        network: detected_network,
+        base_path,
+        account_type,
+    })
+}
+
+/// Convert our Network enum to BDK's Network (used by both compose and account_info).
+pub(crate) fn onchain_to_bdk_network(network: OnchainNetwork) -> BdkNetwork {
+    match network {
+        OnchainNetwork::Bitcoin => BdkNetwork::Bitcoin,
+        OnchainNetwork::Testnet | OnchainNetwork::Testnet4 => BdkNetwork::Testnet,
+        OnchainNetwork::Signet => BdkNetwork::Signet,
+        OnchainNetwork::Regtest => BdkNetwork::Regtest,
+    }
+}
+
+/// Connect to Electrum and return the raw client (blocking).
+pub(crate) fn connect_electrum(
+    electrum_url: &str,
+) -> Result<bdk::electrum_client::Client, AccountInfoError> {
+    bdk::electrum_client::Client::new(electrum_url).map_err(|e| AccountInfoError::ElectrumError {
+        error_details: format!("Failed to connect to Electrum: {}", e),
+    })
+}
+
+/// Create a BDK wallet and sync it via the provided Electrum client.
+///
+/// The client is consumed (wrapped into `ElectrumBlockchain`). If you need
+/// the client for other calls (e.g. `block_headers_subscribe`), do those
+/// before calling this function.
+pub(crate) fn create_and_sync_wallet(
+    setup: &WalletSetup,
+    client: bdk::electrum_client::Client,
+) -> Result<Wallet<MemoryDatabase>, AccountInfoError> {
+    let wallet = Wallet::new(
+        &setup.external_desc,
+        Some(&setup.internal_desc),
+        setup.network,
+        MemoryDatabase::new(),
+    )
+    .map_err(|e| AccountInfoError::WalletError {
+        error_details: format!("Failed to create wallet: {}", e),
+    })?;
+
+    let blockchain = ElectrumBlockchain::from(client);
+    wallet
+        .sync(&blockchain, SyncOptions::default())
+        .map_err(|e| AccountInfoError::SyncError {
+            error_details: format!("Failed to sync wallet: {}", e),
+        })?;
+
+    Ok(wallet)
+}
+
+// ============================================================================
 // Account info: main async functions
 // ============================================================================
 
@@ -736,72 +865,21 @@ pub async fn get_account_info(
     gap_limit: Option<u32>,
     script_type: Option<AccountType>,
 ) -> Result<AccountInfoResult, AccountInfoError> {
-    // Use script_type override for ambiguous prefixes (xpub/tpub), otherwise use prefix detection
-    let account_type = match script_type {
-        Some(st) if extended_key.len() >= 4 => {
-            match &extended_key[..4] {
-                "xpub" | "tpub" => st,
-                _ => detect_account_type(extended_key)?,
-            }
-        }
-        _ => detect_account_type(extended_key)?,
-    };
-    let detected_network = detect_network_from_key(extended_key)?;
-
-    // Verify network matches if caller specified one
-    if let Some(net) = network {
-        let specified_bdk = network_to_bdk(net.into());
-        if specified_bdk != detected_network {
-            return Err(AccountInfoError::NetworkMismatch {
-                error_details: format!(
-                    "Key prefix suggests {:?} but {:?} was specified",
-                    detected_network, specified_bdk
-                ),
-            });
-        }
-    }
-
-    let normalized_key = normalize_extended_key(extended_key)?;
-    let (external_desc, internal_desc) = build_descriptors(&normalized_key, account_type);
-
-    // Parse xpub to get account index from child_number
-    let xpub = ExtendedPubKey::from_str(&normalized_key).map_err(|e| {
-        AccountInfoError::InvalidExtendedKey {
-            error_details: format!("Failed to parse extended key: {}", e),
-        }
-    })?;
-
-    let account_index = match xpub.child_number {
-        bdk::bitcoin::bip32::ChildNumber::Hardened { index } => index,
-        bdk::bitcoin::bip32::ChildNumber::Normal { index } => index,
-    };
-    let base_path = derive_base_path(account_type, detected_network, account_index);
+    let setup = resolve_wallet_setup(extended_key, network, script_type, None)?;
     let gap = gap_limit.unwrap_or(20);
-    let bdk_network = detected_network;
+    let base_path = setup.base_path.clone();
+    let account_type = setup.account_type.clone();
+    let bdk_network = setup.network;
 
     let electrum_url_owned = electrum_url.to_string();
-    let base_path_clone = base_path.clone();
+    let base_path_inner = base_path.clone();
 
     // All BDK + Electrum operations in a blocking task
     let result = tokio::task::spawn_blocking(move || {
-        let base_path = base_path_clone;
-        // Create BDK wallet from descriptors
-        let wallet = Wallet::new(
-            &external_desc,
-            Some(&internal_desc),
-            bdk_network,
-            MemoryDatabase::new(),
-        )
-        .map_err(|e| AccountInfoError::WalletError {
-            error_details: format!("Failed to create wallet: {}", e),
-        })?;
+        let base_path = base_path_inner;
 
-        // Connect, get block tip height, then sync (single connection)
-        let client = bdk::electrum_client::Client::new(&electrum_url_owned).map_err(|e| {
-            AccountInfoError::ElectrumError {
-                error_details: format!("Failed to connect to Electrum: {}", e),
-            }
-        })?;
+        // Single Electrum connection: get tip height first, then sync wallet
+        let client = connect_electrum(&electrum_url_owned)?;
         let header = client.block_headers_subscribe().map_err(|e| {
             AccountInfoError::ElectrumError {
                 error_details: format!("Failed to get block height: {}", e),
@@ -809,12 +887,7 @@ pub async fn get_account_info(
         })?;
         let tip_height = header.height as u32;
 
-        let blockchain = ElectrumBlockchain::from(client);
-        wallet
-            .sync(&blockchain, SyncOptions::default())
-            .map_err(|e| AccountInfoError::SyncError {
-                error_details: format!("Failed to sync wallet: {}", e),
-            })?;
+        let wallet = create_and_sync_wallet(&setup, client)?;
 
         // Get the next unused external address index
         let next_external = wallet

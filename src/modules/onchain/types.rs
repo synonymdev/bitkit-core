@@ -306,3 +306,92 @@ pub struct SingleAddressInfoResult {
     /// Current blockchain tip height
     pub block_height: u32,
 }
+
+// ============================================================================
+// Shared wallet parameters
+// ============================================================================
+
+/// Common parameters for creating a watch-only BDK wallet from an extended key.
+///
+/// Used by both `get_account_info` and `compose_transaction` to avoid
+/// duplicating wallet setup logic.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct WalletParams {
+    /// Extended public key (xpub/ypub/zpub/tpub/upub/vpub)
+    pub extended_key: String,
+    /// Electrum server URL for wallet sync
+    pub electrum_url: String,
+    /// Root fingerprint hex (e.g. "73c5da0a") for PSBT BIP32 derivation paths
+    pub fingerprint: Option<String>,
+    /// Bitcoin network (auto-detected from key prefix if not specified)
+    pub network: Option<Network>,
+    /// Override account type for ambiguous key prefixes (xpub/tpub)
+    pub account_type: Option<AccountType>,
+    /// Address gap limit for wallet sync (default: 20)
+    pub gap_limit: Option<u32>,
+}
+
+// ============================================================================
+// Transaction compose types (signer-agnostic)
+// ============================================================================
+
+/// Coin selection strategy for transaction composition.
+#[derive(Debug, Clone, uniffi::Enum)]
+pub enum CoinSelection {
+    /// Branch-and-bound (default). Minimizes change by searching for exact matches.
+    BranchAndBound,
+    /// Selects largest UTXOs first. Useful for UTXO consolidation.
+    LargestFirst,
+    /// Selects oldest UTXOs first. Maximizes coin-age spending.
+    OldestFirst,
+}
+
+/// Output specification for transaction composition.
+#[derive(Debug, Clone, uniffi::Enum)]
+pub enum ComposeOutput {
+    /// Payment to a specific address with a fixed amount (satoshis)
+    Payment { address: String, amount_sats: u64 },
+    /// Send all remaining funds (after fees) to an address
+    SendMax { address: String },
+    /// OP_RETURN data output (hex-encoded payload)
+    OpReturn { data_hex: String },
+}
+
+/// Parameters for composing a transaction.
+///
+/// Builds PSBTs for each fee rate using BDK's TxBuilder. The resulting
+/// PSBTs are signer-agnostic and can be signed by any PSBT-compatible
+/// hardware or software wallet.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct ComposeParams {
+    /// Wallet configuration (key, server, network)
+    pub wallet: WalletParams,
+    /// Desired transaction outputs
+    pub outputs: Vec<ComposeOutput>,
+    /// Fee rates to evaluate (sat/vB), one PSBT per rate
+    pub fee_rates: Vec<f32>,
+    /// UTXO selection strategy (defaults to BranchAndBound)
+    pub coin_selection: Option<CoinSelection>,
+}
+
+/// Result of composing a transaction at a single fee rate.
+#[derive(Debug, Clone, uniffi::Enum)]
+pub enum ComposeResult {
+    /// Successfully built a signable PSBT
+    Success {
+        /// Base64-encoded PSBT ready for signing
+        psbt: String,
+        /// Total fee in satoshis
+        fee: u64,
+        /// Actual fee rate in sat/vB
+        fee_rate: f32,
+        /// Transaction virtual size in vbytes
+        vsize: u64,
+        /// Total value spent (payments + fee, excluding change)
+        total_spent: u64,
+    },
+    /// Composition failed (e.g. insufficient funds)
+    Error {
+        error: String,
+    },
+}
