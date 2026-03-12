@@ -1008,7 +1008,7 @@ pub async fn get_account_info(
 pub async fn get_address_info(
     address: &str,
     electrum_url: &str,
-    _network: Option<OnchainNetwork>,
+    network: Option<OnchainNetwork>,
 ) -> Result<SingleAddressInfoResult, AccountInfoError> {
     // Validate address parses correctly using the top-level bitcoin crate
     let _parsed = Address::from_str(address).map_err(|e| AccountInfoError::InvalidAddress {
@@ -1019,8 +1019,18 @@ pub async fn get_address_info(
     let bdk_addr = BdkAddress::from_str(address)
         .map_err(|e| AccountInfoError::InvalidAddress {
             error_details: format!("Invalid address: {}", e),
-        })?
-        .assume_checked();
+        })?;
+    let bdk_addr = match network {
+        Some(net) => {
+            let bdk_network = network_to_bdk(net.into());
+            bdk_addr.require_network(bdk_network).map_err(|e| {
+                AccountInfoError::NetworkMismatch {
+                    error_details: format!("Address network mismatch: {}", e),
+                }
+            })?
+        }
+        None => bdk_addr.assume_checked(),
+    };
 
     let electrum_url_owned = electrum_url.to_string();
     let addr_str = address.to_string();

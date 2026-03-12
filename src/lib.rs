@@ -1787,7 +1787,7 @@ pub fn trezor_precomposed_to_sign_params(
     inputs: Vec<TrezorPrecomposedInput>,
     outputs: Vec<TrezorPrecomposedOutput>,
     coin: Option<TrezorCoinType>,
-) -> TrezorSignTxParams {
+) -> Result<TrezorSignTxParams, TrezorError> {
     precomposed_to_sign_params(inputs, outputs, coin)
 }
 

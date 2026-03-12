@@ -668,7 +668,7 @@ mod tests {
                     amount: "50000".to_string(),
                 },
             ],
-            coin: "Regtest".to_string(),
+            coin: Some(TrezorCoinType::Regtest),
             account: test_compose_account(),
             fee_levels: vec![
                 TrezorFeeLevel {
@@ -707,7 +707,7 @@ mod tests {
                     amount: "50000".to_string(),
                 },
             ],
-            coin: "Regtest".to_string(),
+            coin: Some(TrezorCoinType::Regtest),
             account: test_compose_account(),
             fee_levels: vec![
                 TrezorFeeLevel {
@@ -727,7 +727,7 @@ mod tests {
                     inputs.clone(),
                     outputs.clone(),
                     Some(TrezorCoinType::Regtest),
-                );
+                ).unwrap();
 
                 assert!(!sign_params.inputs.is_empty());
                 assert!(!sign_params.outputs.is_empty());
@@ -756,7 +756,7 @@ mod tests {
                     amount: "999999999".to_string(),
                 },
             ],
-            coin: "Regtest".to_string(),
+            coin: Some(TrezorCoinType::Regtest),
             account: test_compose_account(),
             fee_levels: vec![
                 TrezorFeeLevel {
@@ -783,7 +783,7 @@ mod tests {
                     amount: "50000".to_string(),
                 },
             ],
-            coin: "Regtest".to_string(),
+            coin: Some(TrezorCoinType::Regtest),
             account: test_compose_account(),
             fee_levels: vec![
                 TrezorFeeLevel { fee_per_unit: "1".to_string(), base_fee: None, floor_base_fee: None },

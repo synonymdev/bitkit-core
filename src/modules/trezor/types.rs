@@ -153,6 +153,17 @@ pub enum TrezorCoinType {
     Regtest,
 }
 
+impl TrezorCoinType {
+    /// Returns the coin name string expected by the Trezor protocol.
+    pub fn coin_name(&self) -> String {
+        match self {
+            TrezorCoinType::Bitcoin => "Bitcoin".to_string(),
+            TrezorCoinType::Testnet | TrezorCoinType::Signet => "Testnet".to_string(),
+            TrezorCoinType::Regtest => "Regtest".to_string(),
+        }
+    }
+}
+
 impl From<TrezorCoinType> for trezor_connect_rs::Network {
     fn from(c: TrezorCoinType) -> Self {
         match c {
@@ -681,8 +692,8 @@ impl From<TrezorPrecomposeOutput> for trezor_connect_rs::api::compose::Precompos
 pub struct TrezorPrecomposeParams {
     /// Desired outputs
     pub outputs: Vec<TrezorPrecomposeOutput>,
-    /// Coin name (e.g., "Bitcoin", "Regtest")
-    pub coin: String,
+    /// Coin network (default: Bitcoin)
+    pub coin: Option<TrezorCoinType>,
     /// Account with UTXOs and addresses
     pub account: ComposeAccount,
     /// Fee levels to evaluate
@@ -697,7 +708,7 @@ impl From<TrezorPrecomposeParams> for trezor_connect_rs::api::compose::Precompos
     fn from(p: TrezorPrecomposeParams) -> Self {
         Self {
             outputs: p.outputs.into_iter().map(|o| o.into()).collect(),
-            coin: p.coin,
+            coin: p.coin.map(|c| c.coin_name()).unwrap_or_else(|| "Bitcoin".to_string()),
             account: p.account.into(),
             fee_levels: p.fee_levels.into_iter().map(|f| f.into()).collect(),
             sequence: p.sequence,
