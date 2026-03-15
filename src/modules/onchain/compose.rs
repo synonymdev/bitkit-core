@@ -73,7 +73,7 @@ async fn compose_inner(params: ComposeParams) -> Result<Vec<ComposeResult>, Acco
         let mut results = Vec::with_capacity(fee_rates.len());
         for rate in &fee_rates {
             let result =
-                match build_psbt(&mut wallet, &outputs, *rate, setup.network, &coin_selection) {
+                match build_psbt(&mut wallet, &outputs, *rate, setup.network, coin_selection.as_ref()) {
                     Ok(r) => r,
                     Err(msg) => ComposeResult::Error { error: msg },
                 };
@@ -92,9 +92,9 @@ fn build_psbt(
     outputs: &[ComposeOutput],
     fee_rate: f32,
     network: BdkNetwork,
-    coin_selection: &Option<CoinSelection>,
+    coin_selection: Option<&CoinSelection>,
 ) -> Result<ComposeResult, String> {
-    match coin_selection.as_ref().unwrap_or(&CoinSelection::BranchAndBound) {
+    match coin_selection.unwrap_or(&CoinSelection::BranchAndBound) {
         CoinSelection::BranchAndBound => {
             let builder = wallet.build_tx();
             finish_psbt(builder, outputs, fee_rate, network)
@@ -153,18 +153,15 @@ fn finish_psbt<Cs: CoinSelectionAlgorithm<MemoryDatabase>>(
     let fee = details
         .fee
         .ok_or("BDK could not determine the transaction fee")?;
+    // Note: for self-transfers (e.g. consolidation), received includes the
+    // destination output so total_spent will undercount. See ComposeResult docs.
     let total_spent = details.sent.saturating_sub(details.received);
     let psbt_base64 = general_purpose::STANDARD.encode(psbt.serialize());
-
-    // Approximate signed vsize recovered from fee / requested_rate.
-    // May be off by ±1 vbyte due to integer fee rounding.
-    let vsize = (fee as f64 / fee_rate as f64).ceil() as u64;
 
     Ok(ComposeResult::Success {
         psbt: psbt_base64,
         fee,
         fee_rate,
-        vsize,
         total_spent,
     })
 }

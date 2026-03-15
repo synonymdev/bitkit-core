@@ -1786,10 +1786,9 @@ pub async fn onchain_compose_transaction(params: ComposeParams) -> Vec<ComposeRe
     })
     .await
     .unwrap_or_else(|e| {
-        let err = ComposeResult::Error {
+        vec![ComposeResult::Error {
             error: format!("Runtime error: {}", e),
-        };
-        vec![err; num_rates]
+        }; num_rates]
     })
 }
 

@@ -583,15 +583,6 @@ mod tests {
         assert_eq!(err.to_string(), "No device connected. Call trezor_connect first.");
     }
 
-    // ========================================================================
-    // Trezor-specific Account Info Tests
-    // ========================================================================
-
-    const ACCOUNT_INFO_ELECTRUM_URL: &str = "ssl://fulcrum.bitkit.stag0.blocktank.to:18484";
-
-    // Test addresses derived from the above mnemonic (each funded with 100,000 sats)
-    const TEST_LEGACY_ADDR: &str = "mixttbUXpVWVpx3qHh7KUiVnxWiNxL2uu9";
-
     #[test]
     fn test_account_type_to_script_type() {
         use crate::modules::trezor::account_info::account_type_to_script_type;

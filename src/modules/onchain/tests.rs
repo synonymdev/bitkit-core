@@ -1142,10 +1142,9 @@ mod tests {
         assert_eq!(results.len(), 1);
 
         match &results[0] {
-            ComposeResult::Success { psbt, fee, vsize, total_spent, .. } => {
+            ComposeResult::Success { psbt, fee, total_spent, .. } => {
                 assert!(!psbt.is_empty(), "PSBT should not be empty");
                 assert!(*fee > 0, "Fee should be > 0");
-                assert!(*vsize > 0, "vsize should be > 0");
                 assert!(*total_spent > 5_000, "total_spent should be > payment amount");
 
                 use base64::{engine::general_purpose, Engine as _};

@@ -251,7 +251,7 @@ pub struct AddressInfo {
     pub address: String,
     /// BIP32 derivation path
     pub path: String,
-    /// Whether this address has been used (1) or not (0)
+    /// Number of transfers (real count in `get_address_info`, 1/0 presence flag in `get_account_info`)
     pub transfers: u32,
 }
 
@@ -376,9 +376,9 @@ pub enum ComposeResult {
         fee: u64,
         /// Target fee rate in sat/vB (actual may differ slightly due to rounding)
         fee_rate: f32,
-        /// Transaction virtual size in vbytes
-        vsize: u64,
-        /// Total value spent (payments + fee, excluding change)
+        /// Total value spent (payments + fee, excluding change).
+        /// Uses BDK's `sent - received` semantics, which may undercount for
+        /// self-transfers where the destination is also owned by the wallet.
         total_spent: u64,
     },
     /// Composition failed (e.g. insufficient funds)
