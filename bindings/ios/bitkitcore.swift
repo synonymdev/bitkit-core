@@ -470,6 +470,22 @@ fileprivate struct FfiConverterInt64: FfiConverterPrimitive {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterFloat: FfiConverterPrimitive {
+    typealias FfiType = Float
+    typealias SwiftType = Float
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Float {
+        return try lift(readFloat(&buf))
+    }
+
+    public static func write(_ value: Float, into buf: inout [UInt8]) {
+        writeFloat(&buf, lower(value))
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterDouble: FfiConverterPrimitive {
     typealias FfiType = Double
     typealias SwiftType = Double
@@ -2062,7 +2078,7 @@ public struct AddressInfo {
      */
     public var path: String
     /**
-     * Whether this address has been used (1) or not (0)
+     * Number of transfers (real count in `get_address_info`, 1/0 presence flag in `get_account_info`)
      */
     public var transfers: UInt32
 
@@ -2076,7 +2092,7 @@ public struct AddressInfo {
          * BIP32 derivation path
          */path: String, 
         /**
-         * Whether this address has been used (1) or not (0)
+         * Number of transfers (real count in `get_address_info`, 1/0 presence flag in `get_account_info`)
          */transfers: UInt32) {
         self.address = address
         self.path = path
@@ -2600,6 +2616,121 @@ public func FfiConverterTypeComposeAccount_lift(_ buf: RustBuffer) throws -> Com
 #endif
 public func FfiConverterTypeComposeAccount_lower(_ value: ComposeAccount) -> RustBuffer {
     return FfiConverterTypeComposeAccount.lower(value)
+}
+
+
+/**
+ * Parameters for composing a signer-agnostic transaction.
+ */
+public struct ComposeParams {
+    /**
+     * Wallet configuration (key, server, network)
+     */
+    public var wallet: WalletParams
+    /**
+     * Desired transaction outputs
+     */
+    public var outputs: [ComposeOutput]
+    /**
+     * Fee rates to evaluate (sat/vB), one PSBT per rate
+     */
+    public var feeRates: [Float]
+    /**
+     * UTXO selection strategy (defaults to BranchAndBound)
+     */
+    public var coinSelection: CoinSelection?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Wallet configuration (key, server, network)
+         */wallet: WalletParams, 
+        /**
+         * Desired transaction outputs
+         */outputs: [ComposeOutput], 
+        /**
+         * Fee rates to evaluate (sat/vB), one PSBT per rate
+         */feeRates: [Float], 
+        /**
+         * UTXO selection strategy (defaults to BranchAndBound)
+         */coinSelection: CoinSelection?) {
+        self.wallet = wallet
+        self.outputs = outputs
+        self.feeRates = feeRates
+        self.coinSelection = coinSelection
+    }
+}
+
+#if compiler(>=6)
+extension ComposeParams: Sendable {}
+#endif
+
+
+extension ComposeParams: Equatable, Hashable {
+    public static func ==(lhs: ComposeParams, rhs: ComposeParams) -> Bool {
+        if lhs.wallet != rhs.wallet {
+            return false
+        }
+        if lhs.outputs != rhs.outputs {
+            return false
+        }
+        if lhs.feeRates != rhs.feeRates {
+            return false
+        }
+        if lhs.coinSelection != rhs.coinSelection {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(wallet)
+        hasher.combine(outputs)
+        hasher.combine(feeRates)
+        hasher.combine(coinSelection)
+    }
+}
+
+extension ComposeParams: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeComposeParams: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ComposeParams {
+        return
+            try ComposeParams(
+                wallet: FfiConverterTypeWalletParams.read(from: &buf), 
+                outputs: FfiConverterSequenceTypeComposeOutput.read(from: &buf), 
+                feeRates: FfiConverterSequenceFloat.read(from: &buf), 
+                coinSelection: FfiConverterOptionTypeCoinSelection.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ComposeParams, into buf: inout [UInt8]) {
+        FfiConverterTypeWalletParams.write(value.wallet, into: &buf)
+        FfiConverterSequenceTypeComposeOutput.write(value.outputs, into: &buf)
+        FfiConverterSequenceFloat.write(value.feeRates, into: &buf)
+        FfiConverterOptionTypeCoinSelection.write(value.coinSelection, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeComposeParams_lift(_ buf: RustBuffer) throws -> ComposeParams {
+    return try FfiConverterTypeComposeParams.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeComposeParams_lower(_ value: ComposeParams) -> RustBuffer {
+    return FfiConverterTypeComposeParams.lower(value)
 }
 
 
@@ -8961,107 +9092,6 @@ public func FfiConverterTypeTrezorFeatures_lower(_ value: TrezorFeatures) -> Rus
 
 
 /**
- * Fee level for transaction composition.
- */
-public struct TrezorFeeLevel {
-    /**
-     * Fee rate in sat/vB
-     */
-    public var feePerUnit: String
-    /**
-     * Base fee in satoshis (optional, added to calculated fee)
-     */
-    public var baseFee: UInt64?
-    /**
-     * Whether to use floor for base fee calculation
-     */
-    public var floorBaseFee: Bool?
-
-    // Default memberwise initializers are never public by default, so we
-    // declare one manually.
-    public init(
-        /**
-         * Fee rate in sat/vB
-         */feePerUnit: String, 
-        /**
-         * Base fee in satoshis (optional, added to calculated fee)
-         */baseFee: UInt64?, 
-        /**
-         * Whether to use floor for base fee calculation
-         */floorBaseFee: Bool?) {
-        self.feePerUnit = feePerUnit
-        self.baseFee = baseFee
-        self.floorBaseFee = floorBaseFee
-    }
-}
-
-#if compiler(>=6)
-extension TrezorFeeLevel: Sendable {}
-#endif
-
-
-extension TrezorFeeLevel: Equatable, Hashable {
-    public static func ==(lhs: TrezorFeeLevel, rhs: TrezorFeeLevel) -> Bool {
-        if lhs.feePerUnit != rhs.feePerUnit {
-            return false
-        }
-        if lhs.baseFee != rhs.baseFee {
-            return false
-        }
-        if lhs.floorBaseFee != rhs.floorBaseFee {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(feePerUnit)
-        hasher.combine(baseFee)
-        hasher.combine(floorBaseFee)
-    }
-}
-
-extension TrezorFeeLevel: Codable {}
-
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeTrezorFeeLevel: FfiConverterRustBuffer {
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorFeeLevel {
-        return
-            try TrezorFeeLevel(
-                feePerUnit: FfiConverterString.read(from: &buf), 
-                baseFee: FfiConverterOptionUInt64.read(from: &buf), 
-                floorBaseFee: FfiConverterOptionBool.read(from: &buf)
-        )
-    }
-
-    public static func write(_ value: TrezorFeeLevel, into buf: inout [UInt8]) {
-        FfiConverterString.write(value.feePerUnit, into: &buf)
-        FfiConverterOptionUInt64.write(value.baseFee, into: &buf)
-        FfiConverterOptionBool.write(value.floorBaseFee, into: &buf)
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorFeeLevel_lift(_ buf: RustBuffer) throws -> TrezorFeeLevel {
-    return try FfiConverterTypeTrezorFeeLevel.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorFeeLevel_lower(_ value: TrezorFeeLevel) -> RustBuffer {
-    return FfiConverterTypeTrezorFeeLevel.lower(value)
-}
-
-
-/**
  * Parameters for getting an address from the device.
  */
 public struct TrezorGetAddressParams {
@@ -9274,292 +9304,6 @@ public func FfiConverterTypeTrezorGetPublicKeyParams_lift(_ buf: RustBuffer) thr
 #endif
 public func FfiConverterTypeTrezorGetPublicKeyParams_lower(_ value: TrezorGetPublicKeyParams) -> RustBuffer {
     return FfiConverterTypeTrezorGetPublicKeyParams.lower(value)
-}
-
-
-/**
- * Parameters for precompose transaction.
- */
-public struct TrezorPrecomposeParams {
-    /**
-     * Desired outputs
-     */
-    public var outputs: [TrezorPrecomposeOutput]
-    /**
-     * Coin network (default: Bitcoin)
-     */
-    public var coin: TrezorCoinType?
-    /**
-     * Account with UTXOs and addresses
-     */
-    public var account: ComposeAccount
-    /**
-     * Fee levels to evaluate
-     */
-    public var feeLevels: [TrezorFeeLevel]
-    /**
-     * Default sequence number
-     */
-    public var sequence: UInt32?
-    /**
-     * Sorting strategy for inputs/outputs
-     */
-    public var sortingStrategy: TrezorSortingStrategy?
-
-    // Default memberwise initializers are never public by default, so we
-    // declare one manually.
-    public init(
-        /**
-         * Desired outputs
-         */outputs: [TrezorPrecomposeOutput], 
-        /**
-         * Coin network (default: Bitcoin)
-         */coin: TrezorCoinType?, 
-        /**
-         * Account with UTXOs and addresses
-         */account: ComposeAccount, 
-        /**
-         * Fee levels to evaluate
-         */feeLevels: [TrezorFeeLevel], 
-        /**
-         * Default sequence number
-         */sequence: UInt32?, 
-        /**
-         * Sorting strategy for inputs/outputs
-         */sortingStrategy: TrezorSortingStrategy?) {
-        self.outputs = outputs
-        self.coin = coin
-        self.account = account
-        self.feeLevels = feeLevels
-        self.sequence = sequence
-        self.sortingStrategy = sortingStrategy
-    }
-}
-
-#if compiler(>=6)
-extension TrezorPrecomposeParams: Sendable {}
-#endif
-
-
-extension TrezorPrecomposeParams: Equatable, Hashable {
-    public static func ==(lhs: TrezorPrecomposeParams, rhs: TrezorPrecomposeParams) -> Bool {
-        if lhs.outputs != rhs.outputs {
-            return false
-        }
-        if lhs.coin != rhs.coin {
-            return false
-        }
-        if lhs.account != rhs.account {
-            return false
-        }
-        if lhs.feeLevels != rhs.feeLevels {
-            return false
-        }
-        if lhs.sequence != rhs.sequence {
-            return false
-        }
-        if lhs.sortingStrategy != rhs.sortingStrategy {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(outputs)
-        hasher.combine(coin)
-        hasher.combine(account)
-        hasher.combine(feeLevels)
-        hasher.combine(sequence)
-        hasher.combine(sortingStrategy)
-    }
-}
-
-extension TrezorPrecomposeParams: Codable {}
-
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeTrezorPrecomposeParams: FfiConverterRustBuffer {
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorPrecomposeParams {
-        return
-            try TrezorPrecomposeParams(
-                outputs: FfiConverterSequenceTypeTrezorPrecomposeOutput.read(from: &buf), 
-                coin: FfiConverterOptionTypeTrezorCoinType.read(from: &buf), 
-                account: FfiConverterTypeComposeAccount.read(from: &buf), 
-                feeLevels: FfiConverterSequenceTypeTrezorFeeLevel.read(from: &buf), 
-                sequence: FfiConverterOptionUInt32.read(from: &buf), 
-                sortingStrategy: FfiConverterOptionTypeTrezorSortingStrategy.read(from: &buf)
-        )
-    }
-
-    public static func write(_ value: TrezorPrecomposeParams, into buf: inout [UInt8]) {
-        FfiConverterSequenceTypeTrezorPrecomposeOutput.write(value.outputs, into: &buf)
-        FfiConverterOptionTypeTrezorCoinType.write(value.coin, into: &buf)
-        FfiConverterTypeComposeAccount.write(value.account, into: &buf)
-        FfiConverterSequenceTypeTrezorFeeLevel.write(value.feeLevels, into: &buf)
-        FfiConverterOptionUInt32.write(value.sequence, into: &buf)
-        FfiConverterOptionTypeTrezorSortingStrategy.write(value.sortingStrategy, into: &buf)
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorPrecomposeParams_lift(_ buf: RustBuffer) throws -> TrezorPrecomposeParams {
-    return try FfiConverterTypeTrezorPrecomposeParams.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorPrecomposeParams_lower(_ value: TrezorPrecomposeParams) -> RustBuffer {
-    return FfiConverterTypeTrezorPrecomposeParams.lower(value)
-}
-
-
-/**
- * Input in a precomposed result.
- */
-public struct TrezorPrecomposedInput {
-    /**
-     * Transaction ID (hex)
-     */
-    public var txid: String
-    /**
-     * Output index
-     */
-    public var vout: UInt32
-    /**
-     * Amount in satoshis (as string)
-     */
-    public var amount: String
-    /**
-     * Address
-     */
-    public var address: String
-    /**
-     * BIP32 derivation path
-     */
-    public var path: String
-    /**
-     * Script type
-     */
-    public var scriptType: TrezorScriptType
-
-    // Default memberwise initializers are never public by default, so we
-    // declare one manually.
-    public init(
-        /**
-         * Transaction ID (hex)
-         */txid: String, 
-        /**
-         * Output index
-         */vout: UInt32, 
-        /**
-         * Amount in satoshis (as string)
-         */amount: String, 
-        /**
-         * Address
-         */address: String, 
-        /**
-         * BIP32 derivation path
-         */path: String, 
-        /**
-         * Script type
-         */scriptType: TrezorScriptType) {
-        self.txid = txid
-        self.vout = vout
-        self.amount = amount
-        self.address = address
-        self.path = path
-        self.scriptType = scriptType
-    }
-}
-
-#if compiler(>=6)
-extension TrezorPrecomposedInput: Sendable {}
-#endif
-
-
-extension TrezorPrecomposedInput: Equatable, Hashable {
-    public static func ==(lhs: TrezorPrecomposedInput, rhs: TrezorPrecomposedInput) -> Bool {
-        if lhs.txid != rhs.txid {
-            return false
-        }
-        if lhs.vout != rhs.vout {
-            return false
-        }
-        if lhs.amount != rhs.amount {
-            return false
-        }
-        if lhs.address != rhs.address {
-            return false
-        }
-        if lhs.path != rhs.path {
-            return false
-        }
-        if lhs.scriptType != rhs.scriptType {
-            return false
-        }
-        return true
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(txid)
-        hasher.combine(vout)
-        hasher.combine(amount)
-        hasher.combine(address)
-        hasher.combine(path)
-        hasher.combine(scriptType)
-    }
-}
-
-extension TrezorPrecomposedInput: Codable {}
-
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeTrezorPrecomposedInput: FfiConverterRustBuffer {
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorPrecomposedInput {
-        return
-            try TrezorPrecomposedInput(
-                txid: FfiConverterString.read(from: &buf), 
-                vout: FfiConverterUInt32.read(from: &buf), 
-                amount: FfiConverterString.read(from: &buf), 
-                address: FfiConverterString.read(from: &buf), 
-                path: FfiConverterString.read(from: &buf), 
-                scriptType: FfiConverterTypeTrezorScriptType.read(from: &buf)
-        )
-    }
-
-    public static func write(_ value: TrezorPrecomposedInput, into buf: inout [UInt8]) {
-        FfiConverterString.write(value.txid, into: &buf)
-        FfiConverterUInt32.write(value.vout, into: &buf)
-        FfiConverterString.write(value.amount, into: &buf)
-        FfiConverterString.write(value.address, into: &buf)
-        FfiConverterString.write(value.path, into: &buf)
-        FfiConverterTypeTrezorScriptType.write(value.scriptType, into: &buf)
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorPrecomposedInput_lift(_ buf: RustBuffer) throws -> TrezorPrecomposedInput {
-    return try FfiConverterTypeTrezorPrecomposedInput.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorPrecomposedInput_lower(_ value: TrezorPrecomposedInput) -> RustBuffer {
-    return FfiConverterTypeTrezorPrecomposedInput.lower(value)
 }
 
 
@@ -11449,6 +11193,135 @@ public func FfiConverterTypeValidationResult_lift(_ buf: RustBuffer) throws -> V
 #endif
 public func FfiConverterTypeValidationResult_lower(_ value: ValidationResult) -> RustBuffer {
     return FfiConverterTypeValidationResult.lower(value)
+}
+
+
+/**
+ * Common parameters for creating and syncing a watch-only BDK wallet.
+ */
+public struct WalletParams {
+    /**
+     * Extended public key (xpub/ypub/zpub/tpub/upub/vpub)
+     */
+    public var extendedKey: String
+    /**
+     * Electrum server URL for wallet sync
+     */
+    public var electrumUrl: String
+    /**
+     * Root fingerprint hex (e.g. "73c5da0a"). Required for hardware wallet signing.
+     */
+    public var fingerprint: String?
+    /**
+     * Bitcoin network (auto-detected from key prefix if not specified)
+     */
+    public var network: Network?
+    /**
+     * Override account type for ambiguous key prefixes (xpub/tpub)
+     */
+    public var accountType: AccountType?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Extended public key (xpub/ypub/zpub/tpub/upub/vpub)
+         */extendedKey: String, 
+        /**
+         * Electrum server URL for wallet sync
+         */electrumUrl: String, 
+        /**
+         * Root fingerprint hex (e.g. "73c5da0a"). Required for hardware wallet signing.
+         */fingerprint: String?, 
+        /**
+         * Bitcoin network (auto-detected from key prefix if not specified)
+         */network: Network?, 
+        /**
+         * Override account type for ambiguous key prefixes (xpub/tpub)
+         */accountType: AccountType?) {
+        self.extendedKey = extendedKey
+        self.electrumUrl = electrumUrl
+        self.fingerprint = fingerprint
+        self.network = network
+        self.accountType = accountType
+    }
+}
+
+#if compiler(>=6)
+extension WalletParams: Sendable {}
+#endif
+
+
+extension WalletParams: Equatable, Hashable {
+    public static func ==(lhs: WalletParams, rhs: WalletParams) -> Bool {
+        if lhs.extendedKey != rhs.extendedKey {
+            return false
+        }
+        if lhs.electrumUrl != rhs.electrumUrl {
+            return false
+        }
+        if lhs.fingerprint != rhs.fingerprint {
+            return false
+        }
+        if lhs.network != rhs.network {
+            return false
+        }
+        if lhs.accountType != rhs.accountType {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(extendedKey)
+        hasher.combine(electrumUrl)
+        hasher.combine(fingerprint)
+        hasher.combine(network)
+        hasher.combine(accountType)
+    }
+}
+
+extension WalletParams: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeWalletParams: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> WalletParams {
+        return
+            try WalletParams(
+                extendedKey: FfiConverterString.read(from: &buf), 
+                electrumUrl: FfiConverterString.read(from: &buf), 
+                fingerprint: FfiConverterOptionString.read(from: &buf), 
+                network: FfiConverterOptionTypeNetwork.read(from: &buf), 
+                accountType: FfiConverterOptionTypeAccountType.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: WalletParams, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.extendedKey, into: &buf)
+        FfiConverterString.write(value.electrumUrl, into: &buf)
+        FfiConverterOptionString.write(value.fingerprint, into: &buf)
+        FfiConverterOptionTypeNetwork.write(value.network, into: &buf)
+        FfiConverterOptionTypeAccountType.write(value.accountType, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWalletParams_lift(_ buf: RustBuffer) throws -> WalletParams {
+    return try FfiConverterTypeWalletParams.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWalletParams_lower(_ value: WalletParams) -> RustBuffer {
+    return FfiConverterTypeWalletParams.lower(value)
 }
 
 
@@ -13396,6 +13269,302 @@ extension CJitStateEnum: Codable {}
 
 
 
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Coin selection strategy for transaction composition.
+ */
+
+public enum CoinSelection {
+    
+    /**
+     * Branch-and-bound (default). Minimizes change by searching for exact matches.
+     */
+    case branchAndBound
+    /**
+     * Selects largest UTXOs first. Useful for UTXO consolidation.
+     */
+    case largestFirst
+    /**
+     * Selects oldest UTXOs first. Maximizes coin-age spending.
+     */
+    case oldestFirst
+}
+
+
+#if compiler(>=6)
+extension CoinSelection: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCoinSelection: FfiConverterRustBuffer {
+    typealias SwiftType = CoinSelection
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CoinSelection {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .branchAndBound
+        
+        case 2: return .largestFirst
+        
+        case 3: return .oldestFirst
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: CoinSelection, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .branchAndBound:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .largestFirst:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .oldestFirst:
+            writeInt(&buf, Int32(3))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCoinSelection_lift(_ buf: RustBuffer) throws -> CoinSelection {
+    return try FfiConverterTypeCoinSelection.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCoinSelection_lower(_ value: CoinSelection) -> RustBuffer {
+    return FfiConverterTypeCoinSelection.lower(value)
+}
+
+
+extension CoinSelection: Equatable, Hashable {}
+
+extension CoinSelection: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Output specification for transaction composition.
+ */
+
+public enum ComposeOutput {
+    
+    /**
+     * Payment to a specific address with a fixed amount (satoshis)
+     */
+    case payment(address: String, amountSats: UInt64
+    )
+    /**
+     * Send all remaining funds (after fees) to an address
+     */
+    case sendMax(address: String
+    )
+    /**
+     * OP_RETURN data output (hex-encoded payload)
+     */
+    case opReturn(dataHex: String
+    )
+}
+
+
+#if compiler(>=6)
+extension ComposeOutput: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeComposeOutput: FfiConverterRustBuffer {
+    typealias SwiftType = ComposeOutput
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ComposeOutput {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .payment(address: try FfiConverterString.read(from: &buf), amountSats: try FfiConverterUInt64.read(from: &buf)
+        )
+        
+        case 2: return .sendMax(address: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 3: return .opReturn(dataHex: try FfiConverterString.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: ComposeOutput, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case let .payment(address,amountSats):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(address, into: &buf)
+            FfiConverterUInt64.write(amountSats, into: &buf)
+            
+        
+        case let .sendMax(address):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(address, into: &buf)
+            
+        
+        case let .opReturn(dataHex):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(dataHex, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeComposeOutput_lift(_ buf: RustBuffer) throws -> ComposeOutput {
+    return try FfiConverterTypeComposeOutput.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeComposeOutput_lower(_ value: ComposeOutput) -> RustBuffer {
+    return FfiConverterTypeComposeOutput.lower(value)
+}
+
+
+extension ComposeOutput: Equatable, Hashable {}
+
+extension ComposeOutput: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Result of composing a transaction at a single fee rate.
+ */
+
+public enum ComposeResult {
+    
+    /**
+     * Successfully built a signable PSBT
+     */
+    case success(
+        /**
+         * Base64-encoded PSBT ready for signing
+         */psbt: String, 
+        /**
+         * Total fee in satoshis
+         */fee: UInt64, 
+        /**
+         * Target fee rate in sat/vB (actual may differ slightly due to rounding)
+         */feeRate: Float, 
+        /**
+         * Total value spent (payments + fee, excluding change).
+         * Uses BDK's `sent - received` semantics, which may undercount for
+         * self-transfers where the destination is also owned by the wallet.
+         */totalSpent: UInt64
+    )
+    /**
+     * Composition failed (e.g. insufficient funds)
+     */
+    case error(error: String
+    )
+}
+
+
+#if compiler(>=6)
+extension ComposeResult: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeComposeResult: FfiConverterRustBuffer {
+    typealias SwiftType = ComposeResult
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ComposeResult {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .success(psbt: try FfiConverterString.read(from: &buf), fee: try FfiConverterUInt64.read(from: &buf), feeRate: try FfiConverterFloat.read(from: &buf), totalSpent: try FfiConverterUInt64.read(from: &buf)
+        )
+        
+        case 2: return .error(error: try FfiConverterString.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: ComposeResult, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case let .success(psbt,fee,feeRate,totalSpent):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(psbt, into: &buf)
+            FfiConverterUInt64.write(fee, into: &buf)
+            FfiConverterFloat.write(feeRate, into: &buf)
+            FfiConverterUInt64.write(totalSpent, into: &buf)
+            
+        
+        case let .error(error):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(error, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeComposeResult_lift(_ buf: RustBuffer) throws -> ComposeResult {
+    return try FfiConverterTypeComposeResult.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeComposeResult_lower(_ value: ComposeResult) -> RustBuffer {
+    return FfiConverterTypeComposeResult.lower(value)
+}
+
+
+extension ComposeResult: Equatable, Hashable {}
+
+extension ComposeResult: Codable {}
+
+
+
+
+
+
 
 public enum DbError: Swift.Error {
 
@@ -15003,344 +15172,6 @@ extension TrezorError: Foundation.LocalizedError {
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
- * Output specification for precompose.
- */
-
-public enum TrezorPrecomposeOutput {
-    
-    /**
-     * Payment to a specific address
-     */
-    case payment(address: String, amount: String
-    )
-    /**
-     * Payment without address (estimation only)
-     */
-    case paymentNoAddress(amount: String
-    )
-    /**
-     * Send all remaining funds to an address
-     */
-    case sendMax(address: String
-    )
-    /**
-     * Send all remaining funds (no address)
-     */
-    case sendMaxNoAddress
-    /**
-     * OP_RETURN data output
-     */
-    case opReturn(dataHex: String
-    )
-}
-
-
-#if compiler(>=6)
-extension TrezorPrecomposeOutput: Sendable {}
-#endif
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeTrezorPrecomposeOutput: FfiConverterRustBuffer {
-    typealias SwiftType = TrezorPrecomposeOutput
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorPrecomposeOutput {
-        let variant: Int32 = try readInt(&buf)
-        switch variant {
-        
-        case 1: return .payment(address: try FfiConverterString.read(from: &buf), amount: try FfiConverterString.read(from: &buf)
-        )
-        
-        case 2: return .paymentNoAddress(amount: try FfiConverterString.read(from: &buf)
-        )
-        
-        case 3: return .sendMax(address: try FfiConverterString.read(from: &buf)
-        )
-        
-        case 4: return .sendMaxNoAddress
-        
-        case 5: return .opReturn(dataHex: try FfiConverterString.read(from: &buf)
-        )
-        
-        default: throw UniffiInternalError.unexpectedEnumCase
-        }
-    }
-
-    public static func write(_ value: TrezorPrecomposeOutput, into buf: inout [UInt8]) {
-        switch value {
-        
-        
-        case let .payment(address,amount):
-            writeInt(&buf, Int32(1))
-            FfiConverterString.write(address, into: &buf)
-            FfiConverterString.write(amount, into: &buf)
-            
-        
-        case let .paymentNoAddress(amount):
-            writeInt(&buf, Int32(2))
-            FfiConverterString.write(amount, into: &buf)
-            
-        
-        case let .sendMax(address):
-            writeInt(&buf, Int32(3))
-            FfiConverterString.write(address, into: &buf)
-            
-        
-        case .sendMaxNoAddress:
-            writeInt(&buf, Int32(4))
-        
-        
-        case let .opReturn(dataHex):
-            writeInt(&buf, Int32(5))
-            FfiConverterString.write(dataHex, into: &buf)
-            
-        }
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorPrecomposeOutput_lift(_ buf: RustBuffer) throws -> TrezorPrecomposeOutput {
-    return try FfiConverterTypeTrezorPrecomposeOutput.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorPrecomposeOutput_lower(_ value: TrezorPrecomposeOutput) -> RustBuffer {
-    return FfiConverterTypeTrezorPrecomposeOutput.lower(value)
-}
-
-
-extension TrezorPrecomposeOutput: Equatable, Hashable {}
-
-extension TrezorPrecomposeOutput: Codable {}
-
-
-
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-/**
- * Output in a precomposed result.
- */
-
-public enum TrezorPrecomposedOutput {
-    
-    /**
-     * Payment to an address
-     */
-    case payment(address: String, amount: String
-    )
-    /**
-     * Change output
-     */
-    case change(address: String, path: String, amount: String, scriptType: TrezorScriptType
-    )
-    /**
-     * OP_RETURN data output
-     */
-    case opReturn(dataHex: String
-    )
-}
-
-
-#if compiler(>=6)
-extension TrezorPrecomposedOutput: Sendable {}
-#endif
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeTrezorPrecomposedOutput: FfiConverterRustBuffer {
-    typealias SwiftType = TrezorPrecomposedOutput
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorPrecomposedOutput {
-        let variant: Int32 = try readInt(&buf)
-        switch variant {
-        
-        case 1: return .payment(address: try FfiConverterString.read(from: &buf), amount: try FfiConverterString.read(from: &buf)
-        )
-        
-        case 2: return .change(address: try FfiConverterString.read(from: &buf), path: try FfiConverterString.read(from: &buf), amount: try FfiConverterString.read(from: &buf), scriptType: try FfiConverterTypeTrezorScriptType.read(from: &buf)
-        )
-        
-        case 3: return .opReturn(dataHex: try FfiConverterString.read(from: &buf)
-        )
-        
-        default: throw UniffiInternalError.unexpectedEnumCase
-        }
-    }
-
-    public static func write(_ value: TrezorPrecomposedOutput, into buf: inout [UInt8]) {
-        switch value {
-        
-        
-        case let .payment(address,amount):
-            writeInt(&buf, Int32(1))
-            FfiConverterString.write(address, into: &buf)
-            FfiConverterString.write(amount, into: &buf)
-            
-        
-        case let .change(address,path,amount,scriptType):
-            writeInt(&buf, Int32(2))
-            FfiConverterString.write(address, into: &buf)
-            FfiConverterString.write(path, into: &buf)
-            FfiConverterString.write(amount, into: &buf)
-            FfiConverterTypeTrezorScriptType.write(scriptType, into: &buf)
-            
-        
-        case let .opReturn(dataHex):
-            writeInt(&buf, Int32(3))
-            FfiConverterString.write(dataHex, into: &buf)
-            
-        }
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorPrecomposedOutput_lift(_ buf: RustBuffer) throws -> TrezorPrecomposedOutput {
-    return try FfiConverterTypeTrezorPrecomposedOutput.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorPrecomposedOutput_lower(_ value: TrezorPrecomposedOutput) -> RustBuffer {
-    return FfiConverterTypeTrezorPrecomposedOutput.lower(value)
-}
-
-
-extension TrezorPrecomposedOutput: Equatable, Hashable {}
-
-extension TrezorPrecomposedOutput: Codable {}
-
-
-
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-/**
- * Precomposed transaction result (one per fee level).
- */
-
-public enum TrezorPrecomposedResult {
-    
-    /**
-     * Successfully composed a sendable transaction
-     */
-    case final(totalSpent: String, fee: String, feePerByte: String, bytes: UInt32, inputs: [TrezorPrecomposedInput], outputs: [TrezorPrecomposedOutput], outputsPermutation: [UInt32]
-    )
-    /**
-     * Non-final result (e.g., send-max estimation)
-     */
-    case nonFinal(max: String?, totalSpent: String, fee: String, feePerByte: String, bytes: UInt32
-    )
-    /**
-     * Composition failed
-     */
-    case error(error: String
-    )
-}
-
-
-#if compiler(>=6)
-extension TrezorPrecomposedResult: Sendable {}
-#endif
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeTrezorPrecomposedResult: FfiConverterRustBuffer {
-    typealias SwiftType = TrezorPrecomposedResult
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorPrecomposedResult {
-        let variant: Int32 = try readInt(&buf)
-        switch variant {
-        
-        case 1: return .final(totalSpent: try FfiConverterString.read(from: &buf), fee: try FfiConverterString.read(from: &buf), feePerByte: try FfiConverterString.read(from: &buf), bytes: try FfiConverterUInt32.read(from: &buf), inputs: try FfiConverterSequenceTypeTrezorPrecomposedInput.read(from: &buf), outputs: try FfiConverterSequenceTypeTrezorPrecomposedOutput.read(from: &buf), outputsPermutation: try FfiConverterSequenceUInt32.read(from: &buf)
-        )
-        
-        case 2: return .nonFinal(max: try FfiConverterOptionString.read(from: &buf), totalSpent: try FfiConverterString.read(from: &buf), fee: try FfiConverterString.read(from: &buf), feePerByte: try FfiConverterString.read(from: &buf), bytes: try FfiConverterUInt32.read(from: &buf)
-        )
-        
-        case 3: return .error(error: try FfiConverterString.read(from: &buf)
-        )
-        
-        default: throw UniffiInternalError.unexpectedEnumCase
-        }
-    }
-
-    public static func write(_ value: TrezorPrecomposedResult, into buf: inout [UInt8]) {
-        switch value {
-        
-        
-        case let .final(totalSpent,fee,feePerByte,bytes,inputs,outputs,outputsPermutation):
-            writeInt(&buf, Int32(1))
-            FfiConverterString.write(totalSpent, into: &buf)
-            FfiConverterString.write(fee, into: &buf)
-            FfiConverterString.write(feePerByte, into: &buf)
-            FfiConverterUInt32.write(bytes, into: &buf)
-            FfiConverterSequenceTypeTrezorPrecomposedInput.write(inputs, into: &buf)
-            FfiConverterSequenceTypeTrezorPrecomposedOutput.write(outputs, into: &buf)
-            FfiConverterSequenceUInt32.write(outputsPermutation, into: &buf)
-            
-        
-        case let .nonFinal(max,totalSpent,fee,feePerByte,bytes):
-            writeInt(&buf, Int32(2))
-            FfiConverterOptionString.write(max, into: &buf)
-            FfiConverterString.write(totalSpent, into: &buf)
-            FfiConverterString.write(fee, into: &buf)
-            FfiConverterString.write(feePerByte, into: &buf)
-            FfiConverterUInt32.write(bytes, into: &buf)
-            
-        
-        case let .error(error):
-            writeInt(&buf, Int32(3))
-            FfiConverterString.write(error, into: &buf)
-            
-        }
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorPrecomposedResult_lift(_ buf: RustBuffer) throws -> TrezorPrecomposedResult {
-    return try FfiConverterTypeTrezorPrecomposedResult.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorPrecomposedResult_lower(_ value: TrezorPrecomposedResult) -> RustBuffer {
-    return FfiConverterTypeTrezorPrecomposedResult.lower(value)
-}
-
-
-extension TrezorPrecomposedResult: Equatable, Hashable {}
-
-extension TrezorPrecomposedResult: Codable {}
-
-
-
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-/**
  * Script types for address derivation.
  */
 
@@ -15453,97 +15284,6 @@ public func FfiConverterTypeTrezorScriptType_lower(_ value: TrezorScriptType) ->
 extension TrezorScriptType: Equatable, Hashable {}
 
 extension TrezorScriptType: Codable {}
-
-
-
-
-
-
-// Note that we don't yet support `indirect` for enums.
-// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
-/**
- * Sorting strategy for transaction inputs and outputs.
- */
-
-public enum TrezorSortingStrategy {
-    
-    /**
-     * BIP-69: deterministic lexicographic sorting
-     */
-    case bip69
-    /**
-     * Random shuffle (better privacy)
-     */
-    case random
-    /**
-     * Keep original order
-     */
-    case none
-}
-
-
-#if compiler(>=6)
-extension TrezorSortingStrategy: Sendable {}
-#endif
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public struct FfiConverterTypeTrezorSortingStrategy: FfiConverterRustBuffer {
-    typealias SwiftType = TrezorSortingStrategy
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorSortingStrategy {
-        let variant: Int32 = try readInt(&buf)
-        switch variant {
-        
-        case 1: return .bip69
-        
-        case 2: return .random
-        
-        case 3: return .none
-        
-        default: throw UniffiInternalError.unexpectedEnumCase
-        }
-    }
-
-    public static func write(_ value: TrezorSortingStrategy, into buf: inout [UInt8]) {
-        switch value {
-        
-        
-        case .bip69:
-            writeInt(&buf, Int32(1))
-        
-        
-        case .random:
-            writeInt(&buf, Int32(2))
-        
-        
-        case .none:
-            writeInt(&buf, Int32(3))
-        
-        }
-    }
-}
-
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorSortingStrategy_lift(_ buf: RustBuffer) throws -> TrezorSortingStrategy {
-    return try FfiConverterTypeTrezorSortingStrategy.lift(buf)
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-public func FfiConverterTypeTrezorSortingStrategy_lower(_ value: TrezorSortingStrategy) -> RustBuffer {
-    return FfiConverterTypeTrezorSortingStrategy.lower(value)
-}
-
-
-extension TrezorSortingStrategy: Equatable, Hashable {}
-
-extension TrezorSortingStrategy: Codable {}
 
 
 
@@ -16582,6 +16322,30 @@ fileprivate struct FfiConverterOptionTypeCJitStateEnum: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeCoinSelection: FfiConverterRustBuffer {
+    typealias SwiftType = CoinSelection?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeCoinSelection.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeCoinSelection.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypeNetwork: FfiConverterRustBuffer {
     typealias SwiftType = Network?
 
@@ -16702,30 +16466,6 @@ fileprivate struct FfiConverterOptionTypeTrezorScriptType: FfiConverterRustBuffe
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
-fileprivate struct FfiConverterOptionTypeTrezorSortingStrategy: FfiConverterRustBuffer {
-    typealias SwiftType = TrezorSortingStrategy?
-
-    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
-        guard let value = value else {
-            writeInt(&buf, Int8(0))
-            return
-        }
-        writeInt(&buf, Int8(1))
-        FfiConverterTypeTrezorSortingStrategy.write(value, into: &buf)
-    }
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
-        switch try readInt(&buf) as Int8 {
-        case 0: return nil
-        case 1: return try FfiConverterTypeTrezorSortingStrategy.read(from: &buf)
-        default: throw UniffiInternalError.unexpectedOptionalTag
-        }
-    }
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
 fileprivate struct FfiConverterOptionTypeWordCount: FfiConverterRustBuffer {
     typealias SwiftType = WordCount?
 
@@ -16822,23 +16562,23 @@ fileprivate struct FfiConverterOptionDictionaryStringString: FfiConverterRustBuf
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
-fileprivate struct FfiConverterSequenceUInt32: FfiConverterRustBuffer {
-    typealias SwiftType = [UInt32]
+fileprivate struct FfiConverterSequenceFloat: FfiConverterRustBuffer {
+    typealias SwiftType = [Float]
 
-    public static func write(_ value: [UInt32], into buf: inout [UInt8]) {
+    public static func write(_ value: [Float], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
-            FfiConverterUInt32.write(item, into: &buf)
+            FfiConverterFloat.write(item, into: &buf)
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [UInt32] {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [Float] {
         let len: Int32 = try readInt(&buf)
-        var seq = [UInt32]()
+        var seq = [Float]()
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
-            seq.append(try FfiConverterUInt32.read(from: &buf))
+            seq.append(try FfiConverterFloat.read(from: &buf))
         }
         return seq
     }
@@ -17272,56 +17012,6 @@ fileprivate struct FfiConverterSequenceTypeTrezorDeviceInfo: FfiConverterRustBuf
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
-fileprivate struct FfiConverterSequenceTypeTrezorFeeLevel: FfiConverterRustBuffer {
-    typealias SwiftType = [TrezorFeeLevel]
-
-    public static func write(_ value: [TrezorFeeLevel], into buf: inout [UInt8]) {
-        let len = Int32(value.count)
-        writeInt(&buf, len)
-        for item in value {
-            FfiConverterTypeTrezorFeeLevel.write(item, into: &buf)
-        }
-    }
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TrezorFeeLevel] {
-        let len: Int32 = try readInt(&buf)
-        var seq = [TrezorFeeLevel]()
-        seq.reserveCapacity(Int(len))
-        for _ in 0 ..< len {
-            seq.append(try FfiConverterTypeTrezorFeeLevel.read(from: &buf))
-        }
-        return seq
-    }
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-fileprivate struct FfiConverterSequenceTypeTrezorPrecomposedInput: FfiConverterRustBuffer {
-    typealias SwiftType = [TrezorPrecomposedInput]
-
-    public static func write(_ value: [TrezorPrecomposedInput], into buf: inout [UInt8]) {
-        let len = Int32(value.count)
-        writeInt(&buf, len)
-        for item in value {
-            FfiConverterTypeTrezorPrecomposedInput.write(item, into: &buf)
-        }
-    }
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TrezorPrecomposedInput] {
-        let len: Int32 = try readInt(&buf)
-        var seq = [TrezorPrecomposedInput]()
-        seq.reserveCapacity(Int(len))
-        for _ in 0 ..< len {
-            seq.append(try FfiConverterTypeTrezorPrecomposedInput.read(from: &buf))
-        }
-        return seq
-    }
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
 fileprivate struct FfiConverterSequenceTypeTrezorPrevTx: FfiConverterRustBuffer {
     typealias SwiftType = [TrezorPrevTx]
 
@@ -17522,23 +17212,23 @@ fileprivate struct FfiConverterSequenceTypeActivity: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
-fileprivate struct FfiConverterSequenceTypeTrezorPrecomposeOutput: FfiConverterRustBuffer {
-    typealias SwiftType = [TrezorPrecomposeOutput]
+fileprivate struct FfiConverterSequenceTypeComposeOutput: FfiConverterRustBuffer {
+    typealias SwiftType = [ComposeOutput]
 
-    public static func write(_ value: [TrezorPrecomposeOutput], into buf: inout [UInt8]) {
+    public static func write(_ value: [ComposeOutput], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
-            FfiConverterTypeTrezorPrecomposeOutput.write(item, into: &buf)
+            FfiConverterTypeComposeOutput.write(item, into: &buf)
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TrezorPrecomposeOutput] {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ComposeOutput] {
         let len: Int32 = try readInt(&buf)
-        var seq = [TrezorPrecomposeOutput]()
+        var seq = [ComposeOutput]()
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
-            seq.append(try FfiConverterTypeTrezorPrecomposeOutput.read(from: &buf))
+            seq.append(try FfiConverterTypeComposeOutput.read(from: &buf))
         }
         return seq
     }
@@ -17547,48 +17237,23 @@ fileprivate struct FfiConverterSequenceTypeTrezorPrecomposeOutput: FfiConverterR
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
-fileprivate struct FfiConverterSequenceTypeTrezorPrecomposedOutput: FfiConverterRustBuffer {
-    typealias SwiftType = [TrezorPrecomposedOutput]
+fileprivate struct FfiConverterSequenceTypeComposeResult: FfiConverterRustBuffer {
+    typealias SwiftType = [ComposeResult]
 
-    public static func write(_ value: [TrezorPrecomposedOutput], into buf: inout [UInt8]) {
+    public static func write(_ value: [ComposeResult], into buf: inout [UInt8]) {
         let len = Int32(value.count)
         writeInt(&buf, len)
         for item in value {
-            FfiConverterTypeTrezorPrecomposedOutput.write(item, into: &buf)
+            FfiConverterTypeComposeResult.write(item, into: &buf)
         }
     }
 
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TrezorPrecomposedOutput] {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ComposeResult] {
         let len: Int32 = try readInt(&buf)
-        var seq = [TrezorPrecomposedOutput]()
+        var seq = [ComposeResult]()
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
-            seq.append(try FfiConverterTypeTrezorPrecomposedOutput.read(from: &buf))
-        }
-        return seq
-    }
-}
-
-#if swift(>=5.8)
-@_documentation(visibility: private)
-#endif
-fileprivate struct FfiConverterSequenceTypeTrezorPrecomposedResult: FfiConverterRustBuffer {
-    typealias SwiftType = [TrezorPrecomposedResult]
-
-    public static func write(_ value: [TrezorPrecomposedResult], into buf: inout [UInt8]) {
-        let len = Int32(value.count)
-        writeInt(&buf, len)
-        for item in value {
-            FfiConverterTypeTrezorPrecomposedResult.write(item, into: &buf)
-        }
-    }
-
-    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TrezorPrecomposedResult] {
-        let len: Int32 = try readInt(&buf)
-        var seq = [TrezorPrecomposedResult]()
-        seq.reserveCapacity(Int(len))
-        for _ in 0 ..< len {
-            seq.append(try FfiConverterTypeTrezorPrecomposedResult.read(from: &buf))
+            seq.append(try FfiConverterTypeComposeResult.read(from: &buf))
         }
         return seq
     }
@@ -18294,6 +17959,29 @@ public func onchainBroadcastRawTx(serializedTx: String, electrumUrl: String)asyn
         )
 }
 /**
+ * Compose a transaction for multiple fee rates, returning one PSBT per rate.
+ *
+ * Creates a BDK wallet from the extended key, syncs via Electrum, then
+ * builds PSBTs using BDK's TxBuilder. The PSBTs include BIP32 derivation
+ * paths (when fingerprint is provided) and are ready for signing by any
+ * PSBT-compatible signer (Trezor, Ledger, software wallet, etc.).
+ */
+public func onchainComposeTransaction(params: ComposeParams)async  -> [ComposeResult]  {
+    return
+        try!  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_onchain_compose_transaction(FfiConverterTypeComposeParams_lower(params)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeComposeResult.lift,
+            errorHandler: nil
+            
+        )
+}
+/**
  * Query account information for an extended public key via Electrum.
  */
 public func onchainGetAccountInfo(extendedKey: String, electrumUrl: String, network: Network?, gapLimit: UInt32?, scriptType: AccountType?)async throws  -> AccountInfoResult  {
@@ -18603,29 +18291,6 @@ public func trezorDisconnect()async throws   {
         )
 }
 /**
- * Fetch previous transactions from Electrum for Trezor signing.
- *
- * Takes transaction IDs (from TrezorSignTxParams inputs' prev_hash fields),
- * fetches the full transactions from Electrum, and returns them as
- * TrezorPrevTx structures ready to merge into TrezorSignTxParams.prev_txs.
- *
- * Duplicate txids are automatically deduplicated.
- */
-public func trezorFetchPrevTxs(txids: [String], electrumUrl: String)async throws  -> [TrezorPrevTx]  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_trezor_fetch_prev_txs(FfiConverterSequenceString.lower(txids),FfiConverterString.lower(electrumUrl)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
-            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
-            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterSequenceTypeTrezorPrevTx.lift,
-            errorHandler: FfiConverterTypeAccountInfoError_lift
-        )
-}
-/**
  * Get a Bitcoin address from the connected Trezor device.
  */
 public func trezorGetAddress(params: TrezorGetAddressParams)async throws  -> TrezorAddressResponse  {
@@ -18804,32 +18469,6 @@ public func trezorListDevices()async throws  -> [TrezorDeviceInfo]  {
             liftFunc: FfiConverterSequenceTypeTrezorDeviceInfo.lift,
             errorHandler: FfiConverterTypeTrezorError_lift
         )
-}
-/**
- * Compose a transaction offline for multiple fee levels.
- *
- * No device interaction needed — pure coin selection and fee calculation.
- */
-public func trezorPrecomposeTransaction(params: TrezorPrecomposeParams) -> [TrezorPrecomposedResult]  {
-    return try!  FfiConverterSequenceTypeTrezorPrecomposedResult.lift(try! rustCall() {
-    uniffi_bitkitcore_fn_func_trezor_precompose_transaction(
-        FfiConverterTypeTrezorPrecomposeParams_lower(params),$0
-    )
-})
-}
-/**
- * Convert precomposed results into signing parameters for trezor_sign_tx.
- *
- * The returned params have empty prev_txs — add them before signing.
- */
-public func trezorPrecomposedToSignParams(inputs: [TrezorPrecomposedInput], outputs: [TrezorPrecomposedOutput], coin: TrezorCoinType?)throws  -> TrezorSignTxParams  {
-    return try  FfiConverterTypeTrezorSignTxParams_lift(try rustCallWithError(FfiConverterTypeTrezorError_lift) {
-    uniffi_bitkitcore_fn_func_trezor_precomposed_to_sign_params(
-        FfiConverterSequenceTypeTrezorPrecomposedInput.lower(inputs),
-        FfiConverterSequenceTypeTrezorPrecomposedOutput.lower(outputs),
-        FfiConverterOptionTypeTrezorCoinType.lower(coin),$0
-    )
-})
 }
 /**
  * Scan for available Trezor devices (USB + Bluetooth).
@@ -19307,6 +18946,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx() != 45163) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_onchain_compose_transaction() != 20767) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 30087) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -19376,9 +19018,6 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_trezor_disconnect() != 48780) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_trezor_fetch_prev_txs() != 46921) {
-        return InitializationResult.apiChecksumMismatch
-    }
     if (uniffi_bitkitcore_checksum_func_trezor_get_address() != 12910) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -19407,12 +19046,6 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_list_devices() != 32859) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_bitkitcore_checksum_func_trezor_precompose_transaction() != 56637) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_bitkitcore_checksum_func_trezor_precomposed_to_sign_params() != 45966) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_scan() != 54763) {

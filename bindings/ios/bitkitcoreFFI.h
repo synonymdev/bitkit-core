@@ -785,6 +785,11 @@ RustBuffer uniffi_bitkitcore_fn_func_mnemonic_to_seed(RustBuffer mnemonic_phrase
 uint64_t uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx(RustBuffer serialized_tx, RustBuffer electrum_url
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_COMPOSE_TRANSACTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_COMPOSE_TRANSACTION
+uint64_t uniffi_bitkitcore_fn_func_onchain_compose_transaction(RustBuffer params
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_GET_ACCOUNT_INFO
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_GET_ACCOUNT_INFO
 uint64_t uniffi_bitkitcore_fn_func_onchain_get_account_info(RustBuffer extended_key, RustBuffer electrum_url, RustBuffer network, RustBuffer gap_limit, RustBuffer script_type
@@ -903,11 +908,6 @@ uint64_t uniffi_bitkitcore_fn_func_trezor_disconnect(void
     
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_FETCH_PREV_TXS
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_FETCH_PREV_TXS
-uint64_t uniffi_bitkitcore_fn_func_trezor_fetch_prev_txs(RustBuffer txids, RustBuffer electrum_url
-);
-#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_ADDRESS
 uint64_t uniffi_bitkitcore_fn_func_trezor_get_address(RustBuffer params
@@ -963,16 +963,6 @@ uint64_t uniffi_bitkitcore_fn_func_trezor_is_initialized(void
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_LIST_DEVICES
 uint64_t uniffi_bitkitcore_fn_func_trezor_list_devices(void
     
-);
-#endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_PRECOMPOSE_TRANSACTION
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_PRECOMPOSE_TRANSACTION
-RustBuffer uniffi_bitkitcore_fn_func_trezor_precompose_transaction(RustBuffer params, RustCallStatus *_Nonnull out_status
-);
-#endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_PRECOMPOSED_TO_SIGN_PARAMS
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_PRECOMPOSED_TO_SIGN_PARAMS
-RustBuffer uniffi_bitkitcore_fn_func_trezor_precomposed_to_sign_params(RustBuffer inputs, RustBuffer outputs, RustBuffer coin, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SCAN
@@ -1761,6 +1751,12 @@ uint16_t uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_COMPOSE_TRANSACTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_COMPOSE_TRANSACTION
+uint16_t uniffi_bitkitcore_checksum_func_onchain_compose_transaction(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_ACCOUNT_INFO
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_ACCOUNT_INFO
 uint16_t uniffi_bitkitcore_checksum_func_onchain_get_account_info(void
@@ -1899,12 +1895,6 @@ uint16_t uniffi_bitkitcore_checksum_func_trezor_disconnect(void
     
 );
 #endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_FETCH_PREV_TXS
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_FETCH_PREV_TXS
-uint16_t uniffi_bitkitcore_checksum_func_trezor_fetch_prev_txs(void
-    
-);
-#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_ADDRESS
 uint16_t uniffi_bitkitcore_checksum_func_trezor_get_address(void
@@ -1962,18 +1952,6 @@ uint16_t uniffi_bitkitcore_checksum_func_trezor_is_initialized(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_LIST_DEVICES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_LIST_DEVICES
 uint16_t uniffi_bitkitcore_checksum_func_trezor_list_devices(void
-    
-);
-#endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_PRECOMPOSE_TRANSACTION
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_PRECOMPOSE_TRANSACTION
-uint16_t uniffi_bitkitcore_checksum_func_trezor_precompose_transaction(void
-    
-);
-#endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_PRECOMPOSED_TO_SIGN_PARAMS
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_PRECOMPOSED_TO_SIGN_PARAMS
-uint16_t uniffi_bitkitcore_checksum_func_trezor_precomposed_to_sign_params(void
     
 );
 #endif

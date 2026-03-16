@@ -1399,10 +1399,6 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
-
-
-
-
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1628,6 +1624,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx() != 45163.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_onchain_compose_transaction() != 20767.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 30087.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1697,9 +1696,6 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_trezor_disconnect() != 48780.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_fetch_prev_txs() != 46921.toShort()) {
-            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-        }
         if (uniffi_bitkitcore_checksum_func_trezor_get_address() != 12910.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1728,12 +1724,6 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_list_devices() != 32859.toShort()) {
-            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-        }
-        if (uniffi_bitkitcore_checksum_func_trezor_precompose_transaction() != 56637.toShort()) {
-            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-        }
-        if (uniffi_bitkitcore_checksum_func_trezor_precomposed_to_sign_params() != 45966.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_scan() != 54763.toShort()) {
@@ -2043,6 +2033,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_onchain_compose_transaction(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_onchain_get_account_info(
     ): Short
     @JvmStatic
@@ -2112,9 +2105,6 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_trezor_disconnect(
     ): Short
     @JvmStatic
-    external fun uniffi_bitkitcore_checksum_func_trezor_fetch_prev_txs(
-    ): Short
-    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_get_address(
     ): Short
     @JvmStatic
@@ -2143,12 +2133,6 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_list_devices(
-    ): Short
-    @JvmStatic
-    external fun uniffi_bitkitcore_checksum_func_trezor_precompose_transaction(
-    ): Short
-    @JvmStatic
-    external fun uniffi_bitkitcore_checksum_func_trezor_precomposed_to_sign_params(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_scan(
@@ -2735,6 +2719,10 @@ internal object UniffiLib : Library {
         `electrumUrl`: RustBufferByValue,
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_onchain_compose_transaction(
+        `params`: RustBufferByValue,
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_onchain_get_account_info(
         `extendedKey`: RustBufferByValue,
         `electrumUrl`: RustBufferByValue,
@@ -2858,11 +2846,6 @@ internal object UniffiLib : Library {
     external fun uniffi_bitkitcore_fn_func_trezor_disconnect(
     ): Long
     @JvmStatic
-    external fun uniffi_bitkitcore_fn_func_trezor_fetch_prev_txs(
-        `txids`: RustBufferByValue,
-        `electrumUrl`: RustBufferByValue,
-    ): Long
-    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_get_address(
         `params`: RustBufferByValue,
     ): Long
@@ -2896,18 +2879,6 @@ internal object UniffiLib : Library {
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_list_devices(
     ): Long
-    @JvmStatic
-    external fun uniffi_bitkitcore_fn_func_trezor_precompose_transaction(
-        `params`: RustBufferByValue,
-        uniffiCallStatus: UniffiRustCallStatus,
-    ): RustBufferByValue
-    @JvmStatic
-    external fun uniffi_bitkitcore_fn_func_trezor_precomposed_to_sign_params(
-        `inputs`: RustBufferByValue,
-        `outputs`: RustBufferByValue,
-        `coin`: RustBufferByValue,
-        uniffiCallStatus: UniffiRustCallStatus,
-    ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_scan(
     ): Long
@@ -3474,6 +3445,27 @@ public object FfiConverterLong: FfiConverter<Long, Long> {
 
     override fun write(value: Long, buf: ByteBuffer) {
         buf.putLong(value)
+    }
+}
+
+
+public object FfiConverterFloat: FfiConverter<Float, Float> {
+    override fun lift(value: Float): Float {
+        return value
+    }
+
+    override fun read(buf: ByteBuffer): Float {
+        return buf.getFloat()
+    }
+
+    override fun lower(value: Float): Float {
+        return value
+    }
+
+    override fun allocationSize(value: Float): ULong = 4UL
+
+    override fun write(value: Float, buf: ByteBuffer) {
+        buf.putFloat(value)
     }
 }
 
@@ -4725,6 +4717,34 @@ public object FfiConverterTypeComposeAccount: FfiConverterRustBuffer<ComposeAcco
         FfiConverterString.write(value.`path`, buf)
         FfiConverterTypeAccountAddresses.write(value.`addresses`, buf)
         FfiConverterSequenceTypeAccountUtxo.write(value.`utxo`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeComposeParams: FfiConverterRustBuffer<ComposeParams> {
+    override fun read(buf: ByteBuffer): ComposeParams {
+        return ComposeParams(
+            FfiConverterTypeWalletParams.read(buf),
+            FfiConverterSequenceTypeComposeOutput.read(buf),
+            FfiConverterSequenceFloat.read(buf),
+            FfiConverterOptionalTypeCoinSelection.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ComposeParams): ULong = (
+            FfiConverterTypeWalletParams.allocationSize(value.`wallet`) +
+            FfiConverterSequenceTypeComposeOutput.allocationSize(value.`outputs`) +
+            FfiConverterSequenceFloat.allocationSize(value.`feeRates`) +
+            FfiConverterOptionalTypeCoinSelection.allocationSize(value.`coinSelection`)
+    )
+
+    override fun write(value: ComposeParams, buf: ByteBuffer) {
+        FfiConverterTypeWalletParams.write(value.`wallet`, buf)
+        FfiConverterSequenceTypeComposeOutput.write(value.`outputs`, buf)
+        FfiConverterSequenceFloat.write(value.`feeRates`, buf)
+        FfiConverterOptionalTypeCoinSelection.write(value.`coinSelection`, buf)
     }
 }
 
@@ -6696,31 +6716,6 @@ public object FfiConverterTypeTrezorFeatures: FfiConverterRustBuffer<TrezorFeatu
 
 
 
-public object FfiConverterTypeTrezorFeeLevel: FfiConverterRustBuffer<TrezorFeeLevel> {
-    override fun read(buf: ByteBuffer): TrezorFeeLevel {
-        return TrezorFeeLevel(
-            FfiConverterString.read(buf),
-            FfiConverterOptionalULong.read(buf),
-            FfiConverterOptionalBoolean.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: TrezorFeeLevel): ULong = (
-            FfiConverterString.allocationSize(value.`feePerUnit`) +
-            FfiConverterOptionalULong.allocationSize(value.`baseFee`) +
-            FfiConverterOptionalBoolean.allocationSize(value.`floorBaseFee`)
-    )
-
-    override fun write(value: TrezorFeeLevel, buf: ByteBuffer) {
-        FfiConverterString.write(value.`feePerUnit`, buf)
-        FfiConverterOptionalULong.write(value.`baseFee`, buf)
-        FfiConverterOptionalBoolean.write(value.`floorBaseFee`, buf)
-    }
-}
-
-
-
-
 public object FfiConverterTypeTrezorGetAddressParams: FfiConverterRustBuffer<TrezorGetAddressParams> {
     override fun read(buf: ByteBuffer): TrezorGetAddressParams {
         return TrezorGetAddressParams(
@@ -6768,74 +6763,6 @@ public object FfiConverterTypeTrezorGetPublicKeyParams: FfiConverterRustBuffer<T
         FfiConverterString.write(value.`path`, buf)
         FfiConverterOptionalTypeTrezorCoinType.write(value.`coin`, buf)
         FfiConverterBoolean.write(value.`showOnTrezor`, buf)
-    }
-}
-
-
-
-
-public object FfiConverterTypeTrezorPrecomposeParams: FfiConverterRustBuffer<TrezorPrecomposeParams> {
-    override fun read(buf: ByteBuffer): TrezorPrecomposeParams {
-        return TrezorPrecomposeParams(
-            FfiConverterSequenceTypeTrezorPrecomposeOutput.read(buf),
-            FfiConverterOptionalTypeTrezorCoinType.read(buf),
-            FfiConverterTypeComposeAccount.read(buf),
-            FfiConverterSequenceTypeTrezorFeeLevel.read(buf),
-            FfiConverterOptionalUInt.read(buf),
-            FfiConverterOptionalTypeTrezorSortingStrategy.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: TrezorPrecomposeParams): ULong = (
-            FfiConverterSequenceTypeTrezorPrecomposeOutput.allocationSize(value.`outputs`) +
-            FfiConverterOptionalTypeTrezorCoinType.allocationSize(value.`coin`) +
-            FfiConverterTypeComposeAccount.allocationSize(value.`account`) +
-            FfiConverterSequenceTypeTrezorFeeLevel.allocationSize(value.`feeLevels`) +
-            FfiConverterOptionalUInt.allocationSize(value.`sequence`) +
-            FfiConverterOptionalTypeTrezorSortingStrategy.allocationSize(value.`sortingStrategy`)
-    )
-
-    override fun write(value: TrezorPrecomposeParams, buf: ByteBuffer) {
-        FfiConverterSequenceTypeTrezorPrecomposeOutput.write(value.`outputs`, buf)
-        FfiConverterOptionalTypeTrezorCoinType.write(value.`coin`, buf)
-        FfiConverterTypeComposeAccount.write(value.`account`, buf)
-        FfiConverterSequenceTypeTrezorFeeLevel.write(value.`feeLevels`, buf)
-        FfiConverterOptionalUInt.write(value.`sequence`, buf)
-        FfiConverterOptionalTypeTrezorSortingStrategy.write(value.`sortingStrategy`, buf)
-    }
-}
-
-
-
-
-public object FfiConverterTypeTrezorPrecomposedInput: FfiConverterRustBuffer<TrezorPrecomposedInput> {
-    override fun read(buf: ByteBuffer): TrezorPrecomposedInput {
-        return TrezorPrecomposedInput(
-            FfiConverterString.read(buf),
-            FfiConverterUInt.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterTypeTrezorScriptType.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: TrezorPrecomposedInput): ULong = (
-            FfiConverterString.allocationSize(value.`txid`) +
-            FfiConverterUInt.allocationSize(value.`vout`) +
-            FfiConverterString.allocationSize(value.`amount`) +
-            FfiConverterString.allocationSize(value.`address`) +
-            FfiConverterString.allocationSize(value.`path`) +
-            FfiConverterTypeTrezorScriptType.allocationSize(value.`scriptType`)
-    )
-
-    override fun write(value: TrezorPrecomposedInput, buf: ByteBuffer) {
-        FfiConverterString.write(value.`txid`, buf)
-        FfiConverterUInt.write(value.`vout`, buf)
-        FfiConverterString.write(value.`amount`, buf)
-        FfiConverterString.write(value.`address`, buf)
-        FfiConverterString.write(value.`path`, buf)
-        FfiConverterTypeTrezorScriptType.write(value.`scriptType`, buf)
     }
 }
 
@@ -7299,6 +7226,37 @@ public object FfiConverterTypeValidationResult: FfiConverterRustBuffer<Validatio
         FfiConverterString.write(value.`address`, buf)
         FfiConverterTypeNetworkType.write(value.`network`, buf)
         FfiConverterTypeAddressType.write(value.`addressType`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeWalletParams: FfiConverterRustBuffer<WalletParams> {
+    override fun read(buf: ByteBuffer): WalletParams {
+        return WalletParams(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalTypeNetwork.read(buf),
+            FfiConverterOptionalTypeAccountType.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: WalletParams): ULong = (
+            FfiConverterString.allocationSize(value.`extendedKey`) +
+            FfiConverterString.allocationSize(value.`electrumUrl`) +
+            FfiConverterOptionalString.allocationSize(value.`fingerprint`) +
+            FfiConverterOptionalTypeNetwork.allocationSize(value.`network`) +
+            FfiConverterOptionalTypeAccountType.allocationSize(value.`accountType`)
+    )
+
+    override fun write(value: WalletParams, buf: ByteBuffer) {
+        FfiConverterString.write(value.`extendedKey`, buf)
+        FfiConverterString.write(value.`electrumUrl`, buf)
+        FfiConverterOptionalString.write(value.`fingerprint`, buf)
+        FfiConverterOptionalTypeNetwork.write(value.`network`, buf)
+        FfiConverterOptionalTypeAccountType.write(value.`accountType`, buf)
     }
 }
 
@@ -8181,6 +8139,151 @@ public object FfiConverterTypeCJitStateEnum: FfiConverterRustBuffer<CJitStateEnu
 
     override fun write(value: CJitStateEnum, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeCoinSelection: FfiConverterRustBuffer<CoinSelection> {
+    override fun read(buf: ByteBuffer): CoinSelection = try {
+        CoinSelection.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: CoinSelection): ULong = 4UL
+
+    override fun write(value: CoinSelection, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeComposeOutput : FfiConverterRustBuffer<ComposeOutput>{
+    override fun read(buf: ByteBuffer): ComposeOutput {
+        return when(buf.getInt()) {
+            1 -> ComposeOutput.Payment(
+                FfiConverterString.read(buf),
+                FfiConverterULong.read(buf),
+                )
+            2 -> ComposeOutput.SendMax(
+                FfiConverterString.read(buf),
+                )
+            3 -> ComposeOutput.OpReturn(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: ComposeOutput): ULong = when(value) {
+        is ComposeOutput.Payment -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`address`)
+                + FfiConverterULong.allocationSize(value.`amountSats`)
+            )
+        }
+        is ComposeOutput.SendMax -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`address`)
+            )
+        }
+        is ComposeOutput.OpReturn -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`dataHex`)
+            )
+        }
+    }
+
+    override fun write(value: ComposeOutput, buf: ByteBuffer) {
+        when(value) {
+            is ComposeOutput.Payment -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`address`, buf)
+                FfiConverterULong.write(value.`amountSats`, buf)
+                Unit
+            }
+            is ComposeOutput.SendMax -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`address`, buf)
+                Unit
+            }
+            is ComposeOutput.OpReturn -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`dataHex`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeComposeResult : FfiConverterRustBuffer<ComposeResult>{
+    override fun read(buf: ByteBuffer): ComposeResult {
+        return when(buf.getInt()) {
+            1 -> ComposeResult.Success(
+                FfiConverterString.read(buf),
+                FfiConverterULong.read(buf),
+                FfiConverterFloat.read(buf),
+                FfiConverterULong.read(buf),
+                )
+            2 -> ComposeResult.Error(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: ComposeResult): ULong = when(value) {
+        is ComposeResult.Success -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`psbt`)
+                + FfiConverterULong.allocationSize(value.`fee`)
+                + FfiConverterFloat.allocationSize(value.`feeRate`)
+                + FfiConverterULong.allocationSize(value.`totalSpent`)
+            )
+        }
+        is ComposeResult.Error -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`error`)
+            )
+        }
+    }
+
+    override fun write(value: ComposeResult, buf: ByteBuffer) {
+        when(value) {
+            is ComposeResult.Success -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`psbt`, buf)
+                FfiConverterULong.write(value.`fee`, buf)
+                FfiConverterFloat.write(value.`feeRate`, buf)
+                FfiConverterULong.write(value.`totalSpent`, buf)
+                Unit
+            }
+            is ComposeResult.Error -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`error`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
 }
 
@@ -9160,272 +9263,6 @@ public object FfiConverterTypeTrezorError : FfiConverterRustBuffer<TrezorExcepti
 
 
 
-public object FfiConverterTypeTrezorPrecomposeOutput : FfiConverterRustBuffer<TrezorPrecomposeOutput>{
-    override fun read(buf: ByteBuffer): TrezorPrecomposeOutput {
-        return when(buf.getInt()) {
-            1 -> TrezorPrecomposeOutput.Payment(
-                FfiConverterString.read(buf),
-                FfiConverterString.read(buf),
-                )
-            2 -> TrezorPrecomposeOutput.PaymentNoAddress(
-                FfiConverterString.read(buf),
-                )
-            3 -> TrezorPrecomposeOutput.SendMax(
-                FfiConverterString.read(buf),
-                )
-            4 -> TrezorPrecomposeOutput.SendMaxNoAddress
-            5 -> TrezorPrecomposeOutput.OpReturn(
-                FfiConverterString.read(buf),
-                )
-            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
-        }
-    }
-
-    override fun allocationSize(value: TrezorPrecomposeOutput): ULong = when(value) {
-        is TrezorPrecomposeOutput.Payment -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`address`)
-                + FfiConverterString.allocationSize(value.`amount`)
-            )
-        }
-        is TrezorPrecomposeOutput.PaymentNoAddress -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`amount`)
-            )
-        }
-        is TrezorPrecomposeOutput.SendMax -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`address`)
-            )
-        }
-        is TrezorPrecomposeOutput.SendMaxNoAddress -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-            )
-        }
-        is TrezorPrecomposeOutput.OpReturn -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`dataHex`)
-            )
-        }
-    }
-
-    override fun write(value: TrezorPrecomposeOutput, buf: ByteBuffer) {
-        when(value) {
-            is TrezorPrecomposeOutput.Payment -> {
-                buf.putInt(1)
-                FfiConverterString.write(value.`address`, buf)
-                FfiConverterString.write(value.`amount`, buf)
-                Unit
-            }
-            is TrezorPrecomposeOutput.PaymentNoAddress -> {
-                buf.putInt(2)
-                FfiConverterString.write(value.`amount`, buf)
-                Unit
-            }
-            is TrezorPrecomposeOutput.SendMax -> {
-                buf.putInt(3)
-                FfiConverterString.write(value.`address`, buf)
-                Unit
-            }
-            is TrezorPrecomposeOutput.SendMaxNoAddress -> {
-                buf.putInt(4)
-                Unit
-            }
-            is TrezorPrecomposeOutput.OpReturn -> {
-                buf.putInt(5)
-                FfiConverterString.write(value.`dataHex`, buf)
-                Unit
-            }
-        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
-    }
-}
-
-
-
-
-
-public object FfiConverterTypeTrezorPrecomposedOutput : FfiConverterRustBuffer<TrezorPrecomposedOutput>{
-    override fun read(buf: ByteBuffer): TrezorPrecomposedOutput {
-        return when(buf.getInt()) {
-            1 -> TrezorPrecomposedOutput.Payment(
-                FfiConverterString.read(buf),
-                FfiConverterString.read(buf),
-                )
-            2 -> TrezorPrecomposedOutput.Change(
-                FfiConverterString.read(buf),
-                FfiConverterString.read(buf),
-                FfiConverterString.read(buf),
-                FfiConverterTypeTrezorScriptType.read(buf),
-                )
-            3 -> TrezorPrecomposedOutput.OpReturn(
-                FfiConverterString.read(buf),
-                )
-            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
-        }
-    }
-
-    override fun allocationSize(value: TrezorPrecomposedOutput): ULong = when(value) {
-        is TrezorPrecomposedOutput.Payment -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`address`)
-                + FfiConverterString.allocationSize(value.`amount`)
-            )
-        }
-        is TrezorPrecomposedOutput.Change -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`address`)
-                + FfiConverterString.allocationSize(value.`path`)
-                + FfiConverterString.allocationSize(value.`amount`)
-                + FfiConverterTypeTrezorScriptType.allocationSize(value.`scriptType`)
-            )
-        }
-        is TrezorPrecomposedOutput.OpReturn -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`dataHex`)
-            )
-        }
-    }
-
-    override fun write(value: TrezorPrecomposedOutput, buf: ByteBuffer) {
-        when(value) {
-            is TrezorPrecomposedOutput.Payment -> {
-                buf.putInt(1)
-                FfiConverterString.write(value.`address`, buf)
-                FfiConverterString.write(value.`amount`, buf)
-                Unit
-            }
-            is TrezorPrecomposedOutput.Change -> {
-                buf.putInt(2)
-                FfiConverterString.write(value.`address`, buf)
-                FfiConverterString.write(value.`path`, buf)
-                FfiConverterString.write(value.`amount`, buf)
-                FfiConverterTypeTrezorScriptType.write(value.`scriptType`, buf)
-                Unit
-            }
-            is TrezorPrecomposedOutput.OpReturn -> {
-                buf.putInt(3)
-                FfiConverterString.write(value.`dataHex`, buf)
-                Unit
-            }
-        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
-    }
-}
-
-
-
-
-
-public object FfiConverterTypeTrezorPrecomposedResult : FfiConverterRustBuffer<TrezorPrecomposedResult>{
-    override fun read(buf: ByteBuffer): TrezorPrecomposedResult {
-        return when(buf.getInt()) {
-            1 -> TrezorPrecomposedResult.Final(
-                FfiConverterString.read(buf),
-                FfiConverterString.read(buf),
-                FfiConverterString.read(buf),
-                FfiConverterUInt.read(buf),
-                FfiConverterSequenceTypeTrezorPrecomposedInput.read(buf),
-                FfiConverterSequenceTypeTrezorPrecomposedOutput.read(buf),
-                FfiConverterSequenceUInt.read(buf),
-                )
-            2 -> TrezorPrecomposedResult.NonFinal(
-                FfiConverterOptionalString.read(buf),
-                FfiConverterString.read(buf),
-                FfiConverterString.read(buf),
-                FfiConverterString.read(buf),
-                FfiConverterUInt.read(buf),
-                )
-            3 -> TrezorPrecomposedResult.Error(
-                FfiConverterString.read(buf),
-                )
-            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
-        }
-    }
-
-    override fun allocationSize(value: TrezorPrecomposedResult): ULong = when(value) {
-        is TrezorPrecomposedResult.Final -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`totalSpent`)
-                + FfiConverterString.allocationSize(value.`fee`)
-                + FfiConverterString.allocationSize(value.`feePerByte`)
-                + FfiConverterUInt.allocationSize(value.`bytes`)
-                + FfiConverterSequenceTypeTrezorPrecomposedInput.allocationSize(value.`inputs`)
-                + FfiConverterSequenceTypeTrezorPrecomposedOutput.allocationSize(value.`outputs`)
-                + FfiConverterSequenceUInt.allocationSize(value.`outputsPermutation`)
-            )
-        }
-        is TrezorPrecomposedResult.NonFinal -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterOptionalString.allocationSize(value.`max`)
-                + FfiConverterString.allocationSize(value.`totalSpent`)
-                + FfiConverterString.allocationSize(value.`fee`)
-                + FfiConverterString.allocationSize(value.`feePerByte`)
-                + FfiConverterUInt.allocationSize(value.`bytes`)
-            )
-        }
-        is TrezorPrecomposedResult.Error -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`error`)
-            )
-        }
-    }
-
-    override fun write(value: TrezorPrecomposedResult, buf: ByteBuffer) {
-        when(value) {
-            is TrezorPrecomposedResult.Final -> {
-                buf.putInt(1)
-                FfiConverterString.write(value.`totalSpent`, buf)
-                FfiConverterString.write(value.`fee`, buf)
-                FfiConverterString.write(value.`feePerByte`, buf)
-                FfiConverterUInt.write(value.`bytes`, buf)
-                FfiConverterSequenceTypeTrezorPrecomposedInput.write(value.`inputs`, buf)
-                FfiConverterSequenceTypeTrezorPrecomposedOutput.write(value.`outputs`, buf)
-                FfiConverterSequenceUInt.write(value.`outputsPermutation`, buf)
-                Unit
-            }
-            is TrezorPrecomposedResult.NonFinal -> {
-                buf.putInt(2)
-                FfiConverterOptionalString.write(value.`max`, buf)
-                FfiConverterString.write(value.`totalSpent`, buf)
-                FfiConverterString.write(value.`fee`, buf)
-                FfiConverterString.write(value.`feePerByte`, buf)
-                FfiConverterUInt.write(value.`bytes`, buf)
-                Unit
-            }
-            is TrezorPrecomposedResult.Error -> {
-                buf.putInt(3)
-                FfiConverterString.write(value.`error`, buf)
-                Unit
-            }
-        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
-    }
-}
-
-
-
-
-
 public object FfiConverterTypeTrezorScriptType: FfiConverterRustBuffer<TrezorScriptType> {
     override fun read(buf: ByteBuffer): TrezorScriptType = try {
         TrezorScriptType.entries[buf.getInt() - 1]
@@ -9436,24 +9273,6 @@ public object FfiConverterTypeTrezorScriptType: FfiConverterRustBuffer<TrezorScr
     override fun allocationSize(value: TrezorScriptType): ULong = 4UL
 
     override fun write(value: TrezorScriptType, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
-    }
-}
-
-
-
-
-
-public object FfiConverterTypeTrezorSortingStrategy: FfiConverterRustBuffer<TrezorSortingStrategy> {
-    override fun read(buf: ByteBuffer): TrezorSortingStrategy = try {
-        TrezorSortingStrategy.entries[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
-    }
-
-    override fun allocationSize(value: TrezorSortingStrategy): ULong = 4UL
-
-    override fun write(value: TrezorSortingStrategy, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
@@ -10512,6 +10331,35 @@ public object FfiConverterOptionalTypeCJitStateEnum: FfiConverterRustBuffer<CJit
 
 
 
+public object FfiConverterOptionalTypeCoinSelection: FfiConverterRustBuffer<CoinSelection?> {
+    override fun read(buf: ByteBuffer): CoinSelection? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeCoinSelection.read(buf)
+    }
+
+    override fun allocationSize(value: CoinSelection?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeCoinSelection.allocationSize(value)
+        }
+    }
+
+    override fun write(value: CoinSelection?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeCoinSelection.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeNetwork: FfiConverterRustBuffer<Network?> {
     override fun read(buf: ByteBuffer): Network? {
         if (buf.get().toInt() == 0) {
@@ -10657,35 +10505,6 @@ public object FfiConverterOptionalTypeTrezorScriptType: FfiConverterRustBuffer<T
 
 
 
-public object FfiConverterOptionalTypeTrezorSortingStrategy: FfiConverterRustBuffer<TrezorSortingStrategy?> {
-    override fun read(buf: ByteBuffer): TrezorSortingStrategy? {
-        if (buf.get().toInt() == 0) {
-            return null
-        }
-        return FfiConverterTypeTrezorSortingStrategy.read(buf)
-    }
-
-    override fun allocationSize(value: TrezorSortingStrategy?): ULong {
-        if (value == null) {
-            return 1UL
-        } else {
-            return 1UL + FfiConverterTypeTrezorSortingStrategy.allocationSize(value)
-        }
-    }
-
-    override fun write(value: TrezorSortingStrategy?, buf: ByteBuffer) {
-        if (value == null) {
-            buf.put(0)
-        } else {
-            buf.put(1)
-            FfiConverterTypeTrezorSortingStrategy.write(value, buf)
-        }
-    }
-}
-
-
-
-
 public object FfiConverterOptionalTypeWordCount: FfiConverterRustBuffer<WordCount?> {
     override fun read(buf: ByteBuffer): WordCount? {
         if (buf.get().toInt() == 0) {
@@ -10802,24 +10621,24 @@ public object FfiConverterOptionalMapStringString: FfiConverterRustBuffer<Map<ko
 
 
 
-public object FfiConverterSequenceUInt: FfiConverterRustBuffer<List<kotlin.UInt>> {
-    override fun read(buf: ByteBuffer): List<kotlin.UInt> {
+public object FfiConverterSequenceFloat: FfiConverterRustBuffer<List<kotlin.Float>> {
+    override fun read(buf: ByteBuffer): List<kotlin.Float> {
         val len = buf.getInt()
-        return List<kotlin.UInt>(len) {
-            FfiConverterUInt.read(buf)
+        return List<kotlin.Float>(len) {
+            FfiConverterFloat.read(buf)
         }
     }
 
-    override fun allocationSize(value: List<kotlin.UInt>): ULong {
+    override fun allocationSize(value: List<kotlin.Float>): ULong {
         val sizeForLength = 4UL
-        val sizeForItems = value.sumOf { FfiConverterUInt.allocationSize(it) }
+        val sizeForItems = value.sumOf { FfiConverterFloat.allocationSize(it) }
         return sizeForLength + sizeForItems
     }
 
-    override fun write(value: List<kotlin.UInt>, buf: ByteBuffer) {
+    override fun write(value: List<kotlin.Float>, buf: ByteBuffer) {
         buf.putInt(value.size)
         value.iterator().forEach {
-            FfiConverterUInt.write(it, buf)
+            FfiConverterFloat.write(it, buf)
         }
     }
 }
@@ -11252,56 +11071,6 @@ public object FfiConverterSequenceTypeTrezorDeviceInfo: FfiConverterRustBuffer<L
 
 
 
-public object FfiConverterSequenceTypeTrezorFeeLevel: FfiConverterRustBuffer<List<TrezorFeeLevel>> {
-    override fun read(buf: ByteBuffer): List<TrezorFeeLevel> {
-        val len = buf.getInt()
-        return List<TrezorFeeLevel>(len) {
-            FfiConverterTypeTrezorFeeLevel.read(buf)
-        }
-    }
-
-    override fun allocationSize(value: List<TrezorFeeLevel>): ULong {
-        val sizeForLength = 4UL
-        val sizeForItems = value.sumOf { FfiConverterTypeTrezorFeeLevel.allocationSize(it) }
-        return sizeForLength + sizeForItems
-    }
-
-    override fun write(value: List<TrezorFeeLevel>, buf: ByteBuffer) {
-        buf.putInt(value.size)
-        value.iterator().forEach {
-            FfiConverterTypeTrezorFeeLevel.write(it, buf)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterSequenceTypeTrezorPrecomposedInput: FfiConverterRustBuffer<List<TrezorPrecomposedInput>> {
-    override fun read(buf: ByteBuffer): List<TrezorPrecomposedInput> {
-        val len = buf.getInt()
-        return List<TrezorPrecomposedInput>(len) {
-            FfiConverterTypeTrezorPrecomposedInput.read(buf)
-        }
-    }
-
-    override fun allocationSize(value: List<TrezorPrecomposedInput>): ULong {
-        val sizeForLength = 4UL
-        val sizeForItems = value.sumOf { FfiConverterTypeTrezorPrecomposedInput.allocationSize(it) }
-        return sizeForLength + sizeForItems
-    }
-
-    override fun write(value: List<TrezorPrecomposedInput>, buf: ByteBuffer) {
-        buf.putInt(value.size)
-        value.iterator().forEach {
-            FfiConverterTypeTrezorPrecomposedInput.write(it, buf)
-        }
-    }
-}
-
-
-
-
 public object FfiConverterSequenceTypeTrezorPrevTx: FfiConverterRustBuffer<List<TrezorPrevTx>> {
     override fun read(buf: ByteBuffer): List<TrezorPrevTx> {
         val len = buf.getInt()
@@ -11502,24 +11271,24 @@ public object FfiConverterSequenceTypeActivity: FfiConverterRustBuffer<List<Acti
 
 
 
-public object FfiConverterSequenceTypeTrezorPrecomposeOutput: FfiConverterRustBuffer<List<TrezorPrecomposeOutput>> {
-    override fun read(buf: ByteBuffer): List<TrezorPrecomposeOutput> {
+public object FfiConverterSequenceTypeComposeOutput: FfiConverterRustBuffer<List<ComposeOutput>> {
+    override fun read(buf: ByteBuffer): List<ComposeOutput> {
         val len = buf.getInt()
-        return List<TrezorPrecomposeOutput>(len) {
-            FfiConverterTypeTrezorPrecomposeOutput.read(buf)
+        return List<ComposeOutput>(len) {
+            FfiConverterTypeComposeOutput.read(buf)
         }
     }
 
-    override fun allocationSize(value: List<TrezorPrecomposeOutput>): ULong {
+    override fun allocationSize(value: List<ComposeOutput>): ULong {
         val sizeForLength = 4UL
-        val sizeForItems = value.sumOf { FfiConverterTypeTrezorPrecomposeOutput.allocationSize(it) }
+        val sizeForItems = value.sumOf { FfiConverterTypeComposeOutput.allocationSize(it) }
         return sizeForLength + sizeForItems
     }
 
-    override fun write(value: List<TrezorPrecomposeOutput>, buf: ByteBuffer) {
+    override fun write(value: List<ComposeOutput>, buf: ByteBuffer) {
         buf.putInt(value.size)
         value.iterator().forEach {
-            FfiConverterTypeTrezorPrecomposeOutput.write(it, buf)
+            FfiConverterTypeComposeOutput.write(it, buf)
         }
     }
 }
@@ -11527,49 +11296,24 @@ public object FfiConverterSequenceTypeTrezorPrecomposeOutput: FfiConverterRustBu
 
 
 
-public object FfiConverterSequenceTypeTrezorPrecomposedOutput: FfiConverterRustBuffer<List<TrezorPrecomposedOutput>> {
-    override fun read(buf: ByteBuffer): List<TrezorPrecomposedOutput> {
+public object FfiConverterSequenceTypeComposeResult: FfiConverterRustBuffer<List<ComposeResult>> {
+    override fun read(buf: ByteBuffer): List<ComposeResult> {
         val len = buf.getInt()
-        return List<TrezorPrecomposedOutput>(len) {
-            FfiConverterTypeTrezorPrecomposedOutput.read(buf)
+        return List<ComposeResult>(len) {
+            FfiConverterTypeComposeResult.read(buf)
         }
     }
 
-    override fun allocationSize(value: List<TrezorPrecomposedOutput>): ULong {
+    override fun allocationSize(value: List<ComposeResult>): ULong {
         val sizeForLength = 4UL
-        val sizeForItems = value.sumOf { FfiConverterTypeTrezorPrecomposedOutput.allocationSize(it) }
+        val sizeForItems = value.sumOf { FfiConverterTypeComposeResult.allocationSize(it) }
         return sizeForLength + sizeForItems
     }
 
-    override fun write(value: List<TrezorPrecomposedOutput>, buf: ByteBuffer) {
+    override fun write(value: List<ComposeResult>, buf: ByteBuffer) {
         buf.putInt(value.size)
         value.iterator().forEach {
-            FfiConverterTypeTrezorPrecomposedOutput.write(it, buf)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterSequenceTypeTrezorPrecomposedResult: FfiConverterRustBuffer<List<TrezorPrecomposedResult>> {
-    override fun read(buf: ByteBuffer): List<TrezorPrecomposedResult> {
-        val len = buf.getInt()
-        return List<TrezorPrecomposedResult>(len) {
-            FfiConverterTypeTrezorPrecomposedResult.read(buf)
-        }
-    }
-
-    override fun allocationSize(value: List<TrezorPrecomposedResult>): ULong {
-        val sizeForLength = 4UL
-        val sizeForItems = value.sumOf { FfiConverterTypeTrezorPrecomposedResult.allocationSize(it) }
-        return sizeForLength + sizeForItems
-    }
-
-    override fun write(value: List<TrezorPrecomposedResult>, buf: ByteBuffer) {
-        buf.putInt(value.size)
-        value.iterator().forEach {
-            FfiConverterTypeTrezorPrecomposedResult.write(it, buf)
+            FfiConverterTypeComposeResult.write(it, buf)
         }
     }
 }
@@ -12466,6 +12210,30 @@ public suspend fun `onchainBroadcastRawTx`(`serializedTx`: kotlin.String, `elect
 }
 
 /**
+ * Compose a transaction for multiple fee rates, returning one PSBT per rate.
+ *
+ * Creates a BDK wallet from the extended key, syncs via Electrum, then
+ * builds PSBTs using BDK's TxBuilder. The PSBTs include BIP32 derivation
+ * paths (when fingerprint is provided) and are ready for signing by any
+ * PSBT-compatible signer (Trezor, Ledger, software wallet, etc.).
+ */
+public suspend fun `onchainComposeTransaction`(`params`: ComposeParams): List<ComposeResult> {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_onchain_compose_transaction(
+            FfiConverterTypeComposeParams.lower(`params`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterSequenceTypeComposeResult.lift(it) },
+        // Error FFI converter
+        UniffiNullRustCallStatusErrorHandler,
+    )
+}
+
+/**
  * Query account information for an extended public key via Electrum.
  */
 @Throws(AccountInfoException::class, kotlin.coroutines.cancellation.CancellationException::class)
@@ -12872,33 +12640,6 @@ public suspend fun `trezorDisconnect`() {
 }
 
 /**
- * Fetch previous transactions from Electrum for Trezor signing.
- *
- * Takes transaction IDs (from TrezorSignTxParams inputs' prev_hash fields),
- * fetches the full transactions from Electrum, and returns them as
- * TrezorPrevTx structures ready to merge into TrezorSignTxParams.prev_txs.
- *
- * Duplicate txids are automatically deduplicated.
- */
-@Throws(AccountInfoException::class, kotlin.coroutines.cancellation.CancellationException::class)
-public suspend fun `trezorFetchPrevTxs`(`txids`: List<kotlin.String>, `electrumUrl`: kotlin.String): List<TrezorPrevTx> {
-    return uniffiRustCallAsync(
-        UniffiLib.uniffi_bitkitcore_fn_func_trezor_fetch_prev_txs(
-            FfiConverterSequenceString.lower(`txids`),
-            FfiConverterString.lower(`electrumUrl`),
-        ),
-        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
-        // lift function
-        { FfiConverterSequenceTypeTrezorPrevTx.lift(it) },
-        // Error FFI converter
-        AccountInfoExceptionErrorHandler,
-    )
-}
-
-/**
  * Get a Bitcoin address from the connected Trezor device.
  */
 @Throws(TrezorException::class, kotlin.coroutines.cancellation.CancellationException::class)
@@ -13092,37 +12833,6 @@ public suspend fun `trezorListDevices`(): List<TrezorDeviceInfo> {
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
-}
-
-/**
- * Compose a transaction offline for multiple fee levels.
- *
- * No device interaction needed — pure coin selection and fee calculation.
- */
-public fun `trezorPrecomposeTransaction`(`params`: TrezorPrecomposeParams): List<TrezorPrecomposedResult> {
-    return FfiConverterSequenceTypeTrezorPrecomposedResult.lift(uniffiRustCall { uniffiRustCallStatus ->
-        UniffiLib.uniffi_bitkitcore_fn_func_trezor_precompose_transaction(
-            FfiConverterTypeTrezorPrecomposeParams.lower(`params`),
-            uniffiRustCallStatus,
-        )
-    })
-}
-
-/**
- * Convert precomposed results into signing parameters for trezor_sign_tx.
- *
- * The returned params have empty prev_txs — add them before signing.
- */
-@Throws(TrezorException::class)
-public fun `trezorPrecomposedToSignParams`(`inputs`: List<TrezorPrecomposedInput>, `outputs`: List<TrezorPrecomposedOutput>, `coin`: TrezorCoinType?): TrezorSignTxParams {
-    return FfiConverterTypeTrezorSignTxParams.lift(uniffiRustCallWithError(TrezorExceptionErrorHandler) { uniffiRustCallStatus ->
-        UniffiLib.uniffi_bitkitcore_fn_func_trezor_precomposed_to_sign_params(
-            FfiConverterSequenceTypeTrezorPrecomposedInput.lower(`inputs`),
-            FfiConverterSequenceTypeTrezorPrecomposedOutput.lower(`outputs`),
-            FfiConverterOptionalTypeTrezorCoinType.lower(`coin`),
-            uniffiRustCallStatus,
-        )
-    })
 }
 
 /**

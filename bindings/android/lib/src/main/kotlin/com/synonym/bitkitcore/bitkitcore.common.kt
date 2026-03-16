@@ -111,6 +111,8 @@ public object NoPointer
 
 
 
+
+
 /**
  * Callback interface for native Trezor transport operations
  *
@@ -409,7 +411,7 @@ public data class AddressInfo (
      */
     val `path`: kotlin.String, 
     /**
-     * Whether this address has been used (1) or not (0)
+     * Number of transfers (real count in `get_address_info`, 1/0 presence flag in `get_account_info`)
      */
     val `transfers`: kotlin.UInt
 ) {
@@ -482,6 +484,33 @@ public data class ComposeAccount (
      * Unspent transaction outputs
      */
     val `utxo`: List<AccountUtxo>
+) {
+    public companion object
+}
+
+
+
+/**
+ * Parameters for composing a signer-agnostic transaction.
+ */
+@kotlinx.serialization.Serializable
+public data class ComposeParams (
+    /**
+     * Wallet configuration (key, server, network)
+     */
+    val `wallet`: WalletParams, 
+    /**
+     * Desired transaction outputs
+     */
+    val `outputs`: List<ComposeOutput>, 
+    /**
+     * Fee rates to evaluate (sat/vB), one PSBT per rate
+     */
+    val `feeRates`: List<kotlin.Float>, 
+    /**
+     * UTXO selection strategy (defaults to BranchAndBound)
+     */
+    val `coinSelection`: CoinSelection?
 ) {
     public companion object
 }
@@ -1578,29 +1607,6 @@ public data class TrezorFeatures (
 
 
 /**
- * Fee level for transaction composition.
- */
-@kotlinx.serialization.Serializable
-public data class TrezorFeeLevel (
-    /**
-     * Fee rate in sat/vB
-     */
-    val `feePerUnit`: kotlin.String, 
-    /**
-     * Base fee in satoshis (optional, added to calculated fee)
-     */
-    val `baseFee`: kotlin.ULong?, 
-    /**
-     * Whether to use floor for base fee calculation
-     */
-    val `floorBaseFee`: kotlin.Boolean?
-) {
-    public companion object
-}
-
-
-
-/**
  * Parameters for getting an address from the device.
  */
 @kotlinx.serialization.Serializable
@@ -1644,76 +1650,6 @@ public data class TrezorGetPublicKeyParams (
      * Whether to display on device for confirmation
      */
     val `showOnTrezor`: kotlin.Boolean
-) {
-    public companion object
-}
-
-
-
-/**
- * Parameters for precompose transaction.
- */
-@kotlinx.serialization.Serializable
-public data class TrezorPrecomposeParams (
-    /**
-     * Desired outputs
-     */
-    val `outputs`: List<TrezorPrecomposeOutput>, 
-    /**
-     * Coin network (default: Bitcoin)
-     */
-    val `coin`: TrezorCoinType?, 
-    /**
-     * Account with UTXOs and addresses
-     */
-    val `account`: ComposeAccount, 
-    /**
-     * Fee levels to evaluate
-     */
-    val `feeLevels`: List<TrezorFeeLevel>, 
-    /**
-     * Default sequence number
-     */
-    val `sequence`: kotlin.UInt?, 
-    /**
-     * Sorting strategy for inputs/outputs
-     */
-    val `sortingStrategy`: TrezorSortingStrategy?
-) {
-    public companion object
-}
-
-
-
-/**
- * Input in a precomposed result.
- */
-@kotlinx.serialization.Serializable
-public data class TrezorPrecomposedInput (
-    /**
-     * Transaction ID (hex)
-     */
-    val `txid`: kotlin.String, 
-    /**
-     * Output index
-     */
-    val `vout`: kotlin.UInt, 
-    /**
-     * Amount in satoshis (as string)
-     */
-    val `amount`: kotlin.String, 
-    /**
-     * Address
-     */
-    val `address`: kotlin.String, 
-    /**
-     * BIP32 derivation path
-     */
-    val `path`: kotlin.String, 
-    /**
-     * Script type
-     */
-    val `scriptType`: TrezorScriptType
 ) {
     public companion object
 }
@@ -2171,6 +2107,37 @@ public data class ValidationResult (
     val `address`: kotlin.String, 
     val `network`: NetworkType, 
     val `addressType`: AddressType
+) {
+    public companion object
+}
+
+
+
+/**
+ * Common parameters for creating and syncing a watch-only BDK wallet.
+ */
+@kotlinx.serialization.Serializable
+public data class WalletParams (
+    /**
+     * Extended public key (xpub/ypub/zpub/tpub/upub/vpub)
+     */
+    val `extendedKey`: kotlin.String, 
+    /**
+     * Electrum server URL for wallet sync
+     */
+    val `electrumUrl`: kotlin.String, 
+    /**
+     * Root fingerprint hex (e.g. "73c5da0a"). Required for hardware wallet signing.
+     */
+    val `fingerprint`: kotlin.String?, 
+    /**
+     * Bitcoin network (auto-detected from key prefix if not specified)
+     */
+    val `network`: Network?, 
+    /**
+     * Override account type for ambiguous key prefixes (xpub/tpub)
+     */
+    val `accountType`: AccountType?
 ) {
     public companion object
 }
@@ -2745,6 +2712,117 @@ public enum class CJitStateEnum {
     EXPIRED,
     FAILED;
     public companion object
+}
+
+
+
+
+
+
+/**
+ * Coin selection strategy for transaction composition.
+ */
+
+@kotlinx.serialization.Serializable
+public enum class CoinSelection {
+    
+    /**
+     * Branch-and-bound (default). Minimizes change by searching for exact matches.
+     */
+    BRANCH_AND_BOUND,
+    /**
+     * Selects largest UTXOs first. Useful for UTXO consolidation.
+     */
+    LARGEST_FIRST,
+    /**
+     * Selects oldest UTXOs first. Maximizes coin-age spending.
+     */
+    OLDEST_FIRST;
+    public companion object
+}
+
+
+
+
+
+
+/**
+ * Output specification for transaction composition.
+ */
+@kotlinx.serialization.Serializable
+public sealed class ComposeOutput {
+    
+    /**
+     * Payment to a specific address with a fixed amount (satoshis)
+     */@kotlinx.serialization.Serializable
+    public data class Payment(
+        val `address`: kotlin.String,
+        val `amountSats`: kotlin.ULong,
+    ) : ComposeOutput() {
+    }
+    
+    /**
+     * Send all remaining funds (after fees) to an address
+     */@kotlinx.serialization.Serializable
+    public data class SendMax(
+        val `address`: kotlin.String,
+    ) : ComposeOutput() {
+    }
+    
+    /**
+     * OP_RETURN data output (hex-encoded payload)
+     */@kotlinx.serialization.Serializable
+    public data class OpReturn(
+        val `dataHex`: kotlin.String,
+    ) : ComposeOutput() {
+    }
+    
+}
+
+
+
+
+
+
+/**
+ * Result of composing a transaction at a single fee rate.
+ */
+@kotlinx.serialization.Serializable
+public sealed class ComposeResult {
+    
+    /**
+     * Successfully built a signable PSBT
+     */@kotlinx.serialization.Serializable
+    public data class Success(
+        /**
+         * Base64-encoded PSBT ready for signing
+         */
+        val `psbt`: kotlin.String,
+        /**
+         * Total fee in satoshis
+         */
+        val `fee`: kotlin.ULong,
+        /**
+         * Target fee rate in sat/vB (actual may differ slightly due to rounding)
+         */
+        val `feeRate`: kotlin.Float,
+        /**
+         * Total value spent (payments + fee, excluding change).
+         * Uses BDK's `sent - received` semantics, which may undercount for
+         * self-transfers where the destination is also owned by the wallet.
+         */
+        val `totalSpent`: kotlin.ULong,
+    ) : ComposeResult() {
+    }
+    
+    /**
+     * Composition failed (e.g. insufficient funds)
+     */@kotlinx.serialization.Serializable
+    public data class Error(
+        val `error`: kotlin.String,
+    ) : ComposeResult() {
+    }
+    
 }
 
 
@@ -3372,147 +3450,6 @@ public sealed class TrezorException: kotlin.Exception() {
 
 
 /**
- * Output specification for precompose.
- */
-@kotlinx.serialization.Serializable
-public sealed class TrezorPrecomposeOutput {
-    
-    /**
-     * Payment to a specific address
-     */@kotlinx.serialization.Serializable
-    public data class Payment(
-        val `address`: kotlin.String,
-        val `amount`: kotlin.String,
-    ) : TrezorPrecomposeOutput() {
-    }
-    
-    /**
-     * Payment without address (estimation only)
-     */@kotlinx.serialization.Serializable
-    public data class PaymentNoAddress(
-        val `amount`: kotlin.String,
-    ) : TrezorPrecomposeOutput() {
-    }
-    
-    /**
-     * Send all remaining funds to an address
-     */@kotlinx.serialization.Serializable
-    public data class SendMax(
-        val `address`: kotlin.String,
-    ) : TrezorPrecomposeOutput() {
-    }
-    
-    /**
-     * Send all remaining funds (no address)
-     */
-    @kotlinx.serialization.Serializable
-    public data object SendMaxNoAddress : TrezorPrecomposeOutput() 
-    
-    
-    /**
-     * OP_RETURN data output
-     */@kotlinx.serialization.Serializable
-    public data class OpReturn(
-        val `dataHex`: kotlin.String,
-    ) : TrezorPrecomposeOutput() {
-    }
-    
-}
-
-
-
-
-
-
-/**
- * Output in a precomposed result.
- */
-@kotlinx.serialization.Serializable
-public sealed class TrezorPrecomposedOutput {
-    
-    /**
-     * Payment to an address
-     */@kotlinx.serialization.Serializable
-    public data class Payment(
-        val `address`: kotlin.String,
-        val `amount`: kotlin.String,
-    ) : TrezorPrecomposedOutput() {
-    }
-    
-    /**
-     * Change output
-     */@kotlinx.serialization.Serializable
-    public data class Change(
-        val `address`: kotlin.String,
-        val `path`: kotlin.String,
-        val `amount`: kotlin.String,
-        val `scriptType`: TrezorScriptType,
-    ) : TrezorPrecomposedOutput() {
-    }
-    
-    /**
-     * OP_RETURN data output
-     */@kotlinx.serialization.Serializable
-    public data class OpReturn(
-        val `dataHex`: kotlin.String,
-    ) : TrezorPrecomposedOutput() {
-    }
-    
-}
-
-
-
-
-
-
-/**
- * Precomposed transaction result (one per fee level).
- */
-@kotlinx.serialization.Serializable
-public sealed class TrezorPrecomposedResult {
-    
-    /**
-     * Successfully composed a sendable transaction
-     */@kotlinx.serialization.Serializable
-    public data class Final(
-        val `totalSpent`: kotlin.String,
-        val `fee`: kotlin.String,
-        val `feePerByte`: kotlin.String,
-        val `bytes`: kotlin.UInt,
-        val `inputs`: List<TrezorPrecomposedInput>,
-        val `outputs`: List<TrezorPrecomposedOutput>,
-        val `outputsPermutation`: List<kotlin.UInt>,
-    ) : TrezorPrecomposedResult() {
-    }
-    
-    /**
-     * Non-final result (e.g., send-max estimation)
-     */@kotlinx.serialization.Serializable
-    public data class NonFinal(
-        val `max`: kotlin.String?,
-        val `totalSpent`: kotlin.String,
-        val `fee`: kotlin.String,
-        val `feePerByte`: kotlin.String,
-        val `bytes`: kotlin.UInt,
-    ) : TrezorPrecomposedResult() {
-    }
-    
-    /**
-     * Composition failed
-     */@kotlinx.serialization.Serializable
-    public data class Error(
-        val `error`: kotlin.String,
-    ) : TrezorPrecomposedResult() {
-    }
-    
-}
-
-
-
-
-
-
-/**
  * Script types for address derivation.
  */
 
@@ -3543,33 +3480,6 @@ public enum class TrezorScriptType {
      * External/watch-only input (not signed by device)
      */
     EXTERNAL;
-    public companion object
-}
-
-
-
-
-
-
-/**
- * Sorting strategy for transaction inputs and outputs.
- */
-
-@kotlinx.serialization.Serializable
-public enum class TrezorSortingStrategy {
-    
-    /**
-     * BIP-69: deterministic lexicographic sorting
-     */
-    BIP69,
-    /**
-     * Random shuffle (better privacy)
-     */
-    RANDOM,
-    /**
-     * Keep original order
-     */
-    NONE;
     public companion object
 }
 
@@ -3627,12 +3537,6 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
-
-
-
-
-
-
 
 
 
