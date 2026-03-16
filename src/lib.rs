@@ -1501,6 +1501,26 @@ pub async fn complete_pubky_auth() -> Result<String, PubkyError> {
     }))
 }
 
+#[uniffi::export]
+pub async fn fetch_pubky_profile(public_key: String) -> Result<PubkyProfile, PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::fetch_pubky_profile(public_key).await
+    }).await.unwrap_or_else(|e| Err(PubkyError::FetchFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn fetch_pubky_contacts(public_key: String) -> Result<Vec<String>, PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::fetch_pubky_contacts(public_key).await
+    }).await.unwrap_or_else(|e| Err(PubkyError::FetchFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
 // ============================================================================
 // Trezor Hardware Wallet Functions
 // ============================================================================

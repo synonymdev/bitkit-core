@@ -38,6 +38,7 @@ bdk = { version = "0.30.2", features = ["all-keys"] }
 base64 = "0.22"
 log = "0.4"
 pubky = "0.6.0"
+pubky-app-specs = "0.4"
 
 # Bluetooth (for Android JNI initialization)
 # btleplug is also pulled in transitively by trezor-connect-rs

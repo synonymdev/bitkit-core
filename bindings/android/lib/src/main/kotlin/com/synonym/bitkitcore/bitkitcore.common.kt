@@ -111,8 +111,6 @@ public object NoPointer
 
 
 
-
-
 /**
  * Callback interface for native Trezor transport operations
  *
@@ -283,104 +281,22 @@ public interface TrezorUiCallback {
 
 
 /**
- * Grouped address lists for an account.
+ * Account addresses
  */
 @kotlinx.serialization.Serializable
 public data class AccountAddresses (
     /**
-     * Used receive addresses (have at least one transaction)
+     * Used addresses
      */
     val `used`: List<AddressInfo>, 
     /**
-     * Unused receive addresses (no transactions yet)
+     * Unused addresses
      */
     val `unused`: List<AddressInfo>, 
     /**
      * Change addresses
      */
     val `change`: List<AddressInfo>
-) {
-    public companion object
-}
-
-
-
-/**
- * Result from querying an extended public key via Electrum.
- */
-@kotlinx.serialization.Serializable
-public data class AccountInfoResult (
-    /**
-     * The account structure with addresses and UTXOs
-     */
-    val `account`: ComposeAccount, 
-    /**
-     * Total confirmed balance in satoshis
-     */
-    val `balance`: kotlin.ULong, 
-    /**
-     * Number of UTXOs
-     */
-    val `utxoCount`: kotlin.UInt, 
-    /**
-     * The detected or specified account type
-     */
-    val `accountType`: AccountType, 
-    /**
-     * The current blockchain tip height
-     */
-    val `blockHeight`: kotlin.UInt
-) {
-    public companion object
-}
-
-
-
-/**
- * A UTXO associated with an account or address.
- */
-@kotlinx.serialization.Serializable
-public data class AccountUtxo (
-    /**
-     * Transaction ID (hex)
-     */
-    val `txid`: kotlin.String, 
-    /**
-     * Output index
-     */
-    val `vout`: kotlin.UInt, 
-    /**
-     * Amount in satoshis
-     */
-    val `amount`: kotlin.ULong, 
-    /**
-     * Block height where the UTXO was confirmed (0 if unconfirmed)
-     */
-    val `blockHeight`: kotlin.UInt, 
-    /**
-     * Address holding this UTXO
-     */
-    val `address`: kotlin.String, 
-    /**
-     * BIP32 derivation path (e.g., "m/84'/0'/0'/0/0")
-     */
-    val `path`: kotlin.String, 
-    /**
-     * Number of confirmations (0 if unconfirmed)
-     */
-    val `confirmations`: kotlin.UInt, 
-    /**
-     * Whether this is a coinbase output
-     */
-    val `coinbase`: kotlin.Boolean, 
-    /**
-     * Whether this UTXO is owned by the account
-     */
-    val `own`: kotlin.Boolean, 
-    /**
-     * Whether this UTXO must be included in the transaction
-     */
-    val `required`: kotlin.Boolean?
 ) {
     public companion object
 }
@@ -398,20 +314,20 @@ public data class ActivityTags (
 
 
 /**
- * Information about a single address in an account.
+ * Address information
  */
 @kotlinx.serialization.Serializable
 public data class AddressInfo (
     /**
-     * The Bitcoin address
+     * Address string
      */
     val `address`: kotlin.String, 
     /**
-     * BIP32 derivation path
+     * Derivation path
      */
     val `path`: kotlin.String, 
     /**
-     * Number of transfers (real count in `get_address_info`, 1/0 presence flag in `get_account_info`)
+     * Number of transfers
      */
     val `transfers`: kotlin.UInt
 ) {
@@ -461,56 +377,6 @@ public data class ClosedChannelDetails (
     val `forwardingFeeBaseMsat`: kotlin.UInt, 
     val `channelName`: kotlin.String, 
     val `channelClosureReason`: kotlin.String
-) {
-    public companion object
-}
-
-
-
-/**
- * Full account structure with addresses and UTXOs.
- */
-@kotlinx.serialization.Serializable
-public data class ComposeAccount (
-    /**
-     * Account derivation path (e.g., "m/84'/0'/0'")
-     */
-    val `path`: kotlin.String, 
-    /**
-     * Categorized addresses
-     */
-    val `addresses`: AccountAddresses, 
-    /**
-     * Unspent transaction outputs
-     */
-    val `utxo`: List<AccountUtxo>
-) {
-    public companion object
-}
-
-
-
-/**
- * Parameters for composing a signer-agnostic transaction.
- */
-@kotlinx.serialization.Serializable
-public data class ComposeParams (
-    /**
-     * Wallet configuration (key, server, network)
-     */
-    val `wallet`: WalletParams, 
-    /**
-     * Desired transaction outputs
-     */
-    val `outputs`: List<ComposeOutput>, 
-    /**
-     * Fee rates to evaluate (sat/vB), one PSBT per rate
-     */
-    val `feeRates`: List<kotlin.Float>, 
-    /**
-     * UTXO selection strategy (defaults to BranchAndBound)
-     */
-    val `coinSelection`: CoinSelection?
 ) {
     public companion object
 }
@@ -1284,31 +1150,23 @@ public data class PubkyAuth (
 
 
 
-/**
- * Result from querying a single Bitcoin address.
- */
 @kotlinx.serialization.Serializable
-public data class SingleAddressInfoResult (
-    /**
-     * The queried address
-     */
-    val `address`: kotlin.String, 
-    /**
-     * Total confirmed balance in satoshis
-     */
-    val `balance`: kotlin.ULong, 
-    /**
-     * UTXOs for this address
-     */
-    val `utxos`: List<AccountUtxo>, 
-    /**
-     * Number of transactions involving this address
-     */
-    val `transfers`: kotlin.UInt, 
-    /**
-     * Current blockchain tip height
-     */
-    val `blockHeight`: kotlin.UInt
+public data class PubkyProfile (
+    val `name`: kotlin.String, 
+    val `bio`: kotlin.String?, 
+    val `image`: kotlin.String?, 
+    val `links`: List<PubkyProfileLink>?, 
+    val `status`: kotlin.String?
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class PubkyProfileLink (
+    val `title`: kotlin.String, 
+    val `url`: kotlin.String
 ) {
     public companion object
 }
@@ -1861,11 +1719,7 @@ public data class TrezorSignedTx (
     /**
      * Serialized transaction (hex)
      */
-    val `serializedTx`: kotlin.String, 
-    /**
-     * Broadcast transaction ID (populated when push=true)
-     */
-    val `txid`: kotlin.String?
+    val `serializedTx`: kotlin.String
 ) {
     public companion object
 }
@@ -2110,161 +1964,6 @@ public data class ValidationResult (
 ) {
     public companion object
 }
-
-
-
-/**
- * Common parameters for creating and syncing a watch-only BDK wallet.
- */
-@kotlinx.serialization.Serializable
-public data class WalletParams (
-    /**
-     * Extended public key (xpub/ypub/zpub/tpub/upub/vpub)
-     */
-    val `extendedKey`: kotlin.String, 
-    /**
-     * Electrum server URL for wallet sync
-     */
-    val `electrumUrl`: kotlin.String, 
-    /**
-     * Root fingerprint hex (e.g. "73c5da0a"). Required for hardware wallet signing.
-     */
-    val `fingerprint`: kotlin.String?, 
-    /**
-     * Bitcoin network (auto-detected from key prefix if not specified)
-     */
-    val `network`: Network?, 
-    /**
-     * Override account type for ambiguous key prefixes (xpub/tpub)
-     */
-    val `accountType`: AccountType?
-) {
-    public companion object
-}
-
-
-
-
-
-/**
- * Errors specific to account info operations (BDK/Electrum-based).
- */
-public sealed class AccountInfoException: kotlin.Exception() {
-    
-    /**
-     * The provided extended public key is invalid or cannot be parsed
-     */
-    public class InvalidExtendedKey(
-        public val `errorDetails`: kotlin.String,
-    ) : AccountInfoException() {
-        override val message: String
-            get() = "errorDetails=${ `errorDetails` }"
-    }
-    
-    /**
-     * The provided address is invalid
-     */
-    public class InvalidAddress(
-        public val `errorDetails`: kotlin.String,
-    ) : AccountInfoException() {
-        override val message: String
-            get() = "errorDetails=${ `errorDetails` }"
-    }
-    
-    /**
-     * Electrum connection or query failed
-     */
-    public class ElectrumException(
-        public val `errorDetails`: kotlin.String,
-    ) : AccountInfoException() {
-        override val message: String
-            get() = "errorDetails=${ `errorDetails` }"
-    }
-    
-    /**
-     * BDK wallet creation or operation error
-     */
-    public class WalletException(
-        public val `errorDetails`: kotlin.String,
-    ) : AccountInfoException() {
-        override val message: String
-            get() = "errorDetails=${ `errorDetails` }"
-    }
-    
-    /**
-     * Wallet sync with Electrum failed
-     */
-    public class SyncException(
-        public val `errorDetails`: kotlin.String,
-    ) : AccountInfoException() {
-        override val message: String
-            get() = "errorDetails=${ `errorDetails` }"
-    }
-    
-    /**
-     * The key type/prefix is not recognized
-     */
-    public class UnsupportedKeyType(
-        public val `errorDetails`: kotlin.String,
-    ) : AccountInfoException() {
-        override val message: String
-            get() = "errorDetails=${ `errorDetails` }"
-    }
-    
-    /**
-     * Network mismatch between key prefix and specified network
-     */
-    public class NetworkMismatch(
-        public val `errorDetails`: kotlin.String,
-    ) : AccountInfoException() {
-        override val message: String
-            get() = "errorDetails=${ `errorDetails` }"
-    }
-    
-    /**
-     * Invalid transaction ID provided
-     */
-    public class InvalidTxid(
-        public val `errorDetails`: kotlin.String,
-    ) : AccountInfoException() {
-        override val message: String
-            get() = "errorDetails=${ `errorDetails` }"
-    }
-    
-}
-
-
-
-
-/**
- * Account type classification for extended public keys.
- *
- * Determines the BIP standard, derivation path purpose, and script type.
- */
-
-@kotlinx.serialization.Serializable
-public enum class AccountType {
-    
-    /**
-     * BIP44 legacy (P2PKH) — xpub/tpub prefix
-     */
-    LEGACY,
-    /**
-     * BIP49 wrapped segwit (P2SH-P2WPKH) — ypub/upub prefix
-     */
-    WRAPPED_SEGWIT,
-    /**
-     * BIP84 native segwit (P2WPKH) — zpub/vpub prefix
-     */
-    NATIVE_SEGWIT,
-    /**
-     * BIP86 taproot (P2TR)
-     */
-    TAPROOT;
-    public companion object
-}
-
-
 
 
 
@@ -2554,42 +2253,6 @@ public sealed class BlocktankException: kotlin.Exception() {
 
 
 
-public sealed class BroadcastException: kotlin.Exception() {
-    
-    public class InvalidHex(
-        public val `errorDetails`: kotlin.String,
-    ) : BroadcastException() {
-        override val message: String
-            get() = "errorDetails=${ `errorDetails` }"
-    }
-    
-    public class InvalidTransaction(
-        public val `errorDetails`: kotlin.String,
-    ) : BroadcastException() {
-        override val message: String
-            get() = "errorDetails=${ `errorDetails` }"
-    }
-    
-    public class ElectrumException(
-        public val `errorDetails`: kotlin.String,
-    ) : BroadcastException() {
-        override val message: String
-            get() = "errorDetails=${ `errorDetails` }"
-    }
-    
-    public class TaskException(
-        public val `errorDetails`: kotlin.String,
-    ) : BroadcastException() {
-        override val message: String
-            get() = "errorDetails=${ `errorDetails` }"
-    }
-    
-}
-
-
-
-
-
 @kotlinx.serialization.Serializable
 public enum class BtBolt11InvoiceState {
     
@@ -2712,117 +2375,6 @@ public enum class CJitStateEnum {
     EXPIRED,
     FAILED;
     public companion object
-}
-
-
-
-
-
-
-/**
- * Coin selection strategy for transaction composition.
- */
-
-@kotlinx.serialization.Serializable
-public enum class CoinSelection {
-    
-    /**
-     * Branch-and-bound (default). Minimizes change by searching for exact matches.
-     */
-    BRANCH_AND_BOUND,
-    /**
-     * Selects largest UTXOs first. Useful for UTXO consolidation.
-     */
-    LARGEST_FIRST,
-    /**
-     * Selects oldest UTXOs first. Maximizes coin-age spending.
-     */
-    OLDEST_FIRST;
-    public companion object
-}
-
-
-
-
-
-
-/**
- * Output specification for transaction composition.
- */
-@kotlinx.serialization.Serializable
-public sealed class ComposeOutput {
-    
-    /**
-     * Payment to a specific address with a fixed amount (satoshis)
-     */@kotlinx.serialization.Serializable
-    public data class Payment(
-        val `address`: kotlin.String,
-        val `amountSats`: kotlin.ULong,
-    ) : ComposeOutput() {
-    }
-    
-    /**
-     * Send all remaining funds (after fees) to an address
-     */@kotlinx.serialization.Serializable
-    public data class SendMax(
-        val `address`: kotlin.String,
-    ) : ComposeOutput() {
-    }
-    
-    /**
-     * OP_RETURN data output (hex-encoded payload)
-     */@kotlinx.serialization.Serializable
-    public data class OpReturn(
-        val `dataHex`: kotlin.String,
-    ) : ComposeOutput() {
-    }
-    
-}
-
-
-
-
-
-
-/**
- * Result of composing a transaction at a single fee rate.
- */
-@kotlinx.serialization.Serializable
-public sealed class ComposeResult {
-    
-    /**
-     * Successfully built a signable PSBT
-     */@kotlinx.serialization.Serializable
-    public data class Success(
-        /**
-         * Base64-encoded PSBT ready for signing
-         */
-        val `psbt`: kotlin.String,
-        /**
-         * Total fee in satoshis
-         */
-        val `fee`: kotlin.ULong,
-        /**
-         * Target fee rate in sat/vB (actual may differ slightly due to rounding)
-         */
-        val `feeRate`: kotlin.Float,
-        /**
-         * Total value spent (payments + fee, excluding change).
-         * Uses BDK's `sent - received` semantics, which may undercount for
-         * self-transfers where the destination is also owned by the wallet.
-         */
-        val `totalSpent`: kotlin.ULong,
-    ) : ComposeResult() {
-    }
-    
-    /**
-     * Composition failed (e.g. insufficient funds)
-     */@kotlinx.serialization.Serializable
-    public data class Error(
-        val `error`: kotlin.String,
-    ) : ComposeResult() {
-    }
-    
 }
 
 
@@ -3114,6 +2666,26 @@ public sealed class PubkyException: kotlin.Exception() {
     }
     
     public class ResolutionFailed(
+        public val `reason`: kotlin.String,
+    ) : PubkyException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class FetchFailed(
+        public val `reason`: kotlin.String,
+    ) : PubkyException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class ProfileNotFound(
+    ) : PubkyException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class ProfileParseFailed(
         public val `reason`: kotlin.String,
     ) : PubkyException() {
         override val message: String
@@ -3537,14 +3109,6 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
-
-
-
-
-
-
-
-
 
 
 

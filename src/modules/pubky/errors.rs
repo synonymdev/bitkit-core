@@ -11,4 +11,13 @@ pub enum PubkyError {
 
     #[error("Resolution failed: {reason}")]
     ResolutionFailed { reason: String },
+
+    #[error("Fetch failed: {reason}")]
+    FetchFailed { reason: String },
+
+    #[error("Profile not found")]
+    ProfileNotFound,
+
+    #[error("Profile parse failed: {reason}")]
+    ProfileParseFailed { reason: String },
 }

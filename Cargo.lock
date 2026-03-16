@@ -494,7 +494,8 @@ dependencies = [
  "log",
  "once_cell",
  "openssl",
- "pubky",
+ "pubky 0.6.0",
+ "pubky-app-specs",
  "r2d2",
  "r2d2_sqlite",
  "rand 0.8.5",
@@ -2440,6 +2441,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 
 [[package]]
+name = "mime"
+version = "0.3.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+
+[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3062,6 +3069,31 @@ dependencies = [
 
 [[package]]
 name = "pubky"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "12f7fe978ba733fdb614320e9b1f3910cfecf0509530511c8ba12cc8d32f8bc8"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "bytes",
+ "cookie",
+ "cookie_store",
+ "flume",
+ "futures-lite",
+ "futures-util",
+ "log",
+ "pkarr",
+ "pubky-common 0.5.4",
+ "reqwest",
+ "thiserror 2.0.17",
+ "tokio",
+ "tracing",
+ "url",
+ "wasm-bindgen-futures",
+]
+
+[[package]]
+name = "pubky"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ee35ad75b5bfff099616d9649b47c27edcf8ceaa99e8adfa59b91bb2650de40"
@@ -3074,7 +3106,7 @@ dependencies = [
  "httpdate",
  "log",
  "pkarr",
- "pubky-common",
+ "pubky-common 0.6.0",
  "reqwest",
  "thiserror 2.0.18",
  "tokio",
@@ -3082,6 +3114,46 @@ dependencies = [
  "url",
  "wasm-bindgen-futures",
  "web-time",
+]
+
+[[package]]
+name = "pubky-app-specs"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "768489143c50693e617f2efd6b2498be0c8b0ac6280b4ba59067a3afc8b01477"
+dependencies = [
+ "base32",
+ "blake3",
+ "js-sys",
+ "mime",
+ "pubky 0.5.4",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "url",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "pubky-common"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f078584beadafe3bc8669bfd6b245f10f42b8bea24e7ccbff0e09886e310ba9b"
+dependencies = [
+ "argon2",
+ "base32",
+ "blake3",
+ "crypto_secretbox",
+ "ed25519-dalek",
+ "js-sys",
+ "once_cell",
+ "pkarr",
+ "postcard",
+ "pubky-timestamp",
+ "rand 0.9.2",
+ "serde",
+ "thiserror 2.0.17",
 ]
 
 [[package]]
@@ -3860,6 +3932,17 @@ checksum = "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e"
 dependencies = [
  "serde_core",
  "serde_derive",
+]
+
+[[package]]
+name = "serde-wasm-bindgen"
+version = "0.6.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8302e169f0eddcc139c70f139d19d6467353af16f9fce27e8c30158036a1e16b"
+dependencies = [
+ "js-sys",
+ "serde",
+ "wasm-bindgen",
 ]
 
 [[package]]

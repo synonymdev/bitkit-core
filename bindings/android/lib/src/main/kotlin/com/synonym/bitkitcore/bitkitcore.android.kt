@@ -1393,12 +1393,6 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
-
-
-
-
-
-
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1516,7 +1510,13 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_fetch_pubky_contacts() != 18744.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_fetch_pubky_file() != 24890.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_fetch_pubky_profile() != 19709.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292.toShort()) {
@@ -1621,18 +1621,6 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_mnemonic_to_seed() != 40039.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx() != 45163.toShort()) {
-            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-        }
-        if (uniffi_bitkitcore_checksum_func_onchain_compose_transaction() != 20767.toShort()) {
-            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-        }
-        if (uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 30087.toShort()) {
-            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-        }
-        if (uniffi_bitkitcore_checksum_func_onchain_get_address_info() != 4749.toShort()) {
-            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-        }
         if (uniffi_bitkitcore_checksum_func_open_channel() != 21402.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1682,9 +1670,6 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_test_notification() != 32857.toShort()) {
-            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-        }
-        if (uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type() != 16116.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_clear_credentials() != 41940.toShort()) {
@@ -1925,7 +1910,13 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_estimate_order_fee_full(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_fetch_pubky_contacts(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_fetch_pubky_file(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_fetch_pubky_profile(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_generate_mnemonic(
@@ -2030,18 +2021,6 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_mnemonic_to_seed(
     ): Short
     @JvmStatic
-    external fun uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx(
-    ): Short
-    @JvmStatic
-    external fun uniffi_bitkitcore_checksum_func_onchain_compose_transaction(
-    ): Short
-    @JvmStatic
-    external fun uniffi_bitkitcore_checksum_func_onchain_get_account_info(
-    ): Short
-    @JvmStatic
-    external fun uniffi_bitkitcore_checksum_func_onchain_get_address_info(
-    ): Short
-    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_open_channel(
     ): Short
     @JvmStatic
@@ -2091,9 +2070,6 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_test_notification(
-    ): Short
-    @JvmStatic
-    external fun uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_clear_credentials(
@@ -2531,8 +2507,16 @@ internal object UniffiLib : Library {
         `options`: RustBufferByValue,
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_fetch_pubky_contacts(
+        `publicKey`: RustBufferByValue,
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_fetch_pubky_file(
         `uri`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_fetch_pubky_profile(
+        `publicKey`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_generate_mnemonic(
@@ -2714,29 +2698,6 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
-    external fun uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx(
-        `serializedTx`: RustBufferByValue,
-        `electrumUrl`: RustBufferByValue,
-    ): Long
-    @JvmStatic
-    external fun uniffi_bitkitcore_fn_func_onchain_compose_transaction(
-        `params`: RustBufferByValue,
-    ): Long
-    @JvmStatic
-    external fun uniffi_bitkitcore_fn_func_onchain_get_account_info(
-        `extendedKey`: RustBufferByValue,
-        `electrumUrl`: RustBufferByValue,
-        `network`: RustBufferByValue,
-        `gapLimit`: RustBufferByValue,
-        `scriptType`: RustBufferByValue,
-    ): Long
-    @JvmStatic
-    external fun uniffi_bitkitcore_fn_func_onchain_get_address_info(
-        `address`: RustBufferByValue,
-        `electrumUrl`: RustBufferByValue,
-        `network`: RustBufferByValue,
-    ): Long
-    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_open_channel(
         `orderId`: RustBufferByValue,
         `connectionString`: RustBufferByValue,
@@ -2829,11 +2790,6 @@ internal object UniffiLib : Library {
         `notificationType`: RustBufferByValue,
         `customUrl`: RustBufferByValue,
     ): Long
-    @JvmStatic
-    external fun uniffi_bitkitcore_fn_func_trezor_account_type_to_script_type(
-        `accountType`: RustBufferByValue,
-        uniffiCallStatus: UniffiRustCallStatus,
-    ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_clear_credentials(
         `deviceId`: RustBufferByValue,
@@ -3445,27 +3401,6 @@ public object FfiConverterLong: FfiConverter<Long, Long> {
 
     override fun write(value: Long, buf: ByteBuffer) {
         buf.putLong(value)
-    }
-}
-
-
-public object FfiConverterFloat: FfiConverter<Float, Float> {
-    override fun lift(value: Float): Float {
-        return value
-    }
-
-    override fun read(buf: ByteBuffer): Float {
-        return buf.getFloat()
-    }
-
-    override fun lower(value: Float): Float {
-        return value
-    }
-
-    override fun allocationSize(value: Float): ULong = 4UL
-
-    override fun write(value: Float, buf: ByteBuffer) {
-        buf.putFloat(value)
     }
 }
 
@@ -4457,83 +4392,6 @@ public object FfiConverterTypeAccountAddresses: FfiConverterRustBuffer<AccountAd
 
 
 
-public object FfiConverterTypeAccountInfoResult: FfiConverterRustBuffer<AccountInfoResult> {
-    override fun read(buf: ByteBuffer): AccountInfoResult {
-        return AccountInfoResult(
-            FfiConverterTypeComposeAccount.read(buf),
-            FfiConverterULong.read(buf),
-            FfiConverterUInt.read(buf),
-            FfiConverterTypeAccountType.read(buf),
-            FfiConverterUInt.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: AccountInfoResult): ULong = (
-            FfiConverterTypeComposeAccount.allocationSize(value.`account`) +
-            FfiConverterULong.allocationSize(value.`balance`) +
-            FfiConverterUInt.allocationSize(value.`utxoCount`) +
-            FfiConverterTypeAccountType.allocationSize(value.`accountType`) +
-            FfiConverterUInt.allocationSize(value.`blockHeight`)
-    )
-
-    override fun write(value: AccountInfoResult, buf: ByteBuffer) {
-        FfiConverterTypeComposeAccount.write(value.`account`, buf)
-        FfiConverterULong.write(value.`balance`, buf)
-        FfiConverterUInt.write(value.`utxoCount`, buf)
-        FfiConverterTypeAccountType.write(value.`accountType`, buf)
-        FfiConverterUInt.write(value.`blockHeight`, buf)
-    }
-}
-
-
-
-
-public object FfiConverterTypeAccountUtxo: FfiConverterRustBuffer<AccountUtxo> {
-    override fun read(buf: ByteBuffer): AccountUtxo {
-        return AccountUtxo(
-            FfiConverterString.read(buf),
-            FfiConverterUInt.read(buf),
-            FfiConverterULong.read(buf),
-            FfiConverterUInt.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterUInt.read(buf),
-            FfiConverterBoolean.read(buf),
-            FfiConverterBoolean.read(buf),
-            FfiConverterOptionalBoolean.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: AccountUtxo): ULong = (
-            FfiConverterString.allocationSize(value.`txid`) +
-            FfiConverterUInt.allocationSize(value.`vout`) +
-            FfiConverterULong.allocationSize(value.`amount`) +
-            FfiConverterUInt.allocationSize(value.`blockHeight`) +
-            FfiConverterString.allocationSize(value.`address`) +
-            FfiConverterString.allocationSize(value.`path`) +
-            FfiConverterUInt.allocationSize(value.`confirmations`) +
-            FfiConverterBoolean.allocationSize(value.`coinbase`) +
-            FfiConverterBoolean.allocationSize(value.`own`) +
-            FfiConverterOptionalBoolean.allocationSize(value.`required`)
-    )
-
-    override fun write(value: AccountUtxo, buf: ByteBuffer) {
-        FfiConverterString.write(value.`txid`, buf)
-        FfiConverterUInt.write(value.`vout`, buf)
-        FfiConverterULong.write(value.`amount`, buf)
-        FfiConverterUInt.write(value.`blockHeight`, buf)
-        FfiConverterString.write(value.`address`, buf)
-        FfiConverterString.write(value.`path`, buf)
-        FfiConverterUInt.write(value.`confirmations`, buf)
-        FfiConverterBoolean.write(value.`coinbase`, buf)
-        FfiConverterBoolean.write(value.`own`, buf)
-        FfiConverterOptionalBoolean.write(value.`required`, buf)
-    }
-}
-
-
-
-
 public object FfiConverterTypeActivityTags: FfiConverterRustBuffer<ActivityTags> {
     override fun read(buf: ByteBuffer): ActivityTags {
         return ActivityTags(
@@ -4692,59 +4550,6 @@ public object FfiConverterTypeClosedChannelDetails: FfiConverterRustBuffer<Close
         FfiConverterUInt.write(value.`forwardingFeeBaseMsat`, buf)
         FfiConverterString.write(value.`channelName`, buf)
         FfiConverterString.write(value.`channelClosureReason`, buf)
-    }
-}
-
-
-
-
-public object FfiConverterTypeComposeAccount: FfiConverterRustBuffer<ComposeAccount> {
-    override fun read(buf: ByteBuffer): ComposeAccount {
-        return ComposeAccount(
-            FfiConverterString.read(buf),
-            FfiConverterTypeAccountAddresses.read(buf),
-            FfiConverterSequenceTypeAccountUtxo.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: ComposeAccount): ULong = (
-            FfiConverterString.allocationSize(value.`path`) +
-            FfiConverterTypeAccountAddresses.allocationSize(value.`addresses`) +
-            FfiConverterSequenceTypeAccountUtxo.allocationSize(value.`utxo`)
-    )
-
-    override fun write(value: ComposeAccount, buf: ByteBuffer) {
-        FfiConverterString.write(value.`path`, buf)
-        FfiConverterTypeAccountAddresses.write(value.`addresses`, buf)
-        FfiConverterSequenceTypeAccountUtxo.write(value.`utxo`, buf)
-    }
-}
-
-
-
-
-public object FfiConverterTypeComposeParams: FfiConverterRustBuffer<ComposeParams> {
-    override fun read(buf: ByteBuffer): ComposeParams {
-        return ComposeParams(
-            FfiConverterTypeWalletParams.read(buf),
-            FfiConverterSequenceTypeComposeOutput.read(buf),
-            FfiConverterSequenceFloat.read(buf),
-            FfiConverterOptionalTypeCoinSelection.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: ComposeParams): ULong = (
-            FfiConverterTypeWalletParams.allocationSize(value.`wallet`) +
-            FfiConverterSequenceTypeComposeOutput.allocationSize(value.`outputs`) +
-            FfiConverterSequenceFloat.allocationSize(value.`feeRates`) +
-            FfiConverterOptionalTypeCoinSelection.allocationSize(value.`coinSelection`)
-    )
-
-    override fun write(value: ComposeParams, buf: ByteBuffer) {
-        FfiConverterTypeWalletParams.write(value.`wallet`, buf)
-        FfiConverterSequenceTypeComposeOutput.write(value.`outputs`, buf)
-        FfiConverterSequenceFloat.write(value.`feeRates`, buf)
-        FfiConverterOptionalTypeCoinSelection.write(value.`coinSelection`, buf)
     }
 }
 
@@ -6416,31 +6221,53 @@ public object FfiConverterTypePubkyAuth: FfiConverterRustBuffer<PubkyAuth> {
 
 
 
-public object FfiConverterTypeSingleAddressInfoResult: FfiConverterRustBuffer<SingleAddressInfoResult> {
-    override fun read(buf: ByteBuffer): SingleAddressInfoResult {
-        return SingleAddressInfoResult(
+public object FfiConverterTypePubkyProfile: FfiConverterRustBuffer<PubkyProfile> {
+    override fun read(buf: ByteBuffer): PubkyProfile {
+        return PubkyProfile(
             FfiConverterString.read(buf),
-            FfiConverterULong.read(buf),
-            FfiConverterSequenceTypeAccountUtxo.read(buf),
-            FfiConverterUInt.read(buf),
-            FfiConverterUInt.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalSequenceTypePubkyProfileLink.read(buf),
+            FfiConverterOptionalString.read(buf),
         )
     }
 
-    override fun allocationSize(value: SingleAddressInfoResult): ULong = (
-            FfiConverterString.allocationSize(value.`address`) +
-            FfiConverterULong.allocationSize(value.`balance`) +
-            FfiConverterSequenceTypeAccountUtxo.allocationSize(value.`utxos`) +
-            FfiConverterUInt.allocationSize(value.`transfers`) +
-            FfiConverterUInt.allocationSize(value.`blockHeight`)
+    override fun allocationSize(value: PubkyProfile): ULong = (
+            FfiConverterString.allocationSize(value.`name`) +
+            FfiConverterOptionalString.allocationSize(value.`bio`) +
+            FfiConverterOptionalString.allocationSize(value.`image`) +
+            FfiConverterOptionalSequenceTypePubkyProfileLink.allocationSize(value.`links`) +
+            FfiConverterOptionalString.allocationSize(value.`status`)
     )
 
-    override fun write(value: SingleAddressInfoResult, buf: ByteBuffer) {
-        FfiConverterString.write(value.`address`, buf)
-        FfiConverterULong.write(value.`balance`, buf)
-        FfiConverterSequenceTypeAccountUtxo.write(value.`utxos`, buf)
-        FfiConverterUInt.write(value.`transfers`, buf)
-        FfiConverterUInt.write(value.`blockHeight`, buf)
+    override fun write(value: PubkyProfile, buf: ByteBuffer) {
+        FfiConverterString.write(value.`name`, buf)
+        FfiConverterOptionalString.write(value.`bio`, buf)
+        FfiConverterOptionalString.write(value.`image`, buf)
+        FfiConverterOptionalSequenceTypePubkyProfileLink.write(value.`links`, buf)
+        FfiConverterOptionalString.write(value.`status`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypePubkyProfileLink: FfiConverterRustBuffer<PubkyProfileLink> {
+    override fun read(buf: ByteBuffer): PubkyProfileLink {
+        return PubkyProfileLink(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PubkyProfileLink): ULong = (
+            FfiConverterString.allocationSize(value.`title`) +
+            FfiConverterString.allocationSize(value.`url`)
+    )
+
+    override fun write(value: PubkyProfileLink, buf: ByteBuffer) {
+        FfiConverterString.write(value.`title`, buf)
+        FfiConverterString.write(value.`url`, buf)
     }
 }
 
@@ -6973,20 +6800,17 @@ public object FfiConverterTypeTrezorSignedTx: FfiConverterRustBuffer<TrezorSigne
         return TrezorSignedTx(
             FfiConverterSequenceString.read(buf),
             FfiConverterString.read(buf),
-            FfiConverterOptionalString.read(buf),
         )
     }
 
     override fun allocationSize(value: TrezorSignedTx): ULong = (
             FfiConverterSequenceString.allocationSize(value.`signatures`) +
-            FfiConverterString.allocationSize(value.`serializedTx`) +
-            FfiConverterOptionalString.allocationSize(value.`txid`)
+            FfiConverterString.allocationSize(value.`serializedTx`)
     )
 
     override fun write(value: TrezorSignedTx, buf: ByteBuffer) {
         FfiConverterSequenceString.write(value.`signatures`, buf)
         FfiConverterString.write(value.`serializedTx`, buf)
-        FfiConverterOptionalString.write(value.`txid`, buf)
     }
 }
 
@@ -7226,184 +7050,6 @@ public object FfiConverterTypeValidationResult: FfiConverterRustBuffer<Validatio
         FfiConverterString.write(value.`address`, buf)
         FfiConverterTypeNetworkType.write(value.`network`, buf)
         FfiConverterTypeAddressType.write(value.`addressType`, buf)
-    }
-}
-
-
-
-
-public object FfiConverterTypeWalletParams: FfiConverterRustBuffer<WalletParams> {
-    override fun read(buf: ByteBuffer): WalletParams {
-        return WalletParams(
-            FfiConverterString.read(buf),
-            FfiConverterString.read(buf),
-            FfiConverterOptionalString.read(buf),
-            FfiConverterOptionalTypeNetwork.read(buf),
-            FfiConverterOptionalTypeAccountType.read(buf),
-        )
-    }
-
-    override fun allocationSize(value: WalletParams): ULong = (
-            FfiConverterString.allocationSize(value.`extendedKey`) +
-            FfiConverterString.allocationSize(value.`electrumUrl`) +
-            FfiConverterOptionalString.allocationSize(value.`fingerprint`) +
-            FfiConverterOptionalTypeNetwork.allocationSize(value.`network`) +
-            FfiConverterOptionalTypeAccountType.allocationSize(value.`accountType`)
-    )
-
-    override fun write(value: WalletParams, buf: ByteBuffer) {
-        FfiConverterString.write(value.`extendedKey`, buf)
-        FfiConverterString.write(value.`electrumUrl`, buf)
-        FfiConverterOptionalString.write(value.`fingerprint`, buf)
-        FfiConverterOptionalTypeNetwork.write(value.`network`, buf)
-        FfiConverterOptionalTypeAccountType.write(value.`accountType`, buf)
-    }
-}
-
-
-
-
-public object AccountInfoExceptionErrorHandler : UniffiRustCallStatusErrorHandler<AccountInfoException> {
-    override fun lift(errorBuf: RustBufferByValue): AccountInfoException = FfiConverterTypeAccountInfoError.lift(errorBuf)
-}
-
-public object FfiConverterTypeAccountInfoError : FfiConverterRustBuffer<AccountInfoException> {
-    override fun read(buf: ByteBuffer): AccountInfoException {
-        return when (buf.getInt()) {
-            1 -> AccountInfoException.InvalidExtendedKey(
-                FfiConverterString.read(buf),
-                )
-            2 -> AccountInfoException.InvalidAddress(
-                FfiConverterString.read(buf),
-                )
-            3 -> AccountInfoException.ElectrumException(
-                FfiConverterString.read(buf),
-                )
-            4 -> AccountInfoException.WalletException(
-                FfiConverterString.read(buf),
-                )
-            5 -> AccountInfoException.SyncException(
-                FfiConverterString.read(buf),
-                )
-            6 -> AccountInfoException.UnsupportedKeyType(
-                FfiConverterString.read(buf),
-                )
-            7 -> AccountInfoException.NetworkMismatch(
-                FfiConverterString.read(buf),
-                )
-            8 -> AccountInfoException.InvalidTxid(
-                FfiConverterString.read(buf),
-                )
-            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
-        }
-    }
-
-    override fun allocationSize(value: AccountInfoException): ULong {
-        return when (value) {
-            is AccountInfoException.InvalidExtendedKey -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-                + FfiConverterString.allocationSize(value.`errorDetails`)
-            )
-            is AccountInfoException.InvalidAddress -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-                + FfiConverterString.allocationSize(value.`errorDetails`)
-            )
-            is AccountInfoException.ElectrumException -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-                + FfiConverterString.allocationSize(value.`errorDetails`)
-            )
-            is AccountInfoException.WalletException -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-                + FfiConverterString.allocationSize(value.`errorDetails`)
-            )
-            is AccountInfoException.SyncException -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-                + FfiConverterString.allocationSize(value.`errorDetails`)
-            )
-            is AccountInfoException.UnsupportedKeyType -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-                + FfiConverterString.allocationSize(value.`errorDetails`)
-            )
-            is AccountInfoException.NetworkMismatch -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-                + FfiConverterString.allocationSize(value.`errorDetails`)
-            )
-            is AccountInfoException.InvalidTxid -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-                + FfiConverterString.allocationSize(value.`errorDetails`)
-            )
-        }
-    }
-
-    override fun write(value: AccountInfoException, buf: ByteBuffer) {
-        when (value) {
-            is AccountInfoException.InvalidExtendedKey -> {
-                buf.putInt(1)
-                FfiConverterString.write(value.`errorDetails`, buf)
-                Unit
-            }
-            is AccountInfoException.InvalidAddress -> {
-                buf.putInt(2)
-                FfiConverterString.write(value.`errorDetails`, buf)
-                Unit
-            }
-            is AccountInfoException.ElectrumException -> {
-                buf.putInt(3)
-                FfiConverterString.write(value.`errorDetails`, buf)
-                Unit
-            }
-            is AccountInfoException.WalletException -> {
-                buf.putInt(4)
-                FfiConverterString.write(value.`errorDetails`, buf)
-                Unit
-            }
-            is AccountInfoException.SyncException -> {
-                buf.putInt(5)
-                FfiConverterString.write(value.`errorDetails`, buf)
-                Unit
-            }
-            is AccountInfoException.UnsupportedKeyType -> {
-                buf.putInt(6)
-                FfiConverterString.write(value.`errorDetails`, buf)
-                Unit
-            }
-            is AccountInfoException.NetworkMismatch -> {
-                buf.putInt(7)
-                FfiConverterString.write(value.`errorDetails`, buf)
-                Unit
-            }
-            is AccountInfoException.InvalidTxid -> {
-                buf.putInt(8)
-                FfiConverterString.write(value.`errorDetails`, buf)
-                Unit
-            }
-        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
-    }
-}
-
-
-
-
-
-public object FfiConverterTypeAccountType: FfiConverterRustBuffer<AccountType> {
-    override fun read(buf: ByteBuffer): AccountType = try {
-        AccountType.entries[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
-    }
-
-    override fun allocationSize(value: AccountType): ULong = 4UL
-
-    override fun write(value: AccountType, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
     }
 }
 
@@ -7924,83 +7570,6 @@ public object FfiConverterTypeBlocktankError : FfiConverterRustBuffer<BlocktankE
 
 
 
-public object BroadcastExceptionErrorHandler : UniffiRustCallStatusErrorHandler<BroadcastException> {
-    override fun lift(errorBuf: RustBufferByValue): BroadcastException = FfiConverterTypeBroadcastError.lift(errorBuf)
-}
-
-public object FfiConverterTypeBroadcastError : FfiConverterRustBuffer<BroadcastException> {
-    override fun read(buf: ByteBuffer): BroadcastException {
-        return when (buf.getInt()) {
-            1 -> BroadcastException.InvalidHex(
-                FfiConverterString.read(buf),
-                )
-            2 -> BroadcastException.InvalidTransaction(
-                FfiConverterString.read(buf),
-                )
-            3 -> BroadcastException.ElectrumException(
-                FfiConverterString.read(buf),
-                )
-            4 -> BroadcastException.TaskException(
-                FfiConverterString.read(buf),
-                )
-            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
-        }
-    }
-
-    override fun allocationSize(value: BroadcastException): ULong {
-        return when (value) {
-            is BroadcastException.InvalidHex -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-                + FfiConverterString.allocationSize(value.`errorDetails`)
-            )
-            is BroadcastException.InvalidTransaction -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-                + FfiConverterString.allocationSize(value.`errorDetails`)
-            )
-            is BroadcastException.ElectrumException -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-                + FfiConverterString.allocationSize(value.`errorDetails`)
-            )
-            is BroadcastException.TaskException -> (
-                // Add the size for the Int that specifies the variant plus the size needed for all fields
-                4UL
-                + FfiConverterString.allocationSize(value.`errorDetails`)
-            )
-        }
-    }
-
-    override fun write(value: BroadcastException, buf: ByteBuffer) {
-        when (value) {
-            is BroadcastException.InvalidHex -> {
-                buf.putInt(1)
-                FfiConverterString.write(value.`errorDetails`, buf)
-                Unit
-            }
-            is BroadcastException.InvalidTransaction -> {
-                buf.putInt(2)
-                FfiConverterString.write(value.`errorDetails`, buf)
-                Unit
-            }
-            is BroadcastException.ElectrumException -> {
-                buf.putInt(3)
-                FfiConverterString.write(value.`errorDetails`, buf)
-                Unit
-            }
-            is BroadcastException.TaskException -> {
-                buf.putInt(4)
-                FfiConverterString.write(value.`errorDetails`, buf)
-                Unit
-            }
-        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
-    }
-}
-
-
-
-
 
 public object FfiConverterTypeBtBolt11InvoiceState: FfiConverterRustBuffer<BtBolt11InvoiceState> {
     override fun read(buf: ByteBuffer): BtBolt11InvoiceState = try {
@@ -8139,151 +7708,6 @@ public object FfiConverterTypeCJitStateEnum: FfiConverterRustBuffer<CJitStateEnu
 
     override fun write(value: CJitStateEnum, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
-    }
-}
-
-
-
-
-
-public object FfiConverterTypeCoinSelection: FfiConverterRustBuffer<CoinSelection> {
-    override fun read(buf: ByteBuffer): CoinSelection = try {
-        CoinSelection.entries[buf.getInt() - 1]
-    } catch (e: IndexOutOfBoundsException) {
-        throw RuntimeException("invalid enum value, something is very wrong!!", e)
-    }
-
-    override fun allocationSize(value: CoinSelection): ULong = 4UL
-
-    override fun write(value: CoinSelection, buf: ByteBuffer) {
-        buf.putInt(value.ordinal + 1)
-    }
-}
-
-
-
-
-
-public object FfiConverterTypeComposeOutput : FfiConverterRustBuffer<ComposeOutput>{
-    override fun read(buf: ByteBuffer): ComposeOutput {
-        return when(buf.getInt()) {
-            1 -> ComposeOutput.Payment(
-                FfiConverterString.read(buf),
-                FfiConverterULong.read(buf),
-                )
-            2 -> ComposeOutput.SendMax(
-                FfiConverterString.read(buf),
-                )
-            3 -> ComposeOutput.OpReturn(
-                FfiConverterString.read(buf),
-                )
-            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
-        }
-    }
-
-    override fun allocationSize(value: ComposeOutput): ULong = when(value) {
-        is ComposeOutput.Payment -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`address`)
-                + FfiConverterULong.allocationSize(value.`amountSats`)
-            )
-        }
-        is ComposeOutput.SendMax -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`address`)
-            )
-        }
-        is ComposeOutput.OpReturn -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`dataHex`)
-            )
-        }
-    }
-
-    override fun write(value: ComposeOutput, buf: ByteBuffer) {
-        when(value) {
-            is ComposeOutput.Payment -> {
-                buf.putInt(1)
-                FfiConverterString.write(value.`address`, buf)
-                FfiConverterULong.write(value.`amountSats`, buf)
-                Unit
-            }
-            is ComposeOutput.SendMax -> {
-                buf.putInt(2)
-                FfiConverterString.write(value.`address`, buf)
-                Unit
-            }
-            is ComposeOutput.OpReturn -> {
-                buf.putInt(3)
-                FfiConverterString.write(value.`dataHex`, buf)
-                Unit
-            }
-        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
-    }
-}
-
-
-
-
-
-public object FfiConverterTypeComposeResult : FfiConverterRustBuffer<ComposeResult>{
-    override fun read(buf: ByteBuffer): ComposeResult {
-        return when(buf.getInt()) {
-            1 -> ComposeResult.Success(
-                FfiConverterString.read(buf),
-                FfiConverterULong.read(buf),
-                FfiConverterFloat.read(buf),
-                FfiConverterULong.read(buf),
-                )
-            2 -> ComposeResult.Error(
-                FfiConverterString.read(buf),
-                )
-            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
-        }
-    }
-
-    override fun allocationSize(value: ComposeResult): ULong = when(value) {
-        is ComposeResult.Success -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`psbt`)
-                + FfiConverterULong.allocationSize(value.`fee`)
-                + FfiConverterFloat.allocationSize(value.`feeRate`)
-                + FfiConverterULong.allocationSize(value.`totalSpent`)
-            )
-        }
-        is ComposeResult.Error -> {
-            // Add the size for the Int that specifies the variant plus the size needed for all fields
-            (
-                4UL
-                + FfiConverterString.allocationSize(value.`error`)
-            )
-        }
-    }
-
-    override fun write(value: ComposeResult, buf: ByteBuffer) {
-        when(value) {
-            is ComposeResult.Success -> {
-                buf.putInt(1)
-                FfiConverterString.write(value.`psbt`, buf)
-                FfiConverterULong.write(value.`fee`, buf)
-                FfiConverterFloat.write(value.`feeRate`, buf)
-                FfiConverterULong.write(value.`totalSpent`, buf)
-                Unit
-            }
-            is ComposeResult.Error -> {
-                buf.putInt(2)
-                FfiConverterString.write(value.`error`, buf)
-                Unit
-            }
-        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
 }
 
@@ -8710,6 +8134,13 @@ public object FfiConverterTypePubkyError : FfiConverterRustBuffer<PubkyException
             4 -> PubkyException.ResolutionFailed(
                 FfiConverterString.read(buf),
                 )
+            5 -> PubkyException.FetchFailed(
+                FfiConverterString.read(buf),
+                )
+            6 -> PubkyException.ProfileNotFound()
+            7 -> PubkyException.ProfileParseFailed(
+                FfiConverterString.read(buf),
+                )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
@@ -8735,6 +8166,20 @@ public object FfiConverterTypePubkyError : FfiConverterRustBuffer<PubkyException
                 4UL
                 + FfiConverterString.allocationSize(value.`reason`)
             )
+            is PubkyException.FetchFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+            is PubkyException.ProfileNotFound -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is PubkyException.ProfileParseFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
         }
     }
 
@@ -8756,6 +8201,20 @@ public object FfiConverterTypePubkyError : FfiConverterRustBuffer<PubkyException
             }
             is PubkyException.ResolutionFailed -> {
                 buf.putInt(4)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is PubkyException.FetchFailed -> {
+                buf.putInt(5)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is PubkyException.ProfileNotFound -> {
+                buf.putInt(6)
+                Unit
+            }
+            is PubkyException.ProfileParseFailed -> {
+                buf.putInt(7)
                 FfiConverterString.write(value.`reason`, buf)
                 Unit
             }
@@ -10157,35 +9616,6 @@ public object FfiConverterOptionalTypeTrezorFeatures: FfiConverterRustBuffer<Tre
 
 
 
-public object FfiConverterOptionalTypeAccountType: FfiConverterRustBuffer<AccountType?> {
-    override fun read(buf: ByteBuffer): AccountType? {
-        if (buf.get().toInt() == 0) {
-            return null
-        }
-        return FfiConverterTypeAccountType.read(buf)
-    }
-
-    override fun allocationSize(value: AccountType?): ULong {
-        if (value == null) {
-            return 1UL
-        } else {
-            return 1UL + FfiConverterTypeAccountType.allocationSize(value)
-        }
-    }
-
-    override fun write(value: AccountType?, buf: ByteBuffer) {
-        if (value == null) {
-            buf.put(0)
-        } else {
-            buf.put(1)
-            FfiConverterTypeAccountType.write(value, buf)
-        }
-    }
-}
-
-
-
-
 public object FfiConverterOptionalTypeActivity: FfiConverterRustBuffer<Activity?> {
     override fun read(buf: ByteBuffer): Activity? {
         if (buf.get().toInt() == 0) {
@@ -10324,35 +9754,6 @@ public object FfiConverterOptionalTypeCJitStateEnum: FfiConverterRustBuffer<CJit
         } else {
             buf.put(1)
             FfiConverterTypeCJitStateEnum.write(value, buf)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterOptionalTypeCoinSelection: FfiConverterRustBuffer<CoinSelection?> {
-    override fun read(buf: ByteBuffer): CoinSelection? {
-        if (buf.get().toInt() == 0) {
-            return null
-        }
-        return FfiConverterTypeCoinSelection.read(buf)
-    }
-
-    override fun allocationSize(value: CoinSelection?): ULong {
-        if (value == null) {
-            return 1UL
-        } else {
-            return 1UL + FfiConverterTypeCoinSelection.allocationSize(value)
-        }
-    }
-
-    override fun write(value: CoinSelection?, buf: ByteBuffer) {
-        if (value == null) {
-            buf.put(0)
-        } else {
-            buf.put(1)
-            FfiConverterTypeCoinSelection.write(value, buf)
         }
     }
 }
@@ -10592,6 +9993,35 @@ public object FfiConverterOptionalSequenceTypeIManualRefund: FfiConverterRustBuf
 
 
 
+public object FfiConverterOptionalSequenceTypePubkyProfileLink: FfiConverterRustBuffer<List<PubkyProfileLink>?> {
+    override fun read(buf: ByteBuffer): List<PubkyProfileLink>? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterSequenceTypePubkyProfileLink.read(buf)
+    }
+
+    override fun allocationSize(value: List<PubkyProfileLink>?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterSequenceTypePubkyProfileLink.allocationSize(value)
+        }
+    }
+
+    override fun write(value: List<PubkyProfileLink>?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterSequenceTypePubkyProfileLink.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalMapStringString: FfiConverterRustBuffer<Map<kotlin.String, kotlin.String>?> {
     override fun read(buf: ByteBuffer): Map<kotlin.String, kotlin.String>? {
         if (buf.get().toInt() == 0) {
@@ -10621,31 +10051,6 @@ public object FfiConverterOptionalMapStringString: FfiConverterRustBuffer<Map<ko
 
 
 
-public object FfiConverterSequenceFloat: FfiConverterRustBuffer<List<kotlin.Float>> {
-    override fun read(buf: ByteBuffer): List<kotlin.Float> {
-        val len = buf.getInt()
-        return List<kotlin.Float>(len) {
-            FfiConverterFloat.read(buf)
-        }
-    }
-
-    override fun allocationSize(value: List<kotlin.Float>): ULong {
-        val sizeForLength = 4UL
-        val sizeForItems = value.sumOf { FfiConverterFloat.allocationSize(it) }
-        return sizeForLength + sizeForItems
-    }
-
-    override fun write(value: List<kotlin.Float>, buf: ByteBuffer) {
-        buf.putInt(value.size)
-        value.iterator().forEach {
-            FfiConverterFloat.write(it, buf)
-        }
-    }
-}
-
-
-
-
 public object FfiConverterSequenceString: FfiConverterRustBuffer<List<kotlin.String>> {
     override fun read(buf: ByteBuffer): List<kotlin.String> {
         val len = buf.getInt()
@@ -10664,31 +10069,6 @@ public object FfiConverterSequenceString: FfiConverterRustBuffer<List<kotlin.Str
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterString.write(it, buf)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterSequenceTypeAccountUtxo: FfiConverterRustBuffer<List<AccountUtxo>> {
-    override fun read(buf: ByteBuffer): List<AccountUtxo> {
-        val len = buf.getInt()
-        return List<AccountUtxo>(len) {
-            FfiConverterTypeAccountUtxo.read(buf)
-        }
-    }
-
-    override fun allocationSize(value: List<AccountUtxo>): ULong {
-        val sizeForLength = 4UL
-        val sizeForItems = value.sumOf { FfiConverterTypeAccountUtxo.allocationSize(it) }
-        return sizeForLength + sizeForItems
-    }
-
-    override fun write(value: List<AccountUtxo>, buf: ByteBuffer) {
-        buf.putInt(value.size)
-        value.iterator().forEach {
-            FfiConverterTypeAccountUtxo.write(it, buf)
         }
     }
 }
@@ -11021,6 +10401,31 @@ public object FfiConverterSequenceTypePreActivityMetadata: FfiConverterRustBuffe
 
 
 
+public object FfiConverterSequenceTypePubkyProfileLink: FfiConverterRustBuffer<List<PubkyProfileLink>> {
+    override fun read(buf: ByteBuffer): List<PubkyProfileLink> {
+        val len = buf.getInt()
+        return List<PubkyProfileLink>(len) {
+            FfiConverterTypePubkyProfileLink.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<PubkyProfileLink>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypePubkyProfileLink.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<PubkyProfileLink>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypePubkyProfileLink.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceTypeTransactionDetails: FfiConverterRustBuffer<List<TransactionDetails>> {
     override fun read(buf: ByteBuffer): List<TransactionDetails> {
         val len = buf.getInt()
@@ -11264,56 +10669,6 @@ public object FfiConverterSequenceTypeActivity: FfiConverterRustBuffer<List<Acti
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeActivity.write(it, buf)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterSequenceTypeComposeOutput: FfiConverterRustBuffer<List<ComposeOutput>> {
-    override fun read(buf: ByteBuffer): List<ComposeOutput> {
-        val len = buf.getInt()
-        return List<ComposeOutput>(len) {
-            FfiConverterTypeComposeOutput.read(buf)
-        }
-    }
-
-    override fun allocationSize(value: List<ComposeOutput>): ULong {
-        val sizeForLength = 4UL
-        val sizeForItems = value.sumOf { FfiConverterTypeComposeOutput.allocationSize(it) }
-        return sizeForLength + sizeForItems
-    }
-
-    override fun write(value: List<ComposeOutput>, buf: ByteBuffer) {
-        buf.putInt(value.size)
-        value.iterator().forEach {
-            FfiConverterTypeComposeOutput.write(it, buf)
-        }
-    }
-}
-
-
-
-
-public object FfiConverterSequenceTypeComposeResult: FfiConverterRustBuffer<List<ComposeResult>> {
-    override fun read(buf: ByteBuffer): List<ComposeResult> {
-        val len = buf.getInt()
-        return List<ComposeResult>(len) {
-            FfiConverterTypeComposeResult.read(buf)
-        }
-    }
-
-    override fun allocationSize(value: List<ComposeResult>): ULong {
-        val sizeForLength = 4UL
-        val sizeForItems = value.sumOf { FfiConverterTypeComposeResult.allocationSize(it) }
-        return sizeForLength + sizeForItems
-    }
-
-    override fun write(value: List<ComposeResult>, buf: ByteBuffer) {
-        buf.putInt(value.size)
-        value.iterator().forEach {
-            FfiConverterTypeComposeResult.write(it, buf)
         }
     }
 }
@@ -11744,6 +11099,23 @@ public suspend fun `estimateOrderFeeFull`(`lspBalanceSat`: kotlin.ULong, `channe
 }
 
 @Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `fetchPubkyContacts`(`publicKey`: kotlin.String): List<kotlin.String> {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_contacts(
+            FfiConverterString.lower(`publicKey`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterSequenceString.lift(it) },
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
+    )
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
 public suspend fun `fetchPubkyFile`(`uri`: kotlin.String): kotlin.ByteArray {
     return uniffiRustCallAsync(
         UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file(
@@ -11755,6 +11127,23 @@ public suspend fun `fetchPubkyFile`(`uri`: kotlin.String): kotlin.ByteArray {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
         // lift function
         { FfiConverterByteArray.lift(it) },
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
+    )
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `fetchPubkyProfile`(`publicKey`: kotlin.String): PubkyProfile {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_profile(
+            FfiConverterString.lower(`publicKey`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypePubkyProfile.lift(it) },
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -12185,100 +11574,6 @@ public fun `mnemonicToSeed`(`mnemonicPhrase`: kotlin.String, `passphrase`: kotli
     })
 }
 
-/**
- * Broadcast a signed raw transaction via Electrum.
- *
- * Takes a hex-encoded serialized transaction and an Electrum server URL.
- * Returns the transaction ID on success.
- */
-@Throws(BroadcastException::class, kotlin.coroutines.cancellation.CancellationException::class)
-public suspend fun `onchainBroadcastRawTx`(`serializedTx`: kotlin.String, `electrumUrl`: kotlin.String): kotlin.String {
-    return uniffiRustCallAsync(
-        UniffiLib.uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx(
-            FfiConverterString.lower(`serializedTx`),
-            FfiConverterString.lower(`electrumUrl`),
-        ),
-        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
-        // lift function
-        { FfiConverterString.lift(it) },
-        // Error FFI converter
-        BroadcastExceptionErrorHandler,
-    )
-}
-
-/**
- * Compose a transaction for multiple fee rates, returning one PSBT per rate.
- *
- * Creates a BDK wallet from the extended key, syncs via Electrum, then
- * builds PSBTs using BDK's TxBuilder. The PSBTs include BIP32 derivation
- * paths (when fingerprint is provided) and are ready for signing by any
- * PSBT-compatible signer (Trezor, Ledger, software wallet, etc.).
- */
-public suspend fun `onchainComposeTransaction`(`params`: ComposeParams): List<ComposeResult> {
-    return uniffiRustCallAsync(
-        UniffiLib.uniffi_bitkitcore_fn_func_onchain_compose_transaction(
-            FfiConverterTypeComposeParams.lower(`params`),
-        ),
-        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
-        // lift function
-        { FfiConverterSequenceTypeComposeResult.lift(it) },
-        // Error FFI converter
-        UniffiNullRustCallStatusErrorHandler,
-    )
-}
-
-/**
- * Query account information for an extended public key via Electrum.
- */
-@Throws(AccountInfoException::class, kotlin.coroutines.cancellation.CancellationException::class)
-public suspend fun `onchainGetAccountInfo`(`extendedKey`: kotlin.String, `electrumUrl`: kotlin.String, `network`: Network?, `gapLimit`: kotlin.UInt?, `scriptType`: AccountType?): AccountInfoResult {
-    return uniffiRustCallAsync(
-        UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_account_info(
-            FfiConverterString.lower(`extendedKey`),
-            FfiConverterString.lower(`electrumUrl`),
-            FfiConverterOptionalTypeNetwork.lower(`network`),
-            FfiConverterOptionalUInt.lower(`gapLimit`),
-            FfiConverterOptionalTypeAccountType.lower(`scriptType`),
-        ),
-        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
-        // lift function
-        { FfiConverterTypeAccountInfoResult.lift(it) },
-        // Error FFI converter
-        AccountInfoExceptionErrorHandler,
-    )
-}
-
-/**
- * Query balance and UTXOs for a single Bitcoin address via Electrum.
- */
-@Throws(AccountInfoException::class, kotlin.coroutines.cancellation.CancellationException::class)
-public suspend fun `onchainGetAddressInfo`(`address`: kotlin.String, `electrumUrl`: kotlin.String, `network`: Network?): SingleAddressInfoResult {
-    return uniffiRustCallAsync(
-        UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_address_info(
-            FfiConverterString.lower(`address`),
-            FfiConverterString.lower(`electrumUrl`),
-            FfiConverterOptionalTypeNetwork.lower(`network`),
-        ),
-        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
-        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
-        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
-        // lift function
-        { FfiConverterTypeSingleAddressInfoResult.lift(it) },
-        // Error FFI converter
-        AccountInfoExceptionErrorHandler,
-    )
-}
-
 @Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
 public suspend fun `openChannel`(`orderId`: kotlin.String, `connectionString`: kotlin.String): IBtOrder {
     return uniffiRustCallAsync(
@@ -12558,18 +11853,6 @@ public suspend fun `testNotification`(`deviceToken`: kotlin.String, `secretMessa
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
-}
-
-/**
- * Convert an account type to its corresponding Trezor script type.
- */
-public fun `trezorAccountTypeToScriptType`(`accountType`: AccountType): TrezorScriptType {
-    return FfiConverterTypeTrezorScriptType.lift(uniffiRustCall { uniffiRustCallStatus ->
-        UniffiLib.uniffi_bitkitcore_fn_func_trezor_account_type_to_script_type(
-            FfiConverterTypeAccountType.lower(`accountType`),
-            uniffiRustCallStatus,
-        )
-    })
 }
 
 /**
