@@ -747,7 +747,11 @@ pub(crate) fn resolve_wallet_setup(
 
     if let Some(net) = network {
         let specified = onchain_to_bdk_network(net);
-        if specified != detected_network {
+        // Regtest uses the same key prefixes (tpub/upub/vpub) as Testnet,
+        // so treat them as compatible for key validation purposes.
+        let networks_compatible = specified == detected_network
+            || (specified == BdkNetwork::Regtest && detected_network == BdkNetwork::Testnet);
+        if !networks_compatible {
             return Err(AccountInfoError::NetworkMismatch {
                 error_details: format!(
                     "Key prefix suggests {:?} but {:?} was specified",
@@ -790,10 +794,17 @@ pub(crate) fn resolve_wallet_setup(
     let (external_desc, internal_desc) =
         build_descriptors(&normalized_key, account_type, key_origin);
 
+    // Use the specified network when provided and compatible, so that
+    // regtest addresses (bcrt1q) are validated correctly even though the
+    // key prefix (tpub) is detected as testnet.
+    let effective_network = network
+        .map(onchain_to_bdk_network)
+        .unwrap_or(detected_network);
+
     Ok(WalletSetup {
         external_desc,
         internal_desc,
-        network: detected_network,
+        network: effective_network,
         base_path,
         account_type,
     })
