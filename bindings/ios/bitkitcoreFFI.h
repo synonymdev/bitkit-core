@@ -600,9 +600,19 @@ uint64_t uniffi_bitkitcore_fn_func_estimate_order_fee(uint64_t lsp_balance_sat, 
 uint64_t uniffi_bitkitcore_fn_func_estimate_order_fee_full(uint64_t lsp_balance_sat, uint32_t channel_expiry_weeks, RustBuffer options
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_FETCH_PUBKY_CONTACTS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_FETCH_PUBKY_CONTACTS
+uint64_t uniffi_bitkitcore_fn_func_fetch_pubky_contacts(RustBuffer public_key
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_FETCH_PUBKY_FILE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_FETCH_PUBKY_FILE
 uint64_t uniffi_bitkitcore_fn_func_fetch_pubky_file(RustBuffer uri
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_FETCH_PUBKY_PROFILE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_FETCH_PUBKY_PROFILE
+uint64_t uniffi_bitkitcore_fn_func_fetch_pubky_profile(RustBuffer public_key
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GENERATE_MNEMONIC
@@ -1510,9 +1520,21 @@ uint16_t uniffi_bitkitcore_checksum_func_estimate_order_fee_full(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_CONTACTS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_CONTACTS
+uint16_t uniffi_bitkitcore_checksum_func_fetch_pubky_contacts(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_FILE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_FILE
 uint16_t uniffi_bitkitcore_checksum_func_fetch_pubky_file(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_PROFILE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_PROFILE
+uint16_t uniffi_bitkitcore_checksum_func_fetch_pubky_profile(void
     
 );
 #endif

@@ -35,7 +35,7 @@ pub use modules::scanner::{
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
-use crate::modules::pubky::PubkyError;
+use crate::modules::pubky::{PubkyError, PubkyProfile};
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
 use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances};
@@ -1496,6 +1496,26 @@ pub async fn complete_pubky_auth() -> Result<String, PubkyError> {
     rt.spawn(async move {
         crate::modules::pubky::complete_pubky_auth().await
     }).await.unwrap_or_else(|e| Err(PubkyError::AuthFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn fetch_pubky_profile(public_key: String) -> Result<PubkyProfile, PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::fetch_pubky_profile(public_key).await
+    }).await.unwrap_or_else(|e| Err(PubkyError::FetchFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn fetch_pubky_contacts(public_key: String) -> Result<Vec<String>, PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::fetch_pubky_contacts(public_key).await
+    }).await.unwrap_or_else(|e| Err(PubkyError::FetchFailed {
         reason: format!("Runtime error: {}", e)
     }))
 }

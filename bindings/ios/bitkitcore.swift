@@ -7271,6 +7271,174 @@ public func FfiConverterTypePubkyAuth_lower(_ value: PubkyAuth) -> RustBuffer {
 }
 
 
+public struct PubkyProfile {
+    public var name: String
+    public var bio: String?
+    public var image: String?
+    public var links: [PubkyProfileLink]?
+    public var status: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(name: String, bio: String?, image: String?, links: [PubkyProfileLink]?, status: String?) {
+        self.name = name
+        self.bio = bio
+        self.image = image
+        self.links = links
+        self.status = status
+    }
+}
+
+#if compiler(>=6)
+extension PubkyProfile: Sendable {}
+#endif
+
+
+extension PubkyProfile: Equatable, Hashable {
+    public static func ==(lhs: PubkyProfile, rhs: PubkyProfile) -> Bool {
+        if lhs.name != rhs.name {
+            return false
+        }
+        if lhs.bio != rhs.bio {
+            return false
+        }
+        if lhs.image != rhs.image {
+            return false
+        }
+        if lhs.links != rhs.links {
+            return false
+        }
+        if lhs.status != rhs.status {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
+        hasher.combine(bio)
+        hasher.combine(image)
+        hasher.combine(links)
+        hasher.combine(status)
+    }
+}
+
+extension PubkyProfile: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePubkyProfile: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PubkyProfile {
+        return
+            try PubkyProfile(
+                name: FfiConverterString.read(from: &buf), 
+                bio: FfiConverterOptionString.read(from: &buf), 
+                image: FfiConverterOptionString.read(from: &buf), 
+                links: FfiConverterOptionSequenceTypePubkyProfileLink.read(from: &buf), 
+                status: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PubkyProfile, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.name, into: &buf)
+        FfiConverterOptionString.write(value.bio, into: &buf)
+        FfiConverterOptionString.write(value.image, into: &buf)
+        FfiConverterOptionSequenceTypePubkyProfileLink.write(value.links, into: &buf)
+        FfiConverterOptionString.write(value.status, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyProfile_lift(_ buf: RustBuffer) throws -> PubkyProfile {
+    return try FfiConverterTypePubkyProfile.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyProfile_lower(_ value: PubkyProfile) -> RustBuffer {
+    return FfiConverterTypePubkyProfile.lower(value)
+}
+
+
+public struct PubkyProfileLink {
+    public var title: String
+    public var url: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(title: String, url: String) {
+        self.title = title
+        self.url = url
+    }
+}
+
+#if compiler(>=6)
+extension PubkyProfileLink: Sendable {}
+#endif
+
+
+extension PubkyProfileLink: Equatable, Hashable {
+    public static func ==(lhs: PubkyProfileLink, rhs: PubkyProfileLink) -> Bool {
+        if lhs.title != rhs.title {
+            return false
+        }
+        if lhs.url != rhs.url {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(title)
+        hasher.combine(url)
+    }
+}
+
+extension PubkyProfileLink: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePubkyProfileLink: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PubkyProfileLink {
+        return
+            try PubkyProfileLink(
+                title: FfiConverterString.read(from: &buf), 
+                url: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PubkyProfileLink, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.title, into: &buf)
+        FfiConverterString.write(value.url, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyProfileLink_lift(_ buf: RustBuffer) throws -> PubkyProfileLink {
+    return try FfiConverterTypePubkyProfileLink.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyProfileLink_lower(_ value: PubkyProfileLink) -> RustBuffer {
+    return FfiConverterTypePubkyProfileLink.lower(value)
+}
+
+
 public struct SweepResult {
     /**
      * The transaction ID of the sweep transaction
@@ -12866,6 +13034,11 @@ public enum PubkyError: Swift.Error {
     case NoActiveFlow
     case ResolutionFailed(reason: String
     )
+    case FetchFailed(reason: String
+    )
+    case ProfileNotFound
+    case ProfileParseFailed(reason: String
+    )
 }
 
 
@@ -12890,6 +13063,13 @@ public struct FfiConverterTypePubkyError: FfiConverterRustBuffer {
             )
         case 3: return .NoActiveFlow
         case 4: return .ResolutionFailed(
+            reason: try FfiConverterString.read(from: &buf)
+            )
+        case 5: return .FetchFailed(
+            reason: try FfiConverterString.read(from: &buf)
+            )
+        case 6: return .ProfileNotFound
+        case 7: return .ProfileParseFailed(
             reason: try FfiConverterString.read(from: &buf)
             )
 
@@ -12920,6 +13100,20 @@ public struct FfiConverterTypePubkyError: FfiConverterRustBuffer {
         
         case let .ResolutionFailed(reason):
             writeInt(&buf, Int32(4))
+            FfiConverterString.write(reason, into: &buf)
+            
+        
+        case let .FetchFailed(reason):
+            writeInt(&buf, Int32(5))
+            FfiConverterString.write(reason, into: &buf)
+            
+        
+        case .ProfileNotFound:
+            writeInt(&buf, Int32(6))
+        
+        
+        case let .ProfileParseFailed(reason):
+            writeInt(&buf, Int32(7))
             FfiConverterString.write(reason, into: &buf)
             
         }
@@ -14976,6 +15170,30 @@ fileprivate struct FfiConverterOptionSequenceTypeIManualRefund: FfiConverterRust
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionSequenceTypePubkyProfileLink: FfiConverterRustBuffer {
+    typealias SwiftType = [PubkyProfileLink]?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterSequenceTypePubkyProfileLink.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterSequenceTypePubkyProfileLink.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionDictionaryStringString: FfiConverterRustBuffer {
     typealias SwiftType = [String: String]?
 
@@ -15342,6 +15560,31 @@ fileprivate struct FfiConverterSequenceTypePreActivityMetadata: FfiConverterRust
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypePreActivityMetadata.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypePubkyProfileLink: FfiConverterRustBuffer {
+    typealias SwiftType = [PubkyProfileLink]
+
+    public static func write(_ value: [PubkyProfileLink], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypePubkyProfileLink.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PubkyProfileLink] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [PubkyProfileLink]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypePubkyProfileLink.read(from: &buf))
         }
         return seq
     }
@@ -15948,6 +16191,20 @@ public func estimateOrderFeeFull(lspBalanceSat: UInt64, channelExpiryWeeks: UInt
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
+public func fetchPubkyContacts(publicKey: String)async throws  -> [String]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_fetch_pubky_contacts(FfiConverterString.lower(publicKey)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceString.lift,
+            errorHandler: FfiConverterTypePubkyError_lift
+        )
+}
 public func fetchPubkyFile(uri: String)async throws  -> Data  {
     return
         try  await uniffiRustCallAsync(
@@ -15959,6 +16216,20 @@ public func fetchPubkyFile(uri: String)async throws  -> Data  {
             completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
             liftFunc: FfiConverterData.lift,
+            errorHandler: FfiConverterTypePubkyError_lift
+        )
+}
+public func fetchPubkyProfile(publicKey: String)async throws  -> PubkyProfile  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_fetch_pubky_profile(FfiConverterString.lower(publicKey)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypePubkyProfile_lift,
             errorHandler: FfiConverterTypePubkyError_lift
         )
 }
@@ -17089,7 +17360,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_fetch_pubky_contacts() != 18744) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_fetch_pubky_file() != 24890) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_fetch_pubky_profile() != 19709) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292) {

@@ -513,7 +513,11 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_fetch_pubky_contacts() != 18744:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_fetch_pubky_file() != 24890:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_fetch_pubky_profile() != 19709:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -1145,10 +1149,18 @@ _UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee_full.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee_full.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_contacts.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_contacts.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_profile.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_profile.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_generate_mnemonic.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1930,9 +1942,15 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee.restype = ctypes.c
 _UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_estimate_order_fee_full.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_contacts.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_contacts.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_file.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_file.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_profile.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_profile.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_generate_mnemonic.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_generate_mnemonic.restype = ctypes.c_uint16
@@ -6036,6 +6054,99 @@ class _UniffiConverterTypePubkyAuth(_UniffiConverterRustBuffer):
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.data, buf)
+
+
+class PubkyProfile:
+    name: "str"
+    bio: "typing.Optional[str]"
+    image: "typing.Optional[str]"
+    links: "typing.Optional[typing.List[PubkyProfileLink]]"
+    status: "typing.Optional[str]"
+    def __init__(self, *, name: "str", bio: "typing.Optional[str]", image: "typing.Optional[str]", links: "typing.Optional[typing.List[PubkyProfileLink]]", status: "typing.Optional[str]"):
+        self.name = name
+        self.bio = bio
+        self.image = image
+        self.links = links
+        self.status = status
+
+    def __str__(self):
+        return "PubkyProfile(name={}, bio={}, image={}, links={}, status={})".format(self.name, self.bio, self.image, self.links, self.status)
+
+    def __eq__(self, other):
+        if self.name != other.name:
+            return False
+        if self.bio != other.bio:
+            return False
+        if self.image != other.image:
+            return False
+        if self.links != other.links:
+            return False
+        if self.status != other.status:
+            return False
+        return True
+
+class _UniffiConverterTypePubkyProfile(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return PubkyProfile(
+            name=_UniffiConverterString.read(buf),
+            bio=_UniffiConverterOptionalString.read(buf),
+            image=_UniffiConverterOptionalString.read(buf),
+            links=_UniffiConverterOptionalSequenceTypePubkyProfileLink.read(buf),
+            status=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.name)
+        _UniffiConverterOptionalString.check_lower(value.bio)
+        _UniffiConverterOptionalString.check_lower(value.image)
+        _UniffiConverterOptionalSequenceTypePubkyProfileLink.check_lower(value.links)
+        _UniffiConverterOptionalString.check_lower(value.status)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.name, buf)
+        _UniffiConverterOptionalString.write(value.bio, buf)
+        _UniffiConverterOptionalString.write(value.image, buf)
+        _UniffiConverterOptionalSequenceTypePubkyProfileLink.write(value.links, buf)
+        _UniffiConverterOptionalString.write(value.status, buf)
+
+
+class PubkyProfileLink:
+    title: "str"
+    url: "str"
+    def __init__(self, *, title: "str", url: "str"):
+        self.title = title
+        self.url = url
+
+    def __str__(self):
+        return "PubkyProfileLink(title={}, url={})".format(self.title, self.url)
+
+    def __eq__(self, other):
+        if self.title != other.title:
+            return False
+        if self.url != other.url:
+            return False
+        return True
+
+class _UniffiConverterTypePubkyProfileLink(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return PubkyProfileLink(
+            title=_UniffiConverterString.read(buf),
+            url=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.title)
+        _UniffiConverterString.check_lower(value.url)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.title, buf)
+        _UniffiConverterString.write(value.url, buf)
 
 
 class SweepResult:
@@ -10150,6 +10261,33 @@ class PubkyError:  # type: ignore
         def __repr__(self):
             return "PubkyError.ResolutionFailed({})".format(str(self))
     _UniffiTempPubkyError.ResolutionFailed = ResolutionFailed # type: ignore
+    class FetchFailed(_UniffiTempPubkyError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "PubkyError.FetchFailed({})".format(str(self))
+    _UniffiTempPubkyError.FetchFailed = FetchFailed # type: ignore
+    class ProfileNotFound(_UniffiTempPubkyError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "PubkyError.ProfileNotFound({})".format(str(self))
+    _UniffiTempPubkyError.ProfileNotFound = ProfileNotFound # type: ignore
+    class ProfileParseFailed(_UniffiTempPubkyError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "PubkyError.ProfileParseFailed({})".format(str(self))
+    _UniffiTempPubkyError.ProfileParseFailed = ProfileParseFailed # type: ignore
 
 PubkyError = _UniffiTempPubkyError # type: ignore
 del _UniffiTempPubkyError
@@ -10174,6 +10312,17 @@ class _UniffiConverterTypePubkyError(_UniffiConverterRustBuffer):
             return PubkyError.ResolutionFailed(
                 _UniffiConverterString.read(buf),
             )
+        if variant == 5:
+            return PubkyError.FetchFailed(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 6:
+            return PubkyError.ProfileNotFound(
+            )
+        if variant == 7:
+            return PubkyError.ProfileParseFailed(
+                _UniffiConverterString.read(buf),
+            )
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
@@ -10189,6 +10338,14 @@ class _UniffiConverterTypePubkyError(_UniffiConverterRustBuffer):
         if isinstance(value, PubkyError.ResolutionFailed):
             _UniffiConverterString.check_lower(value.reason)
             return
+        if isinstance(value, PubkyError.FetchFailed):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+        if isinstance(value, PubkyError.ProfileNotFound):
+            return
+        if isinstance(value, PubkyError.ProfileParseFailed):
+            _UniffiConverterString.check_lower(value.reason)
+            return
 
     @staticmethod
     def write(value, buf):
@@ -10202,6 +10359,14 @@ class _UniffiConverterTypePubkyError(_UniffiConverterRustBuffer):
             buf.write_i32(3)
         if isinstance(value, PubkyError.ResolutionFailed):
             buf.write_i32(4)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, PubkyError.FetchFailed):
+            buf.write_i32(5)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, PubkyError.ProfileNotFound):
+            buf.write_i32(6)
+        if isinstance(value, PubkyError.ProfileParseFailed):
+            buf.write_i32(7)
             _UniffiConverterString.write(value.reason, buf)
 
 
@@ -12554,6 +12719,33 @@ class _UniffiConverterOptionalSequenceTypeIManualRefund(_UniffiConverterRustBuff
 
 
 
+class _UniffiConverterOptionalSequenceTypePubkyProfileLink(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterSequenceTypePubkyProfileLink.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterSequenceTypePubkyProfileLink.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterSequenceTypePubkyProfileLink.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalMapStringString(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -12927,6 +13119,31 @@ class _UniffiConverterSequenceTypePreActivityMetadata(_UniffiConverterRustBuffer
 
         return [
             _UniffiConverterTypePreActivityMetadata.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypePubkyProfileLink(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypePubkyProfileLink.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypePubkyProfileLink.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypePubkyProfileLink.read(buf) for i in range(count)
         ]
 
 
@@ -14770,6 +14987,23 @@ async def estimate_order_fee_full(lsp_balance_sat: "int",channel_expiry_weeks: "
 _UniffiConverterTypeBlocktankError,
 
     )
+async def fetch_pubky_contacts(public_key: "str") -> "typing.List[str]":
+
+    _UniffiConverterString.check_lower(public_key)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_contacts(
+        _UniffiConverterString.lower(public_key)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterSequenceString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
+
+    )
 async def fetch_pubky_file(uri: "str") -> "bytes":
 
     _UniffiConverterString.check_lower(uri)
@@ -14782,6 +15016,23 @@ async def fetch_pubky_file(uri: "str") -> "bytes":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterBytes.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
+
+    )
+async def fetch_pubky_profile(public_key: "str") -> "PubkyProfile":
+
+    _UniffiConverterString.check_lower(public_key)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_profile(
+        _UniffiConverterString.lower(public_key)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypePubkyProfile.lift,
         
     # Error FFI converter
 _UniffiConverterTypePubkyError,
@@ -16168,6 +16419,8 @@ __all__ = [
     "OnchainActivity",
     "PreActivityMetadata",
     "PubkyAuth",
+    "PubkyProfile",
+    "PubkyProfileLink",
     "SweepResult",
     "SweepTransactionPreview",
     "SweepableBalances",
@@ -16220,7 +16473,9 @@ __all__ = [
     "entropy_to_mnemonic",
     "estimate_order_fee",
     "estimate_order_fee_full",
+    "fetch_pubky_contacts",
     "fetch_pubky_file",
+    "fetch_pubky_profile",
     "generate_mnemonic",
     "get_activities",
     "get_activities_by_tag",
