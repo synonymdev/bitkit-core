@@ -17,7 +17,6 @@ fn init_android_logger() {
 
 mod modules;
 
-use std::sync::Arc;
 use once_cell::sync::OnceCell;
 
 // Re-export Trezor callback types and traits so UniFFI discovers them at the crate root
@@ -36,11 +35,12 @@ pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
 use crate::modules::pubky::PubkyError;
-use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
+use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
-use crate::onchain::{AddressError, BroadcastError, AccountInfoError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances, broadcast_raw_tx, AccountInfoResult, SingleAddressInfoResult, AccountType, AccountUtxo, AddressInfo, AccountAddresses, ComposeAccount, get_account_info, get_address_info};
-use crate::modules::trezor::{TrezorError, TrezorDeviceInfo, TrezorTransportType, TrezorFeatures, TrezorGetAddressParams, TrezorAddressResponse, TrezorGetPublicKeyParams, TrezorPublicKeyResponse, TrezorScriptType, TrezorManager, TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams, TrezorSignTxParams, TrezorSignedTx, TrezorTxInput, TrezorTxOutput, TrezorCoinType};
-use crate::modules::trezor::{account_type_to_script_type, fetch_prev_txs, TrezorFeeLevel, TrezorSortingStrategy, TrezorPrecomposeOutput, TrezorPrecomposeParams, TrezorPrecomposedInput, TrezorPrecomposedOutput, TrezorPrecomposedResult, precompose_transaction, precomposed_to_sign_params, TrezorPrevTx};
+use crate::onchain::{AddressError, BroadcastError, AccountInfoError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances, broadcast_raw_tx, AccountInfoResult, SingleAddressInfoResult, AccountType, get_account_info, get_address_info};
+use crate::modules::trezor::{TrezorError, TrezorDeviceInfo, TrezorFeatures, TrezorGetAddressParams, TrezorAddressResponse, TrezorGetPublicKeyParams, TrezorPublicKeyResponse, TrezorScriptType, TrezorManager, TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams, TrezorSignTxParams, TrezorSignedTx, TrezorCoinType};
+use crate::modules::trezor::account_type_to_script_type;
+use crate::onchain::{compose_transaction, ComposeParams, ComposeResult};
 pub use crate::onchain::WordCount;
 
 use std::sync::Mutex as StdMutex;
@@ -1768,47 +1768,28 @@ pub fn trezor_account_type_to_script_type(account_type: AccountType) -> TrezorSc
 }
 
 // ============================================================================
-// Compose FFI exports
+// Compose FFI exports (signer-agnostic)
 // ============================================================================
 
-/// Compose a transaction offline for multiple fee levels.
+/// Compose a transaction for multiple fee rates, returning one PSBT per rate.
 ///
-/// No device interaction needed — pure coin selection and fee calculation.
+/// Creates a BDK wallet from the extended key, syncs via Electrum, then
+/// builds PSBTs using BDK's TxBuilder. The PSBTs include BIP32 derivation
+/// paths (when fingerprint is provided) and are ready for signing by any
+/// PSBT-compatible signer (Trezor, Ledger, software wallet, etc.).
 #[uniffi::export]
-pub fn trezor_precompose_transaction(params: TrezorPrecomposeParams) -> Vec<TrezorPrecomposedResult> {
-    precompose_transaction(params)
-}
-
-/// Convert precomposed results into signing parameters for trezor_sign_tx.
-///
-/// The returned params have empty prev_txs — add them before signing.
-#[uniffi::export]
-pub fn trezor_precomposed_to_sign_params(
-    inputs: Vec<TrezorPrecomposedInput>,
-    outputs: Vec<TrezorPrecomposedOutput>,
-    coin: Option<TrezorCoinType>,
-) -> Result<TrezorSignTxParams, TrezorError> {
-    precomposed_to_sign_params(inputs, outputs, coin)
-}
-
-/// Fetch previous transactions from Electrum for Trezor signing.
-///
-/// Takes transaction IDs (from TrezorSignTxParams inputs' prev_hash fields),
-/// fetches the full transactions from Electrum, and returns them as
-/// TrezorPrevTx structures ready to merge into TrezorSignTxParams.prev_txs.
-///
-/// Duplicate txids are automatically deduplicated.
-#[uniffi::export]
-pub async fn trezor_fetch_prev_txs(
-    txids: Vec<String>,
-    electrum_url: String,
-) -> Result<Vec<TrezorPrevTx>, AccountInfoError> {
+pub async fn onchain_compose_transaction(params: ComposeParams) -> Vec<ComposeResult> {
     let rt = ensure_runtime();
+    let num_rates = params.fee_rates.len();
     rt.spawn(async move {
-        fetch_prev_txs(txids, &electrum_url).await
-    }).await.unwrap_or_else(|e| Err(AccountInfoError::SyncError {
-        error_details: format!("Runtime error: {}", e),
-    }))
+        compose_transaction(params).await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        vec![ComposeResult::Error {
+            error: format!("Runtime error: {}", e),
+        }; num_rates]
+    })
 }
 
 /// Broadcast a signed raw transaction via Electrum.

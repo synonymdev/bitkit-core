@@ -251,7 +251,7 @@ pub struct AddressInfo {
     pub address: String,
     /// BIP32 derivation path
     pub path: String,
-    /// Whether this address has been used (1) or not (0)
+    /// Number of transfers (real count in `get_address_info`, 1/0 presence flag in `get_account_info`)
     pub transfers: u32,
 }
 
@@ -305,4 +305,84 @@ pub struct SingleAddressInfoResult {
     pub transfers: u32,
     /// Current blockchain tip height
     pub block_height: u32,
+}
+
+// ============================================================================
+// Shared wallet parameters
+// ============================================================================
+
+/// Common parameters for creating and syncing a watch-only BDK wallet.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct WalletParams {
+    /// Extended public key (xpub/ypub/zpub/tpub/upub/vpub)
+    pub extended_key: String,
+    /// Electrum server URL for wallet sync
+    pub electrum_url: String,
+    /// Root fingerprint hex (e.g. "73c5da0a"). Required for hardware wallet signing.
+    pub fingerprint: Option<String>,
+    /// Bitcoin network (auto-detected from key prefix if not specified)
+    pub network: Option<Network>,
+    /// Override account type for ambiguous key prefixes (xpub/tpub)
+    pub account_type: Option<AccountType>,
+}
+
+// ============================================================================
+// Transaction compose types (signer-agnostic)
+// ============================================================================
+
+/// Coin selection strategy for transaction composition.
+#[derive(Debug, Clone, uniffi::Enum)]
+pub enum CoinSelection {
+    /// Branch-and-bound (default). Minimizes change by searching for exact matches.
+    BranchAndBound,
+    /// Selects largest UTXOs first. Useful for UTXO consolidation.
+    LargestFirst,
+    /// Selects oldest UTXOs first. Maximizes coin-age spending.
+    OldestFirst,
+}
+
+/// Output specification for transaction composition.
+#[derive(Debug, Clone, uniffi::Enum)]
+pub enum ComposeOutput {
+    /// Payment to a specific address with a fixed amount (satoshis)
+    Payment { address: String, amount_sats: u64 },
+    /// Send all remaining funds (after fees) to an address
+    SendMax { address: String },
+    /// OP_RETURN data output (hex-encoded payload)
+    OpReturn { data_hex: String },
+}
+
+/// Parameters for composing a signer-agnostic transaction.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct ComposeParams {
+    /// Wallet configuration (key, server, network)
+    pub wallet: WalletParams,
+    /// Desired transaction outputs
+    pub outputs: Vec<ComposeOutput>,
+    /// Fee rates to evaluate (sat/vB), one PSBT per rate
+    pub fee_rates: Vec<f32>,
+    /// UTXO selection strategy (defaults to BranchAndBound)
+    pub coin_selection: Option<CoinSelection>,
+}
+
+/// Result of composing a transaction at a single fee rate.
+#[derive(Debug, Clone, uniffi::Enum)]
+pub enum ComposeResult {
+    /// Successfully built a signable PSBT
+    Success {
+        /// Base64-encoded PSBT ready for signing
+        psbt: String,
+        /// Total fee in satoshis
+        fee: u64,
+        /// Target fee rate in sat/vB (actual may differ slightly due to rounding)
+        fee_rate: f32,
+        /// Total value spent (payments + fee, excluding change).
+        /// Uses BDK's `sent - received` semantics, which may undercount for
+        /// self-transfers where the destination is also owned by the wallet.
+        total_spent: u64,
+    },
+    /// Composition failed (e.g. insufficient funds)
+    Error {
+        error: String,
+    },
 }

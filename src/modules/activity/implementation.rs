@@ -178,9 +178,15 @@ const TRIGGER_STATEMENTS: &[&str] = &[
      END"
 ];
 
-const MIGRATION_STATEMENTS: &[&str] = &[
-    // Add seen_at column to activities table
-    "ALTER TABLE activities ADD COLUMN seen_at INTEGER CHECK (seen_at IS NULL OR seen_at > 0)",
+/// Migrations to apply to the activities table.
+/// Each entry is (column_name, ALTER TABLE statement). The column is checked
+/// via `PRAGMA table_info` before running the statement to avoid relying on
+/// locale-dependent SQLite error messages.
+const MIGRATIONS: &[(&str, &str)] = &[
+    (
+        "seen_at",
+        "ALTER TABLE activities ADD COLUMN seen_at INTEGER CHECK (seen_at IS NULL OR seen_at > 0)",
+    ),
 ];
 
 impl ActivityDB {
@@ -286,18 +292,24 @@ impl ActivityDB {
             }
         }
 
-        // Run migrations (idempotent — duplicate column errors are expected and ignored)
-        for statement in MIGRATION_STATEMENTS {
-            match self.conn.execute(statement, []) {
-                Ok(_) => {},
-                Err(e) => {
-                    let err_msg = e.to_string();
-                    if !err_msg.contains("duplicate column name") {
-                        return Err(ActivityError::InitializationError {
-                            error_details: format!("Error running migration: {}", e),
-                        });
+        // Run migrations. Check if each column already exists via PRAGMA table_info
+        // before running ALTER TABLE, so we don't rely on locale-dependent error messages.
+        for (column, statement) in MIGRATIONS {
+            let column_exists: bool = self
+                .conn
+                .prepare("PRAGMA table_info(activities)")
+                .and_then(|mut stmt| {
+                    stmt.query_map([], |row| row.get::<_, String>(1))
+                        .map(|rows| rows.filter_map(|r| r.ok()).any(|name| name == *column))
+                })
+                .unwrap_or(false);
+
+            if !column_exists {
+                self.conn.execute(statement, []).map_err(|e| {
+                    ActivityError::InitializationError {
+                        error_details: format!("Error running migration: {}", e),
                     }
-                }
+                })?;
             }
         }
 

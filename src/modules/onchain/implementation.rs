@@ -35,16 +35,6 @@ use crate::onchain::types::{
 };
 use crate::onchain::{AddressError, BroadcastError, SweepError};
 
-
-fn network_to_bdk(network: Network) -> BdkNetwork {
-    match network {
-        Network::Bitcoin => BdkNetwork::Bitcoin,
-        Network::Testnet | Network::Testnet4 => BdkNetwork::Testnet,
-        Network::Signet => BdkNetwork::Signet,
-        Network::Regtest => BdkNetwork::Regtest,
-    }
-}
-
 struct SweepWallets {
     legacy_wallet: Wallet<MemoryDatabase>,
     p2sh_wallet: Wallet<MemoryDatabase>,
@@ -203,7 +193,7 @@ impl BitcoinAddressValidator {
         network: Network,
         bip39_passphrase: Option<&str>,
     ) -> Result<SweepWallets, SweepError> {
-        let bdk_network = network_to_bdk(network);
+        let bdk_network = onchain_to_bdk_network(network.into());
         let mnemonic =
             Mnemonic::from_str(mnemonic_phrase).map_err(|_| SweepError::InvalidMnemonic)?;
         let key = (mnemonic.clone(), bip39_passphrase.map(String::from));
@@ -363,7 +353,7 @@ impl BitcoinAddressValidator {
         destination_address: &str,
         fee_rate_sats_per_vbyte: Option<u32>,
     ) -> Result<SweepTransactionPreview, SweepError> {
-        let bdk_network = network_to_bdk(network);
+        let bdk_network = onchain_to_bdk_network(network.into());
         let wallets = Self::create_sweep_wallets(mnemonic_phrase, network, bip39_passphrase)?;
 
         let dest_addr = BdkAddress::from_str(destination_address)
@@ -577,7 +567,7 @@ pub async fn broadcast_raw_tx(
     })?;
 
     // Validate that the bytes are a valid transaction
-    let _: Transaction = deserialize(&tx_bytes).map_err(|e| BroadcastError::InvalidTransaction {
+    let _tx: Transaction = deserialize(&tx_bytes).map_err(|e| BroadcastError::InvalidTransaction {
         error_details: format!("Invalid transaction data: {}", e),
     })?;
 
@@ -609,13 +599,12 @@ pub async fn broadcast_raw_tx(
 // ============================================================================
 
 /// Detect the account type from an extended public key prefix.
+/// `xpub`/`tpub` default to `Legacy`; use `account_type_override` for other script types.
 pub fn detect_account_type(extended_key: &str) -> Result<AccountType, AccountInfoError> {
-    if extended_key.len() < 4 {
-        return Err(AccountInfoError::InvalidExtendedKey {
-            error_details: "Key too short".to_string(),
-        });
-    }
-    match &extended_key[..4] {
+    let prefix = extended_key.get(..4).ok_or(AccountInfoError::InvalidExtendedKey {
+        error_details: "Key too short".to_string(),
+    })?;
+    match prefix {
         "xpub" | "tpub" => Ok(AccountType::Legacy),
         "ypub" | "upub" => Ok(AccountType::WrappedSegwit),
         "zpub" | "vpub" => Ok(AccountType::NativeSegwit),
@@ -627,12 +616,10 @@ pub fn detect_account_type(extended_key: &str) -> Result<AccountType, AccountInf
 
 /// Detect network from an extended public key prefix.
 pub fn detect_network_from_key(extended_key: &str) -> Result<BdkNetwork, AccountInfoError> {
-    if extended_key.len() < 4 {
-        return Err(AccountInfoError::InvalidExtendedKey {
-            error_details: "Key too short".to_string(),
-        });
-    }
-    match &extended_key[..4] {
+    let prefix = extended_key.get(..4).ok_or(AccountInfoError::InvalidExtendedKey {
+        error_details: "Key too short".to_string(),
+    })?;
+    match prefix {
         "xpub" | "ypub" | "zpub" => Ok(BdkNetwork::Bitcoin),
         "tpub" | "upub" | "vpub" => Ok(BdkNetwork::Testnet),
         prefix => Err(AccountInfoError::UnsupportedKeyType {
@@ -644,13 +631,9 @@ pub fn detect_network_from_key(extended_key: &str) -> Result<BdkNetwork, Account
 /// Convert ypub/zpub/upub/vpub to xpub/tpub by swapping the version bytes.
 /// BDK only understands standard xpub/tpub format.
 pub fn normalize_extended_key(extended_key: &str) -> Result<String, AccountInfoError> {
-    if extended_key.len() < 4 {
-        return Err(AccountInfoError::InvalidExtendedKey {
-            error_details: "Key too short".to_string(),
-        });
-    }
-
-    let prefix = &extended_key[..4];
+    let prefix = extended_key.get(..4).ok_or(AccountInfoError::InvalidExtendedKey {
+        error_details: "Key too short".to_string(),
+    })?;
     let target_version: Option<[u8; 4]> = match prefix {
         "xpub" | "tpub" => None, // Already standard format
         "ypub" | "zpub" => Some([0x04, 0x88, 0xB2, 0x1E]), // Convert to xpub
@@ -684,26 +667,35 @@ pub fn normalize_extended_key(extended_key: &str) -> Result<String, AccountInfoE
 }
 
 /// Build BDK descriptor strings for external and internal keychains.
+///
+/// When `key_origin` is provided as `(fingerprint_hex, derivation_path)`,
+/// the descriptors include key origin info needed for PSBT BIP32 derivation
+/// paths, e.g. `wpkh([73c5da0a/84'/0'/0']xpub.../0/*)`.
 pub fn build_descriptors(
     normalized_xpub: &str,
     account_type: AccountType,
+    key_origin: Option<(&str, &str)>,
 ) -> (String, String) {
+    let key_expr = match key_origin {
+        Some((fingerprint, path)) => format!("[{}/{}]{}", fingerprint, path, normalized_xpub),
+        None => normalized_xpub.to_string(),
+    };
     let (external, internal) = match account_type {
         AccountType::Legacy => (
-            format!("pkh({}/0/*)", normalized_xpub),
-            format!("pkh({}/1/*)", normalized_xpub),
+            format!("pkh({}/0/*)", key_expr),
+            format!("pkh({}/1/*)", key_expr),
         ),
         AccountType::WrappedSegwit => (
-            format!("sh(wpkh({}/0/*))", normalized_xpub),
-            format!("sh(wpkh({}/1/*))", normalized_xpub),
+            format!("sh(wpkh({}/0/*))", key_expr),
+            format!("sh(wpkh({}/1/*))", key_expr),
         ),
         AccountType::NativeSegwit => (
-            format!("wpkh({}/0/*)", normalized_xpub),
-            format!("wpkh({}/1/*)", normalized_xpub),
+            format!("wpkh({}/0/*)", key_expr),
+            format!("wpkh({}/1/*)", key_expr),
         ),
         AccountType::Taproot => (
-            format!("tr({}/0/*)", normalized_xpub),
-            format!("tr({}/1/*)", normalized_xpub),
+            format!("tr({}/0/*)", key_expr),
+            format!("tr({}/1/*)", key_expr),
         ),
     };
     (external, internal)
@@ -725,6 +717,136 @@ pub fn derive_base_path(account_type: AccountType, network: BdkNetwork, account_
 }
 
 // ============================================================================
+// Shared wallet setup helper
+// ============================================================================
+
+pub(crate) struct WalletSetup {
+    pub external_desc: String,
+    pub internal_desc: String,
+    pub network: BdkNetwork,
+    pub base_path: String,
+    pub account_type: AccountType,
+}
+
+/// Resolve an extended key into descriptors, network, and derivation path.
+pub(crate) fn resolve_wallet_setup(
+    extended_key: &str,
+    network: Option<OnchainNetwork>,
+    account_type_override: Option<AccountType>,
+    fingerprint: Option<&str>,
+) -> Result<WalletSetup, AccountInfoError> {
+    let account_type = match account_type_override {
+        Some(st) => match extended_key.get(..4).unwrap_or("") {
+            "xpub" | "tpub" => st,
+            _ => detect_account_type(extended_key)?,
+        },
+        _ => detect_account_type(extended_key)?,
+    };
+
+    let detected_network = detect_network_from_key(extended_key)?;
+
+    if let Some(net) = network {
+        let specified = onchain_to_bdk_network(net);
+        if specified != detected_network {
+            return Err(AccountInfoError::NetworkMismatch {
+                error_details: format!(
+                    "Key prefix suggests {:?} but {:?} was specified",
+                    detected_network, specified
+                ),
+            });
+        }
+    }
+
+    let normalized_key = normalize_extended_key(extended_key)?;
+
+    let xpub = ExtendedPubKey::from_str(&normalized_key).map_err(|e| {
+        AccountInfoError::InvalidExtendedKey {
+            error_details: format!("Failed to parse extended key: {}", e),
+        }
+    })?;
+    let account_index = match xpub.child_number {
+        bdk::bitcoin::bip32::ChildNumber::Hardened { index } => index,
+        bdk::bitcoin::bip32::ChildNumber::Normal { index } => index,
+    };
+    let base_path = derive_base_path(account_type, detected_network, account_index);
+
+    let normalized_fp = if let Some(fp) = fingerprint {
+        if fp.len() != 8 || !fp.chars().all(|c| c.is_ascii_hexdigit()) {
+            return Err(AccountInfoError::InvalidExtendedKey {
+                error_details: format!(
+                    "Fingerprint must be 8 hex characters (e.g. \"73c5da0a\"), got \"{}\"",
+                    fp
+                ),
+            });
+        }
+        Some(fp.to_ascii_lowercase())
+    } else {
+        None
+    };
+
+    let derivation = base_path.strip_prefix("m/").unwrap_or(&base_path);
+    let key_origin: Option<(&str, &str)> =
+        normalized_fp.as_deref().map(|fp| (fp, derivation));
+    let (external_desc, internal_desc) =
+        build_descriptors(&normalized_key, account_type, key_origin);
+
+    Ok(WalletSetup {
+        external_desc,
+        internal_desc,
+        network: detected_network,
+        base_path,
+        account_type,
+    })
+}
+
+/// Convert our Network enum to BDK's Network.
+pub(crate) fn onchain_to_bdk_network(network: OnchainNetwork) -> BdkNetwork {
+    match network {
+        OnchainNetwork::Bitcoin => BdkNetwork::Bitcoin,
+        OnchainNetwork::Testnet | OnchainNetwork::Testnet4 => BdkNetwork::Testnet,
+        OnchainNetwork::Signet => BdkNetwork::Signet,
+        OnchainNetwork::Regtest => BdkNetwork::Regtest,
+    }
+}
+
+/// Connect to Electrum and return the raw client.
+pub(crate) fn connect_electrum(
+    electrum_url: &str,
+) -> Result<bdk::electrum_client::Client, AccountInfoError> {
+    bdk::electrum_client::Client::new(electrum_url).map_err(|e| AccountInfoError::ElectrumError {
+        error_details: format!("Failed to connect to Electrum: {}", e),
+    })
+}
+
+/// Create a BDK wallet and sync it via the provided Electrum client.
+///
+/// The client is consumed; make any pre-sync calls (e.g. `block_headers_subscribe`)
+/// before passing it here.
+pub(crate) fn create_and_sync_wallet(
+    setup: &WalletSetup,
+    client: bdk::electrum_client::Client,
+) -> Result<Wallet<MemoryDatabase>, AccountInfoError> {
+    let wallet = Wallet::new(
+        &setup.external_desc,
+        Some(&setup.internal_desc),
+        setup.network,
+        MemoryDatabase::new(),
+    )
+    .map_err(|e| AccountInfoError::WalletError {
+        error_details: format!("Failed to create wallet: {}", e),
+    })?;
+
+    let blockchain = ElectrumBlockchain::from(client);
+    wallet
+        .sync(&blockchain, SyncOptions::default())
+        .map_err(|e| AccountInfoError::SyncError {
+            error_details: format!("Failed to sync wallet: {}", e),
+        })?;
+
+    Ok(wallet)
+}
+
+// ============================================================================
 // Account info: main async functions
 // ============================================================================
 
@@ -736,85 +858,30 @@ pub async fn get_account_info(
     gap_limit: Option<u32>,
     script_type: Option<AccountType>,
 ) -> Result<AccountInfoResult, AccountInfoError> {
-    // Use script_type override for ambiguous prefixes (xpub/tpub), otherwise use prefix detection
-    let account_type = match script_type {
-        Some(st) if extended_key.len() >= 4 => {
-            match &extended_key[..4] {
-                "xpub" | "tpub" => st,
-                _ => detect_account_type(extended_key)?,
-            }
-        }
-        _ => detect_account_type(extended_key)?,
-    };
-    let detected_network = detect_network_from_key(extended_key)?;
-
-    // Verify network matches if caller specified one
-    if let Some(net) = network {
-        let specified_bdk = network_to_bdk(net.into());
-        if specified_bdk != detected_network {
-            return Err(AccountInfoError::NetworkMismatch {
-                error_details: format!(
-                    "Key prefix suggests {:?} but {:?} was specified",
-                    detected_network, specified_bdk
-                ),
-            });
-        }
-    }
-
-    let normalized_key = normalize_extended_key(extended_key)?;
-    let (external_desc, internal_desc) = build_descriptors(&normalized_key, account_type);
-
-    // Parse xpub to get account index from child_number
-    let xpub = ExtendedPubKey::from_str(&normalized_key).map_err(|e| {
-        AccountInfoError::InvalidExtendedKey {
-            error_details: format!("Failed to parse extended key: {}", e),
-        }
-    })?;
-
-    let account_index = match xpub.child_number {
-        bdk::bitcoin::bip32::ChildNumber::Hardened { index } => index,
-        bdk::bitcoin::bip32::ChildNumber::Normal { index } => index,
-    };
-    let base_path = derive_base_path(account_type, detected_network, account_index);
+    let setup = resolve_wallet_setup(extended_key, network, script_type, None)?;
     let gap = gap_limit.unwrap_or(20);
-    let bdk_network = detected_network;
+    let base_path = setup.base_path.clone();
+    let account_type = setup.account_type;
 
     let electrum_url_owned = electrum_url.to_string();
-    let base_path_clone = base_path.clone();
 
-    // All BDK + Electrum operations in a blocking task
     let result = tokio::task::spawn_blocking(move || {
-        let base_path = base_path_clone;
-        // Create BDK wallet from descriptors
-        let wallet = Wallet::new(
-            &external_desc,
-            Some(&internal_desc),
-            bdk_network,
-            MemoryDatabase::new(),
-        )
-        .map_err(|e| AccountInfoError::WalletError {
-            error_details: format!("Failed to create wallet: {}", e),
-        })?;
+        let base_path = &setup.base_path;
 
-        // Connect, get block tip height, then sync (single connection)
-        let client = bdk::electrum_client::Client::new(&electrum_url_owned).map_err(|e| {
-            AccountInfoError::ElectrumError {
-                error_details: format!("Failed to connect to Electrum: {}", e),
-            }
-        })?;
+        // Single Electrum connection: get tip height first, then sync wallet
+        let client = connect_electrum(&electrum_url_owned)?;
         let header = client.block_headers_subscribe().map_err(|e| {
             AccountInfoError::ElectrumError {
                 error_details: format!("Failed to get block height: {}", e),
             }
         })?;
-        let tip_height = header.height as u32;
+        let tip_height = u32::try_from(header.height).map_err(|_| {
+            AccountInfoError::ElectrumError {
+                error_details: format!("Invalid block height: {}", header.height),
+            }
+        })?;
 
-        let blockchain = ElectrumBlockchain::from(client);
-        wallet
-            .sync(&blockchain, SyncOptions::default())
-            .map_err(|e| AccountInfoError::SyncError {
-                error_details: format!("Failed to sync wallet: {}", e),
-            })?;
+        let wallet = create_and_sync_wallet(&setup, client)?;
 
         // Get the next unused external address index
         let next_external = wallet
@@ -822,7 +889,7 @@ pub async fn get_account_info(
             .map_err(|e| AccountInfoError::WalletError {
                 error_details: format!("Failed to get address: {}", e),
             })?;
-        let max_external = next_external.index + gap;
+        let max_external = next_external.index.saturating_add(gap);
 
         // Get the next unused change address index
         let next_change = wallet
@@ -830,7 +897,7 @@ pub async fn get_account_info(
             .map_err(|e| AccountInfoError::WalletError {
                 error_details: format!("Failed to get change address: {}", e),
             })?;
-        let max_change = next_change.index + gap;
+        let max_change = next_change.index.saturating_add(gap);
 
         // Build address lists using BDK's LastUnused boundary (no extra Electrum calls)
         let mut address_paths: HashMap<ScriptBuf, String> = HashMap::new();
@@ -914,15 +981,15 @@ pub async fn get_account_info(
             let utxo_path = match address_paths.get(utxo_script) {
                 Some(path) => path.clone(),
                 None => {
-                    eprintln!(
-                        "Warning: No derivation path found for UTXO {}:{}",
+                    log::warn!(
+                        "No derivation path found for UTXO {}:{}",
                         utxo.outpoint.txid, utxo.outpoint.vout,
                     );
                     String::new()
                 }
             };
 
-            let addr_str = BdkAddress::from_script(utxo_script, bdk_network)
+            let addr_str = BdkAddress::from_script(utxo_script, setup.network)
                 .map(|a| a.to_string())
                 .unwrap_or_default();
 
@@ -934,7 +1001,7 @@ pub async fn get_account_info(
             let (block_height, confirmations) = tx_detail
                 .and_then(|tx| tx.confirmation_time.as_ref())
                 .map(|conf| {
-                    let height = conf.height as u32;
+                    let height = conf.height;
                     let confs = tip_height.saturating_sub(height) + 1;
                     (height, confs)
                 })
@@ -966,7 +1033,7 @@ pub async fn get_account_info(
             change_addresses,
             account_utxos,
             balance,
-            utxos.len() as u32,
+            u32::try_from(utxos.len()).unwrap_or(u32::MAX),
             tip_height,
         ))
     })
@@ -1005,16 +1072,15 @@ pub async fn get_account_info(
 }
 
 /// Query balance and UTXOs for a single Bitcoin address via Electrum.
+///
+/// When `network` is `None`, the address is accepted without network validation
+/// (`assume_checked`). In that case, if the Electrum server is on a different
+/// network the query will silently return empty or incorrect results.
 pub async fn get_address_info(
     address: &str,
     electrum_url: &str,
     network: Option<OnchainNetwork>,
 ) -> Result<SingleAddressInfoResult, AccountInfoError> {
-    // Validate address parses correctly using the top-level bitcoin crate
-    let _parsed = Address::from_str(address).map_err(|e| AccountInfoError::InvalidAddress {
-        error_details: format!("Invalid address: {}", e),
-    })?;
-
     // Parse with BDK's bitcoin crate for script_pubkey generation
     let bdk_addr = BdkAddress::from_str(address)
         .map_err(|e| AccountInfoError::InvalidAddress {
@@ -1022,7 +1088,7 @@ pub async fn get_address_info(
         })?;
     let bdk_addr = match network {
         Some(net) => {
-            let bdk_network = network_to_bdk(net.into());
+            let bdk_network = onchain_to_bdk_network(net);
             bdk_addr.require_network(bdk_network).map_err(|e| {
                 AccountInfoError::NetworkMismatch {
                     error_details: format!("Address network mismatch: {}", e),
@@ -1036,11 +1102,7 @@ pub async fn get_address_info(
     let addr_str = address.to_string();
 
     let result = tokio::task::spawn_blocking(move || {
-        let client = bdk::electrum_client::Client::new(&electrum_url_owned).map_err(|e| {
-            AccountInfoError::ElectrumError {
-                error_details: format!("Failed to connect to Electrum: {}", e),
-            }
-        })?;
+        let client = connect_electrum(&electrum_url_owned)?;
 
         let script = bdk_addr.script_pubkey();
 
@@ -1050,7 +1112,11 @@ pub async fn get_address_info(
                 error_details: format!("Failed to get block height: {}", e),
             }
         })?;
-        let tip_height = header.height as u32;
+        let tip_height = u32::try_from(header.height).map_err(|_| {
+            AccountInfoError::ElectrumError {
+                error_details: format!("Invalid block height: {}", header.height),
+            }
+        })?;
 
         // Get UTXOs for this address
         let utxos = client.script_list_unspent(&script).map_err(|e| {
@@ -1069,20 +1135,22 @@ pub async fn get_address_info(
         let account_utxos: Vec<AccountUtxo> = utxos
             .iter()
             .map(|utxo| {
-                let height = if utxo.height > 0 {
-                    utxo.height as u32
-                } else {
-                    0
-                };
-                let confirmations = if utxo.height > 0 {
-                    tip_height.saturating_sub(utxo.height as u32) + 1
+                let height = u32::try_from(utxo.height).unwrap_or(0);
+                let confirmations = if height > 0 {
+                    tip_height.saturating_sub(height) + 1
                 } else {
                     0
                 };
 
-                AccountUtxo {
+                let vout = u32::try_from(utxo.tx_pos).map_err(|_| {
+                    AccountInfoError::WalletError {
+                        error_details: format!("Output index {} exceeds u32", utxo.tx_pos),
+                    }
+                })?;
+
+                Ok(AccountUtxo {
                     txid: utxo.tx_hash.to_string(),
-                    vout: utxo.tx_pos as u32,
+                    vout,
                     amount: utxo.value,
                     block_height: height,
                     address: addr_str.clone(),
@@ -1091,9 +1159,9 @@ pub async fn get_address_info(
                     coinbase: false,
                     own: true,
                     required: None,
-                }
+                })
             })
-            .collect();
+            .collect::<Result<Vec<_>, AccountInfoError>>()?;
 
         let balance: u64 = utxos.iter().map(|u| u.value).sum();
 
@@ -1101,7 +1169,7 @@ pub async fn get_address_info(
             address: addr_str,
             balance,
             utxos: account_utxos,
-            transfers: history.len() as u32,
+            transfers: u32::try_from(history.len()).unwrap_or(u32::MAX),
             block_height: tip_height,
         })
     })

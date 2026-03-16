@@ -1,6 +1,7 @@
 mod errors;
 mod implementation;
 mod types;
+mod compose;
 
 pub use errors::{AccountInfoError, AddressError, BroadcastError, SweepError};
 pub use implementation::{
@@ -10,10 +11,12 @@ pub use implementation::{
 };
 pub use types::{
     AccountAddresses, AccountInfoResult, AccountType, AccountUtxo, AddressInfo,
-    AddressType, ComposeAccount, GetAddressResponse, GetAddressesResponse, Network,
+    AddressType, CoinSelection, ComposeAccount, ComposeOutput, ComposeParams,
+    ComposeResult, GetAddressResponse, GetAddressesResponse, Network,
     SingleAddressInfoResult, SweepResult, SweepTransactionPreview, SweepableBalances,
-    ValidationResult, WordCount,
+    ValidationResult, WalletParams, WordCount,
 };
+pub use compose::compose_transaction;
 
 #[cfg(test)]
 mod tests;
