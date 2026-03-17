@@ -896,6 +896,20 @@ dependencies = [
 
 [[package]]
 name = "cookie_store"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2eac901828f88a5241ee0600950ab981148a18f2f756900ffba1b125ca6a3ef9"
+dependencies = [
+ "cookie",
+ "document-features",
+ "idna",
+ "log",
+ "time",
+ "url",
+]
+
+[[package]]
+name = "cookie_store"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "15b2c103cf610ec6cae3da84a766285b42fd16aad564758459e6ecf128c75206"
@@ -3077,7 +3091,7 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "cookie",
- "cookie_store",
+ "cookie_store 0.21.1",
  "flume",
  "futures-lite",
  "futures-util",
@@ -3085,7 +3099,7 @@ dependencies = [
  "pkarr",
  "pubky-common 0.5.4",
  "reqwest",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
  "tokio",
  "tracing",
  "url",
@@ -3153,7 +3167,7 @@ dependencies = [
  "pubky-timestamp",
  "rand 0.9.2",
  "serde",
- "thiserror 2.0.17",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -3448,7 +3462,7 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "cookie",
- "cookie_store",
+ "cookie_store 0.22.1",
  "futures-core",
  "http",
  "http-body",

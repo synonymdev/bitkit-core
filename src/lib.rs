@@ -34,7 +34,7 @@ pub use modules::scanner::{
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
-use crate::modules::pubky::PubkyError;
+use crate::modules::pubky::{PubkyError, PubkyProfile};
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
 use crate::onchain::{AddressError, BroadcastError, AccountInfoError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances, broadcast_raw_tx, AccountInfoResult, SingleAddressInfoResult, AccountType, get_account_info, get_address_info};
