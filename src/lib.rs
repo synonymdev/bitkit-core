@@ -17,7 +17,6 @@ fn init_android_logger() {
 
 mod modules;
 
-use std::sync::Arc;
 use once_cell::sync::OnceCell;
 
 // Re-export Trezor callback types and traits so UniFFI discovers them at the crate root
@@ -36,10 +35,12 @@ pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
 use crate::modules::pubky::{PubkyError, PubkyProfile};
-use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
+use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
-use crate::onchain::{AddressError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances};
-use crate::modules::trezor::{TrezorError, TrezorDeviceInfo, TrezorTransportType, TrezorFeatures, TrezorGetAddressParams, TrezorAddressResponse, TrezorGetPublicKeyParams, TrezorPublicKeyResponse, TrezorScriptType, TrezorManager, TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams, TrezorSignTxParams, TrezorSignedTx, TrezorTxInput, TrezorTxOutput, TrezorCoinType, AddressInfo, AccountAddresses};
+use crate::onchain::{AddressError, BroadcastError, AccountInfoError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances, broadcast_raw_tx, AccountInfoResult, SingleAddressInfoResult, AccountType, get_account_info, get_address_info};
+use crate::modules::trezor::{TrezorError, TrezorDeviceInfo, TrezorFeatures, TrezorGetAddressParams, TrezorAddressResponse, TrezorGetPublicKeyParams, TrezorPublicKeyResponse, TrezorScriptType, TrezorManager, TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams, TrezorSignTxParams, TrezorSignedTx, TrezorCoinType};
+use crate::modules::trezor::account_type_to_script_type;
+use crate::onchain::{compose_transaction, ComposeParams, ComposeResult};
 pub use crate::onchain::WordCount;
 
 use std::sync::Mutex as StdMutex;
@@ -1742,4 +1743,88 @@ pub async fn trezor_clear_credentials(device_id: String) -> Result<(), TrezorErr
     rt.spawn(async move {
         get_trezor_manager().clear_credentials(&device_id).await
     }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+}
+
+// ============================================================================
+// Account info FFI exports
+// ============================================================================
+
+/// Query account information for an extended public key via Electrum.
+#[uniffi::export]
+pub async fn onchain_get_account_info(
+    extended_key: String,
+    electrum_url: String,
+    network: Option<Network>,
+    gap_limit: Option<u32>,
+    script_type: Option<AccountType>,
+) -> Result<AccountInfoResult, AccountInfoError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_account_info(&extended_key, &electrum_url, network, gap_limit, script_type).await
+    }).await.unwrap_or_else(|e| Err(AccountInfoError::SyncError {
+        error_details: format!("Runtime error: {}", e),
+    }))
+}
+
+/// Query balance and UTXOs for a single Bitcoin address via Electrum.
+#[uniffi::export]
+pub async fn onchain_get_address_info(
+    address: String,
+    electrum_url: String,
+    network: Option<Network>,
+) -> Result<SingleAddressInfoResult, AccountInfoError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_address_info(&address, &electrum_url, network).await
+    }).await.unwrap_or_else(|e| Err(AccountInfoError::SyncError {
+        error_details: format!("Runtime error: {}", e),
+    }))
+}
+
+/// Convert an account type to its corresponding Trezor script type.
+#[uniffi::export]
+pub fn trezor_account_type_to_script_type(account_type: AccountType) -> TrezorScriptType {
+    account_type_to_script_type(account_type)
+}
+
+// ============================================================================
+// Compose FFI exports (signer-agnostic)
+// ============================================================================
+
+/// Compose a transaction for multiple fee rates, returning one PSBT per rate.
+///
+/// Creates a BDK wallet from the extended key, syncs via Electrum, then
+/// builds PSBTs using BDK's TxBuilder. The PSBTs include BIP32 derivation
+/// paths (when fingerprint is provided) and are ready for signing by any
+/// PSBT-compatible signer (Trezor, Ledger, software wallet, etc.).
+#[uniffi::export]
+pub async fn onchain_compose_transaction(params: ComposeParams) -> Vec<ComposeResult> {
+    let rt = ensure_runtime();
+    let num_rates = params.fee_rates.len();
+    rt.spawn(async move {
+        compose_transaction(params).await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        vec![ComposeResult::Error {
+            error: format!("Runtime error: {}", e),
+        }; num_rates]
+    })
+}
+
+/// Broadcast a signed raw transaction via Electrum.
+///
+/// Takes a hex-encoded serialized transaction and an Electrum server URL.
+/// Returns the transaction ID on success.
+#[uniffi::export]
+pub async fn onchain_broadcast_raw_tx(
+    serialized_tx: String,
+    electrum_url: String,
+) -> Result<String, BroadcastError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        broadcast_raw_tx(serialized_tx, &electrum_url).await
+    }).await.unwrap_or_else(|e| Err(BroadcastError::TaskError {
+        error_details: format!("Runtime error: {}", e),
+    }))
 }

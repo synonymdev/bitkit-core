@@ -178,6 +178,17 @@ const TRIGGER_STATEMENTS: &[&str] = &[
      END"
 ];
 
+/// Migrations to apply to the activities table.
+/// Each entry is (column_name, ALTER TABLE statement). The column is checked
+/// via `PRAGMA table_info` before running the statement to avoid relying on
+/// locale-dependent SQLite error messages.
+const MIGRATIONS: &[(&str, &str)] = &[
+    (
+        "seen_at",
+        "ALTER TABLE activities ADD COLUMN seen_at INTEGER CHECK (seen_at IS NULL OR seen_at > 0)",
+    ),
+];
+
 impl ActivityDB {
     /// Creates a new ActivityDB instance with the specified database path.
     /// Initializes the database schema if it doesn't exist.
@@ -278,6 +289,27 @@ impl ActivityDB {
                 return Err(ActivityError::InitializationError {
                     error_details: format!("Error creating trigger: {}", e),
                 });
+            }
+        }
+
+        // Run migrations. Check if each column already exists via PRAGMA table_info
+        // before running ALTER TABLE, so we don't rely on locale-dependent error messages.
+        for (column, statement) in MIGRATIONS {
+            let column_exists: bool = self
+                .conn
+                .prepare("PRAGMA table_info(activities)")
+                .and_then(|mut stmt| {
+                    stmt.query_map([], |row| row.get::<_, String>(1))
+                        .map(|rows| rows.filter_map(|r| r.ok()).any(|name| name == *column))
+                })
+                .unwrap_or(false);
+
+            if !column_exists {
+                self.conn.execute(statement, []).map_err(|e| {
+                    ActivityError::InitializationError {
+                        error_details: format!("Error running migration: {}", e),
+                    }
+                })?;
             }
         }
 

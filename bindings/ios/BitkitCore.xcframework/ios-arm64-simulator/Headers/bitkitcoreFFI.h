@@ -790,6 +790,26 @@ RustBuffer uniffi_bitkitcore_fn_func_mnemonic_to_entropy(RustBuffer mnemonic_phr
 RustBuffer uniffi_bitkitcore_fn_func_mnemonic_to_seed(RustBuffer mnemonic_phrase, RustBuffer passphrase, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_BROADCAST_RAW_TX
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_BROADCAST_RAW_TX
+uint64_t uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx(RustBuffer serialized_tx, RustBuffer electrum_url
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_COMPOSE_TRANSACTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_COMPOSE_TRANSACTION
+uint64_t uniffi_bitkitcore_fn_func_onchain_compose_transaction(RustBuffer params
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_GET_ACCOUNT_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_GET_ACCOUNT_INFO
+uint64_t uniffi_bitkitcore_fn_func_onchain_get_account_info(RustBuffer extended_key, RustBuffer electrum_url, RustBuffer network, RustBuffer gap_limit, RustBuffer script_type
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_GET_ADDRESS_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_GET_ADDRESS_INFO
+uint64_t uniffi_bitkitcore_fn_func_onchain_get_address_info(RustBuffer address, RustBuffer electrum_url, RustBuffer network
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_OPEN_CHANNEL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_OPEN_CHANNEL
 uint64_t uniffi_bitkitcore_fn_func_open_channel(RustBuffer order_id, RustBuffer connection_string
@@ -875,6 +895,11 @@ uint64_t uniffi_bitkitcore_fn_func_start_pubky_auth(RustBuffer caps
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TEST_NOTIFICATION
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TEST_NOTIFICATION
 uint64_t uniffi_bitkitcore_fn_func_test_notification(RustBuffer device_token, RustBuffer secret_message, RustBuffer notification_type, RustBuffer custom_url
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_ACCOUNT_TYPE_TO_SCRIPT_TYPE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_ACCOUNT_TYPE_TO_SCRIPT_TYPE
+RustBuffer uniffi_bitkitcore_fn_func_trezor_account_type_to_script_type(RustBuffer account_type, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_CLEAR_CREDENTIALS
@@ -1742,6 +1767,30 @@ uint16_t uniffi_bitkitcore_checksum_func_mnemonic_to_seed(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_BROADCAST_RAW_TX
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_BROADCAST_RAW_TX
+uint16_t uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_COMPOSE_TRANSACTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_COMPOSE_TRANSACTION
+uint16_t uniffi_bitkitcore_checksum_func_onchain_compose_transaction(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_ACCOUNT_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_ACCOUNT_INFO
+uint16_t uniffi_bitkitcore_checksum_func_onchain_get_account_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_ADDRESS_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_ADDRESS_INFO
+uint16_t uniffi_bitkitcore_checksum_func_onchain_get_address_info(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_OPEN_CHANNEL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_OPEN_CHANNEL
 uint16_t uniffi_bitkitcore_checksum_func_open_channel(void
@@ -1841,6 +1890,12 @@ uint16_t uniffi_bitkitcore_checksum_func_start_pubky_auth(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TEST_NOTIFICATION
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TEST_NOTIFICATION
 uint16_t uniffi_bitkitcore_checksum_func_test_notification(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_ACCOUNT_TYPE_TO_SCRIPT_TYPE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_ACCOUNT_TYPE_TO_SCRIPT_TYPE
+uint16_t uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type(void
     
 );
 #endif

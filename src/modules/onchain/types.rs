@@ -199,3 +199,190 @@ pub struct SweepableBalances {
     /// Total number of UTXOs across all wallet types
     pub total_utxos_count: u32,
 }
+
+// ============================================================================
+// Account info types
+// ============================================================================
+
+/// Account type classification for extended public keys.
+///
+/// Determines the BIP standard, derivation path purpose, and script type.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum AccountType {
+    /// BIP44 legacy (P2PKH) — xpub/tpub prefix
+    Legacy,
+    /// BIP49 wrapped segwit (P2SH-P2WPKH) — ypub/upub prefix
+    WrappedSegwit,
+    /// BIP84 native segwit (P2WPKH) — zpub/vpub prefix
+    NativeSegwit,
+    /// BIP86 taproot (P2TR)
+    Taproot,
+}
+
+/// A UTXO associated with an account or address.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct AccountUtxo {
+    /// Transaction ID (hex)
+    pub txid: String,
+    /// Output index
+    pub vout: u32,
+    /// Amount in satoshis
+    pub amount: u64,
+    /// Block height where the UTXO was confirmed (0 if unconfirmed)
+    pub block_height: u32,
+    /// Address holding this UTXO
+    pub address: String,
+    /// BIP32 derivation path (e.g., "m/84'/0'/0'/0/0")
+    pub path: String,
+    /// Number of confirmations (0 if unconfirmed)
+    pub confirmations: u32,
+    /// Whether this is a coinbase output
+    pub coinbase: bool,
+    /// Whether this UTXO is owned by the account
+    pub own: bool,
+    /// Whether this UTXO must be included in the transaction
+    pub required: Option<bool>,
+}
+
+/// Information about a single address in an account.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct AddressInfo {
+    /// The Bitcoin address
+    pub address: String,
+    /// BIP32 derivation path
+    pub path: String,
+    /// Number of transfers (real count in `get_address_info`, 1/0 presence flag in `get_account_info`)
+    pub transfers: u32,
+}
+
+/// Grouped address lists for an account.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct AccountAddresses {
+    /// Used receive addresses (have at least one transaction)
+    pub used: Vec<AddressInfo>,
+    /// Unused receive addresses (no transactions yet)
+    pub unused: Vec<AddressInfo>,
+    /// Change addresses
+    pub change: Vec<AddressInfo>,
+}
+
+/// Full account structure with addresses and UTXOs.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct ComposeAccount {
+    /// Account derivation path (e.g., "m/84'/0'/0'")
+    pub path: String,
+    /// Categorized addresses
+    pub addresses: AccountAddresses,
+    /// Unspent transaction outputs
+    pub utxo: Vec<AccountUtxo>,
+}
+
+/// Result from querying an extended public key via Electrum.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct AccountInfoResult {
+    /// The account structure with addresses and UTXOs
+    pub account: ComposeAccount,
+    /// Total confirmed balance in satoshis
+    pub balance: u64,
+    /// Number of UTXOs
+    pub utxo_count: u32,
+    /// The detected or specified account type
+    pub account_type: AccountType,
+    /// The current blockchain tip height
+    pub block_height: u32,
+}
+
+/// Result from querying a single Bitcoin address.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct SingleAddressInfoResult {
+    /// The queried address
+    pub address: String,
+    /// Total confirmed balance in satoshis
+    pub balance: u64,
+    /// UTXOs for this address
+    pub utxos: Vec<AccountUtxo>,
+    /// Number of transactions involving this address
+    pub transfers: u32,
+    /// Current blockchain tip height
+    pub block_height: u32,
+}
+
+// ============================================================================
+// Shared wallet parameters
+// ============================================================================
+
+/// Common parameters for creating and syncing a watch-only BDK wallet.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct WalletParams {
+    /// Extended public key (xpub/ypub/zpub/tpub/upub/vpub)
+    pub extended_key: String,
+    /// Electrum server URL for wallet sync
+    pub electrum_url: String,
+    /// Root fingerprint hex (e.g. "73c5da0a"). Required for hardware wallet signing.
+    pub fingerprint: Option<String>,
+    /// Bitcoin network (auto-detected from key prefix if not specified)
+    pub network: Option<Network>,
+    /// Override account type for ambiguous key prefixes (xpub/tpub)
+    pub account_type: Option<AccountType>,
+}
+
+// ============================================================================
+// Transaction compose types (signer-agnostic)
+// ============================================================================
+
+/// Coin selection strategy for transaction composition.
+#[derive(Debug, Clone, uniffi::Enum)]
+pub enum CoinSelection {
+    /// Branch-and-bound (default). Minimizes change by searching for exact matches.
+    BranchAndBound,
+    /// Selects largest UTXOs first. Useful for UTXO consolidation.
+    LargestFirst,
+    /// Selects oldest UTXOs first. Maximizes coin-age spending.
+    OldestFirst,
+}
+
+/// Output specification for transaction composition.
+#[derive(Debug, Clone, uniffi::Enum)]
+pub enum ComposeOutput {
+    /// Payment to a specific address with a fixed amount (satoshis)
+    Payment { address: String, amount_sats: u64 },
+    /// Send all remaining funds (after fees) to an address
+    SendMax { address: String },
+    /// OP_RETURN data output (hex-encoded payload)
+    OpReturn { data_hex: String },
+}
+
+/// Parameters for composing a signer-agnostic transaction.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct ComposeParams {
+    /// Wallet configuration (key, server, network)
+    pub wallet: WalletParams,
+    /// Desired transaction outputs
+    pub outputs: Vec<ComposeOutput>,
+    /// Fee rates to evaluate (sat/vB), one PSBT per rate
+    pub fee_rates: Vec<f32>,
+    /// UTXO selection strategy (defaults to BranchAndBound)
+    pub coin_selection: Option<CoinSelection>,
+}
+
+/// Result of composing a transaction at a single fee rate.
+#[derive(Debug, Clone, uniffi::Enum)]
+pub enum ComposeResult {
+    /// Successfully built a signable PSBT
+    Success {
+        /// Base64-encoded PSBT ready for signing
+        psbt: String,
+        /// Total fee in satoshis
+        fee: u64,
+        /// Target fee rate in sat/vB (actual may differ slightly due to rounding)
+        fee_rate: f32,
+        /// Total value spent (payments + fee, excluding change).
+        /// Uses BDK's `sent - received` semantics, which may undercount for
+        /// self-transfers where the destination is also owned by the wallet.
+        total_spent: u64,
+    },
+    /// Composition failed (e.g. insufficient funds)
+    Error {
+        error: String,
+    },
+}

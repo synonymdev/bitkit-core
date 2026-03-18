@@ -283,3 +283,4 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
         }
     }
 }
+

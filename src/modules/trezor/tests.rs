@@ -385,12 +385,14 @@ mod tests {
         let response = trezor_connect_rs::SignedTxResponse {
             signatures: vec!["sig1".to_string(), "sig2".to_string()],
             serialized_tx: "rawtx".to_string(),
+            txid: None,
         };
 
         let result: TrezorSignedTx = response.into();
 
         assert_eq!(result.signatures, vec!["sig1", "sig2"]);
         assert_eq!(result.serialized_tx, "rawtx");
+        assert!(result.txid.is_none());
     }
 
     // ========================================================================
@@ -580,4 +582,35 @@ mod tests {
         let err = TrezorError::NotConnected;
         assert_eq!(err.to_string(), "No device connected. Call trezor_connect first.");
     }
+
+    #[test]
+    fn test_account_type_to_script_type() {
+        use crate::modules::trezor::account_info::account_type_to_script_type;
+        use crate::modules::onchain::AccountType;
+
+        assert!(matches!(account_type_to_script_type(AccountType::Legacy), TrezorScriptType::SpendAddress));
+        assert!(matches!(account_type_to_script_type(AccountType::WrappedSegwit), TrezorScriptType::SpendP2shWitness));
+        assert!(matches!(account_type_to_script_type(AccountType::NativeSegwit), TrezorScriptType::SpendWitness));
+        assert!(matches!(account_type_to_script_type(AccountType::Taproot), TrezorScriptType::SpendTaproot));
+    }
+
+    #[test]
+    fn test_script_type_reverse_conversion() {
+        use trezor_connect_rs::ScriptType;
+
+        let cases = vec![
+            (ScriptType::SpendAddress, TrezorScriptType::SpendAddress),
+            (ScriptType::SpendP2SHWitness, TrezorScriptType::SpendP2shWitness),
+            (ScriptType::SpendWitness, TrezorScriptType::SpendWitness),
+            (ScriptType::SpendTaproot, TrezorScriptType::SpendTaproot),
+            (ScriptType::SpendMultisig, TrezorScriptType::SpendMultisig),
+            (ScriptType::External, TrezorScriptType::External),
+        ];
+
+        for (tc_type, expected) in cases {
+            let result: TrezorScriptType = tc_type.into();
+            assert_eq!(result, expected);
+        }
+    }
+
 }

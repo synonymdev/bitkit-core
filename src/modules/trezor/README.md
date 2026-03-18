@@ -63,6 +63,13 @@ FFI-compatible types exposed via UniFFI:
 Error types with UniFFI support:
 - `TrezorError` - Main error enum with variants for transport, connection, device errors
 
+#### `account_info.rs`
+Helper that maps generic `AccountType` to Trezor's `TrezorScriptType` for transaction signing.
+Blockchain query functions (account info, address info) and transaction composition now live in
+the generic `onchain` module.
+
+- `account_type_to_script_type(account_type)` - Maps `AccountType` to `TrezorScriptType` for signing inputs
+
 #### `implementation.rs`
 Core `TrezorManager` struct:
 - Manages device lifecycle (scan, connect, disconnect)

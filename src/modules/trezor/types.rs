@@ -127,6 +127,19 @@ impl From<TrezorScriptType> for trezor_connect_rs::ScriptType {
     }
 }
 
+impl From<trezor_connect_rs::ScriptType> for TrezorScriptType {
+    fn from(t: trezor_connect_rs::ScriptType) -> Self {
+        match t {
+            trezor_connect_rs::ScriptType::SpendAddress => TrezorScriptType::SpendAddress,
+            trezor_connect_rs::ScriptType::SpendP2SHWitness => TrezorScriptType::SpendP2shWitness,
+            trezor_connect_rs::ScriptType::SpendWitness => TrezorScriptType::SpendWitness,
+            trezor_connect_rs::ScriptType::SpendTaproot => TrezorScriptType::SpendTaproot,
+            trezor_connect_rs::ScriptType::SpendMultisig => TrezorScriptType::SpendMultisig,
+            trezor_connect_rs::ScriptType::External => TrezorScriptType::External,
+        }
+    }
+}
+
 /// Bitcoin network / coin type for Trezor operations.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum TrezorCoinType {
@@ -138,6 +151,17 @@ pub enum TrezorCoinType {
     Signet,
     /// Bitcoin regtest
     Regtest,
+}
+
+impl TrezorCoinType {
+    /// Returns the coin name string expected by the Trezor protocol.
+    pub fn coin_name(&self) -> String {
+        match self {
+            TrezorCoinType::Bitcoin => "Bitcoin".to_string(),
+            TrezorCoinType::Testnet | TrezorCoinType::Signet => "Testnet".to_string(),
+            TrezorCoinType::Regtest => "Regtest".to_string(),
+        }
+    }
 }
 
 impl From<TrezorCoinType> for trezor_connect_rs::Network {
@@ -413,6 +437,8 @@ pub struct TrezorSignedTx {
     pub signatures: Vec<String>,
     /// Serialized transaction (hex)
     pub serialized_tx: String,
+    /// Broadcast transaction ID (populated when push=true)
+    pub txid: Option<String>,
 }
 
 impl From<TrezorTxInput> for trezor_connect_rs::SignTxInput {
@@ -426,6 +452,12 @@ impl From<TrezorTxInput> for trezor_connect_rs::SignTxInput {
             sequence: input.sequence,
             orig_hash: input.orig_hash,
             orig_index: input.orig_index,
+            multisig: None,
+            script_pubkey: None,
+            script_sig: None,
+            witness: None,
+            ownership_proof: None,
+            commitment_data: None,
         }
     }
 }
@@ -440,6 +472,8 @@ impl From<TrezorTxOutput> for trezor_connect_rs::SignTxOutput {
             op_return_data: output.op_return_data,
             orig_hash: output.orig_hash,
             orig_index: output.orig_index,
+            multisig: None,
+            payment_req_index: None,
         }
     }
 }
@@ -472,6 +506,7 @@ impl From<TrezorPrevTx> for trezor_connect_rs::SignTxPrevTx {
             lock_time: tx.lock_time,
             inputs: tx.inputs.into_iter().map(|i| i.into()).collect(),
             outputs: tx.outputs.into_iter().map(|o| o.into()).collect(),
+            extra_data: None,
         }
     }
 }
@@ -485,6 +520,12 @@ impl From<TrezorSignTxParams> for trezor_connect_rs::SignTxParams {
             lock_time: params.lock_time,
             version: params.version,
             prev_txs: params.prev_txs.into_iter().map(|t| t.into()).collect(),
+            push: None,
+            amount_unit: None,
+            serialize: None,
+            chunkify: None,
+            unlock_path: None,
+            payment_requests: vec![],
         }
     }
 }
@@ -494,28 +535,7 @@ impl From<trezor_connect_rs::SignedTxResponse> for TrezorSignedTx {
         Self {
             signatures: response.signatures,
             serialized_tx: response.serialized_tx,
+            txid: response.txid,
         }
     }
-}
-
-/// Address information
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, uniffi::Record)]
-pub struct AddressInfo {
-    /// Address string
-    pub address: String,
-    /// Derivation path
-    pub path: String,
-    /// Number of transfers
-    pub transfers: u32,
-}
-
-/// Account addresses
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, uniffi::Record)]
-pub struct AccountAddresses {
-    /// Used addresses
-    pub used: Vec<AddressInfo>,
-    /// Unused addresses
-    pub unused: Vec<AddressInfo>,
-    /// Change addresses
-    pub change: Vec<AddressInfo>,
 }
