@@ -1403,6 +1403,10 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1641,6 +1645,12 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_onchain_get_address_info() != 4749.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_onchain_get_transaction_detail() != 24151.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_onchain_get_transaction_history() != 4452.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_open_channel() != 21402.toShort()) {
@@ -2056,6 +2066,12 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_onchain_get_address_info(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_onchain_get_transaction_detail(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_onchain_get_transaction_history(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_open_channel(
@@ -2759,6 +2775,21 @@ internal object UniffiLib : Library {
         `address`: RustBufferByValue,
         `electrumUrl`: RustBufferByValue,
         `network`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_onchain_get_transaction_detail(
+        `extendedKey`: RustBufferByValue,
+        `electrumUrl`: RustBufferByValue,
+        `txid`: RustBufferByValue,
+        `network`: RustBufferByValue,
+        `scriptType`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_onchain_get_transaction_history(
+        `extendedKey`: RustBufferByValue,
+        `electrumUrl`: RustBufferByValue,
+        `network`: RustBufferByValue,
+        `scriptType`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_open_channel(
@@ -4987,6 +5018,52 @@ public object FfiConverterTypeGetAddressesResponse: FfiConverterRustBuffer<GetAd
 
 
 
+public object FfiConverterTypeHistoryTransaction: FfiConverterRustBuffer<HistoryTransaction> {
+    override fun read(buf: ByteBuffer): HistoryTransaction {
+        return HistoryTransaction(
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterLong.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterTypeTxDirection.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: HistoryTransaction): ULong = (
+            FfiConverterString.allocationSize(value.`txid`) +
+            FfiConverterULong.allocationSize(value.`received`) +
+            FfiConverterULong.allocationSize(value.`sent`) +
+            FfiConverterLong.allocationSize(value.`net`) +
+            FfiConverterOptionalULong.allocationSize(value.`fee`) +
+            FfiConverterULong.allocationSize(value.`amount`) +
+            FfiConverterTypeTxDirection.allocationSize(value.`direction`) +
+            FfiConverterOptionalUInt.allocationSize(value.`blockHeight`) +
+            FfiConverterOptionalULong.allocationSize(value.`timestamp`) +
+            FfiConverterUInt.allocationSize(value.`confirmations`)
+    )
+
+    override fun write(value: HistoryTransaction, buf: ByteBuffer) {
+        FfiConverterString.write(value.`txid`, buf)
+        FfiConverterULong.write(value.`received`, buf)
+        FfiConverterULong.write(value.`sent`, buf)
+        FfiConverterLong.write(value.`net`, buf)
+        FfiConverterOptionalULong.write(value.`fee`, buf)
+        FfiConverterULong.write(value.`amount`, buf)
+        FfiConverterTypeTxDirection.write(value.`direction`, buf)
+        FfiConverterOptionalUInt.write(value.`blockHeight`, buf)
+        FfiConverterOptionalULong.write(value.`timestamp`, buf)
+        FfiConverterUInt.write(value.`confirmations`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypeIBt0ConfMinTxFeeWindow: FfiConverterRustBuffer<IBt0ConfMinTxFeeWindow> {
     override fun read(buf: ByteBuffer): IBt0ConfMinTxFeeWindow {
         return IBt0ConfMinTxFeeWindow(
@@ -6629,6 +6706,70 @@ public object FfiConverterTypeSweepableBalances: FfiConverterRustBuffer<Sweepabl
 
 
 
+public object FfiConverterTypeTransactionDetail: FfiConverterRustBuffer<TransactionDetail> {
+    override fun read(buf: ByteBuffer): TransactionDetail {
+        return TransactionDetail(
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterLong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterTypeTxDirection.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterSequenceTypeTxDetailInput.read(buf),
+            FfiConverterSequenceTypeTxDetailOutput.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterOptionalDouble.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: TransactionDetail): ULong = (
+            FfiConverterString.allocationSize(value.`txid`) +
+            FfiConverterULong.allocationSize(value.`received`) +
+            FfiConverterULong.allocationSize(value.`sent`) +
+            FfiConverterLong.allocationSize(value.`net`) +
+            FfiConverterULong.allocationSize(value.`amount`) +
+            FfiConverterOptionalULong.allocationSize(value.`fee`) +
+            FfiConverterTypeTxDirection.allocationSize(value.`direction`) +
+            FfiConverterOptionalUInt.allocationSize(value.`blockHeight`) +
+            FfiConverterOptionalULong.allocationSize(value.`timestamp`) +
+            FfiConverterUInt.allocationSize(value.`confirmations`) +
+            FfiConverterSequenceTypeTxDetailInput.allocationSize(value.`inputs`) +
+            FfiConverterSequenceTypeTxDetailOutput.allocationSize(value.`outputs`) +
+            FfiConverterUInt.allocationSize(value.`size`) +
+            FfiConverterUInt.allocationSize(value.`vsize`) +
+            FfiConverterUInt.allocationSize(value.`weight`) +
+            FfiConverterOptionalDouble.allocationSize(value.`feeRate`)
+    )
+
+    override fun write(value: TransactionDetail, buf: ByteBuffer) {
+        FfiConverterString.write(value.`txid`, buf)
+        FfiConverterULong.write(value.`received`, buf)
+        FfiConverterULong.write(value.`sent`, buf)
+        FfiConverterLong.write(value.`net`, buf)
+        FfiConverterULong.write(value.`amount`, buf)
+        FfiConverterOptionalULong.write(value.`fee`, buf)
+        FfiConverterTypeTxDirection.write(value.`direction`, buf)
+        FfiConverterOptionalUInt.write(value.`blockHeight`, buf)
+        FfiConverterOptionalULong.write(value.`timestamp`, buf)
+        FfiConverterUInt.write(value.`confirmations`, buf)
+        FfiConverterSequenceTypeTxDetailInput.write(value.`inputs`, buf)
+        FfiConverterSequenceTypeTxDetailOutput.write(value.`outputs`, buf)
+        FfiConverterUInt.write(value.`size`, buf)
+        FfiConverterUInt.write(value.`vsize`, buf)
+        FfiConverterUInt.write(value.`weight`, buf)
+        FfiConverterOptionalDouble.write(value.`feeRate`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypeTransactionDetails: FfiConverterRustBuffer<TransactionDetails> {
     override fun read(buf: ByteBuffer): TransactionDetails {
         return TransactionDetails(
@@ -6651,6 +6792,37 @@ public object FfiConverterTypeTransactionDetails: FfiConverterRustBuffer<Transac
         FfiConverterLong.write(value.`amountSats`, buf)
         FfiConverterSequenceTypeTxInput.write(value.`inputs`, buf)
         FfiConverterSequenceTypeTxOutput.write(value.`outputs`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeTransactionHistoryResult: FfiConverterRustBuffer<TransactionHistoryResult> {
+    override fun read(buf: ByteBuffer): TransactionHistoryResult {
+        return TransactionHistoryResult(
+            FfiConverterSequenceTypeHistoryTransaction.read(buf),
+            FfiConverterTypeWalletBalance.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterTypeAccountType.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: TransactionHistoryResult): ULong = (
+            FfiConverterSequenceTypeHistoryTransaction.allocationSize(value.`transactions`) +
+            FfiConverterTypeWalletBalance.allocationSize(value.`balance`) +
+            FfiConverterUInt.allocationSize(value.`txCount`) +
+            FfiConverterUInt.allocationSize(value.`blockHeight`) +
+            FfiConverterTypeAccountType.allocationSize(value.`accountType`)
+    )
+
+    override fun write(value: TransactionHistoryResult, buf: ByteBuffer) {
+        FfiConverterSequenceTypeHistoryTransaction.write(value.`transactions`, buf)
+        FfiConverterTypeWalletBalance.write(value.`balance`, buf)
+        FfiConverterUInt.write(value.`txCount`, buf)
+        FfiConverterUInt.write(value.`blockHeight`, buf)
+        FfiConverterTypeAccountType.write(value.`accountType`, buf)
     }
 }
 
@@ -7222,6 +7394,65 @@ public object FfiConverterTypeTrezorVerifyMessageParams: FfiConverterRustBuffer<
 
 
 
+public object FfiConverterTypeTxDetailInput: FfiConverterRustBuffer<TxDetailInput> {
+    override fun read(buf: ByteBuffer): TxDetailInput {
+        return TxDetailInput(
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterSequenceString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: TxDetailInput): ULong = (
+            FfiConverterString.allocationSize(value.`txid`) +
+            FfiConverterUInt.allocationSize(value.`vout`) +
+            FfiConverterUInt.allocationSize(value.`sequence`) +
+            FfiConverterString.allocationSize(value.`scriptSig`) +
+            FfiConverterSequenceString.allocationSize(value.`witness`)
+    )
+
+    override fun write(value: TxDetailInput, buf: ByteBuffer) {
+        FfiConverterString.write(value.`txid`, buf)
+        FfiConverterUInt.write(value.`vout`, buf)
+        FfiConverterUInt.write(value.`sequence`, buf)
+        FfiConverterString.write(value.`scriptSig`, buf)
+        FfiConverterSequenceString.write(value.`witness`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeTxDetailOutput: FfiConverterRustBuffer<TxDetailOutput> {
+    override fun read(buf: ByteBuffer): TxDetailOutput {
+        return TxDetailOutput(
+            FfiConverterULong.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterBoolean.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: TxDetailOutput): ULong = (
+            FfiConverterULong.allocationSize(value.`value`) +
+            FfiConverterString.allocationSize(value.`scriptPubkey`) +
+            FfiConverterOptionalString.allocationSize(value.`address`) +
+            FfiConverterBoolean.allocationSize(value.`isMine`)
+    )
+
+    override fun write(value: TxDetailOutput, buf: ByteBuffer) {
+        FfiConverterULong.write(value.`value`, buf)
+        FfiConverterString.write(value.`scriptPubkey`, buf)
+        FfiConverterOptionalString.write(value.`address`, buf)
+        FfiConverterBoolean.write(value.`isMine`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypeTxInput: FfiConverterRustBuffer<TxInput> {
     override fun read(buf: ByteBuffer): TxInput {
         return TxInput(
@@ -7303,6 +7534,40 @@ public object FfiConverterTypeValidationResult: FfiConverterRustBuffer<Validatio
         FfiConverterString.write(value.`address`, buf)
         FfiConverterTypeNetworkType.write(value.`network`, buf)
         FfiConverterTypeAddressType.write(value.`addressType`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeWalletBalance: FfiConverterRustBuffer<WalletBalance> {
+    override fun read(buf: ByteBuffer): WalletBalance {
+        return WalletBalance(
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: WalletBalance): ULong = (
+            FfiConverterULong.allocationSize(value.`confirmed`) +
+            FfiConverterULong.allocationSize(value.`immature`) +
+            FfiConverterULong.allocationSize(value.`trustedPending`) +
+            FfiConverterULong.allocationSize(value.`untrustedPending`) +
+            FfiConverterULong.allocationSize(value.`spendable`) +
+            FfiConverterULong.allocationSize(value.`total`)
+    )
+
+    override fun write(value: WalletBalance, buf: ByteBuffer) {
+        FfiConverterULong.write(value.`confirmed`, buf)
+        FfiConverterULong.write(value.`immature`, buf)
+        FfiConverterULong.write(value.`trustedPending`, buf)
+        FfiConverterULong.write(value.`untrustedPending`, buf)
+        FfiConverterULong.write(value.`spendable`, buf)
+        FfiConverterULong.write(value.`total`, buf)
     }
 }
 
@@ -9411,6 +9676,24 @@ public object FfiConverterTypeTrezorTransportType: FfiConverterRustBuffer<Trezor
 
 
 
+public object FfiConverterTypeTxDirection: FfiConverterRustBuffer<TxDirection> {
+    override fun read(buf: ByteBuffer): TxDirection = try {
+        TxDirection.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: TxDirection): ULong = 4UL
+
+    override fun write(value: TxDirection, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
 public object FfiConverterTypeWordCount: FfiConverterRustBuffer<WordCount> {
     override fun read(buf: ByteBuffer): WordCount = try {
         WordCount.entries[buf.getInt() - 1]
@@ -9508,6 +9791,35 @@ public object FfiConverterOptionalULong: FfiConverterRustBuffer<kotlin.ULong?> {
         } else {
             buf.put(1)
             FfiConverterULong.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalDouble: FfiConverterRustBuffer<kotlin.Double?> {
+    override fun read(buf: ByteBuffer): kotlin.Double? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterDouble.read(buf)
+    }
+
+    override fun allocationSize(value: kotlin.Double?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterDouble.allocationSize(value)
+        }
+    }
+
+    override fun write(value: kotlin.Double?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterDouble.write(value, buf)
         }
     }
 }
@@ -10937,6 +11249,31 @@ public object FfiConverterSequenceTypeGetAddressResponse: FfiConverterRustBuffer
 
 
 
+public object FfiConverterSequenceTypeHistoryTransaction: FfiConverterRustBuffer<List<HistoryTransaction>> {
+    override fun read(buf: ByteBuffer): List<HistoryTransaction> {
+        val len = buf.getInt()
+        return List<HistoryTransaction>(len) {
+            FfiConverterTypeHistoryTransaction.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<HistoryTransaction>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeHistoryTransaction.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<HistoryTransaction>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeHistoryTransaction.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceTypeIBtOnchainTransaction: FfiConverterRustBuffer<List<IBtOnchainTransaction>> {
     override fun read(buf: ByteBuffer): List<IBtOnchainTransaction> {
         val len = buf.getInt()
@@ -11355,6 +11692,56 @@ public object FfiConverterSequenceTypeTrezorTxOutput: FfiConverterRustBuffer<Lis
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeTrezorTxOutput.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeTxDetailInput: FfiConverterRustBuffer<List<TxDetailInput>> {
+    override fun read(buf: ByteBuffer): List<TxDetailInput> {
+        val len = buf.getInt()
+        return List<TxDetailInput>(len) {
+            FfiConverterTypeTxDetailInput.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<TxDetailInput>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeTxDetailInput.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<TxDetailInput>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeTxDetailInput.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeTxDetailOutput: FfiConverterRustBuffer<List<TxDetailOutput>> {
+    override fun read(buf: ByteBuffer): List<TxDetailOutput> {
+        val len = buf.getInt()
+        return List<TxDetailOutput>(len) {
+            FfiConverterTypeTxDetailOutput.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<TxDetailOutput>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeTxDetailOutput.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<TxDetailOutput>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeTxDetailOutput.write(it, buf)
         }
     }
 }
@@ -12474,6 +12861,53 @@ public suspend fun `onchainGetAddressInfo`(`address`: kotlin.String, `electrumUr
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
         // lift function
         { FfiConverterTypeSingleAddressInfoResult.lift(it) },
+        // Error FFI converter
+        AccountInfoExceptionErrorHandler,
+    )
+}
+
+/**
+ * Get full details for a single transaction by txid.
+ */
+@Throws(AccountInfoException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `onchainGetTransactionDetail`(`extendedKey`: kotlin.String, `electrumUrl`: kotlin.String, `txid`: kotlin.String, `network`: Network?, `scriptType`: AccountType?): TransactionDetail {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_transaction_detail(
+            FfiConverterString.lower(`extendedKey`),
+            FfiConverterString.lower(`electrumUrl`),
+            FfiConverterString.lower(`txid`),
+            FfiConverterOptionalTypeNetwork.lower(`network`),
+            FfiConverterOptionalTypeAccountType.lower(`scriptType`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeTransactionDetail.lift(it) },
+        // Error FFI converter
+        AccountInfoExceptionErrorHandler,
+    )
+}
+
+/**
+ * Query transaction history and balance for an extended public key via Electrum.
+ */
+@Throws(AccountInfoException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `onchainGetTransactionHistory`(`extendedKey`: kotlin.String, `electrumUrl`: kotlin.String, `network`: Network?, `scriptType`: AccountType?): TransactionHistoryResult {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_transaction_history(
+            FfiConverterString.lower(`extendedKey`),
+            FfiConverterString.lower(`electrumUrl`),
+            FfiConverterOptionalTypeNetwork.lower(`network`),
+            FfiConverterOptionalTypeAccountType.lower(`scriptType`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeTransactionHistoryResult.lift(it) },
         // Error FFI converter
         AccountInfoExceptionErrorHandler,
     )

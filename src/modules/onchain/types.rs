@@ -386,3 +386,147 @@ pub enum ComposeResult {
         error: String,
     },
 }
+
+// ============================================================================
+// Transaction history types
+// ============================================================================
+
+/// Transaction direction from the wallet's perspective.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum TxDirection {
+    /// Wallet sent funds to an external address
+    Sent,
+    /// Wallet received funds from an external source
+    Received,
+    /// Wallet sent funds to itself (e.g. consolidation, change-only)
+    SelfTransfer,
+}
+
+/// A single transaction in the wallet's history.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct HistoryTransaction {
+    /// Transaction ID (hex)
+    pub txid: String,
+    /// Amount received by the wallet (sats)
+    pub received: u64,
+    /// Amount sent by the wallet (sats) — includes change sent back to self
+    pub sent: u64,
+    /// Net value from wallet's perspective: received - sent (positive = inflow, negative = outflow)
+    pub net: i64,
+    /// Transaction fee in sats (None if not available, e.g. for received-only txs)
+    pub fee: Option<u64>,
+    /// Display amount in sats:
+    /// - Received: the received value
+    /// - Sent: amount that left the wallet (sent - received - fee)
+    /// - SelfTransfer: the fee paid
+    pub amount: u64,
+    /// Transaction direction
+    pub direction: TxDirection,
+    /// Block height (None if unconfirmed/mempool)
+    pub block_height: Option<u32>,
+    /// Block timestamp as unix epoch seconds (None if unconfirmed)
+    pub timestamp: Option<u64>,
+    /// Number of confirmations (0 if unconfirmed)
+    pub confirmations: u32,
+}
+
+/// Balance breakdown from BDK.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct WalletBalance {
+    /// Confirmed and spendable balance (sats)
+    pub confirmed: u64,
+    /// Immature coinbase outputs (sats)
+    pub immature: u64,
+    /// Unconfirmed UTXOs from trusted sources (own change) (sats)
+    pub trusted_pending: u64,
+    /// Unconfirmed UTXOs from external sources (sats)
+    pub untrusted_pending: u64,
+    /// Total spendable: confirmed + trusted_pending (sats)
+    pub spendable: u64,
+    /// Grand total: all categories (sats)
+    pub total: u64,
+}
+
+/// Result from querying transaction history for an xpub.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct TransactionHistoryResult {
+    /// All transactions, sorted: unconfirmed first, then by timestamp descending
+    pub transactions: Vec<HistoryTransaction>,
+    /// Balance breakdown
+    pub balance: WalletBalance,
+    /// Total number of transactions
+    pub tx_count: u32,
+    /// Current blockchain tip height
+    pub block_height: u32,
+    /// The detected or specified account type
+    pub account_type: AccountType,
+}
+
+// ============================================================================
+// Transaction detail types (single-tx endpoint)
+// ============================================================================
+
+/// A transaction input with full details.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct TxDetailInput {
+    /// Previous output transaction ID (hex)
+    pub txid: String,
+    /// Previous output index
+    pub vout: u32,
+    /// Sequence number
+    pub sequence: u32,
+    /// Script signature (hex-encoded)
+    pub script_sig: String,
+    /// Witness stack (each element hex-encoded)
+    pub witness: Vec<String>,
+}
+
+/// A transaction output with full details.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct TxDetailOutput {
+    /// Output value in sats
+    pub value: u64,
+    /// Script public key (hex-encoded)
+    pub script_pubkey: String,
+    /// Decoded address (None if script is not decodable to an address)
+    pub address: Option<String>,
+    /// Whether this output belongs to the queried wallet
+    pub is_mine: bool,
+}
+
+/// Full details for a single transaction, including raw inputs/outputs and size metrics.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct TransactionDetail {
+    /// Transaction ID (hex)
+    pub txid: String,
+    /// Amount received by the wallet (sats)
+    pub received: u64,
+    /// Amount sent by the wallet (sats) — includes change sent back to self
+    pub sent: u64,
+    /// Net value from wallet's perspective: received - sent (positive = inflow, negative = outflow)
+    pub net: i64,
+    /// Display amount in sats (same semantics as HistoryTransaction.amount)
+    pub amount: u64,
+    /// Transaction fee in sats (None if not available)
+    pub fee: Option<u64>,
+    /// Transaction direction
+    pub direction: TxDirection,
+    /// Block height (None if unconfirmed/mempool)
+    pub block_height: Option<u32>,
+    /// Block timestamp as unix epoch seconds (None if unconfirmed)
+    pub timestamp: Option<u64>,
+    /// Number of confirmations (0 if unconfirmed)
+    pub confirmations: u32,
+    /// Transaction inputs
+    pub inputs: Vec<TxDetailInput>,
+    /// Transaction outputs
+    pub outputs: Vec<TxDetailOutput>,
+    /// Serialized transaction size in bytes
+    pub size: u32,
+    /// Virtual size in vbytes (ceil(weight / 4))
+    pub vsize: u32,
+    /// Transaction weight in weight units
+    pub weight: u32,
+    /// Fee rate in sat/vB (fee / vsize), None if fee or vsize unavailable
+    pub fee_rate: Option<f64>,
+}

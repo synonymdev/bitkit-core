@@ -1110,6 +1110,305 @@ mod tests {
     }
 
     // ========================================================================
+    // Transaction History Tests
+    // ========================================================================
+
+    #[test]
+    fn test_get_transaction_history_invalid_key() {
+        use crate::modules::onchain::get_transaction_history;
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let result = rt.block_on(get_transaction_history(
+            "not_a_valid_xpub",
+            ACCOUNT_INFO_ELECTRUM_URL,
+            None,
+            None,
+        ));
+
+        assert!(result.is_err(), "Expected error for invalid key");
+    }
+
+    #[test]
+    fn test_get_transaction_history_network_mismatch() {
+        use crate::modules::onchain::get_transaction_history;
+        use crate::modules::onchain::{AccountInfoError, Network as OnchainNetwork};
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        // tpub is testnet, but we specify Bitcoin (mainnet) — should get NetworkMismatch
+        let result = rt.block_on(get_transaction_history(
+            TEST_TPUB,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            Some(OnchainNetwork::Bitcoin),
+            None,
+        ));
+
+        assert!(result.is_err(), "Expected NetworkMismatch error");
+        match result.unwrap_err() {
+            AccountInfoError::NetworkMismatch { .. } => {}
+            other => panic!("Expected NetworkMismatch, got: {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_get_transaction_history_vpub() {
+        use crate::modules::onchain::get_transaction_history;
+        use crate::modules::onchain::{AccountType, TxDirection};
+
+        let result = get_transaction_history(
+            TEST_VPUB,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            None,
+            None,
+        )
+        .await;
+
+        let info = result.expect("get_transaction_history(vpub) should succeed");
+        assert_eq!(info.account_type, AccountType::NativeSegwit);
+        assert!(info.block_height > 0, "Expected block_height > 0");
+        assert!(info.tx_count > 0, "Expected at least 1 transaction");
+        assert_eq!(info.tx_count, info.transactions.len() as u32);
+
+        // Balance should be consistent
+        assert!(info.balance.total >= info.balance.confirmed);
+        assert_eq!(
+            info.balance.spendable,
+            info.balance.confirmed + info.balance.trusted_pending
+        );
+
+        // Verify transaction fields
+        for tx in &info.transactions {
+            assert!(!tx.txid.is_empty(), "Transaction should have non-empty txid");
+            assert!(tx.received > 0 || tx.sent > 0, "Transaction should have some value");
+
+            match tx.direction {
+                TxDirection::Sent => assert!(tx.sent > 0),
+                TxDirection::Received => assert!(tx.received > 0),
+                TxDirection::SelfTransfer => {
+                    assert!(tx.sent > 0);
+                    assert!(tx.received > 0);
+                }
+            }
+        }
+
+        // Verify sort order: unconfirmed first, then by timestamp descending
+        let mut prev_timestamp: Option<u64> = None;
+        let mut seen_confirmed = false;
+        for tx in &info.transactions {
+            if tx.timestamp.is_none() {
+                assert!(!seen_confirmed, "Unconfirmed txs should come before confirmed");
+            } else {
+                seen_confirmed = true;
+                if let Some(prev) = prev_timestamp {
+                    assert!(tx.timestamp.unwrap() <= prev, "Confirmed txs should be sorted newest first");
+                }
+                prev_timestamp = tx.timestamp;
+            }
+        }
+
+        println!(
+            "vpub tx history: tx_count={}, balance={}, block_height={}",
+            info.tx_count, info.balance.confirmed, info.block_height
+        );
+    }
+
+    // ========================================================================
+    // Transaction Detail Tests
+    // ========================================================================
+
+    #[test]
+    fn test_get_transaction_detail_invalid_key() {
+        use crate::modules::onchain::get_transaction_detail;
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let result = rt.block_on(get_transaction_detail(
+            "not_a_valid_xpub",
+            ACCOUNT_INFO_ELECTRUM_URL,
+            "0000000000000000000000000000000000000000000000000000000000000000",
+            None,
+            None,
+        ));
+
+        assert!(result.is_err(), "Expected error for invalid key");
+    }
+
+    #[test]
+    fn test_get_transaction_detail_invalid_txid() {
+        use crate::modules::onchain::get_transaction_detail;
+        use crate::modules::onchain::AccountInfoError;
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let result = rt.block_on(get_transaction_detail(
+            TEST_VPUB,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            "not_a_valid_txid",
+            None,
+            None,
+        ));
+
+        assert!(result.is_err(), "Expected error for invalid txid");
+        match result.unwrap_err() {
+            AccountInfoError::InvalidTxid { .. } => {}
+            other => panic!("Expected InvalidTxid, got: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_get_transaction_detail_network_mismatch() {
+        use crate::modules::onchain::get_transaction_detail;
+        use crate::modules::onchain::{AccountInfoError, Network as OnchainNetwork};
+
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let result = rt.block_on(get_transaction_detail(
+            TEST_TPUB,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            "0000000000000000000000000000000000000000000000000000000000000000",
+            Some(OnchainNetwork::Bitcoin),
+            None,
+        ));
+
+        assert!(result.is_err(), "Expected NetworkMismatch error");
+        match result.unwrap_err() {
+            AccountInfoError::NetworkMismatch { .. } => {}
+            other => panic!("Expected NetworkMismatch, got: {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_get_transaction_detail_vpub() {
+        use crate::modules::onchain::{get_transaction_detail, get_transaction_history, TxDirection};
+
+        // First get a known txid from the history
+        let history = get_transaction_history(
+            TEST_VPUB,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            None,
+            None,
+        )
+        .await
+        .expect("get_transaction_history should succeed");
+
+        assert!(!history.transactions.is_empty(), "Need at least 1 tx to test detail");
+
+        let target_tx = &history.transactions[0];
+        let target_txid = &target_tx.txid;
+
+        let detail = get_transaction_detail(
+            TEST_VPUB,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            target_txid,
+            None,
+            None,
+        )
+        .await
+        .expect("get_transaction_detail should succeed");
+
+        // Verify txid matches
+        assert_eq!(detail.txid, *target_txid);
+
+        // Verify summary fields match the history entry
+        assert_eq!(detail.received, target_tx.received);
+        assert_eq!(detail.sent, target_tx.sent);
+        assert_eq!(detail.net, target_tx.net);
+        assert_eq!(detail.amount, target_tx.amount);
+        assert_eq!(detail.fee, target_tx.fee);
+        assert_eq!(detail.direction, target_tx.direction);
+
+        // Verify detail fields
+        assert!(!detail.inputs.is_empty(), "Transaction should have inputs");
+        assert!(!detail.outputs.is_empty(), "Transaction should have outputs");
+        assert!(detail.size > 0, "Transaction size should be > 0");
+        assert!(detail.vsize > 0, "Transaction vsize should be > 0");
+        assert!(detail.weight > 0, "Transaction weight should be > 0");
+        assert!(detail.vsize <= detail.size, "vsize should be <= size");
+
+        // Fee rate should be present when fee is known
+        if detail.fee.is_some() {
+            assert!(detail.fee_rate.is_some(), "fee_rate should be present when fee is known");
+            assert!(detail.fee_rate.unwrap() > 0.0, "fee_rate should be positive");
+        }
+
+        // For received txs, at least one output should be ours
+        if detail.direction == TxDirection::Received {
+            assert!(
+                detail.outputs.iter().any(|o| o.is_mine),
+                "Received tx should have at least one is_mine output"
+            );
+        }
+
+        // Verify input fields
+        for inp in &detail.inputs {
+            assert!(!inp.txid.is_empty(), "Input should have non-empty txid");
+        }
+
+        // Verify output fields
+        for out in &detail.outputs {
+            assert!(!out.script_pubkey.is_empty(), "Output should have script_pubkey");
+        }
+
+        println!(
+            "vpub tx detail: txid={}, inputs={}, outputs={}, size={}, vsize={}, fee_rate={:?}",
+            detail.txid,
+            detail.inputs.len(),
+            detail.outputs.len(),
+            detail.size,
+            detail.vsize,
+            detail.fee_rate
+        );
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_history_transaction_amount() {
+        use crate::modules::onchain::{get_transaction_history, TxDirection};
+
+        let history = get_transaction_history(
+            TEST_VPUB,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            None,
+            None,
+        )
+        .await
+        .expect("get_transaction_history should succeed");
+
+        assert!(!history.transactions.is_empty(), "Need at least 1 tx");
+
+        for tx in &history.transactions {
+            match tx.direction {
+                TxDirection::Received => {
+                    assert_eq!(
+                        tx.amount, tx.received,
+                        "Received amount should equal received (txid={})",
+                        tx.txid
+                    );
+                }
+                TxDirection::Sent => {
+                    let expected = tx
+                        .sent
+                        .saturating_sub(tx.received)
+                        .saturating_sub(tx.fee.unwrap_or(0));
+                    assert_eq!(
+                        tx.amount, expected,
+                        "Sent amount should equal sent - received - fee (txid={})",
+                        tx.txid
+                    );
+                }
+                TxDirection::SelfTransfer => {
+                    assert_eq!(
+                        tx.amount,
+                        tx.fee.unwrap_or(0),
+                        "SelfTransfer amount should equal fee (txid={})",
+                        tx.txid
+                    );
+                }
+            }
+        }
+
+        println!("Verified amount field for {} transactions", history.transactions.len());
+    }
+
+    // ========================================================================
     // Compose Transaction Tests (BDK-based, signer-agnostic)
     // ========================================================================
 
