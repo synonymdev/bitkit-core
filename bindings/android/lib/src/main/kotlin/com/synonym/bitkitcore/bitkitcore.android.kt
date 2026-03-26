@@ -7636,6 +7636,9 @@ public object FfiConverterTypeAccountInfoError : FfiConverterRustBuffer<AccountI
             8 -> AccountInfoException.InvalidTxid(
                 FfiConverterString.read(buf),
                 )
+            9 -> AccountInfoException.TransactionNotFound(
+                FfiConverterString.read(buf),
+                )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
@@ -7682,6 +7685,11 @@ public object FfiConverterTypeAccountInfoError : FfiConverterRustBuffer<AccountI
                 4UL
                 + FfiConverterString.allocationSize(value.`errorDetails`)
             )
+            is AccountInfoException.TransactionNotFound -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
         }
     }
 
@@ -7724,6 +7732,11 @@ public object FfiConverterTypeAccountInfoError : FfiConverterRustBuffer<AccountI
             }
             is AccountInfoException.InvalidTxid -> {
                 buf.putInt(8)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is AccountInfoException.TransactionNotFound -> {
+                buf.putInt(9)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }

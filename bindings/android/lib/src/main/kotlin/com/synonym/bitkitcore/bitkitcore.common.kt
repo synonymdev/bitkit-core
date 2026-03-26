@@ -1558,7 +1558,7 @@ public data class TransactionDetail (
      */
     val `weight`: kotlin.UInt, 
     /**
-     * Fee rate in sat/vB (fee / vsize), None if fee or vsize unavailable
+     * Fee rate in sat/vB (fee / vsize), None if fee is unavailable or vsize is zero
      */
     val `feeRate`: kotlin.Double?
 ) {
@@ -2501,6 +2501,16 @@ public sealed class AccountInfoException: kotlin.Exception() {
      * Invalid transaction ID provided
      */
     public class InvalidTxid(
+        public val `errorDetails`: kotlin.String,
+    ) : AccountInfoException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * A valid transaction ID was not found in the wallet
+     */
+    public class TransactionNotFound(
         public val `errorDetails`: kotlin.String,
     ) : AccountInfoException() {
         override val message: String

@@ -7159,7 +7159,7 @@ class TransactionDetail:
 
     fee_rate: "typing.Optional[float]"
     """
-    Fee rate in sat/vB (fee / vsize), None if fee or vsize unavailable
+    Fee rate in sat/vB (fee / vsize), None if fee is unavailable or vsize is zero
     """
 
     def __init__(self, *, txid: "str", received: "int", sent: "int", net: "int", amount: "int", fee: "typing.Optional[int]", direction: "TxDirection", block_height: "typing.Optional[int]", timestamp: "typing.Optional[int]", confirmations: "int", inputs: "typing.List[TxDetailInput]", outputs: "typing.List[TxDetailOutput]", size: "int", vsize: "int", weight: "int", fee_rate: "typing.Optional[float]"):
@@ -9547,6 +9547,20 @@ class AccountInfoError:  # type: ignore
         def __repr__(self):
             return "AccountInfoError.InvalidTxid({})".format(str(self))
     _UniffiTempAccountInfoError.InvalidTxid = InvalidTxid # type: ignore
+    class TransactionNotFound(_UniffiTempAccountInfoError):
+        """
+        A valid transaction ID was not found in the wallet
+        """
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "AccountInfoError.TransactionNotFound({})".format(str(self))
+    _UniffiTempAccountInfoError.TransactionNotFound = TransactionNotFound # type: ignore
 
 AccountInfoError = _UniffiTempAccountInfoError # type: ignore
 del _UniffiTempAccountInfoError
@@ -9588,6 +9602,10 @@ class _UniffiConverterTypeAccountInfoError(_UniffiConverterRustBuffer):
             return AccountInfoError.InvalidTxid(
                 _UniffiConverterString.read(buf),
             )
+        if variant == 9:
+            return AccountInfoError.TransactionNotFound(
+                _UniffiConverterString.read(buf),
+            )
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
@@ -9616,6 +9634,9 @@ class _UniffiConverterTypeAccountInfoError(_UniffiConverterRustBuffer):
         if isinstance(value, AccountInfoError.InvalidTxid):
             _UniffiConverterString.check_lower(value.error_details)
             return
+        if isinstance(value, AccountInfoError.TransactionNotFound):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
 
     @staticmethod
     def write(value, buf):
@@ -9642,6 +9663,9 @@ class _UniffiConverterTypeAccountInfoError(_UniffiConverterRustBuffer):
             _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, AccountInfoError.InvalidTxid):
             buf.write_i32(8)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, AccountInfoError.TransactionNotFound):
+            buf.write_i32(9)
             _UniffiConverterString.write(value.error_details, buf)
 
 

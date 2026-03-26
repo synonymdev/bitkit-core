@@ -8832,7 +8832,7 @@ public struct TransactionDetail {
      */
     public var weight: UInt32
     /**
-     * Fee rate in sat/vB (fee / vsize), None if fee or vsize unavailable
+     * Fee rate in sat/vB (fee / vsize), None if fee is unavailable or vsize is zero
      */
     public var feeRate: Double?
 
@@ -8885,7 +8885,7 @@ public struct TransactionDetail {
          * Transaction weight in weight units
          */weight: UInt32, 
         /**
-         * Fee rate in sat/vB (fee / vsize), None if fee or vsize unavailable
+         * Fee rate in sat/vB (fee / vsize), None if fee is unavailable or vsize is zero
          */feeRate: Double?) {
         self.txid = txid
         self.received = received
@@ -12544,6 +12544,11 @@ public enum AccountInfoError: Swift.Error {
      */
     case InvalidTxid(errorDetails: String
     )
+    /**
+     * A valid transaction ID was not found in the wallet
+     */
+    case TransactionNotFound(errorDetails: String
+    )
 }
 
 
@@ -12582,6 +12587,9 @@ public struct FfiConverterTypeAccountInfoError: FfiConverterRustBuffer {
             errorDetails: try FfiConverterString.read(from: &buf)
             )
         case 8: return .InvalidTxid(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 9: return .TransactionNotFound(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
 
@@ -12633,6 +12641,11 @@ public struct FfiConverterTypeAccountInfoError: FfiConverterRustBuffer {
         
         case let .InvalidTxid(errorDetails):
             writeInt(&buf, Int32(8))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .TransactionNotFound(errorDetails):
+            writeInt(&buf, Int32(9))
             FfiConverterString.write(errorDetails, into: &buf)
             
         }
