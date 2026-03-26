@@ -1,4 +1,5 @@
 #[derive(uniffi::Error, thiserror::Error, Debug)]
+#[non_exhaustive]
 pub enum PubkyError {
     #[error("Invalid capabilities: {reason}")]
     InvalidCapabilities { reason: String },

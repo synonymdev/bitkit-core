@@ -36,12 +36,12 @@ pub async fn fetch_pubky_file(uri: String) -> Result<Vec<u8>, PubkyError> {
         .public_storage()
         .get(&uri)
         .await
-        .map_err(|e| PubkyError::ResolutionFailed { reason: e.to_string() })?;
+        .map_err(|e| PubkyError::FetchFailed { reason: e.to_string() })?;
 
     let bytes = response
         .bytes()
         .await
-        .map_err(|e| PubkyError::ResolutionFailed { reason: e.to_string() })?;
+        .map_err(|e| PubkyError::FetchFailed { reason: e.to_string() })?;
 
     Ok(bytes.to_vec())
 }

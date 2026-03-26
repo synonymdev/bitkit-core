@@ -69,7 +69,7 @@ pub async fn pubky_session_delete(
         .storage()
         .delete(path.as_str())
         .await
-        .map_err(|e| PubkyError::WriteFailed { reason: e.to_string() })?;
+        .map_err(|e| PubkyError::WriteFailed { reason: format!("delete failed: {e}") })?;
 
     Ok(())
 }

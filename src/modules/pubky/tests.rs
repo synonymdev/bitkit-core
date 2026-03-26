@@ -69,8 +69,8 @@ async fn fetch_malformed_uri_returns_error() {
     let result = fetch_pubky_file("totally-not-a-pubky-uri".into()).await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        PubkyError::ResolutionFailed { .. } => {}
-        other => panic!("expected ResolutionFailed, got: {other:?}"),
+        PubkyError::FetchFailed { .. } => {}
+        other => panic!("expected FetchFailed, got: {other:?}"),
     }
 }
 
@@ -356,6 +356,20 @@ async fn sign_in_invalid_secret_key_returns_error() {
 }
 
 // ============================================================================
+// Put with secret key error tests
+// ============================================================================
+
+#[tokio::test]
+async fn put_with_secret_key_invalid_key_returns_error() {
+    let result = pubky_put_with_secret_key("bad-hex".into(), "/pub/test".into(), vec![]).await;
+    assert!(result.is_err());
+    match result.unwrap_err() {
+        PubkyError::KeyError { .. } => {}
+        other => panic!("expected KeyError, got: {other:?}"),
+    }
+}
+
+// ============================================================================
 // Session operation error tests
 // ============================================================================
 
@@ -398,8 +412,8 @@ async fn fetch_file_string_malformed_uri_returns_error() {
     let result = fetch_pubky_file_string("not-a-uri".into()).await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        PubkyError::ResolutionFailed { .. } => {}
-        other => panic!("expected ResolutionFailed, got: {other:?}"),
+        PubkyError::FetchFailed { .. } => {}
+        other => panic!("expected FetchFailed, got: {other:?}"),
     }
 }
 
