@@ -3430,6 +3430,211 @@ public func FfiConverterTypeGetAddressesResponse_lower(_ value: GetAddressesResp
 }
 
 
+/**
+ * A single transaction in the wallet's history.
+ */
+public struct HistoryTransaction {
+    /**
+     * Transaction ID (hex)
+     */
+    public var txid: String
+    /**
+     * Amount received by the wallet (sats)
+     */
+    public var received: UInt64
+    /**
+     * Amount sent by the wallet (sats) — includes change sent back to self
+     */
+    public var sent: UInt64
+    /**
+     * Net value from wallet's perspective: received - sent (positive = inflow, negative = outflow)
+     */
+    public var net: Int64
+    /**
+     * Transaction fee in sats (None if not available, e.g. for received-only txs)
+     */
+    public var fee: UInt64?
+    /**
+     * Display amount in sats:
+     * - Received: the received value
+     * - Sent: amount that left the wallet (sent - received - fee)
+     * - SelfTransfer: the fee paid
+     */
+    public var amount: UInt64
+    /**
+     * Transaction direction
+     */
+    public var direction: TxDirection
+    /**
+     * Block height (None if unconfirmed/mempool)
+     */
+    public var blockHeight: UInt32?
+    /**
+     * Block timestamp as unix epoch seconds (None if unconfirmed)
+     */
+    public var timestamp: UInt64?
+    /**
+     * Number of confirmations (0 if unconfirmed)
+     */
+    public var confirmations: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Transaction ID (hex)
+         */txid: String, 
+        /**
+         * Amount received by the wallet (sats)
+         */received: UInt64, 
+        /**
+         * Amount sent by the wallet (sats) — includes change sent back to self
+         */sent: UInt64, 
+        /**
+         * Net value from wallet's perspective: received - sent (positive = inflow, negative = outflow)
+         */net: Int64, 
+        /**
+         * Transaction fee in sats (None if not available, e.g. for received-only txs)
+         */fee: UInt64?, 
+        /**
+         * Display amount in sats:
+         * - Received: the received value
+         * - Sent: amount that left the wallet (sent - received - fee)
+         * - SelfTransfer: the fee paid
+         */amount: UInt64, 
+        /**
+         * Transaction direction
+         */direction: TxDirection, 
+        /**
+         * Block height (None if unconfirmed/mempool)
+         */blockHeight: UInt32?, 
+        /**
+         * Block timestamp as unix epoch seconds (None if unconfirmed)
+         */timestamp: UInt64?, 
+        /**
+         * Number of confirmations (0 if unconfirmed)
+         */confirmations: UInt32) {
+        self.txid = txid
+        self.received = received
+        self.sent = sent
+        self.net = net
+        self.fee = fee
+        self.amount = amount
+        self.direction = direction
+        self.blockHeight = blockHeight
+        self.timestamp = timestamp
+        self.confirmations = confirmations
+    }
+}
+
+#if compiler(>=6)
+extension HistoryTransaction: Sendable {}
+#endif
+
+
+extension HistoryTransaction: Equatable, Hashable {
+    public static func ==(lhs: HistoryTransaction, rhs: HistoryTransaction) -> Bool {
+        if lhs.txid != rhs.txid {
+            return false
+        }
+        if lhs.received != rhs.received {
+            return false
+        }
+        if lhs.sent != rhs.sent {
+            return false
+        }
+        if lhs.net != rhs.net {
+            return false
+        }
+        if lhs.fee != rhs.fee {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.direction != rhs.direction {
+            return false
+        }
+        if lhs.blockHeight != rhs.blockHeight {
+            return false
+        }
+        if lhs.timestamp != rhs.timestamp {
+            return false
+        }
+        if lhs.confirmations != rhs.confirmations {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(txid)
+        hasher.combine(received)
+        hasher.combine(sent)
+        hasher.combine(net)
+        hasher.combine(fee)
+        hasher.combine(amount)
+        hasher.combine(direction)
+        hasher.combine(blockHeight)
+        hasher.combine(timestamp)
+        hasher.combine(confirmations)
+    }
+}
+
+extension HistoryTransaction: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeHistoryTransaction: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> HistoryTransaction {
+        return
+            try HistoryTransaction(
+                txid: FfiConverterString.read(from: &buf), 
+                received: FfiConverterUInt64.read(from: &buf), 
+                sent: FfiConverterUInt64.read(from: &buf), 
+                net: FfiConverterInt64.read(from: &buf), 
+                fee: FfiConverterOptionUInt64.read(from: &buf), 
+                amount: FfiConverterUInt64.read(from: &buf), 
+                direction: FfiConverterTypeTxDirection.read(from: &buf), 
+                blockHeight: FfiConverterOptionUInt32.read(from: &buf), 
+                timestamp: FfiConverterOptionUInt64.read(from: &buf), 
+                confirmations: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: HistoryTransaction, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.txid, into: &buf)
+        FfiConverterUInt64.write(value.received, into: &buf)
+        FfiConverterUInt64.write(value.sent, into: &buf)
+        FfiConverterInt64.write(value.net, into: &buf)
+        FfiConverterOptionUInt64.write(value.fee, into: &buf)
+        FfiConverterUInt64.write(value.amount, into: &buf)
+        FfiConverterTypeTxDirection.write(value.direction, into: &buf)
+        FfiConverterOptionUInt32.write(value.blockHeight, into: &buf)
+        FfiConverterOptionUInt64.write(value.timestamp, into: &buf)
+        FfiConverterUInt32.write(value.confirmations, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeHistoryTransaction_lift(_ buf: RustBuffer) throws -> HistoryTransaction {
+    return try FfiConverterTypeHistoryTransaction.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeHistoryTransaction_lower(_ value: HistoryTransaction) -> RustBuffer {
+    return FfiConverterTypeHistoryTransaction.lower(value)
+}
+
+
 public struct IBt0ConfMinTxFeeWindow {
     public var satPerVbyte: Double
     public var validityEndsAt: String
@@ -8563,6 +8768,289 @@ public func FfiConverterTypeSweepableBalances_lower(_ value: SweepableBalances) 
 
 
 /**
+ * Full details for a single transaction, including raw inputs/outputs and size metrics.
+ */
+public struct TransactionDetail {
+    /**
+     * Transaction ID (hex)
+     */
+    public var txid: String
+    /**
+     * Amount received by the wallet (sats)
+     */
+    public var received: UInt64
+    /**
+     * Amount sent by the wallet (sats) — includes change sent back to self
+     */
+    public var sent: UInt64
+    /**
+     * Net value from wallet's perspective: received - sent (positive = inflow, negative = outflow)
+     */
+    public var net: Int64
+    /**
+     * Display amount in sats (same semantics as HistoryTransaction.amount)
+     */
+    public var amount: UInt64
+    /**
+     * Transaction fee in sats (None if not available)
+     */
+    public var fee: UInt64?
+    /**
+     * Transaction direction
+     */
+    public var direction: TxDirection
+    /**
+     * Block height (None if unconfirmed/mempool)
+     */
+    public var blockHeight: UInt32?
+    /**
+     * Block timestamp as unix epoch seconds (None if unconfirmed)
+     */
+    public var timestamp: UInt64?
+    /**
+     * Number of confirmations (0 if unconfirmed)
+     */
+    public var confirmations: UInt32
+    /**
+     * Transaction inputs
+     */
+    public var inputs: [TxDetailInput]
+    /**
+     * Transaction outputs
+     */
+    public var outputs: [TxDetailOutput]
+    /**
+     * Serialized transaction size in bytes
+     */
+    public var size: UInt32
+    /**
+     * Virtual size in vbytes (ceil(weight / 4))
+     */
+    public var vsize: UInt32
+    /**
+     * Transaction weight in weight units
+     */
+    public var weight: UInt32
+    /**
+     * Fee rate in sat/vB (fee / vsize), None if fee is unavailable or vsize is zero
+     */
+    public var feeRate: Double?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Transaction ID (hex)
+         */txid: String, 
+        /**
+         * Amount received by the wallet (sats)
+         */received: UInt64, 
+        /**
+         * Amount sent by the wallet (sats) — includes change sent back to self
+         */sent: UInt64, 
+        /**
+         * Net value from wallet's perspective: received - sent (positive = inflow, negative = outflow)
+         */net: Int64, 
+        /**
+         * Display amount in sats (same semantics as HistoryTransaction.amount)
+         */amount: UInt64, 
+        /**
+         * Transaction fee in sats (None if not available)
+         */fee: UInt64?, 
+        /**
+         * Transaction direction
+         */direction: TxDirection, 
+        /**
+         * Block height (None if unconfirmed/mempool)
+         */blockHeight: UInt32?, 
+        /**
+         * Block timestamp as unix epoch seconds (None if unconfirmed)
+         */timestamp: UInt64?, 
+        /**
+         * Number of confirmations (0 if unconfirmed)
+         */confirmations: UInt32, 
+        /**
+         * Transaction inputs
+         */inputs: [TxDetailInput], 
+        /**
+         * Transaction outputs
+         */outputs: [TxDetailOutput], 
+        /**
+         * Serialized transaction size in bytes
+         */size: UInt32, 
+        /**
+         * Virtual size in vbytes (ceil(weight / 4))
+         */vsize: UInt32, 
+        /**
+         * Transaction weight in weight units
+         */weight: UInt32, 
+        /**
+         * Fee rate in sat/vB (fee / vsize), None if fee is unavailable or vsize is zero
+         */feeRate: Double?) {
+        self.txid = txid
+        self.received = received
+        self.sent = sent
+        self.net = net
+        self.amount = amount
+        self.fee = fee
+        self.direction = direction
+        self.blockHeight = blockHeight
+        self.timestamp = timestamp
+        self.confirmations = confirmations
+        self.inputs = inputs
+        self.outputs = outputs
+        self.size = size
+        self.vsize = vsize
+        self.weight = weight
+        self.feeRate = feeRate
+    }
+}
+
+#if compiler(>=6)
+extension TransactionDetail: Sendable {}
+#endif
+
+
+extension TransactionDetail: Equatable, Hashable {
+    public static func ==(lhs: TransactionDetail, rhs: TransactionDetail) -> Bool {
+        if lhs.txid != rhs.txid {
+            return false
+        }
+        if lhs.received != rhs.received {
+            return false
+        }
+        if lhs.sent != rhs.sent {
+            return false
+        }
+        if lhs.net != rhs.net {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.fee != rhs.fee {
+            return false
+        }
+        if lhs.direction != rhs.direction {
+            return false
+        }
+        if lhs.blockHeight != rhs.blockHeight {
+            return false
+        }
+        if lhs.timestamp != rhs.timestamp {
+            return false
+        }
+        if lhs.confirmations != rhs.confirmations {
+            return false
+        }
+        if lhs.inputs != rhs.inputs {
+            return false
+        }
+        if lhs.outputs != rhs.outputs {
+            return false
+        }
+        if lhs.size != rhs.size {
+            return false
+        }
+        if lhs.vsize != rhs.vsize {
+            return false
+        }
+        if lhs.weight != rhs.weight {
+            return false
+        }
+        if lhs.feeRate != rhs.feeRate {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(txid)
+        hasher.combine(received)
+        hasher.combine(sent)
+        hasher.combine(net)
+        hasher.combine(amount)
+        hasher.combine(fee)
+        hasher.combine(direction)
+        hasher.combine(blockHeight)
+        hasher.combine(timestamp)
+        hasher.combine(confirmations)
+        hasher.combine(inputs)
+        hasher.combine(outputs)
+        hasher.combine(size)
+        hasher.combine(vsize)
+        hasher.combine(weight)
+        hasher.combine(feeRate)
+    }
+}
+
+extension TransactionDetail: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTransactionDetail: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TransactionDetail {
+        return
+            try TransactionDetail(
+                txid: FfiConverterString.read(from: &buf), 
+                received: FfiConverterUInt64.read(from: &buf), 
+                sent: FfiConverterUInt64.read(from: &buf), 
+                net: FfiConverterInt64.read(from: &buf), 
+                amount: FfiConverterUInt64.read(from: &buf), 
+                fee: FfiConverterOptionUInt64.read(from: &buf), 
+                direction: FfiConverterTypeTxDirection.read(from: &buf), 
+                blockHeight: FfiConverterOptionUInt32.read(from: &buf), 
+                timestamp: FfiConverterOptionUInt64.read(from: &buf), 
+                confirmations: FfiConverterUInt32.read(from: &buf), 
+                inputs: FfiConverterSequenceTypeTxDetailInput.read(from: &buf), 
+                outputs: FfiConverterSequenceTypeTxDetailOutput.read(from: &buf), 
+                size: FfiConverterUInt32.read(from: &buf), 
+                vsize: FfiConverterUInt32.read(from: &buf), 
+                weight: FfiConverterUInt32.read(from: &buf), 
+                feeRate: FfiConverterOptionDouble.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TransactionDetail, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.txid, into: &buf)
+        FfiConverterUInt64.write(value.received, into: &buf)
+        FfiConverterUInt64.write(value.sent, into: &buf)
+        FfiConverterInt64.write(value.net, into: &buf)
+        FfiConverterUInt64.write(value.amount, into: &buf)
+        FfiConverterOptionUInt64.write(value.fee, into: &buf)
+        FfiConverterTypeTxDirection.write(value.direction, into: &buf)
+        FfiConverterOptionUInt32.write(value.blockHeight, into: &buf)
+        FfiConverterOptionUInt64.write(value.timestamp, into: &buf)
+        FfiConverterUInt32.write(value.confirmations, into: &buf)
+        FfiConverterSequenceTypeTxDetailInput.write(value.inputs, into: &buf)
+        FfiConverterSequenceTypeTxDetailOutput.write(value.outputs, into: &buf)
+        FfiConverterUInt32.write(value.size, into: &buf)
+        FfiConverterUInt32.write(value.vsize, into: &buf)
+        FfiConverterUInt32.write(value.weight, into: &buf)
+        FfiConverterOptionDouble.write(value.feeRate, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTransactionDetail_lift(_ buf: RustBuffer) throws -> TransactionDetail {
+    return try FfiConverterTypeTransactionDetail.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTransactionDetail_lower(_ value: TransactionDetail) -> RustBuffer {
+    return FfiConverterTypeTransactionDetail.lower(value)
+}
+
+
+/**
  * Details about an onchain transaction.
  */
 public struct TransactionDetails {
@@ -8684,6 +9172,135 @@ public func FfiConverterTypeTransactionDetails_lift(_ buf: RustBuffer) throws ->
 #endif
 public func FfiConverterTypeTransactionDetails_lower(_ value: TransactionDetails) -> RustBuffer {
     return FfiConverterTypeTransactionDetails.lower(value)
+}
+
+
+/**
+ * Result from querying transaction history for an xpub.
+ */
+public struct TransactionHistoryResult {
+    /**
+     * All transactions, sorted: unconfirmed first, then by timestamp descending
+     */
+    public var transactions: [HistoryTransaction]
+    /**
+     * Balance breakdown
+     */
+    public var balance: WalletBalance
+    /**
+     * Total number of transactions
+     */
+    public var txCount: UInt32
+    /**
+     * Current blockchain tip height
+     */
+    public var blockHeight: UInt32
+    /**
+     * The detected or specified account type
+     */
+    public var accountType: AccountType
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * All transactions, sorted: unconfirmed first, then by timestamp descending
+         */transactions: [HistoryTransaction], 
+        /**
+         * Balance breakdown
+         */balance: WalletBalance, 
+        /**
+         * Total number of transactions
+         */txCount: UInt32, 
+        /**
+         * Current blockchain tip height
+         */blockHeight: UInt32, 
+        /**
+         * The detected or specified account type
+         */accountType: AccountType) {
+        self.transactions = transactions
+        self.balance = balance
+        self.txCount = txCount
+        self.blockHeight = blockHeight
+        self.accountType = accountType
+    }
+}
+
+#if compiler(>=6)
+extension TransactionHistoryResult: Sendable {}
+#endif
+
+
+extension TransactionHistoryResult: Equatable, Hashable {
+    public static func ==(lhs: TransactionHistoryResult, rhs: TransactionHistoryResult) -> Bool {
+        if lhs.transactions != rhs.transactions {
+            return false
+        }
+        if lhs.balance != rhs.balance {
+            return false
+        }
+        if lhs.txCount != rhs.txCount {
+            return false
+        }
+        if lhs.blockHeight != rhs.blockHeight {
+            return false
+        }
+        if lhs.accountType != rhs.accountType {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(transactions)
+        hasher.combine(balance)
+        hasher.combine(txCount)
+        hasher.combine(blockHeight)
+        hasher.combine(accountType)
+    }
+}
+
+extension TransactionHistoryResult: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTransactionHistoryResult: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TransactionHistoryResult {
+        return
+            try TransactionHistoryResult(
+                transactions: FfiConverterSequenceTypeHistoryTransaction.read(from: &buf), 
+                balance: FfiConverterTypeWalletBalance.read(from: &buf), 
+                txCount: FfiConverterUInt32.read(from: &buf), 
+                blockHeight: FfiConverterUInt32.read(from: &buf), 
+                accountType: FfiConverterTypeAccountType.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TransactionHistoryResult, into buf: inout [UInt8]) {
+        FfiConverterSequenceTypeHistoryTransaction.write(value.transactions, into: &buf)
+        FfiConverterTypeWalletBalance.write(value.balance, into: &buf)
+        FfiConverterUInt32.write(value.txCount, into: &buf)
+        FfiConverterUInt32.write(value.blockHeight, into: &buf)
+        FfiConverterTypeAccountType.write(value.accountType, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTransactionHistoryResult_lift(_ buf: RustBuffer) throws -> TransactionHistoryResult {
+    return try FfiConverterTypeTransactionHistoryResult.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTransactionHistoryResult_lower(_ value: TransactionHistoryResult) -> RustBuffer {
+    return FfiConverterTypeTransactionHistoryResult.lower(value)
 }
 
 
@@ -11027,6 +11644,250 @@ public func FfiConverterTypeTrezorVerifyMessageParams_lower(_ value: TrezorVerif
 
 
 /**
+ * A transaction input with full details.
+ */
+public struct TxDetailInput {
+    /**
+     * Previous output transaction ID (hex)
+     */
+    public var txid: String
+    /**
+     * Previous output index
+     */
+    public var vout: UInt32
+    /**
+     * Sequence number
+     */
+    public var sequence: UInt32
+    /**
+     * Script signature (hex-encoded)
+     */
+    public var scriptSig: String
+    /**
+     * Witness stack (each element hex-encoded)
+     */
+    public var witness: [String]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Previous output transaction ID (hex)
+         */txid: String, 
+        /**
+         * Previous output index
+         */vout: UInt32, 
+        /**
+         * Sequence number
+         */sequence: UInt32, 
+        /**
+         * Script signature (hex-encoded)
+         */scriptSig: String, 
+        /**
+         * Witness stack (each element hex-encoded)
+         */witness: [String]) {
+        self.txid = txid
+        self.vout = vout
+        self.sequence = sequence
+        self.scriptSig = scriptSig
+        self.witness = witness
+    }
+}
+
+#if compiler(>=6)
+extension TxDetailInput: Sendable {}
+#endif
+
+
+extension TxDetailInput: Equatable, Hashable {
+    public static func ==(lhs: TxDetailInput, rhs: TxDetailInput) -> Bool {
+        if lhs.txid != rhs.txid {
+            return false
+        }
+        if lhs.vout != rhs.vout {
+            return false
+        }
+        if lhs.sequence != rhs.sequence {
+            return false
+        }
+        if lhs.scriptSig != rhs.scriptSig {
+            return false
+        }
+        if lhs.witness != rhs.witness {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(txid)
+        hasher.combine(vout)
+        hasher.combine(sequence)
+        hasher.combine(scriptSig)
+        hasher.combine(witness)
+    }
+}
+
+extension TxDetailInput: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTxDetailInput: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TxDetailInput {
+        return
+            try TxDetailInput(
+                txid: FfiConverterString.read(from: &buf), 
+                vout: FfiConverterUInt32.read(from: &buf), 
+                sequence: FfiConverterUInt32.read(from: &buf), 
+                scriptSig: FfiConverterString.read(from: &buf), 
+                witness: FfiConverterSequenceString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TxDetailInput, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.txid, into: &buf)
+        FfiConverterUInt32.write(value.vout, into: &buf)
+        FfiConverterUInt32.write(value.sequence, into: &buf)
+        FfiConverterString.write(value.scriptSig, into: &buf)
+        FfiConverterSequenceString.write(value.witness, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTxDetailInput_lift(_ buf: RustBuffer) throws -> TxDetailInput {
+    return try FfiConverterTypeTxDetailInput.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTxDetailInput_lower(_ value: TxDetailInput) -> RustBuffer {
+    return FfiConverterTypeTxDetailInput.lower(value)
+}
+
+
+/**
+ * A transaction output with full details.
+ */
+public struct TxDetailOutput {
+    /**
+     * Output value in sats
+     */
+    public var value: UInt64
+    /**
+     * Script public key (hex-encoded)
+     */
+    public var scriptPubkey: String
+    /**
+     * Decoded address (None if script is not decodable to an address)
+     */
+    public var address: String?
+    /**
+     * Whether this output belongs to the queried wallet
+     */
+    public var isMine: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Output value in sats
+         */value: UInt64, 
+        /**
+         * Script public key (hex-encoded)
+         */scriptPubkey: String, 
+        /**
+         * Decoded address (None if script is not decodable to an address)
+         */address: String?, 
+        /**
+         * Whether this output belongs to the queried wallet
+         */isMine: Bool) {
+        self.value = value
+        self.scriptPubkey = scriptPubkey
+        self.address = address
+        self.isMine = isMine
+    }
+}
+
+#if compiler(>=6)
+extension TxDetailOutput: Sendable {}
+#endif
+
+
+extension TxDetailOutput: Equatable, Hashable {
+    public static func ==(lhs: TxDetailOutput, rhs: TxDetailOutput) -> Bool {
+        if lhs.value != rhs.value {
+            return false
+        }
+        if lhs.scriptPubkey != rhs.scriptPubkey {
+            return false
+        }
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.isMine != rhs.isMine {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(value)
+        hasher.combine(scriptPubkey)
+        hasher.combine(address)
+        hasher.combine(isMine)
+    }
+}
+
+extension TxDetailOutput: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTxDetailOutput: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TxDetailOutput {
+        return
+            try TxDetailOutput(
+                value: FfiConverterUInt64.read(from: &buf), 
+                scriptPubkey: FfiConverterString.read(from: &buf), 
+                address: FfiConverterOptionString.read(from: &buf), 
+                isMine: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TxDetailOutput, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.value, into: &buf)
+        FfiConverterString.write(value.scriptPubkey, into: &buf)
+        FfiConverterOptionString.write(value.address, into: &buf)
+        FfiConverterBool.write(value.isMine, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTxDetailOutput_lift(_ buf: RustBuffer) throws -> TxDetailOutput {
+    return try FfiConverterTypeTxDetailOutput.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTxDetailOutput_lower(_ value: TxDetailOutput) -> RustBuffer {
+    return FfiConverterTypeTxDetailOutput.lower(value)
+}
+
+
+/**
  * Details about a transaction input.
  */
 public struct TxInput {
@@ -11365,6 +12226,149 @@ public func FfiConverterTypeValidationResult_lower(_ value: ValidationResult) ->
 
 
 /**
+ * Balance breakdown from BDK.
+ */
+public struct WalletBalance {
+    /**
+     * Confirmed and spendable balance (sats)
+     */
+    public var confirmed: UInt64
+    /**
+     * Immature coinbase outputs (sats)
+     */
+    public var immature: UInt64
+    /**
+     * Unconfirmed UTXOs from trusted sources (own change) (sats)
+     */
+    public var trustedPending: UInt64
+    /**
+     * Unconfirmed UTXOs from external sources (sats)
+     */
+    public var untrustedPending: UInt64
+    /**
+     * Total spendable: confirmed + trusted_pending (sats)
+     */
+    public var spendable: UInt64
+    /**
+     * Grand total: all categories (sats)
+     */
+    public var total: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Confirmed and spendable balance (sats)
+         */confirmed: UInt64, 
+        /**
+         * Immature coinbase outputs (sats)
+         */immature: UInt64, 
+        /**
+         * Unconfirmed UTXOs from trusted sources (own change) (sats)
+         */trustedPending: UInt64, 
+        /**
+         * Unconfirmed UTXOs from external sources (sats)
+         */untrustedPending: UInt64, 
+        /**
+         * Total spendable: confirmed + trusted_pending (sats)
+         */spendable: UInt64, 
+        /**
+         * Grand total: all categories (sats)
+         */total: UInt64) {
+        self.confirmed = confirmed
+        self.immature = immature
+        self.trustedPending = trustedPending
+        self.untrustedPending = untrustedPending
+        self.spendable = spendable
+        self.total = total
+    }
+}
+
+#if compiler(>=6)
+extension WalletBalance: Sendable {}
+#endif
+
+
+extension WalletBalance: Equatable, Hashable {
+    public static func ==(lhs: WalletBalance, rhs: WalletBalance) -> Bool {
+        if lhs.confirmed != rhs.confirmed {
+            return false
+        }
+        if lhs.immature != rhs.immature {
+            return false
+        }
+        if lhs.trustedPending != rhs.trustedPending {
+            return false
+        }
+        if lhs.untrustedPending != rhs.untrustedPending {
+            return false
+        }
+        if lhs.spendable != rhs.spendable {
+            return false
+        }
+        if lhs.total != rhs.total {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(confirmed)
+        hasher.combine(immature)
+        hasher.combine(trustedPending)
+        hasher.combine(untrustedPending)
+        hasher.combine(spendable)
+        hasher.combine(total)
+    }
+}
+
+extension WalletBalance: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeWalletBalance: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> WalletBalance {
+        return
+            try WalletBalance(
+                confirmed: FfiConverterUInt64.read(from: &buf), 
+                immature: FfiConverterUInt64.read(from: &buf), 
+                trustedPending: FfiConverterUInt64.read(from: &buf), 
+                untrustedPending: FfiConverterUInt64.read(from: &buf), 
+                spendable: FfiConverterUInt64.read(from: &buf), 
+                total: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: WalletBalance, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.confirmed, into: &buf)
+        FfiConverterUInt64.write(value.immature, into: &buf)
+        FfiConverterUInt64.write(value.trustedPending, into: &buf)
+        FfiConverterUInt64.write(value.untrustedPending, into: &buf)
+        FfiConverterUInt64.write(value.spendable, into: &buf)
+        FfiConverterUInt64.write(value.total, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWalletBalance_lift(_ buf: RustBuffer) throws -> WalletBalance {
+    return try FfiConverterTypeWalletBalance.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWalletBalance_lower(_ value: WalletBalance) -> RustBuffer {
+    return FfiConverterTypeWalletBalance.lower(value)
+}
+
+
+/**
  * Common parameters for creating and syncing a watch-only BDK wallet.
  */
 public struct WalletParams {
@@ -11540,6 +12544,11 @@ public enum AccountInfoError: Swift.Error {
      */
     case InvalidTxid(errorDetails: String
     )
+    /**
+     * A valid transaction ID was not found in the wallet
+     */
+    case TransactionNotFound(errorDetails: String
+    )
 }
 
 
@@ -11578,6 +12587,9 @@ public struct FfiConverterTypeAccountInfoError: FfiConverterRustBuffer {
             errorDetails: try FfiConverterString.read(from: &buf)
             )
         case 8: return .InvalidTxid(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 9: return .TransactionNotFound(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
 
@@ -11629,6 +12641,11 @@ public struct FfiConverterTypeAccountInfoError: FfiConverterRustBuffer {
         
         case let .InvalidTxid(errorDetails):
             writeInt(&buf, Int32(8))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .TransactionNotFound(errorDetails):
+            writeInt(&buf, Int32(9))
             FfiConverterString.write(errorDetails, into: &buf)
             
         }
@@ -15567,6 +16584,97 @@ extension TrezorTransportType: Codable {}
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Transaction direction from the wallet's perspective.
+ */
+
+public enum TxDirection {
+    
+    /**
+     * Wallet sent funds to an external address
+     */
+    case sent
+    /**
+     * Wallet received funds from an external source
+     */
+    case received
+    /**
+     * Wallet sent funds to itself (e.g. consolidation, change-only)
+     */
+    case selfTransfer
+}
+
+
+#if compiler(>=6)
+extension TxDirection: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTxDirection: FfiConverterRustBuffer {
+    typealias SwiftType = TxDirection
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TxDirection {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .sent
+        
+        case 2: return .received
+        
+        case 3: return .selfTransfer
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: TxDirection, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .sent:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .received:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .selfTransfer:
+            writeInt(&buf, Int32(3))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTxDirection_lift(_ buf: RustBuffer) throws -> TxDirection {
+    return try FfiConverterTypeTxDirection.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTxDirection_lower(_ value: TxDirection) -> RustBuffer {
+    return FfiConverterTypeTxDirection.lower(value)
+}
+
+
+extension TxDirection: Equatable, Hashable {}
+
+extension TxDirection: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
 public enum WordCount {
     
@@ -15740,6 +16848,30 @@ fileprivate struct FfiConverterOptionUInt64: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterUInt64.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionDouble: FfiConverterRustBuffer {
+    typealias SwiftType = Double?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterDouble.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterDouble.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -16955,6 +18087,31 @@ fileprivate struct FfiConverterSequenceTypeGetAddressResponse: FfiConverterRustB
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeHistoryTransaction: FfiConverterRustBuffer {
+    typealias SwiftType = [HistoryTransaction]
+
+    public static func write(_ value: [HistoryTransaction], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeHistoryTransaction.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [HistoryTransaction] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [HistoryTransaction]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeHistoryTransaction.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeIBtOnchainTransaction: FfiConverterRustBuffer {
     typealias SwiftType = [IBtOnchainTransaction]
 
@@ -17372,6 +18529,56 @@ fileprivate struct FfiConverterSequenceTypeTrezorTxOutput: FfiConverterRustBuffe
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeTrezorTxOutput.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeTxDetailInput: FfiConverterRustBuffer {
+    typealias SwiftType = [TxDetailInput]
+
+    public static func write(_ value: [TxDetailInput], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTxDetailInput.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TxDetailInput] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TxDetailInput]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTxDetailInput.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeTxDetailOutput: FfiConverterRustBuffer {
+    typealias SwiftType = [TxDetailOutput]
+
+    public static func write(_ value: [TxDetailOutput], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTxDetailOutput.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TxDetailOutput] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TxDetailOutput]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTxDetailOutput.read(from: &buf))
         }
         return seq
     }
@@ -18283,6 +19490,40 @@ public func onchainGetAddressInfo(address: String, electrumUrl: String, network:
             completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeSingleAddressInfoResult_lift,
+            errorHandler: FfiConverterTypeAccountInfoError_lift
+        )
+}
+/**
+ * Get full details for a single transaction by txid.
+ */
+public func onchainGetTransactionDetail(extendedKey: String, electrumUrl: String, txid: String, network: Network?, scriptType: AccountType?)async throws  -> TransactionDetail  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_onchain_get_transaction_detail(FfiConverterString.lower(extendedKey),FfiConverterString.lower(electrumUrl),FfiConverterString.lower(txid),FfiConverterOptionTypeNetwork.lower(network),FfiConverterOptionTypeAccountType.lower(scriptType)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeTransactionDetail_lift,
+            errorHandler: FfiConverterTypeAccountInfoError_lift
+        )
+}
+/**
+ * Query transaction history and balance for an extended public key via Electrum.
+ */
+public func onchainGetTransactionHistory(extendedKey: String, electrumUrl: String, network: Network?, scriptType: AccountType?)async throws  -> TransactionHistoryResult  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_onchain_get_transaction_history(FfiConverterString.lower(extendedKey),FfiConverterString.lower(electrumUrl),FfiConverterOptionTypeNetwork.lower(network),FfiConverterOptionTypeAccountType.lower(scriptType)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeTransactionHistoryResult_lift,
             errorHandler: FfiConverterTypeAccountInfoError_lift
         )
 }
@@ -19230,6 +20471,12 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_onchain_get_address_info() != 4749) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_onchain_get_transaction_detail() != 24151) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_onchain_get_transaction_history() != 4452) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_open_channel() != 21402) {

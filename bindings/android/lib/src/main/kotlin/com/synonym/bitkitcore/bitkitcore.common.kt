@@ -621,6 +621,60 @@ public data class GetAddressesResponse (
 
 
 
+/**
+ * A single transaction in the wallet's history.
+ */
+@kotlinx.serialization.Serializable
+public data class HistoryTransaction (
+    /**
+     * Transaction ID (hex)
+     */
+    val `txid`: kotlin.String, 
+    /**
+     * Amount received by the wallet (sats)
+     */
+    val `received`: kotlin.ULong, 
+    /**
+     * Amount sent by the wallet (sats) — includes change sent back to self
+     */
+    val `sent`: kotlin.ULong, 
+    /**
+     * Net value from wallet's perspective: received - sent (positive = inflow, negative = outflow)
+     */
+    val `net`: kotlin.Long, 
+    /**
+     * Transaction fee in sats (None if not available, e.g. for received-only txs)
+     */
+    val `fee`: kotlin.ULong?, 
+    /**
+     * Display amount in sats:
+     * - Received: the received value
+     * - Sent: amount that left the wallet (sent - received - fee)
+     * - SelfTransfer: the fee paid
+     */
+    val `amount`: kotlin.ULong, 
+    /**
+     * Transaction direction
+     */
+    val `direction`: TxDirection, 
+    /**
+     * Block height (None if unconfirmed/mempool)
+     */
+    val `blockHeight`: kotlin.UInt?, 
+    /**
+     * Block timestamp as unix epoch seconds (None if unconfirmed)
+     */
+    val `timestamp`: kotlin.ULong?, 
+    /**
+     * Number of confirmations (0 if unconfirmed)
+     */
+    val `confirmations`: kotlin.UInt
+) {
+    public companion object
+}
+
+
+
 @kotlinx.serialization.Serializable
 public data class IBt0ConfMinTxFeeWindow (
     val `satPerVbyte`: kotlin.Double, 
@@ -1439,6 +1493,81 @@ public data class SweepableBalances (
 
 
 /**
+ * Full details for a single transaction, including raw inputs/outputs and size metrics.
+ */
+@kotlinx.serialization.Serializable
+public data class TransactionDetail (
+    /**
+     * Transaction ID (hex)
+     */
+    val `txid`: kotlin.String, 
+    /**
+     * Amount received by the wallet (sats)
+     */
+    val `received`: kotlin.ULong, 
+    /**
+     * Amount sent by the wallet (sats) — includes change sent back to self
+     */
+    val `sent`: kotlin.ULong, 
+    /**
+     * Net value from wallet's perspective: received - sent (positive = inflow, negative = outflow)
+     */
+    val `net`: kotlin.Long, 
+    /**
+     * Display amount in sats (same semantics as HistoryTransaction.amount)
+     */
+    val `amount`: kotlin.ULong, 
+    /**
+     * Transaction fee in sats (None if not available)
+     */
+    val `fee`: kotlin.ULong?, 
+    /**
+     * Transaction direction
+     */
+    val `direction`: TxDirection, 
+    /**
+     * Block height (None if unconfirmed/mempool)
+     */
+    val `blockHeight`: kotlin.UInt?, 
+    /**
+     * Block timestamp as unix epoch seconds (None if unconfirmed)
+     */
+    val `timestamp`: kotlin.ULong?, 
+    /**
+     * Number of confirmations (0 if unconfirmed)
+     */
+    val `confirmations`: kotlin.UInt, 
+    /**
+     * Transaction inputs
+     */
+    val `inputs`: List<TxDetailInput>, 
+    /**
+     * Transaction outputs
+     */
+    val `outputs`: List<TxDetailOutput>, 
+    /**
+     * Serialized transaction size in bytes
+     */
+    val `size`: kotlin.UInt, 
+    /**
+     * Virtual size in vbytes (ceil(weight / 4))
+     */
+    val `vsize`: kotlin.UInt, 
+    /**
+     * Transaction weight in weight units
+     */
+    val `weight`: kotlin.UInt, 
+    /**
+     * Fee rate in sat/vB (fee / vsize), None if fee is unavailable or vsize is zero
+     */
+    val `feeRate`: kotlin.Double?
+) {
+    public companion object
+}
+
+
+
+/**
  * Details about an onchain transaction.
  */
 @kotlinx.serialization.Serializable
@@ -1464,6 +1593,37 @@ public data class TransactionDetails (
      * The transaction outputs with full details.
      */
     val `outputs`: List<TxOutput>
+) {
+    public companion object
+}
+
+
+
+/**
+ * Result from querying transaction history for an xpub.
+ */
+@kotlinx.serialization.Serializable
+public data class TransactionHistoryResult (
+    /**
+     * All transactions, sorted: unconfirmed first, then by timestamp descending
+     */
+    val `transactions`: List<HistoryTransaction>, 
+    /**
+     * Balance breakdown
+     */
+    val `balance`: WalletBalance, 
+    /**
+     * Total number of transactions
+     */
+    val `txCount`: kotlin.UInt, 
+    /**
+     * Current blockchain tip height
+     */
+    val `blockHeight`: kotlin.UInt, 
+    /**
+     * The detected or specified account type
+     */
+    val `accountType`: AccountType
 ) {
     public companion object
 }
@@ -2064,6 +2224,64 @@ public data class TrezorVerifyMessageParams (
 
 
 /**
+ * A transaction input with full details.
+ */
+@kotlinx.serialization.Serializable
+public data class TxDetailInput (
+    /**
+     * Previous output transaction ID (hex)
+     */
+    val `txid`: kotlin.String, 
+    /**
+     * Previous output index
+     */
+    val `vout`: kotlin.UInt, 
+    /**
+     * Sequence number
+     */
+    val `sequence`: kotlin.UInt, 
+    /**
+     * Script signature (hex-encoded)
+     */
+    val `scriptSig`: kotlin.String, 
+    /**
+     * Witness stack (each element hex-encoded)
+     */
+    val `witness`: List<kotlin.String>
+) {
+    public companion object
+}
+
+
+
+/**
+ * A transaction output with full details.
+ */
+@kotlinx.serialization.Serializable
+public data class TxDetailOutput (
+    /**
+     * Output value in sats
+     */
+    val `value`: kotlin.ULong, 
+    /**
+     * Script public key (hex-encoded)
+     */
+    val `scriptPubkey`: kotlin.String, 
+    /**
+     * Decoded address (None if script is not decodable to an address)
+     */
+    val `address`: kotlin.String?, 
+    /**
+     * Whether this output belongs to the queried wallet
+     */
+    val `isMine`: kotlin.Boolean
+) {
+    public companion object
+}
+
+
+
+/**
  * Details about a transaction input.
  */
 @kotlinx.serialization.Serializable
@@ -2130,6 +2348,41 @@ public data class ValidationResult (
     val `address`: kotlin.String, 
     val `network`: NetworkType, 
     val `addressType`: AddressType
+) {
+    public companion object
+}
+
+
+
+/**
+ * Balance breakdown from BDK.
+ */
+@kotlinx.serialization.Serializable
+public data class WalletBalance (
+    /**
+     * Confirmed and spendable balance (sats)
+     */
+    val `confirmed`: kotlin.ULong, 
+    /**
+     * Immature coinbase outputs (sats)
+     */
+    val `immature`: kotlin.ULong, 
+    /**
+     * Unconfirmed UTXOs from trusted sources (own change) (sats)
+     */
+    val `trustedPending`: kotlin.ULong, 
+    /**
+     * Unconfirmed UTXOs from external sources (sats)
+     */
+    val `untrustedPending`: kotlin.ULong, 
+    /**
+     * Total spendable: confirmed + trusted_pending (sats)
+     */
+    val `spendable`: kotlin.ULong, 
+    /**
+     * Grand total: all categories (sats)
+     */
+    val `total`: kotlin.ULong
 ) {
     public companion object
 }
@@ -2248,6 +2501,16 @@ public sealed class AccountInfoException: kotlin.Exception() {
      * Invalid transaction ID provided
      */
     public class InvalidTxid(
+        public val `errorDetails`: kotlin.String,
+    ) : AccountInfoException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * A valid transaction ID was not found in the wallet
+     */
+    public class TransactionNotFound(
         public val `errorDetails`: kotlin.String,
     ) : AccountInfoException() {
         override val message: String
@@ -3554,6 +3817,33 @@ public enum class TrezorTransportType {
 
 
 
+/**
+ * Transaction direction from the wallet's perspective.
+ */
+
+@kotlinx.serialization.Serializable
+public enum class TxDirection {
+    
+    /**
+     * Wallet sent funds to an external address
+     */
+    SENT,
+    /**
+     * Wallet received funds from an external source
+     */
+    RECEIVED,
+    /**
+     * Wallet sent funds to itself (e.g. consolidation, change-only)
+     */
+    SELF_TRANSFER;
+    public companion object
+}
+
+
+
+
+
+
 
 @kotlinx.serialization.Serializable
 public enum class WordCount {
@@ -3580,6 +3870,14 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
+
+
+
+
+
+
 
 
 

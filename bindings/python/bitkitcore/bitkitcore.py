@@ -595,6 +595,10 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_onchain_get_address_info() != 4749:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_onchain_get_transaction_detail() != 24151:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_onchain_get_transaction_history() != 4452:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_open_channel() != 21402:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273:
@@ -1373,6 +1377,21 @@ _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_address_info.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_address_info.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_transaction_detail.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_transaction_detail.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_transaction_history.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_transaction_history.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_open_channel.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -2103,6 +2122,12 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_account_info.restype = ct
 _UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_address_info.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_address_info.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_transaction_detail.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_transaction_detail.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_transaction_history.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_transaction_history.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.restype = ctypes.c_uint16
@@ -3615,6 +3640,145 @@ class _UniffiConverterTypeGetAddressesResponse(_UniffiConverterRustBuffer):
     @staticmethod
     def write(value, buf):
         _UniffiConverterSequenceTypeGetAddressResponse.write(value.addresses, buf)
+
+
+class HistoryTransaction:
+    """
+    A single transaction in the wallet's history.
+    """
+
+    txid: "str"
+    """
+    Transaction ID (hex)
+    """
+
+    received: "int"
+    """
+    Amount received by the wallet (sats)
+    """
+
+    sent: "int"
+    """
+    Amount sent by the wallet (sats) — includes change sent back to self
+    """
+
+    net: "int"
+    """
+    Net value from wallet's perspective: received - sent (positive = inflow, negative = outflow)
+    """
+
+    fee: "typing.Optional[int]"
+    """
+    Transaction fee in sats (None if not available, e.g. for received-only txs)
+    """
+
+    amount: "int"
+    """
+    Display amount in sats:
+    - Received: the received value
+    - Sent: amount that left the wallet (sent - received - fee)
+    - SelfTransfer: the fee paid
+    """
+
+    direction: "TxDirection"
+    """
+    Transaction direction
+    """
+
+    block_height: "typing.Optional[int]"
+    """
+    Block height (None if unconfirmed/mempool)
+    """
+
+    timestamp: "typing.Optional[int]"
+    """
+    Block timestamp as unix epoch seconds (None if unconfirmed)
+    """
+
+    confirmations: "int"
+    """
+    Number of confirmations (0 if unconfirmed)
+    """
+
+    def __init__(self, *, txid: "str", received: "int", sent: "int", net: "int", fee: "typing.Optional[int]", amount: "int", direction: "TxDirection", block_height: "typing.Optional[int]", timestamp: "typing.Optional[int]", confirmations: "int"):
+        self.txid = txid
+        self.received = received
+        self.sent = sent
+        self.net = net
+        self.fee = fee
+        self.amount = amount
+        self.direction = direction
+        self.block_height = block_height
+        self.timestamp = timestamp
+        self.confirmations = confirmations
+
+    def __str__(self):
+        return "HistoryTransaction(txid={}, received={}, sent={}, net={}, fee={}, amount={}, direction={}, block_height={}, timestamp={}, confirmations={})".format(self.txid, self.received, self.sent, self.net, self.fee, self.amount, self.direction, self.block_height, self.timestamp, self.confirmations)
+
+    def __eq__(self, other):
+        if self.txid != other.txid:
+            return False
+        if self.received != other.received:
+            return False
+        if self.sent != other.sent:
+            return False
+        if self.net != other.net:
+            return False
+        if self.fee != other.fee:
+            return False
+        if self.amount != other.amount:
+            return False
+        if self.direction != other.direction:
+            return False
+        if self.block_height != other.block_height:
+            return False
+        if self.timestamp != other.timestamp:
+            return False
+        if self.confirmations != other.confirmations:
+            return False
+        return True
+
+class _UniffiConverterTypeHistoryTransaction(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return HistoryTransaction(
+            txid=_UniffiConverterString.read(buf),
+            received=_UniffiConverterUInt64.read(buf),
+            sent=_UniffiConverterUInt64.read(buf),
+            net=_UniffiConverterInt64.read(buf),
+            fee=_UniffiConverterOptionalUInt64.read(buf),
+            amount=_UniffiConverterUInt64.read(buf),
+            direction=_UniffiConverterTypeTxDirection.read(buf),
+            block_height=_UniffiConverterOptionalUInt32.read(buf),
+            timestamp=_UniffiConverterOptionalUInt64.read(buf),
+            confirmations=_UniffiConverterUInt32.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.txid)
+        _UniffiConverterUInt64.check_lower(value.received)
+        _UniffiConverterUInt64.check_lower(value.sent)
+        _UniffiConverterInt64.check_lower(value.net)
+        _UniffiConverterOptionalUInt64.check_lower(value.fee)
+        _UniffiConverterUInt64.check_lower(value.amount)
+        _UniffiConverterTypeTxDirection.check_lower(value.direction)
+        _UniffiConverterOptionalUInt32.check_lower(value.block_height)
+        _UniffiConverterOptionalUInt64.check_lower(value.timestamp)
+        _UniffiConverterUInt32.check_lower(value.confirmations)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.txid, buf)
+        _UniffiConverterUInt64.write(value.received, buf)
+        _UniffiConverterUInt64.write(value.sent, buf)
+        _UniffiConverterInt64.write(value.net, buf)
+        _UniffiConverterOptionalUInt64.write(value.fee, buf)
+        _UniffiConverterUInt64.write(value.amount, buf)
+        _UniffiConverterTypeTxDirection.write(value.direction, buf)
+        _UniffiConverterOptionalUInt32.write(value.block_height, buf)
+        _UniffiConverterOptionalUInt64.write(value.timestamp, buf)
+        _UniffiConverterUInt32.write(value.confirmations, buf)
 
 
 class IBt0ConfMinTxFeeWindow:
@@ -6913,6 +7077,208 @@ class _UniffiConverterTypeSweepableBalances(_UniffiConverterRustBuffer):
         _UniffiConverterUInt32.write(value.total_utxos_count, buf)
 
 
+class TransactionDetail:
+    """
+    Full details for a single transaction, including raw inputs/outputs and size metrics.
+    """
+
+    txid: "str"
+    """
+    Transaction ID (hex)
+    """
+
+    received: "int"
+    """
+    Amount received by the wallet (sats)
+    """
+
+    sent: "int"
+    """
+    Amount sent by the wallet (sats) — includes change sent back to self
+    """
+
+    net: "int"
+    """
+    Net value from wallet's perspective: received - sent (positive = inflow, negative = outflow)
+    """
+
+    amount: "int"
+    """
+    Display amount in sats (same semantics as HistoryTransaction.amount)
+    """
+
+    fee: "typing.Optional[int]"
+    """
+    Transaction fee in sats (None if not available)
+    """
+
+    direction: "TxDirection"
+    """
+    Transaction direction
+    """
+
+    block_height: "typing.Optional[int]"
+    """
+    Block height (None if unconfirmed/mempool)
+    """
+
+    timestamp: "typing.Optional[int]"
+    """
+    Block timestamp as unix epoch seconds (None if unconfirmed)
+    """
+
+    confirmations: "int"
+    """
+    Number of confirmations (0 if unconfirmed)
+    """
+
+    inputs: "typing.List[TxDetailInput]"
+    """
+    Transaction inputs
+    """
+
+    outputs: "typing.List[TxDetailOutput]"
+    """
+    Transaction outputs
+    """
+
+    size: "int"
+    """
+    Serialized transaction size in bytes
+    """
+
+    vsize: "int"
+    """
+    Virtual size in vbytes (ceil(weight / 4))
+    """
+
+    weight: "int"
+    """
+    Transaction weight in weight units
+    """
+
+    fee_rate: "typing.Optional[float]"
+    """
+    Fee rate in sat/vB (fee / vsize), None if fee is unavailable or vsize is zero
+    """
+
+    def __init__(self, *, txid: "str", received: "int", sent: "int", net: "int", amount: "int", fee: "typing.Optional[int]", direction: "TxDirection", block_height: "typing.Optional[int]", timestamp: "typing.Optional[int]", confirmations: "int", inputs: "typing.List[TxDetailInput]", outputs: "typing.List[TxDetailOutput]", size: "int", vsize: "int", weight: "int", fee_rate: "typing.Optional[float]"):
+        self.txid = txid
+        self.received = received
+        self.sent = sent
+        self.net = net
+        self.amount = amount
+        self.fee = fee
+        self.direction = direction
+        self.block_height = block_height
+        self.timestamp = timestamp
+        self.confirmations = confirmations
+        self.inputs = inputs
+        self.outputs = outputs
+        self.size = size
+        self.vsize = vsize
+        self.weight = weight
+        self.fee_rate = fee_rate
+
+    def __str__(self):
+        return "TransactionDetail(txid={}, received={}, sent={}, net={}, amount={}, fee={}, direction={}, block_height={}, timestamp={}, confirmations={}, inputs={}, outputs={}, size={}, vsize={}, weight={}, fee_rate={})".format(self.txid, self.received, self.sent, self.net, self.amount, self.fee, self.direction, self.block_height, self.timestamp, self.confirmations, self.inputs, self.outputs, self.size, self.vsize, self.weight, self.fee_rate)
+
+    def __eq__(self, other):
+        if self.txid != other.txid:
+            return False
+        if self.received != other.received:
+            return False
+        if self.sent != other.sent:
+            return False
+        if self.net != other.net:
+            return False
+        if self.amount != other.amount:
+            return False
+        if self.fee != other.fee:
+            return False
+        if self.direction != other.direction:
+            return False
+        if self.block_height != other.block_height:
+            return False
+        if self.timestamp != other.timestamp:
+            return False
+        if self.confirmations != other.confirmations:
+            return False
+        if self.inputs != other.inputs:
+            return False
+        if self.outputs != other.outputs:
+            return False
+        if self.size != other.size:
+            return False
+        if self.vsize != other.vsize:
+            return False
+        if self.weight != other.weight:
+            return False
+        if self.fee_rate != other.fee_rate:
+            return False
+        return True
+
+class _UniffiConverterTypeTransactionDetail(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TransactionDetail(
+            txid=_UniffiConverterString.read(buf),
+            received=_UniffiConverterUInt64.read(buf),
+            sent=_UniffiConverterUInt64.read(buf),
+            net=_UniffiConverterInt64.read(buf),
+            amount=_UniffiConverterUInt64.read(buf),
+            fee=_UniffiConverterOptionalUInt64.read(buf),
+            direction=_UniffiConverterTypeTxDirection.read(buf),
+            block_height=_UniffiConverterOptionalUInt32.read(buf),
+            timestamp=_UniffiConverterOptionalUInt64.read(buf),
+            confirmations=_UniffiConverterUInt32.read(buf),
+            inputs=_UniffiConverterSequenceTypeTxDetailInput.read(buf),
+            outputs=_UniffiConverterSequenceTypeTxDetailOutput.read(buf),
+            size=_UniffiConverterUInt32.read(buf),
+            vsize=_UniffiConverterUInt32.read(buf),
+            weight=_UniffiConverterUInt32.read(buf),
+            fee_rate=_UniffiConverterOptionalDouble.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.txid)
+        _UniffiConverterUInt64.check_lower(value.received)
+        _UniffiConverterUInt64.check_lower(value.sent)
+        _UniffiConverterInt64.check_lower(value.net)
+        _UniffiConverterUInt64.check_lower(value.amount)
+        _UniffiConverterOptionalUInt64.check_lower(value.fee)
+        _UniffiConverterTypeTxDirection.check_lower(value.direction)
+        _UniffiConverterOptionalUInt32.check_lower(value.block_height)
+        _UniffiConverterOptionalUInt64.check_lower(value.timestamp)
+        _UniffiConverterUInt32.check_lower(value.confirmations)
+        _UniffiConverterSequenceTypeTxDetailInput.check_lower(value.inputs)
+        _UniffiConverterSequenceTypeTxDetailOutput.check_lower(value.outputs)
+        _UniffiConverterUInt32.check_lower(value.size)
+        _UniffiConverterUInt32.check_lower(value.vsize)
+        _UniffiConverterUInt32.check_lower(value.weight)
+        _UniffiConverterOptionalDouble.check_lower(value.fee_rate)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.txid, buf)
+        _UniffiConverterUInt64.write(value.received, buf)
+        _UniffiConverterUInt64.write(value.sent, buf)
+        _UniffiConverterInt64.write(value.net, buf)
+        _UniffiConverterUInt64.write(value.amount, buf)
+        _UniffiConverterOptionalUInt64.write(value.fee, buf)
+        _UniffiConverterTypeTxDirection.write(value.direction, buf)
+        _UniffiConverterOptionalUInt32.write(value.block_height, buf)
+        _UniffiConverterOptionalUInt64.write(value.timestamp, buf)
+        _UniffiConverterUInt32.write(value.confirmations, buf)
+        _UniffiConverterSequenceTypeTxDetailInput.write(value.inputs, buf)
+        _UniffiConverterSequenceTypeTxDetailOutput.write(value.outputs, buf)
+        _UniffiConverterUInt32.write(value.size, buf)
+        _UniffiConverterUInt32.write(value.vsize, buf)
+        _UniffiConverterUInt32.write(value.weight, buf)
+        _UniffiConverterOptionalDouble.write(value.fee_rate, buf)
+
+
 class TransactionDetails:
     """
     Details about an onchain transaction.
@@ -6986,6 +7352,87 @@ class _UniffiConverterTypeTransactionDetails(_UniffiConverterRustBuffer):
         _UniffiConverterInt64.write(value.amount_sats, buf)
         _UniffiConverterSequenceTypeTxInput.write(value.inputs, buf)
         _UniffiConverterSequenceTypeTxOutput.write(value.outputs, buf)
+
+
+class TransactionHistoryResult:
+    """
+    Result from querying transaction history for an xpub.
+    """
+
+    transactions: "typing.List[HistoryTransaction]"
+    """
+    All transactions, sorted: unconfirmed first, then by timestamp descending
+    """
+
+    balance: "WalletBalance"
+    """
+    Balance breakdown
+    """
+
+    tx_count: "int"
+    """
+    Total number of transactions
+    """
+
+    block_height: "int"
+    """
+    Current blockchain tip height
+    """
+
+    account_type: "AccountType"
+    """
+    The detected or specified account type
+    """
+
+    def __init__(self, *, transactions: "typing.List[HistoryTransaction]", balance: "WalletBalance", tx_count: "int", block_height: "int", account_type: "AccountType"):
+        self.transactions = transactions
+        self.balance = balance
+        self.tx_count = tx_count
+        self.block_height = block_height
+        self.account_type = account_type
+
+    def __str__(self):
+        return "TransactionHistoryResult(transactions={}, balance={}, tx_count={}, block_height={}, account_type={})".format(self.transactions, self.balance, self.tx_count, self.block_height, self.account_type)
+
+    def __eq__(self, other):
+        if self.transactions != other.transactions:
+            return False
+        if self.balance != other.balance:
+            return False
+        if self.tx_count != other.tx_count:
+            return False
+        if self.block_height != other.block_height:
+            return False
+        if self.account_type != other.account_type:
+            return False
+        return True
+
+class _UniffiConverterTypeTransactionHistoryResult(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TransactionHistoryResult(
+            transactions=_UniffiConverterSequenceTypeHistoryTransaction.read(buf),
+            balance=_UniffiConverterTypeWalletBalance.read(buf),
+            tx_count=_UniffiConverterUInt32.read(buf),
+            block_height=_UniffiConverterUInt32.read(buf),
+            account_type=_UniffiConverterTypeAccountType.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterSequenceTypeHistoryTransaction.check_lower(value.transactions)
+        _UniffiConverterTypeWalletBalance.check_lower(value.balance)
+        _UniffiConverterUInt32.check_lower(value.tx_count)
+        _UniffiConverterUInt32.check_lower(value.block_height)
+        _UniffiConverterTypeAccountType.check_lower(value.account_type)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterSequenceTypeHistoryTransaction.write(value.transactions, buf)
+        _UniffiConverterTypeWalletBalance.write(value.balance, buf)
+        _UniffiConverterUInt32.write(value.tx_count, buf)
+        _UniffiConverterUInt32.write(value.block_height, buf)
+        _UniffiConverterTypeAccountType.write(value.account_type, buf)
 
 
 class TrezorAddressResponse:
@@ -8439,6 +8886,157 @@ class _UniffiConverterTypeTrezorVerifyMessageParams(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalTypeTrezorCoinType.write(value.coin, buf)
 
 
+class TxDetailInput:
+    """
+    A transaction input with full details.
+    """
+
+    txid: "str"
+    """
+    Previous output transaction ID (hex)
+    """
+
+    vout: "int"
+    """
+    Previous output index
+    """
+
+    sequence: "int"
+    """
+    Sequence number
+    """
+
+    script_sig: "str"
+    """
+    Script signature (hex-encoded)
+    """
+
+    witness: "typing.List[str]"
+    """
+    Witness stack (each element hex-encoded)
+    """
+
+    def __init__(self, *, txid: "str", vout: "int", sequence: "int", script_sig: "str", witness: "typing.List[str]"):
+        self.txid = txid
+        self.vout = vout
+        self.sequence = sequence
+        self.script_sig = script_sig
+        self.witness = witness
+
+    def __str__(self):
+        return "TxDetailInput(txid={}, vout={}, sequence={}, script_sig={}, witness={})".format(self.txid, self.vout, self.sequence, self.script_sig, self.witness)
+
+    def __eq__(self, other):
+        if self.txid != other.txid:
+            return False
+        if self.vout != other.vout:
+            return False
+        if self.sequence != other.sequence:
+            return False
+        if self.script_sig != other.script_sig:
+            return False
+        if self.witness != other.witness:
+            return False
+        return True
+
+class _UniffiConverterTypeTxDetailInput(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TxDetailInput(
+            txid=_UniffiConverterString.read(buf),
+            vout=_UniffiConverterUInt32.read(buf),
+            sequence=_UniffiConverterUInt32.read(buf),
+            script_sig=_UniffiConverterString.read(buf),
+            witness=_UniffiConverterSequenceString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.txid)
+        _UniffiConverterUInt32.check_lower(value.vout)
+        _UniffiConverterUInt32.check_lower(value.sequence)
+        _UniffiConverterString.check_lower(value.script_sig)
+        _UniffiConverterSequenceString.check_lower(value.witness)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.txid, buf)
+        _UniffiConverterUInt32.write(value.vout, buf)
+        _UniffiConverterUInt32.write(value.sequence, buf)
+        _UniffiConverterString.write(value.script_sig, buf)
+        _UniffiConverterSequenceString.write(value.witness, buf)
+
+
+class TxDetailOutput:
+    """
+    A transaction output with full details.
+    """
+
+    value: "int"
+    """
+    Output value in sats
+    """
+
+    script_pubkey: "str"
+    """
+    Script public key (hex-encoded)
+    """
+
+    address: "typing.Optional[str]"
+    """
+    Decoded address (None if script is not decodable to an address)
+    """
+
+    is_mine: "bool"
+    """
+    Whether this output belongs to the queried wallet
+    """
+
+    def __init__(self, *, value: "int", script_pubkey: "str", address: "typing.Optional[str]", is_mine: "bool"):
+        self.value = value
+        self.script_pubkey = script_pubkey
+        self.address = address
+        self.is_mine = is_mine
+
+    def __str__(self):
+        return "TxDetailOutput(value={}, script_pubkey={}, address={}, is_mine={})".format(self.value, self.script_pubkey, self.address, self.is_mine)
+
+    def __eq__(self, other):
+        if self.value != other.value:
+            return False
+        if self.script_pubkey != other.script_pubkey:
+            return False
+        if self.address != other.address:
+            return False
+        if self.is_mine != other.is_mine:
+            return False
+        return True
+
+class _UniffiConverterTypeTxDetailOutput(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return TxDetailOutput(
+            value=_UniffiConverterUInt64.read(buf),
+            script_pubkey=_UniffiConverterString.read(buf),
+            address=_UniffiConverterOptionalString.read(buf),
+            is_mine=_UniffiConverterBool.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.value)
+        _UniffiConverterString.check_lower(value.script_pubkey)
+        _UniffiConverterOptionalString.check_lower(value.address)
+        _UniffiConverterBool.check_lower(value.is_mine)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.value, buf)
+        _UniffiConverterString.write(value.script_pubkey, buf)
+        _UniffiConverterOptionalString.write(value.address, buf)
+        _UniffiConverterBool.write(value.is_mine, buf)
+
+
 class TxInput:
     """
     Details about a transaction input.
@@ -8642,6 +9240,98 @@ class _UniffiConverterTypeValidationResult(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.address, buf)
         _UniffiConverterTypeNetworkType.write(value.network, buf)
         _UniffiConverterTypeAddressType.write(value.address_type, buf)
+
+
+class WalletBalance:
+    """
+    Balance breakdown from BDK.
+    """
+
+    confirmed: "int"
+    """
+    Confirmed and spendable balance (sats)
+    """
+
+    immature: "int"
+    """
+    Immature coinbase outputs (sats)
+    """
+
+    trusted_pending: "int"
+    """
+    Unconfirmed UTXOs from trusted sources (own change) (sats)
+    """
+
+    untrusted_pending: "int"
+    """
+    Unconfirmed UTXOs from external sources (sats)
+    """
+
+    spendable: "int"
+    """
+    Total spendable: confirmed + trusted_pending (sats)
+    """
+
+    total: "int"
+    """
+    Grand total: all categories (sats)
+    """
+
+    def __init__(self, *, confirmed: "int", immature: "int", trusted_pending: "int", untrusted_pending: "int", spendable: "int", total: "int"):
+        self.confirmed = confirmed
+        self.immature = immature
+        self.trusted_pending = trusted_pending
+        self.untrusted_pending = untrusted_pending
+        self.spendable = spendable
+        self.total = total
+
+    def __str__(self):
+        return "WalletBalance(confirmed={}, immature={}, trusted_pending={}, untrusted_pending={}, spendable={}, total={})".format(self.confirmed, self.immature, self.trusted_pending, self.untrusted_pending, self.spendable, self.total)
+
+    def __eq__(self, other):
+        if self.confirmed != other.confirmed:
+            return False
+        if self.immature != other.immature:
+            return False
+        if self.trusted_pending != other.trusted_pending:
+            return False
+        if self.untrusted_pending != other.untrusted_pending:
+            return False
+        if self.spendable != other.spendable:
+            return False
+        if self.total != other.total:
+            return False
+        return True
+
+class _UniffiConverterTypeWalletBalance(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return WalletBalance(
+            confirmed=_UniffiConverterUInt64.read(buf),
+            immature=_UniffiConverterUInt64.read(buf),
+            trusted_pending=_UniffiConverterUInt64.read(buf),
+            untrusted_pending=_UniffiConverterUInt64.read(buf),
+            spendable=_UniffiConverterUInt64.read(buf),
+            total=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.confirmed)
+        _UniffiConverterUInt64.check_lower(value.immature)
+        _UniffiConverterUInt64.check_lower(value.trusted_pending)
+        _UniffiConverterUInt64.check_lower(value.untrusted_pending)
+        _UniffiConverterUInt64.check_lower(value.spendable)
+        _UniffiConverterUInt64.check_lower(value.total)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.confirmed, buf)
+        _UniffiConverterUInt64.write(value.immature, buf)
+        _UniffiConverterUInt64.write(value.trusted_pending, buf)
+        _UniffiConverterUInt64.write(value.untrusted_pending, buf)
+        _UniffiConverterUInt64.write(value.spendable, buf)
+        _UniffiConverterUInt64.write(value.total, buf)
 
 
 class WalletParams:
@@ -8857,6 +9547,20 @@ class AccountInfoError:  # type: ignore
         def __repr__(self):
             return "AccountInfoError.InvalidTxid({})".format(str(self))
     _UniffiTempAccountInfoError.InvalidTxid = InvalidTxid # type: ignore
+    class TransactionNotFound(_UniffiTempAccountInfoError):
+        """
+        A valid transaction ID was not found in the wallet
+        """
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "AccountInfoError.TransactionNotFound({})".format(str(self))
+    _UniffiTempAccountInfoError.TransactionNotFound = TransactionNotFound # type: ignore
 
 AccountInfoError = _UniffiTempAccountInfoError # type: ignore
 del _UniffiTempAccountInfoError
@@ -8898,6 +9602,10 @@ class _UniffiConverterTypeAccountInfoError(_UniffiConverterRustBuffer):
             return AccountInfoError.InvalidTxid(
                 _UniffiConverterString.read(buf),
             )
+        if variant == 9:
+            return AccountInfoError.TransactionNotFound(
+                _UniffiConverterString.read(buf),
+            )
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
@@ -8926,6 +9634,9 @@ class _UniffiConverterTypeAccountInfoError(_UniffiConverterRustBuffer):
         if isinstance(value, AccountInfoError.InvalidTxid):
             _UniffiConverterString.check_lower(value.error_details)
             return
+        if isinstance(value, AccountInfoError.TransactionNotFound):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
 
     @staticmethod
     def write(value, buf):
@@ -8952,6 +9663,9 @@ class _UniffiConverterTypeAccountInfoError(_UniffiConverterRustBuffer):
             _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, AccountInfoError.InvalidTxid):
             buf.write_i32(8)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, AccountInfoError.TransactionNotFound):
+            buf.write_i32(9)
             _UniffiConverterString.write(value.error_details, buf)
 
 
@@ -12867,6 +13581,68 @@ class _UniffiConverterTypeTrezorTransportType(_UniffiConverterRustBuffer):
 
 
 
+class TxDirection(enum.Enum):
+    """
+    Transaction direction from the wallet's perspective.
+    """
+
+    SENT = 0
+    """
+    Wallet sent funds to an external address
+    """
+
+    
+    RECEIVED = 1
+    """
+    Wallet received funds from an external source
+    """
+
+    
+    SELF_TRANSFER = 2
+    """
+    Wallet sent funds to itself (e.g. consolidation, change-only)
+    """
+
+    
+
+
+class _UniffiConverterTypeTxDirection(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return TxDirection.SENT
+        if variant == 2:
+            return TxDirection.RECEIVED
+        if variant == 3:
+            return TxDirection.SELF_TRANSFER
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == TxDirection.SENT:
+            return
+        if value == TxDirection.RECEIVED:
+            return
+        if value == TxDirection.SELF_TRANSFER:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == TxDirection.SENT:
+            buf.write_i32(1)
+        if value == TxDirection.RECEIVED:
+            buf.write_i32(2)
+        if value == TxDirection.SELF_TRANSFER:
+            buf.write_i32(3)
+
+
+
+
+
+
+
 class WordCount(enum.Enum):
     WORDS12 = 12
     """
@@ -13023,6 +13799,33 @@ class _UniffiConverterOptionalUInt64(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterUInt64.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalDouble(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterDouble.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterDouble.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterDouble.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -14364,6 +15167,31 @@ class _UniffiConverterSequenceTypeGetAddressResponse(_UniffiConverterRustBuffer)
 
 
 
+class _UniffiConverterSequenceTypeHistoryTransaction(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeHistoryTransaction.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeHistoryTransaction.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeHistoryTransaction.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypeIBtOnchainTransaction(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -14785,6 +15613,56 @@ class _UniffiConverterSequenceTypeTrezorTxOutput(_UniffiConverterRustBuffer):
 
         return [
             _UniffiConverterTypeTrezorTxOutput.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeTxDetailInput(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeTxDetailInput.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeTxDetailInput.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeTxDetailInput.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeTxDetailOutput(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeTxDetailOutput.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeTxDetailOutput.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeTxDetailOutput.read(buf) for i in range(count)
         ]
 
 
@@ -17063,6 +17941,69 @@ async def onchain_get_address_info(address: "str",electrum_url: "str",network: "
 _UniffiConverterTypeAccountInfoError,
 
     )
+async def onchain_get_transaction_detail(extended_key: "str",electrum_url: "str",txid: "str",network: "typing.Optional[Network]",script_type: "typing.Optional[AccountType]") -> "TransactionDetail":
+
+    """
+    Get full details for a single transaction by txid.
+    """
+
+    _UniffiConverterString.check_lower(extended_key)
+    
+    _UniffiConverterString.check_lower(electrum_url)
+    
+    _UniffiConverterString.check_lower(txid)
+    
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+    
+    _UniffiConverterOptionalTypeAccountType.check_lower(script_type)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_transaction_detail(
+        _UniffiConverterString.lower(extended_key),
+        _UniffiConverterString.lower(electrum_url),
+        _UniffiConverterString.lower(txid),
+        _UniffiConverterOptionalTypeNetwork.lower(network),
+        _UniffiConverterOptionalTypeAccountType.lower(script_type)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeTransactionDetail.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeAccountInfoError,
+
+    )
+async def onchain_get_transaction_history(extended_key: "str",electrum_url: "str",network: "typing.Optional[Network]",script_type: "typing.Optional[AccountType]") -> "TransactionHistoryResult":
+
+    """
+    Query transaction history and balance for an extended public key via Electrum.
+    """
+
+    _UniffiConverterString.check_lower(extended_key)
+    
+    _UniffiConverterString.check_lower(electrum_url)
+    
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+    
+    _UniffiConverterOptionalTypeAccountType.check_lower(script_type)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_transaction_history(
+        _UniffiConverterString.lower(extended_key),
+        _UniffiConverterString.lower(electrum_url),
+        _UniffiConverterOptionalTypeNetwork.lower(network),
+        _UniffiConverterOptionalTypeAccountType.lower(script_type)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeTransactionHistoryResult.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeAccountInfoError,
+
+    )
 async def open_channel(order_id: "str",connection_string: "str") -> "IBtOrder":
 
     _UniffiConverterString.check_lower(order_id)
@@ -18014,6 +18955,7 @@ __all__ = [
     "TrezorError",
     "TrezorScriptType",
     "TrezorTransportType",
+    "TxDirection",
     "WordCount",
     "AccountAddresses",
     "AccountInfoResult",
@@ -18033,6 +18975,7 @@ __all__ = [
     "FundingTx",
     "GetAddressResponse",
     "GetAddressesResponse",
+    "HistoryTransaction",
     "IBt0ConfMinTxFeeWindow",
     "IBtBolt11Invoice",
     "IBtChannel",
@@ -18076,7 +19019,9 @@ __all__ = [
     "SweepResult",
     "SweepTransactionPreview",
     "SweepableBalances",
+    "TransactionDetail",
     "TransactionDetails",
+    "TransactionHistoryResult",
     "TrezorAddressResponse",
     "TrezorCallMessageResult",
     "TrezorDeviceInfo",
@@ -18096,9 +19041,12 @@ __all__ = [
     "TrezorTxInput",
     "TrezorTxOutput",
     "TrezorVerifyMessageParams",
+    "TxDetailInput",
+    "TxDetailOutput",
     "TxInput",
     "TxOutput",
     "ValidationResult",
+    "WalletBalance",
     "WalletParams",
     "activity_wipe_all",
     "add_pre_activity_metadata",
@@ -18167,6 +19115,8 @@ __all__ = [
     "onchain_compose_transaction",
     "onchain_get_account_info",
     "onchain_get_address_info",
+    "onchain_get_transaction_detail",
+    "onchain_get_transaction_history",
     "open_channel",
     "prepare_sweep_transaction",
     "refresh_active_cjit_entries",

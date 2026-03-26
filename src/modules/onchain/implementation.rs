@@ -7,8 +7,8 @@ use bdk::bitcoin::bip32::ExtendedPubKey;
 use bdk::bitcoin::consensus::deserialize;
 use bdk::bitcoin::psbt::PartiallySignedTransaction as Psbt;
 use bdk::bitcoin::{
-    Address as BdkAddress, Network as BdkNetwork, OutPoint, ScriptBuf, Sequence, Transaction, TxIn,
-    TxOut, Witness,
+    Address as BdkAddress, Network as BdkNetwork, OutPoint, ScriptBuf, Sequence, Transaction, Txid,
+    TxIn, TxOut, Witness,
 };
 use bdk::blockchain::ElectrumBlockchain;
 use bdk::database::MemoryDatabase;
@@ -24,9 +24,10 @@ use bitcoin_address_generator;
 
 use super::errors::AccountInfoError;
 use super::types::{
-    AccountAddresses, AccountInfoResult, AccountType, AccountUtxo, AddressInfo,
-    AddressType, ComposeAccount, Network as OnchainNetwork, SingleAddressInfoResult,
-    ValidationResult,
+    classify_tx, AccountAddresses, AccountInfoResult, AccountType, AccountUtxo, AddressInfo,
+    AddressType, ComposeAccount, HistoryTransaction, Network as OnchainNetwork,
+    SingleAddressInfoResult, TransactionDetail, TransactionHistoryResult, TxDetailInput,
+    TxDetailOutput, ValidationResult, WalletBalance,
 };
 use crate::modules::scanner::NetworkType;
 use crate::onchain::types::{
@@ -829,6 +830,27 @@ pub(crate) fn connect_electrum(
     })
 }
 
+/// Connect to Electrum and fetch the current blockchain tip height.
+///
+/// Returns the raw client (not yet consumed by `create_and_sync_wallet`)
+/// and the tip height as u32.
+pub(crate) fn connect_and_get_tip(
+    electrum_url: &str,
+) -> Result<(bdk::electrum_client::Client, u32), AccountInfoError> {
+    let client = connect_electrum(electrum_url)?;
+    let header = client.block_headers_subscribe().map_err(|e| {
+        AccountInfoError::ElectrumError {
+            error_details: format!("Failed to get block height: {}", e),
+        }
+    })?;
+    let tip_height = u32::try_from(header.height).map_err(|_| {
+        AccountInfoError::ElectrumError {
+            error_details: format!("Invalid block height: {}", header.height),
+        }
+    })?;
+    Ok((client, tip_height))
+}
+
 /// Create a BDK wallet and sync it via the provided Electrum client.
 ///
 /// The client is consumed; make any pre-sync calls (e.g. `block_headers_subscribe`)
@@ -880,17 +902,7 @@ pub async fn get_account_info(
         let base_path = &setup.base_path;
 
         // Single Electrum connection: get tip height first, then sync wallet
-        let client = connect_electrum(&electrum_url_owned)?;
-        let header = client.block_headers_subscribe().map_err(|e| {
-            AccountInfoError::ElectrumError {
-                error_details: format!("Failed to get block height: {}", e),
-            }
-        })?;
-        let tip_height = u32::try_from(header.height).map_err(|_| {
-            AccountInfoError::ElectrumError {
-                error_details: format!("Invalid block height: {}", header.height),
-            }
-        })?;
+        let (client, tip_height) = connect_and_get_tip(&electrum_url_owned)?;
 
         let wallet = create_and_sync_wallet(&setup, client)?;
 
@@ -1082,6 +1094,223 @@ pub async fn get_account_info(
     })
 }
 
+/// Query transaction history and balance for an extended public key via Electrum.
+pub async fn get_transaction_history(
+    extended_key: &str,
+    electrum_url: &str,
+    network: Option<OnchainNetwork>,
+    script_type: Option<AccountType>,
+) -> Result<TransactionHistoryResult, AccountInfoError> {
+    let setup = resolve_wallet_setup(extended_key, network, script_type, None)?;
+    let account_type = setup.account_type;
+
+    let electrum_url = electrum_url.to_string();
+
+    let result = tokio::task::spawn_blocking(move || {
+        let (client, tip_height) = connect_and_get_tip(&electrum_url)?;
+
+        let wallet = create_and_sync_wallet(&setup, client)?;
+
+        // Balance
+        let bdk_balance = wallet.get_balance().map_err(|e| AccountInfoError::WalletError {
+            error_details: format!("Failed to get balance: {}", e),
+        })?;
+        let balance: WalletBalance = bdk_balance.into();
+
+        // Transaction history
+        let txs = wallet
+            .list_transactions(false)
+            .map_err(|e| AccountInfoError::WalletError {
+                error_details: format!("Failed to list transactions: {}", e),
+            })?;
+
+        let mut history: Vec<HistoryTransaction> = txs
+            .iter()
+            .map(|tx| {
+                let (direction, amount, net) = classify_tx(tx.sent, tx.received, tx.fee);
+
+                let (block_height, timestamp, confirmations) =
+                    match tx.confirmation_time.as_ref() {
+                        Some(conf) => {
+                            let confs = tip_height.saturating_sub(conf.height) + 1;
+                            (Some(conf.height), Some(conf.timestamp), confs)
+                        }
+                        None => (None, None, 0),
+                    };
+
+                HistoryTransaction {
+                    txid: tx.txid.to_string(),
+                    received: tx.received,
+                    sent: tx.sent,
+                    net,
+                    fee: tx.fee,
+                    amount,
+                    direction,
+                    block_height,
+                    timestamp,
+                    confirmations,
+                }
+            })
+            .collect();
+
+        // Sort: unconfirmed first, then by timestamp descending
+        history.sort_by(|a, b| {
+            match (a.timestamp, b.timestamp) {
+                (None, Some(_)) => std::cmp::Ordering::Less,
+                (Some(_), None) => std::cmp::Ordering::Greater,
+                (None, None) => std::cmp::Ordering::Equal,
+                (Some(a_ts), Some(b_ts)) => b_ts.cmp(&a_ts),
+            }
+        });
+
+        let tx_count = u32::try_from(history.len()).unwrap_or(u32::MAX);
+
+        Ok((history, balance, tx_count, tip_height))
+    })
+    .await
+    .map_err(|e| AccountInfoError::SyncError {
+        error_details: format!("Task failed: {}", e),
+    })??;
+
+    let (transactions, balance, tx_count, block_height) = result;
+
+    Ok(TransactionHistoryResult {
+        transactions,
+        balance,
+        tx_count,
+        block_height,
+        account_type,
+    })
+}
+
+/// Get full details for a single transaction by txid.
+///
+/// Requires the extended public key because BDK needs to create a wallet to determine
+/// which outputs belong to the wallet and to compute sent/received amounts.
+pub async fn get_transaction_detail(
+    extended_key: &str,
+    electrum_url: &str,
+    txid: &str,
+    network: Option<OnchainNetwork>,
+    script_type: Option<AccountType>,
+) -> Result<TransactionDetail, AccountInfoError> {
+    let target_txid = Txid::from_str(txid).map_err(|e| AccountInfoError::InvalidTxid {
+        error_details: format!("Invalid txid '{}': {}", txid, e),
+    })?;
+
+    let setup = resolve_wallet_setup(extended_key, network, script_type, None)?;
+    let wallet_network = setup.network;
+
+    let electrum_url = electrum_url.to_string();
+
+    let result = tokio::task::spawn_blocking(move || {
+        let (client, tip_height) = connect_and_get_tip(&electrum_url)?;
+
+        let wallet = create_and_sync_wallet(&setup, client)?;
+
+        // Include raw transaction data
+        let txs = wallet
+            .list_transactions(true)
+            .map_err(|e| AccountInfoError::WalletError {
+                error_details: format!("Failed to list transactions: {}", e),
+            })?;
+
+        let tx = txs
+            .iter()
+            .find(|t| t.txid == target_txid)
+            .ok_or_else(|| AccountInfoError::TransactionNotFound {
+                error_details: format!("Transaction {} not found in wallet", target_txid),
+            })?;
+
+        // Summary fields
+        let (direction, amount, net) = classify_tx(tx.sent, tx.received, tx.fee);
+
+        let (block_height, timestamp, confirmations) = match tx.confirmation_time.as_ref() {
+            Some(conf) => {
+                let confs = tip_height.saturating_sub(conf.height) + 1;
+                (Some(conf.height), Some(conf.timestamp), confs)
+            }
+            None => (None, None, 0),
+        };
+
+        // Raw transaction details
+        let raw_tx = tx.transaction.as_ref().ok_or_else(|| {
+            AccountInfoError::WalletError {
+                error_details: format!(
+                    "Raw transaction data not available for {}",
+                    target_txid
+                ),
+            }
+        })?;
+
+        let inputs: Vec<TxDetailInput> = raw_tx
+            .input
+            .iter()
+            .map(|inp| TxDetailInput {
+                txid: inp.previous_output.txid.to_string(),
+                vout: inp.previous_output.vout,
+                sequence: inp.sequence.0,
+                script_sig: hex::encode(inp.script_sig.as_bytes()),
+                witness: inp.witness.iter().map(|w| hex::encode(w)).collect(),
+            })
+            .collect();
+
+        let outputs: Vec<TxDetailOutput> = raw_tx
+            .output
+            .iter()
+            .map(|out| {
+                let address = BdkAddress::from_script(&out.script_pubkey, wallet_network)
+                    .ok()
+                    .map(|a| a.to_string());
+                let is_mine = wallet.is_mine(&out.script_pubkey).map_err(|e| {
+                    AccountInfoError::WalletError {
+                        error_details: format!("Failed to check script ownership: {}", e),
+                    }
+                })?;
+                Ok(TxDetailOutput {
+                    value: out.value,
+                    script_pubkey: hex::encode(out.script_pubkey.as_bytes()),
+                    address,
+                    is_mine,
+                })
+            })
+            .collect::<Result<Vec<_>, AccountInfoError>>()?;
+
+        let size = u32::try_from(raw_tx.size()).unwrap_or(u32::MAX);
+        let vsize = u32::try_from(raw_tx.vsize()).unwrap_or(u32::MAX);
+        let weight = u32::try_from(raw_tx.weight().to_wu()).unwrap_or(u32::MAX);
+        let fee_rate = match tx.fee {
+            Some(f) if vsize > 0 => Some(f as f64 / vsize as f64),
+            _ => None,
+        };
+
+        Ok(TransactionDetail {
+            txid: tx.txid.to_string(),
+            received: tx.received,
+            sent: tx.sent,
+            net,
+            amount,
+            fee: tx.fee,
+            direction,
+            block_height,
+            timestamp,
+            confirmations,
+            inputs,
+            outputs,
+            size,
+            vsize,
+            weight,
+            fee_rate,
+        })
+    })
+    .await
+    .map_err(|e| AccountInfoError::SyncError {
+        error_details: format!("Task failed: {}", e),
+    })??;
+
+    Ok(result)
+}
+
 /// Query balance and UTXOs for a single Bitcoin address via Electrum.
 ///
 /// When `network` is `None`, the address is accepted without network validation
@@ -1113,21 +1342,9 @@ pub async fn get_address_info(
     let addr_str = address.to_string();
 
     let result = tokio::task::spawn_blocking(move || {
-        let client = connect_electrum(&electrum_url_owned)?;
+        let (client, tip_height) = connect_and_get_tip(&electrum_url_owned)?;
 
         let script = bdk_addr.script_pubkey();
-
-        // Get block height
-        let header = client.block_headers_subscribe().map_err(|e| {
-            AccountInfoError::ElectrumError {
-                error_details: format!("Failed to get block height: {}", e),
-            }
-        })?;
-        let tip_height = u32::try_from(header.height).map_err(|_| {
-            AccountInfoError::ElectrumError {
-                error_details: format!("Invalid block height: {}", header.height),
-            }
-        })?;
 
         // Get UTXOs for this address
         let utxos = client.script_list_unspent(&script).map_err(|e| {

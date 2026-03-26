@@ -37,7 +37,7 @@ pub use modules::activity;
 use crate::modules::pubky::{PubkyError, PubkyProfile};
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
-use crate::onchain::{AddressError, BroadcastError, AccountInfoError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances, broadcast_raw_tx, AccountInfoResult, SingleAddressInfoResult, AccountType, get_account_info, get_address_info};
+use crate::onchain::{AddressError, BroadcastError, AccountInfoError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances, broadcast_raw_tx, AccountInfoResult, SingleAddressInfoResult, AccountType, get_account_info, get_address_info, get_transaction_history, get_transaction_detail, TransactionHistoryResult, TransactionDetail};
 use crate::modules::trezor::{TrezorError, TrezorDeviceInfo, TrezorFeatures, TrezorGetAddressParams, TrezorAddressResponse, TrezorGetPublicKeyParams, TrezorPublicKeyResponse, TrezorScriptType, TrezorManager, TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams, TrezorSignTxParams, TrezorSignedTx, TrezorCoinType};
 use crate::modules::trezor::account_type_to_script_type;
 use crate::onchain::{compose_transaction, ComposeParams, ComposeResult};
@@ -1761,6 +1761,39 @@ pub async fn onchain_get_account_info(
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_account_info(&extended_key, &electrum_url, network, gap_limit, script_type).await
+    }).await.unwrap_or_else(|e| Err(AccountInfoError::SyncError {
+        error_details: format!("Runtime error: {}", e),
+    }))
+}
+
+/// Query transaction history and balance for an extended public key via Electrum.
+#[uniffi::export]
+pub async fn onchain_get_transaction_history(
+    extended_key: String,
+    electrum_url: String,
+    network: Option<Network>,
+    script_type: Option<AccountType>,
+) -> Result<TransactionHistoryResult, AccountInfoError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_transaction_history(&extended_key, &electrum_url, network, script_type).await
+    }).await.unwrap_or_else(|e| Err(AccountInfoError::SyncError {
+        error_details: format!("Runtime error: {}", e),
+    }))
+}
+
+/// Get full details for a single transaction by txid.
+#[uniffi::export]
+pub async fn onchain_get_transaction_detail(
+    extended_key: String,
+    electrum_url: String,
+    txid: String,
+    network: Option<Network>,
+    script_type: Option<AccountType>,
+) -> Result<TransactionDetail, AccountInfoError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_transaction_detail(&extended_key, &electrum_url, &txid, network, script_type).await
     }).await.unwrap_or_else(|e| Err(AccountInfoError::SyncError {
         error_details: format!("Runtime error: {}", e),
     }))
