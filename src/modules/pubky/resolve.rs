@@ -20,6 +20,14 @@ pub fn resolve_pubky_url(uri: String) -> Result<String, PubkyError> {
     Ok(url.to_string())
 }
 
+/// Fetch a public resource from a `pubky://` URI and return as a UTF-8 string.
+pub async fn fetch_pubky_file_string(uri: String) -> Result<String, PubkyError> {
+    let bytes = fetch_pubky_file(uri).await?;
+    String::from_utf8(bytes).map_err(|e| PubkyError::FetchFailed {
+        reason: e.to_string(),
+    })
+}
+
 /// Fetch a public resource from a `pubky://` URI and return its raw bytes.
 pub async fn fetch_pubky_file(uri: String) -> Result<Vec<u8>, PubkyError> {
     let pubky = get_pubky()?;

@@ -1407,6 +1407,17 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1515,6 +1526,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_derive_private_key() != 25155.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_derive_pubky_secret_key() != 36989.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1528,6 +1542,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_fetch_pubky_file() != 24890.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_fetch_pubky_file_string() != 47799.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_fetch_pubky_profile() != 19709.toShort()) {
@@ -1657,6 +1674,27 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret() != 47481.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_pubky_put_with_secret_key() != 36562.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_pubky_session_delete() != 39070.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_pubky_session_list() != 7225.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_pubky_session_put() != 25203.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_pubky_sign_in() != 26706.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_pubky_sign_up() != 61692.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries() != 5324.toShort()) {
@@ -1936,6 +1974,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_derive_private_key(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_derive_pubky_secret_key(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_entropy_to_mnemonic(
     ): Short
     @JvmStatic
@@ -1949,6 +1990,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_fetch_pubky_file(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_fetch_pubky_file_string(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_fetch_pubky_profile(
@@ -2078,6 +2122,27 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_prepare_sweep_transaction(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_pubky_put_with_secret_key(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_pubky_session_delete(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_pubky_session_list(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_pubky_session_put(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_pubky_sign_in(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_pubky_sign_up(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries(
@@ -2546,6 +2611,11 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_derive_pubky_secret_key(
+        `seed`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_entropy_to_mnemonic(
         `entropy`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
@@ -2568,6 +2638,10 @@ internal object UniffiLib : Library {
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_fetch_pubky_file(
+        `uri`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_fetch_pubky_file_string(
         `uri`: RustBufferByValue,
     ): Long
     @JvmStatic
@@ -2804,6 +2878,43 @@ internal object UniffiLib : Library {
         `electrumUrl`: RustBufferByValue,
         `destinationAddress`: RustBufferByValue,
         `feeRateSatsPerVbyte`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_pubky_public_key_from_secret(
+        `secretKeyHex`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_pubky_put_with_secret_key(
+        `secretKeyHex`: RustBufferByValue,
+        `path`: RustBufferByValue,
+        `content`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_pubky_session_delete(
+        `sessionSecret`: RustBufferByValue,
+        `path`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_pubky_session_list(
+        `sessionSecret`: RustBufferByValue,
+        `dirPath`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_pubky_session_put(
+        `sessionSecret`: RustBufferByValue,
+        `path`: RustBufferByValue,
+        `content`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_pubky_sign_in(
+        `secretKeyHex`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_pubky_sign_up(
+        `secretKeyHex`: RustBufferByValue,
+        `homeserverPublicKeyZ32`: RustBufferByValue,
+        `signupCode`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_refresh_active_cjit_entries(
@@ -9072,6 +9183,12 @@ public object FfiConverterTypePubkyError : FfiConverterRustBuffer<PubkyException
             7 -> PubkyException.ProfileParseFailed(
                 FfiConverterString.read(buf),
                 )
+            8 -> PubkyException.KeyException(
+                FfiConverterString.read(buf),
+                )
+            9 -> PubkyException.WriteFailed(
+                FfiConverterString.read(buf),
+                )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
@@ -9111,6 +9228,16 @@ public object FfiConverterTypePubkyError : FfiConverterRustBuffer<PubkyException
                 4UL
                 + FfiConverterString.allocationSize(value.`reason`)
             )
+            is PubkyException.KeyException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+            is PubkyException.WriteFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
         }
     }
 
@@ -9146,6 +9273,16 @@ public object FfiConverterTypePubkyError : FfiConverterRustBuffer<PubkyException
             }
             is PubkyException.ProfileParseFailed -> {
                 buf.putInt(7)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is PubkyException.KeyException -> {
+                buf.putInt(8)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is PubkyException.WriteFailed -> {
+                buf.putInt(9)
                 FfiConverterString.write(value.`reason`, buf)
                 Unit
             }
@@ -12261,6 +12398,16 @@ public fun `derivePrivateKey`(`mnemonicPhrase`: kotlin.String, `derivationPathSt
     })
 }
 
+@Throws(PubkyException::class)
+public fun `derivePubkySecretKey`(`seed`: kotlin.ByteArray): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(PubkyExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_derive_pubky_secret_key(
+            FfiConverterByteArray.lower(`seed`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
 @Throws(AddressException::class)
 public fun `entropyToMnemonic`(`entropy`: kotlin.ByteArray): kotlin.String {
     return FfiConverterString.lift(uniffiRustCallWithError(AddressExceptionErrorHandler) { uniffiRustCallStatus ->
@@ -12338,6 +12485,23 @@ public suspend fun `fetchPubkyFile`(`uri`: kotlin.String): kotlin.ByteArray {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
         // lift function
         { FfiConverterByteArray.lift(it) },
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
+    )
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `fetchPubkyFileString`(`uri`: kotlin.String): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file_string(
+            FfiConverterString.lower(`uri`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -12963,6 +13127,129 @@ public suspend fun `prepareSweepTransaction`(`mnemonicPhrase`: kotlin.String, `n
         { FfiConverterTypeSweepTransactionPreview.lift(it) },
         // Error FFI converter
         SweepExceptionErrorHandler,
+    )
+}
+
+@Throws(PubkyException::class)
+public fun `pubkyPublicKeyFromSecret`(`secretKeyHex`: kotlin.String): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(PubkyExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_pubky_public_key_from_secret(
+            FfiConverterString.lower(`secretKeyHex`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `pubkyPutWithSecretKey`(`secretKeyHex`: kotlin.String, `path`: kotlin.String, `content`: kotlin.ByteArray) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_pubky_put_with_secret_key(
+            FfiConverterString.lower(`secretKeyHex`),
+            FfiConverterString.lower(`path`),
+            FfiConverterByteArray.lower(`content`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
+    )
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `pubkySessionDelete`(`sessionSecret`: kotlin.String, `path`: kotlin.String) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_delete(
+            FfiConverterString.lower(`sessionSecret`),
+            FfiConverterString.lower(`path`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
+    )
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `pubkySessionList`(`sessionSecret`: kotlin.String, `dirPath`: kotlin.String): List<kotlin.String> {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_list(
+            FfiConverterString.lower(`sessionSecret`),
+            FfiConverterString.lower(`dirPath`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterSequenceString.lift(it) },
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
+    )
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `pubkySessionPut`(`sessionSecret`: kotlin.String, `path`: kotlin.String, `content`: kotlin.ByteArray) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_put(
+            FfiConverterString.lower(`sessionSecret`),
+            FfiConverterString.lower(`path`),
+            FfiConverterByteArray.lower(`content`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
+    )
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `pubkySignIn`(`secretKeyHex`: kotlin.String): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_pubky_sign_in(
+            FfiConverterString.lower(`secretKeyHex`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
+    )
+}
+
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `pubkySignUp`(`secretKeyHex`: kotlin.String, `homeserverPublicKeyZ32`: kotlin.String, `signupCode`: kotlin.String?): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_pubky_sign_up(
+            FfiConverterString.lower(`secretKeyHex`),
+            FfiConverterString.lower(`homeserverPublicKeyZ32`),
+            FfiConverterOptionalString.lower(`signupCode`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
     )
 }
 

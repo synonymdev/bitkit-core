@@ -242,3 +242,164 @@ async fn fetch_contacts_empty_key_returns_fetch_failed() {
     }
 }
 
+// ============================================================================
+// Key derivation tests
+// ============================================================================
+
+#[test]
+fn derive_secret_key_returns_valid_hex() {
+    let seed = vec![0xABu8; 64];
+    let hex_str = derive_pubky_secret_key(seed).unwrap();
+    assert_eq!(hex_str.len(), 64); // 32 bytes = 64 hex chars
+    assert!(hex::decode(&hex_str).is_ok());
+}
+
+#[test]
+fn derive_secret_key_is_deterministic() {
+    let seed = vec![0x42u8; 64];
+    let key1 = derive_pubky_secret_key(seed.clone()).unwrap();
+    let key2 = derive_pubky_secret_key(seed).unwrap();
+    assert_eq!(key1, key2);
+}
+
+#[test]
+fn derive_secret_key_different_seeds_produce_different_keys() {
+    let key1 = derive_pubky_secret_key(vec![0x01u8; 64]).unwrap();
+    let key2 = derive_pubky_secret_key(vec![0x02u8; 64]).unwrap();
+    assert_ne!(key1, key2);
+}
+
+#[test]
+fn derive_secret_key_rejects_short_seed() {
+    let result = derive_pubky_secret_key(vec![0u8; 32]);
+    assert!(result.is_err());
+    match result.unwrap_err() {
+        PubkyError::KeyError { .. } => {}
+        other => panic!("expected KeyError, got: {other:?}"),
+    }
+}
+
+#[test]
+fn derive_secret_key_rejects_empty_seed() {
+    let result = derive_pubky_secret_key(vec![]);
+    assert!(result.is_err());
+    match result.unwrap_err() {
+        PubkyError::KeyError { .. } => {}
+        other => panic!("expected KeyError, got: {other:?}"),
+    }
+}
+
+#[test]
+fn public_key_from_derived_secret_roundtrips() {
+    let seed = vec![0xCDu8; 64];
+    let secret = derive_pubky_secret_key(seed).unwrap();
+    let pk1 = pubky_public_key_from_secret(secret.clone()).unwrap();
+    let pk2 = pubky_public_key_from_secret(secret).unwrap();
+    assert_eq!(pk1, pk2);
+    assert!(!pk1.is_empty());
+    // z32-encoded public keys are 52 characters
+    assert_eq!(pk1.len(), 52);
+}
+
+#[test]
+fn public_key_from_invalid_hex_returns_error() {
+    let result = pubky_public_key_from_secret("not-valid-hex".into());
+    assert!(result.is_err());
+    match result.unwrap_err() {
+        PubkyError::KeyError { .. } => {}
+        other => panic!("expected KeyError, got: {other:?}"),
+    }
+}
+
+#[test]
+fn public_key_from_empty_hex_returns_error() {
+    let result = pubky_public_key_from_secret(String::new());
+    assert!(result.is_err());
+    match result.unwrap_err() {
+        PubkyError::KeyError { .. } => {}
+        other => panic!("expected KeyError, got: {other:?}"),
+    }
+}
+
+#[test]
+fn public_key_from_wrong_length_hex_returns_error() {
+    let result = pubky_public_key_from_secret("aabb".into()); // only 2 bytes, need 32
+    assert!(result.is_err());
+    match result.unwrap_err() {
+        PubkyError::KeyError { .. } => {}
+        other => panic!("expected KeyError, got: {other:?}"),
+    }
+}
+
+// ============================================================================
+// Sign up / sign in error tests
+// ============================================================================
+
+#[tokio::test]
+async fn sign_up_invalid_secret_key_returns_error() {
+    let result = pubky_sign_up("bad-hex".into(), "some-homeserver".into(), None).await;
+    assert!(result.is_err());
+    match result.unwrap_err() {
+        PubkyError::KeyError { .. } => {}
+        other => panic!("expected KeyError, got: {other:?}"),
+    }
+}
+
+#[tokio::test]
+async fn sign_in_invalid_secret_key_returns_error() {
+    let result = pubky_sign_in("bad-hex".into()).await;
+    assert!(result.is_err());
+    match result.unwrap_err() {
+        PubkyError::KeyError { .. } => {}
+        other => panic!("expected KeyError, got: {other:?}"),
+    }
+}
+
+// ============================================================================
+// Session operation error tests
+// ============================================================================
+
+#[tokio::test]
+async fn session_put_invalid_session_returns_error() {
+    let result = pubky_session_put("bad-session".into(), "/pub/test".into(), vec![]).await;
+    assert!(result.is_err());
+    match result.unwrap_err() {
+        PubkyError::AuthFailed { .. } => {}
+        other => panic!("expected AuthFailed, got: {other:?}"),
+    }
+}
+
+#[tokio::test]
+async fn session_delete_invalid_session_returns_error() {
+    let result = pubky_session_delete("bad-session".into(), "/pub/test".into()).await;
+    assert!(result.is_err());
+    match result.unwrap_err() {
+        PubkyError::AuthFailed { .. } => {}
+        other => panic!("expected AuthFailed, got: {other:?}"),
+    }
+}
+
+#[tokio::test]
+async fn session_list_invalid_session_returns_error() {
+    let result = pubky_session_list("bad-session".into(), "/pub/test/".into()).await;
+    assert!(result.is_err());
+    match result.unwrap_err() {
+        PubkyError::AuthFailed { .. } => {}
+        other => panic!("expected AuthFailed, got: {other:?}"),
+    }
+}
+
+// ============================================================================
+// String fetch tests
+// ============================================================================
+
+#[tokio::test]
+async fn fetch_file_string_malformed_uri_returns_error() {
+    let result = fetch_pubky_file_string("not-a-uri".into()).await;
+    assert!(result.is_err());
+    match result.unwrap_err() {
+        PubkyError::ResolutionFailed { .. } => {}
+        other => panic!("expected ResolutionFailed, got: {other:?}"),
+    }
+}
+

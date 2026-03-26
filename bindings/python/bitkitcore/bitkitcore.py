@@ -507,6 +507,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_derive_private_key() != 25155:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_derive_pubky_secret_key() != 36989:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_estimate_order_fee() != 9548:
@@ -516,6 +518,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_fetch_pubky_contacts() != 18744:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_fetch_pubky_file() != 24890:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_fetch_pubky_file_string() != 47799:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_fetch_pubky_profile() != 19709:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -602,6 +606,20 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_open_channel() != 21402:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret() != 47481:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_pubky_put_with_secret_key() != 36562:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_pubky_session_delete() != 39070:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_pubky_session_list() != 7225:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_pubky_session_put() != 25203:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_pubky_sign_in() != 26706:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_pubky_sign_up() != 61692:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries() != 5324:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -1146,6 +1164,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_derive_private_key.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_derive_private_key.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_pubky_secret_key.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_pubky_secret_key.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_entropy_to_mnemonic.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1171,6 +1194,10 @@ _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file_string.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file_string.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_profile.argtypes = (
     _UniffiRustBuffer,
 )
@@ -1406,6 +1433,43 @@ _UniffiLib.uniffi_bitkitcore_fn_func_prepare_sweep_transaction.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_prepare_sweep_transaction.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_public_key_from_secret.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_public_key_from_secret.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_put_with_secret_key.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_put_with_secret_key.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_delete.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_delete.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_list.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_list.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_put.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_put.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_sign_in.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_sign_in.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_sign_up.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_pubky_sign_up.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_cjit_entries.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_refresh_active_cjit_entries.restype = ctypes.c_uint64
@@ -1990,6 +2054,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses.restype = ct
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_private_key.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_private_key.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_pubky_secret_key.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_pubky_secret_key.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic.restype = ctypes.c_uint16
@@ -2005,6 +2072,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_contacts.restype = ctypes
 _UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_file.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_file.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_file_string.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_file_string.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_profile.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_profile.restype = ctypes.c_uint16
@@ -2134,6 +2204,27 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.restype = ctypes.c_uint1
 _UniffiLib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_put_with_secret_key.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_put_with_secret_key.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_session_delete.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_session_delete.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_session_list.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_session_list.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_session_put.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_session_put.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_sign_in.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_sign_in.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_sign_up.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_pubky_sign_up.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries.restype = ctypes.c_uint16
@@ -12364,6 +12455,26 @@ class PubkyError:  # type: ignore
         def __repr__(self):
             return "PubkyError.ProfileParseFailed({})".format(str(self))
     _UniffiTempPubkyError.ProfileParseFailed = ProfileParseFailed # type: ignore
+    class KeyError(_UniffiTempPubkyError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "PubkyError.KeyError({})".format(str(self))
+    _UniffiTempPubkyError.KeyError = KeyError # type: ignore
+    class WriteFailed(_UniffiTempPubkyError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "PubkyError.WriteFailed({})".format(str(self))
+    _UniffiTempPubkyError.WriteFailed = WriteFailed # type: ignore
 
 PubkyError = _UniffiTempPubkyError # type: ignore
 del _UniffiTempPubkyError
@@ -12399,6 +12510,14 @@ class _UniffiConverterTypePubkyError(_UniffiConverterRustBuffer):
             return PubkyError.ProfileParseFailed(
                 _UniffiConverterString.read(buf),
             )
+        if variant == 8:
+            return PubkyError.KeyError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 9:
+            return PubkyError.WriteFailed(
+                _UniffiConverterString.read(buf),
+            )
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
@@ -12422,6 +12541,12 @@ class _UniffiConverterTypePubkyError(_UniffiConverterRustBuffer):
         if isinstance(value, PubkyError.ProfileParseFailed):
             _UniffiConverterString.check_lower(value.reason)
             return
+        if isinstance(value, PubkyError.KeyError):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+        if isinstance(value, PubkyError.WriteFailed):
+            _UniffiConverterString.check_lower(value.reason)
+            return
 
     @staticmethod
     def write(value, buf):
@@ -12443,6 +12568,12 @@ class _UniffiConverterTypePubkyError(_UniffiConverterRustBuffer):
             buf.write_i32(6)
         if isinstance(value, PubkyError.ProfileParseFailed):
             buf.write_i32(7)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, PubkyError.KeyError):
+            buf.write_i32(8)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, PubkyError.WriteFailed):
+            buf.write_i32(9)
             _UniffiConverterString.write(value.reason, buf)
 
 
@@ -17329,6 +17460,13 @@ def derive_private_key(mnemonic_phrase: "str",derivation_path_str: "typing.Optio
         _UniffiConverterOptionalString.lower(bip39_passphrase)))
 
 
+def derive_pubky_secret_key(seed: "bytes") -> "str":
+    _UniffiConverterBytes.check_lower(seed)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePubkyError,_UniffiLib.uniffi_bitkitcore_fn_func_derive_pubky_secret_key,
+        _UniffiConverterBytes.lower(seed)))
+
+
 def entropy_to_mnemonic(entropy: "bytes") -> "str":
     _UniffiConverterBytes.check_lower(entropy)
     
@@ -17410,6 +17548,23 @@ async def fetch_pubky_file(uri: "str") -> "bytes":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterBytes.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
+
+    )
+async def fetch_pubky_file_string(uri: "str") -> "str":
+
+    _UniffiConverterString.check_lower(uri)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file_string(
+        _UniffiConverterString.lower(uri)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
         
     # Error FFI converter
 _UniffiConverterTypePubkyError,
@@ -18054,6 +18209,142 @@ async def prepare_sweep_transaction(mnemonic_phrase: "str",network: "typing.Opti
         
     # Error FFI converter
 _UniffiConverterTypeSweepError,
+
+    )
+
+def pubky_public_key_from_secret(secret_key_hex: "str") -> "str":
+    _UniffiConverterString.check_lower(secret_key_hex)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePubkyError,_UniffiLib.uniffi_bitkitcore_fn_func_pubky_public_key_from_secret,
+        _UniffiConverterString.lower(secret_key_hex)))
+
+async def pubky_put_with_secret_key(secret_key_hex: "str",path: "str",content: "bytes") -> None:
+
+    _UniffiConverterString.check_lower(secret_key_hex)
+    
+    _UniffiConverterString.check_lower(path)
+    
+    _UniffiConverterBytes.check_lower(content)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_pubky_put_with_secret_key(
+        _UniffiConverterString.lower(secret_key_hex),
+        _UniffiConverterString.lower(path),
+        _UniffiConverterBytes.lower(content)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
+
+    )
+async def pubky_session_delete(session_secret: "str",path: "str") -> None:
+
+    _UniffiConverterString.check_lower(session_secret)
+    
+    _UniffiConverterString.check_lower(path)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_delete(
+        _UniffiConverterString.lower(session_secret),
+        _UniffiConverterString.lower(path)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
+
+    )
+async def pubky_session_list(session_secret: "str",dir_path: "str") -> "typing.List[str]":
+
+    _UniffiConverterString.check_lower(session_secret)
+    
+    _UniffiConverterString.check_lower(dir_path)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_list(
+        _UniffiConverterString.lower(session_secret),
+        _UniffiConverterString.lower(dir_path)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterSequenceString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
+
+    )
+async def pubky_session_put(session_secret: "str",path: "str",content: "bytes") -> None:
+
+    _UniffiConverterString.check_lower(session_secret)
+    
+    _UniffiConverterString.check_lower(path)
+    
+    _UniffiConverterBytes.check_lower(content)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_put(
+        _UniffiConverterString.lower(session_secret),
+        _UniffiConverterString.lower(path),
+        _UniffiConverterBytes.lower(content)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
+
+    )
+async def pubky_sign_in(secret_key_hex: "str") -> "str":
+
+    _UniffiConverterString.check_lower(secret_key_hex)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_pubky_sign_in(
+        _UniffiConverterString.lower(secret_key_hex)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
+
+    )
+async def pubky_sign_up(secret_key_hex: "str",homeserver_public_key_z32: "str",signup_code: "typing.Optional[str]") -> "str":
+
+    _UniffiConverterString.check_lower(secret_key_hex)
+    
+    _UniffiConverterString.check_lower(homeserver_public_key_z32)
+    
+    _UniffiConverterOptionalString.check_lower(signup_code)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_pubky_sign_up(
+        _UniffiConverterString.lower(secret_key_hex),
+        _UniffiConverterString.lower(homeserver_public_key_z32),
+        _UniffiConverterOptionalString.lower(signup_code)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
 
     )
 async def refresh_active_cjit_entries() -> "typing.List[IcJitEntry]":
@@ -19071,11 +19362,13 @@ __all__ = [
     "derive_bitcoin_address",
     "derive_bitcoin_addresses",
     "derive_private_key",
+    "derive_pubky_secret_key",
     "entropy_to_mnemonic",
     "estimate_order_fee",
     "estimate_order_fee_full",
     "fetch_pubky_contacts",
     "fetch_pubky_file",
+    "fetch_pubky_file_string",
     "fetch_pubky_profile",
     "generate_mnemonic",
     "get_activities",
@@ -19119,6 +19412,13 @@ __all__ = [
     "onchain_get_transaction_history",
     "open_channel",
     "prepare_sweep_transaction",
+    "pubky_public_key_from_secret",
+    "pubky_put_with_secret_key",
+    "pubky_session_delete",
+    "pubky_session_list",
+    "pubky_session_put",
+    "pubky_sign_in",
+    "pubky_sign_up",
     "refresh_active_cjit_entries",
     "refresh_active_orders",
     "register_device",

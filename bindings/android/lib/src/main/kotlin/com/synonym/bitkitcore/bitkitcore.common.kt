@@ -3426,6 +3426,20 @@ public sealed class PubkyException: kotlin.Exception() {
             get() = "reason=${ `reason` }"
     }
     
+    public class KeyException(
+        public val `reason`: kotlin.String,
+    ) : PubkyException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class WriteFailed(
+        public val `reason`: kotlin.String,
+    ) : PubkyException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
 }
 
 

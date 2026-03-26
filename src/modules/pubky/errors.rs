@@ -20,4 +20,10 @@ pub enum PubkyError {
 
     #[error("Profile parse failed: {reason}")]
     ProfileParseFailed { reason: String },
+
+    #[error("Key error: {reason}")]
+    KeyError { reason: String },
+
+    #[error("Write failed: {reason}")]
+    WriteFailed { reason: String },
 }
