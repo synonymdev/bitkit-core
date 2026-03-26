@@ -1116,6 +1116,7 @@ mod tests {
     #[test]
     fn test_get_transaction_history_invalid_key() {
         use crate::modules::onchain::get_transaction_history;
+        use crate::modules::onchain::AccountInfoError;
 
         let rt = tokio::runtime::Runtime::new().unwrap();
         let result = rt.block_on(get_transaction_history(
@@ -1126,6 +1127,14 @@ mod tests {
         ));
 
         assert!(result.is_err(), "Expected error for invalid key");
+        match result.unwrap_err() {
+            AccountInfoError::InvalidExtendedKey { .. }
+            | AccountInfoError::UnsupportedKeyType { .. } => {}
+            other => panic!(
+                "Expected InvalidExtendedKey or UnsupportedKeyType, got: {:?}",
+                other
+            ),
+        }
     }
 
     #[test]
@@ -1219,6 +1228,7 @@ mod tests {
     #[test]
     fn test_get_transaction_detail_invalid_key() {
         use crate::modules::onchain::get_transaction_detail;
+        use crate::modules::onchain::AccountInfoError;
 
         let rt = tokio::runtime::Runtime::new().unwrap();
         let result = rt.block_on(get_transaction_detail(
@@ -1230,6 +1240,14 @@ mod tests {
         ));
 
         assert!(result.is_err(), "Expected error for invalid key");
+        match result.unwrap_err() {
+            AccountInfoError::InvalidExtendedKey { .. }
+            | AccountInfoError::UnsupportedKeyType { .. } => {}
+            other => panic!(
+                "Expected InvalidExtendedKey or UnsupportedKeyType, got: {:?}",
+                other
+            ),
+        }
     }
 
     #[test]
@@ -1272,6 +1290,89 @@ mod tests {
             AccountInfoError::NetworkMismatch { .. } => {}
             other => panic!("Expected NetworkMismatch, got: {:?}", other),
         }
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_get_transaction_detail_not_found() {
+        use crate::modules::onchain::get_transaction_detail;
+        use crate::modules::onchain::AccountInfoError;
+
+        // Valid txid format but not present in the wallet
+        let result = get_transaction_detail(
+            TEST_VPUB,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            "0000000000000000000000000000000000000000000000000000000000000001",
+            None,
+            None,
+        )
+        .await;
+
+        assert!(result.is_err(), "Expected error for txid not in wallet");
+        match result.unwrap_err() {
+            AccountInfoError::TransactionNotFound { .. } => {}
+            other => panic!("Expected TransactionNotFound, got: {:?}", other),
+        }
+    }
+
+    // ========================================================================
+    // classify_tx unit tests
+    // ========================================================================
+
+    #[test]
+    fn test_classify_tx_received() {
+        use crate::modules::onchain::types::classify_tx;
+        use crate::modules::onchain::TxDirection;
+
+        let (dir, amount, net) = classify_tx(0, 50_000, None);
+        assert_eq!(dir, TxDirection::Received);
+        assert_eq!(amount, 50_000);
+        assert_eq!(net, 50_000);
+    }
+
+    #[test]
+    fn test_classify_tx_sent() {
+        use crate::modules::onchain::types::classify_tx;
+        use crate::modules::onchain::TxDirection;
+
+        let (dir, amount, net) = classify_tx(100_000, 40_000, Some(1_000));
+        assert_eq!(dir, TxDirection::Sent);
+        assert_eq!(amount, 59_000); // 100k - 40k - 1k
+        assert_eq!(net, -60_000);
+    }
+
+    #[test]
+    fn test_classify_tx_self_transfer() {
+        use crate::modules::onchain::types::classify_tx;
+        use crate::modules::onchain::TxDirection;
+
+        let (dir, amount, net) = classify_tx(100_000, 99_500, Some(500));
+        assert_eq!(dir, TxDirection::SelfTransfer);
+        assert_eq!(amount, 500); // fee
+        assert_eq!(net, -500);
+    }
+
+    #[test]
+    fn test_classify_tx_sent_with_change_exceeding_fee() {
+        use crate::modules::onchain::types::classify_tx;
+        use crate::modules::onchain::TxDirection;
+
+        // Both sent and received > 0, but net outflow exceeds fee => Sent
+        let (dir, amount, net) = classify_tx(100_000, 30_000, Some(1_000));
+        assert_eq!(dir, TxDirection::Sent);
+        assert_eq!(amount, 69_000); // 100k - 30k - 1k
+        assert_eq!(net, -70_000);
+    }
+
+    #[test]
+    fn test_classify_tx_large_values_no_truncation() {
+        use crate::modules::onchain::types::classify_tx;
+
+        // Values near u64::MAX / 2 that would overflow i64 if cast directly
+        let large = (i64::MAX as u64) + 1; // 2^63
+        let (_, _, net) = classify_tx(large, 0, Some(1_000));
+        // net should be negative and clamped (since -(2^63) fits exactly in i64::MIN)
+        assert!(net < 0);
     }
 
     #[tokio::test]

@@ -76,4 +76,8 @@ pub enum AccountInfoError {
     /// Invalid transaction ID provided
     #[error("Invalid transaction ID: {error_details}")]
     InvalidTxid { error_details: String },
+
+    /// A valid transaction ID was not found in the wallet
+    #[error("Transaction not found: {error_details}")]
+    TransactionNotFound { error_details: String },
 }

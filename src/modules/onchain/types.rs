@@ -402,6 +402,36 @@ pub enum TxDirection {
     SelfTransfer,
 }
 
+/// Classify a transaction by direction and compute the display amount.
+///
+/// Pure function for easy unit testing. Uses i128 intermediates to avoid
+/// silent truncation when casting large u64 values to i64.
+///
+/// Returns `(direction, display_amount, net_value)`.
+pub(crate) fn classify_tx(sent: u64, received: u64, fee: Option<u64>) -> (TxDirection, u64, i64) {
+    let net =
+        (received as i128 - sent as i128).clamp(i64::MIN as i128, i64::MAX as i128) as i64;
+
+    let direction = if sent > 0 && received > 0 {
+        match fee {
+            Some(f) if sent.saturating_sub(received) <= f => TxDirection::SelfTransfer,
+            _ => TxDirection::Sent,
+        }
+    } else if sent > 0 {
+        TxDirection::Sent
+    } else {
+        TxDirection::Received
+    };
+
+    let amount = match direction {
+        TxDirection::Received => received,
+        TxDirection::Sent => sent.saturating_sub(received).saturating_sub(fee.unwrap_or(0)),
+        TxDirection::SelfTransfer => fee.unwrap_or(0),
+    };
+
+    (direction, amount, net)
+}
+
 /// A single transaction in the wallet's history.
 #[derive(Debug, Clone, uniffi::Record)]
 pub struct HistoryTransaction {
@@ -445,6 +475,19 @@ pub struct WalletBalance {
     pub spendable: u64,
     /// Grand total: all categories (sats)
     pub total: u64,
+}
+
+impl From<bdk::Balance> for WalletBalance {
+    fn from(b: bdk::Balance) -> Self {
+        Self {
+            confirmed: b.confirmed,
+            immature: b.immature,
+            trusted_pending: b.trusted_pending,
+            untrusted_pending: b.untrusted_pending,
+            spendable: b.confirmed + b.trusted_pending,
+            total: b.confirmed + b.immature + b.trusted_pending + b.untrusted_pending,
+        }
+    }
 }
 
 /// Result from querying transaction history for an xpub.
@@ -527,6 +570,6 @@ pub struct TransactionDetail {
     pub vsize: u32,
     /// Transaction weight in weight units
     pub weight: u32,
-    /// Fee rate in sat/vB (fee / vsize), None if fee or vsize unavailable
+    /// Fee rate in sat/vB (fee / vsize), None if fee is unavailable or vsize is zero
     pub fee_rate: Option<f64>,
 }
