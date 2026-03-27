@@ -1521,6 +1521,104 @@ pub async fn fetch_pubky_contacts(public_key: String) -> Result<Vec<String>, Pub
     }))
 }
 
+#[uniffi::export]
+pub async fn fetch_pubky_file_string(uri: String) -> Result<String, PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::fetch_pubky_file_string(uri).await
+    }).await.unwrap_or_else(|e| Err(PubkyError::FetchFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub fn derive_pubky_secret_key(seed: Vec<u8>) -> Result<String, PubkyError> {
+    crate::modules::pubky::derive_pubky_secret_key(seed)
+}
+
+#[uniffi::export]
+pub fn pubky_public_key_from_secret(secret_key_hex: String) -> Result<String, PubkyError> {
+    crate::modules::pubky::pubky_public_key_from_secret(secret_key_hex)
+}
+
+#[uniffi::export]
+pub async fn pubky_sign_up(
+    secret_key_hex: String,
+    homeserver_public_key_z32: String,
+    signup_code: Option<String>,
+) -> Result<String, PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::pubky_sign_up(secret_key_hex, homeserver_public_key_z32, signup_code).await
+    }).await.unwrap_or_else(|e| Err(PubkyError::AuthFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn pubky_sign_in(secret_key_hex: String) -> Result<String, PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::pubky_sign_in(secret_key_hex).await
+    }).await.unwrap_or_else(|e| Err(PubkyError::AuthFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn pubky_session_put(
+    session_secret: String,
+    path: String,
+    content: Vec<u8>,
+) -> Result<(), PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::pubky_session_put(session_secret, path, content).await
+    }).await.unwrap_or_else(|e| Err(PubkyError::WriteFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn pubky_session_delete(
+    session_secret: String,
+    path: String,
+) -> Result<(), PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::pubky_session_delete(session_secret, path).await
+    }).await.unwrap_or_else(|e| Err(PubkyError::WriteFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn pubky_put_with_secret_key(
+    secret_key_hex: String,
+    path: String,
+    content: Vec<u8>,
+) -> Result<(), PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::pubky_put_with_secret_key(secret_key_hex, path, content).await
+    }).await.unwrap_or_else(|e| Err(PubkyError::WriteFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub async fn pubky_session_list(
+    session_secret: String,
+    dir_path: String,
+) -> Result<Vec<String>, PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::pubky_session_list(session_secret, dir_path).await
+    }).await.unwrap_or_else(|e| Err(PubkyError::FetchFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
 // ============================================================================
 // Trezor Hardware Wallet Functions
 // ============================================================================

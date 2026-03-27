@@ -15570,6 +15570,10 @@ public enum PubkyError: Swift.Error {
     case ProfileNotFound
     case ProfileParseFailed(reason: String
     )
+    case KeyError(reason: String
+    )
+    case WriteFailed(reason: String
+    )
 }
 
 
@@ -15601,6 +15605,12 @@ public struct FfiConverterTypePubkyError: FfiConverterRustBuffer {
             )
         case 6: return .ProfileNotFound
         case 7: return .ProfileParseFailed(
+            reason: try FfiConverterString.read(from: &buf)
+            )
+        case 8: return .KeyError(
+            reason: try FfiConverterString.read(from: &buf)
+            )
+        case 9: return .WriteFailed(
             reason: try FfiConverterString.read(from: &buf)
             )
 
@@ -15645,6 +15655,16 @@ public struct FfiConverterTypePubkyError: FfiConverterRustBuffer {
         
         case let .ProfileParseFailed(reason):
             writeInt(&buf, Int32(7))
+            FfiConverterString.write(reason, into: &buf)
+            
+        
+        case let .KeyError(reason):
+            writeInt(&buf, Int32(8))
+            FfiConverterString.write(reason, into: &buf)
+            
+        
+        case let .WriteFailed(reason):
+            writeInt(&buf, Int32(9))
             FfiConverterString.write(reason, into: &buf)
             
         }
@@ -19025,6 +19045,13 @@ public func derivePrivateKey(mnemonicPhrase: String, derivationPathStr: String?,
     )
 })
 }
+public func derivePubkySecretKey(seed: Data)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypePubkyError_lift) {
+    uniffi_bitkitcore_fn_func_derive_pubky_secret_key(
+        FfiConverterData.lower(seed),$0
+    )
+})
+}
 public func entropyToMnemonic(entropy: Data)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeAddressError_lift) {
     uniffi_bitkitcore_fn_func_entropy_to_mnemonic(
@@ -19085,6 +19112,20 @@ public func fetchPubkyFile(uri: String)async throws  -> Data  {
             completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
             liftFunc: FfiConverterData.lift,
+            errorHandler: FfiConverterTypePubkyError_lift
+        )
+}
+public func fetchPubkyFileString(uri: String)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_fetch_pubky_file_string(FfiConverterString.lower(uri)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
             errorHandler: FfiConverterTypePubkyError_lift
         )
 }
@@ -19553,6 +19594,97 @@ public func prepareSweepTransaction(mnemonicPhrase: String, network: Network?, b
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeSweepTransactionPreview_lift,
             errorHandler: FfiConverterTypeSweepError_lift
+        )
+}
+public func pubkyPublicKeyFromSecret(secretKeyHex: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypePubkyError_lift) {
+    uniffi_bitkitcore_fn_func_pubky_public_key_from_secret(
+        FfiConverterString.lower(secretKeyHex),$0
+    )
+})
+}
+public func pubkyPutWithSecretKey(secretKeyHex: String, path: String, content: Data)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_pubky_put_with_secret_key(FfiConverterString.lower(secretKeyHex),FfiConverterString.lower(path),FfiConverterData.lower(content)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypePubkyError_lift
+        )
+}
+public func pubkySessionDelete(sessionSecret: String, path: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_pubky_session_delete(FfiConverterString.lower(sessionSecret),FfiConverterString.lower(path)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypePubkyError_lift
+        )
+}
+public func pubkySessionList(sessionSecret: String, dirPath: String)async throws  -> [String]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_pubky_session_list(FfiConverterString.lower(sessionSecret),FfiConverterString.lower(dirPath)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceString.lift,
+            errorHandler: FfiConverterTypePubkyError_lift
+        )
+}
+public func pubkySessionPut(sessionSecret: String, path: String, content: Data)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_pubky_session_put(FfiConverterString.lower(sessionSecret),FfiConverterString.lower(path),FfiConverterData.lower(content)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypePubkyError_lift
+        )
+}
+public func pubkySignIn(secretKeyHex: String)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_pubky_sign_in(FfiConverterString.lower(secretKeyHex)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypePubkyError_lift
+        )
+}
+public func pubkySignUp(secretKeyHex: String, homeserverPublicKeyZ32: String, signupCode: String?)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_pubky_sign_up(FfiConverterString.lower(secretKeyHex),FfiConverterString.lower(homeserverPublicKeyZ32),FfiConverterOptionString.lower(signupCode)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypePubkyError_lift
         )
 }
 /**
@@ -20341,6 +20473,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_derive_private_key() != 25155) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_derive_pubky_secret_key() != 36989) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -20354,6 +20489,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_fetch_pubky_file() != 24890) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_fetch_pubky_file_string() != 47799) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_fetch_pubky_profile() != 19709) {
@@ -20483,6 +20621,27 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret() != 47481) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_pubky_put_with_secret_key() != 36562) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_pubky_session_delete() != 39070) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_pubky_session_list() != 7225) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_pubky_session_put() != 25203) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_pubky_sign_in() != 26706) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_pubky_sign_up() != 61692) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries() != 5324) {

@@ -1,4 +1,5 @@
 #[derive(uniffi::Error, thiserror::Error, Debug)]
+#[non_exhaustive]
 pub enum PubkyError {
     #[error("Invalid capabilities: {reason}")]
     InvalidCapabilities { reason: String },
@@ -20,4 +21,10 @@ pub enum PubkyError {
 
     #[error("Profile parse failed: {reason}")]
     ProfileParseFailed { reason: String },
+
+    #[error("Key error: {reason}")]
+    KeyError { reason: String },
+
+    #[error("Write failed: {reason}")]
+    WriteFailed { reason: String },
 }
