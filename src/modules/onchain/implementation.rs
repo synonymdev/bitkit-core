@@ -7,8 +7,8 @@ use bdk::bitcoin::bip32::ExtendedPubKey;
 use bdk::bitcoin::consensus::deserialize;
 use bdk::bitcoin::psbt::PartiallySignedTransaction as Psbt;
 use bdk::bitcoin::{
-    Address as BdkAddress, Network as BdkNetwork, OutPoint, ScriptBuf, Sequence, Transaction, Txid,
-    TxIn, TxOut, Witness,
+    Address as BdkAddress, Network as BdkNetwork, OutPoint, ScriptBuf, Sequence, Transaction, TxIn,
+    TxOut, Txid, Witness,
 };
 use bdk::blockchain::ElectrumBlockchain;
 use bdk::database::MemoryDatabase;
@@ -57,7 +57,7 @@ impl BitcoinAddressValidator {
             Err(e) => return Err(e),
         };
         match verify_network(unchecked_addr, expected_network.into()) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => return Err(e),
         }
         let address_type = get_address_type(address)?;
@@ -71,16 +71,14 @@ impl BitcoinAddressValidator {
         })
     }
 
-    pub fn genenerate_mnemonic(
-        word_count: Option<WordCount>,
-    ) -> Result<String, AddressError> {
+    pub fn genenerate_mnemonic(word_count: Option<WordCount>) -> Result<String, AddressError> {
         let external_word_count = word_count.map(|wc| wc.into());
         let mnemonic = bitcoin_address_generator::generate_mnemonic(external_word_count, None);
         match mnemonic {
             Ok(mnemonic) => {
                 println!("✓ Generated mnemonic: {}", mnemonic);
                 Ok(mnemonic)
-            },
+            }
             Err(e) => {
                 println!("✗ Failed to generate mnemonic: {:?}", e);
                 Err(AddressError::MnemonicGenerationFailed)
@@ -135,10 +133,10 @@ impl BitcoinAddressValidator {
             network.into(),
             bip39_passphrase,
         )
-            .map_err(|e| {
-                println!("✗ Failed to derive address: {:?}", e);
-                AddressError::AddressDerivationFailed
-            })?;
+        .map_err(|e| {
+            println!("✗ Failed to derive address: {:?}", e);
+            AddressError::AddressDerivationFailed
+        })?;
 
         Ok(address.into())
     }
@@ -161,10 +159,10 @@ impl BitcoinAddressValidator {
             start_index,
             count,
         )
-            .map_err(|e| {
-                println!("✗ Failed to derive addresses: {:?}", e);
-                AddressError::AddressDerivationFailed
-            })?;
+        .map_err(|e| {
+            println!("✗ Failed to derive addresses: {:?}", e);
+            AddressError::AddressDerivationFailed
+        })?;
 
         Ok(addresses.into())
     }
@@ -181,10 +179,10 @@ impl BitcoinAddressValidator {
             network.into(),
             bip39_passphrase,
         )
-            .map_err(|e| {
-                println!("✗ Failed to derive private key: {:?}", e);
-                AddressError::AddressDerivationFailed
-            })?;
+        .map_err(|e| {
+            println!("✗ Failed to derive private key: {:?}", e);
+            AddressError::AddressDerivationFailed
+        })?;
 
         Ok(private_key)
     }
@@ -500,7 +498,9 @@ impl BitcoinAddressValidator {
             )));
         }
 
-        let total_input: u64 = psbt.inputs.iter()
+        let total_input: u64 = psbt
+            .inputs
+            .iter()
             .filter_map(|i| i.witness_utxo.as_ref())
             .map(|u| u.value)
             .sum();
@@ -568,9 +568,10 @@ pub async fn broadcast_raw_tx(
     })?;
 
     // Validate that the bytes are a valid transaction
-    let _tx: Transaction = deserialize(&tx_bytes).map_err(|e| BroadcastError::InvalidTransaction {
-        error_details: format!("Invalid transaction data: {}", e),
-    })?;
+    let _tx: Transaction =
+        deserialize(&tx_bytes).map_err(|e| BroadcastError::InvalidTransaction {
+            error_details: format!("Invalid transaction data: {}", e),
+        })?;
 
     let electrum_url_owned = electrum_url.to_string();
 
@@ -602,9 +603,11 @@ pub async fn broadcast_raw_tx(
 /// Detect the account type from an extended public key prefix.
 /// `xpub`/`tpub` default to `Legacy`; use `account_type_override` for other script types.
 pub fn detect_account_type(extended_key: &str) -> Result<AccountType, AccountInfoError> {
-    let prefix = extended_key.get(..4).ok_or(AccountInfoError::InvalidExtendedKey {
-        error_details: "Key too short".to_string(),
-    })?;
+    let prefix = extended_key
+        .get(..4)
+        .ok_or(AccountInfoError::InvalidExtendedKey {
+            error_details: "Key too short".to_string(),
+        })?;
     match prefix {
         "xpub" | "tpub" => Ok(AccountType::Legacy),
         "ypub" | "upub" => Ok(AccountType::WrappedSegwit),
@@ -617,9 +620,11 @@ pub fn detect_account_type(extended_key: &str) -> Result<AccountType, AccountInf
 
 /// Detect network from an extended public key prefix.
 pub fn detect_network_from_key(extended_key: &str) -> Result<BdkNetwork, AccountInfoError> {
-    let prefix = extended_key.get(..4).ok_or(AccountInfoError::InvalidExtendedKey {
-        error_details: "Key too short".to_string(),
-    })?;
+    let prefix = extended_key
+        .get(..4)
+        .ok_or(AccountInfoError::InvalidExtendedKey {
+            error_details: "Key too short".to_string(),
+        })?;
     match prefix {
         "xpub" | "ypub" | "zpub" => Ok(BdkNetwork::Bitcoin),
         "tpub" | "upub" | "vpub" => Ok(BdkNetwork::Testnet),
@@ -632,11 +637,13 @@ pub fn detect_network_from_key(extended_key: &str) -> Result<BdkNetwork, Account
 /// Convert ypub/zpub/upub/vpub to xpub/tpub by swapping the version bytes.
 /// BDK only understands standard xpub/tpub format.
 pub fn normalize_extended_key(extended_key: &str) -> Result<String, AccountInfoError> {
-    let prefix = extended_key.get(..4).ok_or(AccountInfoError::InvalidExtendedKey {
-        error_details: "Key too short".to_string(),
-    })?;
+    let prefix = extended_key
+        .get(..4)
+        .ok_or(AccountInfoError::InvalidExtendedKey {
+            error_details: "Key too short".to_string(),
+        })?;
     let target_version: Option<[u8; 4]> = match prefix {
-        "xpub" | "tpub" => None, // Already standard format
+        "xpub" | "tpub" => None,                           // Already standard format
         "ypub" | "zpub" => Some([0x04, 0x88, 0xB2, 0x1E]), // Convert to xpub
         "upub" | "vpub" => Some([0x04, 0x35, 0x87, 0xCF]), // Convert to tpub
         _ => {
@@ -703,7 +710,11 @@ pub fn build_descriptors(
 }
 
 /// Determine the BIP derivation base path.
-pub fn derive_base_path(account_type: AccountType, network: BdkNetwork, account_index: u32) -> String {
+pub fn derive_base_path(
+    account_type: AccountType,
+    network: BdkNetwork,
+    account_index: u32,
+) -> String {
     let purpose = match account_type {
         AccountType::Legacy => 44,
         AccountType::WrappedSegwit => 49,
@@ -790,8 +801,7 @@ pub(crate) fn resolve_wallet_setup(
     };
 
     let derivation = base_path.strip_prefix("m/").unwrap_or(&base_path);
-    let key_origin: Option<(&str, &str)> =
-        normalized_fp.as_deref().map(|fp| (fp, derivation));
+    let key_origin: Option<(&str, &str)> = normalized_fp.as_deref().map(|fp| (fp, derivation));
     let (external_desc, internal_desc) =
         build_descriptors(&normalized_key, account_type, key_origin);
 
@@ -838,15 +848,13 @@ pub(crate) fn connect_and_get_tip(
     electrum_url: &str,
 ) -> Result<(bdk::electrum_client::Client, u32), AccountInfoError> {
     let client = connect_electrum(electrum_url)?;
-    let header = client.block_headers_subscribe().map_err(|e| {
-        AccountInfoError::ElectrumError {
+    let header = client
+        .block_headers_subscribe()
+        .map_err(|e| AccountInfoError::ElectrumError {
             error_details: format!("Failed to get block height: {}", e),
-        }
-    })?;
-    let tip_height = u32::try_from(header.height).map_err(|_| {
-        AccountInfoError::ElectrumError {
-            error_details: format!("Invalid block height: {}", header.height),
-        }
+        })?;
+    let tip_height = u32::try_from(header.height).map_err(|_| AccountInfoError::ElectrumError {
+        error_details: format!("Invalid block height: {}", header.height),
     })?;
     Ok((client, tip_height))
 }
@@ -984,9 +992,11 @@ pub async fn get_account_info(
         }
 
         // Extract UTXOs
-        let utxos = wallet.list_unspent().map_err(|e| AccountInfoError::WalletError {
-            error_details: format!("Failed to list UTXOs: {}", e),
-        })?;
+        let utxos = wallet
+            .list_unspent()
+            .map_err(|e| AccountInfoError::WalletError {
+                error_details: format!("Failed to list UTXOs: {}", e),
+            })?;
 
         // Get transaction details for confirmation info and coinbase detection
         let transactions =
@@ -1006,7 +1016,8 @@ pub async fn get_account_info(
                 None => {
                     log::warn!(
                         "No derivation path found for UTXO {}:{}",
-                        utxo.outpoint.txid, utxo.outpoint.vout,
+                        utxo.outpoint.txid,
+                        utxo.outpoint.vout,
                     );
                     String::new()
                 }
@@ -1017,9 +1028,7 @@ pub async fn get_account_info(
                 .unwrap_or_default();
 
             // Get confirmation info and coinbase status from transaction details
-            let tx_detail = transactions
-                .iter()
-                .find(|tx| tx.txid == utxo.outpoint.txid);
+            let tx_detail = transactions.iter().find(|tx| tx.txid == utxo.outpoint.txid);
 
             let (block_height, confirmations) = tx_detail
                 .and_then(|tx| tx.confirmation_time.as_ref())
@@ -1112,9 +1121,11 @@ pub async fn get_transaction_history(
         let wallet = create_and_sync_wallet(&setup, client)?;
 
         // Balance
-        let bdk_balance = wallet.get_balance().map_err(|e| AccountInfoError::WalletError {
-            error_details: format!("Failed to get balance: {}", e),
-        })?;
+        let bdk_balance = wallet
+            .get_balance()
+            .map_err(|e| AccountInfoError::WalletError {
+                error_details: format!("Failed to get balance: {}", e),
+            })?;
         let balance: WalletBalance = bdk_balance.into();
 
         // Transaction history
@@ -1129,14 +1140,13 @@ pub async fn get_transaction_history(
             .map(|tx| {
                 let (direction, amount, net) = classify_tx(tx.sent, tx.received, tx.fee);
 
-                let (block_height, timestamp, confirmations) =
-                    match tx.confirmation_time.as_ref() {
-                        Some(conf) => {
-                            let confs = tip_height.saturating_sub(conf.height) + 1;
-                            (Some(conf.height), Some(conf.timestamp), confs)
-                        }
-                        None => (None, None, 0),
-                    };
+                let (block_height, timestamp, confirmations) = match tx.confirmation_time.as_ref() {
+                    Some(conf) => {
+                        let confs = tip_height.saturating_sub(conf.height) + 1;
+                        (Some(conf.height), Some(conf.timestamp), confs)
+                    }
+                    None => (None, None, 0),
+                };
 
                 HistoryTransaction {
                     txid: tx.txid.to_string(),
@@ -1154,13 +1164,11 @@ pub async fn get_transaction_history(
             .collect();
 
         // Sort: unconfirmed first, then by timestamp descending
-        history.sort_by(|a, b| {
-            match (a.timestamp, b.timestamp) {
-                (None, Some(_)) => std::cmp::Ordering::Less,
-                (Some(_), None) => std::cmp::Ordering::Greater,
-                (None, None) => std::cmp::Ordering::Equal,
-                (Some(a_ts), Some(b_ts)) => b_ts.cmp(&a_ts),
-            }
+        history.sort_by(|a, b| match (a.timestamp, b.timestamp) {
+            (None, Some(_)) => std::cmp::Ordering::Less,
+            (Some(_), None) => std::cmp::Ordering::Greater,
+            (None, None) => std::cmp::Ordering::Equal,
+            (Some(a_ts), Some(b_ts)) => b_ts.cmp(&a_ts),
         });
 
         let tx_count = u32::try_from(history.len()).unwrap_or(u32::MAX);
@@ -1215,12 +1223,11 @@ pub async fn get_transaction_detail(
                 error_details: format!("Failed to list transactions: {}", e),
             })?;
 
-        let tx = txs
-            .iter()
-            .find(|t| t.txid == target_txid)
-            .ok_or_else(|| AccountInfoError::TransactionNotFound {
+        let tx = txs.iter().find(|t| t.txid == target_txid).ok_or_else(|| {
+            AccountInfoError::TransactionNotFound {
                 error_details: format!("Transaction {} not found in wallet", target_txid),
-            })?;
+            }
+        })?;
 
         // Summary fields
         let (direction, amount, net) = classify_tx(tx.sent, tx.received, tx.fee);
@@ -1234,14 +1241,12 @@ pub async fn get_transaction_detail(
         };
 
         // Raw transaction details
-        let raw_tx = tx.transaction.as_ref().ok_or_else(|| {
-            AccountInfoError::WalletError {
-                error_details: format!(
-                    "Raw transaction data not available for {}",
-                    target_txid
-                ),
-            }
-        })?;
+        let raw_tx = tx
+            .transaction
+            .as_ref()
+            .ok_or_else(|| AccountInfoError::WalletError {
+                error_details: format!("Raw transaction data not available for {}", target_txid),
+            })?;
 
         let inputs: Vec<TxDetailInput> = raw_tx
             .input
@@ -1322,10 +1327,9 @@ pub async fn get_address_info(
     network: Option<OnchainNetwork>,
 ) -> Result<SingleAddressInfoResult, AccountInfoError> {
     // Parse with BDK's bitcoin crate for script_pubkey generation
-    let bdk_addr = BdkAddress::from_str(address)
-        .map_err(|e| AccountInfoError::InvalidAddress {
-            error_details: format!("Invalid address: {}", e),
-        })?;
+    let bdk_addr = BdkAddress::from_str(address).map_err(|e| AccountInfoError::InvalidAddress {
+        error_details: format!("Invalid address: {}", e),
+    })?;
     let bdk_addr = match network {
         Some(net) => {
             let bdk_network = onchain_to_bdk_network(net);
@@ -1341,70 +1345,70 @@ pub async fn get_address_info(
     let electrum_url_owned = electrum_url.to_string();
     let addr_str = address.to_string();
 
-    let result = tokio::task::spawn_blocking(move || {
-        let (client, tip_height) = connect_and_get_tip(&electrum_url_owned)?;
+    let result =
+        tokio::task::spawn_blocking(move || {
+            let (client, tip_height) = connect_and_get_tip(&electrum_url_owned)?;
 
-        let script = bdk_addr.script_pubkey();
+            let script = bdk_addr.script_pubkey();
 
-        // Get UTXOs for this address
-        let utxos = client.script_list_unspent(&script).map_err(|e| {
-            AccountInfoError::ElectrumError {
-                error_details: format!("Failed to list UTXOs: {}", e),
-            }
-        })?;
+            // Get UTXOs for this address
+            let utxos = client.script_list_unspent(&script).map_err(|e| {
+                AccountInfoError::ElectrumError {
+                    error_details: format!("Failed to list UTXOs: {}", e),
+                }
+            })?;
 
-        // Get history for transfer count
-        let history = client.script_get_history(&script).map_err(|e| {
-            AccountInfoError::ElectrumError {
-                error_details: format!("Failed to get history: {}", e),
-            }
-        })?;
+            // Get history for transfer count
+            let history = client.script_get_history(&script).map_err(|e| {
+                AccountInfoError::ElectrumError {
+                    error_details: format!("Failed to get history: {}", e),
+                }
+            })?;
 
-        let account_utxos: Vec<AccountUtxo> = utxos
-            .iter()
-            .map(|utxo| {
-                let height = u32::try_from(utxo.height).unwrap_or(0);
-                let confirmations = if height > 0 {
-                    tip_height.saturating_sub(height) + 1
-                } else {
-                    0
-                };
+            let account_utxos: Vec<AccountUtxo> = utxos
+                .iter()
+                .map(|utxo| {
+                    let height = u32::try_from(utxo.height).unwrap_or(0);
+                    let confirmations = if height > 0 {
+                        tip_height.saturating_sub(height) + 1
+                    } else {
+                        0
+                    };
 
-                let vout = u32::try_from(utxo.tx_pos).map_err(|_| {
-                    AccountInfoError::WalletError {
-                        error_details: format!("Output index {} exceeds u32", utxo.tx_pos),
-                    }
-                })?;
+                    let vout =
+                        u32::try_from(utxo.tx_pos).map_err(|_| AccountInfoError::WalletError {
+                            error_details: format!("Output index {} exceeds u32", utxo.tx_pos),
+                        })?;
 
-                Ok(AccountUtxo {
-                    txid: utxo.tx_hash.to_string(),
-                    vout,
-                    amount: utxo.value,
-                    block_height: height,
-                    address: addr_str.clone(),
-                    path: String::new(), // No derivation path for single address
-                    confirmations,
-                    coinbase: false,
-                    own: true,
-                    required: None,
+                    Ok(AccountUtxo {
+                        txid: utxo.tx_hash.to_string(),
+                        vout,
+                        amount: utxo.value,
+                        block_height: height,
+                        address: addr_str.clone(),
+                        path: String::new(), // No derivation path for single address
+                        confirmations,
+                        coinbase: false,
+                        own: true,
+                        required: None,
+                    })
                 })
+                .collect::<Result<Vec<_>, AccountInfoError>>()?;
+
+            let balance: u64 = utxos.iter().map(|u| u.value).sum();
+
+            Ok::<_, AccountInfoError>(SingleAddressInfoResult {
+                address: addr_str,
+                balance,
+                utxos: account_utxos,
+                transfers: u32::try_from(history.len()).unwrap_or(u32::MAX),
+                block_height: tip_height,
             })
-            .collect::<Result<Vec<_>, AccountInfoError>>()?;
-
-        let balance: u64 = utxos.iter().map(|u| u.value).sum();
-
-        Ok::<_, AccountInfoError>(SingleAddressInfoResult {
-            address: addr_str,
-            balance,
-            utxos: account_utxos,
-            transfers: u32::try_from(history.len()).unwrap_or(u32::MAX),
-            block_height: tip_height,
         })
-    })
-    .await
-    .map_err(|e| AccountInfoError::SyncError {
-        error_details: format!("Task failed: {}", e),
-    })??;
+        .await
+        .map_err(|e| AccountInfoError::SyncError {
+            error_details: format!("Task failed: {}", e),
+        })??;
 
     Ok(result)
 }
@@ -1426,15 +1430,19 @@ fn determine_network(address: &str) -> Result<Network, AddressError> {
         s if s.starts_with("1") || s.starts_with("3") || s.starts_with("bc1") => {
             println!("✓ Determined network: Bitcoin");
             Ok(Network::Bitcoin)
-        },
-        s if s.starts_with("2") || s.starts_with("tb1") || s.starts_with("m") || s.starts_with("n") => {
+        }
+        s if s.starts_with("2")
+            || s.starts_with("tb1")
+            || s.starts_with("m")
+            || s.starts_with("n") =>
+        {
             println!("✓ Determined network: Testnet");
             Ok(Network::Testnet)
-        },
+        }
         s if s.starts_with("bcrt1") => {
             println!("✓ Determined network: Regtest");
             Ok(Network::Regtest)
-        },
+        }
         _ => {
             println!("✗ Could not determine network");
             Err(AddressError::InvalidNetwork)
@@ -1442,10 +1450,16 @@ fn determine_network(address: &str) -> Result<Network, AddressError> {
     }
 }
 
-fn verify_network(unchecked_addr: Address<NetworkUnchecked>, expected_network: Network)
-                  -> Result<Address, AddressError> {
-    println!("Attempting to verify address for network: {:?}", expected_network);
-    unchecked_addr.require_network(expected_network)
+fn verify_network(
+    unchecked_addr: Address<NetworkUnchecked>,
+    expected_network: Network,
+) -> Result<Address, AddressError> {
+    println!(
+        "Attempting to verify address for network: {:?}",
+        expected_network
+    );
+    unchecked_addr
+        .require_network(expected_network)
         .map_err(|e| {
             println!("✗ Network verification failed: {:?}", e);
             AddressError::InvalidNetwork
@@ -1459,15 +1473,21 @@ fn verify_network(unchecked_addr: Address<NetworkUnchecked>, expected_network: N
 fn get_address_type(address: &str) -> Result<AddressType, AddressError> {
     let address_type = match address {
         // Legacy addresses (P2PKH)
-        s if s.starts_with("1") || s.starts_with("m") || s.starts_with("n") => Some(AddressType::P2PKH),
+        s if s.starts_with("1") || s.starts_with("m") || s.starts_with("n") => {
+            Some(AddressType::P2PKH)
+        }
         // SegWit addresses (P2SH)
         s if s.starts_with("3") || s.starts_with("2") => Some(AddressType::P2SH),
         // Taproot addresses (P2TR)
         s if s.starts_with("bc1p") || s.starts_with("tb1p") => Some(AddressType::P2TR),
         // Native SegWit addresses (P2WPKH)
-        s if (s.starts_with("bc1q") || s.starts_with("tb1q")) && s.len() == 42 => Some(AddressType::P2WPKH),
+        s if (s.starts_with("bc1q") || s.starts_with("tb1q")) && s.len() == 42 => {
+            Some(AddressType::P2WPKH)
+        }
         // Native SegWit Script addresses (P2WSH)
-        s if (s.starts_with("bc1q") || s.starts_with("tb1q")) && s.len() == 62 => Some(AddressType::P2WSH),
+        s if (s.starts_with("bc1q") || s.starts_with("tb1q")) && s.len() == 62 => {
+            Some(AddressType::P2WSH)
+        }
         // Regtest addresses
         s if s.starts_with("bcrt1") => {
             if s.len() == 42 {
@@ -1477,15 +1497,17 @@ fn get_address_type(address: &str) -> Result<AddressType, AddressError> {
             } else {
                 Some(AddressType::Unknown)
             }
-        },
-        _ => Some(AddressType::Unknown)
+        }
+        _ => Some(AddressType::Unknown),
     };
 
-    address_type.map(|t| {
-        println!("✓ Determined address type: {:?}", t);
-        t
-    }).ok_or_else(|| {
-        println!("✗ Could not determine address type");
-        AddressError::InvalidAddress
-    })
+    address_type
+        .map(|t| {
+            println!("✓ Determined address type: {:?}", t);
+            t
+        })
+        .ok_or_else(|| {
+            println!("✗ Could not determine address type");
+            AddressError::InvalidAddress
+        })
 }

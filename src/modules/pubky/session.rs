@@ -1,4 +1,4 @@
-use pubky::{PublicKey, PubkySession};
+use pubky::{PubkySession, PublicKey};
 
 use super::errors::PubkyError;
 use super::keys::keypair_from_hex;
@@ -12,8 +12,10 @@ pub async fn pubky_sign_up(
 ) -> Result<String, PubkyError> {
     let kp = keypair_from_hex(&secret_key_hex)?;
 
-    let homeserver_pk = PublicKey::try_from_z32(&homeserver_public_key_z32)
-        .map_err(|e| PubkyError::KeyError { reason: e.to_string() })?;
+    let homeserver_pk =
+        PublicKey::try_from_z32(&homeserver_public_key_z32).map_err(|e| PubkyError::KeyError {
+            reason: e.to_string(),
+        })?;
 
     let pubky = get_pubky()?;
     let signer = pubky.signer(kp);
@@ -21,7 +23,9 @@ pub async fn pubky_sign_up(
     let session = signer
         .signup(&homeserver_pk, signup_code.as_deref())
         .await
-        .map_err(|e| PubkyError::AuthFailed { reason: e.to_string() })?;
+        .map_err(|e| PubkyError::AuthFailed {
+            reason: e.to_string(),
+        })?;
 
     Ok(session.export_secret())
 }
@@ -33,10 +37,9 @@ pub async fn pubky_sign_in(secret_key_hex: String) -> Result<String, PubkyError>
     let pubky = get_pubky()?;
     let signer = pubky.signer(kp);
 
-    let session = signer
-        .signin()
-        .await
-        .map_err(|e| PubkyError::AuthFailed { reason: e.to_string() })?;
+    let session = signer.signin().await.map_err(|e| PubkyError::AuthFailed {
+        reason: e.to_string(),
+    })?;
 
     Ok(session.export_secret())
 }
@@ -53,23 +56,24 @@ pub async fn pubky_session_put(
         .storage()
         .put(path.as_str(), content)
         .await
-        .map_err(|e| PubkyError::WriteFailed { reason: e.to_string() })?;
+        .map_err(|e| PubkyError::WriteFailed {
+            reason: e.to_string(),
+        })?;
 
     Ok(())
 }
 
 /// Delete a resource at path on the user's homeserver.
-pub async fn pubky_session_delete(
-    session_secret: String,
-    path: String,
-) -> Result<(), PubkyError> {
+pub async fn pubky_session_delete(session_secret: String, path: String) -> Result<(), PubkyError> {
     let session = import_session(&session_secret).await?;
 
     session
         .storage()
         .delete(path.as_str())
         .await
-        .map_err(|e| PubkyError::WriteFailed { reason: format!("delete failed: {e}") })?;
+        .map_err(|e| PubkyError::WriteFailed {
+            reason: format!("delete failed: {e}"),
+        })?;
 
     Ok(())
 }
@@ -85,16 +89,17 @@ pub async fn pubky_put_with_secret_key(
     let pubky = get_pubky()?;
     let signer = pubky.signer(kp);
 
-    let session = signer
-        .signin()
-        .await
-        .map_err(|e| PubkyError::AuthFailed { reason: e.to_string() })?;
+    let session = signer.signin().await.map_err(|e| PubkyError::AuthFailed {
+        reason: e.to_string(),
+    })?;
 
     session
         .storage()
         .put(path.as_str(), content)
         .await
-        .map_err(|e| PubkyError::WriteFailed { reason: e.to_string() })?;
+        .map_err(|e| PubkyError::WriteFailed {
+            reason: e.to_string(),
+        })?;
 
     Ok(())
 }
@@ -109,10 +114,14 @@ pub async fn pubky_session_list(
     let entries = session
         .storage()
         .list(dir_path.as_str())
-        .map_err(|e| PubkyError::FetchFailed { reason: e.to_string() })?
+        .map_err(|e| PubkyError::FetchFailed {
+            reason: e.to_string(),
+        })?
         .send()
         .await
-        .map_err(|e| PubkyError::FetchFailed { reason: e.to_string() })?;
+        .map_err(|e| PubkyError::FetchFailed {
+            reason: e.to_string(),
+        })?;
 
     Ok(entries.iter().map(|e| e.to_pubky_url()).collect())
 }
@@ -121,5 +130,7 @@ pub async fn pubky_session_list(
 async fn import_session(session_secret: &str) -> Result<PubkySession, PubkyError> {
     PubkySession::import_secret(session_secret, None)
         .await
-        .map_err(|e| PubkyError::AuthFailed { reason: e.to_string() })
+        .map_err(|e| PubkyError::AuthFailed {
+            reason: e.to_string(),
+        })
 }

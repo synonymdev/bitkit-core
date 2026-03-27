@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
-use thiserror::Error;
 use crate::activity::ActivityError;
 use crate::modules::blocktank::BlocktankError;
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 #[derive(Debug, uniffi::Enum)]
 pub enum Activity {
@@ -232,25 +232,19 @@ pub enum SortDirection {
 #[non_exhaustive]
 pub enum DbError {
     #[error("DB Activity Error: {error_details}")]
-    DbActivityError {
-        error_details: ActivityError
-    },
+    DbActivityError { error_details: ActivityError },
 
     #[error("DB Blocktank Error: {error_details}")]
-    DbBlocktankError {
-        error_details: BlocktankError
-    },
+    DbBlocktankError { error_details: BlocktankError },
 
     #[error("Initialization Error: {error_details}")]
-    InitializationError {
-        error_details: String
-    },
+    InitializationError { error_details: String },
 }
 
 impl From<ActivityError> for DbError {
     fn from(error: ActivityError) -> Self {
         DbError::DbActivityError {
-            error_details: error
+            error_details: error,
         }
     }
 }
@@ -258,7 +252,7 @@ impl From<ActivityError> for DbError {
 impl From<BlocktankError> for DbError {
     fn from(error: BlocktankError) -> Self {
         DbError::DbBlocktankError {
-            error_details: error
+            error_details: error,
         }
     }
 }

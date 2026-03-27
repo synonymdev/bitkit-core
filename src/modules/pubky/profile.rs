@@ -36,9 +36,9 @@ impl From<PubkyAppUser> for PubkyProfile {
             name: user.name,
             bio: user.bio,
             image: user.image,
-            links: user.links.map(|links| {
-                links.into_iter().map(PubkyProfileLink::from).collect()
-            }),
+            links: user
+                .links
+                .map(|links| links.into_iter().map(PubkyProfileLink::from).collect()),
             status: user.status,
         }
     }
@@ -54,25 +54,27 @@ pub async fn fetch_pubky_profile(public_key: String) -> Result<PubkyProfile, Pub
     let pubky = get_pubky()?;
     let addr = format!("{public_key}{PROFILE_PATH}");
 
-    let response = pubky
-        .public_storage()
-        .get(&addr)
-        .await
-        .map_err(|e| {
-            if is_not_found(&e) {
-                PubkyError::ProfileNotFound
-            } else {
-                PubkyError::FetchFailed { reason: e.to_string() }
+    let response = pubky.public_storage().get(&addr).await.map_err(|e| {
+        if is_not_found(&e) {
+            PubkyError::ProfileNotFound
+        } else {
+            PubkyError::FetchFailed {
+                reason: e.to_string(),
             }
-        })?;
+        }
+    })?;
 
     let bytes = response
         .bytes()
         .await
-        .map_err(|e| PubkyError::FetchFailed { reason: e.to_string() })?;
+        .map_err(|e| PubkyError::FetchFailed {
+            reason: e.to_string(),
+        })?;
 
-    let user: PubkyAppUser = serde_json::from_slice(&bytes)
-        .map_err(|e| PubkyError::ProfileParseFailed { reason: e.to_string() })?;
+    let user: PubkyAppUser =
+        serde_json::from_slice(&bytes).map_err(|e| PubkyError::ProfileParseFailed {
+            reason: e.to_string(),
+        })?;
 
     Ok(PubkyProfile::from(user))
 }
@@ -83,14 +85,18 @@ pub async fn fetch_pubky_contacts(public_key: String) -> Result<Vec<String>, Pub
     let addr = format!("{public_key}{FOLLOWS_PATH}");
     let storage = pubky.public_storage();
 
-    let list_builder = storage
-        .list(&addr)
-        .map_err(|e| PubkyError::FetchFailed { reason: e.to_string() })?;
+    let list_builder = storage.list(&addr).map_err(|e| PubkyError::FetchFailed {
+        reason: e.to_string(),
+    })?;
 
     let entries = match list_builder.send().await {
         Ok(entries) => entries,
         Err(e) if is_not_found(&e) => return Ok(Vec::new()),
-        Err(e) => return Err(PubkyError::FetchFailed { reason: e.to_string() }),
+        Err(e) => {
+            return Err(PubkyError::FetchFailed {
+                reason: e.to_string(),
+            })
+        }
     };
 
     let mut contacts = Vec::new();

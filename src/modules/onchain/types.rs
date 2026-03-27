@@ -1,12 +1,11 @@
 use crate::modules::scanner::NetworkType;
+use bitcoin::Network as BitcoinNetwork;
 use bitcoin_address_generator::{
     GetAddressResponse as ExternalGetAddressResponse,
-    GetAddressesResponse as ExternalGetAddressesResponse,
-    WordCount as ExternalWordCount
+    GetAddressesResponse as ExternalGetAddressesResponse, WordCount as ExternalWordCount,
 };
-use bitcoin::Network as BitcoinNetwork;
-use uniffi::{Enum, Record};
 use serde::{Deserialize, Serialize};
+use uniffi::{Enum, Record};
 
 #[derive(Debug, Clone, Copy, Enum)]
 pub enum WordCount {
@@ -23,7 +22,7 @@ pub enum WordCount {
 }
 
 // For GetAddressResponse struct
-#[derive(Debug, Serialize, Deserialize, Clone, Record)]  // Added Record trait
+#[derive(Debug, Serialize, Deserialize, Clone, Record)] // Added Record trait
 pub struct GetAddressResponse {
     /// The generated Bitcoin address as a string
     pub address: String,
@@ -34,7 +33,7 @@ pub struct GetAddressResponse {
 }
 
 // For GetAddressesResponse struct
-#[derive(Debug, Serialize, Deserialize, Clone, Record)]  // Added Record trait
+#[derive(Debug, Serialize, Deserialize, Clone, Record)] // Added Record trait
 pub struct GetAddressesResponse {
     /// Vector of generated Bitcoin addresses
     pub addresses: Vec<GetAddressResponse>,
@@ -77,7 +76,11 @@ impl From<ExternalGetAddressResponse> for GetAddressResponse {
 impl From<ExternalGetAddressesResponse> for GetAddressesResponse {
     fn from(response: ExternalGetAddressesResponse) -> Self {
         Self {
-            addresses: response.addresses.into_iter().map(|addr| addr.into()).collect(),
+            addresses: response
+                .addresses
+                .into_iter()
+                .map(|addr| addr.into())
+                .collect(),
         }
     }
 }
@@ -122,11 +125,11 @@ impl From<Network> for BitcoinNetwork {
 
 #[derive(uniffi::Enum, Debug, PartialEq)]
 pub enum AddressType {
-    P2PKH,    // Legacy
-    P2SH,     // SegWit
-    P2WPKH,   // Native SegWit
-    P2WSH,    // Native SegWit Script
-    P2TR,     // Taproot
+    P2PKH,  // Legacy
+    P2SH,   // SegWit
+    P2WPKH, // Native SegWit
+    P2WSH,  // Native SegWit Script
+    P2TR,   // Taproot
     Unknown,
 }
 
@@ -382,9 +385,7 @@ pub enum ComposeResult {
         total_spent: u64,
     },
     /// Composition failed (e.g. insufficient funds)
-    Error {
-        error: String,
-    },
+    Error { error: String },
 }
 
 // ============================================================================
@@ -409,8 +410,7 @@ pub enum TxDirection {
 ///
 /// Returns `(direction, display_amount, net_value)`.
 pub(crate) fn classify_tx(sent: u64, received: u64, fee: Option<u64>) -> (TxDirection, u64, i64) {
-    let net =
-        (received as i128 - sent as i128).clamp(i64::MIN as i128, i64::MAX as i128) as i64;
+    let net = (received as i128 - sent as i128).clamp(i64::MIN as i128, i64::MAX as i128) as i64;
 
     let direction = if sent > 0 && received > 0 {
         match fee {
@@ -425,7 +425,9 @@ pub(crate) fn classify_tx(sent: u64, received: u64, fee: Option<u64>) -> (TxDire
 
     let amount = match direction {
         TxDirection::Received => received,
-        TxDirection::Sent => sent.saturating_sub(received).saturating_sub(fee.unwrap_or(0)),
+        TxDirection::Sent => sent
+            .saturating_sub(received)
+            .saturating_sub(fee.unwrap_or(0)),
         TxDirection::SelfTransfer => fee.unwrap_or(0),
     };
 

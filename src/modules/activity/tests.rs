@@ -1,8 +1,12 @@
 #[cfg(test)]
 mod tests {
-    use crate::activity::{ActivityDB, OnchainActivity, LightningActivity, PaymentType, PaymentState, Activity, ActivityFilter, ActivityType, SortDirection, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails, TxInput, TxOutput};
-    use std::fs;
+    use crate::activity::{
+        Activity, ActivityDB, ActivityFilter, ActivityTags, ActivityType, ClosedChannelDetails,
+        LightningActivity, OnchainActivity, PaymentState, PaymentType, PreActivityMetadata,
+        SortDirection, TransactionDetails, TxInput, TxOutput,
+    };
     use rand::random;
+    use std::fs;
 
     fn setup() -> (ActivityDB, String) {
         let db_path = format!("test_db_{}.sqlite", random::<u64>());
@@ -74,7 +78,11 @@ mod tests {
         }
     }
 
-    fn create_test_pre_activity_metadata(payment_id: String, _payment_type: ActivityType, tags: Vec<String>) -> PreActivityMetadata {
+    fn create_test_pre_activity_metadata(
+        payment_id: String,
+        _payment_type: ActivityType,
+        tags: Vec<String>,
+    ) -> PreActivityMetadata {
         PreActivityMetadata {
             payment_id,
             tags,
@@ -92,7 +100,10 @@ mod tests {
     #[test]
     fn test_db_initialization() {
         let (db, db_path) = setup();
-        assert!(db.conn.is_autocommit(), "Database should be in autocommit mode");
+        assert!(
+            db.conn.is_autocommit(),
+            "Database should be in autocommit mode"
+        );
         cleanup(&db_path);
     }
 
@@ -102,7 +113,18 @@ mod tests {
         let activity = create_test_onchain_activity();
         assert!(db.insert_onchain_activity(&activity).is_ok());
 
-        let activities = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, None, None).unwrap();
+        let activities = db
+            .get_activities(
+                Some(ActivityFilter::Onchain),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(activities.len(), 1);
         if let Activity::Onchain(retrieved) = &activities[0] {
             assert_eq!(retrieved.id, activity.id);
@@ -123,7 +145,18 @@ mod tests {
         let activity = create_test_lightning_activity();
         assert!(db.insert_lightning_activity(&activity).is_ok());
 
-        let activities = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, None, None).unwrap();
+        let activities = db
+            .get_activities(
+                Some(ActivityFilter::Lightning),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(activities.len(), 1);
         if let Activity::Lightning(retrieved) = &activities[0] {
             assert_eq!(retrieved.id, activity.id);
@@ -147,7 +180,18 @@ mod tests {
         db.insert_onchain_activity(&onchain).unwrap();
         db.insert_lightning_activity(&lightning).unwrap();
 
-        let all_activities = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, None).unwrap();
+        let all_activities = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(all_activities.len(), 2);
 
         // Check ordering by timestamp descending (they have the same timestamp in this test)
@@ -164,7 +208,18 @@ mod tests {
         let activity = create_test_onchain_activity();
         db.insert_onchain_activity(&activity).unwrap();
 
-        let retrieved = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, None, None).unwrap();
+        let retrieved = db
+            .get_activities(
+                Some(ActivityFilter::Onchain),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         if let Activity::Onchain(activity) = &retrieved[0] {
             assert!(activity.created_at.is_some());
             assert!(activity.updated_at.is_some());
@@ -187,7 +242,18 @@ mod tests {
         db.insert_onchain_activity(&activity1).unwrap();
         db_clone.insert_lightning_activity(&activity2).unwrap();
 
-        let all_activities = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, None).unwrap();
+        let all_activities = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(all_activities.len(), 2);
 
         cleanup(&db_path);
@@ -208,7 +274,18 @@ mod tests {
         db.insert_onchain_activity(&onchain2).unwrap();
         db.insert_lightning_activity(&lightning).unwrap();
 
-        let activities = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, None).unwrap();
+        let activities = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         let timestamps: Vec<u64> = activities.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(timestamps, vec![2000, 1500, 1000]);
 
@@ -233,17 +310,61 @@ mod tests {
         }
 
         // Test limits with different filters
-        let all = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, Some(3), None).unwrap();
+        let all = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(3),
+                None,
+            )
+            .unwrap();
         assert_eq!(all.len(), 3);
 
-        let onchain = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, Some(2), None).unwrap();
+        let onchain = db
+            .get_activities(
+                Some(ActivityFilter::Onchain),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(2),
+                None,
+            )
+            .unwrap();
         assert_eq!(onchain.len(), 2);
 
-        let lightning = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, Some(4), None).unwrap();
+        let lightning = db
+            .get_activities(
+                Some(ActivityFilter::Lightning),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(4),
+                None,
+            )
+            .unwrap();
         assert_eq!(lightning.len(), 4);
 
         // Test without limits
-        let all = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, None).unwrap();
+        let all = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(all.len(), 10);
 
         cleanup(&db_path);
@@ -252,16 +373,51 @@ mod tests {
     #[test]
     fn test_zero_limit() {
         let (mut db, db_path) = setup();
-        db.insert_onchain_activity(&create_test_onchain_activity()).unwrap();
-        db.insert_lightning_activity(&create_test_lightning_activity()).unwrap();
+        db.insert_onchain_activity(&create_test_onchain_activity())
+            .unwrap();
+        db.insert_lightning_activity(&create_test_lightning_activity())
+            .unwrap();
 
-        let all = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, Some(0), None).unwrap();
+        let all = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(0),
+                None,
+            )
+            .unwrap();
         assert_eq!(all.len(), 0);
 
-        let onchain = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, Some(0), None).unwrap();
+        let onchain = db
+            .get_activities(
+                Some(ActivityFilter::Onchain),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(0),
+                None,
+            )
+            .unwrap();
         assert_eq!(onchain.len(), 0);
 
-        let lightning = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, Some(0), None).unwrap();
+        let lightning = db
+            .get_activities(
+                Some(ActivityFilter::Lightning),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(0),
+                None,
+            )
+            .unwrap();
         assert_eq!(lightning.len(), 0);
 
         cleanup(&db_path);
@@ -292,7 +448,8 @@ mod tests {
         let tags = vec!["payment".to_string(), "coffee".to_string()];
         db.add_tags(&activity.id, &tags).unwrap();
 
-        db.remove_tags(&activity.id, &vec!["payment".to_string()]).unwrap();
+        db.remove_tags(&activity.id, &vec!["payment".to_string()])
+            .unwrap();
         let remaining_tags = db.get_tags(&activity.id).unwrap();
         assert_eq!(remaining_tags.len(), 1);
         assert_eq!(remaining_tags[0], "coffee");
@@ -311,7 +468,8 @@ mod tests {
         db.insert_lightning_activity(&lightning).unwrap();
 
         db.add_tags(&onchain.id, &["payment".to_string()]).unwrap();
-        db.add_tags(&lightning.id, &["payment".to_string()]).unwrap();
+        db.add_tags(&lightning.id, &["payment".to_string()])
+            .unwrap();
 
         let activities = db.get_activities_by_tag("payment", None, None).unwrap();
         assert_eq!(activities.len(), 2);
@@ -367,7 +525,10 @@ mod tests {
         db.delete_activity_by_id(&activity.id).unwrap();
 
         let tags = db.get_tags(&activity.id).unwrap();
-        assert!(tags.is_empty(), "Tags should be removed after activity deletion");
+        assert!(
+            tags.is_empty(),
+            "Tags should be removed after activity deletion"
+        );
 
         cleanup(&db_path);
     }
@@ -390,7 +551,9 @@ mod tests {
 
         // These operations should fail or return empty results after deletion
         assert!(db.get_activity_by_id(&activity.id).unwrap().is_none());
-        assert!(db.update_onchain_activity_by_id(&activity.id, &activity).is_err());
+        assert!(db
+            .update_onchain_activity_by_id(&activity.id, &activity)
+            .is_err());
         assert!(db.add_tags(&activity.id, &["test".to_string()]).is_err());
 
         cleanup(&db_path);
@@ -410,7 +573,11 @@ mod tests {
         activity.confirm_timestamp = Some(safe_max - 1);
 
         let result = db.insert_onchain_activity(&activity);
-        assert!(result.is_ok(), "Failed to insert activity: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to insert activity: {:?}",
+            result.err()
+        );
 
         let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
         if let Activity::Onchain(retrieved) = retrieved {
@@ -469,7 +636,18 @@ mod tests {
         activity.fee = Some(i64::MAX as u64);
         assert!(db.insert_lightning_activity(&activity).is_ok());
 
-        let activities = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, None, None).unwrap();
+        let activities = db
+            .get_activities(
+                Some(ActivityFilter::Lightning),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(activities.len(), 3);
 
         for act in activities {
@@ -531,7 +709,9 @@ mod tests {
 
         // Use a large but safe value
         activity.value = 1_000_000_000_000;
-        assert!(db.update_onchain_activity_by_id(&activity.id, &activity).is_ok());
+        assert!(db
+            .update_onchain_activity_by_id(&activity.id, &activity)
+            .is_ok());
 
         let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
         if let Activity::Onchain(retrieved) = retrieved {
@@ -673,12 +853,34 @@ mod tests {
         }
 
         // Test ascending order
-        let asc_results = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, Some(SortDirection::Asc)).unwrap();
+        let asc_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(SortDirection::Asc),
+            )
+            .unwrap();
         let asc_timestamps: Vec<u64> = asc_results.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(asc_timestamps, vec![1000, 1001, 1002]);
 
         // Test descending order
-        let desc_results = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, Some(SortDirection::Desc)).unwrap();
+        let desc_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(SortDirection::Desc),
+            )
+            .unwrap();
         let desc_timestamps: Vec<u64> = desc_results.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(desc_timestamps, vec![1002, 1001, 1000]);
 
@@ -705,12 +907,16 @@ mod tests {
         db.add_tags(&onchain2.id, &[tag.clone()]).unwrap();
 
         // Test ascending order
-        let asc_activities = db.get_activities_by_tag(&tag, None, Some(SortDirection::Asc)).unwrap();
+        let asc_activities = db
+            .get_activities_by_tag(&tag, None, Some(SortDirection::Asc))
+            .unwrap();
         let asc_timestamps: Vec<u64> = asc_activities.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(asc_timestamps, vec![1000, 2000]);
 
         // Test descending order
-        let desc_activities = db.get_activities_by_tag(&tag, None, Some(SortDirection::Desc)).unwrap();
+        let desc_activities = db
+            .get_activities_by_tag(&tag, None, Some(SortDirection::Desc))
+            .unwrap();
         let desc_timestamps: Vec<u64> = desc_activities.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(desc_timestamps, vec![2000, 1000]);
 
@@ -730,12 +936,34 @@ mod tests {
         }
 
         // Test ascending order with limit
-        let asc_limited = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, Some(3), Some(SortDirection::Asc)).unwrap();
+        let asc_limited = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(3),
+                Some(SortDirection::Asc),
+            )
+            .unwrap();
         let asc_timestamps: Vec<u64> = asc_limited.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(asc_timestamps, vec![1000, 1001, 1002]);
 
         // Test descending order with limit
-        let desc_limited = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, Some(3), Some(SortDirection::Desc)).unwrap();
+        let desc_limited = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(3),
+                Some(SortDirection::Desc),
+            )
+            .unwrap();
         let desc_timestamps: Vec<u64> = desc_limited.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(desc_timestamps, vec![1004, 1003, 1002]);
 
@@ -762,7 +990,18 @@ mod tests {
         db.insert_onchain_activity(&onchain2).unwrap();
 
         // Test ascending order
-        let asc_results = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, Some(SortDirection::Asc)).unwrap();
+        let asc_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(SortDirection::Asc),
+            )
+            .unwrap();
         let asc_timestamps: Vec<u64> = asc_results.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(asc_timestamps, vec![1000, 2000, 3000]);
 
@@ -789,7 +1028,18 @@ mod tests {
         db.insert_onchain_activity(&onchain2).unwrap();
 
         // Test with None sort direction (should default to Desc)
-        let default_results = db.get_activities(Some(ActivityFilter::All), None, None, None, None, None, None, None).unwrap();
+        let default_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         let timestamps: Vec<u64> = default_results.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(timestamps, vec![2000, 1000]);
 
@@ -812,32 +1062,40 @@ mod tests {
         db.insert_onchain_activity(&received_activity).unwrap();
 
         // Test filtering by sent
-        let sent_activities = db.get_activities(
-            Some(ActivityFilter::All),
-            Some(PaymentType::Sent),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let sent_activities = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                Some(PaymentType::Sent),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(sent_activities.len(), 1);
-        assert!(matches!(sent_activities[0], Activity::Onchain(ref a) if a.tx_type == PaymentType::Sent));
+        assert!(
+            matches!(sent_activities[0], Activity::Onchain(ref a) if a.tx_type == PaymentType::Sent)
+        );
 
         // Test filtering by received
-        let received_activities = db.get_activities(
-            Some(ActivityFilter::All),
-            Some(PaymentType::Received),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let received_activities = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                Some(PaymentType::Received),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(received_activities.len(), 1);
-        assert!(matches!(received_activities[0], Activity::Onchain(ref a) if a.tx_type == PaymentType::Received));
+        assert!(
+            matches!(received_activities[0], Activity::Onchain(ref a) if a.tx_type == PaymentType::Received)
+        );
 
         cleanup(&db_path);
     }
@@ -857,30 +1115,34 @@ mod tests {
         db.insert_lightning_activity(&lightning).unwrap();
 
         // Test address search
-        let address_results = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            None,
-            Some("xyz123".to_string()),
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let address_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                Some("xyz123".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(address_results.len(), 1);
         assert!(matches!(address_results[0], Activity::Onchain(_)));
 
         // Test message search
-        let message_results = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            None,
-            Some("Coffee".to_string()),
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let message_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                Some("Coffee".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(message_results.len(), 1);
         assert!(matches!(message_results[0], Activity::Lightning(_)));
 
@@ -907,42 +1169,48 @@ mod tests {
         db.insert_onchain_activity(&activity3).unwrap();
 
         // Test min date
-        let min_date_results = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            None,
-            None,
-            Some(1500),
-            None,
-            None,
-            None
-        ).unwrap();
+        let min_date_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                Some(1500),
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(min_date_results.len(), 2);
 
         // Test max date
-        let max_date_results = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            None,
-            None,
-            None,
-            Some(2500),
-            None,
-            None
-        ).unwrap();
+        let max_date_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                Some(2500),
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(max_date_results.len(), 2);
 
         // Test date range
-        let range_results = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            None,
-            None,
-            Some(1500),
-            Some(2500),
-            None,
-            None
-        ).unwrap();
+        let range_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                Some(1500),
+                Some(2500),
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(range_results.len(), 1);
         assert_eq!(range_results[0].get_timestamp(), 2000);
 
@@ -969,19 +1237,25 @@ mod tests {
 
         // Add tags
         db.add_tags(&onchain1.id, &["payment".to_string()]).unwrap();
-        db.add_tags(&onchain2.id, &["payment".to_string(), "important".to_string()]).unwrap();
+        db.add_tags(
+            &onchain2.id,
+            &["payment".to_string(), "important".to_string()],
+        )
+        .unwrap();
 
         // Test combined filters
-        let results = db.get_activities(
-            Some(ActivityFilter::Onchain),
-            Some(PaymentType::Received),
-            Some(vec!["payment".to_string()]),
-            Some("abc".to_string()),
-            Some(1500),
-            Some(2500),
-            Some(1),
-            Some(SortDirection::Desc)
-        ).unwrap();
+        let results = db
+            .get_activities(
+                Some(ActivityFilter::Onchain),
+                Some(PaymentType::Received),
+                Some(vec!["payment".to_string()]),
+                Some("abc".to_string()),
+                Some(1500),
+                Some(2500),
+                Some(1),
+                Some(SortDirection::Desc),
+            )
+            .unwrap();
 
         assert_eq!(results.len(), 1);
         if let Activity::Onchain(activity) = &results[0] {
@@ -1004,29 +1278,33 @@ mod tests {
         db.insert_onchain_activity(&activity).unwrap();
 
         // Test empty search string - should return all results, same as if no search was provided
-        let empty_search = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            None,
-            Some("".to_string()),
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let empty_search = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                Some("".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(empty_search.len(), 1); // Changed from 0 to 1
 
         // Test empty tags array
-        let empty_tags = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            Some(vec![]),
-            None,
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let empty_tags = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                Some(vec![]),
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(empty_tags.len(), 1);
 
         cleanup(&db_path);
@@ -1048,34 +1326,41 @@ mod tests {
         db.insert_onchain_activity(&activity3).unwrap();
 
         // Add different tag combinations
-        db.add_tags(&activity1.id, &["tag1".to_string(), "tag2".to_string()]).unwrap();
-        db.add_tags(&activity2.id, &["tag2".to_string(), "tag3".to_string()]).unwrap();
-        db.add_tags(&activity3.id, &["tag1".to_string(), "tag3".to_string()]).unwrap();
+        db.add_tags(&activity1.id, &["tag1".to_string(), "tag2".to_string()])
+            .unwrap();
+        db.add_tags(&activity2.id, &["tag2".to_string(), "tag3".to_string()])
+            .unwrap();
+        db.add_tags(&activity3.id, &["tag1".to_string(), "tag3".to_string()])
+            .unwrap();
 
         // Test filtering with multiple tags (OR condition)
-        let results = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            Some(vec!["tag1".to_string(), "tag2".to_string()]),
-            None,
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                Some(vec!["tag1".to_string(), "tag2".to_string()]),
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(results.len(), 3);
 
         // Test with non-existent tag mixed with existing tags
-        let mixed_results = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            Some(vec!["tag1".to_string(), "nonexistent".to_string()]),
-            None,
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let mixed_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                Some(vec!["tag1".to_string(), "nonexistent".to_string()]),
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(mixed_results.len(), 2);
 
         cleanup(&db_path);
@@ -1089,29 +1374,33 @@ mod tests {
         db.insert_onchain_activity(&activity).unwrap();
 
         // Test max date before min date
-        let invalid_range = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            None,
-            None,
-            Some(2000),
-            Some(1000),
-            None,
-            None
-        ).unwrap();
+        let invalid_range = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                Some(2000),
+                Some(1000),
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(invalid_range.len(), 0);
 
         // Test dates way in the future
-        let future_date = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            None,
-            None,
-            Some(u64::MAX - 1000),
-            None,
-            None,
-            None
-        ).unwrap();
+        let future_date = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                Some(u64::MAX - 1000),
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(future_date.len(), 0);
 
         cleanup(&db_path);
@@ -1126,42 +1415,48 @@ mod tests {
         db.insert_lightning_activity(&lightning).unwrap();
 
         // Test lowercase search
-        let lower_results = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            None,
-            Some("coffee".to_string()),
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let lower_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                Some("coffee".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(lower_results.len(), 1);
 
         // Test uppercase search
-        let upper_results = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            None,
-            Some("COFFEE".to_string()),
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let upper_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                Some("COFFEE".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(upper_results.len(), 1);
 
         // Test mixed case search
-        let mixed_results = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            None,
-            Some("CoFfEe".to_string()),
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let mixed_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                Some("CoFfEe".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(mixed_results.len(), 1);
 
         cleanup(&db_path);
@@ -1177,19 +1472,23 @@ mod tests {
 
         // Add tags from both connections
         db.add_tags(&activity.id, &["tag1".to_string()]).unwrap();
-        db_clone.add_tags(&activity.id, &["tag2".to_string()]).unwrap();
+        db_clone
+            .add_tags(&activity.id, &["tag2".to_string()])
+            .unwrap();
 
         // Verify tags from both connections
-        let results = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            Some(vec!["tag1".to_string(), "tag2".to_string()]),
-            None,
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                Some(vec!["tag1".to_string(), "tag2".to_string()]),
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(results.len(), 1);
 
         cleanup(&db_path);
@@ -1209,29 +1508,33 @@ mod tests {
         db.insert_lightning_activity(&lightning).unwrap();
 
         // Search with special characters
-        let special_results = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            None,
-            Some("%chars".to_string()),
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let special_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                Some("%chars".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(special_results.len(), 1);
 
         // Search with underscore
-        let underscore_results = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            None,
-            Some("_special".to_string()),
-            None,
-            None,
-            None,
-            None
-        ).unwrap();
+        let underscore_results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                Some("_special".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(underscore_results.len(), 1);
 
         cleanup(&db_path);
@@ -1256,30 +1559,34 @@ mod tests {
         }
 
         // Test pagination with combined filters
-        let page1 = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            Some(vec!["even".to_string()]),
-            Some("address".to_string()),
-            Some(1000),
-            None,
-            Some(2),
-            Some(SortDirection::Asc)
-        ).unwrap();
+        let page1 = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                Some(vec!["even".to_string()]),
+                Some("address".to_string()),
+                Some(1000),
+                None,
+                Some(2),
+                Some(SortDirection::Asc),
+            )
+            .unwrap();
         assert_eq!(page1.len(), 2);
 
         // Get next page
         let min_date = page1.last().unwrap().get_timestamp();
-        let page2 = db.get_activities(
-            Some(ActivityFilter::All),
-            None,
-            Some(vec!["even".to_string()]),
-            Some("address".to_string()),
-            Some(min_date + 1),
-            None,
-            Some(2),
-            Some(SortDirection::Asc)
-        ).unwrap();
+        let page2 = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                Some(vec!["even".to_string()]),
+                Some("address".to_string()),
+                Some(min_date + 1),
+                None,
+                Some(2),
+                Some(SortDirection::Asc),
+            )
+            .unwrap();
 
         assert_eq!(page2.len(), 1);
         assert!(page2[0].get_timestamp() > page1[1].get_timestamp());
@@ -1300,8 +1607,13 @@ mod tests {
         db.insert_onchain_activity(&activity2).unwrap();
 
         // Add various tags
-        db.add_tags(&activity1.id, &["payment".to_string(), "coffee".to_string()]).unwrap();
-        db.add_tags(&activity2.id, &["payment".to_string(), "food".to_string()]).unwrap();
+        db.add_tags(
+            &activity1.id,
+            &["payment".to_string(), "coffee".to_string()],
+        )
+        .unwrap();
+        db.add_tags(&activity2.id, &["payment".to_string(), "food".to_string()])
+            .unwrap();
 
         // Get all unique tags
         let all_tags = db.get_all_unique_tags().unwrap();
@@ -1378,12 +1690,10 @@ mod tests {
         db.insert_onchain_activity(&activity).unwrap();
 
         // First upsert
-        let activity_tags = vec![
-            ActivityTags {
-                activity_id: activity.id.clone(),
-                tags: vec!["payment".to_string(), "coffee".to_string()],
-            },
-        ];
+        let activity_tags = vec![ActivityTags {
+            activity_id: activity.id.clone(),
+            tags: vec!["payment".to_string(), "coffee".to_string()],
+        }];
         assert!(db.upsert_tags(&activity_tags).is_ok());
 
         // Second upsert with same tags (should be idempotent)
@@ -1408,12 +1718,14 @@ mod tests {
         db.add_tags(&activity.id, &["payment".to_string()]).unwrap();
 
         // Upsert with additional tags (adds new tags, keeps existing)
-        let activity_tags = vec![
-            ActivityTags {
-                activity_id: activity.id.clone(),
-                tags: vec!["payment".to_string(), "coffee".to_string(), "food".to_string()],
-            },
-        ];
+        let activity_tags = vec![ActivityTags {
+            activity_id: activity.id.clone(),
+            tags: vec![
+                "payment".to_string(),
+                "coffee".to_string(),
+                "food".to_string(),
+            ],
+        }];
         assert!(db.upsert_tags(&activity_tags).is_ok());
 
         // Verify all tags are present (payment was already there, coffee and food are new)
@@ -1435,12 +1747,10 @@ mod tests {
         db.insert_onchain_activity(&activity).unwrap();
 
         // Upsert with empty tags mixed in
-        let activity_tags = vec![
-            ActivityTags {
-                activity_id: activity.id.clone(),
-                tags: vec!["payment".to_string(), "".to_string(), "coffee".to_string()],
-            },
-        ];
+        let activity_tags = vec![ActivityTags {
+            activity_id: activity.id.clone(),
+            tags: vec!["payment".to_string(), "".to_string(), "coffee".to_string()],
+        }];
         assert!(db.upsert_tags(&activity_tags).is_ok());
 
         // Verify only non-empty tags were added
@@ -1522,8 +1832,10 @@ mod tests {
         db.insert_lightning_activity(&lightning).unwrap();
 
         // Add tags
-        db.add_tags(&onchain.id, &["payment".to_string(), "coffee".to_string()]).unwrap();
-        db.add_tags(&lightning.id, &["payment".to_string()]).unwrap();
+        db.add_tags(&onchain.id, &["payment".to_string(), "coffee".to_string()])
+            .unwrap();
+        db.add_tags(&lightning.id, &["payment".to_string()])
+            .unwrap();
 
         // Get all activity tags
         let activity_tags = db.get_all_activities_tags().unwrap();
@@ -1531,14 +1843,20 @@ mod tests {
         assert_eq!(activity_tags.len(), 2);
 
         // Find onchain tags
-        let onchain_tags = activity_tags.iter().find(|at| at.activity_id == onchain.id).unwrap();
+        let onchain_tags = activity_tags
+            .iter()
+            .find(|at| at.activity_id == onchain.id)
+            .unwrap();
         assert_eq!(onchain_tags.activity_id, onchain.id);
         assert_eq!(onchain_tags.tags.len(), 2);
         assert!(onchain_tags.tags.contains(&"payment".to_string()));
         assert!(onchain_tags.tags.contains(&"coffee".to_string()));
 
         // Find lightning tags
-        let lightning_tags = activity_tags.iter().find(|at| at.activity_id == lightning.id).unwrap();
+        let lightning_tags = activity_tags
+            .iter()
+            .find(|at| at.activity_id == lightning.id)
+            .unwrap();
         assert_eq!(lightning_tags.activity_id, lightning.id);
         assert_eq!(lightning_tags.tags.len(), 1);
         assert!(lightning_tags.tags.contains(&"payment".to_string()));
@@ -1566,12 +1884,10 @@ mod tests {
         db.add_tags(&activity.id, &["old_tag".to_string()]).unwrap();
 
         // Upsert with empty tags (with INSERT OR IGNORE, won't clear existing tags)
-        let activity_tags = vec![
-            ActivityTags {
-                activity_id: activity.id.clone(),
-                tags: vec![],
-            },
-        ];
+        let activity_tags = vec![ActivityTags {
+            activity_id: activity.id.clone(),
+            tags: vec![],
+        }];
 
         assert!(db.upsert_tags(&activity_tags).is_ok());
 
@@ -1597,12 +1913,10 @@ mod tests {
         let (mut db, db_path) = setup();
 
         // Test with empty activity_id
-        let activity_tags = vec![
-            ActivityTags {
-                activity_id: "".to_string(),
-                tags: vec!["payment".to_string()],
-            },
-        ];
+        let activity_tags = vec![ActivityTags {
+            activity_id: "".to_string(),
+            tags: vec!["payment".to_string()],
+        }];
 
         assert!(db.upsert_tags(&activity_tags).is_err());
 
@@ -1628,10 +1942,17 @@ mod tests {
         db.insert_lightning_activity(&activity4).unwrap();
 
         // Add tags
-        db.add_tags(&activity1.id, &["payment".to_string()]).unwrap();
-        db.add_tags(&activity2.id, &["invoice".to_string()]).unwrap();
-        db.add_tags(&activity3.id, &["transfer".to_string()]).unwrap();
-        db.add_tags(&activity4.id, &["payment".to_string(), "invoice".to_string()]).unwrap();
+        db.add_tags(&activity1.id, &["payment".to_string()])
+            .unwrap();
+        db.add_tags(&activity2.id, &["invoice".to_string()])
+            .unwrap();
+        db.add_tags(&activity3.id, &["transfer".to_string()])
+            .unwrap();
+        db.add_tags(
+            &activity4.id,
+            &["payment".to_string(), "invoice".to_string()],
+        )
+        .unwrap();
 
         // Insert closed channels
         let mut channel1 = create_test_closed_channel();
@@ -1642,7 +1963,9 @@ mod tests {
         db.upsert_closed_channel(&channel2).unwrap();
 
         // Verify data exists
-        let activities = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
+        let activities = db
+            .get_activities(None, None, None, None, None, None, None, None)
+            .unwrap();
         assert_eq!(activities.len(), 4);
         let tags = db.get_all_unique_tags().unwrap();
         assert_eq!(tags.len(), 3);
@@ -1653,7 +1976,9 @@ mod tests {
         db.wipe_all().unwrap();
 
         // Verify everything is deleted
-        let activities_after = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
+        let activities_after = db
+            .get_activities(None, None, None, None, None, None, None, None)
+            .unwrap();
         assert_eq!(activities_after.len(), 0);
         let tags_after = db.get_all_unique_tags().unwrap();
         assert_eq!(tags_after.len(), 0);
@@ -1663,7 +1988,9 @@ mod tests {
         // Verify we can still insert new data after wipe
         let new_activity = create_test_onchain_activity();
         db.insert_onchain_activity(&new_activity).unwrap();
-        let activities_new = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
+        let activities_new = db
+            .get_activities(None, None, None, None, None, None, None, None)
+            .unwrap();
         assert_eq!(activities_new.len(), 1);
 
         cleanup(&db_path);
@@ -1673,7 +2000,7 @@ mod tests {
     fn test_insert_and_retrieve_closed_channel() {
         let (mut db, db_path) = setup();
         let channel = create_test_closed_channel();
-        
+
         // Insert closed channel
         assert!(db.upsert_closed_channel(&channel).is_ok());
 
@@ -1681,21 +2008,51 @@ mod tests {
         let retrieved = db.get_closed_channel_by_id(&channel.channel_id).unwrap();
         assert!(retrieved.is_some());
         let retrieved_channel = retrieved.unwrap();
-        
+
         assert_eq!(retrieved_channel.channel_id, channel.channel_id);
-        assert_eq!(retrieved_channel.counterparty_node_id, channel.counterparty_node_id);
+        assert_eq!(
+            retrieved_channel.counterparty_node_id,
+            channel.counterparty_node_id
+        );
         assert_eq!(retrieved_channel.funding_txo_txid, channel.funding_txo_txid);
-        assert_eq!(retrieved_channel.funding_txo_index, channel.funding_txo_index);
-        assert_eq!(retrieved_channel.channel_value_sats, channel.channel_value_sats);
+        assert_eq!(
+            retrieved_channel.funding_txo_index,
+            channel.funding_txo_index
+        );
+        assert_eq!(
+            retrieved_channel.channel_value_sats,
+            channel.channel_value_sats
+        );
         assert_eq!(retrieved_channel.closed_at, channel.closed_at);
-        assert_eq!(retrieved_channel.outbound_capacity_msat, channel.outbound_capacity_msat);
-        assert_eq!(retrieved_channel.inbound_capacity_msat, channel.inbound_capacity_msat);
-        assert_eq!(retrieved_channel.counterparty_unspendable_punishment_reserve, channel.counterparty_unspendable_punishment_reserve);
-        assert_eq!(retrieved_channel.unspendable_punishment_reserve, channel.unspendable_punishment_reserve);
-        assert_eq!(retrieved_channel.forwarding_fee_proportional_millionths, channel.forwarding_fee_proportional_millionths);
-        assert_eq!(retrieved_channel.forwarding_fee_base_msat, channel.forwarding_fee_base_msat);
+        assert_eq!(
+            retrieved_channel.outbound_capacity_msat,
+            channel.outbound_capacity_msat
+        );
+        assert_eq!(
+            retrieved_channel.inbound_capacity_msat,
+            channel.inbound_capacity_msat
+        );
+        assert_eq!(
+            retrieved_channel.counterparty_unspendable_punishment_reserve,
+            channel.counterparty_unspendable_punishment_reserve
+        );
+        assert_eq!(
+            retrieved_channel.unspendable_punishment_reserve,
+            channel.unspendable_punishment_reserve
+        );
+        assert_eq!(
+            retrieved_channel.forwarding_fee_proportional_millionths,
+            channel.forwarding_fee_proportional_millionths
+        );
+        assert_eq!(
+            retrieved_channel.forwarding_fee_base_msat,
+            channel.forwarding_fee_base_msat
+        );
         assert_eq!(retrieved_channel.channel_name, channel.channel_name);
-        assert_eq!(retrieved_channel.channel_closure_reason, channel.channel_closure_reason);
+        assert_eq!(
+            retrieved_channel.channel_closure_reason,
+            channel.channel_closure_reason
+        );
 
         cleanup(&db_path);
     }
@@ -1729,7 +2086,9 @@ mod tests {
         assert_eq!(all_channels[2].channel_id, "channel1"); // Oldest (1000)
 
         // Get all channels, ascending sort
-        let all_channels_asc = db.get_all_closed_channels(Some(SortDirection::Asc)).unwrap();
+        let all_channels_asc = db
+            .get_all_closed_channels(Some(SortDirection::Asc))
+            .unwrap();
         assert_eq!(all_channels_asc.len(), 3);
         assert_eq!(all_channels_asc[0].channel_id, "channel1"); // Oldest first
         assert_eq!(all_channels_asc[1].channel_id, "channel3");
@@ -1764,9 +2123,9 @@ mod tests {
     fn test_remove_closed_channel_by_id() {
         let (mut db, db_path) = setup();
         let channel = create_test_closed_channel();
-        
+
         db.upsert_closed_channel(&channel).unwrap();
-        
+
         // Verify it exists
         let retrieved = db.get_closed_channel_by_id(&channel.channel_id).unwrap();
         assert!(retrieved.is_some());
@@ -1844,7 +2203,10 @@ mod tests {
         assert_eq!(all.len(), 5);
         for i in 1..=5 {
             let id = format!("bulk_channel_{}", i);
-            let ch = all.iter().find(|c| c.channel_id == id).expect("missing channel");
+            let ch = all
+                .iter()
+                .find(|c| c.channel_id == id)
+                .expect("missing channel");
             assert_eq!(ch.channel_value_sats, 1_000_000 * i as u64);
         }
 
@@ -1857,11 +2219,20 @@ mod tests {
 
         // Verify updates applied
         let after = db.get_all_closed_channels(None).unwrap();
-        let c1 = after.iter().find(|c| c.channel_id == "bulk_channel_1").unwrap();
+        let c1 = after
+            .iter()
+            .find(|c| c.channel_id == "bulk_channel_1")
+            .unwrap();
         assert_eq!(c1.channel_value_sats, 9_999_999);
-        let c2 = after.iter().find(|c| c.channel_id == "bulk_channel_2").unwrap();
+        let c2 = after
+            .iter()
+            .find(|c| c.channel_id == "bulk_channel_2")
+            .unwrap();
         assert_eq!(c2.channel_name, "Updated Name");
-        let c3 = after.iter().find(|c| c.channel_id == "bulk_channel_3").unwrap();
+        let c3 = after
+            .iter()
+            .find(|c| c.channel_id == "bulk_channel_3")
+            .unwrap();
         assert_eq!(c3.forwarding_fee_base_msat, 777);
 
         cleanup(&db_path);
@@ -1892,7 +2263,18 @@ mod tests {
 
         assert!(db.upsert_onchain_activities(&acts).is_ok());
 
-        let all = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, None, None).unwrap();
+        let all = db
+            .get_activities(
+                Some(ActivityFilter::Onchain),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(all.len(), 5);
 
         let mut updated = acts.clone();
@@ -1902,11 +2284,25 @@ mod tests {
         updated[3].is_boosted = true;
         assert!(db.upsert_onchain_activities(&updated).is_ok());
 
-        let after = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, None, None).unwrap();
-        let map: std::collections::HashMap<String, OnchainActivity> = after.into_iter().map(|a| match a {
-            Activity::Onchain(o) => (o.id.clone(), o),
-            _ => unreachable!(),
-        }).collect();
+        let after = db
+            .get_activities(
+                Some(ActivityFilter::Onchain),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+        let map: std::collections::HashMap<String, OnchainActivity> = after
+            .into_iter()
+            .map(|a| match a {
+                Activity::Onchain(o) => (o.id.clone(), o),
+                _ => unreachable!(),
+            })
+            .collect();
         assert_eq!(map["onchain_bulk_0"].value, 999_999);
         assert_eq!(map["onchain_bulk_1"].fee, 42);
         assert_eq!(map["onchain_bulk_2"].fee_rate, 7);
@@ -1919,7 +2315,18 @@ mod tests {
     fn test_upsert_onchain_activities_empty() {
         let (mut db, db_path) = setup();
         assert!(db.upsert_onchain_activities(&[]).is_ok());
-        let all = db.get_activities(Some(ActivityFilter::Onchain), None, None, None, None, None, None, None).unwrap();
+        let all = db
+            .get_activities(
+                Some(ActivityFilter::Onchain),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert!(all.is_empty());
         cleanup(&db_path);
     }
@@ -1940,7 +2347,18 @@ mod tests {
 
         assert!(db.upsert_lightning_activities(&acts).is_ok());
 
-        let all = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, None, None).unwrap();
+        let all = db
+            .get_activities(
+                Some(ActivityFilter::Lightning),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert_eq!(all.len(), 5);
 
         let mut updated = acts.clone();
@@ -1950,11 +2368,25 @@ mod tests {
         updated[3].message = "updated".to_string();
         assert!(db.upsert_lightning_activities(&updated).is_ok());
 
-        let after = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, None, None).unwrap();
-        let map: std::collections::HashMap<String, LightningActivity> = after.into_iter().map(|a| match a {
-            Activity::Lightning(l) => (l.id.clone(), l),
-            _ => unreachable!(),
-        }).collect();
+        let after = db
+            .get_activities(
+                Some(ActivityFilter::Lightning),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+        let map: std::collections::HashMap<String, LightningActivity> = after
+            .into_iter()
+            .map(|a| match a {
+                Activity::Lightning(l) => (l.id.clone(), l),
+                _ => unreachable!(),
+            })
+            .collect();
         assert_eq!(map["lightning_bulk_0"].value, 55);
         assert_eq!(map["lightning_bulk_1"].status, PaymentState::Failed);
         assert_eq!(map["lightning_bulk_2"].fee, Some(0));
@@ -1967,7 +2399,18 @@ mod tests {
     fn test_upsert_lightning_activities_empty() {
         let (mut db, db_path) = setup();
         assert!(db.upsert_lightning_activities(&[]).is_ok());
-        let all = db.get_activities(Some(ActivityFilter::Lightning), None, None, None, None, None, None, None).unwrap();
+        let all = db
+            .get_activities(
+                Some(ActivityFilter::Lightning),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
         assert!(all.is_empty());
         cleanup(&db_path);
     }
@@ -1980,7 +2423,8 @@ mod tests {
         let address = "bc1qtest123".to_string();
         let tags = vec!["payment".to_string(), "coffee".to_string()];
 
-        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
         metadata.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
@@ -2004,7 +2448,13 @@ mod tests {
         let payment_hash = "test_lightning_1".to_string();
         let tags = vec!["invoice".to_string(), "payment".to_string()];
 
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(payment_hash.clone(), ActivityType::Lightning, tags.clone())).is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                payment_hash.clone(),
+                ActivityType::Lightning,
+                tags.clone()
+            ))
+            .is_ok());
 
         // Verify tags are transferred when activity is received
         let mut activity = create_test_lightning_activity();
@@ -2025,7 +2475,11 @@ mod tests {
         let (mut db, db_path) = setup();
         let tags = vec!["payment".to_string()];
 
-        let result = db.add_pre_activity_metadata(&create_test_pre_activity_metadata("".to_string(), ActivityType::Onchain, tags));
+        let result = db.add_pre_activity_metadata(&create_test_pre_activity_metadata(
+            "".to_string(),
+            ActivityType::Onchain,
+            tags,
+        ));
         assert!(result.is_err());
 
         cleanup(&db_path);
@@ -2037,10 +2491,12 @@ mod tests {
         let address = "bc1qtest123".to_string();
         let tags = vec!["payment".to_string()];
 
-        let mut metadata1 = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata1 =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata1.address = Some(address.clone());
         metadata1.is_receive = true;
-        let mut metadata2 = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata2 =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata2.address = Some(address.clone());
         metadata2.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
@@ -2066,7 +2522,11 @@ mod tests {
         let payment_id2 = "payment_id_2".to_string();
 
         // Add metadata with payment_id1 and address
-        let mut metadata1 = create_test_pre_activity_metadata(payment_id1.clone(), ActivityType::Onchain, vec!["tag1".to_string()]);
+        let mut metadata1 = create_test_pre_activity_metadata(
+            payment_id1.clone(),
+            ActivityType::Onchain,
+            vec!["tag1".to_string()],
+        );
         metadata1.address = Some(address.clone());
         metadata1.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
@@ -2079,7 +2539,11 @@ mod tests {
         assert_eq!(result_by_address1.unwrap().payment_id, payment_id1);
 
         // Add metadata with payment_id2 and same address (should replace metadata1)
-        let mut metadata2 = create_test_pre_activity_metadata(payment_id2.clone(), ActivityType::Onchain, vec!["tag2".to_string()]);
+        let mut metadata2 = create_test_pre_activity_metadata(
+            payment_id2.clone(),
+            ActivityType::Onchain,
+            vec!["tag2".to_string()],
+        );
         metadata2.address = Some(address.clone());
         metadata2.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata2).is_ok());
@@ -2105,10 +2569,18 @@ mod tests {
         let (mut db, db_path) = setup();
         let address = "bc1qtest123".to_string();
 
-        let mut metadata1 = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["tag1".to_string()]);
+        let mut metadata1 = create_test_pre_activity_metadata(
+            address.clone(),
+            ActivityType::Onchain,
+            vec!["tag1".to_string()],
+        );
         metadata1.address = Some(address.clone());
         metadata1.is_receive = true;
-        let mut metadata2 = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["tag2".to_string(), "tag3".to_string()]);
+        let mut metadata2 = create_test_pre_activity_metadata(
+            address.clone(),
+            ActivityType::Onchain,
+            vec!["tag2".to_string(), "tag3".to_string()],
+        );
         metadata2.address = Some(address.clone());
         metadata2.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
@@ -2133,10 +2605,18 @@ mod tests {
         let address = "bc1qtest123".to_string();
 
         // Add initial metadata with one tag
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["tag1".to_string()])).is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                address.clone(),
+                ActivityType::Onchain,
+                vec!["tag1".to_string()]
+            ))
+            .is_ok());
 
         // Add more tags to existing metadata
-        assert!(db.add_pre_activity_metadata_tags(&address, &["tag2".to_string(), "tag3".to_string()]).is_ok());
+        assert!(db
+            .add_pre_activity_metadata_tags(&address, &["tag2".to_string(), "tag3".to_string()])
+            .is_ok());
 
         // Verify all tags are present
         let all_metadata = db.get_all_pre_activity_metadata().unwrap();
@@ -2148,14 +2628,19 @@ mod tests {
         assert!(metadata.tags.contains(&"tag3".to_string()));
 
         // Add duplicate tag (should not add duplicate)
-        assert!(db.add_pre_activity_metadata_tags(&address, &["tag2".to_string()]).is_ok());
+        assert!(db
+            .add_pre_activity_metadata_tags(&address, &["tag2".to_string()])
+            .is_ok());
 
         // Verify no duplicate was added
         let all_metadata_after = db.get_all_pre_activity_metadata().unwrap();
         assert_eq!(all_metadata_after.len(), 1);
         let metadata_after = &all_metadata_after[0];
         assert_eq!(metadata_after.tags.len(), 3);
-        assert_eq!(metadata_after.tags.iter().filter(|t| *t == "tag2").count(), 1);
+        assert_eq!(
+            metadata_after.tags.iter().filter(|t| *t == "tag2").count(),
+            1
+        );
 
         cleanup(&db_path);
     }
@@ -2178,11 +2663,14 @@ mod tests {
         let address = "bc1qtest123".to_string();
         let tags = vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string()];
 
-        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
-        assert!(db.remove_pre_activity_metadata_tags(&address, &["tag2".to_string()]).is_ok());
+        assert!(db
+            .remove_pre_activity_metadata_tags(&address, &["tag2".to_string()])
+            .is_ok());
 
         let mut activity = create_test_onchain_activity();
         activity.address = address.clone();
@@ -2202,13 +2690,21 @@ mod tests {
     fn test_remove_pre_activity_metadata_multiple() {
         let (mut db, db_path) = setup();
         let address = "bc1qtest123".to_string();
-        let tags = vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string(), "tag4".to_string()];
+        let tags = vec![
+            "tag1".to_string(),
+            "tag2".to_string(),
+            "tag3".to_string(),
+            "tag4".to_string(),
+        ];
 
-        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
-        assert!(db.remove_pre_activity_metadata_tags(&address, &["tag1".to_string(), "tag3".to_string()]).is_ok());
+        assert!(db
+            .remove_pre_activity_metadata_tags(&address, &["tag1".to_string(), "tag3".to_string()])
+            .is_ok());
 
         let mut activity = create_test_onchain_activity();
         activity.address = address.clone();
@@ -2229,7 +2725,9 @@ mod tests {
         let address = "bc1qtest123".to_string();
 
         // Try to remove tags that don't exist (should not error)
-        assert!(db.remove_pre_activity_metadata_tags(&address, &["nonexistent".to_string()]).is_ok());
+        assert!(db
+            .remove_pre_activity_metadata_tags(&address, &["nonexistent".to_string()])
+            .is_ok());
 
         cleanup(&db_path);
     }
@@ -2241,7 +2739,13 @@ mod tests {
         let tags = vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string()];
 
         // Add tags
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone())).is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                address.clone(),
+                ActivityType::Onchain,
+                tags.clone()
+            ))
+            .is_ok());
 
         // Reset all tags
         assert!(db.reset_pre_activity_metadata_tags(&address).is_ok());
@@ -2276,7 +2780,13 @@ mod tests {
         let tags = vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string()];
 
         // Add tags
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone())).is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                address.clone(),
+                ActivityType::Onchain,
+                tags.clone()
+            ))
+            .is_ok());
 
         // Verify metadata exists
         let all_metadata = db.get_all_pre_activity_metadata().unwrap();
@@ -2307,7 +2817,8 @@ mod tests {
         let address = "bc1qtest123".to_string();
         let tags = vec!["payment".to_string()];
 
-        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
         metadata.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
@@ -2331,7 +2842,8 @@ mod tests {
         let tx_id = "txid123".to_string();
         let tags = vec!["sent_payment".to_string()];
 
-        let mut metadata = create_test_pre_activity_metadata(tx_id.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(tx_id.clone(), ActivityType::Onchain, tags.clone());
         metadata.tx_id = Some(tx_id.clone());
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
@@ -2354,7 +2866,8 @@ mod tests {
         let metadata_address = "bc1qmetadata456".to_string();
         let tags = vec!["sent_payment".to_string()];
 
-        let mut metadata = create_test_pre_activity_metadata(tx_id.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(tx_id.clone(), ActivityType::Onchain, tags.clone());
         metadata.tx_id = Some(tx_id.clone());
         metadata.address = Some(metadata_address.clone());
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
@@ -2385,7 +2898,8 @@ mod tests {
         let address = "bc1qtest123".to_string();
         let tags = vec!["payment".to_string()];
 
-        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
         metadata.is_receive = true;
         metadata.fee_rate = 10;
@@ -2413,7 +2927,8 @@ mod tests {
         let address = "bc1qtest123".to_string();
         let tags = vec!["payment".to_string()];
 
-        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
         metadata.is_receive = true;
         metadata.is_transfer = true;
@@ -2442,7 +2957,8 @@ mod tests {
         let channel_id = "channel_abc123".to_string();
         let tags = vec!["payment".to_string()];
 
-        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
         metadata.is_receive = true;
         metadata.channel_id = Some(channel_id.clone());
@@ -2471,7 +2987,8 @@ mod tests {
         let channel_id = "channel_xyz789".to_string();
         let tags = vec!["payment".to_string(), "transfer".to_string()];
 
-        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
         metadata.is_receive = true;
         metadata.fee_rate = 15;
@@ -2510,7 +3027,8 @@ mod tests {
         let address = "bc1qtest123".to_string();
         let tags = vec!["payment".to_string()];
 
-        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
         metadata.is_receive = true;
         metadata.fee_rate = 0;
@@ -2538,7 +3056,8 @@ mod tests {
         let address = "bc1qtest123".to_string();
         let tags = vec!["payment".to_string()];
 
-        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
         metadata.is_receive = true;
         metadata.is_transfer = false;
@@ -2567,7 +3086,13 @@ mod tests {
         let tags = vec!["sent_invoice".to_string()];
 
         // Add pre-activity metadata using payment hash
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(payment_hash.clone(), ActivityType::Lightning, tags.clone())).is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                payment_hash.clone(),
+                ActivityType::Lightning,
+                tags.clone()
+            ))
+            .is_ok());
 
         // Insert sent lightning activity (should transfer tags based on payment hash)
         let mut sent_activity = create_test_lightning_activity();
@@ -2588,7 +3113,8 @@ mod tests {
         let address = "bc1qtest123".to_string();
         let tags = vec!["tag1".to_string(), "tag2".to_string()];
 
-        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
         metadata.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
@@ -2619,7 +3145,13 @@ mod tests {
         let payment_hash = "test_lightning_received_1".to_string();
         let tags = vec!["invoice".to_string(), "payment".to_string()];
 
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(payment_hash.clone(), ActivityType::Lightning, tags.clone())).is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                payment_hash.clone(),
+                ActivityType::Lightning,
+                tags.clone()
+            ))
+            .is_ok());
 
         let mut activity = create_test_lightning_activity();
         activity.id = payment_hash.clone();
@@ -2641,7 +3173,8 @@ mod tests {
         let ln_payment_hash = "ln_payment_hash_abc123".to_string();
         let tags = vec!["payment".to_string(), "coffee".to_string()];
 
-        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata =
+            create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
@@ -2665,10 +3198,18 @@ mod tests {
         let address1 = "bc1qtest123".to_string();
         let address2 = "bc1qtest456".to_string();
 
-        let mut metadata1 = create_test_pre_activity_metadata(address1.clone(), ActivityType::Onchain, vec!["tag1".to_string()]);
+        let mut metadata1 = create_test_pre_activity_metadata(
+            address1.clone(),
+            ActivityType::Onchain,
+            vec!["tag1".to_string()],
+        );
         metadata1.address = Some(address1.clone());
         metadata1.is_receive = true;
-        let mut metadata2 = create_test_pre_activity_metadata(address2.clone(), ActivityType::Onchain, vec!["tag2".to_string()]);
+        let mut metadata2 = create_test_pre_activity_metadata(
+            address2.clone(),
+            ActivityType::Onchain,
+            vec!["tag2".to_string()],
+        );
         metadata2.address = Some(address2.clone());
         metadata2.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
@@ -2704,10 +3245,18 @@ mod tests {
         let address = "bc1qtest123".to_string();
         let payment_hash = "test_lightning_separate_1".to_string();
 
-        let mut metadata1 = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["onchain_tag".to_string()]);
+        let mut metadata1 = create_test_pre_activity_metadata(
+            address.clone(),
+            ActivityType::Onchain,
+            vec!["onchain_tag".to_string()],
+        );
         metadata1.address = Some(address.clone());
         metadata1.is_receive = true;
-        let metadata2 = create_test_pre_activity_metadata(payment_hash.clone(), ActivityType::Lightning, vec!["lightning_tag".to_string()]);
+        let metadata2 = create_test_pre_activity_metadata(
+            payment_hash.clone(),
+            ActivityType::Lightning,
+            vec!["lightning_tag".to_string()],
+        );
         assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
         assert!(db.add_pre_activity_metadata(&metadata2).is_ok());
 
@@ -2741,7 +3290,13 @@ mod tests {
         let address = "bc1qtest123".to_string();
 
         // Add empty tags (should be allowed, but won't transfer anything meaningful)
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec![])).is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                address.clone(),
+                ActivityType::Onchain,
+                vec![]
+            ))
+            .is_ok());
 
         // Insert received activity
         let mut activity = create_test_onchain_activity();
@@ -2761,7 +3316,11 @@ mod tests {
         let (mut db, db_path) = setup();
         let address = "bc1qtest123".to_string();
 
-        let mut metadata = create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, vec!["receiving_tag".to_string()]);
+        let mut metadata = create_test_pre_activity_metadata(
+            address.clone(),
+            ActivityType::Onchain,
+            vec!["receiving_tag".to_string()],
+        );
         metadata.address = Some(address.clone());
         metadata.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
@@ -2772,7 +3331,8 @@ mod tests {
         db.insert_onchain_activity(&activity).unwrap();
 
         // Add regular tags to the same activity
-        db.add_tags(&activity.id, &["regular_tag".to_string()]).unwrap();
+        db.add_tags(&activity.id, &["regular_tag".to_string()])
+            .unwrap();
 
         // Verify both types of tags are present
         let activity_tags = db.get_tags(&activity.id).unwrap();
@@ -2794,7 +3354,13 @@ mod tests {
         assert!(result.is_none());
 
         // Add pre-activity metadata
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone())).is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                address.clone(),
+                ActivityType::Onchain,
+                tags.clone()
+            ))
+            .is_ok());
 
         // Get existing metadata
         let metadata = db.get_pre_activity_metadata(&address, false).unwrap();
@@ -2816,7 +3382,11 @@ mod tests {
         let tags = vec!["tag1".to_string(), "tag2".to_string()];
 
         // Add pre-activity metadata with address
-        let mut metadata = create_test_pre_activity_metadata(payment_id.clone(), ActivityType::Onchain, tags.clone());
+        let mut metadata = create_test_pre_activity_metadata(
+            payment_id.clone(),
+            ActivityType::Onchain,
+            tags.clone(),
+        );
         metadata.address = Some(address.clone());
         metadata.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
@@ -2849,22 +3419,46 @@ mod tests {
         let invoice = "lightning:invoice123".to_string();
 
         // Add pre-activity metadata for multiple identifiers
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address1.clone(), ActivityType::Onchain, vec!["tag1".to_string(), "tag2".to_string()])).is_ok());
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(address2.clone(), ActivityType::Onchain, vec!["tag3".to_string()])).is_ok());
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata(invoice.clone(), ActivityType::Lightning, vec!["tag4".to_string(), "tag5".to_string()])).is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                address1.clone(),
+                ActivityType::Onchain,
+                vec!["tag1".to_string(), "tag2".to_string()]
+            ))
+            .is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                address2.clone(),
+                ActivityType::Onchain,
+                vec!["tag3".to_string()]
+            ))
+            .is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                invoice.clone(),
+                ActivityType::Lightning,
+                vec!["tag4".to_string(), "tag5".to_string()]
+            ))
+            .is_ok());
 
         // Get all pre-activity metadata
         let all_tags = db.get_all_pre_activity_metadata().unwrap();
         assert_eq!(all_tags.len(), 3);
 
         // Find tags for address1
-        let addr1_tags = all_tags.iter().find(|rt| rt.payment_id == address1).unwrap();
+        let addr1_tags = all_tags
+            .iter()
+            .find(|rt| rt.payment_id == address1)
+            .unwrap();
         assert_eq!(addr1_tags.tags.len(), 2);
         assert!(addr1_tags.tags.contains(&"tag1".to_string()));
         assert!(addr1_tags.tags.contains(&"tag2".to_string()));
 
         // Find tags for address2
-        let addr2_tags = all_tags.iter().find(|rt| rt.payment_id == address2).unwrap();
+        let addr2_tags = all_tags
+            .iter()
+            .find(|rt| rt.payment_id == address2)
+            .unwrap();
         assert_eq!(addr2_tags.tags.len(), 1);
         assert!(addr2_tags.tags.contains(&"tag3".to_string()));
 
@@ -2932,7 +3526,9 @@ mod tests {
         ];
 
         // Upsert pre-activity metadata
-        assert!(db.upsert_pre_activity_metadata(&pre_activity_metadata).is_ok());
+        assert!(db
+            .upsert_pre_activity_metadata(&pre_activity_metadata)
+            .is_ok());
 
         // Verify tags were added
         let all_tags = db.get_all_pre_activity_metadata().unwrap();
@@ -2956,24 +3552,26 @@ mod tests {
     fn test_upsert_pre_activity_metadata_idempotent() {
         let (mut db, db_path) = setup();
 
-        let pre_activity_metadata = vec![
-            PreActivityMetadata {
-                payment_id: "bc1qtest123".to_string(),
-                tags: vec!["tag1".to_string(), "tag2".to_string()],
-                payment_hash: None,
-                tx_id: None,
-                address: None,
-                is_receive: false,
-                fee_rate: 0,
-                is_transfer: false,
-                channel_id: None,
-                created_at: 0,
-            },
-        ];
+        let pre_activity_metadata = vec![PreActivityMetadata {
+            payment_id: "bc1qtest123".to_string(),
+            tags: vec!["tag1".to_string(), "tag2".to_string()],
+            payment_hash: None,
+            tx_id: None,
+            address: None,
+            is_receive: false,
+            fee_rate: 0,
+            is_transfer: false,
+            channel_id: None,
+            created_at: 0,
+        }];
 
         // Upsert twice (should be idempotent)
-        assert!(db.upsert_pre_activity_metadata(&pre_activity_metadata).is_ok());
-        assert!(db.upsert_pre_activity_metadata(&pre_activity_metadata).is_ok());
+        assert!(db
+            .upsert_pre_activity_metadata(&pre_activity_metadata)
+            .is_ok());
+        assert!(db
+            .upsert_pre_activity_metadata(&pre_activity_metadata)
+            .is_ok());
 
         // Verify tags are still there
         let all_tags = db.get_all_pre_activity_metadata().unwrap();
@@ -2990,27 +3588,31 @@ mod tests {
     fn test_upsert_pre_activity_metadata_updates_existing() {
         let (mut db, db_path) = setup();
 
-        let mut initial_metadata = create_test_pre_activity_metadata("bc1qtest123".to_string(), ActivityType::Onchain, vec!["tag1".to_string()]);
+        let mut initial_metadata = create_test_pre_activity_metadata(
+            "bc1qtest123".to_string(),
+            ActivityType::Onchain,
+            vec!["tag1".to_string()],
+        );
         initial_metadata.address = Some("bc1qtest123".to_string());
         initial_metadata.is_receive = true;
         assert!(db.add_pre_activity_metadata(&initial_metadata).is_ok());
 
-        let pre_activity_metadata = vec![
-            PreActivityMetadata {
-                payment_id: "bc1qtest123".to_string(),
-                tags: vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string()],
-                payment_hash: None,
-                tx_id: None,
-                address: Some("bc1qtest123".to_string()),
-                is_receive: true,
-                fee_rate: 0,
-                is_transfer: false,
-                channel_id: None,
-                created_at: 0,
-            },
-        ];
+        let pre_activity_metadata = vec![PreActivityMetadata {
+            payment_id: "bc1qtest123".to_string(),
+            tags: vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string()],
+            payment_hash: None,
+            tx_id: None,
+            address: Some("bc1qtest123".to_string()),
+            is_receive: true,
+            fee_rate: 0,
+            is_transfer: false,
+            channel_id: None,
+            created_at: 0,
+        }];
 
-        assert!(db.upsert_pre_activity_metadata(&pre_activity_metadata).is_ok());
+        assert!(db
+            .upsert_pre_activity_metadata(&pre_activity_metadata)
+            .is_ok());
 
         // Verify all tags are present
         let all_tags = db.get_all_pre_activity_metadata().unwrap();
@@ -3041,23 +3643,23 @@ mod tests {
     fn test_upsert_pre_activity_metadata_empty_identifier() {
         let (mut db, db_path) = setup();
 
-        let pre_activity_metadata = vec![
-            PreActivityMetadata {
-                payment_id: "".to_string(),
-                tags: vec!["tag1".to_string()],
-                payment_hash: None,
-                tx_id: None,
-                address: None,
-                is_receive: false,
-                fee_rate: 0,
-                is_transfer: false,
-                channel_id: None,
-                created_at: 0,
-            },
-        ];
+        let pre_activity_metadata = vec![PreActivityMetadata {
+            payment_id: "".to_string(),
+            tags: vec!["tag1".to_string()],
+            payment_hash: None,
+            tx_id: None,
+            address: None,
+            is_receive: false,
+            fee_rate: 0,
+            is_transfer: false,
+            channel_id: None,
+            created_at: 0,
+        }];
 
         // Empty identifier is allowed for backup/restore (restores exactly what was backed up)
-        assert!(db.upsert_pre_activity_metadata(&pre_activity_metadata).is_ok());
+        assert!(db
+            .upsert_pre_activity_metadata(&pre_activity_metadata)
+            .is_ok());
 
         cleanup(&db_path);
     }
@@ -3066,9 +3668,17 @@ mod tests {
     fn test_backup_restore_pre_activity_metadata() {
         let (mut db, db_path) = setup();
 
-        let mut metadata1 = create_test_pre_activity_metadata("bc1qtest123".to_string(), ActivityType::Onchain, vec!["tag1".to_string(), "tag2".to_string()]);
+        let mut metadata1 = create_test_pre_activity_metadata(
+            "bc1qtest123".to_string(),
+            ActivityType::Onchain,
+            vec!["tag1".to_string(), "tag2".to_string()],
+        );
         metadata1.address = Some("bc1qtest123".to_string());
-        let metadata2 = create_test_pre_activity_metadata("lightning:invoice123".to_string(), ActivityType::Lightning, vec!["tag3".to_string()]);
+        let metadata2 = create_test_pre_activity_metadata(
+            "lightning:invoice123".to_string(),
+            ActivityType::Lightning,
+            vec!["tag3".to_string()],
+        );
         assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
         assert!(db.add_pre_activity_metadata(&metadata2).is_ok());
 
@@ -3077,8 +3687,12 @@ mod tests {
         assert_eq!(backup.len(), 2);
 
         // Simulate restore: Delete and restore
-        assert!(db.delete_pre_activity_metadata(&"bc1qtest123".to_string()).is_ok());
-        assert!(db.delete_pre_activity_metadata(&"lightning:invoice123".to_string()).is_ok());
+        assert!(db
+            .delete_pre_activity_metadata(&"bc1qtest123".to_string())
+            .is_ok());
+        assert!(db
+            .delete_pre_activity_metadata(&"lightning:invoice123".to_string())
+            .is_ok());
 
         // Verify cleared
         let after_clear = db.get_all_pre_activity_metadata().unwrap();
@@ -3137,7 +3751,9 @@ mod tests {
             },
         ];
 
-        assert!(db.upsert_pre_activity_metadata(&pre_activity_metadata).is_ok());
+        assert!(db
+            .upsert_pre_activity_metadata(&pre_activity_metadata)
+            .is_ok());
 
         // Verify only the last one is stored (second replaces first)
         let all_tags = db.get_all_pre_activity_metadata().unwrap();
@@ -3155,9 +3771,27 @@ mod tests {
         let (mut db, db_path) = setup();
 
         // Add tags in non-alphabetical order
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata("z_address".to_string(), ActivityType::Onchain, vec!["tag1".to_string()])).is_ok());
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata("a_address".to_string(), ActivityType::Onchain, vec!["tag2".to_string()])).is_ok());
-        assert!(db.add_pre_activity_metadata(&create_test_pre_activity_metadata("m_address".to_string(), ActivityType::Onchain, vec!["tag3".to_string()])).is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                "z_address".to_string(),
+                ActivityType::Onchain,
+                vec!["tag1".to_string()]
+            ))
+            .is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                "a_address".to_string(),
+                ActivityType::Onchain,
+                vec!["tag2".to_string()]
+            ))
+            .is_ok());
+        assert!(db
+            .add_pre_activity_metadata(&create_test_pre_activity_metadata(
+                "m_address".to_string(),
+                ActivityType::Onchain,
+                vec!["tag3".to_string()]
+            ))
+            .is_ok());
 
         // Get all tags - should be sorted by payment_id
         let all_tags = db.get_all_pre_activity_metadata().unwrap();
@@ -3173,13 +3807,25 @@ mod tests {
     fn test_upsert_pre_activity_metadata_partial_update() {
         let (mut db, db_path) = setup();
 
-        let mut metadata1 = create_test_pre_activity_metadata("address1".to_string(), ActivityType::Onchain, vec!["tag1".to_string()]);
+        let mut metadata1 = create_test_pre_activity_metadata(
+            "address1".to_string(),
+            ActivityType::Onchain,
+            vec!["tag1".to_string()],
+        );
         metadata1.address = Some("address1".to_string());
         metadata1.is_receive = true;
-        let mut metadata2 = create_test_pre_activity_metadata("address2".to_string(), ActivityType::Onchain, vec!["tag2".to_string()]);
+        let mut metadata2 = create_test_pre_activity_metadata(
+            "address2".to_string(),
+            ActivityType::Onchain,
+            vec!["tag2".to_string()],
+        );
         metadata2.address = Some("address2".to_string());
         metadata2.is_receive = true;
-        let mut metadata3 = create_test_pre_activity_metadata("address3".to_string(), ActivityType::Onchain, vec!["tag3".to_string()]);
+        let mut metadata3 = create_test_pre_activity_metadata(
+            "address3".to_string(),
+            ActivityType::Onchain,
+            vec!["tag3".to_string()],
+        );
         metadata3.address = Some("address3".to_string());
         metadata3.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
@@ -3191,20 +3837,18 @@ mod tests {
         assert_eq!(all.len(), 3);
 
         // Upsert with new tags for address2 (replaces existing tags)
-        let updated = vec![
-            PreActivityMetadata {
-                payment_id: "address2".to_string(),
-                tags: vec!["tag2_updated".to_string(), "tag2_new".to_string()],
-                payment_hash: None,
-                tx_id: None,
-                address: None,
-                is_receive: false,
-                fee_rate: 0,
-                is_transfer: false,
-                channel_id: None,
-                created_at: 0,
-            },
-        ];
+        let updated = vec![PreActivityMetadata {
+            payment_id: "address2".to_string(),
+            tags: vec!["tag2_updated".to_string(), "tag2_new".to_string()],
+            payment_hash: None,
+            tx_id: None,
+            address: None,
+            is_receive: false,
+            fee_rate: 0,
+            is_transfer: false,
+            channel_id: None,
+            created_at: 0,
+        }];
 
         assert!(db.upsert_pre_activity_metadata(&updated).is_ok());
 
@@ -3232,10 +3876,18 @@ mod tests {
     fn test_get_all_pre_activity_metadata_after_transfer() {
         let (mut db, db_path) = setup();
 
-        let mut metadata1 = create_test_pre_activity_metadata("bc1qtest123".to_string(), ActivityType::Onchain, vec!["tag1".to_string(), "tag2".to_string()]);
+        let mut metadata1 = create_test_pre_activity_metadata(
+            "bc1qtest123".to_string(),
+            ActivityType::Onchain,
+            vec!["tag1".to_string(), "tag2".to_string()],
+        );
         metadata1.address = Some("bc1qtest123".to_string());
         metadata1.is_receive = true;
-        let mut metadata2 = create_test_pre_activity_metadata("bc1qtest456".to_string(), ActivityType::Onchain, vec!["tag3".to_string()]);
+        let mut metadata2 = create_test_pre_activity_metadata(
+            "bc1qtest456".to_string(),
+            ActivityType::Onchain,
+            vec!["tag3".to_string()],
+        );
         metadata2.address = Some("bc1qtest456".to_string());
         metadata2.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
@@ -3264,10 +3916,10 @@ mod tests {
     fn test_is_address_used_no_activities() {
         let (db, db_path) = setup();
         let address = "bc1qunused123".to_string();
-        
+
         let is_used = db.is_address_used(&address).unwrap();
         assert!(!is_used, "Address with no activities should return false");
-        
+
         cleanup(&db_path);
     }
 
@@ -3275,17 +3927,17 @@ mod tests {
     fn test_is_address_used_with_received_activity() {
         let (mut db, db_path) = setup();
         let address = "bc1qreceived123".to_string();
-        
+
         let mut activity = create_test_onchain_activity();
         activity.address = address.clone();
         activity.tx_type = PaymentType::Received;
         activity.id = "test_received_1".to_string();
-        
+
         db.insert_onchain_activity(&activity).unwrap();
-        
+
         let is_used = db.is_address_used(&address).unwrap();
         assert!(is_used, "Address with received activity should return true");
-        
+
         cleanup(&db_path);
     }
 
@@ -3293,17 +3945,17 @@ mod tests {
     fn test_is_address_used_with_sent_activity() {
         let (mut db, db_path) = setup();
         let address = "bc1qsent123".to_string();
-        
+
         let mut activity = create_test_onchain_activity();
         activity.address = address.clone();
         activity.tx_type = PaymentType::Sent;
         activity.id = "test_sent_1".to_string();
-        
+
         db.insert_onchain_activity(&activity).unwrap();
-        
+
         let is_used = db.is_address_used(&address).unwrap();
         assert!(is_used, "Address with sent activity should return true");
-        
+
         cleanup(&db_path);
     }
 
@@ -3311,7 +3963,7 @@ mod tests {
     fn test_is_address_used_with_multiple_activities() {
         let (mut db, db_path) = setup();
         let address = "bc1qmultiple123".to_string();
-        
+
         // Add received activity
         let mut received_activity = create_test_onchain_activity();
         received_activity.address = address.clone();
@@ -3319,7 +3971,7 @@ mod tests {
         received_activity.id = "test_received_1".to_string();
         received_activity.confirmed = true;
         db.insert_onchain_activity(&received_activity).unwrap();
-        
+
         // Add sent activity
         let mut sent_activity = create_test_onchain_activity();
         sent_activity.address = address.clone();
@@ -3327,10 +3979,13 @@ mod tests {
         sent_activity.id = "test_sent_1".to_string();
         sent_activity.confirmed = false;
         db.insert_onchain_activity(&sent_activity).unwrap();
-        
+
         let is_used = db.is_address_used(&address).unwrap();
-        assert!(is_used, "Address with multiple activities should return true");
-        
+        assert!(
+            is_used,
+            "Address with multiple activities should return true"
+        );
+
         cleanup(&db_path);
     }
 
@@ -3338,18 +3993,21 @@ mod tests {
     fn test_is_address_used_with_unconfirmed_activity() {
         let (mut db, db_path) = setup();
         let address = "bc1qunconfirmed123".to_string();
-        
+
         let mut activity = create_test_onchain_activity();
         activity.address = address.clone();
         activity.tx_type = PaymentType::Received;
         activity.id = "test_unconfirmed_1".to_string();
         activity.confirmed = false;
-        
+
         db.insert_onchain_activity(&activity).unwrap();
-        
+
         let is_used = db.is_address_used(&address).unwrap();
-        assert!(is_used, "Address with unconfirmed activity should return true");
-        
+        assert!(
+            is_used,
+            "Address with unconfirmed activity should return true"
+        );
+
         cleanup(&db_path);
     }
 
@@ -3358,22 +4016,22 @@ mod tests {
         let (mut db, db_path) = setup();
         let used_address = "bc1qused123".to_string();
         let unused_address = "bc1qunused456".to_string();
-        
+
         // Add activity for one address
         let mut activity = create_test_onchain_activity();
         activity.address = used_address.clone();
         activity.tx_type = PaymentType::Received;
         activity.id = "test_used_1".to_string();
         db.insert_onchain_activity(&activity).unwrap();
-        
+
         // Check used address
         let is_used = db.is_address_used(&used_address).unwrap();
         assert!(is_used, "Address with activity should return true");
-        
+
         // Check unused address
         let is_unused = db.is_address_used(&unused_address).unwrap();
         assert!(!is_unused, "Address without activity should return false");
-        
+
         cleanup(&db_path);
     }
 
@@ -3381,26 +4039,32 @@ mod tests {
     fn test_is_address_used_only_onchain_activities() {
         let (mut db, db_path) = setup();
         let address = "bc1qonchain123".to_string();
-        
+
         // Add lightning activity (should not affect the check)
         let lightning_activity = create_test_lightning_activity();
         db.insert_lightning_activity(&lightning_activity).unwrap();
-        
+
         // Address should still be unused since no onchain activity
         let is_used = db.is_address_used(&address).unwrap();
-        assert!(!is_used, "Address should return false if only lightning activities exist");
-        
+        assert!(
+            !is_used,
+            "Address should return false if only lightning activities exist"
+        );
+
         // Now add onchain activity
         let mut onchain_activity = create_test_onchain_activity();
         onchain_activity.address = address.clone();
         onchain_activity.tx_type = PaymentType::Received;
         onchain_activity.id = "test_onchain_1".to_string();
         db.insert_onchain_activity(&onchain_activity).unwrap();
-        
+
         // Now it should be used
         let is_used_after = db.is_address_used(&address).unwrap();
-        assert!(is_used_after, "Address should return true after onchain activity is added");
-        
+        assert!(
+            is_used_after,
+            "Address should return true after onchain activity is added"
+        );
+
         cleanup(&db_path);
     }
 
@@ -3408,10 +4072,10 @@ mod tests {
     fn test_get_activity_by_tx_id_not_found() {
         let (db, db_path) = setup();
         let tx_id = "nonexistent_tx_id".to_string();
-        
+
         let activity = db.get_activity_by_tx_id(&tx_id).unwrap();
         assert!(activity.is_none(), "Non-existent tx_id should return None");
-        
+
         cleanup(&db_path);
     }
 
@@ -3419,16 +4083,16 @@ mod tests {
     fn test_get_activity_by_tx_id_found() {
         let (mut db, db_path) = setup();
         let tx_id = "test_tx_id_123".to_string();
-        
+
         let mut activity = create_test_onchain_activity();
         activity.tx_id = tx_id.clone();
         activity.id = "test_activity_1".to_string();
-        
+
         db.insert_onchain_activity(&activity).unwrap();
-        
+
         let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
         assert!(retrieved.is_some(), "Activity should be found by tx_id");
-        
+
         if let Some(retrieved_activity) = retrieved {
             assert_eq!(retrieved_activity.tx_id, tx_id);
             assert_eq!(retrieved_activity.id, activity.id);
@@ -3436,7 +4100,7 @@ mod tests {
         } else {
             panic!("Expected Onchain activity");
         }
-        
+
         cleanup(&db_path);
     }
 
@@ -3444,25 +4108,25 @@ mod tests {
     fn test_get_activity_by_tx_id_multiple_activities() {
         let (mut db, db_path) = setup();
         let tx_id = "shared_tx_id".to_string();
-        
+
         // Insert first activity
         let mut activity1 = create_test_onchain_activity();
         activity1.tx_id = tx_id.clone();
         activity1.id = "test_activity_1".to_string();
         activity1.value = 10000;
         db.insert_onchain_activity(&activity1).unwrap();
-        
+
         // Insert second activity with same tx_id (shouldn't happen in practice, but test it)
         let mut activity2 = create_test_onchain_activity();
         activity2.tx_id = tx_id.clone();
         activity2.id = "test_activity_2".to_string();
         activity2.value = 20000;
         db.insert_onchain_activity(&activity2).unwrap();
-        
+
         // Should return the first one found
         let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
         assert!(retrieved.is_some(), "Activity should be found by tx_id");
-        
+
         if let Some(retrieved_activity) = retrieved {
             assert_eq!(retrieved_activity.tx_id, tx_id);
             // Should return one of them (implementation dependent which one)
@@ -3470,7 +4134,7 @@ mod tests {
         } else {
             panic!("Expected Onchain activity");
         }
-        
+
         cleanup(&db_path);
     }
 
@@ -3479,17 +4143,17 @@ mod tests {
         let (mut db, db_path) = setup();
         let tx_id1 = "tx_id_1".to_string();
         let tx_id2 = "tx_id_2".to_string();
-        
+
         let mut activity1 = create_test_onchain_activity();
         activity1.tx_id = tx_id1.clone();
         activity1.id = "test_activity_1".to_string();
         db.insert_onchain_activity(&activity1).unwrap();
-        
+
         let mut activity2 = create_test_onchain_activity();
         activity2.tx_id = tx_id2.clone();
         activity2.id = "test_activity_2".to_string();
         db.insert_onchain_activity(&activity2).unwrap();
-        
+
         // Get first activity
         let retrieved1 = db.get_activity_by_tx_id(&tx_id1).unwrap();
         assert!(retrieved1.is_some(), "First activity should be found");
@@ -3499,7 +4163,7 @@ mod tests {
         } else {
             panic!("Expected Onchain activity");
         }
-        
+
         // Get second activity
         let retrieved2 = db.get_activity_by_tx_id(&tx_id2).unwrap();
         assert!(retrieved2.is_some(), "Second activity should be found");
@@ -3509,7 +4173,7 @@ mod tests {
         } else {
             panic!("Expected Onchain activity");
         }
-        
+
         cleanup(&db_path);
     }
 
@@ -3517,25 +4181,31 @@ mod tests {
     fn test_get_activity_by_tx_id_only_onchain() {
         let (mut db, db_path) = setup();
         let tx_id = "onchain_tx_id".to_string();
-        
+
         // Add lightning activity (should not be found by tx_id)
         let lightning_activity = create_test_lightning_activity();
         db.insert_lightning_activity(&lightning_activity).unwrap();
-        
+
         // Try to get by tx_id - should return None since lightning doesn't have tx_id
         let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
-        assert!(retrieved.is_none(), "Lightning activities should not be found by tx_id");
-        
+        assert!(
+            retrieved.is_none(),
+            "Lightning activities should not be found by tx_id"
+        );
+
         // Add onchain activity
         let mut onchain_activity = create_test_onchain_activity();
         onchain_activity.tx_id = tx_id.clone();
         onchain_activity.id = "test_onchain_1".to_string();
         db.insert_onchain_activity(&onchain_activity).unwrap();
-        
+
         // Now should find it
         let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
-        assert!(retrieved.is_some(), "Onchain activity should be found by tx_id");
-        
+        assert!(
+            retrieved.is_some(),
+            "Onchain activity should be found by tx_id"
+        );
+
         cleanup(&db_path);
     }
 
@@ -3547,15 +4217,23 @@ mod tests {
 
         // Verify initial state - seen_at should be None
         let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
-        assert!(retrieved.get_seen_at().is_none(), "seen_at should be None initially");
+        assert!(
+            retrieved.get_seen_at().is_none(),
+            "seen_at should be None initially"
+        );
 
         // Mark as seen
         let seen_timestamp = 1234567900u64;
-        db.mark_activity_as_seen(&activity.id, seen_timestamp).unwrap();
+        db.mark_activity_as_seen(&activity.id, seen_timestamp)
+            .unwrap();
 
         // Verify seen_at is now set
         let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
-        assert_eq!(retrieved.get_seen_at(), Some(seen_timestamp), "seen_at should be set");
+        assert_eq!(
+            retrieved.get_seen_at(),
+            Some(seen_timestamp),
+            "seen_at should be set"
+        );
 
         cleanup(&db_path);
     }
@@ -3568,15 +4246,23 @@ mod tests {
 
         // Verify initial state - seen_at should be None
         let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
-        assert!(retrieved.get_seen_at().is_none(), "seen_at should be None initially");
+        assert!(
+            retrieved.get_seen_at().is_none(),
+            "seen_at should be None initially"
+        );
 
         // Mark as seen
         let seen_timestamp = 1234567900u64;
-        db.mark_activity_as_seen(&activity.id, seen_timestamp).unwrap();
+        db.mark_activity_as_seen(&activity.id, seen_timestamp)
+            .unwrap();
 
         // Verify seen_at is now set
         let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
-        assert_eq!(retrieved.get_seen_at(), Some(seen_timestamp), "seen_at should be set");
+        assert_eq!(
+            retrieved.get_seen_at(),
+            Some(seen_timestamp),
+            "seen_at should be set"
+        );
 
         cleanup(&db_path);
     }
@@ -3595,35 +4281,42 @@ mod tests {
     #[test]
     fn test_seen_at_preserved_in_get_activities() {
         let (mut db, db_path) = setup();
-        
+
         // Insert two activities
         let mut onchain = create_test_onchain_activity();
         onchain.timestamp = 1000;
         let mut lightning = create_test_lightning_activity();
         lightning.timestamp = 2000;
-        
+
         db.insert_onchain_activity(&onchain).unwrap();
         db.insert_lightning_activity(&lightning).unwrap();
-        
+
         // Mark only onchain as seen
         let seen_timestamp = 3000u64;
-        db.mark_activity_as_seen(&onchain.id, seen_timestamp).unwrap();
-        
+        db.mark_activity_as_seen(&onchain.id, seen_timestamp)
+            .unwrap();
+
         // Get all activities
-        let activities = db.get_activities(None, None, None, None, None, None, None, None).unwrap();
+        let activities = db
+            .get_activities(None, None, None, None, None, None, None, None)
+            .unwrap();
         assert_eq!(activities.len(), 2);
-        
+
         for activity in activities {
             match activity {
                 Activity::Onchain(o) => {
-                    assert_eq!(o.seen_at, Some(seen_timestamp), "Onchain should have seen_at set");
+                    assert_eq!(
+                        o.seen_at,
+                        Some(seen_timestamp),
+                        "Onchain should have seen_at set"
+                    );
                 }
                 Activity::Lightning(l) => {
                     assert!(l.seen_at.is_none(), "Lightning should not have seen_at set");
                 }
             }
         }
-        
+
         cleanup(&db_path);
     }
 
@@ -3635,11 +4328,16 @@ mod tests {
 
         // Mark as seen
         let seen_timestamp = 1234567900u64;
-        db.mark_activity_as_seen(&activity.id, seen_timestamp).unwrap();
+        db.mark_activity_as_seen(&activity.id, seen_timestamp)
+            .unwrap();
 
         // Retrieve by tx_id and verify seen_at
         let retrieved = db.get_activity_by_tx_id(&activity.tx_id).unwrap().unwrap();
-        assert_eq!(retrieved.seen_at, Some(seen_timestamp), "seen_at should be preserved when getting by tx_id");
+        assert_eq!(
+            retrieved.seen_at,
+            Some(seen_timestamp),
+            "seen_at should be preserved when getting by tx_id"
+        );
 
         cleanup(&db_path);
     }
@@ -3648,15 +4346,13 @@ mod tests {
         TransactionDetails {
             tx_id: "tx123abc".to_string(),
             amount_sats: 50000,
-            inputs: vec![
-                TxInput {
-                    txid: "prev_tx_abc".to_string(),
-                    vout: 0,
-                    scriptsig: "00".to_string(),
-                    witness: vec!["witness1".to_string(), "witness2".to_string()],
-                    sequence: 0xffffffff,
-                },
-            ],
+            inputs: vec![TxInput {
+                txid: "prev_tx_abc".to_string(),
+                vout: 0,
+                scriptsig: "00".to_string(),
+                witness: vec!["witness1".to_string(), "witness2".to_string()],
+                sequence: 0xffffffff,
+            }],
             outputs: vec![
                 TxOutput {
                     scriptpubkey: "0014abc123".to_string(),
@@ -3680,10 +4376,10 @@ mod tests {
     fn test_upsert_and_get_transaction_details() {
         let (mut db, db_path) = setup();
         let details = create_test_transaction_details();
-        
+
         // Upsert
         db.upsert_transaction_details(&[details.clone()]).unwrap();
-        
+
         // Retrieve
         let retrieved = db.get_transaction_details(&details.tx_id).unwrap().unwrap();
         assert_eq!(retrieved.tx_id, details.tx_id);
@@ -3692,17 +4388,17 @@ mod tests {
         assert_eq!(retrieved.outputs.len(), 2);
         assert_eq!(retrieved.inputs[0].txid, "prev_tx_abc");
         assert_eq!(retrieved.outputs[0].value, 45000);
-        
+
         cleanup(&db_path);
     }
 
     #[test]
     fn test_transaction_details_not_found() {
         let (db, db_path) = setup();
-        
+
         let retrieved = db.get_transaction_details("nonexistent_tx").unwrap();
         assert!(retrieved.is_none());
-        
+
         cleanup(&db_path);
     }
 
@@ -3710,18 +4406,18 @@ mod tests {
     fn test_upsert_transaction_details_updates_existing() {
         let (mut db, db_path) = setup();
         let mut details = create_test_transaction_details();
-        
+
         // Initial insert
         db.upsert_transaction_details(&[details.clone()]).unwrap();
-        
+
         // Update with new amount
         details.amount_sats = 100000;
         db.upsert_transaction_details(&[details.clone()]).unwrap();
-        
+
         // Verify update
         let retrieved = db.get_transaction_details(&details.tx_id).unwrap().unwrap();
         assert_eq!(retrieved.amount_sats, 100000);
-        
+
         cleanup(&db_path);
     }
 
@@ -3729,165 +4425,173 @@ mod tests {
     fn test_delete_transaction_details() {
         let (mut db, db_path) = setup();
         let details = create_test_transaction_details();
-        
+
         db.upsert_transaction_details(&[details.clone()]).unwrap();
-        
+
         // Delete
         let deleted = db.delete_transaction_details(&details.tx_id).unwrap();
         assert!(deleted);
-        
+
         // Verify deletion
         let retrieved = db.get_transaction_details(&details.tx_id).unwrap();
         assert!(retrieved.is_none());
-        
+
         cleanup(&db_path);
     }
 
     #[test]
     fn test_delete_nonexistent_transaction_details() {
         let (mut db, db_path) = setup();
-        
+
         let deleted = db.delete_transaction_details("nonexistent_tx").unwrap();
         assert!(!deleted);
-        
+
         cleanup(&db_path);
     }
 
     #[test]
     fn test_upsert_transaction_details_multiple() {
         let (mut db, db_path) = setup();
-        
+
         let details1 = create_test_transaction_details();
         let mut details2 = create_test_transaction_details();
         details2.tx_id = "tx456def".to_string();
         details2.amount_sats = -25000; // Outgoing
-        
-        db.upsert_transaction_details(&[details1.clone(), details2.clone()]).unwrap();
-        
+
+        db.upsert_transaction_details(&[details1.clone(), details2.clone()])
+            .unwrap();
+
         // Verify both were inserted
         let all = db.get_all_transaction_details().unwrap();
         assert_eq!(all.len(), 2);
-        
-        let retrieved1 = db.get_transaction_details(&details1.tx_id).unwrap().unwrap();
+
+        let retrieved1 = db
+            .get_transaction_details(&details1.tx_id)
+            .unwrap()
+            .unwrap();
         assert_eq!(retrieved1.amount_sats, 50000);
-        
-        let retrieved2 = db.get_transaction_details(&details2.tx_id).unwrap().unwrap();
+
+        let retrieved2 = db
+            .get_transaction_details(&details2.tx_id)
+            .unwrap()
+            .unwrap();
         assert_eq!(retrieved2.amount_sats, -25000);
-        
+
         cleanup(&db_path);
     }
 
     #[test]
     fn test_get_all_transaction_details() {
         let (mut db, db_path) = setup();
-        
+
         // Initially empty
         let all = db.get_all_transaction_details().unwrap();
         assert!(all.is_empty());
-        
+
         // Add some
         let details1 = create_test_transaction_details();
         let mut details2 = create_test_transaction_details();
         details2.tx_id = "tx789ghi".to_string();
-        
-        db.upsert_transaction_details(&[details1, details2]).unwrap();
-        
+
+        db.upsert_transaction_details(&[details1, details2])
+            .unwrap();
+
         let all = db.get_all_transaction_details().unwrap();
         assert_eq!(all.len(), 2);
-        
+
         cleanup(&db_path);
     }
 
     #[test]
     fn test_wipe_all_transaction_details() {
         let (mut db, db_path) = setup();
-        
+
         let details1 = create_test_transaction_details();
         let mut details2 = create_test_transaction_details();
         details2.tx_id = "tx999xyz".to_string();
-        
-        db.upsert_transaction_details(&[details1, details2]).unwrap();
-        
+
+        db.upsert_transaction_details(&[details1, details2])
+            .unwrap();
+
         // Wipe all
         db.wipe_all_transaction_details().unwrap();
-        
+
         let all = db.get_all_transaction_details().unwrap();
         assert!(all.is_empty());
-        
+
         cleanup(&db_path);
     }
 
     #[test]
     fn test_transaction_details_empty_tx_id_fails() {
         let (mut db, db_path) = setup();
-        
+
         let mut details = create_test_transaction_details();
         details.tx_id = "".to_string();
-        
+
         let result = db.upsert_transaction_details(&[details]);
         assert!(result.is_err());
-        
+
         cleanup(&db_path);
     }
 
     #[test]
     fn test_transaction_details_complex_witness() {
         let (mut db, db_path) = setup();
-        
+
         let details = TransactionDetails {
             tx_id: "tx_with_complex_witness".to_string(),
             amount_sats: 10000,
-            inputs: vec![
-                TxInput {
-                    txid: "prev_tx".to_string(),
-                    vout: 1,
-                    scriptsig: "".to_string(),
-                    witness: vec![
-                        "304402...".to_string(),
-                        "02abc...".to_string(),
-                        "c0...".to_string(),
-                    ],
-                    sequence: 0xfffffffd,
-                },
-            ],
-            outputs: vec![
-                TxOutput {
-                    scriptpubkey: "5120...".to_string(),
-                    scriptpubkey_type: Some("p2tr".to_string()),
-                    scriptpubkey_address: Some("bc1p...".to_string()),
-                    value: 9500,
-                    n: 0,
-                },
-            ],
+            inputs: vec![TxInput {
+                txid: "prev_tx".to_string(),
+                vout: 1,
+                scriptsig: "".to_string(),
+                witness: vec![
+                    "304402...".to_string(),
+                    "02abc...".to_string(),
+                    "c0...".to_string(),
+                ],
+                sequence: 0xfffffffd,
+            }],
+            outputs: vec![TxOutput {
+                scriptpubkey: "5120...".to_string(),
+                scriptpubkey_type: Some("p2tr".to_string()),
+                scriptpubkey_address: Some("bc1p...".to_string()),
+                value: 9500,
+                n: 0,
+            }],
         };
-        
+
         db.upsert_transaction_details(&[details.clone()]).unwrap();
-        
+
         let retrieved = db.get_transaction_details(&details.tx_id).unwrap().unwrap();
         assert_eq!(retrieved.inputs[0].witness.len(), 3);
-        assert_eq!(retrieved.outputs[0].scriptpubkey_type, Some("p2tr".to_string()));
-        
+        assert_eq!(
+            retrieved.outputs[0].scriptpubkey_type,
+            Some("p2tr".to_string())
+        );
+
         cleanup(&db_path);
     }
 
     #[test]
     fn test_wipe_all_includes_transaction_details() {
         let (mut db, db_path) = setup();
-        
+
         // Add activity and transaction details
         let activity = create_test_onchain_activity();
         db.insert_onchain_activity(&activity).unwrap();
-        
+
         let details = create_test_transaction_details();
         db.upsert_transaction_details(&[details]).unwrap();
-        
+
         // Wipe all
         db.wipe_all().unwrap();
-        
+
         // Verify transaction details are also wiped
         let all = db.get_all_transaction_details().unwrap();
         assert!(all.is_empty());
-        
+
         cleanup(&db_path);
     }
 }

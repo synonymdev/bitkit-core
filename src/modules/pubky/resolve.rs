@@ -15,8 +15,9 @@ pub(super) fn get_pubky() -> Result<&'static Pubky, PubkyError> {
 
 /// Convert a `pubky://` URI to its `https://_pubky.<z32>/…` transport URL.
 pub fn resolve_pubky_url(uri: String) -> Result<String, PubkyError> {
-    let url = pubky::resolve_pubky(&uri)
-        .map_err(|e| PubkyError::ResolutionFailed { reason: e.to_string() })?;
+    let url = pubky::resolve_pubky(&uri).map_err(|e| PubkyError::ResolutionFailed {
+        reason: e.to_string(),
+    })?;
     Ok(url.to_string())
 }
 
@@ -36,12 +37,16 @@ pub async fn fetch_pubky_file(uri: String) -> Result<Vec<u8>, PubkyError> {
         .public_storage()
         .get(&uri)
         .await
-        .map_err(|e| PubkyError::FetchFailed { reason: e.to_string() })?;
+        .map_err(|e| PubkyError::FetchFailed {
+            reason: e.to_string(),
+        })?;
 
     let bytes = response
         .bytes()
         .await
-        .map_err(|e| PubkyError::FetchFailed { reason: e.to_string() })?;
+        .map_err(|e| PubkyError::FetchFailed {
+            reason: e.to_string(),
+        })?;
 
     Ok(bytes.to_vec())
 }

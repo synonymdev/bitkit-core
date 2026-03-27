@@ -93,9 +93,7 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
             // Top-level errors
             TE::Cancelled => TrezorError::UserCancelled,
             TE::Timeout => TrezorError::Timeout,
-            TE::IoError(msg) => TrezorError::IoError {
-                error_details: msg,
-            },
+            TE::IoError(msg) => TrezorError::IoError { error_details: msg },
 
             // Transport errors
             TE::Transport(transport_err) => match transport_err {
@@ -208,9 +206,7 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
             // THP (Trezor Host Protocol) errors
             TE::Thp(thp_err) => match thp_err {
                 ThpError::PairingRequired => TrezorError::PairingRequired,
-                ThpError::PairingFailed(msg) => TrezorError::PairingFailed {
-                    error_details: msg,
-                },
+                ThpError::PairingFailed(msg) => TrezorError::PairingFailed { error_details: msg },
                 ThpError::InvalidCredentials => TrezorError::PairingFailed {
                     error_details: "Invalid credentials".to_string(),
                 },
@@ -258,9 +254,7 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
 
             // Bitcoin errors
             TE::Bitcoin(bitcoin_err) => match bitcoin_err {
-                BitcoinError::InvalidPath(msg) => TrezorError::InvalidPath {
-                    error_details: msg,
-                },
+                BitcoinError::InvalidPath(msg) => TrezorError::InvalidPath { error_details: msg },
                 BitcoinError::InvalidAddress(msg) => TrezorError::DeviceError {
                     error_details: format!("Invalid address: {}", msg),
                 },
@@ -283,4 +277,3 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
         }
     }
 }
-

@@ -1,6 +1,6 @@
 use once_cell::sync::OnceCell;
+use pubky::{AuthFlowKind, Capabilities, PubkyAuthFlow};
 use tokio::sync::Mutex as TokioMutex;
-use pubky::{PubkyAuthFlow, Capabilities, AuthFlowKind};
 
 use super::errors::PubkyError;
 
@@ -12,8 +12,10 @@ fn auth_flow_slot() -> &'static TokioMutex<Option<PubkyAuthFlow>> {
 
 /// Start a Pubky auth flow and return the `pubkyauth://` deep-link URL.
 pub async fn start_pubky_auth(caps: String) -> Result<String, PubkyError> {
-    let capabilities = Capabilities::try_from(caps.as_str())
-        .map_err(|e| PubkyError::InvalidCapabilities { reason: e.to_string() })?;
+    let capabilities =
+        Capabilities::try_from(caps.as_str()).map_err(|e| PubkyError::InvalidCapabilities {
+            reason: e.to_string(),
+        })?;
 
     let mut guard = auth_flow_slot().lock().await;
 
@@ -23,8 +25,11 @@ pub async fn start_pubky_auth(caps: String) -> Result<String, PubkyError> {
         });
     }
 
-    let flow = PubkyAuthFlow::start(&capabilities, AuthFlowKind::signin())
-        .map_err(|e| PubkyError::AuthFailed { reason: e.to_string() })?;
+    let flow = PubkyAuthFlow::start(&capabilities, AuthFlowKind::signin()).map_err(|e| {
+        PubkyError::AuthFailed {
+            reason: e.to_string(),
+        }
+    })?;
 
     let url = flow.authorization_url().to_string();
     *guard = Some(flow);
@@ -49,7 +54,9 @@ pub async fn complete_pubky_auth() -> Result<String, PubkyError> {
     let session = flow
         .await_approval()
         .await
-        .map_err(|e| PubkyError::AuthFailed { reason: e.to_string() })?;
+        .map_err(|e| PubkyError::AuthFailed {
+            reason: e.to_string(),
+        })?;
 
     Ok(session.export_secret())
 }

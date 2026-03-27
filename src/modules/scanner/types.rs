@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-use std::fmt;
 use bitcoin::Network;
 use serde::Serialize;
+use std::collections::HashMap;
+use std::fmt;
 
 #[derive(uniffi::Enum, Debug, Clone, PartialEq, Serialize)]
 pub enum NetworkType {

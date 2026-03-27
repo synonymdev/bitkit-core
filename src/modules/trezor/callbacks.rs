@@ -3,8 +3,8 @@
 //! These types and traits bridge the Rust trezor-connect-rs library with
 //! native iOS/Android implementations via UniFFI callback interfaces.
 
-use std::sync::Arc;
 use once_cell::sync::OnceCell;
+use std::sync::Arc;
 
 // ============================================================================
 // Transport callback types
@@ -115,7 +115,12 @@ pub trait TrezorTransportCallback: Send + Sync {
     /// * `path` - Device path
     /// * `message_type` - Protobuf message type (e.g., GetAddress = 29)
     /// * `data` - Serialized protobuf message data
-    fn call_message(&self, path: String, message_type: u16, data: Vec<u8>) -> Option<TrezorCallMessageResult>;
+    fn call_message(
+        &self,
+        path: String,
+        message_type: u16,
+        data: Vec<u8>,
+    ) -> Option<TrezorCallMessageResult>;
 
     /// Get pairing code from user during BLE THP pairing.
     ///

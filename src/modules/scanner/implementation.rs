@@ -1,26 +1,25 @@
-use std::collections::HashMap;
-use std::str::FromStr;
-use async_trait::async_trait;
-use bitcoin::Network;
-use lazy_regex::{lazy_regex, Lazy};
-use lightning_invoice::Bolt11Invoice;
-use lnurl::{Builder, LnUrlResponse};
-use lnurl::lightning_address::LightningAddress;
-use lnurl::lnurl::LnUrl;
-use url::Url;
-use chrono::{DateTime, Utc};
-use regex::Regex;
-use crate::lnurl::is_lnurl_address;
 use super::errors::DecodingError;
 use super::types::*;
 use super::utils::*;
+use crate::lnurl::is_lnurl_address;
+use async_trait::async_trait;
+use bitcoin::Network;
+use chrono::{DateTime, Utc};
+use lazy_regex::{lazy_regex, Lazy};
+use lightning_invoice::Bolt11Invoice;
+use lnurl::lightning_address::LightningAddress;
+use lnurl::lnurl::LnUrl;
+use lnurl::{Builder, LnUrlResponse};
+use regex::Regex;
+use std::collections::HashMap;
+use std::str::FromStr;
+use url::Url;
 
 use crate::modules::onchain::BitcoinAddressValidator;
 
 impl LightningInvoice {
     pub fn get_timestamp(&self) -> DateTime<Utc> {
-        DateTime::<Utc>::from_timestamp(self.timestamp_seconds as i64, 0)
-            .unwrap_or_default()
+        DateTime::<Utc>::from_timestamp(self.timestamp_seconds as i64, 0).unwrap_or_default()
     }
 
     pub fn get_expiry(&self) -> core::time::Duration {
@@ -44,9 +43,10 @@ impl Scanner {
     fn normalize_address_for_validation(address: &str) -> String {
         let address_lower = address.to_lowercase();
         // Check if it's a bech32 address (starts with bc1, tb1, bcrt1, etc.)
-        if address_lower.starts_with("bc1") || 
-           address_lower.starts_with("tb1") || 
-           address_lower.starts_with("bcrt1") {
+        if address_lower.starts_with("bc1")
+            || address_lower.starts_with("tb1")
+            || address_lower.starts_with("bcrt1")
+        {
             address_lower
         } else {
             // Legacy address - preserve original case
@@ -63,13 +63,14 @@ impl Scanner {
         // Handle Bitkit deep links
         if invoice_str.starts_with("bitkit://") {
             let data = invoice_str.replace("bitkit://", "");
-            
+
             // Check if it's a gift code format: bitkit://gift-<code>-<amount>
             if data.starts_with("gift-") {
                 let parts: Vec<&str> = data.splitn(3, '-').collect();
                 if parts.len() == 3 && parts[0] == "gift" {
                     let code = parts[1];
-                    let amount = parts[2].parse::<u64>()
+                    let amount = parts[2]
+                        .parse::<u64>()
                         .map_err(|_| DecodingError::InvalidFormat)?;
                     return Ok(Scanner::Gift {
                         code: code.to_string(),
@@ -77,7 +78,7 @@ impl Scanner {
                     });
                 }
             }
-            
+
             return Box::pin(Self::decode(data)).await;
         }
 
@@ -90,14 +91,14 @@ impl Scanner {
                 }
                 return Ok(Scanner::NodeId {
                     url: invoice_str.to_string(),
-                    network: NetworkType::Bitcoin
+                    network: NetworkType::Bitcoin,
                 });
             }
         }
 
-        if  invoice_str.to_lowercase().contains("lightning:") ||
-            invoice_str.to_lowercase().starts_with("lntb") ||
-            invoice_str.to_lowercase().starts_with("lnbc")
+        if invoice_str.to_lowercase().contains("lightning:")
+            || invoice_str.to_lowercase().starts_with("lntb")
+            || invoice_str.to_lowercase().starts_with("lnbc")
         {
             let invoice_lower = invoice_str.to_lowercase();
             let invoice = invoice_lower
@@ -106,13 +107,14 @@ impl Scanner {
             Self::decode_lightning(invoice)
         } else if invoice_str.to_lowercase().starts_with("bitcoin:") {
             // Extract address and query params (preserve original case for query params)
-            let (address_part, query_part) = invoice_str[8..].split_once('?')
+            let (address_part, query_part) = invoice_str[8..]
+                .split_once('?')
                 .map(|(addr, query)| (addr, Some(query)))
                 .unwrap_or((&invoice_str[8..], None));
-            
+
             // Normalize address (only lowercase bech32, preserve legacy case)
             let address_normalized = Self::normalize_address_for_validation(address_part);
-            
+
             if BitcoinAddressValidator::validate_address(&address_normalized).is_ok() {
                 let normalized = if let Some(query) = query_part {
                     format!("bitcoin:{}?{}", address_normalized, query)
@@ -125,7 +127,7 @@ impl Scanner {
             }
         } else if invoice_str.to_lowercase().starts_with("pubkyauth:") {
             Ok(Scanner::PubkyAuth {
-                data: invoice_str.to_string()
+                data: invoice_str.to_string(),
             })
         } else if let Some(lnurl) = Self::find_lnurl(invoice_str) {
             Self::decode_lnurl(&lnurl).await
@@ -144,7 +146,9 @@ impl Scanner {
     }
 
     pub fn find_lnurl(text: &str) -> Option<String> {
-        static LNURL_REGEX: Lazy<Regex> = lazy_regex!(r"^(?:(http.*|bitcoin:.*)[&?]lightning=|lightning:)?(lnurl1[02-9ac-hj-np-z]+)");
+        static LNURL_REGEX: Lazy<Regex> = lazy_regex!(
+            r"^(?:(http.*|bitcoin:.*)[&?]lightning=|lightning:)?(lnurl1[02-9ac-hj-np-z]+)"
+        );
 
         // Convert input to lowercase and store it in a variable
         let text_lower = text.to_lowercase();
@@ -159,46 +163,43 @@ impl Scanner {
 
     async fn decode_lnurl(invoice_str: &str) -> Result<Scanner, DecodingError> {
         // Helper function to convert responses to Scanner enum
-        fn convert_response(uri: String, response: LnUrlResponse) -> Result<Scanner, DecodingError> {
+        fn convert_response(
+            uri: String,
+            response: LnUrlResponse,
+        ) -> Result<Scanner, DecodingError> {
             match response {
-                LnUrlResponse::LnUrlPayResponse(pay) => {
-                    Ok(Scanner::LnurlPay {
-                        data: LnurlPayData {
-                            uri,
-                            callback: pay.callback,
-                            min_sendable: pay.min_sendable,
-                            max_sendable: pay.max_sendable,
-                            metadata_str: pay.metadata,
-                            comment_allowed: pay.comment_allowed,
-                            allows_nostr: pay.allows_nostr.unwrap_or(false),
-                            nostr_pubkey: pay.nostr_pubkey.map(|key| key.serialize().to_vec()),
-                        }
-                    })
-                },
-                LnUrlResponse::LnUrlWithdrawResponse(withdraw) => {
-                    Ok(Scanner::LnurlWithdraw {
-                        data: LnurlWithdrawData {
-                            uri,
-                            callback: withdraw.callback,
-                            k1: withdraw.k1,
-                            default_description: withdraw.default_description,
-                            min_withdrawable: withdraw.min_withdrawable,
-                            max_withdrawable: withdraw.max_withdrawable,
-                            tag: withdraw.tag.to_string(),
-                        }
-                    })
-                },
-                LnUrlResponse::LnUrlChannelResponse(channel) => {
-                    Ok(Scanner::LnurlChannel {
-                        data: LnurlChannelData {
-                            uri: channel.uri,
-                            callback: channel.callback,
-                            k1: channel.k1,
-                            tag: channel.tag.to_string(),
-                        }
-                    })
-                },
-                _ => Err(DecodingError::InvalidFormat)
+                LnUrlResponse::LnUrlPayResponse(pay) => Ok(Scanner::LnurlPay {
+                    data: LnurlPayData {
+                        uri,
+                        callback: pay.callback,
+                        min_sendable: pay.min_sendable,
+                        max_sendable: pay.max_sendable,
+                        metadata_str: pay.metadata,
+                        comment_allowed: pay.comment_allowed,
+                        allows_nostr: pay.allows_nostr.unwrap_or(false),
+                        nostr_pubkey: pay.nostr_pubkey.map(|key| key.serialize().to_vec()),
+                    },
+                }),
+                LnUrlResponse::LnUrlWithdrawResponse(withdraw) => Ok(Scanner::LnurlWithdraw {
+                    data: LnurlWithdrawData {
+                        uri,
+                        callback: withdraw.callback,
+                        k1: withdraw.k1,
+                        default_description: withdraw.default_description,
+                        min_withdrawable: withdraw.min_withdrawable,
+                        max_withdrawable: withdraw.max_withdrawable,
+                        tag: withdraw.tag.to_string(),
+                    },
+                }),
+                LnUrlResponse::LnUrlChannelResponse(channel) => Ok(Scanner::LnurlChannel {
+                    data: LnurlChannelData {
+                        uri: channel.uri,
+                        callback: channel.callback,
+                        k1: channel.k1,
+                        tag: channel.tag.to_string(),
+                    },
+                }),
+                _ => Err(DecodingError::InvalidFormat),
             }
         }
 
@@ -206,10 +207,12 @@ impl Scanner {
         if is_lnurl_address(invoice_str) {
             if let Ok(ln_addr) = LightningAddress::from_str(invoice_str) {
                 let url = ln_addr.lnurlp_url();
-                let async_client = Builder::default().build_async()
+                let async_client = Builder::default()
+                    .build_async()
                     .map_err(|_| DecodingError::InvalidFormat)?;
 
-                let response = async_client.make_request(&*url)
+                let response = async_client
+                    .make_request(&*url)
                     .await
                     .map_err(|_| DecodingError::InvalidFormat)?;
 
@@ -218,20 +221,20 @@ impl Scanner {
         }
 
         // Handle LNURL
-        let lnurl = LnUrl::from_str(invoice_str)
-            .map_err(|_| DecodingError::InvalidFormat)?;
+        let lnurl = LnUrl::from_str(invoice_str).map_err(|_| DecodingError::InvalidFormat)?;
 
         // Check for LNURL-auth
         if lnurl.is_lnurl_auth() {
-            let parsed_url = Url::parse(&lnurl.url)
-                .map_err(|_| DecodingError::InvalidFormat)?;
+            let parsed_url = Url::parse(&lnurl.url).map_err(|_| DecodingError::InvalidFormat)?;
 
-            let k1 = parsed_url.query_pairs()
+            let k1 = parsed_url
+                .query_pairs()
                 .find(|(key, _)| key == "k1")
                 .map(|(_, value)| value.to_string())
                 .ok_or(DecodingError::InvalidFormat)?;
 
-            let domain = parsed_url.host_str()
+            let domain = parsed_url
+                .host_str()
                 .ok_or(DecodingError::InvalidFormat)?
                 .to_string();
 
@@ -241,15 +244,17 @@ impl Scanner {
                     tag: "login".to_string(),
                     k1,
                     domain,
-                }
+                },
             });
         }
 
         // Handle other LNURL types
-        let async_client = Builder::default().build_async()
+        let async_client = Builder::default()
+            .build_async()
             .map_err(|_| DecodingError::InvalidFormat)?;
 
-        let response = async_client.make_request(&lnurl.url)
+        let response = async_client
+            .make_request(&lnurl.url)
             .await
             .map_err(|_| DecodingError::InvalidFormat)?;
 
@@ -257,8 +262,8 @@ impl Scanner {
     }
 
     fn decode_lightning(invoice_str: &str) -> Result<Self, DecodingError> {
-        let bolt11_invoice = Bolt11Invoice::from_str(invoice_str)
-            .map_err(|_| DecodingError::InvalidFormat)?;
+        let bolt11_invoice =
+            Bolt11Invoice::from_str(invoice_str).map_err(|_| DecodingError::InvalidFormat)?;
 
         let network = NetworkType::from(bolt11_invoice.network());
         let amount_satoshis: u64 = bolt11_invoice.amount_milli_satoshis().unwrap_or(0) / 1000u64;
@@ -266,8 +271,9 @@ impl Scanner {
 
         let timestamp = DateTime::<Utc>::from_timestamp(
             bolt11_invoice.duration_since_epoch().as_secs() as i64,
-            0
-        ).unwrap_or_default();
+            0,
+        )
+        .unwrap_or_default();
 
         let description = match bolt11_invoice.description() {
             lightning_invoice::Bolt11InvoiceDescription::Direct(desc) => Some(desc.to_string()),
@@ -275,8 +281,7 @@ impl Scanner {
         };
 
         let payment_hash = AsRef::<[u8]>::as_ref(bolt11_invoice.payment_hash()).to_vec();
-        let payee_node_id = bolt11_invoice.recover_payee_pub_key()
-            .serialize().to_vec();
+        let payee_node_id = bolt11_invoice.recover_payee_pub_key().serialize().to_vec();
 
         let expiry = bolt11_invoice.expiry_time();
 
@@ -291,14 +296,14 @@ impl Scanner {
                 description,
                 network_type: network,
                 payee_node_id: Some(payee_node_id),
-            }
+            },
         })
     }
 
     fn handle_node_id(invoice_str: &str) -> Result<Self, DecodingError> {
         Ok(Scanner::NodeId {
             url: invoice_str.to_string(),
-            network: NetworkType::Bitcoin
+            network: NetworkType::Bitcoin,
         })
     }
 
@@ -315,24 +320,23 @@ impl Scanner {
             parts[1]
                 .split('&')
                 .filter_map(|param| {
-                    param.split_once('=').map(|(k, v)| {
-                        (k.to_string(), v.to_string())
-                    })
+                    param
+                        .split_once('=')
+                        .map(|(k, v)| (k.to_string(), v.to_string()))
                 })
                 .collect::<HashMap<String, String>>()
         } else {
             HashMap::new()
         };
 
-        let amount_satoshis = params.get("amount")
+        let amount_satoshis = params
+            .get("amount")
             .and_then(|amount| parse_amount_as_satoshis(amount).ok())
             .unwrap_or(0);
 
-        let label = params.get("label")
-            .map(String::from);
+        let label = params.get("label").map(String::from);
 
-        let message = params.get("message")
-            .map(String::from);
+        let message = params.get("message").map(String::from);
 
         Ok(Scanner::OnChain {
             invoice: OnChainInvoice {
@@ -341,7 +345,7 @@ impl Scanner {
                 label,
                 message,
                 params: Some(params),
-            }
+            },
         })
     }
 }

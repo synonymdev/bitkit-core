@@ -4,18 +4,20 @@ const STAGING_SERVER: &str = "https://api.stag.blocktank.to/blocktank/api/v2";
 
 #[cfg(test)]
 mod tests {
-    use rust_blocktank_client::*;
-    use crate::modules::blocktank::{BlocktankDB, BlocktankError};
-    use crate::modules::blocktank::liquidity::{
-        calculate_channel_liquidity_options, ChannelLiquidityParams,
-        get_default_lsp_balance, DefaultLspBalanceParams,
-    };
     use super::*;
+    use crate::modules::blocktank::liquidity::{
+        calculate_channel_liquidity_options, get_default_lsp_balance, ChannelLiquidityParams,
+        DefaultLspBalanceParams,
+    };
+    use crate::modules::blocktank::{BlocktankDB, BlocktankError};
+    use rust_blocktank_client::*;
 
     #[tokio::test]
     async fn test_upsert_info() {
         // Initialize in-memory database
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Create test data
         let test_info = IBtInfo {
@@ -58,11 +60,13 @@ mod tests {
         // Verify the insert
         {
             let conn = db.conn.lock().await;
-            let row = conn.query_row(
-                "SELECT version, is_current FROM info WHERE version = 1",
-                [],
-                |row| Ok((row.get::<_, u32>(0)?, row.get::<_, bool>(1)?))
-            ).unwrap();
+            let row = conn
+                .query_row(
+                    "SELECT version, is_current FROM info WHERE version = 1",
+                    [],
+                    |row| Ok((row.get::<_, u32>(0)?, row.get::<_, bool>(1)?)),
+                )
+                .unwrap();
             assert_eq!(row, (1, true));
         } // Lock is dropped here
 
@@ -80,7 +84,8 @@ mod tests {
             let conn = db.conn.lock().await;
 
             // Check version statuses
-            let rows: Vec<(u32, bool)> = conn.prepare("SELECT version, is_current FROM info ORDER BY version")
+            let rows: Vec<(u32, bool)> = conn
+                .prepare("SELECT version, is_current FROM info ORDER BY version")
                 .unwrap()
                 .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
                 .unwrap()
@@ -92,11 +97,11 @@ mod tests {
             assert_eq!(rows[1], (2, true), "Version 2 should be current");
 
             // Verify JSON serialization
-            let node_data: String = conn.query_row(
-                "SELECT nodes FROM info WHERE version = 2",
-                [],
-                |row| row.get(0)
-            ).unwrap();
+            let node_data: String = conn
+                .query_row("SELECT nodes FROM info WHERE version = 2", [], |row| {
+                    row.get(0)
+                })
+                .unwrap();
 
             let nodes: Vec<ILspNode> = serde_json::from_str(&node_data).unwrap();
             assert_eq!(nodes[0].alias, "updated_node");
@@ -106,11 +111,17 @@ mod tests {
     #[tokio::test]
     async fn test_fetch_and_store_info() {
         // Initialize in-memory database
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Test fetch and store
         let result = db.fetch_and_store_info().await;
-        assert!(result.is_ok(), "Failed to fetch and store info: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to fetch and store info: {:?}",
+            result.err()
+        );
 
         let info = result.unwrap();
 
@@ -119,20 +130,24 @@ mod tests {
             let conn = db.conn.lock().await;
 
             // Verify version is stored
-            let row = conn.query_row(
-                "SELECT version, is_current FROM info WHERE version = ?1",
-                [info.version],
-                |row| Ok((row.get::<_, u32>(0)?, row.get::<_, bool>(1)?))
-            ).unwrap();
+            let row = conn
+                .query_row(
+                    "SELECT version, is_current FROM info WHERE version = ?1",
+                    [info.version],
+                    |row| Ok((row.get::<_, u32>(0)?, row.get::<_, bool>(1)?)),
+                )
+                .unwrap();
             assert_eq!(row.0, info.version);
             assert_eq!(row.1, true);
 
             // Verify JSON data
-            let nodes_json: String = conn.query_row(
-                "SELECT nodes FROM info WHERE version = ?1",
-                [info.version],
-                |row| row.get(0)
-            ).unwrap();
+            let nodes_json: String = conn
+                .query_row(
+                    "SELECT nodes FROM info WHERE version = ?1",
+                    [info.version],
+                    |row| row.get(0),
+                )
+                .unwrap();
 
             let stored_nodes: Vec<ILspNode> = serde_json::from_str(&nodes_json).unwrap();
             assert_eq!(stored_nodes.len(), info.nodes.len());
@@ -148,7 +163,9 @@ mod tests {
     #[tokio::test]
     async fn test_fetch_and_store_info_error_handling() {
         // Initialize with invalid URL to test error handling
-        let db = BlocktankDB::new(":memory:", Some("http://invalid-url")).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some("http://invalid-url"))
+            .await
+            .unwrap();
 
         // Test fetch and store with invalid URL
         let result = db.fetch_and_store_info().await;
@@ -164,11 +181,9 @@ mod tests {
         // Verify no data was stored
         {
             let conn = db.conn.lock().await;
-            let count: u32 = conn.query_row(
-                "SELECT COUNT(*) FROM info",
-                [],
-                |row| row.get(0)
-            ).unwrap();
+            let count: u32 = conn
+                .query_row("SELECT COUNT(*) FROM info", [], |row| row.get(0))
+                .unwrap();
             assert_eq!(count, 0, "No data should be stored when fetch fails");
         }
     }
@@ -176,7 +191,9 @@ mod tests {
     #[tokio::test]
     async fn test_get_info() {
         // Initialize in-memory database
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Should return None when no info exists
         let empty_result = db.get_info().await.unwrap();
@@ -224,16 +241,23 @@ mod tests {
         assert_eq!(stored_info.version, test_info.version);
         assert_eq!(stored_info.nodes[0].alias, test_info.nodes[0].alias);
         assert_eq!(stored_info.nodes[0].pubkey, test_info.nodes[0].pubkey);
-        assert_eq!(stored_info.options.min_channel_size_sat, test_info.options.min_channel_size_sat);
+        assert_eq!(
+            stored_info.options.min_channel_size_sat,
+            test_info.options.min_channel_size_sat
+        );
         assert_eq!(stored_info.versions.http, test_info.versions.http);
         assert_eq!(stored_info.onchain.network, test_info.onchain.network);
-        assert_eq!(stored_info.onchain.fee_rates.fast, test_info.onchain.fee_rates.fast);
+        assert_eq!(
+            stored_info.onchain.fee_rates.fast,
+            test_info.onchain.fee_rates.fast
+        );
     }
-
 
     #[tokio::test]
     async fn test_upsert_order() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Get current timestamp in ISO 8601 format
         let now = chrono::Utc::now();
@@ -252,8 +276,8 @@ mod tests {
             zero_reserve: false,
             client_node_id: Some("client123".to_string()),
             channel_expiry_weeks: 2,
-            channel_expires_at: future.to_rfc3339(),  // Changed from integer to ISO string
-            order_expires_at: future.to_rfc3339(),    // Changed from integer to ISO string
+            channel_expires_at: future.to_rfc3339(), // Changed from integer to ISO string
+            order_expires_at: future.to_rfc3339(),   // Changed from integer to ISO string
             channel: None,
             lsp_node: Some(ILspNode {
                 alias: "test_node".to_string(),
@@ -269,8 +293,8 @@ mod tests {
                 bolt11_invoice: Some(IBtBolt11Invoice {
                     request: "lnbc...".to_string(),
                     state: BtBolt11InvoiceState::Pending,
-                    expires_at: future.to_rfc3339(),   // Changed from integer to ISO string
-                    updated_at: now.to_rfc3339(),      // Changed from integer to ISO string
+                    expires_at: future.to_rfc3339(), // Changed from integer to ISO string
+                    updated_at: now.to_rfc3339(),    // Changed from integer to ISO string
                 }),
                 onchain: Some(IBtOnchainTransactions {
                     address: "bc1...".to_string(),
@@ -284,8 +308,8 @@ mod tests {
             coupon_code: None,
             source: None,
             discount: None,
-            updated_at: now.to_rfc3339(),     // Changed from integer to ISO string
-            created_at: now.to_rfc3339(),     // Changed from integer to ISO string
+            updated_at: now.to_rfc3339(), // Changed from integer to ISO string
+            created_at: now.to_rfc3339(), // Changed from integer to ISO string
         };
 
         // Test initial insert
@@ -295,33 +319,49 @@ mod tests {
         // Verify the insert
         {
             let conn = db.conn.lock().await;
-            let row = conn.query_row(
-                "SELECT id, state, fee_sat FROM orders WHERE id = ?1",
-                [&test_order.id],
-                |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, u64>(2)?))
-            ).unwrap();
+            let row = conn
+                .query_row(
+                    "SELECT id, state, fee_sat FROM orders WHERE id = ?1",
+                    [&test_order.id],
+                    |row| {
+                        Ok((
+                            row.get::<_, String>(0)?,
+                            row.get::<_, String>(1)?,
+                            row.get::<_, u64>(2)?,
+                        ))
+                    },
+                )
+                .unwrap();
 
             assert_eq!(row.0, test_order.id);
             assert_eq!(row.1, format!("{:?}", test_order.state));
             assert_eq!(row.2, test_order.fee_sat);
 
             // Verify JSON serialization
-            let lsp_node_json: String = conn.query_row(
-                "SELECT lsp_node_data FROM orders WHERE id = ?1",
-                [&test_order.id],
-                |row| row.get(0)
-            ).unwrap();
+            let lsp_node_json: String = conn
+                .query_row(
+                    "SELECT lsp_node_data FROM orders WHERE id = ?1",
+                    [&test_order.id],
+                    |row| row.get(0),
+                )
+                .unwrap();
 
             let stored_lsp_node: ILspNode = serde_json::from_str(&lsp_node_json).unwrap();
-            assert_eq!(stored_lsp_node.alias, test_order.lsp_node.as_ref().unwrap().alias.clone());
-            assert_eq!(stored_lsp_node.pubkey, test_order.lsp_node.as_ref().unwrap().pubkey.clone());
+            assert_eq!(
+                stored_lsp_node.alias,
+                test_order.lsp_node.as_ref().unwrap().alias.clone()
+            );
+            assert_eq!(
+                stored_lsp_node.pubkey,
+                test_order.lsp_node.as_ref().unwrap().pubkey.clone()
+            );
         }
 
         // Test update
         let mut updated_order = test_order.clone();
         updated_order.fee_sat = 2000;
         updated_order.state = BtOrderState::Open;
-        updated_order.updated_at = chrono::Utc::now().to_rfc3339();  // Update timestamp
+        updated_order.updated_at = chrono::Utc::now().to_rfc3339(); // Update timestamp
 
         let result = db.upsert_order(&updated_order).await;
         assert!(result.is_ok(), "Failed to update order: {:?}", result.err());
@@ -329,11 +369,13 @@ mod tests {
         // Verify the update
         {
             let conn = db.conn.lock().await;
-            let row = conn.query_row(
-                "SELECT state, fee_sat FROM orders WHERE id = ?1",
-                [&updated_order.id],
-                |row| Ok((row.get::<_, String>(0)?, row.get::<_, u64>(1)?))
-            ).unwrap();
+            let row = conn
+                .query_row(
+                    "SELECT state, fee_sat FROM orders WHERE id = ?1",
+                    [&updated_order.id],
+                    |row| Ok((row.get::<_, String>(0)?, row.get::<_, u64>(1)?)),
+                )
+                .unwrap();
 
             assert_eq!(row.0, format!("{:?}", updated_order.state));
             assert_eq!(row.1, updated_order.fee_sat);
@@ -342,7 +384,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_upsert_orders() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Create multiple test orders
         let mut orders = Vec::new();
@@ -355,7 +399,11 @@ mod tests {
 
         // Test bulk insert
         let result = db.upsert_orders(&orders).await;
-        assert!(result.is_ok(), "Failed to bulk insert orders: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to bulk insert orders: {:?}",
+            result.err()
+        );
 
         // Verify all orders were inserted
         let stored_orders = db.get_orders(None, None).await.unwrap();
@@ -364,7 +412,8 @@ mod tests {
         // Verify each order's data is correct
         for i in 1..=5 {
             let order_id = format!("bulk_order_{}", i);
-            let stored_order = stored_orders.iter()
+            let stored_order = stored_orders
+                .iter()
                 .find(|o| o.id == order_id)
                 .expect(&format!("Order {} not found", order_id));
 
@@ -380,38 +429,46 @@ mod tests {
 
         // Test bulk update - modify some orders
         let mut updated_orders = orders.clone();
-        updated_orders[0].fee_sat = 9999;  // Update first order
-        updated_orders[1].state = BtOrderState::Open;  // Update second order
+        updated_orders[0].fee_sat = 9999; // Update first order
+        updated_orders[1].state = BtOrderState::Open; // Update second order
         updated_orders[1].state2 = Some(BtOrderState2::Executed);
-        updated_orders[2].lsp_balance_sat = 99999;  // Update third order
+        updated_orders[2].lsp_balance_sat = 99999; // Update third order
         updated_orders[2].updated_at = chrono::Utc::now().to_rfc3339();
 
         // Bulk update
         let result = db.upsert_orders(&updated_orders).await;
-        assert!(result.is_ok(), "Failed to bulk update orders: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to bulk update orders: {:?}",
+            result.err()
+        );
 
         // Verify updates were applied
         let stored_orders_after = db.get_orders(None, None).await.unwrap();
         assert_eq!(stored_orders_after.len(), 5, "Should still have 5 orders");
 
-        let updated_order_1 = stored_orders_after.iter()
+        let updated_order_1 = stored_orders_after
+            .iter()
             .find(|o| o.id == "bulk_order_1")
             .expect("Order 1 not found");
         assert_eq!(updated_order_1.fee_sat, 9999);
 
-        let updated_order_2 = stored_orders_after.iter()
+        let updated_order_2 = stored_orders_after
+            .iter()
             .find(|o| o.id == "bulk_order_2")
             .expect("Order 2 not found");
         assert_eq!(updated_order_2.state, BtOrderState::Open);
         assert_eq!(updated_order_2.state2, Some(BtOrderState2::Executed));
 
-        let updated_order_3 = stored_orders_after.iter()
+        let updated_order_3 = stored_orders_after
+            .iter()
             .find(|o| o.id == "bulk_order_3")
             .expect("Order 3 not found");
         assert_eq!(updated_order_3.lsp_balance_sat, 99999);
 
         // Verify other orders weren't affected
-        let updated_order_4 = stored_orders_after.iter()
+        let updated_order_4 = stored_orders_after
+            .iter()
             .find(|o| o.id == "bulk_order_4")
             .expect("Order 4 not found");
         assert_eq!(updated_order_4.fee_sat, 4000);
@@ -420,7 +477,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_upsert_orders_empty() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Test with empty vector
         let result = db.upsert_orders(&[]).await;
@@ -433,7 +492,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_upsert_orders_large_batch() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Create a larger batch of orders to test performance
         let mut orders = Vec::new();
@@ -447,7 +508,11 @@ mod tests {
         let start = std::time::Instant::now();
         let result = db.upsert_orders(&orders).await;
         let bulk_duration = start.elapsed();
-        assert!(result.is_ok(), "Failed to bulk insert orders: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to bulk insert orders: {:?}",
+            result.err()
+        );
 
         // Verify all orders were inserted
         let stored_orders = db.get_orders(None, None).await.unwrap();
@@ -456,7 +521,8 @@ mod tests {
         // Verify a sample of orders
         for i in (1..=50).step_by(10) {
             let order_id = format!("large_batch_order_{}", i);
-            let stored_order = stored_orders.iter()
+            let stored_order = stored_orders
+                .iter()
                 .find(|o| o.id == order_id)
                 .expect(&format!("Order {} not found", order_id));
             assert_eq!(stored_order.fee_sat, 500 * i as u64);
@@ -467,7 +533,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_and_store_order() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         let options = CreateOrderOptions {
             coupon_code: "".to_string(),
@@ -478,18 +546,23 @@ mod tests {
         };
 
         let result = db.create_and_store_order(100000, 4, Some(options)).await;
-        assert!(result.is_ok(), "Failed to create and store order: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to create and store order: {:?}",
+            result.err()
+        );
 
         let order = result.unwrap();
         assert_eq!(order.lsp_balance_sat, 100000);
         assert_eq!(order.client_balance_sat, 0);
-
     }
 
     #[tokio::test]
     async fn test_refresh_orders() {
         // Initialize in-memory database
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Create actual orders through the API
         let options = CreateOrderOptions {
@@ -503,7 +576,9 @@ mod tests {
 
         // Create two real orders
         println!("Creating first test order...");
-        let order1 = db.create_and_store_order(100000, 4, Some(options.clone())).await
+        let order1 = db
+            .create_and_store_order(100000, 4, Some(options.clone()))
+            .await
             .expect("Failed to create first order");
 
         println!("First order created with ID: {}", order1.id);
@@ -512,7 +587,9 @@ mod tests {
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
         println!("Creating second test order...");
-        let order2 = db.create_and_store_order(150000, 4, Some(options.clone())).await
+        let order2 = db
+            .create_and_store_order(150000, 4, Some(options.clone()))
+            .await
             .expect("Failed to create second order");
 
         println!("Second order created with ID: {}", order2.id);
@@ -549,15 +626,19 @@ mod tests {
 
                     // Verify database state
                     let conn = db.conn.lock().await;
-                    let row = conn.query_row(
-                        "SELECT id, state, fee_sat FROM orders WHERE id = ?1",
-                        [&order.id],
-                        |row| Ok((
-                            row.get::<_, String>(0)?,
-                            row.get::<_, String>(1)?,
-                            row.get::<_, u64>(2)?
-                        ))
-                    ).unwrap();
+                    let row = conn
+                        .query_row(
+                            "SELECT id, state, fee_sat FROM orders WHERE id = ?1",
+                            [&order.id],
+                            |row| {
+                                Ok((
+                                    row.get::<_, String>(0)?,
+                                    row.get::<_, String>(1)?,
+                                    row.get::<_, u64>(2)?,
+                                ))
+                            },
+                        )
+                        .unwrap();
 
                     assert_eq!(row.0, order.id);
                     assert_eq!(row.1, format!("{:?}", order.state));
@@ -566,26 +647,31 @@ mod tests {
 
                 assert!(found_order1, "First order not found in refreshed orders");
                 assert!(found_order2, "Second order not found in refreshed orders");
-            },
+            }
             Err(e) => panic!("Failed to refresh orders: {:?}", e),
         }
 
         // Test error handling with invalid order IDs
         let invalid_ids = vec!["invalid_id_1".to_string()];
         let error_result = db.refresh_orders(&invalid_ids).await;
-        assert!(error_result.is_err(), "Expected error for invalid order IDs");
+        assert!(
+            error_result.is_err(),
+            "Expected error for invalid order IDs"
+        );
 
         match error_result {
             Err(BlocktankError::DataError { error_details }) => {
                 assert!(error_details.contains("Failed to fetch orders"));
-            },
+            }
             _ => panic!("Expected DataError"),
         }
     }
 
     #[tokio::test]
     async fn test_get_orders() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Get current timestamp and future timestamp as integers
         let now = chrono::Utc::now();
@@ -665,41 +751,85 @@ mod tests {
         assert_eq!(all_orders.len(), 3, "Should retrieve all 3 orders");
 
         // Test 2: Get specific orders by ID
-        let specific_orders = db.get_orders(
-            Some(&vec![test_order1.id.clone(), test_order2.id.clone()]),
-            None
-        ).await.unwrap();
-        assert_eq!(specific_orders.len(), 2, "Should retrieve 2 specific orders");
+        let specific_orders = db
+            .get_orders(
+                Some(&vec![test_order1.id.clone(), test_order2.id.clone()]),
+                None,
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            specific_orders.len(),
+            2,
+            "Should retrieve 2 specific orders"
+        );
         assert!(specific_orders.iter().any(|o| o.id == test_order1.id));
         assert!(specific_orders.iter().any(|o| o.id == test_order2.id));
 
         // Test 3: Filter by state
-        let paid_orders = db.get_orders(None, Some(BtOrderState2::Paid)).await.unwrap();
+        let paid_orders = db
+            .get_orders(None, Some(BtOrderState2::Paid))
+            .await
+            .unwrap();
         assert_eq!(paid_orders.len(), 1, "Should retrieve 1 paid order");
         assert_eq!(paid_orders[0].id, test_order3.id);
 
         // Test 4: Verify complex fields deserialization
         let order = &all_orders[0];
-        assert!(!order.lsp_node.as_ref().unwrap().connection_strings.is_empty());
-        assert_eq!(order.payment.as_ref().unwrap().state, test_order1.payment.as_ref().unwrap().state);
-        assert_eq!(order.payment.as_ref().unwrap().bolt11_invoice.as_ref().unwrap().state, test_order1.payment.as_ref().unwrap().bolt11_invoice.as_ref().unwrap().state);
+        assert!(!order
+            .lsp_node
+            .as_ref()
+            .unwrap()
+            .connection_strings
+            .is_empty());
+        assert_eq!(
+            order.payment.as_ref().unwrap().state,
+            test_order1.payment.as_ref().unwrap().state
+        );
+        assert_eq!(
+            order
+                .payment
+                .as_ref()
+                .unwrap()
+                .bolt11_invoice
+                .as_ref()
+                .unwrap()
+                .state,
+            test_order1
+                .payment
+                .as_ref()
+                .unwrap()
+                .bolt11_invoice
+                .as_ref()
+                .unwrap()
+                .state
+        );
 
         // Test 5: Test with non-existent order IDs
-        let non_existent = db.get_orders(
-            Some(&vec!["non_existent_id".to_string()]),
-            None
-        ).await.unwrap();
-        assert_eq!(non_existent.len(), 0, "Should return empty vector for non-existent IDs");
+        let non_existent = db
+            .get_orders(Some(&vec!["non_existent_id".to_string()]), None)
+            .await
+            .unwrap();
+        assert_eq!(
+            non_existent.len(),
+            0,
+            "Should return empty vector for non-existent IDs"
+        );
 
         // Test 6: Test with invalid state filter
-        let executed_orders = db.get_orders(None, Some(BtOrderState2::Executed)).await.unwrap();
+        let executed_orders = db
+            .get_orders(None, Some(BtOrderState2::Executed))
+            .await
+            .unwrap();
         assert_eq!(executed_orders.len(), 1, "Should retrieve 1 executed order");
         assert_eq!(executed_orders[0].id, test_order2.id);
     }
 
     #[tokio::test]
     async fn test_get_active_orders() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Get current timestamp and future timestamp
         let now = chrono::Utc::now();
@@ -709,7 +839,7 @@ mod tests {
         let test_order1 = IBtOrder {
             id: "test_order_1".to_string(),
             state: BtOrderState::Created,
-            state2: Some(BtOrderState2::Created),  // This should be included in active orders
+            state2: Some(BtOrderState2::Created), // This should be included in active orders
             fee_sat: 1000,
             network_fee_sat: 500,
             service_fee_sat: 500,
@@ -758,19 +888,19 @@ mod tests {
         let mut test_order2 = test_order1.clone();
         test_order2.id = "test_order_2".to_string();
         test_order2.state = BtOrderState::Open;
-        test_order2.state2 = Some(BtOrderState2::Paid);  // This should be included in active orders
+        test_order2.state2 = Some(BtOrderState2::Paid); // This should be included in active orders
         test_order2.fee_sat = 2000;
 
         let mut test_order3 = test_order1.clone();
         test_order3.id = "test_order_3".to_string();
         test_order3.state = BtOrderState::Closed;
-        test_order3.state2 = Some(BtOrderState2::Expired);  // This should NOT be included
+        test_order3.state2 = Some(BtOrderState2::Expired); // This should NOT be included
         test_order3.fee_sat = 3000;
 
         let mut test_order4 = test_order1.clone();
         test_order4.id = "test_order_4".to_string();
         test_order4.state = BtOrderState::Closed;
-        test_order4.state2 = Some(BtOrderState2::Executed);  // This should NOT be included
+        test_order4.state2 = Some(BtOrderState2::Executed); // This should NOT be included
         test_order4.fee_sat = 4000;
 
         // Insert all test orders
@@ -783,20 +913,31 @@ mod tests {
         let active_orders = db.get_active_orders().await.unwrap();
 
         // Verify we only got orders in Created or Paid state
-        assert_eq!(active_orders.len(), 2, "Should only retrieve orders in Created or Paid state");
+        assert_eq!(
+            active_orders.len(),
+            2,
+            "Should only retrieve orders in Created or Paid state"
+        );
 
         // Verify the specific orders we got back
-        let order_ids: Vec<String> = active_orders.iter()
-            .map(|o| o.id.clone())
-            .collect();
+        let order_ids: Vec<String> = active_orders.iter().map(|o| o.id.clone()).collect();
 
-        assert!(order_ids.contains(&test_order1.id), "Should contain the Created order");
-        assert!(order_ids.contains(&test_order2.id), "Should contain the Paid order");
+        assert!(
+            order_ids.contains(&test_order1.id),
+            "Should contain the Created order"
+        );
+        assert!(
+            order_ids.contains(&test_order2.id),
+            "Should contain the Paid order"
+        );
 
         // Verify the orders are in the correct state
         for order in active_orders {
             assert!(
-                matches!(order.state2, Some(BtOrderState2::Created) | Some(BtOrderState2::Paid)),
+                matches!(
+                    order.state2,
+                    Some(BtOrderState2::Created) | Some(BtOrderState2::Paid)
+                ),
                 "Order {} should be in Created or Paid state, but was in {:?} state",
                 order.id,
                 order.state2
@@ -816,7 +957,9 @@ mod tests {
     #[tokio::test]
     async fn test_refresh_active_orders() {
         // Initialize in-memory database
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Create test orders with different states
         let options = CreateOrderOptions {
@@ -830,7 +973,9 @@ mod tests {
 
         // Create orders that should be active (Created and Paid states)
         println!("Creating first test order (Created state)...");
-        let order1 = db.create_and_store_order(100000, 4, Some(options.clone())).await
+        let order1 = db
+            .create_and_store_order(100000, 4, Some(options.clone()))
+            .await
             .expect("Failed to create first order");
         println!("First order created with ID: {}", order1.id);
 
@@ -838,7 +983,9 @@ mod tests {
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
         println!("Creating second test order (will be set to Paid state)...");
-        let order2 = db.create_and_store_order(150000, 4, Some(options.clone())).await
+        let order2 = db
+            .create_and_store_order(150000, 4, Some(options.clone()))
+            .await
             .expect("Failed to create second order");
         println!("Second order created with ID: {}", order2.id);
 
@@ -851,7 +998,11 @@ mod tests {
 
         match result {
             Ok(refreshed_orders) => {
-                assert_eq!(refreshed_orders.len(), 2, "Should have refreshed 2 active orders");
+                assert_eq!(
+                    refreshed_orders.len(),
+                    2,
+                    "Should have refreshed 2 active orders"
+                );
 
                 // Verify each refreshed order
                 let mut found_order1 = false;
@@ -873,7 +1024,10 @@ mod tests {
 
                     // Verify order is in an active state
                     assert!(
-                        matches!(order.state2, Some(BtOrderState2::Created) | Some(BtOrderState2::Paid)),
+                        matches!(
+                            order.state2,
+                            Some(BtOrderState2::Created) | Some(BtOrderState2::Paid)
+                        ),
                         "Order should be in Created or Paid state"
                     );
                 }
@@ -884,15 +1038,19 @@ mod tests {
                 // Verify database state
                 let conn = db.conn.lock().await;
                 for order in &refreshed_orders {
-                    let row = conn.query_row(
-                        "SELECT id, state2, fee_sat FROM orders WHERE id = ?1",
-                        [&order.id],
-                        |row| Ok((
-                            row.get::<_, String>(0)?,
-                            row.get::<_, String>(1)?,
-                            row.get::<_, u64>(2)?
-                        ))
-                    ).unwrap();
+                    let row = conn
+                        .query_row(
+                            "SELECT id, state2, fee_sat FROM orders WHERE id = ?1",
+                            [&order.id],
+                            |row| {
+                                Ok((
+                                    row.get::<_, String>(0)?,
+                                    row.get::<_, String>(1)?,
+                                    row.get::<_, u64>(2)?,
+                                ))
+                            },
+                        )
+                        .unwrap();
 
                     assert_eq!(row.0, order.id);
                     assert!(
@@ -900,27 +1058,31 @@ mod tests {
                         "Database order state should be Created or Paid"
                     );
                 }
-            },
+            }
             Err(e) => panic!("Failed to refresh active orders: {:?}", e),
         }
 
         // Test with no active orders
         // First, expire all orders to make them inactive
         let conn = db.conn.lock().await;
-        conn.execute(
-            "UPDATE orders SET state2 = 'Expired'",
-            [],
-        ).unwrap();
-        drop(conn);  // Release the lock
+        conn.execute("UPDATE orders SET state2 = 'Expired'", [])
+            .unwrap();
+        drop(conn); // Release the lock
 
         // Now test refresh_active_orders with no active orders
         let empty_result = db.refresh_active_orders().await.unwrap();
-        assert_eq!(empty_result.len(), 0, "Should return empty vec when no active orders exist");
+        assert_eq!(
+            empty_result.len(),
+            0,
+            "Should return empty vec when no active orders exist"
+        );
     }
 
     #[tokio::test]
     async fn test_get_min_zero_conf_tx_fee() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // First create an order to get a valid order ID
         let options = CreateOrderOptions {
@@ -933,18 +1095,30 @@ mod tests {
         };
 
         println!("Creating test order...");
-        let order = db.create_and_store_order(100000, 4, Some(options)).await
+        let order = db
+            .create_and_store_order(100000, 4, Some(options))
+            .await
             .expect("Failed to create order");
 
         println!("Order created with ID: {}", order.id);
 
         // Test getting min zero conf fee
         let result = db.get_min_zero_conf_tx_fee(order.id).await;
-        assert!(result.is_ok(), "Failed to get min zero conf fee: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to get min zero conf fee: {:?}",
+            result.err()
+        );
 
         let fee_window = result.unwrap();
-        assert!(fee_window.sat_per_vbyte > 0.0, "sat_per_vbyte should be greater than 0");
-        assert!(!fee_window.validity_ends_at.is_empty(), "validity_ends_at should not be empty");
+        assert!(
+            fee_window.sat_per_vbyte > 0.0,
+            "sat_per_vbyte should be greater than 0"
+        );
+        assert!(
+            !fee_window.validity_ends_at.is_empty(),
+            "validity_ends_at should not be empty"
+        );
 
         // Test with invalid order ID
         let error_result = db.get_min_zero_conf_tx_fee("invalid_id".to_string()).await;
@@ -953,14 +1127,16 @@ mod tests {
         match error_result {
             Err(BlocktankError::DataError { error_details }) => {
                 assert!(error_details.contains("Failed to get minimum zero-conf transaction fee"));
-            },
+            }
             _ => panic!("Expected DataError"),
         }
     }
 
     #[tokio::test]
     async fn test_estimate_order_fee() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         let options = Some(CreateOrderOptions {
             client_balance_sat: 0,
@@ -973,27 +1149,42 @@ mod tests {
 
         // Test valid estimation
         let result = db.estimate_order_fee(100000, 4, options.clone()).await;
-        assert!(result.is_ok(), "Failed to estimate order fee: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to estimate order fee: {:?}",
+            result.err()
+        );
 
         let fee_estimate = result.unwrap();
-        assert!(fee_estimate.fee_sat > 0, "Fee estimate should be greater than 0");
-        assert!(fee_estimate.min_0_conf_tx_fee.sat_per_vbyte > 0.0, "min_0_conf_tx_fee.sat_per_vbyte should be greater than 0");
+        assert!(
+            fee_estimate.fee_sat > 0,
+            "Fee estimate should be greater than 0"
+        );
+        assert!(
+            fee_estimate.min_0_conf_tx_fee.sat_per_vbyte > 0.0,
+            "min_0_conf_tx_fee.sat_per_vbyte should be greater than 0"
+        );
 
         // Test with invalid parameters
         let error_result = db.estimate_order_fee(0, 0, None).await;
-        assert!(error_result.is_err(), "Expected error for invalid parameters");
+        assert!(
+            error_result.is_err(),
+            "Expected error for invalid parameters"
+        );
 
         match error_result {
             Err(BlocktankError::DataError { error_details }) => {
                 assert!(error_details.contains("Failed to estimate order fee"));
-            },
+            }
             _ => panic!("Expected DataError"),
         }
     }
 
     #[tokio::test]
     async fn test_estimate_order_fee_full() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         let options = Some(CreateOrderOptions {
             client_balance_sat: 20000,
@@ -1006,29 +1197,50 @@ mod tests {
 
         // Test valid full estimation
         let result = db.estimate_order_fee_full(100000, 4, options.clone()).await;
-        assert!(result.is_ok(), "Failed to estimate full order fee: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to estimate full order fee: {:?}",
+            result.err()
+        );
 
         let fee_estimate = result.unwrap();
-        assert!(fee_estimate.fee_sat > 0, "Fee estimate should be greater than 0");
-        assert!(fee_estimate.network_fee_sat > 0, "Network fee should be greater than 0");
-        assert!(fee_estimate.service_fee_sat > 0, "Service fee should be greater than 0");
-        assert!(fee_estimate.min_0_conf_tx_fee.sat_per_vbyte > 0.0, "min_0_conf_tx_fee.sat_per_vbyte should be greater than 0");
+        assert!(
+            fee_estimate.fee_sat > 0,
+            "Fee estimate should be greater than 0"
+        );
+        assert!(
+            fee_estimate.network_fee_sat > 0,
+            "Network fee should be greater than 0"
+        );
+        assert!(
+            fee_estimate.service_fee_sat > 0,
+            "Service fee should be greater than 0"
+        );
+        assert!(
+            fee_estimate.min_0_conf_tx_fee.sat_per_vbyte > 0.0,
+            "min_0_conf_tx_fee.sat_per_vbyte should be greater than 0"
+        );
 
         // Test with invalid parameters
         let error_result = db.estimate_order_fee_full(0, 0, None).await;
-        assert!(error_result.is_err(), "Expected error for invalid parameters");
+        assert!(
+            error_result.is_err(),
+            "Expected error for invalid parameters"
+        );
 
         match error_result {
             Err(BlocktankError::DataError { error_details }) => {
                 assert!(error_details.contains("Failed to estimate full order fee"));
-            },
+            }
             _ => panic!("Expected DataError"),
         }
     }
 
     #[tokio::test]
     async fn test_upsert_cjit_entry() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Get current timestamp in ISO 8601 format
         let now = chrono::Utc::now();
@@ -1067,27 +1279,41 @@ mod tests {
 
         // Test initial insert
         let result = db.upsert_cjit_entry(&test_entry).await;
-        assert!(result.is_ok(), "Failed to insert CJIT entry: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to insert CJIT entry: {:?}",
+            result.err()
+        );
 
         // Verify the insert
         {
             let conn = db.conn.lock().await;
-            let row = conn.query_row(
-                "SELECT id, state, fee_sat FROM cjit_entries WHERE id = ?1",
-                [&test_entry.id],
-                |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, u64>(2)?))
-            ).unwrap();
+            let row = conn
+                .query_row(
+                    "SELECT id, state, fee_sat FROM cjit_entries WHERE id = ?1",
+                    [&test_entry.id],
+                    |row| {
+                        Ok((
+                            row.get::<_, String>(0)?,
+                            row.get::<_, String>(1)?,
+                            row.get::<_, u64>(2)?,
+                        ))
+                    },
+                )
+                .unwrap();
 
             assert_eq!(row.0, test_entry.id);
             assert_eq!(row.1, format!("{:?}", test_entry.state));
             assert_eq!(row.2, test_entry.fee_sat);
 
             // Verify JSON serialization
-            let lsp_node_json: String = conn.query_row(
-                "SELECT lsp_node_data FROM cjit_entries WHERE id = ?1",
-                [&test_entry.id],
-                |row| row.get(0)
-            ).unwrap();
+            let lsp_node_json: String = conn
+                .query_row(
+                    "SELECT lsp_node_data FROM cjit_entries WHERE id = ?1",
+                    [&test_entry.id],
+                    |row| row.get(0),
+                )
+                .unwrap();
 
             let stored_lsp_node: ILspNode = serde_json::from_str(&lsp_node_json).unwrap();
             assert_eq!(stored_lsp_node.alias, test_entry.lsp_node.alias);
@@ -1101,16 +1327,22 @@ mod tests {
         updated_entry.updated_at = chrono::Utc::now().to_rfc3339();
 
         let result = db.upsert_cjit_entry(&updated_entry).await;
-        assert!(result.is_ok(), "Failed to update CJIT entry: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to update CJIT entry: {:?}",
+            result.err()
+        );
 
         // Verify the update
         {
             let conn = db.conn.lock().await;
-            let row = conn.query_row(
-                "SELECT state, fee_sat FROM cjit_entries WHERE id = ?1",
-                [&updated_entry.id],
-                |row| Ok((row.get::<_, String>(0)?, row.get::<_, u64>(1)?))
-            ).unwrap();
+            let row = conn
+                .query_row(
+                    "SELECT state, fee_sat FROM cjit_entries WHERE id = ?1",
+                    [&updated_entry.id],
+                    |row| Ok((row.get::<_, String>(0)?, row.get::<_, u64>(1)?)),
+                )
+                .unwrap();
 
             assert_eq!(row.0, format!("{:?}", updated_entry.state));
             assert_eq!(row.1, updated_entry.fee_sat);
@@ -1119,7 +1351,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_upsert_cjit_entries() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Create multiple test CJIT entries
         let mut entries = Vec::new();
@@ -1132,7 +1366,11 @@ mod tests {
 
         // Test bulk insert
         let result = db.upsert_cjit_entries(&entries).await;
-        assert!(result.is_ok(), "Failed to bulk insert CJIT entries: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to bulk insert CJIT entries: {:?}",
+            result.err()
+        );
 
         // Verify all entries were inserted
         let stored_entries = db.get_cjit_entries(None, None).await.unwrap();
@@ -1141,7 +1379,8 @@ mod tests {
         // Verify each entry's data is correct
         for i in 1..=5 {
             let entry_id = format!("bulk_cjit_{}", i);
-            let stored_entry = stored_entries.iter()
+            let stored_entry = stored_entries
+                .iter()
                 .find(|e| e.id == entry_id)
                 .expect(&format!("Entry {} not found", entry_id));
 
@@ -1156,36 +1395,44 @@ mod tests {
 
         // Test bulk update - modify some entries
         let mut updated_entries = entries.clone();
-        updated_entries[0].fee_sat = 9999;  // Update first entry
-        updated_entries[1].state = CJitStateEnum::Completed;  // Update second entry
-        updated_entries[2].channel_size_sat = 99999;  // Update third entry
+        updated_entries[0].fee_sat = 9999; // Update first entry
+        updated_entries[1].state = CJitStateEnum::Completed; // Update second entry
+        updated_entries[2].channel_size_sat = 99999; // Update third entry
         updated_entries[2].updated_at = chrono::Utc::now().to_rfc3339();
 
         // Bulk update
         let result = db.upsert_cjit_entries(&updated_entries).await;
-        assert!(result.is_ok(), "Failed to bulk update CJIT entries: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to bulk update CJIT entries: {:?}",
+            result.err()
+        );
 
         // Verify updates were applied
         let stored_entries_after = db.get_cjit_entries(None, None).await.unwrap();
         assert_eq!(stored_entries_after.len(), 5, "Should still have 5 entries");
 
-        let updated_entry_1 = stored_entries_after.iter()
+        let updated_entry_1 = stored_entries_after
+            .iter()
             .find(|e| e.id == "bulk_cjit_1")
             .expect("Entry 1 not found");
         assert_eq!(updated_entry_1.fee_sat, 9999);
 
-        let updated_entry_2 = stored_entries_after.iter()
+        let updated_entry_2 = stored_entries_after
+            .iter()
             .find(|e| e.id == "bulk_cjit_2")
             .expect("Entry 2 not found");
         assert_eq!(updated_entry_2.state, CJitStateEnum::Completed);
 
-        let updated_entry_3 = stored_entries_after.iter()
+        let updated_entry_3 = stored_entries_after
+            .iter()
             .find(|e| e.id == "bulk_cjit_3")
             .expect("Entry 3 not found");
         assert_eq!(updated_entry_3.channel_size_sat, 99999);
 
         // Verify other entries weren't affected
-        let updated_entry_4 = stored_entries_after.iter()
+        let updated_entry_4 = stored_entries_after
+            .iter()
             .find(|e| e.id == "bulk_cjit_4")
             .expect("Entry 4 not found");
         assert_eq!(updated_entry_4.fee_sat, 4000);
@@ -1194,7 +1441,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_upsert_cjit_entries_empty() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Test with empty vector
         let result = db.upsert_cjit_entries(&[]).await;
@@ -1207,7 +1456,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_cjit_entries() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Get current timestamp and future timestamp
         let now = chrono::Utc::now();
@@ -1267,16 +1518,26 @@ mod tests {
         assert_eq!(all_entries.len(), 3, "Should retrieve all 3 entries");
 
         // Test 2: Get specific entries by ID
-        let specific_entries = db.get_cjit_entries(
-            Some(&vec![test_entry1.id.clone(), test_entry2.id.clone()]),
-            None
-        ).await.unwrap();
-        assert_eq!(specific_entries.len(), 2, "Should retrieve 2 specific entries");
+        let specific_entries = db
+            .get_cjit_entries(
+                Some(&vec![test_entry1.id.clone(), test_entry2.id.clone()]),
+                None,
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            specific_entries.len(),
+            2,
+            "Should retrieve 2 specific entries"
+        );
         assert!(specific_entries.iter().any(|e| e.id == test_entry1.id));
         assert!(specific_entries.iter().any(|e| e.id == test_entry2.id));
 
         // Test 3: Filter by state
-        let created_entries = db.get_cjit_entries(None, Some(CJitStateEnum::Created)).await.unwrap();
+        let created_entries = db
+            .get_cjit_entries(None, Some(CJitStateEnum::Created))
+            .await
+            .unwrap();
         assert_eq!(created_entries.len(), 1, "Should retrieve 1 created entry");
         assert_eq!(created_entries[0].id, test_entry1.id);
 
@@ -1286,15 +1547,26 @@ mod tests {
         assert_eq!(entry.invoice.state, test_entry1.invoice.state);
 
         // Test 5: Test with non-existent entry IDs
-        let non_existent = db.get_cjit_entries(
-            Some(&vec!["non_existent_id".to_string()]),
-            None
-        ).await.unwrap();
-        assert_eq!(non_existent.len(), 0, "Should return empty vector for non-existent IDs");
+        let non_existent = db
+            .get_cjit_entries(Some(&vec!["non_existent_id".to_string()]), None)
+            .await
+            .unwrap();
+        assert_eq!(
+            non_existent.len(),
+            0,
+            "Should return empty vector for non-existent IDs"
+        );
 
         // Test 6: Test with completed state filter
-        let completed_entries = db.get_cjit_entries(None, Some(CJitStateEnum::Completed)).await.unwrap();
-        assert_eq!(completed_entries.len(), 1, "Should retrieve 1 completed entry");
+        let completed_entries = db
+            .get_cjit_entries(None, Some(CJitStateEnum::Completed))
+            .await
+            .unwrap();
+        assert_eq!(
+            completed_entries.len(),
+            1,
+            "Should retrieve 1 completed entry"
+        );
         assert_eq!(completed_entries[0].id, test_entry2.id);
 
         // Test 7: Verify all fields are correctly loaded for a specific entry
@@ -1302,8 +1574,14 @@ mod tests {
         assert_eq!(specific_entry.fee_sat, test_entry1.fee_sat);
         assert_eq!(specific_entry.network_fee_sat, test_entry1.network_fee_sat);
         assert_eq!(specific_entry.service_fee_sat, test_entry1.service_fee_sat);
-        assert_eq!(specific_entry.channel_size_sat, test_entry1.channel_size_sat);
-        assert_eq!(specific_entry.channel_expiry_weeks, test_entry1.channel_expiry_weeks);
+        assert_eq!(
+            specific_entry.channel_size_sat,
+            test_entry1.channel_size_sat
+        );
+        assert_eq!(
+            specific_entry.channel_expiry_weeks,
+            test_entry1.channel_expiry_weeks
+        );
         assert_eq!(specific_entry.node_id, test_entry1.node_id);
         assert_eq!(specific_entry.coupon_code, test_entry1.coupon_code);
         assert_eq!(specific_entry.source, test_entry1.source);
@@ -1312,7 +1590,9 @@ mod tests {
     #[tokio::test]
     async fn test_cjit_entry_integration() {
         // Initialize database with staging server
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Create a test CJIT entry
         let options = Some(CreateCjitOptions {
@@ -1327,17 +1607,23 @@ mod tests {
         let node_id = "03c8533232c155c41c42e5a8f8487b192dd36f1d354b86ef461cc82e67e3388839"; // Example node ID
         let channel_expiry_weeks = 4;
 
-        let result = db.create_cjit_entry(
-            channel_size_sat,
-            invoice_sat,
-            invoice_description,
-            node_id,
-            channel_expiry_weeks,
-            options.clone()
-        ).await;
+        let result = db
+            .create_cjit_entry(
+                channel_size_sat,
+                invoice_sat,
+                invoice_description,
+                node_id,
+                channel_expiry_weeks,
+                options.clone(),
+            )
+            .await;
 
         // Verify creation was successful
-        assert!(result.is_ok(), "Failed to create CJIT entry: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to create CJIT entry: {:?}",
+            result.err()
+        );
         let cjit_entry = result.unwrap();
 
         println!("Created CJIT entry with ID: {}", cjit_entry.id);
@@ -1359,12 +1645,16 @@ mod tests {
         assert_eq!(cjit_entry.source, Some("integration_test".to_string()));
 
         // Test fetching the created entry
-        let fetched_entries = db.get_cjit_entries(
-            Some(&vec![cjit_entry.id.clone()]),
-            None
-        ).await.unwrap();
+        let fetched_entries = db
+            .get_cjit_entries(Some(&vec![cjit_entry.id.clone()]), None)
+            .await
+            .unwrap();
 
-        assert_eq!(fetched_entries.len(), 1, "Should retrieve exactly one entry");
+        assert_eq!(
+            fetched_entries.len(),
+            1,
+            "Should retrieve exactly one entry"
+        );
         let fetched_entry = &fetched_entries[0];
 
         // Verify fetched entry matches created entry
@@ -1375,53 +1665,71 @@ mod tests {
         assert_eq!(fetched_entry.state, CJitStateEnum::Created);
 
         // Test filtering by state
-        let created_entries = db.get_cjit_entries(None, Some(CJitStateEnum::Created)).await.unwrap();
-        assert!(created_entries.iter().any(|e| e.id == cjit_entry.id),
-                "Should find the entry when filtering by Created state");
+        let created_entries = db
+            .get_cjit_entries(None, Some(CJitStateEnum::Created))
+            .await
+            .unwrap();
+        assert!(
+            created_entries.iter().any(|e| e.id == cjit_entry.id),
+            "Should find the entry when filtering by Created state"
+        );
 
         // Verify no entries in other states
-        let completed_entries = db.get_cjit_entries(None, Some(CJitStateEnum::Completed)).await.unwrap();
-        assert!(!completed_entries.iter().any(|e| e.id == cjit_entry.id),
-                "Should not find the entry when filtering by Completed state");
+        let completed_entries = db
+            .get_cjit_entries(None, Some(CJitStateEnum::Completed))
+            .await
+            .unwrap();
+        assert!(
+            !completed_entries.iter().any(|e| e.id == cjit_entry.id),
+            "Should not find the entry when filtering by Completed state"
+        );
 
         println!("CJIT entry integration test completed successfully");
     }
 
     #[tokio::test]
     async fn test_cjit_entry_invalid_params() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Test with invalid channel size (too small)
-        let result = db.create_cjit_entry(
-            1000, // Very small channel size
-            100,
-            "Test invalid channel size",
-            "03c8533232c155c41c42e5a8f8487b192dd36f1d354b86ef461cc82e67e3388839",
-            4,
-            None
-        ).await;
+        let result = db
+            .create_cjit_entry(
+                1000, // Very small channel size
+                100,
+                "Test invalid channel size",
+                "03c8533232c155c41c42e5a8f8487b192dd36f1d354b86ef461cc82e67e3388839",
+                4,
+                None,
+            )
+            .await;
         assert!(result.is_err(), "Should fail with too small channel size");
 
         // Test with invalid node ID
-        let result = db.create_cjit_entry(
-            100000,
-            1000,
-            "Test invalid node ID",
-            "invalid_node_id",
-            4,
-            None
-        ).await;
+        let result = db
+            .create_cjit_entry(
+                100000,
+                1000,
+                "Test invalid node ID",
+                "invalid_node_id",
+                4,
+                None,
+            )
+            .await;
         assert!(result.is_err(), "Should fail with invalid node ID");
 
         // Test with invalid expiry weeks (too long)
-        let result = db.create_cjit_entry(
-            100000,
-            1000,
-            "Test invalid expiry",
-            "03c8533232c155c41c42e5a8f8487b192dd36f1d354b86ef461cc82e67e3388839",
-            100, // Too many weeks
-            None
-        ).await;
+        let result = db
+            .create_cjit_entry(
+                100000,
+                1000,
+                "Test invalid expiry",
+                "03c8533232c155c41c42e5a8f8487b192dd36f1d354b86ef461cc82e67e3388839",
+                100, // Too many weeks
+                None,
+            )
+            .await;
         assert!(result.is_err(), "Should fail with too many expiry weeks");
 
         println!("CJIT entry invalid parameters test completed successfully");
@@ -1429,7 +1737,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_active_cjit_entries() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         // Get current timestamp and future timestamp
         let now = chrono::Utc::now();
@@ -1438,7 +1748,7 @@ mod tests {
         // Create test entries with different states
         let test_entry1 = ICJitEntry {
             id: "test_cjit_1".to_string(),
-            state: CJitStateEnum::Created,  // This should be included in active entries
+            state: CJitStateEnum::Created, // This should be included in active entries
             fee_sat: 1000,
             network_fee_sat: 500,
             service_fee_sat: 500,
@@ -1469,20 +1779,20 @@ mod tests {
 
         let mut test_entry2 = test_entry1.clone();
         test_entry2.id = "test_cjit_2".to_string();
-        test_entry2.state = CJitStateEnum::Failed;  // This should be included in active entries
+        test_entry2.state = CJitStateEnum::Failed; // This should be included in active entries
         test_entry2.fee_sat = 2000;
         test_entry2.coupon_code = "TEST2".to_string();
         test_entry2.channel_open_error = Some("Connection failed".to_string());
 
         let mut test_entry3 = test_entry1.clone();
         test_entry3.id = "test_cjit_3".to_string();
-        test_entry3.state = CJitStateEnum::Completed;  // This should NOT be included
+        test_entry3.state = CJitStateEnum::Completed; // This should NOT be included
         test_entry3.fee_sat = 3000;
         test_entry3.coupon_code = "TEST3".to_string();
 
         let mut test_entry4 = test_entry1.clone();
         test_entry4.id = "test_cjit_4".to_string();
-        test_entry4.state = CJitStateEnum::Expired;  // This should NOT be included
+        test_entry4.state = CJitStateEnum::Expired; // This should NOT be included
         test_entry4.fee_sat = 4000;
         test_entry4.coupon_code = "TEST4".to_string();
 
@@ -1496,15 +1806,23 @@ mod tests {
         let active_entries = db.get_active_cjit_entries().await.unwrap();
 
         // Verify we only got entries in Created or Failed state
-        assert_eq!(active_entries.len(), 2, "Should only retrieve entries in Created or Failed state");
+        assert_eq!(
+            active_entries.len(),
+            2,
+            "Should only retrieve entries in Created or Failed state"
+        );
 
         // Verify the specific entries we got back
-        let entry_ids: Vec<String> = active_entries.iter()
-            .map(|e| e.id.clone())
-            .collect();
+        let entry_ids: Vec<String> = active_entries.iter().map(|e| e.id.clone()).collect();
 
-        assert!(entry_ids.contains(&test_entry1.id), "Should contain the Created entry");
-        assert!(entry_ids.contains(&test_entry2.id), "Should contain the Failed entry");
+        assert!(
+            entry_ids.contains(&test_entry1.id),
+            "Should contain the Created entry"
+        );
+        assert!(
+            entry_ids.contains(&test_entry2.id),
+            "Should contain the Failed entry"
+        );
 
         // Verify the entries are in the correct state
         for entry in active_entries {
@@ -1523,7 +1841,10 @@ mod tests {
             } else if entry.id == test_entry2.id {
                 assert_eq!(entry.state, CJitStateEnum::Failed);
                 assert_eq!(entry.fee_sat, 2000);
-                assert_eq!(entry.channel_open_error, Some("Connection failed".to_string()));
+                assert_eq!(
+                    entry.channel_open_error,
+                    Some("Connection failed".to_string())
+                );
             }
 
             // Verify LSP node data is loaded correctly
@@ -1536,21 +1857,25 @@ mod tests {
         // Test with no active entries
         // First, mark all entries as completed to make them inactive
         let conn = db.conn.lock().await;
-        conn.execute(
-            "UPDATE cjit_entries SET state = 'Completed'",
-            [],
-        ).unwrap();
-        drop(conn);  // Release the lock
+        conn.execute("UPDATE cjit_entries SET state = 'Completed'", [])
+            .unwrap();
+        drop(conn); // Release the lock
 
         // Now test get_active_cjit_entries with no active entries
         let empty_result = db.get_active_cjit_entries().await.unwrap();
-        assert_eq!(empty_result.len(), 0, "Should return empty vec when no active entries exist");
+        assert_eq!(
+            empty_result.len(),
+            0,
+            "Should return empty vec when no active entries exist"
+        );
     }
 
     #[tokio::test]
     async fn test_refresh_active_cjit_entries() {
         // Initialize database with staging server
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
 
         let options = Some(CreateCjitOptions {
             source: Some("integration_test".to_string()),
@@ -1559,28 +1884,34 @@ mod tests {
 
         // Create two test entries that will start in Created state
         println!("Creating first test CJIT entry...");
-        let entry1 = db.create_cjit_entry(
-            100000,         // channel_size_sat
-            20000,          // invoice_sat
-            "Test CJIT 1",  // description
-            "03c8533232c155c41c42e5a8f8487b192dd36f1d354b86ef461cc82e67e3388839", // node_id
-            4,              // channel_expiry_weeks
-            options.clone()
-        ).await.expect("Failed to create first CJIT entry");
+        let entry1 = db
+            .create_cjit_entry(
+                100000,                                                               // channel_size_sat
+                20000,                                                                // invoice_sat
+                "Test CJIT 1",                                                        // description
+                "03c8533232c155c41c42e5a8f8487b192dd36f1d354b86ef461cc82e67e3388839", // node_id
+                4, // channel_expiry_weeks
+                options.clone(),
+            )
+            .await
+            .expect("Failed to create first CJIT entry");
         println!("First CJIT entry created with ID: {}", entry1.id);
 
         // Add a small delay between entry creations
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
         println!("Creating second test CJIT entry...");
-        let entry2 = db.create_cjit_entry(
-            150000,         // channel_size_sat
-            30000,          // invoice_sat
-            "Test CJIT 2",  // description
-            "03c8533232c155c41c42e5a8f8487b192dd36f1d354b86ef461cc82e67e3388839", // node_id
-            4,              // channel_expiry_weeks
-            options.clone()
-        ).await.expect("Failed to create second CJIT entry");
+        let entry2 = db
+            .create_cjit_entry(
+                150000,                                                               // channel_size_sat
+                30000,                                                                // invoice_sat
+                "Test CJIT 2",                                                        // description
+                "03c8533232c155c41c42e5a8f8487b192dd36f1d354b86ef461cc82e67e3388839", // node_id
+                4, // channel_expiry_weeks
+                options.clone(),
+            )
+            .await
+            .expect("Failed to create second CJIT entry");
         println!("Second CJIT entry created with ID: {}", entry2.id);
 
         // Test refreshing active CJIT entries
@@ -1590,7 +1921,10 @@ mod tests {
         match result {
             Ok(refreshed_entries) => {
                 // Verify we got entries back
-                assert!(!refreshed_entries.is_empty(), "Should have received refreshed entries");
+                assert!(
+                    !refreshed_entries.is_empty(),
+                    "Should have received refreshed entries"
+                );
 
                 // All refreshed entries should be in an active state
                 for entry in &refreshed_entries {
@@ -1617,35 +1951,41 @@ mod tests {
                 // Verify database state
                 let conn = db.conn.lock().await;
                 for entry in &refreshed_entries {
-                    let row = conn.query_row(
-                        "SELECT id FROM cjit_entries WHERE id = ?1",
-                        [&entry.id],
-                        |row| Ok(row.get::<_, String>(0)?)
-                    ).unwrap();
+                    let row = conn
+                        .query_row(
+                            "SELECT id FROM cjit_entries WHERE id = ?1",
+                            [&entry.id],
+                            |row| Ok(row.get::<_, String>(0)?),
+                        )
+                        .unwrap();
 
                     assert_eq!(row, entry.id);
                 }
-            },
+            }
             Err(e) => panic!("Failed to refresh active CJIT entries: {:?}", e),
         }
 
         // Test with no active entries by manually marking all entries as completed in the database
         {
             let conn = db.conn.lock().await;
-            conn.execute(
-                "UPDATE cjit_entries SET state = 'Completed'",
-                [],
-            ).unwrap();
+            conn.execute("UPDATE cjit_entries SET state = 'Completed'", [])
+                .unwrap();
         }
 
         // Now test refresh_active_cjit_entries with no active entries
         let empty_result = db.refresh_active_cjit_entries().await.unwrap();
-        assert_eq!(empty_result.len(), 0, "Should return empty vec when no active entries exist");
+        assert_eq!(
+            empty_result.len(),
+            0,
+            "Should return empty vec when no active entries exist"
+        );
     }
 
     #[tokio::test]
     async fn test_regtest_mine() {
-        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER)).await.unwrap();
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
         // Test mining 1 block
         let result = db.regtest_mine(Some(1)).await;
         assert!(result.is_ok(), "Failed to mine 1 block: {:?}", result.err());
@@ -1653,8 +1993,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_regtest_deposit() {
-        let client = BlocktankClient::new(Some(STAGING_SERVER))
-            .expect("Failed to create BlocktankClient");
+        let client =
+            BlocktankClient::new(Some(STAGING_SERVER)).expect("Failed to create BlocktankClient");
 
         let test_address = "bcrt1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu";
 
@@ -1665,14 +2005,18 @@ mod tests {
             Ok(txid) => {
                 println!("Successfully deposited to address, txid: {}", txid);
                 assert!(!txid.is_empty(), "Transaction ID should not be empty");
-            },
+            }
             Err(err) => {
-                if err.to_string().contains("not in regtest mode") ||
-                    err.to_string().contains("Bad Request") {
+                if err.to_string().contains("not in regtest mode")
+                    || err.to_string().contains("Bad Request")
+                {
                     println!("Skipping test_regtest_deposit: Not in regtest mode or not supported in this environment");
                     return;
                 } else {
-                    panic!("API call to regtest_deposit failed with unexpected error: {:?}", err);
+                    panic!(
+                        "API call to regtest_deposit failed with unexpected error: {:?}",
+                        err
+                    );
                 }
             }
         }
@@ -1683,7 +2027,8 @@ mod tests {
         let temp_dir = tempfile::tempdir().expect("Failed to create temp directory");
         let db_path = format!("{}/test_blocktank.db", temp_dir.path().display());
 
-        let db = BlocktankDB::new(&db_path, None).await
+        let db = BlocktankDB::new(&db_path, None)
+            .await
             .expect("Failed to create BlocktankDB");
 
         // Create and insert test orders
@@ -1691,25 +2036,44 @@ mod tests {
         let order2 = create_test_order("order_2");
         let order3 = create_test_order("order_3");
 
-        db.upsert_order(&order1).await.expect("Failed to insert order1");
-        db.upsert_order(&order2).await.expect("Failed to insert order2");
-        db.upsert_order(&order3).await.expect("Failed to insert order3");
+        db.upsert_order(&order1)
+            .await
+            .expect("Failed to insert order1");
+        db.upsert_order(&order2)
+            .await
+            .expect("Failed to insert order2");
+        db.upsert_order(&order3)
+            .await
+            .expect("Failed to insert order3");
 
         // Verify orders exist
-        let orders = db.get_orders(None, None).await.expect("Failed to get orders");
+        let orders = db
+            .get_orders(None, None)
+            .await
+            .expect("Failed to get orders");
         assert_eq!(orders.len(), 3);
 
         // Remove all orders
-        db.remove_all_orders().await.expect("Failed to remove all orders");
+        db.remove_all_orders()
+            .await
+            .expect("Failed to remove all orders");
 
         // Verify all orders are deleted
-        let orders_after = db.get_orders(None, None).await.expect("Failed to get orders");
+        let orders_after = db
+            .get_orders(None, None)
+            .await
+            .expect("Failed to get orders");
         assert_eq!(orders_after.len(), 0);
 
         // Verify we can still insert new orders after wipe
         let new_order = create_test_order("new_order");
-        db.upsert_order(&new_order).await.expect("Failed to insert new order");
-        let orders_new = db.get_orders(None, None).await.expect("Failed to get orders");
+        db.upsert_order(&new_order)
+            .await
+            .expect("Failed to insert new order");
+        let orders_new = db
+            .get_orders(None, None)
+            .await
+            .expect("Failed to get orders");
         assert_eq!(orders_new.len(), 1);
     }
 
@@ -1718,7 +2082,8 @@ mod tests {
         let temp_dir = tempfile::tempdir().expect("Failed to create temp directory");
         let db_path = format!("{}/test_blocktank.db", temp_dir.path().display());
 
-        let db = BlocktankDB::new(&db_path, None).await
+        let db = BlocktankDB::new(&db_path, None)
+            .await
             .expect("Failed to create BlocktankDB");
 
         // Create and insert test CJIT entries
@@ -1726,25 +2091,44 @@ mod tests {
         let entry2 = create_test_cjit_entry("cjit_2");
         let entry3 = create_test_cjit_entry("cjit_3");
 
-        db.upsert_cjit_entry(&entry1).await.expect("Failed to insert entry1");
-        db.upsert_cjit_entry(&entry2).await.expect("Failed to insert entry2");
-        db.upsert_cjit_entry(&entry3).await.expect("Failed to insert entry3");
+        db.upsert_cjit_entry(&entry1)
+            .await
+            .expect("Failed to insert entry1");
+        db.upsert_cjit_entry(&entry2)
+            .await
+            .expect("Failed to insert entry2");
+        db.upsert_cjit_entry(&entry3)
+            .await
+            .expect("Failed to insert entry3");
 
         // Verify entries exist
-        let entries = db.get_cjit_entries(None, None).await.expect("Failed to get entries");
+        let entries = db
+            .get_cjit_entries(None, None)
+            .await
+            .expect("Failed to get entries");
         assert_eq!(entries.len(), 3);
 
         // Remove all CJIT entries
-        db.remove_all_cjit_entries().await.expect("Failed to remove all CJIT entries");
+        db.remove_all_cjit_entries()
+            .await
+            .expect("Failed to remove all CJIT entries");
 
         // Verify all entries are deleted
-        let entries_after = db.get_cjit_entries(None, None).await.expect("Failed to get entries");
+        let entries_after = db
+            .get_cjit_entries(None, None)
+            .await
+            .expect("Failed to get entries");
         assert_eq!(entries_after.len(), 0);
 
         // Verify we can still insert new entries after wipe
         let new_entry = create_test_cjit_entry("new_cjit");
-        db.upsert_cjit_entry(&new_entry).await.expect("Failed to insert new entry");
-        let entries_new = db.get_cjit_entries(None, None).await.expect("Failed to get entries");
+        db.upsert_cjit_entry(&new_entry)
+            .await
+            .expect("Failed to insert new entry");
+        let entries_new = db
+            .get_cjit_entries(None, None)
+            .await
+            .expect("Failed to get entries");
         assert_eq!(entries_new.len(), 1);
     }
 
@@ -1753,27 +2137,42 @@ mod tests {
         let temp_dir = tempfile::tempdir().expect("Failed to create temp directory");
         let db_path = format!("{}/test_blocktank.db", temp_dir.path().display());
 
-        let db = BlocktankDB::new(&db_path, None).await
+        let db = BlocktankDB::new(&db_path, None)
+            .await
             .expect("Failed to create BlocktankDB");
 
         // Insert various types of data
         let order1 = create_test_order("order_1");
         let order2 = create_test_order("order_2");
-        db.upsert_order(&order1).await.expect("Failed to insert order");
-        db.upsert_order(&order2).await.expect("Failed to insert order");
+        db.upsert_order(&order1)
+            .await
+            .expect("Failed to insert order");
+        db.upsert_order(&order2)
+            .await
+            .expect("Failed to insert order");
 
         let entry1 = create_test_cjit_entry("cjit_1");
         let entry2 = create_test_cjit_entry("cjit_2");
-        db.upsert_cjit_entry(&entry1).await.expect("Failed to insert entry");
-        db.upsert_cjit_entry(&entry2).await.expect("Failed to insert entry");
+        db.upsert_cjit_entry(&entry1)
+            .await
+            .expect("Failed to insert entry");
+        db.upsert_cjit_entry(&entry2)
+            .await
+            .expect("Failed to insert entry");
 
         let info = create_test_info();
         db.upsert_info(&info).await.expect("Failed to insert info");
 
         // Verify all data exists
-        let orders = db.get_orders(None, None).await.expect("Failed to get orders");
+        let orders = db
+            .get_orders(None, None)
+            .await
+            .expect("Failed to get orders");
         assert_eq!(orders.len(), 2);
-        let entries = db.get_cjit_entries(None, None).await.expect("Failed to get entries");
+        let entries = db
+            .get_cjit_entries(None, None)
+            .await
+            .expect("Failed to get entries");
         assert_eq!(entries.len(), 2);
         let info_check = db.get_info().await.expect("Failed to get info");
         assert!(info_check.is_some());
@@ -1782,17 +2181,28 @@ mod tests {
         db.wipe_all().await.expect("Failed to wipe all");
 
         // Verify everything is deleted
-        let orders_after = db.get_orders(None, None).await.expect("Failed to get orders");
+        let orders_after = db
+            .get_orders(None, None)
+            .await
+            .expect("Failed to get orders");
         assert_eq!(orders_after.len(), 0);
-        let entries_after = db.get_cjit_entries(None, None).await.expect("Failed to get entries");
+        let entries_after = db
+            .get_cjit_entries(None, None)
+            .await
+            .expect("Failed to get entries");
         assert_eq!(entries_after.len(), 0);
         let info_after = db.get_info().await.expect("Failed to get info");
         assert!(info_after.is_none());
 
         // Verify we can still insert new data after wipe
         let new_order = create_test_order("new_order");
-        db.upsert_order(&new_order).await.expect("Failed to insert new order");
-        let orders_new = db.get_orders(None, None).await.expect("Failed to get orders");
+        db.upsert_order(&new_order)
+            .await
+            .expect("Failed to insert new order");
+        let orders_new = db
+            .get_orders(None, None)
+            .await
+            .expect("Failed to get orders");
         assert_eq!(orders_new.len(), 1);
     }
 

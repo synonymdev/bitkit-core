@@ -1,20 +1,23 @@
+use crate::modules::blocktank::models::*;
+use crate::modules::blocktank::{BlocktankDB, BlocktankError};
 use rusqlite::{Connection, OptionalExtension};
 use rust_blocktank_client::*;
-use tokio::sync::Mutex;
 use std::result::Result;
-use crate::modules::blocktank::{BlocktankDB, BlocktankError};
-use crate::modules::blocktank::models::*;
+use tokio::sync::Mutex;
 pub const DEFAULT_BLOCKTANK_URL: &str = "https://api1.blocktank.to/api";
 
 impl BlocktankDB {
-    pub async fn new(db_path: &str, blocktank_url: Option<&str>) -> Result<BlocktankDB, BlocktankError> {
+    pub async fn new(
+        db_path: &str,
+        blocktank_url: Option<&str>,
+    ) -> Result<BlocktankDB, BlocktankError> {
         let conn = Connection::open(db_path).map_err(|e| BlocktankError::InitializationError {
             error_details: format!("Error opening database: {}", e),
         })?;
 
         let url = blocktank_url.unwrap_or(DEFAULT_BLOCKTANK_URL);
-        let client = BlocktankClient::new(Some(url))
-            .map_err(|e| BlocktankError::InitializationError {
+        let client =
+            BlocktankClient::new(Some(url)).map_err(|e| BlocktankError::InitializationError {
                 error_details: format!("Failed to initialize Blocktank client: {}", e),
             })?;
 
@@ -32,22 +35,27 @@ impl BlocktankDB {
 
         // Create enum tables
         for create_stmt in CREATE_ENUM_TABLES {
-            conn.execute(create_stmt, []).map_err(|e| BlocktankError::InitializationError {
-                error_details: format!("Failed to create enum table: {}", e),
-            })?;
+            conn.execute(create_stmt, [])
+                .map_err(|e| BlocktankError::InitializationError {
+                    error_details: format!("Failed to create enum table: {}", e),
+                })?;
         }
 
         // Create main tables
-        conn.execute(CREATE_ORDERS_TABLE, []).map_err(|e| BlocktankError::InitializationError {
-            error_details: format!("Failed to create orders table: {}", e),
-        })?;
+        conn.execute(CREATE_ORDERS_TABLE, [])
+            .map_err(|e| BlocktankError::InitializationError {
+                error_details: format!("Failed to create orders table: {}", e),
+            })?;
 
-        conn.execute(CREATE_INFO_TABLE, []).map_err(|e| BlocktankError::InitializationError {
-            error_details: format!("Failed to create info table: {}", e),
-        })?;
+        conn.execute(CREATE_INFO_TABLE, [])
+            .map_err(|e| BlocktankError::InitializationError {
+                error_details: format!("Failed to create info table: {}", e),
+            })?;
 
-        conn.execute(CREATE_CJIT_ENTRIES_TABLE, []).map_err(|e| BlocktankError::InitializationError {
-            error_details: format!("Failed to create CJIT entries table: {}", e),
+        conn.execute(CREATE_CJIT_ENTRIES_TABLE, []).map_err(|e| {
+            BlocktankError::InitializationError {
+                error_details: format!("Failed to create CJIT entries table: {}", e),
+            }
         })?;
 
         // Populate enum tables
@@ -56,17 +64,25 @@ impl BlocktankDB {
             conn.execute(
                 "INSERT OR IGNORE INTO order_states (state, description) VALUES (?1, ?1)",
                 [state],
-            ).map_err(|e| BlocktankError::InitializationError {
+            )
+            .map_err(|e| BlocktankError::InitializationError {
                 error_details: format!("Failed to insert order state {}: {}", state, e),
             })?;
         }
 
         // Payment states
-        for state in ["Created", "PartiallyPaid", "Paid", "Refunded", "RefundAvailable"] {
+        for state in [
+            "Created",
+            "PartiallyPaid",
+            "Paid",
+            "Refunded",
+            "RefundAvailable",
+        ] {
             conn.execute(
                 "INSERT OR IGNORE INTO payment_states (state, description) VALUES (?1, ?1)",
                 [state],
-            ).map_err(|e| BlocktankError::InitializationError {
+            )
+            .map_err(|e| BlocktankError::InitializationError {
                 error_details: format!("Failed to insert payment state {}: {}", state, e),
             })?;
         }
@@ -76,23 +92,26 @@ impl BlocktankDB {
             conn.execute(
                 "INSERT OR IGNORE INTO cjit_states (state, description) VALUES (?1, ?1)",
                 [state],
-            ).map_err(|e| BlocktankError::InitializationError {
+            )
+            .map_err(|e| BlocktankError::InitializationError {
                 error_details: format!("Failed to insert cjit state {}: {}", state, e),
             })?;
         }
 
         // Create triggers
         for trigger_stmt in TRIGGER_STATEMENTS {
-            conn.execute(trigger_stmt, []).map_err(|e| BlocktankError::InitializationError {
-                error_details: format!("Failed to create trigger: {}", e),
-            })?;
+            conn.execute(trigger_stmt, [])
+                .map_err(|e| BlocktankError::InitializationError {
+                    error_details: format!("Failed to create trigger: {}", e),
+                })?;
         }
 
         // Create indexes
         for index_stmt in INDEX_STATEMENTS {
-            conn.execute(index_stmt, []).map_err(|e| BlocktankError::InitializationError {
-                error_details: format!("Failed to create index: {}", e),
-            })?;
+            conn.execute(index_stmt, [])
+                .map_err(|e| BlocktankError::InitializationError {
+                    error_details: format!("Failed to create index: {}", e),
+                })?;
         }
 
         Ok(())
@@ -108,8 +127,13 @@ impl BlocktankDB {
         }
 
         // Attempt to create a new BlocktankClient with the new URL
-        let new_client = BlocktankClient::new(Some(new_url)).map_err(|e| BlocktankError::InitializationError {
-            error_details: format!("Failed to initialize Blocktank client with the new URL: {}", e),
+        let new_client = BlocktankClient::new(Some(new_url)).map_err(|e| {
+            BlocktankError::InitializationError {
+                error_details: format!(
+                    "Failed to initialize Blocktank client with the new URL: {}",
+                    e
+                ),
+            }
         })?;
 
         // Update both the client and URL
@@ -122,28 +146,33 @@ impl BlocktankDB {
     pub async fn upsert_info(&self, info: &IBtInfo) -> Result<(), BlocktankError> {
         let conn = self.conn.lock().await;
 
-        let nodes_json = serde_json::to_string(&info.nodes).map_err(|e| BlocktankError::SerializationError {
-            error_details: format!("Failed to serialize nodes: {}", e),
+        let nodes_json =
+            serde_json::to_string(&info.nodes).map_err(|e| BlocktankError::SerializationError {
+                error_details: format!("Failed to serialize nodes: {}", e),
+            })?;
+
+        let options_json = serde_json::to_string(&info.options).map_err(|e| {
+            BlocktankError::SerializationError {
+                error_details: format!("Failed to serialize options: {}", e),
+            }
         })?;
 
-        let options_json = serde_json::to_string(&info.options).map_err(|e| BlocktankError::SerializationError {
-            error_details: format!("Failed to serialize options: {}", e),
+        let versions_json = serde_json::to_string(&info.versions).map_err(|e| {
+            BlocktankError::SerializationError {
+                error_details: format!("Failed to serialize versions: {}", e),
+            }
         })?;
 
-        let versions_json = serde_json::to_string(&info.versions).map_err(|e| BlocktankError::SerializationError {
-            error_details: format!("Failed to serialize versions: {}", e),
+        let onchain_json = serde_json::to_string(&info.onchain).map_err(|e| {
+            BlocktankError::SerializationError {
+                error_details: format!("Failed to serialize onchain: {}", e),
+            }
         })?;
 
-        let onchain_json = serde_json::to_string(&info.onchain).map_err(|e| BlocktankError::SerializationError {
-            error_details: format!("Failed to serialize onchain: {}", e),
-        })?;
-
-        conn.execute(
-            "UPDATE info SET is_current = 0 WHERE is_current = 1",
-            [],
-        ).map_err(|e| BlocktankError::DatabaseError {
-            error_details: format!("Failed to update existing info records: {}", e),
-        })?;
+        conn.execute("UPDATE info SET is_current = 0 WHERE is_current = 1", [])
+            .map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to update existing info records: {}", e),
+            })?;
 
         conn.execute(
             "INSERT OR REPLACE INTO info (
@@ -158,7 +187,8 @@ impl BlocktankDB {
                 &versions_json,
                 &onchain_json,
             ),
-        ).map_err(|e| BlocktankError::InsertError {
+        )
+        .map_err(|e| BlocktankError::InsertError {
             error_details: format!("Failed to insert info: {}", e),
         })?;
 
@@ -169,57 +199,67 @@ impl BlocktankDB {
     pub async fn get_info(&self) -> Result<Option<IBtInfo>, BlocktankError> {
         let conn = self.conn.lock().await;
 
-        let result = conn.query_row(
-            "SELECT version, nodes, options, versions, onchain
+        let result = conn
+            .query_row(
+                "SELECT version, nodes, options, versions, onchain
              FROM info
              WHERE is_current = 1",
-            [],
-            |row| {
-                let version: u32 = row.get(0)?;
-                let nodes_json: String = row.get(1)?;
-                let options_json: String = row.get(2)?;
-                let versions_json: String = row.get(3)?;
-                let onchain_json: String = row.get(4)?;
+                [],
+                |row| {
+                    let version: u32 = row.get(0)?;
+                    let nodes_json: String = row.get(1)?;
+                    let options_json: String = row.get(2)?;
+                    let versions_json: String = row.get(3)?;
+                    let onchain_json: String = row.get(4)?;
 
-                let nodes: Vec<ILspNode> = serde_json::from_str(&nodes_json)
-                    .map_err(|e| rusqlite::Error::FromSqlConversionFailure(
-                        0,
-                        rusqlite::types::Type::Text,
-                        Box::new(e),
-                    ))?;
+                    let nodes: Vec<ILspNode> = serde_json::from_str(&nodes_json).map_err(|e| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            0,
+                            rusqlite::types::Type::Text,
+                            Box::new(e),
+                        )
+                    })?;
 
-                let options: IBtInfoOptions = serde_json::from_str(&options_json)
-                    .map_err(|e| rusqlite::Error::FromSqlConversionFailure(
-                        0,
-                        rusqlite::types::Type::Text,
-                        Box::new(e),
-                    ))?;
+                    let options: IBtInfoOptions =
+                        serde_json::from_str(&options_json).map_err(|e| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                0,
+                                rusqlite::types::Type::Text,
+                                Box::new(e),
+                            )
+                        })?;
 
-                let versions: IBtInfoVersions = serde_json::from_str(&versions_json)
-                    .map_err(|e| rusqlite::Error::FromSqlConversionFailure(
-                        0,
-                        rusqlite::types::Type::Text,
-                        Box::new(e),
-                    ))?;
+                    let versions: IBtInfoVersions =
+                        serde_json::from_str(&versions_json).map_err(|e| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                0,
+                                rusqlite::types::Type::Text,
+                                Box::new(e),
+                            )
+                        })?;
 
-                let onchain: IBtInfoOnchain = serde_json::from_str(&onchain_json)
-                    .map_err(|e| rusqlite::Error::FromSqlConversionFailure(
-                        0,
-                        rusqlite::types::Type::Text,
-                        Box::new(e),
-                    ))?;
+                    let onchain: IBtInfoOnchain =
+                        serde_json::from_str(&onchain_json).map_err(|e| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                0,
+                                rusqlite::types::Type::Text,
+                                Box::new(e),
+                            )
+                        })?;
 
-                Ok(IBtInfo {
-                    version,
-                    nodes,
-                    options,
-                    versions,
-                    onchain,
-                })
-            }
-        ).optional().map_err(|e| BlocktankError::DataError {
-            error_details: format!("Failed to fetch info from database: {}", e),
-        })?;
+                    Ok(IBtInfo {
+                        version,
+                        nodes,
+                        options,
+                        versions,
+                        onchain,
+                    })
+                },
+            )
+            .optional()
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to fetch info from database: {}", e),
+            })?;
 
         Ok(result)
     }
@@ -229,11 +269,11 @@ impl BlocktankDB {
 
         let params = Self::build_order_params(order)?;
 
-        let mut stmt = conn.prepare(
-            INSERT_ORDER_SQL
-        ).map_err(|e| BlocktankError::DatabaseError {
-            error_details: format!("Failed to prepare statement: {}", e),
-        })?;
+        let mut stmt =
+            conn.prepare(INSERT_ORDER_SQL)
+                .map_err(|e| BlocktankError::DatabaseError {
+                    error_details: format!("Failed to prepare statement: {}", e),
+                })?;
 
         stmt.execute(rusqlite::params![
             params.id,
@@ -259,7 +299,8 @@ impl BlocktankDB {
             params.discount_json,
             params.updated_at,
             params.created_at,
-        ]).map_err(|e| BlocktankError::InsertError {
+        ])
+        .map_err(|e| BlocktankError::InsertError {
             error_details: format!("Failed to insert order: {}", e),
         })?;
 
@@ -268,16 +309,18 @@ impl BlocktankDB {
 
     pub async fn upsert_orders(&self, orders: &[IBtOrder]) -> Result<(), BlocktankError> {
         let mut conn = self.conn.lock().await;
-        let tx = conn.transaction().map_err(|e| BlocktankError::DatabaseError {
-            error_details: format!("Failed to start transaction: {}", e),
-        })?;
+        let tx = conn
+            .transaction()
+            .map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to start transaction: {}", e),
+            })?;
 
         {
-            let mut stmt = tx.prepare(
-                INSERT_ORDER_SQL
-            ).map_err(|e| BlocktankError::DatabaseError {
-                error_details: format!("Failed to prepare statement: {}", e),
-            })?;
+            let mut stmt =
+                tx.prepare(INSERT_ORDER_SQL)
+                    .map_err(|e| BlocktankError::DatabaseError {
+                        error_details: format!("Failed to prepare statement: {}", e),
+                    })?;
 
             for order in orders {
                 let params = Self::build_order_params(order)?;
@@ -306,7 +349,8 @@ impl BlocktankDB {
                     params.discount_json,
                     params.updated_at,
                     params.created_at,
-                ]).map_err(|e| BlocktankError::InsertError {
+                ])
+                .map_err(|e| BlocktankError::InsertError {
                     error_details: format!("Failed to insert order {}: {}", params.id, e),
                 })?;
             }
@@ -321,24 +365,32 @@ impl BlocktankDB {
 
     fn build_order_params(order: &IBtOrder) -> Result<OrderInsertParams, BlocktankError> {
         let channel_json = if let Some(channel) = &order.channel {
-            Some(serde_json::to_string(channel).map_err(|e| BlocktankError::SerializationError {
-                error_details: format!("Failed to serialize channel: {}", e),
+            Some(serde_json::to_string(channel).map_err(|e| {
+                BlocktankError::SerializationError {
+                    error_details: format!("Failed to serialize channel: {}", e),
+                }
             })?)
         } else {
             None
         };
 
-        let lsp_node_json = serde_json::to_string(&order.lsp_node).map_err(|e| BlocktankError::SerializationError {
-            error_details: format!("Failed to serialize lsp_node: {}", e),
+        let lsp_node_json = serde_json::to_string(&order.lsp_node).map_err(|e| {
+            BlocktankError::SerializationError {
+                error_details: format!("Failed to serialize lsp_node: {}", e),
+            }
         })?;
 
-        let payment_json = serde_json::to_string(&order.payment).map_err(|e| BlocktankError::SerializationError {
-            error_details: format!("Failed to serialize payment: {}", e),
+        let payment_json = serde_json::to_string(&order.payment).map_err(|e| {
+            BlocktankError::SerializationError {
+                error_details: format!("Failed to serialize payment: {}", e),
+            }
         })?;
 
         let discount_json = if let Some(discount) = &order.discount {
-            Some(serde_json::to_string(discount).map_err(|e| BlocktankError::SerializationError {
-                error_details: format!("Failed to serialize discount: {}", e),
+            Some(serde_json::to_string(discount).map_err(|e| {
+                BlocktankError::SerializationError {
+                    error_details: format!("Failed to serialize discount: {}", e),
+                }
             })?)
         } else {
             None
@@ -347,7 +399,11 @@ impl BlocktankDB {
         Ok(OrderInsertParams {
             id: order.id.clone(),
             state: format!("{:?}", order.state),
-            state2: order.state2.as_ref().map(|s| format!("{:?}", s)).unwrap_or_else(|| "".to_string()),
+            state2: order
+                .state2
+                .as_ref()
+                .map(|s| format!("{:?}", s))
+                .unwrap_or_else(|| "".to_string()),
             fee_sat: order.fee_sat,
             network_fee_sat: order.network_fee_sat,
             service_fee_sat: order.service_fee_sat,
@@ -373,24 +429,32 @@ impl BlocktankDB {
 
     fn build_cjit_params(entry: &ICJitEntry) -> Result<CJitInsertParams, BlocktankError> {
         let channel_json = if let Some(channel) = &entry.channel {
-            Some(serde_json::to_string(channel).map_err(|e| BlocktankError::SerializationError {
-                error_details: format!("Failed to serialize channel: {}", e),
+            Some(serde_json::to_string(channel).map_err(|e| {
+                BlocktankError::SerializationError {
+                    error_details: format!("Failed to serialize channel: {}", e),
+                }
             })?)
         } else {
             None
         };
 
-        let invoice_json = serde_json::to_string(&entry.invoice).map_err(|e| BlocktankError::SerializationError {
-            error_details: format!("Failed to serialize invoice: {}", e),
+        let invoice_json = serde_json::to_string(&entry.invoice).map_err(|e| {
+            BlocktankError::SerializationError {
+                error_details: format!("Failed to serialize invoice: {}", e),
+            }
         })?;
 
-        let lsp_node_json = serde_json::to_string(&entry.lsp_node).map_err(|e| BlocktankError::SerializationError {
-            error_details: format!("Failed to serialize lsp_node: {}", e),
+        let lsp_node_json = serde_json::to_string(&entry.lsp_node).map_err(|e| {
+            BlocktankError::SerializationError {
+                error_details: format!("Failed to serialize lsp_node: {}", e),
+            }
         })?;
 
         let discount_json = if let Some(discount) = &entry.discount {
-            Some(serde_json::to_string(discount).map_err(|e| BlocktankError::SerializationError {
-                error_details: format!("Failed to serialize discount: {}", e),
+            Some(serde_json::to_string(discount).map_err(|e| {
+                BlocktankError::SerializationError {
+                    error_details: format!("Failed to serialize discount: {}", e),
+                }
             })?)
         } else {
             None
@@ -431,16 +495,24 @@ impl BlocktankDB {
                     client_node_id, channel_expiry_weeks, channel_expires_at,
                     order_expires_at, lnurl, coupon_code, source, channel_data,
                     lsp_node_data, payment_data, discount_data, updated_at, created_at
-             FROM orders WHERE 1=1"
+             FROM orders WHERE 1=1",
         );
 
         let mut params: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
 
         if let Some(ids) = order_ids {
             query.push_str(" AND id IN (");
-            query.push_str(&std::iter::repeat("?").take(ids.len()).collect::<Vec<_>>().join(","));
+            query.push_str(
+                &std::iter::repeat("?")
+                    .take(ids.len())
+                    .collect::<Vec<_>>()
+                    .join(","),
+            );
             query.push(')');
-            params.extend(ids.iter().map(|id| Box::new(id.clone()) as Box<dyn rusqlite::ToSql>));
+            params.extend(
+                ids.iter()
+                    .map(|id| Box::new(id.clone()) as Box<dyn rusqlite::ToSql>),
+            );
         }
 
         if let Some(state) = filter {
@@ -450,9 +522,11 @@ impl BlocktankDB {
 
         query.push_str(" ORDER BY created_at DESC");
 
-        let mut stmt = conn.prepare(&query).map_err(|e| BlocktankError::DatabaseError {
-            error_details: format!("Failed to prepare statement: {}", e)
-        })?;
+        let mut stmt = conn
+            .prepare(&query)
+            .map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
 
         let orders = stmt
             .query_map(rusqlite::params_from_iter(params), |row| {
@@ -535,11 +609,11 @@ impl BlocktankDB {
                 })
             })
             .map_err(|e| BlocktankError::DatabaseError {
-                error_details: format!("Failed to execute query: {}", e)
+                error_details: format!("Failed to execute query: {}", e),
             })?
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| BlocktankError::DatabaseError {
-                error_details: format!("Failed to process results: {}", e)
+                error_details: format!("Failed to process results: {}", e),
             })?;
 
         Ok(orders)
@@ -556,12 +630,14 @@ impl BlocktankDB {
                 lsp_node_data, payment_data, discount_data, updated_at, created_at
          FROM orders
          WHERE state2 IN ('Created', 'Paid')
-         ORDER BY created_at DESC"
+         ORDER BY created_at DESC",
         );
 
-        let mut stmt = conn.prepare(&query).map_err(|e| BlocktankError::DatabaseError {
-            error_details: format!("Failed to prepare statement: {}", e)
-        })?;
+        let mut stmt = conn
+            .prepare(&query)
+            .map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
 
         let orders = stmt
             .query_map([], |row| {
@@ -644,11 +720,11 @@ impl BlocktankDB {
                 })
             })
             .map_err(|e| BlocktankError::DatabaseError {
-                error_details: format!("Failed to execute query: {}", e)
+                error_details: format!("Failed to execute query: {}", e),
             })?
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| BlocktankError::DatabaseError {
-                error_details: format!("Failed to process results: {}", e)
+                error_details: format!("Failed to process results: {}", e),
             })?;
 
         Ok(orders)
@@ -659,11 +735,11 @@ impl BlocktankDB {
 
         let params = Self::build_cjit_params(entry)?;
 
-        let mut stmt = conn.prepare(
-            INSERT_CJIT_SQL
-        ).map_err(|e| BlocktankError::DatabaseError {
-            error_details: format!("Failed to prepare statement: {}", e),
-        })?;
+        let mut stmt =
+            conn.prepare(INSERT_CJIT_SQL)
+                .map_err(|e| BlocktankError::DatabaseError {
+                    error_details: format!("Failed to prepare statement: {}", e),
+                })?;
 
         stmt.execute(rusqlite::params![
             params.id,
@@ -684,7 +760,8 @@ impl BlocktankDB {
             params.discount_json,
             params.updated_at,
             params.created_at,
-        ]).map_err(|e| BlocktankError::InsertError {
+        ])
+        .map_err(|e| BlocktankError::InsertError {
             error_details: format!("Failed to insert CJIT entry: {}", e),
         })?;
 
@@ -693,16 +770,18 @@ impl BlocktankDB {
 
     pub async fn upsert_cjit_entries(&self, entries: &[ICJitEntry]) -> Result<(), BlocktankError> {
         let mut conn = self.conn.lock().await;
-        let tx = conn.transaction().map_err(|e| BlocktankError::DatabaseError {
-            error_details: format!("Failed to start transaction: {}", e),
-        })?;
+        let tx = conn
+            .transaction()
+            .map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to start transaction: {}", e),
+            })?;
 
         {
-            let mut stmt = tx.prepare(
-                INSERT_CJIT_SQL
-            ).map_err(|e| BlocktankError::DatabaseError {
-                error_details: format!("Failed to prepare statement: {}", e),
-            })?;
+            let mut stmt =
+                tx.prepare(INSERT_CJIT_SQL)
+                    .map_err(|e| BlocktankError::DatabaseError {
+                        error_details: format!("Failed to prepare statement: {}", e),
+                    })?;
 
             for entry in entries {
                 let params = Self::build_cjit_params(entry)?;
@@ -726,7 +805,8 @@ impl BlocktankDB {
                     params.discount_json,
                     params.updated_at,
                     params.created_at,
-                ]).map_err(|e| BlocktankError::InsertError {
+                ])
+                .map_err(|e| BlocktankError::InsertError {
                     error_details: format!("Failed to insert CJIT entry {}: {}", params.id, e),
                 })?;
             }
@@ -752,16 +832,24 @@ impl BlocktankDB {
                 node_id, coupon_code, source, expires_at, invoice_data,
                 channel_data, lsp_node_data, discount_data,
                 updated_at, created_at
-         FROM cjit_entries WHERE 1=1"
+         FROM cjit_entries WHERE 1=1",
         );
 
         let mut params: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
 
         if let Some(ids) = entry_ids {
             query.push_str(" AND id IN (");
-            query.push_str(&std::iter::repeat("?").take(ids.len()).collect::<Vec<_>>().join(","));
+            query.push_str(
+                &std::iter::repeat("?")
+                    .take(ids.len())
+                    .collect::<Vec<_>>()
+                    .join(","),
+            );
             query.push(')');
-            params.extend(ids.iter().map(|id| Box::new(id.clone()) as Box<dyn rusqlite::ToSql>));
+            params.extend(
+                ids.iter()
+                    .map(|id| Box::new(id.clone()) as Box<dyn rusqlite::ToSql>),
+            );
         }
 
         if let Some(state) = filter {
@@ -771,9 +859,11 @@ impl BlocktankDB {
 
         query.push_str(" ORDER BY created_at DESC");
 
-        let mut stmt = conn.prepare(&query).map_err(|e| BlocktankError::DatabaseError {
-            error_details: format!("Failed to prepare statement: {}", e)
-        })?;
+        let mut stmt = conn
+            .prepare(&query)
+            .map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
 
         let entries = stmt
             .query_map(rusqlite::params_from_iter(params), |row| {
@@ -782,13 +872,14 @@ impl BlocktankDB {
                 let lsp_node_json: String = row.get(14)?;
                 let discount_json: Option<String> = row.get(15)?;
 
-                let invoice: IBtBolt11Invoice = serde_json::from_str(&invoice_json).map_err(|e| {
-                    rusqlite::Error::FromSqlConversionFailure(
-                        0,
-                        rusqlite::types::Type::Text,
-                        Box::new(e),
-                    )
-                })?;
+                let invoice: IBtBolt11Invoice =
+                    serde_json::from_str(&invoice_json).map_err(|e| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            0,
+                            rusqlite::types::Type::Text,
+                            Box::new(e),
+                        )
+                    })?;
 
                 let channel = if let Some(json) = channel_json {
                     Some(serde_json::from_str(&json).map_err(|e| {
@@ -824,11 +915,16 @@ impl BlocktankDB {
 
                 Ok(ICJitEntry {
                     id: row.get(0)?,
-                    state: row.get::<_, String>(1)?.parse::<CJitStateEnum>().map_err(|e| rusqlite::Error::FromSqlConversionFailure(
-                        1,
-                        rusqlite::types::Type::Text,
-                        Box::new(e),
-                    ))?,
+                    state: row
+                        .get::<_, String>(1)?
+                        .parse::<CJitStateEnum>()
+                        .map_err(|e| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                1,
+                                rusqlite::types::Type::Text,
+                                Box::new(e),
+                            )
+                        })?,
                     fee_sat: row.get(2)?,
                     network_fee_sat: row.get(3)?,
                     service_fee_sat: row.get(4)?,
@@ -848,11 +944,11 @@ impl BlocktankDB {
                 })
             })
             .map_err(|e| BlocktankError::DatabaseError {
-                error_details: format!("Failed to execute query: {}", e)
+                error_details: format!("Failed to execute query: {}", e),
             })?
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| BlocktankError::DatabaseError {
-                error_details: format!("Failed to process results: {}", e)
+                error_details: format!("Failed to process results: {}", e),
             })?;
 
         Ok(entries)
@@ -869,12 +965,14 @@ impl BlocktankDB {
                 updated_at, created_at
              FROM cjit_entries
              WHERE state IN ('Created', 'Failed')
-             ORDER BY created_at DESC"
+             ORDER BY created_at DESC",
         );
 
-        let mut stmt = conn.prepare(&query).map_err(|e| BlocktankError::DatabaseError {
-            error_details: format!("Failed to prepare statement: {}", e)
-        })?;
+        let mut stmt = conn
+            .prepare(&query)
+            .map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
 
         let entries = stmt
             .query_map([], |row| {
@@ -883,13 +981,14 @@ impl BlocktankDB {
                 let lsp_node_json: String = row.get(14)?;
                 let discount_json: Option<String> = row.get(15)?;
 
-                let invoice: IBtBolt11Invoice = serde_json::from_str(&invoice_json).map_err(|e| {
-                    rusqlite::Error::FromSqlConversionFailure(
-                        0,
-                        rusqlite::types::Type::Text,
-                        Box::new(e),
-                    )
-                })?;
+                let invoice: IBtBolt11Invoice =
+                    serde_json::from_str(&invoice_json).map_err(|e| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            0,
+                            rusqlite::types::Type::Text,
+                            Box::new(e),
+                        )
+                    })?;
 
                 let channel = if let Some(json) = channel_json {
                     Some(serde_json::from_str(&json).map_err(|e| {
@@ -925,11 +1024,16 @@ impl BlocktankDB {
 
                 Ok(ICJitEntry {
                     id: row.get(0)?,
-                    state: row.get::<_, String>(1)?.parse::<CJitStateEnum>().map_err(|e| rusqlite::Error::FromSqlConversionFailure(
-                        1,
-                        rusqlite::types::Type::Text,
-                        Box::new(e),
-                    ))?,
+                    state: row
+                        .get::<_, String>(1)?
+                        .parse::<CJitStateEnum>()
+                        .map_err(|e| {
+                            rusqlite::Error::FromSqlConversionFailure(
+                                1,
+                                rusqlite::types::Type::Text,
+                                Box::new(e),
+                            )
+                        })?,
                     fee_sat: row.get(2)?,
                     network_fee_sat: row.get(3)?,
                     service_fee_sat: row.get(4)?,
@@ -949,11 +1053,11 @@ impl BlocktankDB {
                 })
             })
             .map_err(|e| BlocktankError::DatabaseError {
-                error_details: format!("Failed to execute query: {}", e)
+                error_details: format!("Failed to execute query: {}", e),
             })?
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| BlocktankError::DatabaseError {
-                error_details: format!("Failed to process results: {}", e)
+                error_details: format!("Failed to process results: {}", e),
             })?;
 
         Ok(entries)
@@ -975,10 +1079,11 @@ impl BlocktankDB {
     pub async fn remove_all_cjit_entries(&self) -> Result<(), BlocktankError> {
         let conn = self.conn.lock().await;
 
-        conn.execute("DELETE FROM cjit_entries", [])
-            .map_err(|e| BlocktankError::DatabaseError {
+        conn.execute("DELETE FROM cjit_entries", []).map_err(|e| {
+            BlocktankError::DatabaseError {
                 error_details: format!("Failed to delete all CJIT entries: {}", e),
-            })?;
+            }
+        })?;
 
         Ok(())
     }
@@ -995,9 +1100,11 @@ impl BlocktankDB {
     pub async fn wipe_all(&self) -> Result<(), BlocktankError> {
         let mut conn = self.conn.lock().await;
 
-        let tx = conn.transaction().map_err(|e| BlocktankError::DatabaseError {
-            error_details: format!("Failed to start transaction: {}", e),
-        })?;
+        let tx = conn
+            .transaction()
+            .map_err(|e| BlocktankError::DatabaseError {
+                error_details: format!("Failed to start transaction: {}", e),
+            })?;
 
         tx.execute("DELETE FROM orders", [])
             .map_err(|e| BlocktankError::DatabaseError {

@@ -2,42 +2,27 @@ use rust_blocktank_client::{
     BitcoinNetworkEnum as ExternalBitcoinNetworkEnum,
     BtBolt11InvoiceState as ExternalBtBolt11InvoiceState,
     BtChannelOrderErrorType as ExternalBtChannelOrderErrorType,
-    BtOpenChannelState as ExternalBtOpenChannelState,
-    BtOrderState as ExternalBtOrderState,
-    BtOrderState2 as ExternalBtOrderState2,
-    BtPaymentState as ExternalBtPaymentState,
-    BtPaymentState2 as ExternalBtPaymentState2,
-    CJitStateEnum as ExternalCJitStateEnum,
-    ManualRefundStateEnum as ExternalManualRefundStateEnum,
-    IBtInfoOptions as ExternalIBtInfoOptions,
-    IBtInfo as ExternalIBtInfo,
-    IBtInfoVersions as ExternalIBtInfoVersions,
-    IBtInfoOnchain as ExternalIBtInfoOnchain,
-    IBtEstimateFeeResponse as ExternalIBtEstimateFeeResponse,
-    IBtEstimateFeeResponse2 as ExternalIBtEstimateFeeResponse2,
-    IBt0ConfMinTxFeeWindow as ExternalIBt0ConfMinTxFeeWindow,
-    IBtOnchainTransaction as ExternalIBtOnchainTransaction,
-    IBtOnchainTransactions as ExternalIBtOnchainTransactions,
-    IBtChannel as ExternalIBtChannel,
-    IBtChannelClose as ExternalIBtChannelClose,
-    IBtBolt11Invoice as ExternalIBtBolt11Invoice,
-    IBtPayment as ExternalIBtPayment,
-    IBtOrder as ExternalIBtOrder,
-    ICJitEntry as ExternalICJitEntry,
-    ILspNode as ExternalILspNode,
-    IDiscount as ExternalIDiscount,
-    FeeRates as ExternalFeeRates,
-    FundingTx as ExternalFundingTx,
-    IManualRefund as ExternalIManualRefund,
-    CreateOrderOptions as ExternalCreateOrderOptions,
+    BtOpenChannelState as ExternalBtOpenChannelState, BtOrderState as ExternalBtOrderState,
+    BtOrderState2 as ExternalBtOrderState2, BtPaymentState as ExternalBtPaymentState,
+    BtPaymentState2 as ExternalBtPaymentState2, CJitStateEnum as ExternalCJitStateEnum,
     CreateCjitOptions as ExternalCreateCjitOptions,
-    IGift as ExternalIGift,
-    IGiftCode as ExternalIGiftCode,
-    IGiftOrder as ExternalIGiftOrder,
-    IGiftLspNode as ExternalIGiftLspNode,
-    IGiftPayment as ExternalIGiftPayment,
-    IGiftBolt11Invoice as ExternalIGiftBolt11Invoice,
-    IGiftBtcAddress as ExternalIGiftBtcAddress,
+    CreateOrderOptions as ExternalCreateOrderOptions, FeeRates as ExternalFeeRates,
+    FundingTx as ExternalFundingTx, IBt0ConfMinTxFeeWindow as ExternalIBt0ConfMinTxFeeWindow,
+    IBtBolt11Invoice as ExternalIBtBolt11Invoice, IBtChannel as ExternalIBtChannel,
+    IBtChannelClose as ExternalIBtChannelClose,
+    IBtEstimateFeeResponse as ExternalIBtEstimateFeeResponse,
+    IBtEstimateFeeResponse2 as ExternalIBtEstimateFeeResponse2, IBtInfo as ExternalIBtInfo,
+    IBtInfoOnchain as ExternalIBtInfoOnchain, IBtInfoOptions as ExternalIBtInfoOptions,
+    IBtInfoVersions as ExternalIBtInfoVersions,
+    IBtOnchainTransaction as ExternalIBtOnchainTransaction,
+    IBtOnchainTransactions as ExternalIBtOnchainTransactions, IBtOrder as ExternalIBtOrder,
+    IBtPayment as ExternalIBtPayment, ICJitEntry as ExternalICJitEntry,
+    IDiscount as ExternalIDiscount, IGift as ExternalIGift,
+    IGiftBolt11Invoice as ExternalIGiftBolt11Invoice, IGiftBtcAddress as ExternalIGiftBtcAddress,
+    IGiftCode as ExternalIGiftCode, IGiftLspNode as ExternalIGiftLspNode,
+    IGiftOrder as ExternalIGiftOrder, IGiftPayment as ExternalIGiftPayment,
+    ILspNode as ExternalILspNode, IManualRefund as ExternalIManualRefund,
+    ManualRefundStateEnum as ExternalManualRefundStateEnum,
 };
 use serde::{Deserialize, Serialize};
 
@@ -113,15 +98,21 @@ pub enum BtChannelOrderErrorType {
 impl From<ExternalBtChannelOrderErrorType> for BtChannelOrderErrorType {
     fn from(other: ExternalBtChannelOrderErrorType) -> Self {
         match other {
-            ExternalBtChannelOrderErrorType::WrongOrderState => BtChannelOrderErrorType::WrongOrderState,
-            ExternalBtChannelOrderErrorType::PeerNotReachable => BtChannelOrderErrorType::PeerNotReachable,
+            ExternalBtChannelOrderErrorType::WrongOrderState => {
+                BtChannelOrderErrorType::WrongOrderState
+            }
+            ExternalBtChannelOrderErrorType::PeerNotReachable => {
+                BtChannelOrderErrorType::PeerNotReachable
+            }
             ExternalBtChannelOrderErrorType::ChannelRejectedByDestination => {
                 BtChannelOrderErrorType::ChannelRejectedByDestination
             }
             ExternalBtChannelOrderErrorType::ChannelRejectedByLsp => {
                 BtChannelOrderErrorType::ChannelRejectedByLsp
             }
-            ExternalBtChannelOrderErrorType::BlocktankNotReady => BtChannelOrderErrorType::BlocktankNotReady,
+            ExternalBtChannelOrderErrorType::BlocktankNotReady => {
+                BtChannelOrderErrorType::BlocktankNotReady
+            }
         }
     }
 }
@@ -129,17 +120,24 @@ impl From<ExternalBtChannelOrderErrorType> for BtChannelOrderErrorType {
 impl From<BtChannelOrderErrorType> for ExternalBtChannelOrderErrorType {
     fn from(other: BtChannelOrderErrorType) -> Self {
         match other {
-            BtChannelOrderErrorType::WrongOrderState => ExternalBtChannelOrderErrorType::WrongOrderState,
-            BtChannelOrderErrorType::PeerNotReachable => ExternalBtChannelOrderErrorType::PeerNotReachable,
+            BtChannelOrderErrorType::WrongOrderState => {
+                ExternalBtChannelOrderErrorType::WrongOrderState
+            }
+            BtChannelOrderErrorType::PeerNotReachable => {
+                ExternalBtChannelOrderErrorType::PeerNotReachable
+            }
             BtChannelOrderErrorType::ChannelRejectedByDestination => {
                 ExternalBtChannelOrderErrorType::ChannelRejectedByDestination
             }
-            BtChannelOrderErrorType::ChannelRejectedByLsp => ExternalBtChannelOrderErrorType::ChannelRejectedByLsp,
-            BtChannelOrderErrorType::BlocktankNotReady => ExternalBtChannelOrderErrorType::BlocktankNotReady,
+            BtChannelOrderErrorType::ChannelRejectedByLsp => {
+                ExternalBtChannelOrderErrorType::ChannelRejectedByLsp
+            }
+            BtChannelOrderErrorType::BlocktankNotReady => {
+                ExternalBtChannelOrderErrorType::BlocktankNotReady
+            }
         }
     }
 }
-
 
 #[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum BtOpenChannelState {
@@ -167,7 +165,6 @@ impl From<BtOpenChannelState> for ExternalBtOpenChannelState {
         }
     }
 }
-
 
 #[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum BtOrderState {
@@ -198,7 +195,6 @@ impl From<BtOrderState> for ExternalBtOrderState {
         }
     }
 }
-
 
 #[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum BtOrderState2 {
@@ -263,7 +259,6 @@ impl From<BtPaymentState> for ExternalBtPaymentState {
     }
 }
 
-
 #[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum BtPaymentState2 {
     Created,
@@ -296,7 +291,6 @@ impl From<BtPaymentState2> for ExternalBtPaymentState2 {
         }
     }
 }
-
 
 #[derive(uniffi::Enum, Deserialize, Serialize)]
 pub enum CJitStateEnum {
@@ -357,7 +351,6 @@ impl From<ManualRefundStateEnum> for ExternalManualRefundStateEnum {
         }
     }
 }
-
 
 #[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct ILspNode {
@@ -431,7 +424,6 @@ impl From<IBtInfoOptions> for ExternalIBtInfoOptions {
     }
 }
 
-
 #[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IDiscount {
     pub code: String,
@@ -461,7 +453,6 @@ impl From<IDiscount> for ExternalIDiscount {
         }
     }
 }
-
 
 #[derive(uniffi::Record, Deserialize, Serialize)]
 pub struct IBtBolt11Invoice {
@@ -720,9 +711,9 @@ impl From<ExternalIBtPayment> for IBtPayment {
             bolt11_invoice: other.bolt11_invoice.map(|b| b.into()),
             onchain: other.onchain.map(|o| o.into()),
             is_manually_paid: other.is_manually_paid,
-            manual_refunds: other.manual_refunds.map(|refunds| {
-                refunds.into_iter().map(|refund| refund.into()).collect()
-            }),
+            manual_refunds: other
+                .manual_refunds
+                .map(|refunds| refunds.into_iter().map(|refund| refund.into()).collect()),
         }
     }
 }
@@ -736,9 +727,9 @@ impl From<IBtPayment> for ExternalIBtPayment {
             bolt11_invoice: other.bolt11_invoice.map(|b| b.into()),
             onchain: other.onchain.map(|o| o.into()),
             is_manually_paid: other.is_manually_paid,
-            manual_refunds: other.manual_refunds.map(|refunds| {
-                refunds.into_iter().map(|refund| refund.into()).collect()
-            }),
+            manual_refunds: other
+                .manual_refunds
+                .map(|refunds| refunds.into_iter().map(|refund| refund.into()).collect()),
         }
     }
 }
@@ -1189,7 +1180,11 @@ impl From<ExternalIGiftBtcAddress> for IGiftBtcAddress {
             id: other.id,
             address: other.address,
             transactions: other.transactions.iter().map(|_| "".to_string()).collect(), // Simplified
-            all_transactions: other.all_transactions.iter().map(|_| "".to_string()).collect(), // Simplified
+            all_transactions: other
+                .all_transactions
+                .iter()
+                .map(|_| "".to_string())
+                .collect(), // Simplified
             is_blacklisted: other.is_blacklisted,
             watch_until: other.watch_until,
             watch_for_block_confirmations: other.watch_for_block_confirmations,
@@ -1204,7 +1199,7 @@ impl From<IGiftBtcAddress> for ExternalIGiftBtcAddress {
         Self {
             id: other.id,
             address: other.address,
-            transactions: vec![], // Simplified
+            transactions: vec![],     // Simplified
             all_transactions: vec![], // Simplified
             is_blacklisted: other.is_blacklisted,
             watch_until: other.watch_until,
@@ -1339,7 +1334,11 @@ impl From<ExternalIGiftPayment> for IGiftPayment {
             btc_address_id: other.btc_address_id,
             bolt11_invoice: other.bolt11_invoice.map(|b| b.into()),
             bolt11_invoice_id: other.bolt11_invoice_id,
-            manual_refunds: other.manual_refunds.iter().map(|_| "".to_string()).collect(), // Simplified
+            manual_refunds: other
+                .manual_refunds
+                .iter()
+                .map(|_| "".to_string())
+                .collect(), // Simplified
         }
     }
 }

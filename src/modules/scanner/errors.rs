@@ -1,6 +1,6 @@
-use thiserror::Error;
 use crate::lnurl::LnurlError;
 use crate::onchain::AddressError;
+use thiserror::Error;
 
 #[derive(uniffi::Error, Debug, Error)]
 #[non_exhaustive]
@@ -11,7 +11,9 @@ pub enum DecodingError {
     InvalidNetwork,
     #[error("Invalid amount")]
     InvalidAmount,
-    #[error("Invalid LNURL pay amount: {amount_satoshis} sats (must be between {min} and {max} sats)")]
+    #[error(
+        "Invalid LNURL pay amount: {amount_satoshis} sats (must be between {min} and {max} sats)"
+    )]
     InvalidLNURLPayAmount {
         amount_satoshis: u64,
         min: u64,
@@ -32,9 +34,7 @@ pub enum DecodingError {
     #[error("Client creation failed")]
     ClientCreationFailed,
     #[error("Invoice creation failed: {error_message}")]
-    InvoiceCreationFailed {
-        error_message: String,
-    },
+    InvoiceCreationFailed { error_message: String },
 }
 
 impl From<LnurlError> for DecodingError {
@@ -42,19 +42,21 @@ impl From<LnurlError> for DecodingError {
         match error {
             LnurlError::InvoiceCreationFailed { error_details } => {
                 DecodingError::InvoiceCreationFailed {
-                    error_message: error_details
+                    error_message: error_details,
                 }
-            },
+            }
             LnurlError::InvalidAddress => DecodingError::InvalidFormat,
             LnurlError::ClientCreationFailed => DecodingError::ClientCreationFailed,
             LnurlError::RequestFailed => DecodingError::RequestFailed,
             LnurlError::InvalidResponse => DecodingError::InvalidResponse,
-            LnurlError::InvalidAmount { amount_satoshis, min, max } => {
-                DecodingError::InvalidLNURLPayAmount {
-                    amount_satoshis,
-                    min,
-                    max
-                }
+            LnurlError::InvalidAmount {
+                amount_satoshis,
+                min,
+                max,
+            } => DecodingError::InvalidLNURLPayAmount {
+                amount_satoshis,
+                min,
+                max,
             },
             LnurlError::AuthenticationFailed => DecodingError::InvalidResponse,
         }

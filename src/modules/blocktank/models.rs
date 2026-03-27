@@ -1,6 +1,6 @@
+use rusqlite::Connection;
 use rust_blocktank_client::BlocktankClient;
 use tokio::sync::Mutex;
-use rusqlite::Connection;
 
 pub struct BlocktankDB {
     pub(crate) conn: Mutex<Connection>,
@@ -117,7 +117,6 @@ pub const TRIGGER_STATEMENTS: &[&str] = &[
      BEGIN
          UPDATE info SET is_current = 0;
      END",
-
     // Ensure single current version trigger - UPDATE
     "CREATE TRIGGER IF NOT EXISTS ensure_single_current_version
      BEFORE UPDATE ON info
@@ -125,7 +124,7 @@ pub const TRIGGER_STATEMENTS: &[&str] = &[
      BEGIN
          UPDATE info SET is_current = 0
          WHERE version != NEW.version;
-     END"
+     END",
 ];
 
 /// Database indexes for optimizing queries
@@ -141,10 +140,9 @@ pub const INDEX_STATEMENTS: &[&str] = &[
     "CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC)",
     "CREATE INDEX IF NOT EXISTS idx_orders_updated_at ON orders(updated_at DESC)",
     "CREATE INDEX IF NOT EXISTS idx_orders_expires_at ON orders(order_expires_at DESC)",
-
     // CJIT entries indexes
     "CREATE INDEX IF NOT EXISTS idx_cjit_state ON cjit_entries(state)",
     "CREATE INDEX IF NOT EXISTS idx_cjit_node_state ON cjit_entries(node_id, state)",
     "CREATE INDEX IF NOT EXISTS idx_cjit_expires_at ON cjit_entries(expires_at DESC)",
-    "CREATE INDEX IF NOT EXISTS idx_cjit_created_at ON cjit_entries(created_at DESC)"
+    "CREATE INDEX IF NOT EXISTS idx_cjit_created_at ON cjit_entries(created_at DESC)",
 ];
