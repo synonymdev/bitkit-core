@@ -485,6 +485,11 @@ void uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags(RustBuffer payment
 void uniffi_bitkitcore_fn_func_add_tags(RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_APPROVE_PUBKY_AUTH
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_APPROVE_PUBKY_AUTH
+uint64_t uniffi_bitkitcore_fn_func_approve_pubky_auth(RustBuffer auth_url, RustBuffer secret_key_hex
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
 uint64_t uniffi_bitkitcore_fn_func_blocktank_remove_all_cjit_entries(void
@@ -833,6 +838,11 @@ uint64_t uniffi_bitkitcore_fn_func_onchain_get_transaction_history(RustBuffer ex
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_OPEN_CHANNEL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_OPEN_CHANNEL
 uint64_t uniffi_bitkitcore_fn_func_open_channel(RustBuffer order_id, RustBuffer connection_string
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PARSE_PUBKY_AUTH_URL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PARSE_PUBKY_AUTH_URL
+RustBuffer uniffi_bitkitcore_fn_func_parse_pubky_auth_url(RustBuffer auth_url, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PREPARE_SWEEP_TRANSACTION
@@ -1468,6 +1478,12 @@ uint16_t uniffi_bitkitcore_checksum_func_add_tags(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_APPROVE_PUBKY_AUTH
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_APPROVE_PUBKY_AUTH
+uint16_t uniffi_bitkitcore_checksum_func_approve_pubky_auth(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
 uint16_t uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries(void
@@ -1873,6 +1889,12 @@ uint16_t uniffi_bitkitcore_checksum_func_onchain_get_transaction_history(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_OPEN_CHANNEL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_OPEN_CHANNEL
 uint16_t uniffi_bitkitcore_checksum_func_open_channel(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PARSE_PUBKY_AUTH_URL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PARSE_PUBKY_AUTH_URL
+uint16_t uniffi_bitkitcore_checksum_func_parse_pubky_auth_url(void
     
 );
 #endif
