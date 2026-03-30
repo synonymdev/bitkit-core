@@ -1344,9 +1344,9 @@ public data class PubkyAuth (
 @kotlinx.serialization.Serializable
 public data class PubkyAuthDetails (
     /**
-     * `"signin"` or `"signup"`.
+     * Whether this is a signin or signup flow.
      */
-    val `kind`: kotlin.String, 
+    val `kind`: PubkyAuthKind, 
     /**
      * Requested capabilities (e.g. `"/pub/pubky.app/:rw"`).
      */
@@ -3399,6 +3399,23 @@ public enum class PaymentType {
     
     SENT,
     RECEIVED;
+    public companion object
+}
+
+
+
+
+
+
+/**
+ * The type of a `pubkyauth://` deep-link flow.
+ */
+
+@kotlinx.serialization.Serializable
+public enum class PubkyAuthKind {
+    
+    SIGNIN,
+    SIGNUP;
     public companion object
 }
 

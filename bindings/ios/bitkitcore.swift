@@ -8041,9 +8041,9 @@ public func FfiConverterTypePubkyAuth_lower(_ value: PubkyAuth) -> RustBuffer {
  */
 public struct PubkyAuthDetails {
     /**
-     * `"signin"` or `"signup"`.
+     * Whether this is a signin or signup flow.
      */
-    public var kind: String
+    public var kind: PubkyAuthKind
     /**
      * Requested capabilities (e.g. `"/pub/pubky.app/:rw"`).
      */
@@ -8065,8 +8065,8 @@ public struct PubkyAuthDetails {
     // declare one manually.
     public init(
         /**
-         * `"signin"` or `"signup"`.
-         */kind: String, 
+         * Whether this is a signin or signup flow.
+         */kind: PubkyAuthKind, 
         /**
          * Requested capabilities (e.g. `"/pub/pubky.app/:rw"`).
          */capabilities: String, 
@@ -8132,7 +8132,7 @@ public struct FfiConverterTypePubkyAuthDetails: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PubkyAuthDetails {
         return
             try PubkyAuthDetails(
-                kind: FfiConverterString.read(from: &buf), 
+                kind: FfiConverterTypePubkyAuthKind.read(from: &buf), 
                 capabilities: FfiConverterString.read(from: &buf), 
                 relay: FfiConverterString.read(from: &buf), 
                 homeserver: FfiConverterOptionString.read(from: &buf), 
@@ -8141,7 +8141,7 @@ public struct FfiConverterTypePubkyAuthDetails: FfiConverterRustBuffer {
     }
 
     public static func write(_ value: PubkyAuthDetails, into buf: inout [UInt8]) {
-        FfiConverterString.write(value.kind, into: &buf)
+        FfiConverterTypePubkyAuthKind.write(value.kind, into: &buf)
         FfiConverterString.write(value.capabilities, into: &buf)
         FfiConverterString.write(value.relay, into: &buf)
         FfiConverterOptionString.write(value.homeserver, into: &buf)
@@ -15676,6 +15676,81 @@ public func FfiConverterTypePaymentType_lower(_ value: PaymentType) -> RustBuffe
 extension PaymentType: Equatable, Hashable {}
 
 extension PaymentType: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * The type of a `pubkyauth://` deep-link flow.
+ */
+
+public enum PubkyAuthKind {
+    
+    case signin
+    case signup
+}
+
+
+#if compiler(>=6)
+extension PubkyAuthKind: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePubkyAuthKind: FfiConverterRustBuffer {
+    typealias SwiftType = PubkyAuthKind
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PubkyAuthKind {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .signin
+        
+        case 2: return .signup
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: PubkyAuthKind, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .signin:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .signup:
+            writeInt(&buf, Int32(2))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyAuthKind_lift(_ buf: RustBuffer) throws -> PubkyAuthKind {
+    return try FfiConverterTypePubkyAuthKind.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyAuthKind_lower(_ value: PubkyAuthKind) -> RustBuffer {
+    return FfiConverterTypePubkyAuthKind.lower(value)
+}
+
+
+extension PubkyAuthKind: Equatable, Hashable {}
+
+extension PubkyAuthKind: Codable {}
 
 
 

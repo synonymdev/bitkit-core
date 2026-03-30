@@ -6744,9 +6744,9 @@ class PubkyAuthDetails:
     Details extracted from a `pubkyauth://` deep-link URL.
     """
 
-    kind: "str"
+    kind: "PubkyAuthKind"
     """
-    `"signin"` or `"signup"`.
+    Whether this is a signin or signup flow.
     """
 
     capabilities: "str"
@@ -6769,7 +6769,7 @@ class PubkyAuthDetails:
     Signup token. Present only for signup flows.
     """
 
-    def __init__(self, *, kind: "str", capabilities: "str", relay: "str", homeserver: "typing.Optional[str]", signup_token: "typing.Optional[str]"):
+    def __init__(self, *, kind: "PubkyAuthKind", capabilities: "str", relay: "str", homeserver: "typing.Optional[str]", signup_token: "typing.Optional[str]"):
         self.kind = kind
         self.capabilities = capabilities
         self.relay = relay
@@ -6796,7 +6796,7 @@ class _UniffiConverterTypePubkyAuthDetails(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
         return PubkyAuthDetails(
-            kind=_UniffiConverterString.read(buf),
+            kind=_UniffiConverterTypePubkyAuthKind.read(buf),
             capabilities=_UniffiConverterString.read(buf),
             relay=_UniffiConverterString.read(buf),
             homeserver=_UniffiConverterOptionalString.read(buf),
@@ -6805,7 +6805,7 @@ class _UniffiConverterTypePubkyAuthDetails(_UniffiConverterRustBuffer):
 
     @staticmethod
     def check_lower(value):
-        _UniffiConverterString.check_lower(value.kind)
+        _UniffiConverterTypePubkyAuthKind.check_lower(value.kind)
         _UniffiConverterString.check_lower(value.capabilities)
         _UniffiConverterString.check_lower(value.relay)
         _UniffiConverterOptionalString.check_lower(value.homeserver)
@@ -6813,7 +6813,7 @@ class _UniffiConverterTypePubkyAuthDetails(_UniffiConverterRustBuffer):
 
     @staticmethod
     def write(value, buf):
-        _UniffiConverterString.write(value.kind, buf)
+        _UniffiConverterTypePubkyAuthKind.write(value.kind, buf)
         _UniffiConverterString.write(value.capabilities, buf)
         _UniffiConverterString.write(value.relay, buf)
         _UniffiConverterOptionalString.write(value.homeserver, buf)
@@ -12475,6 +12475,48 @@ class _UniffiConverterTypePaymentType(_UniffiConverterRustBuffer):
         if value == PaymentType.SENT:
             buf.write_i32(1)
         if value == PaymentType.RECEIVED:
+            buf.write_i32(2)
+
+
+
+
+
+
+
+class PubkyAuthKind(enum.Enum):
+    """
+    The type of a `pubkyauth://` deep-link flow.
+    """
+
+    SIGNIN = 0
+    
+    SIGNUP = 1
+    
+
+
+class _UniffiConverterTypePubkyAuthKind(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return PubkyAuthKind.SIGNIN
+        if variant == 2:
+            return PubkyAuthKind.SIGNUP
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == PubkyAuthKind.SIGNIN:
+            return
+        if value == PubkyAuthKind.SIGNUP:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == PubkyAuthKind.SIGNIN:
+            buf.write_i32(1)
+        if value == PubkyAuthKind.SIGNUP:
             buf.write_i32(2)
 
 
@@ -19367,6 +19409,7 @@ __all__ = [
     "NetworkType",
     "PaymentState",
     "PaymentType",
+    "PubkyAuthKind",
     "PubkyError",
     "Scanner",
     "SortDirection",

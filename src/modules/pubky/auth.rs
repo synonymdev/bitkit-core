@@ -64,11 +64,18 @@ pub async fn complete_pubky_auth() -> Result<String, PubkyError> {
     Ok(session.export_secret())
 }
 
+/// The type of a `pubkyauth://` deep-link flow.
+#[derive(uniffi::Enum, Debug, Clone, PartialEq)]
+pub enum PubkyAuthKind {
+    Signin,
+    Signup,
+}
+
 /// Details extracted from a `pubkyauth://` deep-link URL.
 #[derive(uniffi::Record, Debug, Clone)]
 pub struct PubkyAuthDetails {
-    /// `"signin"` or `"signup"`.
-    pub kind: String,
+    /// Whether this is a signin or signup flow.
+    pub kind: PubkyAuthKind,
     /// Requested capabilities (e.g. `"/pub/pubky.app/:rw"`).
     pub capabilities: String,
     /// Relay URL used for the auth exchange.
@@ -92,14 +99,14 @@ pub fn parse_pubky_auth_url(auth_url: String) -> Result<PubkyAuthDetails, PubkyE
 
     match deep_link {
         DeepLink::Signin(signin) => Ok(PubkyAuthDetails {
-            kind: "signin".to_string(),
+            kind: PubkyAuthKind::Signin,
             capabilities: signin.capabilities().to_string(),
             relay: signin.relay().to_string(),
             homeserver: None,
             signup_token: None,
         }),
         DeepLink::Signup(signup) => Ok(PubkyAuthDetails {
-            kind: "signup".to_string(),
+            kind: PubkyAuthKind::Signup,
             capabilities: signup.capabilities().to_string(),
             relay: signup.relay().to_string(),
             homeserver: Some(signup.homeserver().z32()),

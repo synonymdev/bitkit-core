@@ -417,7 +417,7 @@ async fn session_list_invalid_session_returns_error() {
 fn parse_signin_auth_url() {
     let url = "pubkyauth://signin?caps=/pub/pubky.app/:rw&secret=kqnceEMgrNQM_xi06oQXjA3cJHX_RQmw1BY6JE1bse8&relay=https://httprelay.pubky.app/link";
     let details = parse_pubky_auth_url(url.into()).unwrap();
-    assert_eq!(details.kind, "signin");
+    assert_eq!(details.kind, PubkyAuthKind::Signin);
     assert_eq!(details.capabilities, "/pub/pubky.app/:rw");
     assert_eq!(details.relay, "https://httprelay.pubky.app/link");
     assert!(details.homeserver.is_none());
@@ -428,7 +428,7 @@ fn parse_signin_auth_url() {
 fn parse_signup_auth_url_with_token() {
     let url = "pubkyauth://signup?caps=/pub/pubky.app/:rw&secret=kqnceEMgrNQM_xi06oQXjA3cJHX_RQmw1BY6JE1bse8&relay=https://httprelay.pubky.app/link&hs=5jsjx1o6fzu6aeeo697r3i5rx15zq41kikcye8wtwdqm4nb4tryo&st=1234567890";
     let details = parse_pubky_auth_url(url.into()).unwrap();
-    assert_eq!(details.kind, "signup");
+    assert_eq!(details.kind, PubkyAuthKind::Signup);
     assert_eq!(details.capabilities, "/pub/pubky.app/:rw");
     assert_eq!(details.relay, "https://httprelay.pubky.app/link");
     assert_eq!(
@@ -442,7 +442,7 @@ fn parse_signup_auth_url_with_token() {
 fn parse_signup_auth_url_without_token() {
     let url = "pubkyauth://signup?caps=/pub/pubky.app/:rw&secret=kqnceEMgrNQM_xi06oQXjA3cJHX_RQmw1BY6JE1bse8&relay=https://httprelay.pubky.app/link&hs=5jsjx1o6fzu6aeeo697r3i5rx15zq41kikcye8wtwdqm4nb4tryo";
     let details = parse_pubky_auth_url(url.into()).unwrap();
-    assert_eq!(details.kind, "signup");
+    assert_eq!(details.kind, PubkyAuthKind::Signup);
     assert_eq!(
         details.homeserver.as_deref(),
         Some("5jsjx1o6fzu6aeeo697r3i5rx15zq41kikcye8wtwdqm4nb4tryo")
@@ -454,7 +454,7 @@ fn parse_signup_auth_url_without_token() {
 fn parse_old_format_auth_url() {
     let url = "pubkyauth:///?caps=/pub/pubky.app/:rw&secret=kqnceEMgrNQM_xi06oQXjA3cJHX_RQmw1BY6JE1bse8&relay=https://httprelay.pubky.app/link";
     let details = parse_pubky_auth_url(url.into()).unwrap();
-    assert_eq!(details.kind, "signin");
+    assert_eq!(details.kind, PubkyAuthKind::Signin);
 }
 
 #[test]

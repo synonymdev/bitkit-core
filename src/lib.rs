@@ -31,7 +31,7 @@ use crate::modules::blocktank::{
     IBt0ConfMinTxFeeWindow, IBtBolt11Invoice, IBtEstimateFeeResponse, IBtEstimateFeeResponse2,
     IBtInfo, IBtOrder, ICJitEntry, IGift,
 };
-use crate::modules::pubky::{PubkyAuthDetails, PubkyError, PubkyProfile};
+use crate::modules::pubky::{PubkyAuthDetails, PubkyAuthKind, PubkyError, PubkyProfile};
 use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
     get_transport_callback, trezor_is_ble_available, trezor_set_transport_callback,

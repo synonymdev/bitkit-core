@@ -6664,7 +6664,7 @@ public object FfiConverterTypePubkyAuth: FfiConverterRustBuffer<PubkyAuth> {
 public object FfiConverterTypePubkyAuthDetails: FfiConverterRustBuffer<PubkyAuthDetails> {
     override fun read(buf: ByteBuffer): PubkyAuthDetails {
         return PubkyAuthDetails(
-            FfiConverterString.read(buf),
+            FfiConverterTypePubkyAuthKind.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterOptionalString.read(buf),
@@ -6673,7 +6673,7 @@ public object FfiConverterTypePubkyAuthDetails: FfiConverterRustBuffer<PubkyAuth
     }
 
     override fun allocationSize(value: PubkyAuthDetails): ULong = (
-            FfiConverterString.allocationSize(value.`kind`) +
+            FfiConverterTypePubkyAuthKind.allocationSize(value.`kind`) +
             FfiConverterString.allocationSize(value.`capabilities`) +
             FfiConverterString.allocationSize(value.`relay`) +
             FfiConverterOptionalString.allocationSize(value.`homeserver`) +
@@ -6681,7 +6681,7 @@ public object FfiConverterTypePubkyAuthDetails: FfiConverterRustBuffer<PubkyAuth
     )
 
     override fun write(value: PubkyAuthDetails, buf: ByteBuffer) {
-        FfiConverterString.write(value.`kind`, buf)
+        FfiConverterTypePubkyAuthKind.write(value.`kind`, buf)
         FfiConverterString.write(value.`capabilities`, buf)
         FfiConverterString.write(value.`relay`, buf)
         FfiConverterOptionalString.write(value.`homeserver`, buf)
@@ -9216,6 +9216,24 @@ public object FfiConverterTypePaymentType: FfiConverterRustBuffer<PaymentType> {
     override fun allocationSize(value: PaymentType): ULong = 4UL
 
     override fun write(value: PaymentType, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+public object FfiConverterTypePubkyAuthKind: FfiConverterRustBuffer<PubkyAuthKind> {
+    override fun read(buf: ByteBuffer): PubkyAuthKind = try {
+        PubkyAuthKind.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: PubkyAuthKind): ULong = 4UL
+
+    override fun write(value: PubkyAuthKind, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
