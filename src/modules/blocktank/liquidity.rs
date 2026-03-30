@@ -35,22 +35,23 @@ pub struct DefaultLspBalanceParams {
 
 /// Calculates channel liquidity options including default, min, and max LSP balance.
 /// Used for normal channel opening UI with existing channel deduction and 2% buffer.
-pub fn calculate_channel_liquidity_options(params: ChannelLiquidityParams) -> ChannelLiquidityOptions {
+pub fn calculate_channel_liquidity_options(
+    params: ChannelLiquidityParams,
+) -> ChannelLiquidityOptions {
     let threshold_1_sat = THRESHOLD_1_EUR * params.sats_per_eur;
     let threshold_2_sat = THRESHOLD_2_EUR * params.sats_per_eur;
     let default_lsp_target_sat = DEFAULT_LSP_TARGET_EUR * params.sats_per_eur;
 
     // Apply 2% buffer to max channel size (LSP limits fluctuate with network fees)
-    let max_channel_size_buffered = (params.max_channel_size_sat as f64 * MAX_CHANNEL_SIZE_BUFFER_PERCENT) as u64;
+    let max_channel_size_buffered =
+        (params.max_channel_size_sat as f64 * MAX_CHANNEL_SIZE_BUFFER_PERCENT) as u64;
 
     // Subtract existing channels from max (users have a total liquidity cap)
-    let max_channel_size = max_channel_size_buffered
-        .saturating_sub(params.existing_channels_total_sat);
+    let max_channel_size =
+        max_channel_size_buffered.saturating_sub(params.existing_channels_total_sat);
 
-    let min_lsp_balance = calc_min_lsp_balance(
-        params.client_balance_sat,
-        params.min_channel_size_sat,
-    );
+    let min_lsp_balance =
+        calc_min_lsp_balance(params.client_balance_sat, params.min_channel_size_sat);
 
     let max_lsp_balance = max_channel_size.saturating_sub(params.client_balance_sat);
 

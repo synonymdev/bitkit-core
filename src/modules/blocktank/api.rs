@@ -1,23 +1,20 @@
-use rust_blocktank_client::{
-    CreateCjitOptions,
-    CreateOrderOptions,
-    IBt0ConfMinTxFeeWindow,
-    IBtBolt11Invoice,
-    IBtEstimateFeeResponse,
-    IBtEstimateFeeResponse2,
-    IBtInfo,
-    IBtOrder,
-    ICJitEntry
-};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IGift};
+use rust_blocktank_client::{
+    CreateCjitOptions, CreateOrderOptions, IBt0ConfMinTxFeeWindow, IBtBolt11Invoice,
+    IBtEstimateFeeResponse, IBtEstimateFeeResponse2, IBtInfo, IBtOrder, ICJitEntry,
+};
 
 impl BlocktankDB {
     /// Fetches service information from Blocktank and stores it in the database.
     /// Returns the fetched information if successful.
     pub async fn fetch_and_store_info(&self) -> Result<IBtInfo, BlocktankError> {
-        let info = self.client.get_info().await.map_err(|e| BlocktankError::DataError {
-            error_details: format!("Failed to fetch info from Blocktank: {}", e)
-        })?;
+        let info = self
+            .client
+            .get_info()
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to fetch info from Blocktank: {}", e),
+            })?;
 
         self.upsert_info(&info).await?;
         Ok(info)
@@ -30,16 +27,15 @@ impl BlocktankDB {
         channel_expiry_weeks: u32,
         options: Option<CreateOrderOptions>,
     ) -> Result<IBtOrder, BlocktankError> {
-        let response = self.client.create_order(
-            lsp_balance_sat,
-            channel_expiry_weeks,
-            options
-        ).await;
+        let response = self
+            .client
+            .create_order(lsp_balance_sat, channel_expiry_weeks, options)
+            .await;
 
         println!("Raw API response: {:#?}", response);
 
         let order = response.map_err(|e| BlocktankError::DataError {
-            error_details: format!("Failed to create order with Blocktank client: {}", e)
+            error_details: format!("Failed to create order with Blocktank client: {}", e),
         })?;
 
         self.upsert_order(&order).await?;
@@ -49,26 +45,32 @@ impl BlocktankDB {
     pub async fn open_channel(
         &self,
         order_id: String,
-        connection_string: String
+        connection_string: String,
     ) -> Result<IBtOrder, BlocktankError> {
-        let response = self.client.open_channel(
-            &order_id,
-            &connection_string,
-        ).await.map_err(|e| BlocktankError::DataError {
-            error_details: format!("Failed to open channel with Blocktank client: {}", e)
-        })?;
+        let response = self
+            .client
+            .open_channel(&order_id, &connection_string)
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to open channel with Blocktank client: {}", e),
+            })?;
 
         self.upsert_order(&response).await?;
         Ok(response)
     }
 
     /// Fetches and updates multiple orders in the database
-    pub async fn refresh_orders(&self, order_ids: &[String]) -> Result<Vec<IBtOrder>, BlocktankError> {
-        let orders = self.client.get_orders(order_ids)
-            .await
-            .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to fetch orders: {}", e)
-            })?;
+    pub async fn refresh_orders(
+        &self,
+        order_ids: &[String],
+    ) -> Result<Vec<IBtOrder>, BlocktankError> {
+        let orders =
+            self.client
+                .get_orders(order_ids)
+                .await
+                .map_err(|e| BlocktankError::DataError {
+                    error_details: format!("Failed to fetch orders: {}", e),
+                })?;
 
         for order in &orders {
             self.upsert_order(order).await?;
@@ -85,10 +87,7 @@ impl BlocktankDB {
             return Ok(Vec::new());
         }
 
-        let order_ids: Vec<String> = active_orders
-            .iter()
-            .map(|order| order.id.clone())
-            .collect();
+        let order_ids: Vec<String> = active_orders.iter().map(|order| order.id.clone()).collect();
 
         self.refresh_orders(&order_ids).await
     }
@@ -97,10 +96,12 @@ impl BlocktankDB {
         &self,
         order_id: String,
     ) -> Result<IBt0ConfMinTxFeeWindow, BlocktankError> {
-        let response = self.client.get_min_zero_conf_tx_fee(&order_id)
+        let response = self
+            .client
+            .get_min_zero_conf_tx_fee(&order_id)
             .await
             .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to get minimum zero-conf transaction fee: {}", e)
+                error_details: format!("Failed to get minimum zero-conf transaction fee: {}", e),
             })?;
 
         Ok(response)
@@ -112,13 +113,13 @@ impl BlocktankDB {
         channel_expiry_weeks: u32,
         options: Option<CreateOrderOptions>,
     ) -> Result<IBtEstimateFeeResponse, BlocktankError> {
-        let response = self.client.estimate_order_fee(
-            lsp_balance_sat,
-            channel_expiry_weeks,
-            options
-        ).await.map_err(|e| BlocktankError::DataError {
-            error_details: format!("Failed to estimate order fee: {}", e)
-        })?;
+        let response = self
+            .client
+            .estimate_order_fee(lsp_balance_sat, channel_expiry_weeks, options)
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to estimate order fee: {}", e),
+            })?;
 
         Ok(response)
     }
@@ -129,13 +130,13 @@ impl BlocktankDB {
         channel_expiry_weeks: u32,
         options: Option<CreateOrderOptions>,
     ) -> Result<IBtEstimateFeeResponse2, BlocktankError> {
-        let response = self.client.estimate_order_fee_full(
-            lsp_balance_sat,
-            channel_expiry_weeks,
-            options
-        ).await.map_err(|e| BlocktankError::DataError {
-            error_details: format!("Failed to estimate full order fee: {}", e)
-        })?;
+        let response = self
+            .client
+            .estimate_order_fee_full(lsp_balance_sat, channel_expiry_weeks, options)
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to estimate full order fee: {}", e),
+            })?;
 
         Ok(response)
     }
@@ -149,16 +150,20 @@ impl BlocktankDB {
         channel_expiry_weeks: u32,
         options: Option<CreateCjitOptions>,
     ) -> Result<ICJitEntry, BlocktankError> {
-        let response = self.client.create_cjit_entry(
-            channel_size_sat,
-            invoice_sat,
-            invoice_description,
-            node_id,
-            channel_expiry_weeks,
-            options
-        ).await.map_err(|e| BlocktankError::DataError {
-            error_details: format!("Failed to create CJIT entry: {}", e)
-        })?;
+        let response = self
+            .client
+            .create_cjit_entry(
+                channel_size_sat,
+                invoice_sat,
+                invoice_description,
+                node_id,
+                channel_expiry_weeks,
+                options,
+            )
+            .await
+            .map_err(|e| BlocktankError::DataError {
+                error_details: format!("Failed to create CJIT entry: {}", e),
+            })?;
 
         self.upsert_cjit_entry(&response).await?;
         Ok(response)
@@ -167,11 +172,13 @@ impl BlocktankDB {
     /// Fetches a CJIT entry by ID from Blocktank and stores it in the database.
     /// Returns the fetched CJIT entry if successful.
     pub async fn refresh_cjit_entry(&self, entry_id: &str) -> Result<ICJitEntry, BlocktankError> {
-        let response = self.client.get_cjit_entry(entry_id)
-            .await
-            .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to fetch CJIT entry from Blocktank: {}", e)
-            })?;
+        let response =
+            self.client
+                .get_cjit_entry(entry_id)
+                .await
+                .map_err(|e| BlocktankError::DataError {
+                    error_details: format!("Failed to fetch CJIT entry from Blocktank: {}", e),
+                })?;
 
         self.upsert_cjit_entry(&response).await?;
         Ok(response)
@@ -208,10 +215,11 @@ impl BlocktankDB {
 
     /// Mines blocks on the regtest network
     pub async fn regtest_mine(&self, count: Option<u32>) -> Result<(), BlocktankError> {
-        self.client.regtest_mine(count)
+        self.client
+            .regtest_mine(count)
             .await
             .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to mine blocks: {}", e)
+                error_details: format!("Failed to mine blocks: {}", e),
             })
     }
 
@@ -221,10 +229,11 @@ impl BlocktankDB {
         address: &str,
         amount_sat: Option<u64>,
     ) -> Result<String, BlocktankError> {
-        self.client.regtest_deposit(address, amount_sat)
+        self.client
+            .regtest_deposit(address, amount_sat)
             .await
             .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to deposit to address: {}", e)
+                error_details: format!("Failed to deposit to address: {}", e),
             })
     }
 
@@ -234,19 +243,24 @@ impl BlocktankDB {
         invoice: &str,
         amount_sat: Option<u64>,
     ) -> Result<String, BlocktankError> {
-        self.client.regtest_pay(invoice, amount_sat)
+        self.client
+            .regtest_pay(invoice, amount_sat)
             .await
             .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to pay invoice: {}", e)
+                error_details: format!("Failed to pay invoice: {}", e),
             })
     }
 
     /// Gets paid invoice on the regtest network
-    pub async fn regtest_get_payment(&self, payment_id: &str) -> Result<IBtBolt11Invoice, BlocktankError> {
-        self.client.regtest_get_payment(payment_id)
+    pub async fn regtest_get_payment(
+        &self,
+        payment_id: &str,
+    ) -> Result<IBtBolt11Invoice, BlocktankError> {
+        self.client
+            .regtest_get_payment(payment_id)
             .await
             .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to get payment: {}", e)
+                error_details: format!("Failed to get payment: {}", e),
             })
     }
 
@@ -257,10 +271,11 @@ impl BlocktankDB {
         vout: u32,
         force_close_after_s: Option<u64>,
     ) -> Result<String, BlocktankError> {
-        self.client.regtest_close_channel(funding_tx_id, vout, force_close_after_s)
+        self.client
+            .regtest_close_channel(funding_tx_id, vout, force_close_after_s)
             .await
             .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to close channel: {}", e)
+                error_details: format!("Failed to close channel: {}", e),
             })
     }
 
@@ -276,19 +291,20 @@ impl BlocktankDB {
         is_production: Option<bool>,
         custom_url: Option<&str>,
     ) -> Result<String, BlocktankError> {
-        self.client.register_device(
-            device_token,
-            public_key,
-            features,
-            node_id,
-            iso_timestamp,
-            signature,
-            is_production,
-            custom_url
-        )
+        self.client
+            .register_device(
+                device_token,
+                public_key,
+                features,
+                node_id,
+                iso_timestamp,
+                signature,
+                is_production,
+                custom_url,
+            )
             .await
             .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to register device: {}", e)
+                error_details: format!("Failed to register device: {}", e),
             })
     }
 
@@ -300,54 +316,58 @@ impl BlocktankDB {
         notification_type: Option<&str>,
         custom_url: Option<&str>,
     ) -> Result<String, BlocktankError> {
-        self.client.test_notification(
-            device_token,
-            secret_message,
-            notification_type,
-            custom_url
-        )
+        self.client
+            .test_notification(device_token, secret_message, notification_type, custom_url)
             .await
             .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to send test notification: {}", e)
+                error_details: format!("Failed to send test notification: {}", e),
             })
     }
 
     /// Makes a payment for a gift invoice
     pub async fn gift_pay(&self, invoice: &str) -> Result<IGift, BlocktankError> {
-        self.client.gift_pay(invoice)
+        self.client
+            .gift_pay(invoice)
             .await
             .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to pay gift invoice: {}", e)
+                error_details: format!("Failed to pay gift invoice: {}", e),
             })
             .map(|gift| gift.into())
     }
 
     /// Creates a gift order
-    pub async fn gift_order(&self, client_node_id: &str, code: &str) -> Result<IGift, BlocktankError> {
-        self.client.gift_order(client_node_id, code)
+    pub async fn gift_order(
+        &self,
+        client_node_id: &str,
+        code: &str,
+    ) -> Result<IGift, BlocktankError> {
+        self.client
+            .gift_order(client_node_id, code)
             .await
             .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to create gift order: {}", e)
+                error_details: format!("Failed to create gift order: {}", e),
             })
             .map(|gift| gift.into())
     }
 
     /// Gets a paid gift payment
     pub async fn get_gift(&self, gift_id: &str) -> Result<IGift, BlocktankError> {
-        self.client.get_gift(gift_id)
+        self.client
+            .get_gift(gift_id)
             .await
             .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to get gift: {}", e)
+                error_details: format!("Failed to get gift: {}", e),
             })
             .map(|gift| gift.into())
     }
 
     /// Gets a paid payment
     pub async fn get_payment(&self, payment_id: &str) -> Result<IBtBolt11Invoice, BlocktankError> {
-        self.client.get_payment(payment_id)
+        self.client
+            .get_payment(payment_id)
             .await
             .map_err(|e| BlocktankError::DataError {
-                error_details: format!("Failed to get payment: {}", e)
+                error_details: format!("Failed to get payment: {}", e),
             })
     }
 }

@@ -3,8 +3,8 @@
 #[cfg(test)]
 mod tests {
     use crate::modules::trezor::{
-        TrezorDeviceInfo, TrezorError, TrezorFeatures, TrezorScriptType, TrezorTransportType,
-        TrezorTxInput, TrezorTxOutput, TrezorSignTxParams, TrezorSignedTx, TrezorCoinType,
+        TrezorCoinType, TrezorDeviceInfo, TrezorError, TrezorFeatures, TrezorScriptType,
+        TrezorSignTxParams, TrezorSignedTx, TrezorTransportType, TrezorTxInput, TrezorTxOutput,
     };
 
     // ========================================================================
@@ -217,28 +217,40 @@ mod tests {
     fn test_script_type_conversion_spend_address() {
         let trezor_type = TrezorScriptType::SpendAddress;
         let tc_type: trezor_connect_rs::ScriptType = trezor_type.into();
-        assert!(matches!(tc_type, trezor_connect_rs::ScriptType::SpendAddress));
+        assert!(matches!(
+            tc_type,
+            trezor_connect_rs::ScriptType::SpendAddress
+        ));
     }
 
     #[test]
     fn test_script_type_conversion_spend_p2sh_witness() {
         let trezor_type = TrezorScriptType::SpendP2shWitness;
         let tc_type: trezor_connect_rs::ScriptType = trezor_type.into();
-        assert!(matches!(tc_type, trezor_connect_rs::ScriptType::SpendP2SHWitness));
+        assert!(matches!(
+            tc_type,
+            trezor_connect_rs::ScriptType::SpendP2SHWitness
+        ));
     }
 
     #[test]
     fn test_script_type_conversion_spend_witness() {
         let trezor_type = TrezorScriptType::SpendWitness;
         let tc_type: trezor_connect_rs::ScriptType = trezor_type.into();
-        assert!(matches!(tc_type, trezor_connect_rs::ScriptType::SpendWitness));
+        assert!(matches!(
+            tc_type,
+            trezor_connect_rs::ScriptType::SpendWitness
+        ));
     }
 
     #[test]
     fn test_script_type_conversion_spend_taproot() {
         let trezor_type = TrezorScriptType::SpendTaproot;
         let tc_type: trezor_connect_rs::ScriptType = trezor_type.into();
-        assert!(matches!(tc_type, trezor_connect_rs::ScriptType::SpendTaproot));
+        assert!(matches!(
+            tc_type,
+            trezor_connect_rs::ScriptType::SpendTaproot
+        ));
     }
 
     #[test]
@@ -280,7 +292,10 @@ mod tests {
         assert_eq!(tc_input.prev_index, 0);
         assert_eq!(tc_input.path, "m/84'/0'/0'/0/0");
         assert_eq!(tc_input.amount, 100000);
-        assert!(matches!(tc_input.script_type, trezor_connect_rs::ScriptType::SpendWitness));
+        assert!(matches!(
+            tc_input.script_type,
+            trezor_connect_rs::ScriptType::SpendWitness
+        ));
         assert_eq!(tc_input.sequence, Some(0xFFFFFFFD));
     }
 
@@ -320,7 +335,10 @@ mod tests {
         assert!(tc_output.address.is_none());
         assert_eq!(tc_output.path, Some("m/84'/0'/0'/1/0".to_string()));
         assert_eq!(tc_output.amount, 5000);
-        assert!(matches!(tc_output.script_type, Some(trezor_connect_rs::ScriptType::SpendWitness)));
+        assert!(matches!(
+            tc_output.script_type,
+            Some(trezor_connect_rs::ScriptType::SpendWitness)
+        ));
     }
 
     #[test]
@@ -577,21 +595,39 @@ mod tests {
         assert_eq!(err.to_string(), "Operation timed out");
 
         let err = TrezorError::NotInitialized;
-        assert_eq!(err.to_string(), "Trezor not initialized. Call trezor_initialize first.");
+        assert_eq!(
+            err.to_string(),
+            "Trezor not initialized. Call trezor_initialize first."
+        );
 
         let err = TrezorError::NotConnected;
-        assert_eq!(err.to_string(), "No device connected. Call trezor_connect first.");
+        assert_eq!(
+            err.to_string(),
+            "No device connected. Call trezor_connect first."
+        );
     }
 
     #[test]
     fn test_account_type_to_script_type() {
-        use crate::modules::trezor::account_info::account_type_to_script_type;
         use crate::modules::onchain::AccountType;
+        use crate::modules::trezor::account_info::account_type_to_script_type;
 
-        assert!(matches!(account_type_to_script_type(AccountType::Legacy), TrezorScriptType::SpendAddress));
-        assert!(matches!(account_type_to_script_type(AccountType::WrappedSegwit), TrezorScriptType::SpendP2shWitness));
-        assert!(matches!(account_type_to_script_type(AccountType::NativeSegwit), TrezorScriptType::SpendWitness));
-        assert!(matches!(account_type_to_script_type(AccountType::Taproot), TrezorScriptType::SpendTaproot));
+        assert!(matches!(
+            account_type_to_script_type(AccountType::Legacy),
+            TrezorScriptType::SpendAddress
+        ));
+        assert!(matches!(
+            account_type_to_script_type(AccountType::WrappedSegwit),
+            TrezorScriptType::SpendP2shWitness
+        ));
+        assert!(matches!(
+            account_type_to_script_type(AccountType::NativeSegwit),
+            TrezorScriptType::SpendWitness
+        ));
+        assert!(matches!(
+            account_type_to_script_type(AccountType::Taproot),
+            TrezorScriptType::SpendTaproot
+        ));
     }
 
     #[test]
@@ -600,7 +636,10 @@ mod tests {
 
         let cases = vec![
             (ScriptType::SpendAddress, TrezorScriptType::SpendAddress),
-            (ScriptType::SpendP2SHWitness, TrezorScriptType::SpendP2shWitness),
+            (
+                ScriptType::SpendP2SHWitness,
+                TrezorScriptType::SpendP2shWitness,
+            ),
             (ScriptType::SpendWitness, TrezorScriptType::SpendWitness),
             (ScriptType::SpendTaproot, TrezorScriptType::SpendTaproot),
             (ScriptType::SpendMultisig, TrezorScriptType::SpendMultisig),
@@ -612,5 +651,4 @@ mod tests {
             assert_eq!(result, expected);
         }
     }
-
 }

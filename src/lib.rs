@@ -20,36 +20,51 @@ mod modules;
 use once_cell::sync::OnceCell;
 
 // Re-export Trezor callback types and traits so UniFFI discovers them at the crate root
+use crate::activity::{
+    Activity, ActivityDB, ActivityError, ActivityFilter, ActivityTags, ClosedChannelDetails,
+    DbError, LightningActivity, OnchainActivity, PaymentType, PreActivityMetadata, SortDirection,
+    TransactionDetails,
+};
+use crate::modules::blocktank::{
+    BlocktankDB, BlocktankError, BtOrderState2, CJitStateEnum, ChannelLiquidityOptions,
+    ChannelLiquidityParams, CreateCjitOptions, CreateOrderOptions, DefaultLspBalanceParams,
+    IBt0ConfMinTxFeeWindow, IBtBolt11Invoice, IBtEstimateFeeResponse, IBtEstimateFeeResponse2,
+    IBtInfo, IBtOrder, ICJitEntry, IGift,
+};
+use crate::modules::pubky::{PubkyError, PubkyProfile};
+use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
-    TrezorTransportReadResult, TrezorTransportWriteResult, TrezorCallMessageResult,
-    NativeDeviceInfo, TrezorTransportCallback,
-    trezor_set_transport_callback, get_transport_callback,
-    trezor_is_ble_available,
-    TrezorUiCallback, trezor_set_ui_callback,
+    get_transport_callback, trezor_is_ble_available, trezor_set_transport_callback,
+    trezor_set_ui_callback, NativeDeviceInfo, TrezorCallMessageResult, TrezorTransportCallback,
+    TrezorTransportReadResult, TrezorTransportWriteResult, TrezorUiCallback,
 };
-pub use modules::scanner::{
-    Scanner,
-    DecodingError
+use crate::modules::trezor::{
+    TrezorAddressResponse, TrezorCoinType, TrezorDeviceInfo, TrezorError, TrezorFeatures,
+    TrezorGetAddressParams, TrezorGetPublicKeyParams, TrezorManager, TrezorPublicKeyResponse,
+    TrezorScriptType, TrezorSignMessageParams, TrezorSignTxParams, TrezorSignedMessageResponse,
+    TrezorSignedTx, TrezorVerifyMessageParams,
 };
+pub use crate::onchain::WordCount;
+use crate::onchain::{
+    broadcast_raw_tx, get_account_info, get_address_info, get_transaction_detail,
+    get_transaction_history, AccountInfoError, AccountInfoResult, AccountType, AddressError,
+    BroadcastError, GetAddressResponse, GetAddressesResponse, Network, SingleAddressInfoResult,
+    SweepError, SweepResult, SweepTransactionPreview, SweepableBalances, TransactionDetail,
+    TransactionHistoryResult, ValidationResult,
+};
+use crate::onchain::{compose_transaction, ComposeParams, ComposeResult};
+pub use modules::activity;
 pub use modules::lnurl;
 pub use modules::onchain;
-pub use modules::activity;
-use crate::modules::pubky::{PubkyError, PubkyProfile};
-use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails};
-use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
-use crate::onchain::{AddressError, BroadcastError, AccountInfoError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances, broadcast_raw_tx, AccountInfoResult, SingleAddressInfoResult, AccountType, get_account_info, get_address_info, get_transaction_history, get_transaction_detail, TransactionHistoryResult, TransactionDetail};
-use crate::modules::trezor::{TrezorError, TrezorDeviceInfo, TrezorFeatures, TrezorGetAddressParams, TrezorAddressResponse, TrezorGetPublicKeyParams, TrezorPublicKeyResponse, TrezorScriptType, TrezorManager, TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams, TrezorSignTxParams, TrezorSignedTx, TrezorCoinType};
-use crate::modules::trezor::account_type_to_script_type;
-use crate::onchain::{compose_transaction, ComposeParams, ComposeResult};
-pub use crate::onchain::WordCount;
+pub use modules::scanner::{DecodingError, Scanner};
 
-use std::sync::Mutex as StdMutex;
-use tokio::runtime::Runtime;
-use tokio::sync::Mutex as TokioMutex;
 use bip39::Mnemonic;
 use bitcoin::bip32::Xpriv;
 use bitcoin::Network as BitcoinNetwork;
 use std::str::FromStr;
+use std::sync::Mutex as StdMutex;
+use tokio::runtime::Runtime;
+use tokio::sync::Mutex as TokioMutex;
 
 pub struct DatabaseConnections {
     activity_db: Option<ActivityDB>,
@@ -65,15 +80,13 @@ static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 static TREZOR_MANAGER: OnceCell<TrezorManager> = OnceCell::new();
 
 fn ensure_runtime() -> &'static Runtime {
-    RUNTIME.get_or_init(|| {
-        Runtime::new().expect("Failed to create Tokio runtime")
-    })
+    RUNTIME.get_or_init(|| Runtime::new().expect("Failed to create Tokio runtime"))
 }
 
 /// Helper function to get a reference to the activity database connections
 fn get_activity_db() -> Result<std::sync::MutexGuard<'static, DatabaseConnections>, ActivityError> {
     let cell = DB.get().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
+        error_details: "Database not initialized. Call init_db first.".to_string(),
     })?;
     Ok(cell.lock().unwrap())
 }
@@ -81,17 +94,20 @@ fn get_activity_db() -> Result<std::sync::MutexGuard<'static, DatabaseConnection
 #[uniffi::export]
 pub async fn decode(invoice: String) -> Result<Scanner, DecodingError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        Scanner::decode(invoice).await
-    }).await.unwrap()
+    rt.spawn(async move { Scanner::decode(invoice).await })
+        .await
+        .unwrap()
 }
 
 #[uniffi::export]
-pub async fn get_lnurl_invoice(address: String, amount_satoshis: u64) -> Result<String, lnurl::LnurlError> {
+pub async fn get_lnurl_invoice(
+    address: String,
+    amount_satoshis: u64,
+) -> Result<String, lnurl::LnurlError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        lnurl::get_lnurl_invoice(&address, amount_satoshis).await
-    }).await.unwrap()
+    rt.spawn(async move { lnurl::get_lnurl_invoice(&address, amount_satoshis).await })
+        .await
+        .unwrap()
 }
 
 #[uniffi::export]
@@ -135,9 +151,9 @@ pub async fn lnurl_auth(
     network: Option<Network>,
     bip39_passphrase: Option<String>,
 ) -> Result<String, lnurl::LnurlError> {
-    let mnemonic = Mnemonic::parse(&bip32_mnemonic)
-        .map_err(|_| lnurl::LnurlError::AuthenticationFailed)?;
-    
+    let mnemonic =
+        Mnemonic::parse(&bip32_mnemonic).map_err(|_| lnurl::LnurlError::AuthenticationFailed)?;
+
     let bitcoin_network = match network.unwrap_or(Network::Bitcoin) {
         Network::Bitcoin => BitcoinNetwork::Bitcoin,
         Network::Testnet => BitcoinNetwork::Testnet,
@@ -145,32 +161,33 @@ pub async fn lnurl_auth(
         Network::Signet => BitcoinNetwork::Signet,
         Network::Regtest => BitcoinNetwork::Regtest,
     };
-    
+
     let seed = mnemonic.to_seed(bip39_passphrase.as_deref().unwrap_or(""));
     let root = Xpriv::new_master(bitcoin_network, &seed)
         .map_err(|_| lnurl::LnurlError::AuthenticationFailed)?;
-    
+
     // Derive hashing key using m/138'/0 path (as per LUD-05)
     let hashing_path = bitcoin::bip32::DerivationPath::from_str("m/138'/0")
         .map_err(|_| lnurl::LnurlError::AuthenticationFailed)?;
-    
+
     let secp = bitcoin::secp256k1::Secp256k1::new();
-    let hashing_key_xpriv = root.derive_priv(&secp, &hashing_path)
+    let hashing_key_xpriv = root
+        .derive_priv(&secp, &hashing_path)
         .map_err(|_| lnurl::LnurlError::AuthenticationFailed)?;
-    
+
     let hashing_key_bytes = hashing_key_xpriv.private_key.secret_bytes();
-    
+
     let params = lnurl::LnurlAuthParams {
         domain,
         k1,
         callback,
         hashing_key: hashing_key_bytes,
     };
-    
+
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        lnurl::lnurl_auth(params).await
-    }).await.unwrap()
+    rt.spawn(async move { lnurl::lnurl_auth(params).await })
+        .await
+        .unwrap()
 }
 
 #[uniffi::export]
@@ -266,7 +283,10 @@ pub fn entropy_to_mnemonic(entropy: Vec<u8>) -> Result<String, AddressError> {
 }
 
 #[uniffi::export]
-pub fn mnemonic_to_seed(mnemonic_phrase: String, passphrase: Option<String>) -> Result<Vec<u8>, AddressError> {
+pub fn mnemonic_to_seed(
+    mnemonic_phrase: String,
+    passphrase: Option<String>,
+) -> Result<Vec<u8>, AddressError> {
     onchain::BitcoinAddressValidator::mnemonic_to_seed(&mnemonic_phrase, passphrase.as_deref())
 }
 
@@ -342,26 +362,17 @@ pub async fn broadcast_sweep_transaction(
 #[uniffi::export]
 pub fn init_db(base_path: String) -> Result<String, DbError> {
     // Initialize sync database state
-    DB.get_or_init(|| {
-        StdMutex::new(DatabaseConnections {
-            activity_db: None,
-        })
-    });
+    DB.get_or_init(|| StdMutex::new(DatabaseConnections { activity_db: None }));
 
     // Initialize async database state
-    ASYNC_DB.get_or_init(|| {
-        TokioMutex::new(AsyncDatabaseConnections {
-            blocktank_db: None,
-        })
-    });
+    ASYNC_DB.get_or_init(|| TokioMutex::new(AsyncDatabaseConnections { blocktank_db: None }));
 
     // Create runtime for async operations
     let rt = ensure_runtime();
     // Create database connections
     let activity_db = ActivityDB::new(&format!("{}/activity.db", base_path))?;
-    let blocktank_db = rt.block_on(async {
-        BlocktankDB::new(&format!("{}/blocktank.db", base_path), None).await
-    })?;
+    let blocktank_db = rt
+        .block_on(async { BlocktankDB::new(&format!("{}/blocktank.db", base_path), None).await })?;
 
     // Initialize sync database
     {
@@ -390,30 +401,48 @@ pub fn get_activities(
     min_date: Option<u64>,
     max_date: Option<u64>,
     limit: Option<u32>,
-    sort_direction: Option<SortDirection>
+    sort_direction: Option<SortDirection>,
 ) -> Result<Vec<Activity>, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
-    db.get_activities(filter, tx_type, tags, search, min_date, max_date, limit, sort_direction)
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
+    db.get_activities(
+        filter,
+        tx_type,
+        tags,
+        search,
+        min_date,
+        max_date,
+        limit,
+        sort_direction,
+    )
 }
 
 #[uniffi::export]
 pub fn upsert_activity(activity: Activity) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.upsert_activity(&activity)
 }
 
 #[uniffi::export]
 pub fn insert_activity(activity: Activity) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     match activity {
         Activity::Onchain(onchain) => db.insert_onchain_activity(&onchain),
         Activity::Lightning(lightning) => db.insert_lightning_activity(&lightning),
@@ -423,219 +452,312 @@ pub fn insert_activity(activity: Activity) -> Result<(), ActivityError> {
 #[uniffi::export]
 pub fn update_activity(activity_id: String, activity: Activity) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     match activity {
         Activity::Onchain(onchain) => db.update_onchain_activity_by_id(&activity_id, &onchain),
-        Activity::Lightning(lightning) => db.update_lightning_activity_by_id(&activity_id, &lightning),
+        Activity::Lightning(lightning) => {
+            db.update_lightning_activity_by_id(&activity_id, &lightning)
+        }
     }
 }
 
 #[uniffi::export]
 pub fn get_activity_by_id(activity_id: String) -> Result<Option<Activity>, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.get_activity_by_id(&activity_id)
 }
 
 #[uniffi::export]
 pub fn get_activity_by_tx_id(tx_id: String) -> Result<Option<OnchainActivity>, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.get_activity_by_tx_id(&tx_id)
 }
 
 #[uniffi::export]
 pub fn delete_activity_by_id(activity_id: String) -> Result<bool, ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.delete_activity_by_id(&activity_id)
 }
 
 #[uniffi::export]
 pub fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.add_tags(&activity_id, &tags)
 }
 
 #[uniffi::export]
 pub fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.remove_tags(&activity_id, &tags)
 }
 
 #[uniffi::export]
 pub fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.get_tags(&activity_id)
 }
 
 #[uniffi::export]
-pub fn get_activities_by_tag(tag: String, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError> {
+pub fn get_activities_by_tag(
+    tag: String,
+    limit: Option<u32>,
+    sort_direction: Option<SortDirection>,
+) -> Result<Vec<Activity>, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.get_activities_by_tag(&tag, limit, sort_direction)
 }
 
 #[uniffi::export]
 pub fn get_all_unique_tags() -> Result<Vec<String>, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.get_all_unique_tags()
 }
 
 #[uniffi::export]
 pub fn get_all_activities_tags() -> Result<Vec<ActivityTags>, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.get_all_activities_tags()
 }
 
 #[uniffi::export]
 pub fn upsert_tags(activity_tags: Vec<ActivityTags>) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.upsert_tags(&activity_tags)
 }
 
 #[uniffi::export]
-pub fn add_pre_activity_metadata(pre_activity_metadata: PreActivityMetadata) -> Result<(), ActivityError> {
+pub fn add_pre_activity_metadata(
+    pre_activity_metadata: PreActivityMetadata,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.add_pre_activity_metadata(&pre_activity_metadata)
 }
 
 #[uniffi::export]
-pub fn add_pre_activity_metadata_tags(payment_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
+pub fn add_pre_activity_metadata_tags(
+    payment_id: String,
+    tags: Vec<String>,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.add_pre_activity_metadata_tags(&payment_id, &tags)
 }
 
 #[uniffi::export]
-pub fn remove_pre_activity_metadata_tags(payment_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
+pub fn remove_pre_activity_metadata_tags(
+    payment_id: String,
+    tags: Vec<String>,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.remove_pre_activity_metadata_tags(&payment_id, &tags)
 }
 
 #[uniffi::export]
 pub fn reset_pre_activity_metadata_tags(payment_id: String) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.reset_pre_activity_metadata_tags(&payment_id)
 }
 
 #[uniffi::export]
 pub fn delete_pre_activity_metadata(payment_id: String) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.delete_pre_activity_metadata(&payment_id)
 }
 
 #[uniffi::export]
-pub fn upsert_pre_activity_metadata(pre_activity_metadata: Vec<PreActivityMetadata>) -> Result<(), ActivityError> {
+pub fn upsert_pre_activity_metadata(
+    pre_activity_metadata: Vec<PreActivityMetadata>,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.upsert_pre_activity_metadata(&pre_activity_metadata)
 }
 
 #[uniffi::export]
-pub fn get_pre_activity_metadata(search_key: String, search_by_address: bool) -> Result<Option<PreActivityMetadata>, ActivityError> {
+pub fn get_pre_activity_metadata(
+    search_key: String,
+    search_by_address: bool,
+) -> Result<Option<PreActivityMetadata>, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.get_pre_activity_metadata(&search_key, search_by_address)
 }
 
 #[uniffi::export]
 pub fn get_all_pre_activity_metadata() -> Result<Vec<PreActivityMetadata>, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.get_all_pre_activity_metadata()
 }
 
 #[uniffi::export]
 pub fn upsert_closed_channel(channel: ClosedChannelDetails) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
-        db.upsert_closed_channel(&channel)
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
+    db.upsert_closed_channel(&channel)
 }
 
 #[uniffi::export]
 pub fn upsert_closed_channels(channels: Vec<ClosedChannelDetails>) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.upsert_closed_channels(&channels)
 }
 
 #[uniffi::export]
 pub fn upsert_onchain_activities(activities: Vec<OnchainActivity>) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.upsert_onchain_activities(&activities)
 }
 
 #[uniffi::export]
-pub fn upsert_lightning_activities(activities: Vec<LightningActivity>) -> Result<(), ActivityError> {
+pub fn upsert_lightning_activities(
+    activities: Vec<LightningActivity>,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.upsert_lightning_activities(&activities)
 }
 
 #[uniffi::export]
 pub fn upsert_activities(activities: Vec<Activity>) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
 
     let mut onchain_list: Vec<OnchainActivity> = Vec::new();
     let mut lightning_list: Vec<LightningActivity> = Vec::new();
@@ -658,38 +780,54 @@ pub fn upsert_activities(activities: Vec<Activity>) -> Result<(), ActivityError>
 }
 
 #[uniffi::export]
-pub fn get_closed_channel_by_id(channel_id: String) -> Result<Option<ClosedChannelDetails>, ActivityError> {
+pub fn get_closed_channel_by_id(
+    channel_id: String,
+) -> Result<Option<ClosedChannelDetails>, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.get_closed_channel_by_id(&channel_id)
 }
 
 #[uniffi::export]
-pub fn get_all_closed_channels(sort_direction: Option<SortDirection>) -> Result<Vec<ClosedChannelDetails>, ActivityError> {
+pub fn get_all_closed_channels(
+    sort_direction: Option<SortDirection>,
+) -> Result<Vec<ClosedChannelDetails>, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.get_all_closed_channels(sort_direction)
 }
 
 #[uniffi::export]
 pub fn remove_closed_channel_by_id(channel_id: String) -> Result<bool, ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.remove_closed_channel_by_id(&channel_id)
 }
 
 #[uniffi::export]
 pub fn wipe_all_closed_channels() -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.wipe_all_closed_channels()
 }
 
@@ -699,16 +837,23 @@ pub async fn update_blocktank_url(new_url: String) -> Result<(), BlocktankError>
     // Use spawn_blocking instead of block_on to avoid deadlocks
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let mut guard = cell.lock().await;
-        let db = guard.blocktank_db.as_mut().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_mut()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
         db.update_blocktank_url(&new_url).await
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -716,12 +861,15 @@ pub async fn get_info(refresh: Option<bool>) -> Result<Option<IBtInfo>, Blocktan
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         if refresh.unwrap_or(false) {
             Ok(Some(db.fetch_and_store_info().await?.into()))
@@ -729,9 +877,13 @@ pub async fn get_info(refresh: Option<bool>) -> Result<Option<IBtInfo>, Blocktan
             let info = db.get_info().await?;
             Ok(info.map(|info| info.into()))
         }
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -743,21 +895,30 @@ pub async fn create_order(
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         // Convert the options to the external type using .into()
         let external_options = options.map(|opt| opt.into());
 
         // Convert the result to our local IBtOrder type
-        db.create_and_store_order(lsp_balance_sat, channel_expiry_weeks, external_options).await.map(|order| order.into())
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+        db.create_and_store_order(lsp_balance_sat, channel_expiry_weeks, external_options)
+            .await
+            .map(|order| order.into())
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -768,17 +929,26 @@ pub async fn open_channel(
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
-        db.open_channel(order_id, connection_string).await.map(|order| order.into())
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+        db.open_channel(order_id, connection_string)
+            .await
+            .map(|order| order.into())
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -790,28 +960,35 @@ pub async fn get_orders(
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         // If refresh is true and we have order_ids, refresh those specific orders
         if refresh && order_ids.is_some() {
             let ids = order_ids.unwrap();
-            db.refresh_orders(&ids).await.map(|orders| {
-                orders.into_iter().map(|order| order.into()).collect()
-            })
+            db.refresh_orders(&ids)
+                .await
+                .map(|orders| orders.into_iter().map(|order| order.into()).collect())
         } else {
             // Otherwise get orders from the database
-            db.get_orders(order_ids.as_deref(), filter.map(|f| f.into())).await.map(|orders| {
-                orders.into_iter().map(|order| order.into()).collect()
-            })
+            db.get_orders(order_ids.as_deref(), filter.map(|f| f.into()))
+                .await
+                .map(|orders| orders.into_iter().map(|order| order.into()).collect())
         }
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 /// Refresh all active orders in the database with latest data from the LSP
@@ -820,18 +997,25 @@ pub async fn refresh_active_orders() -> Result<Vec<IBtOrder>, BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
-        db.refresh_active_orders().await.map(|orders| {
-            orders.into_iter().map(|order| order.into()).collect()
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
+        db.refresh_active_orders()
+            .await
+            .map(|orders| orders.into_iter().map(|order| order.into()).collect())
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
         })
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
 }
 
 #[uniffi::export]
@@ -841,17 +1025,26 @@ pub async fn get_min_zero_conf_tx_fee(
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
-        db.get_min_zero_conf_tx_fee(order_id).await.map(|fee| fee.into())
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+        db.get_min_zero_conf_tx_fee(order_id)
+            .await
+            .map(|fee| fee.into())
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -863,19 +1056,28 @@ pub async fn estimate_order_fee(
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         let external_options = options.map(|opt| opt.into());
 
-        db.estimate_order_fee(lsp_balance_sat, channel_expiry_weeks, external_options).await.map(|response| response.into())
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+        db.estimate_order_fee(lsp_balance_sat, channel_expiry_weeks, external_options)
+            .await
+            .map(|response| response.into())
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -887,19 +1089,28 @@ pub async fn estimate_order_fee_full(
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         let external_options = options.map(|opt| opt.into());
 
-        db.estimate_order_fee_full(lsp_balance_sat, channel_expiry_weeks, external_options).await.map(|response| response.into())
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+        db.estimate_order_fee_full(lsp_balance_sat, channel_expiry_weeks, external_options)
+            .await
+            .map(|response| response.into())
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -914,12 +1125,15 @@ pub async fn create_cjit_entry(
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         let external_options = options.map(|opt| opt.into());
 
@@ -929,11 +1143,17 @@ pub async fn create_cjit_entry(
             &invoice_description,
             &node_id,
             channel_expiry_weeks,
-            external_options
-        ).await.map(|entry| entry.into())
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+            external_options,
+        )
+        .await
+        .map(|entry| entry.into())
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -945,12 +1165,15 @@ pub async fn get_cjit_entries(
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         // If refresh is true and we have entry_ids, refresh those specific entries
         if refresh && entry_ids.is_some() {
@@ -966,13 +1189,17 @@ pub async fn get_cjit_entries(
             Ok(results.into_iter().map(|entry| entry.into()).collect())
         } else {
             // Otherwise get entries from the database
-            db.get_cjit_entries(entry_ids.as_deref(), filter.map(|f| f.into())).await.map(|entries| {
-                entries.into_iter().map(|entry| entry.into()).collect()
-            })
+            db.get_cjit_entries(entry_ids.as_deref(), filter.map(|f| f.into()))
+                .await
+                .map(|entries| entries.into_iter().map(|entry| entry.into()).collect())
         }
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 /// Refresh all active CJIT entries in the database with latest data from the LSP
@@ -981,18 +1208,25 @@ pub async fn refresh_active_cjit_entries() -> Result<Vec<ICJitEntry>, BlocktankE
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
-        db.refresh_active_cjit_entries().await.map(|entries| {
-            entries.into_iter().map(|entry| entry.into()).collect()
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
+        db.refresh_active_cjit_entries()
+            .await
+            .map(|entries| entries.into_iter().map(|entry| entry.into()).collect())
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
         })
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
 }
 
 #[uniffi::export]
@@ -1004,17 +1238,20 @@ pub async fn register_device(
     iso_timestamp: String,
     signature: String,
     is_production: Option<bool>,
-    custom_url: Option<String>
+    custom_url: Option<String>,
 ) -> Result<String, BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         db.register_device(
             &device_token,
@@ -1024,11 +1261,16 @@ pub async fn register_device(
             &iso_timestamp,
             &signature,
             is_production,
-            custom_url.as_deref()
-        ).await
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+            custom_url.as_deref(),
+        )
+        .await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1036,27 +1278,35 @@ pub async fn test_notification(
     device_token: String,
     secret_message: String,
     notification_type: Option<String>,
-    custom_url: Option<String>
+    custom_url: Option<String>,
 ) -> Result<String, BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         db.test_notification(
             &device_token,
             &secret_message,
             notification_type.as_deref(),
-            custom_url.as_deref()
-        ).await
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+            custom_url.as_deref(),
+        )
+        .await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1064,17 +1314,24 @@ pub async fn gift_pay(invoice: String) -> Result<IGift, BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         db.gift_pay(&invoice).await
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1082,17 +1339,24 @@ pub async fn gift_order(client_node_id: String, code: String) -> Result<IGift, B
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         db.gift_order(&client_node_id, &code).await
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1100,17 +1364,24 @@ pub async fn get_gift(gift_id: String) -> Result<IGift, BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         db.get_gift(&gift_id).await
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1118,17 +1389,26 @@ pub async fn get_payment(payment_id: String) -> Result<IBtBolt11Invoice, Blockta
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
-        db.get_payment(&payment_id).await.map(|payment| payment.into())
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+        db.get_payment(&payment_id)
+            .await
+            .map(|payment| payment.into())
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1136,17 +1416,24 @@ pub async fn regtest_mine(count: Option<u32>) -> Result<(), BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         db.regtest_mine(count).await
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1157,17 +1444,24 @@ pub async fn regtest_deposit(
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         db.regtest_deposit(&address, amount_sat).await
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1178,17 +1472,24 @@ pub async fn regtest_pay(
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
         db.regtest_pay(&invoice, amount_sat).await
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1196,17 +1497,26 @@ pub async fn regtest_get_payment(payment_id: String) -> Result<IBtBolt11Invoice,
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
-        db.regtest_get_payment(&payment_id).await.map(|invoice| invoice.into())
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+        db.regtest_get_payment(&payment_id)
+            .await
+            .map(|invoice| invoice.into())
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1218,88 +1528,122 @@ pub async fn regtest_close_channel(
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
-        db.regtest_close_channel(&funding_tx_id, vout, force_close_after_s).await
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+        db.regtest_close_channel(&funding_tx_id, vout, force_close_after_s)
+            .await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
 pub fn activity_wipe_all() -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.wipe_all()
 }
 
 #[uniffi::export]
 pub fn is_address_used(address: String) -> Result<bool, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.is_address_used(&address)
 }
 
 #[uniffi::export]
 pub fn mark_activity_as_seen(activity_id: String, seen_at: u64) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.mark_activity_as_seen(&activity_id, seen_at)
 }
 
 #[uniffi::export]
-pub fn upsert_transaction_details(details_list: Vec<TransactionDetails>) -> Result<(), ActivityError> {
+pub fn upsert_transaction_details(
+    details_list: Vec<TransactionDetails>,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.upsert_transaction_details(&details_list)
 }
 
 #[uniffi::export]
 pub fn get_transaction_details(tx_id: String) -> Result<Option<TransactionDetails>, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.get_transaction_details(&tx_id)
 }
 
 #[uniffi::export]
 pub fn get_all_transaction_details() -> Result<Vec<TransactionDetails>, ActivityError> {
     let guard = get_activity_db()?;
-    let db = guard.activity_db.as_ref().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.get_all_transaction_details()
 }
 
 #[uniffi::export]
 pub fn delete_transaction_details(tx_id: String) -> Result<bool, ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.delete_transaction_details(&tx_id)
 }
 
 #[uniffi::export]
 pub fn wipe_all_transaction_details() -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
-    let db = guard.activity_db.as_mut().ok_or(ActivityError::ConnectionError {
-        error_details: "Database not initialized. Call init_db first.".to_string()
-    })?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
     db.wipe_all_transaction_details()
 }
 
@@ -1308,14 +1652,19 @@ pub async fn blocktank_remove_all_orders() -> Result<(), BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
         db.remove_all_orders().await
-    }).await.unwrap()
+    })
+    .await
+    .unwrap()
 }
 
 #[uniffi::export]
@@ -1323,14 +1672,19 @@ pub async fn blocktank_remove_all_cjit_entries() -> Result<(), BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
         db.remove_all_cjit_entries().await
-    }).await.unwrap()
+    })
+    .await
+    .unwrap()
 }
 
 #[uniffi::export]
@@ -1338,14 +1692,19 @@ pub async fn blocktank_wipe_all() -> Result<(), BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
         db.wipe_all().await
-    }).await.unwrap()
+    })
+    .await
+    .unwrap()
 }
 
 #[uniffi::export]
@@ -1353,17 +1712,24 @@ pub async fn upsert_info(info: IBtInfo) -> Result<(), BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
         let external_info: rust_blocktank_client::IBtInfo = info.into();
         db.upsert_info(&external_info).await
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1371,18 +1737,26 @@ pub async fn upsert_orders(orders: Vec<IBtOrder>) -> Result<(), BlocktankError> 
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
-        let external_orders: Vec<rust_blocktank_client::IBtOrder> = orders.into_iter().map(|order| order.into()).collect();
+        let external_orders: Vec<rust_blocktank_client::IBtOrder> =
+            orders.into_iter().map(|order| order.into()).collect();
         db.upsert_orders(&external_orders).await
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1390,18 +1764,26 @@ pub async fn upsert_cjit_entries(entries: Vec<ICJitEntry>) -> Result<(), Blockta
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(BlocktankError::ConnectionError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(BlocktankError::ConnectionError {
+                error_details: "Database not initialized. Call init_db first.".to_string(),
+            })?;
 
-        let external_entries: Vec<rust_blocktank_client::ICJitEntry> = entries.into_iter().map(|e| e.into()).collect();
+        let external_entries: Vec<rust_blocktank_client::ICJitEntry> =
+            entries.into_iter().map(|e| e.into()).collect();
         db.upsert_cjit_entries(&external_entries).await
-    }).await.unwrap_or_else(|e| Err(BlocktankError::ConnectionError {
-        error_details: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(BlocktankError::ConnectionError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1411,31 +1793,42 @@ pub async fn wipe_all_databases() -> Result<String, DbError> {
     // Wipe activity database - require it to be initialized
     {
         let cell = DB.get().ok_or(DbError::InitializationError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let mut guard = cell.lock().unwrap();
-        let db = guard.activity_db.as_mut().ok_or(DbError::InitializationError {
-            error_details: "Activity database not initialized. Call init_db first.".to_string()
-        })?;
+        let db = guard
+            .activity_db
+            .as_mut()
+            .ok_or(DbError::InitializationError {
+                error_details: "Activity database not initialized. Call init_db first.".to_string(),
+            })?;
         db.wipe_all().map_err(|e| DbError::InitializationError {
-            error_details: format!("Failed to wipe activity database: {}", e)
+            error_details: format!("Failed to wipe activity database: {}", e),
         })?;
     }
 
     // Wipe blocktank database - require it to be initialized
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(DbError::InitializationError {
-            error_details: "Database not initialized. Call init_db first.".to_string()
+            error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
         let guard = cell.lock().await;
-        let db = guard.blocktank_db.as_ref().ok_or(DbError::InitializationError {
-            error_details: "Blocktank database not initialized. Call init_db first.".to_string()
-        })?;
-        db.wipe_all().await.map_err(|e| DbError::InitializationError {
-            error_details: format!("Failed to wipe blocktank database: {}", e)
-        })?;
+        let db = guard
+            .blocktank_db
+            .as_ref()
+            .ok_or(DbError::InitializationError {
+                error_details: "Blocktank database not initialized. Call init_db first."
+                    .to_string(),
+            })?;
+        db.wipe_all()
+            .await
+            .map_err(|e| DbError::InitializationError {
+                error_details: format!("Failed to wipe blocktank database: {}", e),
+            })?;
         Ok::<(), DbError>(())
-    }).await.unwrap()?;
+    })
+    .await
+    .unwrap()?;
 
     Ok("All databases wiped successfully".to_string())
 }
@@ -1464,71 +1857,85 @@ pub fn resolve_pubky_url(uri: String) -> Result<String, PubkyError> {
 #[uniffi::export]
 pub async fn fetch_pubky_file(uri: String) -> Result<Vec<u8>, PubkyError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        crate::modules::pubky::fetch_pubky_file(uri).await
-    }).await.unwrap_or_else(|e| Err(PubkyError::ResolutionFailed {
-        reason: format!("Runtime error: {}", e)
-    }))
+    rt.spawn(async move { crate::modules::pubky::fetch_pubky_file(uri).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(PubkyError::ResolutionFailed {
+                reason: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 #[uniffi::export]
 pub async fn start_pubky_auth(caps: String) -> Result<String, PubkyError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        crate::modules::pubky::start_pubky_auth(caps).await
-    }).await.unwrap_or_else(|e| Err(PubkyError::AuthFailed {
-        reason: format!("Runtime error: {}", e)
-    }))
+    rt.spawn(async move { crate::modules::pubky::start_pubky_auth(caps).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(PubkyError::AuthFailed {
+                reason: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 #[uniffi::export]
 pub async fn cancel_pubky_auth() -> Result<(), PubkyError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        crate::modules::pubky::cancel_pubky_auth().await
-    }).await.unwrap_or_else(|e| Err(PubkyError::AuthFailed {
-        reason: format!("Runtime error: {}", e)
-    }))
+    rt.spawn(async move { crate::modules::pubky::cancel_pubky_auth().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(PubkyError::AuthFailed {
+                reason: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 #[uniffi::export]
 pub async fn complete_pubky_auth() -> Result<String, PubkyError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        crate::modules::pubky::complete_pubky_auth().await
-    }).await.unwrap_or_else(|e| Err(PubkyError::AuthFailed {
-        reason: format!("Runtime error: {}", e)
-    }))
+    rt.spawn(async move { crate::modules::pubky::complete_pubky_auth().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(PubkyError::AuthFailed {
+                reason: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 #[uniffi::export]
 pub async fn fetch_pubky_profile(public_key: String) -> Result<PubkyProfile, PubkyError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        crate::modules::pubky::fetch_pubky_profile(public_key).await
-    }).await.unwrap_or_else(|e| Err(PubkyError::FetchFailed {
-        reason: format!("Runtime error: {}", e)
-    }))
+    rt.spawn(async move { crate::modules::pubky::fetch_pubky_profile(public_key).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(PubkyError::FetchFailed {
+                reason: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 #[uniffi::export]
 pub async fn fetch_pubky_contacts(public_key: String) -> Result<Vec<String>, PubkyError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        crate::modules::pubky::fetch_pubky_contacts(public_key).await
-    }).await.unwrap_or_else(|e| Err(PubkyError::FetchFailed {
-        reason: format!("Runtime error: {}", e)
-    }))
+    rt.spawn(async move { crate::modules::pubky::fetch_pubky_contacts(public_key).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(PubkyError::FetchFailed {
+                reason: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 #[uniffi::export]
 pub async fn fetch_pubky_file_string(uri: String) -> Result<String, PubkyError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        crate::modules::pubky::fetch_pubky_file_string(uri).await
-    }).await.unwrap_or_else(|e| Err(PubkyError::FetchFailed {
-        reason: format!("Runtime error: {}", e)
-    }))
+    rt.spawn(async move { crate::modules::pubky::fetch_pubky_file_string(uri).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(PubkyError::FetchFailed {
+                reason: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 #[uniffi::export]
@@ -1549,20 +1956,27 @@ pub async fn pubky_sign_up(
 ) -> Result<String, PubkyError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
-        crate::modules::pubky::pubky_sign_up(secret_key_hex, homeserver_public_key_z32, signup_code).await
-    }).await.unwrap_or_else(|e| Err(PubkyError::AuthFailed {
-        reason: format!("Runtime error: {}", e)
-    }))
+        crate::modules::pubky::pubky_sign_up(secret_key_hex, homeserver_public_key_z32, signup_code)
+            .await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(PubkyError::AuthFailed {
+            reason: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
 pub async fn pubky_sign_in(secret_key_hex: String) -> Result<String, PubkyError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        crate::modules::pubky::pubky_sign_in(secret_key_hex).await
-    }).await.unwrap_or_else(|e| Err(PubkyError::AuthFailed {
-        reason: format!("Runtime error: {}", e)
-    }))
+    rt.spawn(async move { crate::modules::pubky::pubky_sign_in(secret_key_hex).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(PubkyError::AuthFailed {
+                reason: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 #[uniffi::export]
@@ -1574,22 +1988,25 @@ pub async fn pubky_session_put(
     let rt = ensure_runtime();
     rt.spawn(async move {
         crate::modules::pubky::pubky_session_put(session_secret, path, content).await
-    }).await.unwrap_or_else(|e| Err(PubkyError::WriteFailed {
-        reason: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(PubkyError::WriteFailed {
+            reason: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
-pub async fn pubky_session_delete(
-    session_secret: String,
-    path: String,
-) -> Result<(), PubkyError> {
+pub async fn pubky_session_delete(session_secret: String, path: String) -> Result<(), PubkyError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        crate::modules::pubky::pubky_session_delete(session_secret, path).await
-    }).await.unwrap_or_else(|e| Err(PubkyError::WriteFailed {
-        reason: format!("Runtime error: {}", e)
-    }))
+    rt.spawn(async move { crate::modules::pubky::pubky_session_delete(session_secret, path).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(PubkyError::WriteFailed {
+                reason: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 #[uniffi::export]
@@ -1601,9 +2018,13 @@ pub async fn pubky_put_with_secret_key(
     let rt = ensure_runtime();
     rt.spawn(async move {
         crate::modules::pubky::pubky_put_with_secret_key(secret_key_hex, path, content).await
-    }).await.unwrap_or_else(|e| Err(PubkyError::WriteFailed {
-        reason: format!("Runtime error: {}", e)
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(PubkyError::WriteFailed {
+            reason: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]
@@ -1612,11 +2033,15 @@ pub async fn pubky_session_list(
     dir_path: String,
 ) -> Result<Vec<String>, PubkyError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        crate::modules::pubky::pubky_session_list(session_secret, dir_path).await
-    }).await.unwrap_or_else(|e| Err(PubkyError::FetchFailed {
-        reason: format!("Runtime error: {}", e)
-    }))
+    rt.spawn(
+        async move { crate::modules::pubky::pubky_session_list(session_secret, dir_path).await },
+    )
+    .await
+    .unwrap_or_else(|e| {
+        Err(PubkyError::FetchFailed {
+            reason: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 // ============================================================================
@@ -1672,9 +2097,13 @@ pub extern "system" fn Java_to_bitkit_services_BluetoothInit_nativeInit(
 #[uniffi::export]
 pub async fn trezor_initialize(credential_path: Option<String>) -> Result<(), TrezorError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().initialize(credential_path).await
-    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+    rt.spawn(async move { get_trezor_manager().initialize(credential_path).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Scan for available Trezor devices (USB + Bluetooth).
@@ -1684,18 +2113,26 @@ pub async fn trezor_initialize(credential_path: Option<String>) -> Result<(), Tr
 #[uniffi::export]
 pub async fn trezor_scan() -> Result<Vec<TrezorDeviceInfo>, TrezorError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().scan().await
-    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+    rt.spawn(async move { get_trezor_manager().scan().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// List previously discovered devices without triggering a new scan.
 #[uniffi::export]
 pub async fn trezor_list_devices() -> Result<Vec<TrezorDeviceInfo>, TrezorError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().list_devices().await
-    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+    rt.spawn(async move { get_trezor_manager().list_devices().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Connect to a Trezor device by its ID.
@@ -1705,63 +2142,83 @@ pub async fn trezor_list_devices() -> Result<Vec<TrezorDeviceInfo>, TrezorError>
 #[uniffi::export]
 pub async fn trezor_connect(device_id: String) -> Result<TrezorFeatures, TrezorError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().connect(&device_id).await
-    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+    rt.spawn(async move { get_trezor_manager().connect(&device_id).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Get a Bitcoin address from the connected Trezor device.
 #[uniffi::export]
-pub async fn trezor_get_address(params: TrezorGetAddressParams) -> Result<TrezorAddressResponse, TrezorError> {
+pub async fn trezor_get_address(
+    params: TrezorGetAddressParams,
+) -> Result<TrezorAddressResponse, TrezorError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().get_address(params).await
-    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+    rt.spawn(async move { get_trezor_manager().get_address(params).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Get a public key (xpub) from the connected Trezor device.
 #[uniffi::export]
-pub async fn trezor_get_public_key(params: TrezorGetPublicKeyParams) -> Result<TrezorPublicKeyResponse, TrezorError> {
+pub async fn trezor_get_public_key(
+    params: TrezorGetPublicKeyParams,
+) -> Result<TrezorPublicKeyResponse, TrezorError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().get_public_key(params).await
-    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+    rt.spawn(async move { get_trezor_manager().get_public_key(params).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Disconnect from the currently connected Trezor device.
 #[uniffi::export]
 pub async fn trezor_disconnect() -> Result<(), TrezorError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().disconnect().await
-    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+    rt.spawn(async move { get_trezor_manager().disconnect().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Check if the Trezor manager is initialized.
 #[uniffi::export]
 pub async fn trezor_is_initialized() -> bool {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().is_initialized().await
-    }).await.unwrap_or(false)
+    rt.spawn(async move { get_trezor_manager().is_initialized().await })
+        .await
+        .unwrap_or(false)
 }
 
 /// Check if a Trezor device is currently connected.
 #[uniffi::export]
 pub async fn trezor_is_connected() -> bool {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().is_connected().await
-    }).await.unwrap_or(false)
+    rt.spawn(async move { get_trezor_manager().is_connected().await })
+        .await
+        .unwrap_or(false)
 }
 
 /// Get information about the currently connected Trezor device.
 #[uniffi::export]
 pub async fn trezor_get_connected_device() -> Option<TrezorDeviceInfo> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().get_connected_device().await
-    }).await.unwrap_or(None)
+    rt.spawn(async move { get_trezor_manager().get_connected_device().await })
+        .await
+        .unwrap_or(None)
 }
 
 /// Get the cached features of the currently connected Trezor device.
@@ -1771,36 +2228,50 @@ pub async fn trezor_get_connected_device() -> Option<TrezorDeviceInfo> {
 #[uniffi::export]
 pub async fn trezor_get_features() -> Option<TrezorFeatures> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().get_features().await
-    }).await.unwrap_or(None)
+    rt.spawn(async move { get_trezor_manager().get_features().await })
+        .await
+        .unwrap_or(None)
 }
 
 /// Sign a message with the connected Trezor device.
 #[uniffi::export]
-pub async fn trezor_sign_message(params: TrezorSignMessageParams) -> Result<TrezorSignedMessageResponse, TrezorError> {
+pub async fn trezor_sign_message(
+    params: TrezorSignMessageParams,
+) -> Result<TrezorSignedMessageResponse, TrezorError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().sign_message(params).await
-    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+    rt.spawn(async move { get_trezor_manager().sign_message(params).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Verify a message signature with the connected Trezor device.
 #[uniffi::export]
 pub async fn trezor_verify_message(params: TrezorVerifyMessageParams) -> Result<bool, TrezorError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().verify_message(params).await
-    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+    rt.spawn(async move { get_trezor_manager().verify_message(params).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Sign a Bitcoin transaction with the connected Trezor device.
 #[uniffi::export]
 pub async fn trezor_sign_tx(params: TrezorSignTxParams) -> Result<TrezorSignedTx, TrezorError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().sign_tx(params).await
-    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+    rt.spawn(async move { get_trezor_manager().sign_tx(params).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Get the device's master root fingerprint as an 8-character hex string.
@@ -1810,9 +2281,13 @@ pub async fn trezor_sign_tx(params: TrezorSignTxParams) -> Result<TrezorSignedTx
 #[uniffi::export]
 pub async fn trezor_get_device_fingerprint() -> Result<String, TrezorError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().get_device_fingerprint().await
-    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+    rt.spawn(async move { get_trezor_manager().get_device_fingerprint().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Sign a Bitcoin transaction from a PSBT (base64-encoded).
@@ -1824,11 +2299,22 @@ pub async fn trezor_get_device_fingerprint() -> Result<String, TrezorError> {
 /// * `psbt_base64` - Base64-encoded PSBT data
 /// * `network` - Bitcoin network type. Defaults to Bitcoin (mainnet) if None.
 #[uniffi::export]
-pub async fn trezor_sign_tx_from_psbt(psbt_base64: String, network: Option<TrezorCoinType>) -> Result<TrezorSignedTx, TrezorError> {
+pub async fn trezor_sign_tx_from_psbt(
+    psbt_base64: String,
+    network: Option<TrezorCoinType>,
+) -> Result<TrezorSignedTx, TrezorError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
-        get_trezor_manager().sign_tx_from_psbt(psbt_base64, network).await
-    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+        get_trezor_manager()
+            .sign_tx_from_psbt(psbt_base64, network)
+            .await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(TrezorError::IoError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 /// Clear stored Bluetooth pairing credentials for a specific Trezor device.
@@ -1838,9 +2324,13 @@ pub async fn trezor_sign_tx_from_psbt(psbt_base64: String, network: Option<Trezo
 #[uniffi::export]
 pub async fn trezor_clear_credentials(device_id: String) -> Result<(), TrezorError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_trezor_manager().clear_credentials(&device_id).await
-    }).await.unwrap_or_else(|e| Err(TrezorError::IoError { error_details: format!("Runtime error: {}", e) }))
+    rt.spawn(async move { get_trezor_manager().clear_credentials(&device_id).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 // ============================================================================
@@ -1858,10 +2348,21 @@ pub async fn onchain_get_account_info(
 ) -> Result<AccountInfoResult, AccountInfoError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
-        get_account_info(&extended_key, &electrum_url, network, gap_limit, script_type).await
-    }).await.unwrap_or_else(|e| Err(AccountInfoError::SyncError {
-        error_details: format!("Runtime error: {}", e),
-    }))
+        get_account_info(
+            &extended_key,
+            &electrum_url,
+            network,
+            gap_limit,
+            script_type,
+        )
+        .await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(AccountInfoError::SyncError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 /// Query transaction history and balance for an extended public key via Electrum.
@@ -1875,9 +2376,13 @@ pub async fn onchain_get_transaction_history(
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_transaction_history(&extended_key, &electrum_url, network, script_type).await
-    }).await.unwrap_or_else(|e| Err(AccountInfoError::SyncError {
-        error_details: format!("Runtime error: {}", e),
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(AccountInfoError::SyncError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 /// Get full details for a single transaction by txid.
@@ -1892,9 +2397,13 @@ pub async fn onchain_get_transaction_detail(
     let rt = ensure_runtime();
     rt.spawn(async move {
         get_transaction_detail(&extended_key, &electrum_url, &txid, network, script_type).await
-    }).await.unwrap_or_else(|e| Err(AccountInfoError::SyncError {
-        error_details: format!("Runtime error: {}", e),
-    }))
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(AccountInfoError::SyncError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 /// Query balance and UTXOs for a single Bitcoin address via Electrum.
@@ -1905,11 +2414,13 @@ pub async fn onchain_get_address_info(
     network: Option<Network>,
 ) -> Result<SingleAddressInfoResult, AccountInfoError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        get_address_info(&address, &electrum_url, network).await
-    }).await.unwrap_or_else(|e| Err(AccountInfoError::SyncError {
-        error_details: format!("Runtime error: {}", e),
-    }))
+    rt.spawn(async move { get_address_info(&address, &electrum_url, network).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(AccountInfoError::SyncError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Convert an account type to its corresponding Trezor script type.
@@ -1932,15 +2443,16 @@ pub fn trezor_account_type_to_script_type(account_type: AccountType) -> TrezorSc
 pub async fn onchain_compose_transaction(params: ComposeParams) -> Vec<ComposeResult> {
     let rt = ensure_runtime();
     let num_rates = params.fee_rates.len();
-    rt.spawn(async move {
-        compose_transaction(params).await
-    })
-    .await
-    .unwrap_or_else(|e| {
-        vec![ComposeResult::Error {
-            error: format!("Runtime error: {}", e),
-        }; num_rates]
-    })
+    rt.spawn(async move { compose_transaction(params).await })
+        .await
+        .unwrap_or_else(|e| {
+            vec![
+                ComposeResult::Error {
+                    error: format!("Runtime error: {}", e),
+                };
+                num_rates
+            ]
+        })
 }
 
 /// Broadcast a signed raw transaction via Electrum.
@@ -1953,9 +2465,11 @@ pub async fn onchain_broadcast_raw_tx(
     electrum_url: String,
 ) -> Result<String, BroadcastError> {
     let rt = ensure_runtime();
-    rt.spawn(async move {
-        broadcast_raw_tx(serialized_tx, &electrum_url).await
-    }).await.unwrap_or_else(|e| Err(BroadcastError::TaskError {
-        error_details: format!("Runtime error: {}", e),
-    }))
+    rt.spawn(async move { broadcast_raw_tx(serialized_tx, &electrum_url).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(BroadcastError::TaskError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }

@@ -47,11 +47,8 @@ async fn compose_inner(params: ComposeParams) -> Result<Vec<ComposeResult>, Acco
         params.wallet.fingerprint.as_deref(),
     )?;
 
-    validate_outputs(&params.outputs, setup.network).map_err(|e| {
-        AccountInfoError::WalletError {
-            error_details: e,
-        }
-    })?;
+    validate_outputs(&params.outputs, setup.network)
+        .map_err(|e| AccountInfoError::WalletError { error_details: e })?;
 
     for rate in &params.fee_rates {
         if !rate.is_finite() || *rate <= 0.0 {
@@ -72,11 +69,16 @@ async fn compose_inner(params: ComposeParams) -> Result<Vec<ComposeResult>, Acco
 
         let mut results = Vec::with_capacity(fee_rates.len());
         for rate in &fee_rates {
-            let result =
-                match build_psbt(&mut wallet, &outputs, *rate, setup.network, coin_selection.as_ref()) {
-                    Ok(r) => r,
-                    Err(msg) => ComposeResult::Error { error: msg },
-                };
+            let result = match build_psbt(
+                &mut wallet,
+                &outputs,
+                *rate,
+                setup.network,
+                coin_selection.as_ref(),
+            ) {
+                Ok(r) => r,
+                Err(msg) => ComposeResult::Error { error: msg },
+            };
             results.push(result);
         }
         Ok(results)
@@ -112,7 +114,12 @@ fn build_psbt(
 
 /// Build a PSBT from pre-validated outputs and fee rate.
 fn finish_psbt<Cs: CoinSelectionAlgorithm<MemoryDatabase>>(
-    mut builder: bdk::wallet::tx_builder::TxBuilder<'_, MemoryDatabase, Cs, bdk::wallet::tx_builder::CreateTx>,
+    mut builder: bdk::wallet::tx_builder::TxBuilder<
+        '_,
+        MemoryDatabase,
+        Cs,
+        bdk::wallet::tx_builder::CreateTx,
+    >,
     outputs: &[ComposeOutput],
     fee_rate: f32,
     network: BdkNetwork,
@@ -135,8 +142,8 @@ fn finish_psbt<Cs: CoinSelectionAlgorithm<MemoryDatabase>>(
                 builder.drain_wallet();
             }
             ComposeOutput::OpReturn { data_hex } => {
-                let data = hex::decode(data_hex)
-                    .map_err(|e| format!("Invalid OP_RETURN hex: {}", e))?;
+                let data =
+                    hex::decode(data_hex).map_err(|e| format!("Invalid OP_RETURN hex: {}", e))?;
                 let push_data = bdk::bitcoin::script::PushBytesBuf::try_from(data)
                     .map_err(|e| format!("OP_RETURN data too large: {}", e))?;
                 let script = bdk::bitcoin::blockdata::script::Builder::new()
@@ -176,13 +183,19 @@ fn parse_address(address: &str, network: BdkNetwork) -> Result<bdk::bitcoin::Scr
 }
 
 /// Pre-validate outputs before the Electrum sync for fast feedback.
-pub(crate) fn validate_outputs(outputs: &[ComposeOutput], network: BdkNetwork) -> Result<(), String> {
+pub(crate) fn validate_outputs(
+    outputs: &[ComposeOutput],
+    network: BdkNetwork,
+) -> Result<(), String> {
     if outputs.is_empty() {
         return Err("At least one output is required".into());
     }
-    let has_recipient = outputs
-        .iter()
-        .any(|o| matches!(o, ComposeOutput::Payment { .. } | ComposeOutput::SendMax { .. }));
+    let has_recipient = outputs.iter().any(|o| {
+        matches!(
+            o,
+            ComposeOutput::Payment { .. } | ComposeOutput::SendMax { .. }
+        )
+    });
     if !has_recipient {
         return Err("At least one Payment or SendMax output is required".into());
     }
@@ -190,7 +203,10 @@ pub(crate) fn validate_outputs(outputs: &[ComposeOutput], network: BdkNetwork) -
     let mut has_drain = false;
     for output in outputs {
         match output {
-            ComposeOutput::Payment { address, amount_sats } => {
+            ComposeOutput::Payment {
+                address,
+                amount_sats,
+            } => {
                 if *amount_sats == 0 {
                     return Err("Payment amount must be greater than zero".into());
                 }
@@ -207,8 +223,8 @@ pub(crate) fn validate_outputs(outputs: &[ComposeOutput], network: BdkNetwork) -
                 if data_hex.is_empty() {
                     return Err("OP_RETURN data must not be empty".into());
                 }
-                let data = hex::decode(data_hex)
-                    .map_err(|e| format!("Invalid OP_RETURN hex: {}", e))?;
+                let data =
+                    hex::decode(data_hex).map_err(|e| format!("Invalid OP_RETURN hex: {}", e))?;
                 if data.len() > 80 {
                     return Err(format!(
                         "OP_RETURN data exceeds 80-byte standard relay limit ({} bytes)",

@@ -3,31 +3,30 @@
 //! On desktop platforms, this uses the trezor-connect-rs library directly.
 //! On Android/iOS, this uses a callback-based transport implemented natively.
 
+use base64::{engine::general_purpose, Engine as _};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use base64::{engine::general_purpose, Engine as _};
 
 use crate::modules::trezor::{
-    TrezorAddressResponse, TrezorDeviceInfo, TrezorError, TrezorFeatures,
+    TrezorAddressResponse, TrezorCoinType, TrezorDeviceInfo, TrezorError, TrezorFeatures,
     TrezorGetAddressParams, TrezorGetPublicKeyParams, TrezorPublicKeyResponse,
-    TrezorSignMessageParams, TrezorSignedMessageResponse, TrezorVerifyMessageParams,
-    TrezorSignTxParams, TrezorSignedTx,
-    TrezorTransportType, TrezorCoinType,
+    TrezorSignMessageParams, TrezorSignTxParams, TrezorSignedMessageResponse, TrezorSignedTx,
+    TrezorTransportType, TrezorVerifyMessageParams,
 };
 
 // Desktop: use full trezor-connect-rs
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use trezor_connect_rs::{
-    ConnectedDevice, DeviceInfo, GetAddressParams, GetPublicKeyParams,
-    SignMessageParams, SignTxParams, VerifyMessageParams, Trezor,
+    ConnectedDevice, DeviceInfo, GetAddressParams, GetPublicKeyParams, SignMessageParams,
+    SignTxParams, Trezor, VerifyMessageParams,
 };
 
 // Mobile: use callback transport from trezor-connect-rs
 #[cfg(any(target_os = "android", target_os = "ios"))]
 use trezor_connect_rs::{
-    CallbackTransport, CallbackDeviceInfo, CallbackReadResult, CallbackResult,
-    CallbackMessageResult, ConnectedDevice, GetAddressParams, GetPublicKeyParams,
-    SignMessageParams, SignTxParams, VerifyMessageParams, Transport, TransportCallback,
+    CallbackDeviceInfo, CallbackMessageResult, CallbackReadResult, CallbackResult,
+    CallbackTransport, ConnectedDevice, GetAddressParams, GetPublicKeyParams, SignMessageParams,
+    SignTxParams, Transport, TransportCallback, VerifyMessageParams,
 };
 
 #[cfg(any(target_os = "android", target_os = "ios"))]
@@ -113,12 +112,22 @@ fn validate_sign_tx_params(params: &SignTxParams) -> Result<(), TrezorError> {
     // Reject unsupported input script types
     for (i, input) in params.inputs.iter().enumerate() {
         match input.script_type {
-            trezor_connect_rs::ScriptType::SpendMultisig => return Err(TrezorError::DeviceError {
-                error_details: format!("Input {}: Multisig inputs are not currently supported.", i),
-            }),
-            trezor_connect_rs::ScriptType::External => return Err(TrezorError::DeviceError {
-                error_details: format!("Input {}: External inputs are not currently supported.", i),
-            }),
+            trezor_connect_rs::ScriptType::SpendMultisig => {
+                return Err(TrezorError::DeviceError {
+                    error_details: format!(
+                        "Input {}: Multisig inputs are not currently supported.",
+                        i
+                    ),
+                })
+            }
+            trezor_connect_rs::ScriptType::External => {
+                return Err(TrezorError::DeviceError {
+                    error_details: format!(
+                        "Input {}: External inputs are not currently supported.",
+                        i
+                    ),
+                })
+            }
             _ => {}
         }
     }
@@ -149,7 +158,10 @@ fn validate_sign_tx_params(params: &SignTxParams) -> Result<(), TrezorError> {
                 // Change output - must have script_type
                 if output.script_type.is_none() {
                     return Err(TrezorError::DeviceError {
-                        error_details: format!("Output {}: change output must specify script_type.", i),
+                        error_details: format!(
+                            "Output {}: change output must specify script_type.",
+                            i
+                        ),
                     });
                 }
             }
@@ -157,7 +169,10 @@ fn validate_sign_tx_params(params: &SignTxParams) -> Result<(), TrezorError> {
                 // OP_RETURN output - amount must be 0
                 if output.amount != 0 {
                     return Err(TrezorError::DeviceError {
-                        error_details: format!("Output {}: OP_RETURN output must have amount 0.", i),
+                        error_details: format!(
+                            "Output {}: OP_RETURN output must have amount 0.",
+                            i
+                        ),
                     });
                 }
             }
@@ -255,13 +270,16 @@ impl TransportCallback for CallbackAdapter {
         self.callback.get_chunk_size(path.to_string())
     }
 
-    fn call_message(&self, path: &str, message_type: u16, data: &[u8]) -> Option<CallbackMessageResult> {
+    fn call_message(
+        &self,
+        path: &str,
+        message_type: u16,
+        data: &[u8],
+    ) -> Option<CallbackMessageResult> {
         // Call the native layer's call_message implementation
-        let result = self.callback.call_message(
-            path.to_string(),
-            message_type,
-            data.to_vec(),
-        );
+        let result = self
+            .callback
+            .call_message(path.to_string(), message_type, data.to_vec());
 
         // Convert from TrezorCallMessageResult to CallbackMessageResult
         result.map(|r| CallbackMessageResult {
@@ -278,7 +296,8 @@ impl TransportCallback for CallbackAdapter {
     }
 
     fn save_thp_credential(&self, device_id: &str, credential_json: &str) -> bool {
-        self.callback.save_thp_credential(device_id.to_string(), credential_json.to_string())
+        self.callback
+            .save_thp_credential(device_id.to_string(), credential_json.to_string())
     }
 
     fn load_thp_credential(&self, device_id: &str) -> Option<String> {
@@ -286,7 +305,8 @@ impl TransportCallback for CallbackAdapter {
     }
 
     fn log_debug(&self, tag: &str, message: &str) {
-        self.callback.log_debug(tag.to_string(), message.to_string());
+        self.callback
+            .log_debug(tag.to_string(), message.to_string());
     }
 }
 
@@ -301,12 +321,20 @@ struct UiCallbackAdapter {
 impl trezor_connect_rs::TrezorUiCallback for UiCallbackAdapter {
     fn on_pin_request(&self) -> Option<String> {
         let result = self.callback.on_pin_request();
-        if result.is_empty() { None } else { Some(result) }
+        if result.is_empty() {
+            None
+        } else {
+            Some(result)
+        }
     }
 
     fn on_passphrase_request(&self, on_device: bool) -> Option<String> {
         let result = self.callback.on_passphrase_request(on_device);
-        if result.is_empty() { None } else { Some(result) }
+        if result.is_empty() {
+            None
+        } else {
+            Some(result)
+        }
     }
 }
 
@@ -383,8 +411,7 @@ impl TrezorManager {
         // Desktop: Initialize trezor-connect-rs
         #[cfg(not(any(target_os = "android", target_os = "ios")))]
         {
-            let mut builder = Trezor::new()
-                .with_app_identity("Bitkit", "Bitkit");
+            let mut builder = Trezor::new().with_app_identity("Bitkit", "Bitkit");
 
             if let Some(ref path) = _credential_path {
                 builder = builder.with_credential_store(path);
@@ -421,8 +448,7 @@ impl TrezorManager {
         {
             use crate::get_transport_callback;
 
-            let callback = get_transport_callback()
-                .ok_or(TrezorError::NotInitialized)?;
+            let callback = get_transport_callback().ok_or(TrezorError::NotInitialized)?;
 
             let native_devices = callback.enumerate_devices();
 
@@ -527,8 +553,7 @@ impl TrezorManager {
         {
             use crate::get_transport_callback;
 
-            let callback = get_transport_callback()
-                .ok_or(TrezorError::NotInitialized)?;
+            let callback = get_transport_callback().ok_or(TrezorError::NotInitialized)?;
 
             // Find the device in cached list
             let device = {
@@ -541,13 +566,18 @@ impl TrezorManager {
             };
 
             // Create transport and connect - this will be reused for all operations
-            let adapter = Arc::new(CallbackAdapter { callback: callback.clone() });
-            let mut transport = CallbackTransport::new(adapter)
-                .with_app_identity("Bitkit", "Bitkit");
+            let adapter = Arc::new(CallbackAdapter {
+                callback: callback.clone(),
+            });
+            let mut transport =
+                CallbackTransport::new(adapter).with_app_identity("Bitkit", "Bitkit");
             transport.init().await.map_err(TrezorError::from)?;
 
             // Acquire a session (this triggers THP handshake for BLE)
-            let session = transport.acquire(&device.path, None).await.map_err(TrezorError::from)?;
+            let session = transport
+                .acquire(&device.path, None)
+                .await
+                .map_err(TrezorError::from)?;
 
             // Store connected path
             {
@@ -577,7 +607,9 @@ impl TrezorManager {
 
             // Wire UI callback if set
             if let Some(ui_cb) = crate::modules::trezor::get_ui_callback() {
-                let adapter = Arc::new(UiCallbackAdapter { callback: ui_cb.clone() });
+                let adapter = Arc::new(UiCallbackAdapter {
+                    callback: ui_cb.clone(),
+                });
                 connected.set_ui_callback(adapter);
             }
 
@@ -613,7 +645,9 @@ impl TrezorManager {
 
             // Wire UI callback if set
             if let Some(ui_cb) = crate::modules::trezor::get_ui_callback() {
-                let adapter = Arc::new(UiCallbackAdapter { callback: ui_cb.clone() });
+                let adapter = Arc::new(UiCallbackAdapter {
+                    callback: ui_cb.clone(),
+                });
                 connected.set_ui_callback(adapter);
             }
 
@@ -646,12 +680,13 @@ impl TrezorManager {
 
         // Both mobile and desktop: use stored connected device
         let mut connected_device = self.connected_device.lock().await;
-        let device = connected_device
-            .as_mut()
-            .ok_or(TrezorError::NotConnected)?;
+        let device = connected_device.as_mut().ok_or(TrezorError::NotConnected)?;
 
         let tc_params: GetAddressParams = params.into();
-        let response = device.get_address(tc_params).await.map_err(TrezorError::from)?;
+        let response = device
+            .get_address(tc_params)
+            .await
+            .map_err(TrezorError::from)?;
 
         Ok(TrezorAddressResponse::from(response))
     }
@@ -669,12 +704,13 @@ impl TrezorManager {
 
         // Both mobile and desktop: use stored connected device
         let mut connected_device = self.connected_device.lock().await;
-        let device = connected_device
-            .as_mut()
-            .ok_or(TrezorError::NotConnected)?;
+        let device = connected_device.as_mut().ok_or(TrezorError::NotConnected)?;
 
         let tc_params: GetPublicKeyParams = params.into();
-        let response = device.get_public_key(tc_params).await.map_err(TrezorError::from)?;
+        let response = device
+            .get_public_key(tc_params)
+            .await
+            .map_err(TrezorError::from)?;
 
         Ok(TrezorPublicKeyResponse::from(response))
     }
@@ -692,12 +728,13 @@ impl TrezorManager {
 
         // Both mobile and desktop: use stored connected device
         let mut connected_device = self.connected_device.lock().await;
-        let device = connected_device
-            .as_mut()
-            .ok_or(TrezorError::NotConnected)?;
+        let device = connected_device.as_mut().ok_or(TrezorError::NotConnected)?;
 
         let tc_params: SignMessageParams = params.into();
-        let response = device.sign_message(tc_params).await.map_err(TrezorError::from)?;
+        let response = device
+            .sign_message(tc_params)
+            .await
+            .map_err(TrezorError::from)?;
 
         Ok(TrezorSignedMessageResponse::from(response))
     }
@@ -712,32 +749,31 @@ impl TrezorManager {
     ) -> Result<bool, TrezorError> {
         // Both mobile and desktop: use stored connected device
         let mut connected_device = self.connected_device.lock().await;
-        let device = connected_device
-            .as_mut()
-            .ok_or(TrezorError::NotConnected)?;
+        let device = connected_device.as_mut().ok_or(TrezorError::NotConnected)?;
 
         let tc_params: VerifyMessageParams = params.into();
-        device.verify_message(tc_params).await.map_err(TrezorError::from)
+        device
+            .verify_message(tc_params)
+            .await
+            .map_err(TrezorError::from)
     }
 
     /// Sign a Bitcoin transaction with the connected device.
     ///
     /// # Arguments
     /// * `params` - Transaction parameters including inputs, outputs, and options
-    pub async fn sign_tx(
-        &self,
-        params: TrezorSignTxParams,
-    ) -> Result<TrezorSignedTx, TrezorError> {
+    pub async fn sign_tx(&self, params: TrezorSignTxParams) -> Result<TrezorSignedTx, TrezorError> {
         let tc_params: SignTxParams = params.into();
         validate_sign_tx_params(&tc_params)?;
 
         // Both mobile and desktop: use stored connected device
         let mut connected_device = self.connected_device.lock().await;
-        let device = connected_device
-            .as_mut()
-            .ok_or(TrezorError::NotConnected)?;
+        let device = connected_device.as_mut().ok_or(TrezorError::NotConnected)?;
 
-        let response = device.sign_transaction(tc_params).await.map_err(TrezorError::from)?;
+        let response = device
+            .sign_transaction(tc_params)
+            .await
+            .map_err(TrezorError::from)?;
 
         Ok(TrezorSignedTx::from(response))
     }
@@ -762,9 +798,11 @@ impl TrezorManager {
             _ => bitcoin::Network::Bitcoin,
         };
 
-        let psbt_bytes = general_purpose::STANDARD.decode(&psbt_base64).map_err(|e| TrezorError::DeviceError {
-            error_details: format!("Invalid PSBT base64: {}", e),
-        })?;
+        let psbt_bytes = general_purpose::STANDARD
+            .decode(&psbt_base64)
+            .map_err(|e| TrezorError::DeviceError {
+                error_details: format!("Invalid PSBT base64: {}", e),
+            })?;
         let sign_params = trezor_connect_rs::psbt::psbt_to_sign_tx_params(&psbt_bytes, btc_network)
             .map_err(|e| TrezorError::DeviceError {
                 error_details: format!("PSBT conversion error: {}", e),
@@ -773,11 +811,12 @@ impl TrezorManager {
         validate_sign_tx_params(&sign_params)?;
 
         let mut connected_device = self.connected_device.lock().await;
-        let device = connected_device
-            .as_mut()
-            .ok_or(TrezorError::NotConnected)?;
+        let device = connected_device.as_mut().ok_or(TrezorError::NotConnected)?;
 
-        let response = device.sign_transaction(sign_params).await.map_err(TrezorError::from)?;
+        let response = device
+            .sign_transaction(sign_params)
+            .await
+            .map_err(TrezorError::from)?;
         Ok(TrezorSignedTx::from(response))
     }
 
@@ -893,8 +932,7 @@ impl TrezorManager {
         {
             use crate::get_transport_callback;
 
-            let callback = get_transport_callback()
-                .ok_or(TrezorError::NotInitialized)?;
+            let callback = get_transport_callback().ok_or(TrezorError::NotInitialized)?;
 
             // The native layer's save_thp_credential with empty string can be used
             // to clear, or we can define a new method. For now, we'll save empty
@@ -915,7 +953,10 @@ impl TrezorManager {
             let mut inner = self.inner.lock().await;
             let trezor = inner.as_mut().ok_or(TrezorError::NotInitialized)?;
 
-            trezor.clear_credentials(device_id).await.map_err(TrezorError::from)
+            trezor
+                .clear_credentials(device_id)
+                .await
+                .map_err(TrezorError::from)
         }
     }
 }

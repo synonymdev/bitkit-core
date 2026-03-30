@@ -1,9 +1,10 @@
-
 use bitkitcore::*;
 
 fn handle_decode_result(result: Result<Scanner, DecodingError>) {
     match result {
-        Ok(Scanner::Lightning { invoice: ln_invoice }) => {
+        Ok(Scanner::Lightning {
+            invoice: ln_invoice,
+        }) => {
             println!("Successfully decoded Lightning invoice:");
             println!("Payment hash: {:?}", ln_invoice.payment_hash);
             println!("Amount: {} sats", ln_invoice.amount_satoshis);
@@ -19,7 +20,9 @@ fn handle_decode_result(result: Result<Scanner, DecodingError>) {
             }
         }
 
-        Ok(Scanner::OnChain { invoice: btc_invoice }) => {
+        Ok(Scanner::OnChain {
+            invoice: btc_invoice,
+        }) => {
             println!("\nSuccessfully decoded on-chain invoice:");
             println!("Address: {}", btc_invoice.address);
             println!("Amount Sats: {}", btc_invoice.amount_satoshis);
@@ -98,7 +101,14 @@ fn handle_decode_result(result: Result<Scanner, DecodingError>) {
             println!("\nSuccessfully decoded Node Connection:");
             println!("URL: {}", url);
             println!("Network: {}", network);
-            println!("Type: {}", if url.contains("onion") { "Tor" } else { "Clearnet" });
+            println!(
+                "Type: {}",
+                if url.contains("onion") {
+                    "Tor"
+                } else {
+                    "Clearnet"
+                }
+            );
         }
 
         Ok(Scanner::Gift { code, amount }) => {
@@ -128,7 +138,8 @@ async fn main() {
     let legacy_address = "199Grz1BcL5KffikSAtbgngAPgYZZRa3cs";
     let random_string = "random_string";
     let tor_node_id = "72413cc3e96168cb4320f992bfa483865133dc28d@3phi2gcmu3nsbvux53hixrxjgyg3u6vd6kqy3yq6rlrvudqrjsxir6id.onion:9735";
-    let node_id = "039b8b4dd1d88c2c5db374290cda397a8f5d79f312d6ea5d5bfdfc7c6ff363eae3@34.65.111.104:9735";
+    let node_id =
+        "039b8b4dd1d88c2c5db374290cda397a8f5d79f312d6ea5d5bfdfc7c6ff363eae3@34.65.111.104:9735";
     let gift_code = "bitkit://gift-ABC123XYZ-50000";
     let invalid_gift_code = "bitkit://gift-TEST-notanumber";
 
@@ -136,7 +147,7 @@ async fn main() {
     println!("\n=== Testing Gift Code Parsing ===");
     println!("Decoding: {}", gift_code);
     handle_decode_result(Scanner::decode(gift_code.to_string()).await);
-    
+
     // Test with invalid amount
     println!("\nDecoding invalid gift code: {}", invalid_gift_code);
     handle_decode_result(Scanner::decode(invalid_gift_code.to_string()).await);

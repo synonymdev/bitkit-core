@@ -96,7 +96,10 @@ fn profile_from_full_app_user() {
     let profile = PubkyProfile::from(user);
     assert_eq!(profile.name, "Alice");
     assert_eq!(profile.bio.as_deref(), Some("Hello world"));
-    assert_eq!(profile.image.as_deref(), Some("https://example.com/avatar.png"));
+    assert_eq!(
+        profile.image.as_deref(),
+        Some("https://example.com/avatar.png")
+    );
     assert_eq!(profile.status.as_deref(), Some("Online"));
 
     let links = profile.links.unwrap();
@@ -159,7 +162,10 @@ fn profile_deserialized_from_full_json() {
 
     assert_eq!(profile.name, "Dave");
     assert_eq!(profile.bio.as_deref(), Some("Hello"));
-    assert_eq!(profile.image.as_deref(), Some("https://example.com/img.png"));
+    assert_eq!(
+        profile.image.as_deref(),
+        Some("https://example.com/img.png")
+    );
     assert_eq!(profile.status.as_deref(), Some("Away"));
     let links = profile.links.unwrap();
     assert_eq!(links.len(), 2);
@@ -416,4 +422,3 @@ async fn fetch_file_string_malformed_uri_returns_error() {
         other => panic!("expected FetchFailed, got: {other:?}"),
     }
 }
-

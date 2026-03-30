@@ -1,51 +1,32 @@
-use thiserror::Error;
 use crate::modules::blocktank::BtChannelOrderErrorType;
+use thiserror::Error;
 
 #[derive(uniffi::Error, Debug, Error)]
 pub enum BlocktankError {
     #[error("HTTP client error: {error_details}")]
-    HttpClient {
-        error_details: String
-    },
+    HttpClient { error_details: String },
 
     #[error("Blocktank error: {error_details}")]
-    BlocktankClient {
-        error_details: String,
-    },
+    BlocktankClient { error_details: String },
     #[error("Invalid Blocktank: {error_details}")]
-    InvalidBlocktank {
-        error_details: String,
-    },
+    InvalidBlocktank { error_details: String },
     #[error("Database initialization failed: {error_details}")]
-    InitializationError {
-        error_details: String,
-    },
+    InitializationError { error_details: String },
 
     #[error("Failed to insert blocktank: {error_details}")]
-    InsertError {
-        error_details: String,
-    },
+    InsertError { error_details: String },
 
     #[error("Failed to retrieve blocktanks: {error_details}")]
-    RetrievalError {
-        error_details: String,
-    },
+    RetrievalError { error_details: String },
 
     #[error("Invalid data format: {error_details}")]
-    DataError {
-        error_details: String,
-    },
+    DataError { error_details: String },
 
     #[error("Database connection error: {error_details}")]
-    ConnectionError {
-        error_details: String,
-    },
+    ConnectionError { error_details: String },
 
     #[error("Serialization error: {error_details}")]
-    SerializationError {
-        error_details: String,
-    },
-
+    SerializationError { error_details: String },
 
     #[error("Channel open error: {error_type:?} - {error_details}")]
     ChannelOpen {
@@ -54,24 +35,18 @@ pub enum BlocktankError {
     },
 
     #[error("Order state error: {error_details}")]
-    OrderState {
-        error_details: String
-    },
+    OrderState { error_details: String },
 
     #[error("Invalid parameter: {error_details}")]
-    InvalidParameter {
-        error_details: String
-    },
+    InvalidParameter { error_details: String },
     #[error("Database error: {error_details}")]
-    DatabaseError {
-        error_details: String,
-    },
+    DatabaseError { error_details: String },
 }
 
 impl From<serde_json::Error> for BlocktankError {
     fn from(err: serde_json::Error) -> Self {
         BlocktankError::SerializationError {
-            error_details: err.to_string()
+            error_details: err.to_string(),
         }
     }
 }
@@ -79,7 +54,7 @@ impl From<serde_json::Error> for BlocktankError {
 impl From<url::ParseError> for BlocktankError {
     fn from(err: url::ParseError) -> Self {
         BlocktankError::ConnectionError {
-            error_details: err.to_string()
+            error_details: err.to_string(),
         }
     }
 }

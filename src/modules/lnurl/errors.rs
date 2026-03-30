@@ -18,9 +18,7 @@ pub enum LnurlError {
         max: u64,
     },
     #[error("Failed to generate invoice: {error_details}")]
-    InvoiceCreationFailed {
-        error_details: String,
-    },
+    InvoiceCreationFailed { error_details: String },
     #[error("LNURL authentication failed")]
     AuthenticationFailed,
 }

@@ -32,7 +32,7 @@ mod tests {
                 assert_eq!(params.get("label").unwrap(), "Test");
                 assert_eq!(params.get("message").unwrap(), "Test%20Payment");
                 assert_eq!(params.get("custom").unwrap(), "value");
-            },
+            }
             _ => assert!(false, "Should be an OnChain invoice"),
         }
     }
@@ -46,7 +46,7 @@ mod tests {
                 assert_eq!(invoice.address, address);
                 assert_eq!(invoice.amount_satoshis, 0);
                 assert!(invoice.params.as_ref().unwrap().is_empty());
-            },
+            }
             _ => assert!(false, "Should be an OnChain invoice"),
         }
     }
@@ -60,7 +60,7 @@ mod tests {
             Ok(Scanner::OnChain { invoice }) => {
                 // Address should be normalized to lowercase
                 assert_eq!(invoice.address, address_upper.to_lowercase());
-            },
+            }
             Ok(_) => assert!(false, "Should be an OnChain invoice"),
             Err(e) => panic!("Failed to decode uppercase address: {:?}", e),
         }
@@ -75,7 +75,7 @@ mod tests {
             Ok(Scanner::OnChain { invoice }) => {
                 // Legacy addresses are case-sensitive, should preserve original case
                 assert_eq!(invoice.address, legacy);
-            },
+            }
             Ok(_) => assert!(false, "Should be an OnChain invoice"),
             Err(e) => panic!("Failed to decode legacy address: {:?}", e),
         }
@@ -88,8 +88,11 @@ mod tests {
         let decoded = Scanner::decode(invoice.to_string()).await.unwrap();
         match decoded {
             Scanner::OnChain { invoice } => {
-                assert_eq!(invoice.address, "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq");
-            },
+                assert_eq!(
+                    invoice.address,
+                    "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq"
+                );
+            }
             _ => assert!(false, "Should be an OnChain invoice"),
         }
     }
@@ -101,8 +104,11 @@ mod tests {
         let decoded = Scanner::decode(invoice.to_string()).await.unwrap();
         match decoded {
             Scanner::OnChain { invoice } => {
-                assert_eq!(invoice.address, "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq");
-            },
+                assert_eq!(
+                    invoice.address,
+                    "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq"
+                );
+            }
             _ => assert!(false, "Should be an OnChain invoice"),
         }
     }
@@ -115,7 +121,7 @@ mod tests {
         match decoded {
             Scanner::OnChain { invoice } => {
                 assert_eq!(invoice.address, "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa");
-            },
+            }
             _ => assert!(false, "Should be an OnChain invoice"),
         }
     }
@@ -128,7 +134,7 @@ mod tests {
         match decoded {
             Scanner::OnChain { invoice } => {
                 assert_eq!(invoice.address, "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy");
-            },
+            }
             _ => assert!(false, "Should be an OnChain invoice"),
         }
     }
@@ -142,7 +148,7 @@ mod tests {
             Scanner::OnChain { invoice } => {
                 // Prefix gets lowercased, but address case is preserved
                 assert_eq!(invoice.address, "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa");
-            },
+            }
             _ => assert!(false, "Should be an OnChain invoice"),
         }
     }
@@ -150,15 +156,19 @@ mod tests {
     #[tokio::test]
     async fn test_bitcoin_prefix_with_query_params() {
         // Test bitcoin: prefix with bech32 address and query params
-        let invoice = "bitcoin:BC1QAR0SRRR7XFKVY5L643LYDNW9RE59GTZZWF5MDQ?amount=0.00001&label=Test";
+        let invoice =
+            "bitcoin:BC1QAR0SRRR7XFKVY5L643LYDNW9RE59GTZZWF5MDQ?amount=0.00001&label=Test";
         let decoded = Scanner::decode(invoice.to_string()).await.unwrap();
         match decoded {
             Scanner::OnChain { invoice } => {
                 // Address should be lowercased, query params preserved
-                assert_eq!(invoice.address, "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq");
+                assert_eq!(
+                    invoice.address,
+                    "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq"
+                );
                 assert_eq!(invoice.amount_satoshis, 1000);
                 assert_eq!(invoice.label.as_ref().unwrap(), "Test");
-            },
+            }
             _ => assert!(false, "Should be an OnChain invoice"),
         }
     }
@@ -166,17 +176,21 @@ mod tests {
     #[tokio::test]
     async fn test_invalid_lightning_invoice() {
         let invoice = "lnbc1invalid".to_string();
-        assert!(matches!(Scanner::decode(invoice).await, Err(DecodingError::InvalidFormat)));
+        assert!(matches!(
+            Scanner::decode(invoice).await,
+            Err(DecodingError::InvalidFormat)
+        ));
     }
 
     #[tokio::test]
     async fn test_floating_point_amount_precision() {
-        let invoice = "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?amount=0.000035".to_string();
+        let invoice =
+            "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?amount=0.000035".to_string();
         let decoded = Scanner::decode(invoice).await.unwrap();
         match decoded {
             Scanner::OnChain { invoice } => {
                 assert_eq!(invoice.amount_satoshis, 3500);
-            },
+            }
             _ => assert!(false, "Should be an OnChain invoice"),
         }
     }
@@ -199,16 +213,21 @@ mod tests {
     #[tokio::test]
     async fn test_uppercase_bitcoin_uri() {
         // Test uppercase BITCOIN: prefix with uppercase address (common in QR codes)
-        let invoice = "BITCOIN:BC1QAR0SRRR7XFKVY5L643LYDNW9RE59GTZZWF5MDQ?amount=0.00001&label=Test".to_string();
+        let invoice =
+            "BITCOIN:BC1QAR0SRRR7XFKVY5L643LYDNW9RE59GTZZWF5MDQ?amount=0.00001&label=Test"
+                .to_string();
         let decoded = Scanner::decode(invoice).await.unwrap();
         match decoded {
             Scanner::OnChain { invoice } => {
                 // Address should be normalized to lowercase
-                assert_eq!(invoice.address, "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq");
+                assert_eq!(
+                    invoice.address,
+                    "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq"
+                );
                 assert_eq!(invoice.amount_satoshis, 1000);
                 // Query params should preserve original case
                 assert_eq!(invoice.label.as_ref().unwrap(), "Test");
-            },
+            }
             _ => assert!(false, "Should be an OnChain invoice"),
         }
     }

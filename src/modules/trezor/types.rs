@@ -1,6 +1,5 @@
 //! FFI-compatible types for the Trezor module.
 
-
 /// Transport type for Trezor devices.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum TrezorTransportType {
