@@ -34,7 +34,7 @@ pub use modules::scanner::{
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::activity;
-use crate::modules::pubky::{PubkyError, PubkyProfile};
+use crate::modules::pubky::{PubkyError, PubkyProfile, PubkyAuthDetails};
 use crate::activity::{ActivityError, ActivityDB, OnchainActivity, LightningActivity, Activity, ActivityFilter, SortDirection, PaymentType, DbError, ClosedChannelDetails, ActivityTags, PreActivityMetadata, TransactionDetails};
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IBtInfo, IBtOrder, CreateOrderOptions, BtOrderState2, IBt0ConfMinTxFeeWindow, IBtEstimateFeeResponse, IBtEstimateFeeResponse2, CreateCjitOptions, ICJitEntry, CJitStateEnum, IBtBolt11Invoice, IGift, ChannelLiquidityOptions, ChannelLiquidityParams, DefaultLspBalanceParams};
 use crate::onchain::{AddressError, BroadcastError, AccountInfoError, ValidationResult, GetAddressResponse, Network, GetAddressesResponse, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances, broadcast_raw_tx, AccountInfoResult, SingleAddressInfoResult, AccountType, get_account_info, get_address_info, get_transaction_history, get_transaction_detail, TransactionHistoryResult, TransactionDetail};
@@ -1496,6 +1496,24 @@ pub async fn complete_pubky_auth() -> Result<String, PubkyError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         crate::modules::pubky::complete_pubky_auth().await
+    }).await.unwrap_or_else(|e| Err(PubkyError::AuthFailed {
+        reason: format!("Runtime error: {}", e)
+    }))
+}
+
+#[uniffi::export]
+pub fn parse_pubky_auth_url(auth_url: String) -> Result<PubkyAuthDetails, PubkyError> {
+    crate::modules::pubky::parse_pubky_auth_url(auth_url)
+}
+
+#[uniffi::export]
+pub async fn approve_pubky_auth(
+    auth_url: String,
+    secret_key_hex: String,
+) -> Result<(), PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::pubky::approve_pubky_auth(auth_url, secret_key_hex).await
     }).await.unwrap_or_else(|e| Err(PubkyError::AuthFailed {
         reason: format!("Runtime error: {}", e)
     }))
