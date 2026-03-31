@@ -8036,6 +8036,135 @@ public func FfiConverterTypePubkyAuth_lower(_ value: PubkyAuth) -> RustBuffer {
 }
 
 
+/**
+ * Details extracted from a `pubkyauth://` deep-link URL.
+ */
+public struct PubkyAuthDetails {
+    /**
+     * Whether this is a signin or signup flow.
+     */
+    public var kind: PubkyAuthKind
+    /**
+     * Requested capabilities (e.g. `"/pub/pubky.app/:rw"`).
+     */
+    public var capabilities: String
+    /**
+     * Relay URL used for the auth exchange.
+     */
+    public var relay: String
+    /**
+     * Homeserver public key (z32-encoded). Present only for signup flows.
+     */
+    public var homeserver: String?
+    /**
+     * Signup token. Present only for signup flows.
+     */
+    public var signupToken: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Whether this is a signin or signup flow.
+         */kind: PubkyAuthKind, 
+        /**
+         * Requested capabilities (e.g. `"/pub/pubky.app/:rw"`).
+         */capabilities: String, 
+        /**
+         * Relay URL used for the auth exchange.
+         */relay: String, 
+        /**
+         * Homeserver public key (z32-encoded). Present only for signup flows.
+         */homeserver: String?, 
+        /**
+         * Signup token. Present only for signup flows.
+         */signupToken: String?) {
+        self.kind = kind
+        self.capabilities = capabilities
+        self.relay = relay
+        self.homeserver = homeserver
+        self.signupToken = signupToken
+    }
+}
+
+#if compiler(>=6)
+extension PubkyAuthDetails: Sendable {}
+#endif
+
+
+extension PubkyAuthDetails: Equatable, Hashable {
+    public static func ==(lhs: PubkyAuthDetails, rhs: PubkyAuthDetails) -> Bool {
+        if lhs.kind != rhs.kind {
+            return false
+        }
+        if lhs.capabilities != rhs.capabilities {
+            return false
+        }
+        if lhs.relay != rhs.relay {
+            return false
+        }
+        if lhs.homeserver != rhs.homeserver {
+            return false
+        }
+        if lhs.signupToken != rhs.signupToken {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(kind)
+        hasher.combine(capabilities)
+        hasher.combine(relay)
+        hasher.combine(homeserver)
+        hasher.combine(signupToken)
+    }
+}
+
+extension PubkyAuthDetails: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePubkyAuthDetails: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PubkyAuthDetails {
+        return
+            try PubkyAuthDetails(
+                kind: FfiConverterTypePubkyAuthKind.read(from: &buf), 
+                capabilities: FfiConverterString.read(from: &buf), 
+                relay: FfiConverterString.read(from: &buf), 
+                homeserver: FfiConverterOptionString.read(from: &buf), 
+                signupToken: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PubkyAuthDetails, into buf: inout [UInt8]) {
+        FfiConverterTypePubkyAuthKind.write(value.kind, into: &buf)
+        FfiConverterString.write(value.capabilities, into: &buf)
+        FfiConverterString.write(value.relay, into: &buf)
+        FfiConverterOptionString.write(value.homeserver, into: &buf)
+        FfiConverterOptionString.write(value.signupToken, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyAuthDetails_lift(_ buf: RustBuffer) throws -> PubkyAuthDetails {
+    return try FfiConverterTypePubkyAuthDetails.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyAuthDetails_lower(_ value: PubkyAuthDetails) -> RustBuffer {
+    return FfiConverterTypePubkyAuthDetails.lower(value)
+}
+
+
 public struct PubkyProfile {
     public var name: String
     public var bio: String?
@@ -15553,6 +15682,81 @@ extension PaymentType: Codable {}
 
 
 
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * The type of a `pubkyauth://` deep-link flow.
+ */
+
+public enum PubkyAuthKind {
+    
+    case signin
+    case signup
+}
+
+
+#if compiler(>=6)
+extension PubkyAuthKind: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePubkyAuthKind: FfiConverterRustBuffer {
+    typealias SwiftType = PubkyAuthKind
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PubkyAuthKind {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .signin
+        
+        case 2: return .signup
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: PubkyAuthKind, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .signin:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .signup:
+            writeInt(&buf, Int32(2))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyAuthKind_lift(_ buf: RustBuffer) throws -> PubkyAuthKind {
+    return try FfiConverterTypePubkyAuthKind.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkyAuthKind_lower(_ value: PubkyAuthKind) -> RustBuffer {
+    return FfiConverterTypePubkyAuthKind.lower(value)
+}
+
+
+extension PubkyAuthKind: Equatable, Hashable {}
+
+extension PubkyAuthKind: Codable {}
+
+
+
+
+
+
 
 public enum PubkyError: Swift.Error {
 
@@ -18825,6 +19029,20 @@ public func addTags(activityId: String, tags: [String])throws   {try rustCallWit
     )
 }
 }
+public func approvePubkyAuth(authUrl: String, secretKeyHex: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_approve_pubky_auth(FfiConverterString.lower(authUrl),FfiConverterString.lower(secretKeyHex)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypePubkyError_lift
+        )
+}
 public func blocktankRemoveAllCjitEntries()async throws   {
     return
         try  await uniffiRustCallAsync(
@@ -19581,6 +19799,13 @@ public func openChannel(orderId: String, connectionString: String)async throws  
             liftFunc: FfiConverterTypeIBtOrder_lift,
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
+}
+public func parsePubkyAuthUrl(authUrl: String)throws  -> PubkyAuthDetails  {
+    return try  FfiConverterTypePubkyAuthDetails_lift(try rustCallWithError(FfiConverterTypePubkyError_lift) {
+    uniffi_bitkitcore_fn_func_parse_pubky_auth_url(
+        FfiConverterString.lower(authUrl),$0
+    )
+})
 }
 public func prepareSweepTransaction(mnemonicPhrase: String, network: Network?, bip39Passphrase: String?, electrumUrl: String, destinationAddress: String, feeRateSatsPerVbyte: UInt32?)async throws  -> SweepTransactionPreview  {
     return
@@ -20416,6 +20641,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_add_tags() != 63739) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_approve_pubky_auth() != 22222) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries() != 40127) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -20618,6 +20846,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_open_channel() != 21402) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273) {

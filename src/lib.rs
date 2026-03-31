@@ -31,7 +31,7 @@ use crate::modules::blocktank::{
     IBt0ConfMinTxFeeWindow, IBtBolt11Invoice, IBtEstimateFeeResponse, IBtEstimateFeeResponse2,
     IBtInfo, IBtOrder, ICJitEntry, IGift,
 };
-use crate::modules::pubky::{PubkyError, PubkyProfile};
+use crate::modules::pubky::{PubkyAuthDetails, PubkyAuthKind, PubkyError, PubkyProfile};
 use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
     get_transport_callback, trezor_is_ble_available, trezor_set_transport_callback,
@@ -1900,6 +1900,28 @@ pub async fn complete_pubky_auth() -> Result<String, PubkyError> {
                 reason: format!("Runtime error: {}", e),
             })
         })
+}
+
+#[uniffi::export]
+pub fn parse_pubky_auth_url(auth_url: String) -> Result<PubkyAuthDetails, PubkyError> {
+    crate::modules::pubky::parse_pubky_auth_url(auth_url)
+}
+
+#[uniffi::export]
+pub async fn approve_pubky_auth(
+    auth_url: String,
+    secret_key_hex: String,
+) -> Result<(), PubkyError> {
+    let rt = ensure_runtime();
+    rt.spawn(
+        async move { crate::modules::pubky::approve_pubky_auth(auth_url, secret_key_hex).await },
+    )
+    .await
+    .unwrap_or_else(|e| {
+        Err(PubkyError::AuthFailed {
+            reason: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 #[uniffi::export]

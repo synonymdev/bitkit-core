@@ -1425,6 +1425,10 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1474,6 +1478,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_add_tags() != 63739.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_approve_pubky_auth() != 22222.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries() != 40127.toShort()) {
@@ -1678,6 +1685,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_open_channel() != 21402.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273.toShort()) {
@@ -1924,6 +1934,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_add_tags(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_approve_pubky_auth(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries(
     ): Short
     @JvmStatic
@@ -2126,6 +2139,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_open_channel(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_parse_pubky_auth_url(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_prepare_sweep_transaction(
@@ -2506,6 +2522,11 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_approve_pubky_auth(
+        `authUrl`: RustBufferByValue,
+        `secretKeyHex`: RustBufferByValue,
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_blocktank_remove_all_cjit_entries(
     ): Long
     @JvmStatic
@@ -2877,6 +2898,11 @@ internal object UniffiLib : Library {
         `orderId`: RustBufferByValue,
         `connectionString`: RustBufferByValue,
     ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_parse_pubky_auth_url(
+        `authUrl`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_prepare_sweep_transaction(
         `mnemonicPhrase`: RustBufferByValue,
@@ -6635,6 +6661,37 @@ public object FfiConverterTypePubkyAuth: FfiConverterRustBuffer<PubkyAuth> {
 
 
 
+public object FfiConverterTypePubkyAuthDetails: FfiConverterRustBuffer<PubkyAuthDetails> {
+    override fun read(buf: ByteBuffer): PubkyAuthDetails {
+        return PubkyAuthDetails(
+            FfiConverterTypePubkyAuthKind.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PubkyAuthDetails): ULong = (
+            FfiConverterTypePubkyAuthKind.allocationSize(value.`kind`) +
+            FfiConverterString.allocationSize(value.`capabilities`) +
+            FfiConverterString.allocationSize(value.`relay`) +
+            FfiConverterOptionalString.allocationSize(value.`homeserver`) +
+            FfiConverterOptionalString.allocationSize(value.`signupToken`)
+    )
+
+    override fun write(value: PubkyAuthDetails, buf: ByteBuffer) {
+        FfiConverterTypePubkyAuthKind.write(value.`kind`, buf)
+        FfiConverterString.write(value.`capabilities`, buf)
+        FfiConverterString.write(value.`relay`, buf)
+        FfiConverterOptionalString.write(value.`homeserver`, buf)
+        FfiConverterOptionalString.write(value.`signupToken`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypePubkyProfile: FfiConverterRustBuffer<PubkyProfile> {
     override fun read(buf: ByteBuffer): PubkyProfile {
         return PubkyProfile(
@@ -9159,6 +9216,24 @@ public object FfiConverterTypePaymentType: FfiConverterRustBuffer<PaymentType> {
     override fun allocationSize(value: PaymentType): ULong = 4UL
 
     override fun write(value: PaymentType, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+public object FfiConverterTypePubkyAuthKind: FfiConverterRustBuffer<PubkyAuthKind> {
+    override fun read(buf: ByteBuffer): PubkyAuthKind = try {
+        PubkyAuthKind.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: PubkyAuthKind): ULong = 4UL
+
+    override fun write(value: PubkyAuthKind, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
@@ -12115,6 +12190,25 @@ public fun `addTags`(`activityId`: kotlin.String, `tags`: List<kotlin.String>) {
     }
 }
 
+@Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `approvePubkyAuth`(`authUrl`: kotlin.String, `secretKeyHex`: kotlin.String) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_approve_pubky_auth(
+            FfiConverterString.lower(`authUrl`),
+            FfiConverterString.lower(`secretKeyHex`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        PubkyExceptionErrorHandler,
+    )
+}
+
 @Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
 public suspend fun `blocktankRemoveAllCjitEntries`() {
     return uniffiRustCallAsync(
@@ -13113,6 +13207,16 @@ public suspend fun `openChannel`(`orderId`: kotlin.String, `connectionString`: k
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
+}
+
+@Throws(PubkyException::class)
+public fun `parsePubkyAuthUrl`(`authUrl`: kotlin.String): PubkyAuthDetails {
+    return FfiConverterTypePubkyAuthDetails.lift(uniffiRustCallWithError(PubkyExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url(
+            FfiConverterString.lower(`authUrl`),
+            uniffiRustCallStatus,
+        )
+    })
 }
 
 @Throws(SweepException::class, kotlin.coroutines.cancellation.CancellationException::class)

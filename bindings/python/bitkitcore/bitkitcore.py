@@ -469,6 +469,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_add_tags() != 63739:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_approve_pubky_auth() != 22222:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries() != 40127:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders() != 38913:
@@ -604,6 +606,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_onchain_get_transaction_history() != 4452:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_open_channel() != 21402:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -1052,6 +1056,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_add_tags.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_add_tags.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_approve_pubky_auth.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_approve_pubky_auth.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_remove_all_cjit_entries.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_remove_all_cjit_entries.restype = ctypes.c_uint64
@@ -1424,6 +1433,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_open_channel.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_open_channel.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_prepare_sweep_transaction.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1997,6 +2011,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags.restyp
 _UniffiLib.uniffi_bitkitcore_checksum_func_add_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_add_tags.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_approve_pubky_auth.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_approve_pubky_auth.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries.restype = ctypes.c_uint16
@@ -2201,6 +2218,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_transaction_history.resty
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction.restype = ctypes.c_uint16
@@ -6717,6 +6737,87 @@ class _UniffiConverterTypePubkyAuth(_UniffiConverterRustBuffer):
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.data, buf)
+
+
+class PubkyAuthDetails:
+    """
+    Details extracted from a `pubkyauth://` deep-link URL.
+    """
+
+    kind: "PubkyAuthKind"
+    """
+    Whether this is a signin or signup flow.
+    """
+
+    capabilities: "str"
+    """
+    Requested capabilities (e.g. `"/pub/pubky.app/:rw"`).
+    """
+
+    relay: "str"
+    """
+    Relay URL used for the auth exchange.
+    """
+
+    homeserver: "typing.Optional[str]"
+    """
+    Homeserver public key (z32-encoded). Present only for signup flows.
+    """
+
+    signup_token: "typing.Optional[str]"
+    """
+    Signup token. Present only for signup flows.
+    """
+
+    def __init__(self, *, kind: "PubkyAuthKind", capabilities: "str", relay: "str", homeserver: "typing.Optional[str]", signup_token: "typing.Optional[str]"):
+        self.kind = kind
+        self.capabilities = capabilities
+        self.relay = relay
+        self.homeserver = homeserver
+        self.signup_token = signup_token
+
+    def __str__(self):
+        return "PubkyAuthDetails(kind={}, capabilities={}, relay={}, homeserver={}, signup_token={})".format(self.kind, self.capabilities, self.relay, self.homeserver, self.signup_token)
+
+    def __eq__(self, other):
+        if self.kind != other.kind:
+            return False
+        if self.capabilities != other.capabilities:
+            return False
+        if self.relay != other.relay:
+            return False
+        if self.homeserver != other.homeserver:
+            return False
+        if self.signup_token != other.signup_token:
+            return False
+        return True
+
+class _UniffiConverterTypePubkyAuthDetails(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return PubkyAuthDetails(
+            kind=_UniffiConverterTypePubkyAuthKind.read(buf),
+            capabilities=_UniffiConverterString.read(buf),
+            relay=_UniffiConverterString.read(buf),
+            homeserver=_UniffiConverterOptionalString.read(buf),
+            signup_token=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterTypePubkyAuthKind.check_lower(value.kind)
+        _UniffiConverterString.check_lower(value.capabilities)
+        _UniffiConverterString.check_lower(value.relay)
+        _UniffiConverterOptionalString.check_lower(value.homeserver)
+        _UniffiConverterOptionalString.check_lower(value.signup_token)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterTypePubkyAuthKind.write(value.kind, buf)
+        _UniffiConverterString.write(value.capabilities, buf)
+        _UniffiConverterString.write(value.relay, buf)
+        _UniffiConverterOptionalString.write(value.homeserver, buf)
+        _UniffiConverterOptionalString.write(value.signup_token, buf)
 
 
 class PubkyProfile:
@@ -12379,6 +12480,48 @@ class _UniffiConverterTypePaymentType(_UniffiConverterRustBuffer):
 
 
 
+
+
+
+class PubkyAuthKind(enum.Enum):
+    """
+    The type of a `pubkyauth://` deep-link flow.
+    """
+
+    SIGNIN = 0
+    
+    SIGNUP = 1
+    
+
+
+class _UniffiConverterTypePubkyAuthKind(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return PubkyAuthKind.SIGNIN
+        if variant == 2:
+            return PubkyAuthKind.SIGNUP
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == PubkyAuthKind.SIGNIN:
+            return
+        if value == PubkyAuthKind.SIGNUP:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == PubkyAuthKind.SIGNIN:
+            buf.write_i32(1)
+        if value == PubkyAuthKind.SIGNUP:
+            buf.write_i32(2)
+
+
+
+
 # PubkyError
 # We want to define each variant as a nested class that's also a subclass,
 # which is tricky in Python.  To accomplish this we're going to create each
@@ -17141,6 +17284,27 @@ def add_tags(activity_id: "str",tags: "typing.List[str]") -> None:
         _UniffiConverterString.lower(activity_id),
         _UniffiConverterSequenceString.lower(tags))
 
+async def approve_pubky_auth(auth_url: "str",secret_key_hex: "str") -> None:
+
+    _UniffiConverterString.check_lower(auth_url)
+    
+    _UniffiConverterString.check_lower(secret_key_hex)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_approve_pubky_auth(
+        _UniffiConverterString.lower(auth_url),
+        _UniffiConverterString.lower(secret_key_hex)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypePubkyError,
+
+    )
 async def blocktank_remove_all_cjit_entries() -> None:
 
     return await _uniffi_rust_call_async(
@@ -18179,6 +18343,13 @@ async def open_channel(order_id: "str",connection_string: "str") -> "IBtOrder":
 _UniffiConverterTypeBlocktankError,
 
     )
+
+def parse_pubky_auth_url(auth_url: "str") -> "PubkyAuthDetails":
+    _UniffiConverterString.check_lower(auth_url)
+    
+    return _UniffiConverterTypePubkyAuthDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePubkyError,_UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url,
+        _UniffiConverterString.lower(auth_url)))
+
 async def prepare_sweep_transaction(mnemonic_phrase: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",electrum_url: "str",destination_address: "str",fee_rate_sats_per_vbyte: "typing.Optional[int]") -> "SweepTransactionPreview":
 
     _UniffiConverterString.check_lower(mnemonic_phrase)
@@ -19238,6 +19409,7 @@ __all__ = [
     "NetworkType",
     "PaymentState",
     "PaymentType",
+    "PubkyAuthKind",
     "PubkyError",
     "Scanner",
     "SortDirection",
@@ -19304,6 +19476,7 @@ __all__ = [
     "OnchainActivity",
     "PreActivityMetadata",
     "PubkyAuth",
+    "PubkyAuthDetails",
     "PubkyProfile",
     "PubkyProfileLink",
     "SingleAddressInfoResult",
@@ -19343,6 +19516,7 @@ __all__ = [
     "add_pre_activity_metadata",
     "add_pre_activity_metadata_tags",
     "add_tags",
+    "approve_pubky_auth",
     "blocktank_remove_all_cjit_entries",
     "blocktank_remove_all_orders",
     "blocktank_wipe_all",
@@ -19411,6 +19585,7 @@ __all__ = [
     "onchain_get_transaction_detail",
     "onchain_get_transaction_history",
     "open_channel",
+    "parse_pubky_auth_url",
     "prepare_sweep_transaction",
     "pubky_public_key_from_secret",
     "pubky_put_with_secret_key",

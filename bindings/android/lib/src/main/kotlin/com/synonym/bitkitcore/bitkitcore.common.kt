@@ -1338,6 +1338,37 @@ public data class PubkyAuth (
 
 
 
+/**
+ * Details extracted from a `pubkyauth://` deep-link URL.
+ */
+@kotlinx.serialization.Serializable
+public data class PubkyAuthDetails (
+    /**
+     * Whether this is a signin or signup flow.
+     */
+    val `kind`: PubkyAuthKind, 
+    /**
+     * Requested capabilities (e.g. `"/pub/pubky.app/:rw"`).
+     */
+    val `capabilities`: kotlin.String, 
+    /**
+     * Relay URL used for the auth exchange.
+     */
+    val `relay`: kotlin.String, 
+    /**
+     * Homeserver public key (z32-encoded). Present only for signup flows.
+     */
+    val `homeserver`: kotlin.String?, 
+    /**
+     * Signup token. Present only for signup flows.
+     */
+    val `signupToken`: kotlin.String?
+) {
+    public companion object
+}
+
+
+
 @kotlinx.serialization.Serializable
 public data class PubkyProfile (
     val `name`: kotlin.String, 
@@ -3368,6 +3399,23 @@ public enum class PaymentType {
     
     SENT,
     RECEIVED;
+    public companion object
+}
+
+
+
+
+
+
+/**
+ * The type of a `pubkyauth://` deep-link flow.
+ */
+
+@kotlinx.serialization.Serializable
+public enum class PubkyAuthKind {
+    
+    SIGNIN,
+    SIGNUP;
     public companion object
 }
 
