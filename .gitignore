@@ -1,4 +1,8 @@
 target/
 .idea/
 .DS_Store
+# AI
 .ai
+.claude/worktrees
+*.local.*
+!*.local.template*
