@@ -266,7 +266,8 @@ impl Scanner {
             Bolt11Invoice::from_str(invoice_str).map_err(|_| DecodingError::InvalidFormat)?;
 
         let network = NetworkType::from(bolt11_invoice.network());
-        let amount_satoshis: u64 = bolt11_invoice.amount_milli_satoshis().unwrap_or(0) / 1000u64;
+        let amount_msat: u64 = bolt11_invoice.amount_milli_satoshis().unwrap_or(0);
+        let amount_satoshis: u64 = amount_msat.div_ceil(1000);
         let is_expired = bolt11_invoice.is_expired();
 
         let timestamp = DateTime::<Utc>::from_timestamp(
