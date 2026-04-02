@@ -2,6 +2,31 @@
 mod tests {
     use crate::{DecodingError, Scanner};
 
+    /// Helper to create a signed BOLT11 invoice string with a specific msat amount.
+    fn create_test_invoice_with_msat(amount_msat: u64) -> String {
+        use bitcoin::hashes::Hash;
+        use bitcoin::secp256k1::{Secp256k1, SecretKey};
+        use lightning_invoice::{Currency, InvoiceBuilder};
+
+        let secp = Secp256k1::new();
+        let secret_key = SecretKey::from_slice(&[0xab; 32]).unwrap();
+
+        let payment_hash = [0u8; 32];
+        let payment_secret = [0u8; 32];
+
+        let invoice = InvoiceBuilder::new(Currency::Bitcoin)
+            .amount_milli_satoshis(amount_msat)
+            .description("test invoice".to_string())
+            .payment_hash(bitcoin::hashes::sha256::Hash::from_byte_array(payment_hash))
+            .payment_secret(lightning_invoice::PaymentSecret(payment_secret))
+            .current_timestamp()
+            .min_final_cltv_expiry_delta(144)
+            .build_signed(|hash| secp.sign_ecdsa_recoverable(hash, &secret_key))
+            .unwrap();
+
+        invoice.to_string()
+    }
+
     #[tokio::test]
     async fn test_lightning_invoice_decode() {
         let invoice = "lightning:lnbc543210n1pnjdrvfpp5s720f4z6wzvjwpdnrlpffgct375l46yu9c6cpe7gdvvdfay47cnsdqqcqzzsxqrrsssp53uty4kfw8k3wmw4ga802udavz7e64tc7dmaz2cmtkj9srfxaq3ps9p4gqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpqysgqwl2tdhzm9e6mtedt7a4263yw7dqxehdwjnjk23r4g8tuppk6rs994f6scunwsev3w207tjldwkpdt32rcegzphgk05c0lctv8he7smgqyfn5xq".to_string();
@@ -230,5 +255,52 @@ mod tests {
             }
             _ => assert!(false, "Should be an OnChain invoice"),
         }
+    }
+
+    /// Helper to decode a test invoice and return amount_satoshis.
+    async fn decode_invoice_sats(amount_msat: u64) -> u64 {
+        let bolt11 = create_test_invoice_with_msat(amount_msat);
+        match Scanner::decode(bolt11).await.unwrap() {
+            Scanner::Lightning { invoice } => invoice.amount_satoshis,
+            _ => panic!("Should be a Lightning invoice"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_lightning_invoice_sub_satoshi_amount_rounds_up() {
+        // 18557538 msat = 18557.538 sats, must round up to avoid underpayment
+        assert_eq!(decode_invoice_sats(18557538).await, 18558);
+    }
+
+    #[tokio::test]
+    async fn test_lightning_invoice_sub_satoshi_remainders() {
+        // Remainder > 500: 222538 msat = 222.538 sats
+        assert_eq!(decode_invoice_sats(222538).await, 223);
+
+        // Remainder < 500: 222222 msat = 222.222 sats
+        assert_eq!(decode_invoice_sats(222222).await, 223);
+
+        // Remainder = 500: 500500 msat = 500.500 sats
+        assert_eq!(decode_invoice_sats(500500).await, 501);
+    }
+
+    #[tokio::test]
+    async fn test_lightning_invoice_exact_sat_amount() {
+        assert_eq!(decode_invoice_sats(3500000).await, 3500);
+    }
+
+    #[tokio::test]
+    async fn test_lightning_invoice_msat_boundary_amounts() {
+        // 1 msat (smallest non-zero)
+        assert_eq!(decode_invoice_sats(1).await, 1);
+
+        // 999 msat (just under 1 sat)
+        assert_eq!(decode_invoice_sats(999).await, 1);
+
+        // 1000 msat (exactly 1 sat)
+        assert_eq!(decode_invoice_sats(1000).await, 1);
+
+        // 1001 msat (just over 1 sat)
+        assert_eq!(decode_invoice_sats(1001).await, 2);
     }
 }
