@@ -475,7 +475,7 @@ dependencies = [
 
 [[package]]
 name = "bitkitcore"
-version = "0.1.56"
+version = "0.1.57"
 dependencies = [
  "android_logger",
  "async-trait",
@@ -4688,9 +4688,9 @@ dependencies = [
 
 [[package]]
 name = "trezor-connect-rs"
-version = "0.2.5"
+version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e263b71e1f5da38ed1efd02e96ef5e274ecd14411e86f30c02e746ff9362dac0"
+checksum = "8b1d7bbb66e791e3bf063373b40c6a7911c4130f4fb14298ecb5bfae5040ed84"
 dependencies = [
  "aes-gcm",
  "async-trait",

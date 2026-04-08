@@ -602,8 +602,19 @@ impl TrezorManager {
                 is_bootloader: false,
             };
 
+            // Check if the transport negotiated THP during acquire (BLE always,
+            // USB for newer devices like Safe 7).
+            let uses_thp = transport.has_thp(&device.path).await;
+
             // Create connected device and initialize it
             let mut connected = ConnectedDevice::new(device_info, Box::new(transport), session);
+
+            // When THP was negotiated, initialize() must use GetFeatures instead
+            // of Initialize (the THP session was already created during acquire
+            // via ThpCreateNewSession).
+            if uses_thp {
+                connected.set_uses_thp(true);
+            }
 
             // Wire UI callback if set
             if let Some(ui_cb) = crate::modules::trezor::get_ui_callback() {
