@@ -888,6 +888,49 @@ pub(crate) fn create_and_sync_wallet(
 }
 
 // ============================================================================
+// Shared tx-mapping helpers
+// ============================================================================
+
+/// Map a single BDK TransactionDetails to a HistoryTransaction.
+pub(crate) fn map_bdk_tx_to_history(
+    tx: &bdk::TransactionDetails,
+    tip_height: u32,
+) -> HistoryTransaction {
+    let (direction, amount, net) = classify_tx(tx.sent, tx.received, tx.fee);
+
+    let (block_height, timestamp, confirmations) = match tx.confirmation_time.as_ref() {
+        Some(conf) => {
+            let confs = tip_height.saturating_sub(conf.height) + 1;
+            (Some(conf.height), Some(conf.timestamp), confs)
+        }
+        None => (None, None, 0),
+    };
+
+    HistoryTransaction {
+        txid: tx.txid.to_string(),
+        received: tx.received,
+        sent: tx.sent,
+        net,
+        fee: tx.fee,
+        amount,
+        direction,
+        block_height,
+        timestamp,
+        confirmations,
+    }
+}
+
+/// Sort history transactions: unconfirmed first, then by timestamp descending.
+pub(crate) fn sort_history_transactions(history: &mut Vec<HistoryTransaction>) {
+    history.sort_by(|a, b| match (a.timestamp, b.timestamp) {
+        (None, Some(_)) => std::cmp::Ordering::Less,
+        (Some(_), None) => std::cmp::Ordering::Greater,
+        (None, None) => std::cmp::Ordering::Equal,
+        (Some(a_ts), Some(b_ts)) => b_ts.cmp(&a_ts),
+    });
+}
+
+// ============================================================================
 // Account info: main async functions
 // ============================================================================
 
@@ -1137,39 +1180,10 @@ pub async fn get_transaction_history(
 
         let mut history: Vec<HistoryTransaction> = txs
             .iter()
-            .map(|tx| {
-                let (direction, amount, net) = classify_tx(tx.sent, tx.received, tx.fee);
-
-                let (block_height, timestamp, confirmations) = match tx.confirmation_time.as_ref() {
-                    Some(conf) => {
-                        let confs = tip_height.saturating_sub(conf.height) + 1;
-                        (Some(conf.height), Some(conf.timestamp), confs)
-                    }
-                    None => (None, None, 0),
-                };
-
-                HistoryTransaction {
-                    txid: tx.txid.to_string(),
-                    received: tx.received,
-                    sent: tx.sent,
-                    net,
-                    fee: tx.fee,
-                    amount,
-                    direction,
-                    block_height,
-                    timestamp,
-                    confirmations,
-                }
-            })
+            .map(|tx| map_bdk_tx_to_history(tx, tip_height))
             .collect();
 
-        // Sort: unconfirmed first, then by timestamp descending
-        history.sort_by(|a, b| match (a.timestamp, b.timestamp) {
-            (None, Some(_)) => std::cmp::Ordering::Less,
-            (Some(_), None) => std::cmp::Ordering::Greater,
-            (None, None) => std::cmp::Ordering::Equal,
-            (Some(a_ts), Some(b_ts)) => b_ts.cmp(&a_ts),
-        });
+        sort_history_transactions(&mut history);
 
         let tx_count = u32::try_from(history.len()).unwrap_or(u32::MAX);
 

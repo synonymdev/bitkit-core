@@ -313,7 +313,9 @@ impl TransportCallback for CallbackAdapter {
 /// Adapter bridging bitkit-core's `TrezorUiCallback` (String-based, UniFFI compatible)
 /// to trezor-connect-rs's `TrezorUiCallback` (Option-based).
 ///
-/// Conversion: empty string → `None` (cancel), non-empty → `Some(value)` (user input).
+/// PIN: empty string → `None` (cancel), non-empty → `Some(value)`.
+/// Passphrase: `"\n"` → `None` (cancel), empty string → `Some("")` (standard wallet),
+///             non-empty → `Some(value)` (hidden wallet).
 struct UiCallbackAdapter {
     callback: Arc<dyn crate::TrezorUiCallback>,
 }
@@ -330,7 +332,7 @@ impl trezor_connect_rs::TrezorUiCallback for UiCallbackAdapter {
 
     fn on_passphrase_request(&self, on_device: bool) -> Option<String> {
         let result = self.callback.on_passphrase_request(on_device);
-        if result.is_empty() {
+        if result == "\n" {
             None
         } else {
             Some(result)
