@@ -36,6 +36,7 @@ mod tests {
             confirm_timestamp: Some(1234568890),
             channel_id: None,
             transfer_tx_id: None,
+            contact: None,
             created_at: None,
             updated_at: None,
             seen_at: None,
@@ -53,6 +54,7 @@ mod tests {
             message: "Test payment".to_string(),
             timestamp: 1234567890,
             preimage: Some("preimage123".to_string()),
+            contact: None,
             created_at: None,
             updated_at: None,
             seen_at: None,
@@ -104,6 +106,40 @@ mod tests {
             db.conn.is_autocommit(),
             "Database should be in autocommit mode"
         );
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_activity_migrations_add_contact_column() {
+        let db_path = format!("test_db_{}.sqlite", random::<u64>());
+        {
+            let conn = rusqlite::Connection::open(&db_path).unwrap();
+            conn.execute(
+                "
+                CREATE TABLE activities (
+                    id TEXT PRIMARY KEY,
+                    activity_type TEXT NOT NULL CHECK (activity_type IN ('onchain', 'lightning')),
+                    tx_type TEXT NOT NULL CHECK (tx_type IN ('sent', 'received')),
+                    timestamp INTEGER NOT NULL CHECK (timestamp > 0),
+                    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+                    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+                )",
+                [],
+            )
+            .unwrap();
+        }
+
+        let db = ActivityDB::new(&db_path).unwrap();
+        let mut stmt = db.conn.prepare("PRAGMA table_info(activities)").unwrap();
+        let columns = stmt
+            .query_map([], |row| row.get::<_, String>(1))
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+
+        assert!(columns.contains(&"seen_at".to_string()));
+        assert!(columns.contains(&"contact".to_string()));
+
         cleanup(&db_path);
     }
 
@@ -166,6 +202,92 @@ mod tests {
             assert!(retrieved.updated_at.is_some());
         } else {
             panic!("Expected Lightning activity");
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_contact_preserved_for_activity_variants() {
+        let (mut db, db_path) = setup();
+        let mut onchain = create_test_onchain_activity();
+        let mut lightning = create_test_lightning_activity();
+
+        onchain.contact = Some("onchain_contact_pubky".to_string());
+        lightning.contact = Some("lightning_contact_pubky".to_string());
+
+        db.insert_onchain_activity(&onchain).unwrap();
+        db.insert_lightning_activity(&lightning).unwrap();
+
+        let onchain_by_id = db.get_activity_by_id(&onchain.id).unwrap().unwrap();
+        match onchain_by_id {
+            Activity::Onchain(activity) => {
+                assert_eq!(activity.contact, Some("onchain_contact_pubky".to_string()));
+            }
+            Activity::Lightning(_) => panic!("Expected Onchain activity"),
+        }
+
+        let onchain_by_tx_id = db.get_activity_by_tx_id(&onchain.tx_id).unwrap().unwrap();
+        assert_eq!(
+            onchain_by_tx_id.contact,
+            Some("onchain_contact_pubky".to_string())
+        );
+
+        let activities = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+
+        assert!(activities.iter().any(|activity| {
+            matches!(activity, Activity::Onchain(a) if a.contact.as_deref() == Some("onchain_contact_pubky"))
+        }));
+        assert!(activities.iter().any(|activity| {
+            matches!(activity, Activity::Lightning(a) if a.contact.as_deref() == Some("lightning_contact_pubky"))
+        }));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_contact_updates_and_searches() {
+        let (mut db, db_path) = setup();
+        let mut activity = create_test_lightning_activity();
+
+        db.insert_lightning_activity(&activity).unwrap();
+        activity.contact = Some("searchable_contact_pubky".to_string());
+        db.update_lightning_activity_by_id(&activity.id, &activity)
+            .unwrap();
+
+        let results = db
+            .get_activities(
+                Some(ActivityFilter::All),
+                None,
+                None,
+                Some("searchable_contact".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+
+        assert_eq!(results.len(), 1);
+        match &results[0] {
+            Activity::Lightning(retrieved) => {
+                assert_eq!(
+                    retrieved.contact,
+                    Some("searchable_contact_pubky".to_string())
+                );
+            }
+            Activity::Onchain(_) => panic!("Expected Lightning activity"),
         }
 
         cleanup(&db_path);

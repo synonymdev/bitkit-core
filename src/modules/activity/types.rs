@@ -100,6 +100,8 @@ pub struct OnchainActivity {
     pub channel_id: Option<String>,
     pub transfer_tx_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub contact: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub created_at: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub updated_at: Option<u64>,
@@ -118,6 +120,8 @@ pub struct LightningActivity {
     pub message: String,
     pub timestamp: u64,
     pub preimage: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub contact: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub created_at: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]

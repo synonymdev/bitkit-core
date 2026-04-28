@@ -6645,13 +6645,14 @@ public struct LightningActivity {
     public var message: String
     public var timestamp: UInt64
     public var preimage: String?
+    public var contact: String?
     public var createdAt: UInt64?
     public var updatedAt: UInt64?
     public var seenAt: UInt64?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, txType: PaymentType, status: PaymentState, value: UInt64, fee: UInt64?, invoice: String, message: String, timestamp: UInt64, preimage: String?, createdAt: UInt64?, updatedAt: UInt64?, seenAt: UInt64?) {
+    public init(id: String, txType: PaymentType, status: PaymentState, value: UInt64, fee: UInt64?, invoice: String, message: String, timestamp: UInt64, preimage: String?, contact: String?, createdAt: UInt64?, updatedAt: UInt64?, seenAt: UInt64?) {
         self.id = id
         self.txType = txType
         self.status = status
@@ -6661,6 +6662,7 @@ public struct LightningActivity {
         self.message = message
         self.timestamp = timestamp
         self.preimage = preimage
+        self.contact = contact
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.seenAt = seenAt
@@ -6701,6 +6703,9 @@ extension LightningActivity: Equatable, Hashable {
         if lhs.preimage != rhs.preimage {
             return false
         }
+        if lhs.contact != rhs.contact {
+            return false
+        }
         if lhs.createdAt != rhs.createdAt {
             return false
         }
@@ -6723,6 +6728,7 @@ extension LightningActivity: Equatable, Hashable {
         hasher.combine(message)
         hasher.combine(timestamp)
         hasher.combine(preimage)
+        hasher.combine(contact)
         hasher.combine(createdAt)
         hasher.combine(updatedAt)
         hasher.combine(seenAt)
@@ -6749,6 +6755,7 @@ public struct FfiConverterTypeLightningActivity: FfiConverterRustBuffer {
                 message: FfiConverterString.read(from: &buf), 
                 timestamp: FfiConverterUInt64.read(from: &buf), 
                 preimage: FfiConverterOptionString.read(from: &buf), 
+                contact: FfiConverterOptionString.read(from: &buf), 
                 createdAt: FfiConverterOptionUInt64.read(from: &buf), 
                 updatedAt: FfiConverterOptionUInt64.read(from: &buf), 
                 seenAt: FfiConverterOptionUInt64.read(from: &buf)
@@ -6765,6 +6772,7 @@ public struct FfiConverterTypeLightningActivity: FfiConverterRustBuffer {
         FfiConverterString.write(value.message, into: &buf)
         FfiConverterUInt64.write(value.timestamp, into: &buf)
         FfiConverterOptionString.write(value.preimage, into: &buf)
+        FfiConverterOptionString.write(value.contact, into: &buf)
         FfiConverterOptionUInt64.write(value.createdAt, into: &buf)
         FfiConverterOptionUInt64.write(value.updatedAt, into: &buf)
         FfiConverterOptionUInt64.write(value.seenAt, into: &buf)
@@ -7645,13 +7653,14 @@ public struct OnchainActivity {
     public var confirmTimestamp: UInt64?
     public var channelId: String?
     public var transferTxId: String?
+    public var contact: String?
     public var createdAt: UInt64?
     public var updatedAt: UInt64?
     public var seenAt: UInt64?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, txType: PaymentType, txId: String, value: UInt64, fee: UInt64, feeRate: UInt64, address: String, confirmed: Bool, timestamp: UInt64, isBoosted: Bool, boostTxIds: [String], isTransfer: Bool, doesExist: Bool, confirmTimestamp: UInt64?, channelId: String?, transferTxId: String?, createdAt: UInt64?, updatedAt: UInt64?, seenAt: UInt64?) {
+    public init(id: String, txType: PaymentType, txId: String, value: UInt64, fee: UInt64, feeRate: UInt64, address: String, confirmed: Bool, timestamp: UInt64, isBoosted: Bool, boostTxIds: [String], isTransfer: Bool, doesExist: Bool, confirmTimestamp: UInt64?, channelId: String?, transferTxId: String?, contact: String?, createdAt: UInt64?, updatedAt: UInt64?, seenAt: UInt64?) {
         self.id = id
         self.txType = txType
         self.txId = txId
@@ -7668,6 +7677,7 @@ public struct OnchainActivity {
         self.confirmTimestamp = confirmTimestamp
         self.channelId = channelId
         self.transferTxId = transferTxId
+        self.contact = contact
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.seenAt = seenAt
@@ -7729,6 +7739,9 @@ extension OnchainActivity: Equatable, Hashable {
         if lhs.transferTxId != rhs.transferTxId {
             return false
         }
+        if lhs.contact != rhs.contact {
+            return false
+        }
         if lhs.createdAt != rhs.createdAt {
             return false
         }
@@ -7758,6 +7771,7 @@ extension OnchainActivity: Equatable, Hashable {
         hasher.combine(confirmTimestamp)
         hasher.combine(channelId)
         hasher.combine(transferTxId)
+        hasher.combine(contact)
         hasher.combine(createdAt)
         hasher.combine(updatedAt)
         hasher.combine(seenAt)
@@ -7791,6 +7805,7 @@ public struct FfiConverterTypeOnchainActivity: FfiConverterRustBuffer {
                 confirmTimestamp: FfiConverterOptionUInt64.read(from: &buf), 
                 channelId: FfiConverterOptionString.read(from: &buf), 
                 transferTxId: FfiConverterOptionString.read(from: &buf), 
+                contact: FfiConverterOptionString.read(from: &buf), 
                 createdAt: FfiConverterOptionUInt64.read(from: &buf), 
                 updatedAt: FfiConverterOptionUInt64.read(from: &buf), 
                 seenAt: FfiConverterOptionUInt64.read(from: &buf)
@@ -7814,6 +7829,7 @@ public struct FfiConverterTypeOnchainActivity: FfiConverterRustBuffer {
         FfiConverterOptionUInt64.write(value.confirmTimestamp, into: &buf)
         FfiConverterOptionString.write(value.channelId, into: &buf)
         FfiConverterOptionString.write(value.transferTxId, into: &buf)
+        FfiConverterOptionString.write(value.contact, into: &buf)
         FfiConverterOptionUInt64.write(value.createdAt, into: &buf)
         FfiConverterOptionUInt64.write(value.updatedAt, into: &buf)
         FfiConverterOptionUInt64.write(value.seenAt, into: &buf)

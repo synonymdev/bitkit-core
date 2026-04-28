@@ -6220,6 +6220,7 @@ public object FfiConverterTypeLightningActivity: FfiConverterRustBuffer<Lightnin
             FfiConverterString.read(buf),
             FfiConverterULong.read(buf),
             FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
             FfiConverterOptionalULong.read(buf),
             FfiConverterOptionalULong.read(buf),
             FfiConverterOptionalULong.read(buf),
@@ -6236,6 +6237,7 @@ public object FfiConverterTypeLightningActivity: FfiConverterRustBuffer<Lightnin
             FfiConverterString.allocationSize(value.`message`) +
             FfiConverterULong.allocationSize(value.`timestamp`) +
             FfiConverterOptionalString.allocationSize(value.`preimage`) +
+            FfiConverterOptionalString.allocationSize(value.`contact`) +
             FfiConverterOptionalULong.allocationSize(value.`createdAt`) +
             FfiConverterOptionalULong.allocationSize(value.`updatedAt`) +
             FfiConverterOptionalULong.allocationSize(value.`seenAt`)
@@ -6251,6 +6253,7 @@ public object FfiConverterTypeLightningActivity: FfiConverterRustBuffer<Lightnin
         FfiConverterString.write(value.`message`, buf)
         FfiConverterULong.write(value.`timestamp`, buf)
         FfiConverterOptionalString.write(value.`preimage`, buf)
+        FfiConverterOptionalString.write(value.`contact`, buf)
         FfiConverterOptionalULong.write(value.`createdAt`, buf)
         FfiConverterOptionalULong.write(value.`updatedAt`, buf)
         FfiConverterOptionalULong.write(value.`seenAt`, buf)
@@ -6542,6 +6545,7 @@ public object FfiConverterTypeOnchainActivity: FfiConverterRustBuffer<OnchainAct
             FfiConverterOptionalULong.read(buf),
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
             FfiConverterOptionalULong.read(buf),
             FfiConverterOptionalULong.read(buf),
             FfiConverterOptionalULong.read(buf),
@@ -6565,6 +6569,7 @@ public object FfiConverterTypeOnchainActivity: FfiConverterRustBuffer<OnchainAct
             FfiConverterOptionalULong.allocationSize(value.`confirmTimestamp`) +
             FfiConverterOptionalString.allocationSize(value.`channelId`) +
             FfiConverterOptionalString.allocationSize(value.`transferTxId`) +
+            FfiConverterOptionalString.allocationSize(value.`contact`) +
             FfiConverterOptionalULong.allocationSize(value.`createdAt`) +
             FfiConverterOptionalULong.allocationSize(value.`updatedAt`) +
             FfiConverterOptionalULong.allocationSize(value.`seenAt`)
@@ -6587,6 +6592,7 @@ public object FfiConverterTypeOnchainActivity: FfiConverterRustBuffer<OnchainAct
         FfiConverterOptionalULong.write(value.`confirmTimestamp`, buf)
         FfiConverterOptionalString.write(value.`channelId`, buf)
         FfiConverterOptionalString.write(value.`transferTxId`, buf)
+        FfiConverterOptionalString.write(value.`contact`, buf)
         FfiConverterOptionalULong.write(value.`createdAt`, buf)
         FfiConverterOptionalULong.write(value.`updatedAt`, buf)
         FfiConverterOptionalULong.write(value.`seenAt`, buf)

@@ -17,7 +17,8 @@ const CREATE_ACTIVITIES_TABLE: &str = "
         timestamp INTEGER NOT NULL CHECK (timestamp > 0),
         created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
         updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-        seen_at INTEGER CHECK (seen_at IS NULL OR seen_at > 0)
+        seen_at INTEGER CHECK (seen_at IS NULL OR seen_at > 0),
+        contact TEXT CHECK (contact IS NULL OR length(contact) > 0)
     )";
 
 const CREATE_ONCHAIN_TABLE: &str = "
@@ -184,10 +185,16 @@ const TRIGGER_STATEMENTS: &[&str] = &[
 /// Each entry is (column_name, ALTER TABLE statement). The column is checked
 /// via `PRAGMA table_info` before running the statement to avoid relying on
 /// locale-dependent SQLite error messages.
-const MIGRATIONS: &[(&str, &str)] = &[(
-    "seen_at",
-    "ALTER TABLE activities ADD COLUMN seen_at INTEGER CHECK (seen_at IS NULL OR seen_at > 0)",
-)];
+const MIGRATIONS: &[(&str, &str)] = &[
+    (
+        "seen_at",
+        "ALTER TABLE activities ADD COLUMN seen_at INTEGER CHECK (seen_at IS NULL OR seen_at > 0)",
+    ),
+    (
+        "contact",
+        "ALTER TABLE activities ADD COLUMN contact TEXT CHECK (contact IS NULL OR length(contact) > 0)",
+    ),
+];
 
 impl ActivityDB {
     /// Creates a new ActivityDB instance with the specified database path.
@@ -368,9 +375,9 @@ impl ActivityDB {
 
         let activities_sql = "
             INSERT INTO activities (
-                id, activity_type, tx_type, timestamp
+                id, activity_type, tx_type, timestamp, contact
             ) VALUES (
-                ?1, 'onchain', ?2, ?3
+                ?1, 'onchain', ?2, ?3, ?4
             )";
 
         tx.execute(
@@ -379,6 +386,7 @@ impl ActivityDB {
                 &activity.id,
                 Self::payment_type_to_string(&activity.tx_type),
                 activity.timestamp,
+                &activity.contact,
             ),
         )
         .map_err(|e| ActivityError::InsertError {
@@ -454,9 +462,9 @@ impl ActivityDB {
 
         let activities_sql = "
             INSERT INTO activities (
-                id, activity_type, tx_type, timestamp
+                id, activity_type, tx_type, timestamp, contact
             ) VALUES (
-                ?1, 'lightning', ?2, ?3
+                ?1, 'lightning', ?2, ?3, ?4
             )";
 
         tx.execute(
@@ -465,6 +473,7 @@ impl ActivityDB {
                 &activity.id,
                 Self::payment_type_to_string(&activity.tx_type),
                 activity.timestamp,
+                &activity.contact,
             ),
         )
         .map_err(|e| ActivityError::InsertError {
@@ -520,7 +529,7 @@ impl ActivityDB {
 
         {
             let mut stmt_act = tx.prepare(
-                "INSERT OR REPLACE INTO activities (id, activity_type, tx_type, timestamp) VALUES (?1, 'onchain', ?2, ?3)"
+                "INSERT OR REPLACE INTO activities (id, activity_type, tx_type, timestamp, contact) VALUES (?1, 'onchain', ?2, ?3, ?4)"
             ).map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to prepare activities statement: {}", e),
             })?;
@@ -550,6 +559,7 @@ impl ActivityDB {
                         &activity.id,
                         Self::payment_type_to_string(&activity.tx_type),
                         activity.timestamp,
+                        &activity.contact,
                     ))
                     .map_err(|e| ActivityError::InsertError {
                         error_details: format!("Failed to upsert activities: {}", e),
@@ -603,7 +613,7 @@ impl ActivityDB {
 
         {
             let mut stmt_act = tx.prepare(
-                "INSERT OR REPLACE INTO activities (id, activity_type, tx_type, timestamp) VALUES (?1, 'lightning', ?2, ?3)"
+                "INSERT OR REPLACE INTO activities (id, activity_type, tx_type, timestamp, contact) VALUES (?1, 'lightning', ?2, ?3, ?4)"
             ).map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to prepare activities statement: {}", e),
             })?;
@@ -631,6 +641,7 @@ impl ActivityDB {
                         &activity.id,
                         Self::payment_type_to_string(&activity.tx_type),
                         activity.timestamp,
+                        &activity.contact,
                     ))
                     .map_err(|e| ActivityError::InsertError {
                         error_details: format!("Failed to upsert activities: {}", e),
@@ -728,10 +739,11 @@ impl ActivityDB {
                 query.push_str(&format!(
                     " AND (
                 o.address LIKE '{}' OR
+                a.contact LIKE '{}' OR
                 l.invoice LIKE '{}' OR
                 l.message LIKE '{}'
             )",
-                    search_pattern, search_pattern, search_pattern
+                    search_pattern, search_pattern, search_pattern, search_pattern
                 ));
             }
         }
@@ -771,7 +783,8 @@ impl ActivityDB {
             l.status AS ln_status,
             l.fee AS ln_fee,
             l.message AS ln_message,
-            l.preimage AS ln_preimage
+            l.preimage AS ln_preimage,
+            a.contact AS contact
 
         FROM activities a
         INNER JOIN filtered_activities fa ON a.id = fa.id
@@ -833,6 +846,7 @@ impl ActivityDB {
                             confirm_timestamp: confirm_timestamp.map(|t| t as u64),
                             channel_id: row.get(18)?,
                             transfer_tx_id: row.get(19)?,
+                            contact: row.get(26)?,
                         }))
                     }
                     "lightning" => {
@@ -856,6 +870,7 @@ impl ActivityDB {
                             fee: fee.map(|f| f as u64),
                             message: row.get(24)?,
                             preimage: row.get(25)?,
+                            contact: row.get(26)?,
                         }))
                     }
                     _ => Err(rusqlite::Error::InvalidColumnType(
@@ -903,7 +918,8 @@ impl ActivityDB {
                     a.id, a.tx_type, o.tx_id, o.value, o.fee, o.fee_rate,
                     o.address, o.confirmed, a.timestamp, o.is_boosted,
                     o.boost_tx_ids, o.is_transfer, o.does_exist, o.confirm_timestamp,
-                    o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at, a.seen_at
+                    o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at, a.seen_at,
+                    a.contact
                 FROM activities a
                 JOIN onchain_activity o ON a.id = o.id
                 WHERE a.id = ?1";
@@ -948,6 +964,7 @@ impl ActivityDB {
                         confirm_timestamp: confirm_timestamp.map(|t| t as u64),
                         channel_id: row.get(14)?,
                         transfer_tx_id: row.get(15)?,
+                        contact: row.get(19)?,
                         created_at: created_at.map(|t| t as u64),
                         updated_at: updated_at.map(|t| t as u64),
                         seen_at: seen_at.map(|t| t as u64),
@@ -966,7 +983,8 @@ impl ActivityDB {
                 SELECT
                     a.id, a.tx_type, l.status, l.value, l.fee,
                     l.invoice, l.message, a.timestamp,
-                    l.preimage, a.created_at, a.updated_at, a.seen_at
+                    l.preimage, a.created_at, a.updated_at, a.seen_at,
+                    a.contact
                 FROM activities a
                 JOIN lightning_activity l ON a.id = l.id
                 WHERE a.id = ?1";
@@ -997,6 +1015,7 @@ impl ActivityDB {
                             message: row.get(6)?,
                             timestamp: timestamp as u64,
                             preimage: row.get(8)?,
+                            contact: row.get(12)?,
                             created_at: created_at.map(|t| t as u64),
                             updated_at: updated_at.map(|t| t as u64),
                             seen_at: seen_at.map(|t| t as u64),
@@ -1022,7 +1041,8 @@ impl ActivityDB {
                 a.id, a.tx_type, o.tx_id, o.value, o.fee, o.fee_rate,
                 o.address, o.confirmed, a.timestamp, o.is_boosted,
                 o.boost_tx_ids, o.is_transfer, o.does_exist, o.confirm_timestamp,
-                o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at, a.seen_at
+                o.channel_id, o.transfer_tx_id, a.created_at, a.updated_at, a.seen_at,
+                a.contact
             FROM activities a
             JOIN onchain_activity o ON a.id = o.id
             WHERE o.tx_id = ?1 AND a.activity_type = 'onchain'
@@ -1068,6 +1088,7 @@ impl ActivityDB {
                 confirm_timestamp: confirm_timestamp.map(|t| t as u64),
                 channel_id: row.get(14)?,
                 transfer_tx_id: row.get(15)?,
+                contact: row.get(19)?,
                 created_at: created_at.map(|t| t as u64),
                 updated_at: updated_at.map(|t| t as u64),
                 seen_at: seen_at.map(|t| t as u64),
@@ -1099,8 +1120,9 @@ impl ActivityDB {
         let activities_sql = "
             UPDATE activities SET
                 tx_type = ?1,
-                timestamp = ?2
-            WHERE id = ?3 AND activity_type = 'onchain'";
+                timestamp = ?2,
+                contact = ?3
+            WHERE id = ?4 AND activity_type = 'onchain'";
 
         let rows = tx
             .execute(
@@ -1108,6 +1130,7 @@ impl ActivityDB {
                 (
                     Self::payment_type_to_string(&activity.tx_type),
                     activity.timestamp,
+                    &activity.contact,
                     activity_id,
                 ),
             )
@@ -1186,8 +1209,9 @@ impl ActivityDB {
         let activities_sql = "
             UPDATE activities SET
                 tx_type = ?1,
-                timestamp = ?2
-            WHERE id = ?3 AND activity_type = 'lightning'";
+                timestamp = ?2,
+                contact = ?3
+            WHERE id = ?4 AND activity_type = 'lightning'";
 
         let rows = tx
             .execute(
@@ -1195,6 +1219,7 @@ impl ActivityDB {
                 (
                     Self::payment_type_to_string(&activity.tx_type),
                     activity.timestamp,
+                    &activity.contact,
                     activity_id,
                 ),
             )
