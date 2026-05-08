@@ -5852,10 +5852,11 @@ class LightningActivity:
     message: "str"
     timestamp: "int"
     preimage: "typing.Optional[str]"
+    contact: "typing.Optional[str]"
     created_at: "typing.Optional[int]"
     updated_at: "typing.Optional[int]"
     seen_at: "typing.Optional[int]"
-    def __init__(self, *, id: "str", tx_type: "PaymentType", status: "PaymentState", value: "int", fee: "typing.Optional[int]", invoice: "str", message: "str", timestamp: "int", preimage: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]", seen_at: "typing.Optional[int]"):
+    def __init__(self, *, id: "str", tx_type: "PaymentType", status: "PaymentState", value: "int", fee: "typing.Optional[int]", invoice: "str", message: "str", timestamp: "int", preimage: "typing.Optional[str]", contact: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]", seen_at: "typing.Optional[int]"):
         self.id = id
         self.tx_type = tx_type
         self.status = status
@@ -5865,12 +5866,13 @@ class LightningActivity:
         self.message = message
         self.timestamp = timestamp
         self.preimage = preimage
+        self.contact = contact
         self.created_at = created_at
         self.updated_at = updated_at
         self.seen_at = seen_at
 
     def __str__(self):
-        return "LightningActivity(id={}, tx_type={}, status={}, value={}, fee={}, invoice={}, message={}, timestamp={}, preimage={}, created_at={}, updated_at={}, seen_at={})".format(self.id, self.tx_type, self.status, self.value, self.fee, self.invoice, self.message, self.timestamp, self.preimage, self.created_at, self.updated_at, self.seen_at)
+        return "LightningActivity(id={}, tx_type={}, status={}, value={}, fee={}, invoice={}, message={}, timestamp={}, preimage={}, contact={}, created_at={}, updated_at={}, seen_at={})".format(self.id, self.tx_type, self.status, self.value, self.fee, self.invoice, self.message, self.timestamp, self.preimage, self.contact, self.created_at, self.updated_at, self.seen_at)
 
     def __eq__(self, other):
         if self.id != other.id:
@@ -5890,6 +5892,8 @@ class LightningActivity:
         if self.timestamp != other.timestamp:
             return False
         if self.preimage != other.preimage:
+            return False
+        if self.contact != other.contact:
             return False
         if self.created_at != other.created_at:
             return False
@@ -5912,6 +5916,7 @@ class _UniffiConverterTypeLightningActivity(_UniffiConverterRustBuffer):
             message=_UniffiConverterString.read(buf),
             timestamp=_UniffiConverterUInt64.read(buf),
             preimage=_UniffiConverterOptionalString.read(buf),
+            contact=_UniffiConverterOptionalString.read(buf),
             created_at=_UniffiConverterOptionalUInt64.read(buf),
             updated_at=_UniffiConverterOptionalUInt64.read(buf),
             seen_at=_UniffiConverterOptionalUInt64.read(buf),
@@ -5928,6 +5933,7 @@ class _UniffiConverterTypeLightningActivity(_UniffiConverterRustBuffer):
         _UniffiConverterString.check_lower(value.message)
         _UniffiConverterUInt64.check_lower(value.timestamp)
         _UniffiConverterOptionalString.check_lower(value.preimage)
+        _UniffiConverterOptionalString.check_lower(value.contact)
         _UniffiConverterOptionalUInt64.check_lower(value.created_at)
         _UniffiConverterOptionalUInt64.check_lower(value.updated_at)
         _UniffiConverterOptionalUInt64.check_lower(value.seen_at)
@@ -5943,6 +5949,7 @@ class _UniffiConverterTypeLightningActivity(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.message, buf)
         _UniffiConverterUInt64.write(value.timestamp, buf)
         _UniffiConverterOptionalString.write(value.preimage, buf)
+        _UniffiConverterOptionalString.write(value.contact, buf)
         _UniffiConverterOptionalUInt64.write(value.created_at, buf)
         _UniffiConverterOptionalUInt64.write(value.updated_at, buf)
         _UniffiConverterOptionalUInt64.write(value.seen_at, buf)
@@ -6480,10 +6487,11 @@ class OnchainActivity:
     confirm_timestamp: "typing.Optional[int]"
     channel_id: "typing.Optional[str]"
     transfer_tx_id: "typing.Optional[str]"
+    contact: "typing.Optional[str]"
     created_at: "typing.Optional[int]"
     updated_at: "typing.Optional[int]"
     seen_at: "typing.Optional[int]"
-    def __init__(self, *, id: "str", tx_type: "PaymentType", tx_id: "str", value: "int", fee: "int", fee_rate: "int", address: "str", confirmed: "bool", timestamp: "int", is_boosted: "bool", boost_tx_ids: "typing.List[str]", is_transfer: "bool", does_exist: "bool", confirm_timestamp: "typing.Optional[int]", channel_id: "typing.Optional[str]", transfer_tx_id: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]", seen_at: "typing.Optional[int]"):
+    def __init__(self, *, id: "str", tx_type: "PaymentType", tx_id: "str", value: "int", fee: "int", fee_rate: "int", address: "str", confirmed: "bool", timestamp: "int", is_boosted: "bool", boost_tx_ids: "typing.List[str]", is_transfer: "bool", does_exist: "bool", confirm_timestamp: "typing.Optional[int]", channel_id: "typing.Optional[str]", transfer_tx_id: "typing.Optional[str]", contact: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]", seen_at: "typing.Optional[int]"):
         self.id = id
         self.tx_type = tx_type
         self.tx_id = tx_id
@@ -6500,12 +6508,13 @@ class OnchainActivity:
         self.confirm_timestamp = confirm_timestamp
         self.channel_id = channel_id
         self.transfer_tx_id = transfer_tx_id
+        self.contact = contact
         self.created_at = created_at
         self.updated_at = updated_at
         self.seen_at = seen_at
 
     def __str__(self):
-        return "OnchainActivity(id={}, tx_type={}, tx_id={}, value={}, fee={}, fee_rate={}, address={}, confirmed={}, timestamp={}, is_boosted={}, boost_tx_ids={}, is_transfer={}, does_exist={}, confirm_timestamp={}, channel_id={}, transfer_tx_id={}, created_at={}, updated_at={}, seen_at={})".format(self.id, self.tx_type, self.tx_id, self.value, self.fee, self.fee_rate, self.address, self.confirmed, self.timestamp, self.is_boosted, self.boost_tx_ids, self.is_transfer, self.does_exist, self.confirm_timestamp, self.channel_id, self.transfer_tx_id, self.created_at, self.updated_at, self.seen_at)
+        return "OnchainActivity(id={}, tx_type={}, tx_id={}, value={}, fee={}, fee_rate={}, address={}, confirmed={}, timestamp={}, is_boosted={}, boost_tx_ids={}, is_transfer={}, does_exist={}, confirm_timestamp={}, channel_id={}, transfer_tx_id={}, contact={}, created_at={}, updated_at={}, seen_at={})".format(self.id, self.tx_type, self.tx_id, self.value, self.fee, self.fee_rate, self.address, self.confirmed, self.timestamp, self.is_boosted, self.boost_tx_ids, self.is_transfer, self.does_exist, self.confirm_timestamp, self.channel_id, self.transfer_tx_id, self.contact, self.created_at, self.updated_at, self.seen_at)
 
     def __eq__(self, other):
         if self.id != other.id:
@@ -6540,6 +6549,8 @@ class OnchainActivity:
             return False
         if self.transfer_tx_id != other.transfer_tx_id:
             return False
+        if self.contact != other.contact:
+            return False
         if self.created_at != other.created_at:
             return False
         if self.updated_at != other.updated_at:
@@ -6568,6 +6579,7 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
             confirm_timestamp=_UniffiConverterOptionalUInt64.read(buf),
             channel_id=_UniffiConverterOptionalString.read(buf),
             transfer_tx_id=_UniffiConverterOptionalString.read(buf),
+            contact=_UniffiConverterOptionalString.read(buf),
             created_at=_UniffiConverterOptionalUInt64.read(buf),
             updated_at=_UniffiConverterOptionalUInt64.read(buf),
             seen_at=_UniffiConverterOptionalUInt64.read(buf),
@@ -6591,6 +6603,7 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalUInt64.check_lower(value.confirm_timestamp)
         _UniffiConverterOptionalString.check_lower(value.channel_id)
         _UniffiConverterOptionalString.check_lower(value.transfer_tx_id)
+        _UniffiConverterOptionalString.check_lower(value.contact)
         _UniffiConverterOptionalUInt64.check_lower(value.created_at)
         _UniffiConverterOptionalUInt64.check_lower(value.updated_at)
         _UniffiConverterOptionalUInt64.check_lower(value.seen_at)
@@ -6613,6 +6626,7 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalUInt64.write(value.confirm_timestamp, buf)
         _UniffiConverterOptionalString.write(value.channel_id, buf)
         _UniffiConverterOptionalString.write(value.transfer_tx_id, buf)
+        _UniffiConverterOptionalString.write(value.contact, buf)
         _UniffiConverterOptionalUInt64.write(value.created_at, buf)
         _UniffiConverterOptionalUInt64.write(value.updated_at, buf)
         _UniffiConverterOptionalUInt64.write(value.seen_at, buf)

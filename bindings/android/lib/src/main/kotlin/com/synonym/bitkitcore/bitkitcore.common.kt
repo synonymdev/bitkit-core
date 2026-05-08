@@ -1086,6 +1086,7 @@ public data class LightningActivity (
     val `message`: kotlin.String, 
     val `timestamp`: kotlin.ULong, 
     val `preimage`: kotlin.String?, 
+    val `contact`: kotlin.String?, 
     val `createdAt`: kotlin.ULong?, 
     val `updatedAt`: kotlin.ULong?, 
     val `seenAt`: kotlin.ULong?
@@ -1302,6 +1303,7 @@ public data class OnchainActivity (
     val `confirmTimestamp`: kotlin.ULong?, 
     val `channelId`: kotlin.String?, 
     val `transferTxId`: kotlin.String?, 
+    val `contact`: kotlin.String?, 
     val `createdAt`: kotlin.ULong?, 
     val `updatedAt`: kotlin.ULong?, 
     val `seenAt`: kotlin.ULong?
