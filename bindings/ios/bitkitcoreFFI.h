@@ -585,6 +585,11 @@ RustBuffer uniffi_bitkitcore_fn_func_derive_bitcoin_address(RustBuffer mnemonic_
 RustBuffer uniffi_bitkitcore_fn_func_derive_bitcoin_addresses(RustBuffer mnemonic_phrase, RustBuffer derivation_path_str, RustBuffer network, RustBuffer bip39_passphrase, RustBuffer is_change, RustBuffer start_index, RustBuffer count, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_ONCHAIN_DESCRIPTOR
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_ONCHAIN_DESCRIPTOR
+RustBuffer uniffi_bitkitcore_fn_func_derive_onchain_descriptor(RustBuffer mnemonic_phrase, RustBuffer network, RustBuffer bip39_passphrase, RustBuffer account_type, uint32_t account_index, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_PRIVATE_KEY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_PRIVATE_KEY
 RustBuffer uniffi_bitkitcore_fn_func_derive_private_key(RustBuffer mnemonic_phrase, RustBuffer derivation_path_str, RustBuffer network, RustBuffer bip39_passphrase, RustCallStatus *_Nonnull out_status
@@ -1589,6 +1594,12 @@ uint16_t uniffi_bitkitcore_checksum_func_derive_bitcoin_address(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_BITCOIN_ADDRESSES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_BITCOIN_ADDRESSES
 uint16_t uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_ONCHAIN_DESCRIPTOR
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_ONCHAIN_DESCRIPTOR
+uint16_t uniffi_bitkitcore_checksum_func_derive_onchain_descriptor(void
     
 );
 #endif

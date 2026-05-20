@@ -3,8 +3,8 @@
 
 import PackageDescription
 
-let tag = "v0.1.58"
-let checksum = "89821971ec3f1ce8c16ac46ed5b35ddaf127e087113829b1a6b6cb023a449c88"
+let tag = "v0.1.59"
+let checksum = "7529d057706e83875901bbcf87a3643246d7914558c0b26dbe60b93a5795791b"
 let url = "https://github.com/synonymdev/bitkit-core/releases/download/\(tag)/BitkitCore.xcframework.zip"
 
 let package = Package(
@@ -28,8 +28,7 @@ let package = Package(
         ),
         .binaryTarget(
             name: "BitkitCoreFFI",
-            url: url,
-            checksum: checksum
+            path: "./bindings/ios/BitkitCore.xcframework"
         )
     ]
 )
