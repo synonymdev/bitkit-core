@@ -1429,6 +1429,8 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1535,6 +1537,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses() != 34371.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_derive_onchain_descriptor() != 49652.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_derive_private_key() != 25155.toShort()) {
@@ -1989,6 +1994,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_derive_onchain_descriptor(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_derive_private_key(
@@ -2628,6 +2636,15 @@ internal object UniffiLib : Library {
         `isChange`: RustBufferByValue,
         `startIndex`: RustBufferByValue,
         `count`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_derive_onchain_descriptor(
+        `mnemonicPhrase`: RustBufferByValue,
+        `network`: RustBufferByValue,
+        `bip39Passphrase`: RustBufferByValue,
+        `accountType`: RustBufferByValue,
+        `accountIndex`: Int,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
@@ -12487,6 +12504,20 @@ public fun `deriveBitcoinAddresses`(`mnemonicPhrase`: kotlin.String, `derivation
             FfiConverterOptionalBoolean.lower(`isChange`),
             FfiConverterOptionalUInt.lower(`startIndex`),
             FfiConverterOptionalUInt.lower(`count`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+@Throws(AddressException::class)
+public fun `deriveOnchainDescriptor`(`mnemonicPhrase`: kotlin.String, `network`: Network, `bip39Passphrase`: kotlin.String?, `accountType`: AccountType, `accountIndex`: kotlin.UInt): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(AddressExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_derive_onchain_descriptor(
+            FfiConverterString.lower(`mnemonicPhrase`),
+            FfiConverterTypeNetwork.lower(`network`),
+            FfiConverterOptionalString.lower(`bip39Passphrase`),
+            FfiConverterTypeAccountType.lower(`accountType`),
+            FfiConverterUInt.lower(`accountIndex`),
             uniffiRustCallStatus,
         )
     })
