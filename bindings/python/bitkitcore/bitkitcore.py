@@ -507,6 +507,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses() != 34371:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_derive_onchain_descriptor() != 49652:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_derive_private_key() != 25155:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_derive_pubky_secret_key() != 36989:
@@ -1165,6 +1167,15 @@ _UniffiLib.uniffi_bitkitcore_fn_func_derive_bitcoin_addresses.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_derive_bitcoin_addresses.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_onchain_descriptor.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.c_uint32,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_onchain_descriptor.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_derive_private_key.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -2068,6 +2079,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_address.restype = ctyp
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_onchain_descriptor.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_onchain_descriptor.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_private_key.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_private_key.restype = ctypes.c_uint16
@@ -17622,6 +17636,25 @@ def derive_bitcoin_addresses(mnemonic_phrase: "str",derivation_path_str: "typing
         _UniffiConverterOptionalUInt32.lower(count)))
 
 
+def derive_onchain_descriptor(mnemonic_phrase: "str",network: "Network",bip39_passphrase: "typing.Optional[str]",account_type: "AccountType",account_index: "int") -> "str":
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+    
+    _UniffiConverterTypeNetwork.check_lower(network)
+    
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+    
+    _UniffiConverterTypeAccountType.check_lower(account_type)
+    
+    _UniffiConverterUInt32.check_lower(account_index)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_derive_onchain_descriptor,
+        _UniffiConverterString.lower(mnemonic_phrase),
+        _UniffiConverterTypeNetwork.lower(network),
+        _UniffiConverterOptionalString.lower(bip39_passphrase),
+        _UniffiConverterTypeAccountType.lower(account_type),
+        _UniffiConverterUInt32.lower(account_index)))
+
+
 def derive_private_key(mnemonic_phrase: "str",derivation_path_str: "typing.Optional[str]",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]") -> "str":
     _UniffiConverterString.check_lower(mnemonic_phrase)
     
@@ -19549,6 +19582,7 @@ __all__ = [
     "delete_transaction_details",
     "derive_bitcoin_address",
     "derive_bitcoin_addresses",
+    "derive_onchain_descriptor",
     "derive_private_key",
     "derive_pubky_secret_key",
     "entropy_to_mnemonic",

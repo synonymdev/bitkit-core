@@ -1,9 +1,13 @@
 #[cfg(test)]
 mod tests {
-    use crate::modules::onchain::{AddressType, BitcoinAddressValidator};
+    use crate::modules::onchain::{AccountType, AddressType, BitcoinAddressValidator};
     use crate::modules::scanner::NetworkType;
     use crate::onchain::types::WordCount;
-    use bitcoin::Network;
+    use bdk::database::MemoryDatabase;
+    use bdk::wallet::{AddressIndex as BdkAddressIndex, Wallet};
+    use bitcoin::bip32::Xpub;
+    use bitcoin::{Network, NetworkKind};
+    use std::str::FromStr;
 
     #[test]
     fn test_address_types() {
@@ -200,6 +204,75 @@ mod tests {
         assert_eq!(result.addresses.len(), 2);
         assert_eq!(result.addresses[0].path, "m/84'/0'/0'/0/5");
         assert_eq!(result.addresses[1].path, "m/84'/0'/0'/0/6");
+    }
+
+    #[test]
+    fn test_derive_onchain_descriptor() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let result = BitcoinAddressValidator::derive_onchain_descriptor(
+            mnemonic,
+            Network::Bitcoin,
+            None,
+            AccountType::NativeSegwit,
+            0,
+        )
+        .unwrap();
+
+        assert!(result.starts_with("wpkh([73c5da0a/84'/0'/0']xpub"));
+        assert!(result.ends_with("/0/*)"));
+
+        let wallet = Wallet::new(
+            result.as_str(),
+            None,
+            bdk::bitcoin::Network::Bitcoin,
+            MemoryDatabase::new(),
+        )
+        .unwrap();
+        let address = wallet.get_address(BdkAddressIndex::Peek(0)).unwrap();
+        assert_eq!(
+            address.address.to_string(),
+            "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
+        );
+    }
+
+    #[test]
+    fn test_derive_onchain_descriptor_uses_test_coin_type_and_xpub_for_regtest() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let result = BitcoinAddressValidator::derive_onchain_descriptor(
+            mnemonic,
+            Network::Regtest,
+            None,
+            AccountType::NativeSegwit,
+            0,
+        )
+        .unwrap();
+
+        assert!(result.contains("/84'/1'/0']xpub"));
+
+        // BDK validates regtest descriptors with tpub; the exported descriptor
+        // keeps xpub while retaining the test coin type in the origin path.
+        let xpub = result
+            .split("]xpub")
+            .nth(1)
+            .and_then(|suffix| suffix.split('/').next())
+            .map(|suffix| format!("xpub{}", suffix))
+            .unwrap();
+        let mut testnet_xpub = Xpub::from_str(&xpub).unwrap();
+        testnet_xpub.network = NetworkKind::Test;
+        let regtest_descriptor = result.replace(&xpub, &testnet_xpub.to_string());
+
+        let wallet = Wallet::new(
+            regtest_descriptor.as_str(),
+            None,
+            bdk::bitcoin::Network::Regtest,
+            MemoryDatabase::new(),
+        )
+        .unwrap();
+        let address = wallet.get_address(BdkAddressIndex::Peek(0)).unwrap();
+        assert_eq!(
+            address.address.to_string(),
+            "bcrt1q6rz28mcfaxtmd6v789l9rrlrusdprr9pz3cppk"
+        );
     }
 
     #[test]

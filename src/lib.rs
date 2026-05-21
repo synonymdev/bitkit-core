@@ -257,6 +257,23 @@ pub fn derive_private_key(
 }
 
 #[uniffi::export]
+pub fn derive_onchain_descriptor(
+    mnemonic_phrase: String,
+    network: Network,
+    bip39_passphrase: Option<String>,
+    account_type: AccountType,
+    account_index: u32,
+) -> Result<String, AddressError> {
+    onchain::BitcoinAddressValidator::derive_onchain_descriptor(
+        &mnemonic_phrase,
+        network.into(),
+        bip39_passphrase.as_deref(),
+        account_type,
+        account_index,
+    )
+}
+
+#[uniffi::export]
 pub fn validate_mnemonic(mnemonic_phrase: String) -> Result<(), AddressError> {
     onchain::BitcoinAddressValidator::validate_mnemonic(&mnemonic_phrase)
 }

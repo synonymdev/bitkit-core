@@ -13,13 +13,15 @@ use bdk::bitcoin::{
 use bdk::blockchain::ElectrumBlockchain;
 use bdk::database::MemoryDatabase;
 use bdk::electrum_client::ElectrumApi;
-use bdk::keys::bip39::Mnemonic;
+use bdk::keys::bip39::Mnemonic as BdkMnemonic;
 use bdk::template::{Bip44, Bip49, Bip86};
 use bdk::wallet::signer::SignOptions;
 use bdk::wallet::{AddressIndex as BdkAddressIndex, SyncOptions, Wallet};
 use bdk::KeychainKind;
+use bip39::Mnemonic as Bip39Mnemonic;
 use bitcoin::address::{Address, NetworkUnchecked};
-use bitcoin::Network;
+use bitcoin::bip32::{DerivationPath, Xpriv, Xpub};
+use bitcoin::{Network, NetworkKind};
 use bitcoin_address_generator;
 
 use super::errors::AccountInfoError;
@@ -187,6 +189,47 @@ impl BitcoinAddressValidator {
         Ok(private_key)
     }
 
+    pub fn derive_onchain_descriptor(
+        mnemonic_phrase: &str,
+        network: Network,
+        bip39_passphrase: Option<&str>,
+        account_type: AccountType,
+        account_index: u32,
+    ) -> Result<String, AddressError> {
+        let bdk_network = onchain_to_bdk_network(network.into());
+        let derivation_path = derive_base_path(account_type, bdk_network, account_index);
+
+        let mnemonic =
+            Bip39Mnemonic::parse(mnemonic_phrase).map_err(|_| AddressError::InvalidMnemonic)?;
+        let seed = mnemonic.to_seed(bip39_passphrase.unwrap_or(""));
+        let path = DerivationPath::from_str(&derivation_path)
+            .map_err(|_| AddressError::AddressDerivationFailed)?;
+
+        let secp = bitcoin::secp256k1::Secp256k1::new();
+        let root =
+            Xpriv::new_master(network, &seed).map_err(|_| AddressError::AddressDerivationFailed)?;
+        let account = root
+            .derive_priv(&secp, &path)
+            .map_err(|_| AddressError::AddressDerivationFailed)?;
+
+        let master_fingerprint = root.fingerprint(&secp).to_string();
+        let mut account_xpub = Xpub::from_priv(&secp, &account);
+        // Export standard xpub descriptors; the key origin path still carries
+        // the selected network's coin type.
+        account_xpub.network = NetworkKind::Main;
+        let account_xpub = account_xpub.to_string();
+        let key_origin_path = derivation_path
+            .strip_prefix("m/")
+            .unwrap_or(&derivation_path);
+        let (external_descriptor, _) = build_descriptors(
+            &account_xpub,
+            account_type,
+            Some((&master_fingerprint, key_origin_path)),
+        );
+
+        Ok(external_descriptor)
+    }
+
     fn create_sweep_wallets(
         mnemonic_phrase: &str,
         network: Network,
@@ -194,7 +237,7 @@ impl BitcoinAddressValidator {
     ) -> Result<SweepWallets, SweepError> {
         let bdk_network = onchain_to_bdk_network(network.into());
         let mnemonic =
-            Mnemonic::from_str(mnemonic_phrase).map_err(|_| SweepError::InvalidMnemonic)?;
+            BdkMnemonic::from_str(mnemonic_phrase).map_err(|_| SweepError::InvalidMnemonic)?;
         let key = (mnemonic.clone(), bip39_passphrase.map(String::from));
 
         let legacy_wallet = Wallet::new(
