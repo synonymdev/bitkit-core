@@ -19269,6 +19269,17 @@ public func deriveBitcoinAddresses(mnemonicPhrase: String, derivationPathStr: St
     )
 })
 }
+public func deriveOnchainDescriptor(mnemonicPhrase: String, network: Network, bip39Passphrase: String?, accountType: AccountType, accountIndex: UInt32)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeAddressError_lift) {
+    uniffi_bitkitcore_fn_func_derive_onchain_descriptor(
+        FfiConverterString.lower(mnemonicPhrase),
+        FfiConverterTypeNetwork_lower(network),
+        FfiConverterOptionString.lower(bip39Passphrase),
+        FfiConverterTypeAccountType_lower(accountType),
+        FfiConverterUInt32.lower(accountIndex),$0
+    )
+})
+}
 public func derivePrivateKey(mnemonicPhrase: String, derivationPathStr: String?, network: Network?, bip39Passphrase: String?)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeAddressError_lift) {
     uniffi_bitkitcore_fn_func_derive_private_key(
@@ -20712,6 +20723,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses() != 34371) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_derive_onchain_descriptor() != 49652) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_derive_private_key() != 25155) {
