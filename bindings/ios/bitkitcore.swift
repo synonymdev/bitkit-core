@@ -586,6 +586,206 @@ fileprivate struct FfiConverterData: FfiConverterRustBuffer {
 
 
 /**
+ * Callback interface for receiving watcher events.
+ *
+ * Implement this trait in Swift/Kotlin/Python to receive typed notifications
+ * from xpub watchers.
+ */
+public protocol EventListener: AnyObject, Sendable {
+    
+    /**
+     * Called when a watcher event occurs.
+     *
+     * `watcher_id` identifies which watcher produced the event.
+     * `event` is a typed enum — no JSON parsing needed.
+     */
+    func onEvent(watcherId: String, event: WatcherEvent) 
+    
+}
+/**
+ * Callback interface for receiving watcher events.
+ *
+ * Implement this trait in Swift/Kotlin/Python to receive typed notifications
+ * from xpub watchers.
+ */
+open class EventListenerImpl: EventListener, @unchecked Sendable {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_bitkitcore_fn_clone_eventlistener(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_bitkitcore_fn_free_eventlistener(pointer, $0) }
+    }
+
+    
+
+    
+    /**
+     * Called when a watcher event occurs.
+     *
+     * `watcher_id` identifies which watcher produced the event.
+     * `event` is a typed enum — no JSON parsing needed.
+     */
+open func onEvent(watcherId: String, event: WatcherEvent)  {try! rustCall() {
+    uniffi_bitkitcore_fn_method_eventlistener_on_event(self.uniffiClonePointer(),
+        FfiConverterString.lower(watcherId),
+        FfiConverterTypeWatcherEvent_lower(event),$0
+    )
+}
+}
+    
+
+}
+
+
+// Put the implementation in a struct so we don't pollute the top-level namespace
+fileprivate struct UniffiCallbackInterfaceEventListener {
+
+    // Create the VTable using a series of closures.
+    // Swift automatically converts these into C callback functions.
+    //
+    // This creates 1-element array, since this seems to be the only way to construct a const
+    // pointer that we can pass to the Rust code.
+    static let vtable: [UniffiVTableCallbackInterfaceEventListener] = [UniffiVTableCallbackInterfaceEventListener(
+        onEvent: { (
+            uniffiHandle: UInt64,
+            watcherId: RustBuffer,
+            event: RustBuffer,
+            uniffiOutReturn: UnsafeMutableRawPointer,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeEventListener.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return uniffiObj.onEvent(
+                     watcherId: try FfiConverterString.lift(watcherId),
+                     event: try FfiConverterTypeWatcherEvent_lift(event)
+                )
+            }
+
+            
+            let writeReturn = { () }
+            uniffiTraitInterfaceCall(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn
+            )
+        },
+        uniffiFree: { (uniffiHandle: UInt64) -> () in
+            let result = try? FfiConverterTypeEventListener.handleMap.remove(handle: uniffiHandle)
+            if result == nil {
+                print("Uniffi callback interface EventListener: handle missing in uniffiFree")
+            }
+        }
+    )]
+}
+
+private func uniffiCallbackInitEventListener() {
+    uniffi_bitkitcore_fn_init_callback_vtable_eventlistener(UniffiCallbackInterfaceEventListener.vtable)
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeEventListener: FfiConverter {
+    fileprivate static let handleMap = UniffiHandleMap<EventListener>()
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = EventListener
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> EventListener {
+        return EventListenerImpl(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: EventListener) -> UnsafeMutableRawPointer {
+        guard let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: handleMap.insert(obj: value))) else {
+            fatalError("Cast to UnsafeMutableRawPointer failed")
+        }
+        return ptr
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> EventListener {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: EventListener, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeEventListener_lift(_ pointer: UnsafeMutableRawPointer) throws -> EventListener {
+    return try FfiConverterTypeEventListener.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeEventListener_lower(_ value: EventListener) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeEventListener.lower(value)
+}
+
+
+
+
+
+
+/**
  * Callback interface for native Trezor transport operations
  *
  * This trait must be implemented by the native iOS/Android code.
@@ -1312,12 +1512,6 @@ public func FfiConverterTypeTrezorTransportCallback_lower(_ value: TrezorTranspo
  *
  * The native layer (iOS/Android) should implement this to show PIN/passphrase
  * input UI when the device requests it during operations like signing.
- *
- * Methods return `String`:
- * - Empty string (`""`) = cancel the request
- * - Non-empty string = the user's input (PIN or passphrase)
- *
- * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
 public protocol TrezorUiCallback: AnyObject, Sendable {
     
@@ -1332,13 +1526,14 @@ public protocol TrezorUiCallback: AnyObject, Sendable {
     /**
      * Called when the device requests a passphrase.
      *
-     * If `on_device` is true, the user should enter on the Trezor itself —
-     * return any non-empty string (e.g., "ok") to acknowledge.
+     * If `on_device` is true, the user should enter the passphrase on the
+     * Trezor itself — return `PassphraseResponse::Standard` (or
+     * `Hidden { value: "ok" }`) to acknowledge.
      *
-     * If `on_device` is false, show a passphrase input UI and return the value.
-     * Return empty string to cancel.
+     * If `on_device` is false, show a passphrase input UI and return the
+     * matching `PassphraseResponse` variant.
      */
-    func onPassphraseRequest(onDevice: Bool)  -> String
+    func onPassphraseRequest(onDevice: Bool)  -> PassphraseResponse
     
 }
 /**
@@ -1346,12 +1541,6 @@ public protocol TrezorUiCallback: AnyObject, Sendable {
  *
  * The native layer (iOS/Android) should implement this to show PIN/passphrase
  * input UI when the device requests it during operations like signing.
- *
- * Methods return `String`:
- * - Empty string (`""`) = cancel the request
- * - Non-empty string = the user's input (PIN or passphrase)
- *
- * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
 open class TrezorUiCallbackImpl: TrezorUiCallback, @unchecked Sendable {
     fileprivate let pointer: UnsafeMutableRawPointer!
@@ -1421,14 +1610,15 @@ open func onPinRequest() -> String  {
     /**
      * Called when the device requests a passphrase.
      *
-     * If `on_device` is true, the user should enter on the Trezor itself —
-     * return any non-empty string (e.g., "ok") to acknowledge.
+     * If `on_device` is true, the user should enter the passphrase on the
+     * Trezor itself — return `PassphraseResponse::Standard` (or
+     * `Hidden { value: "ok" }`) to acknowledge.
      *
-     * If `on_device` is false, show a passphrase input UI and return the value.
-     * Return empty string to cancel.
+     * If `on_device` is false, show a passphrase input UI and return the
+     * matching `PassphraseResponse` variant.
      */
-open func onPassphraseRequest(onDevice: Bool) -> String  {
-    return try!  FfiConverterString.lift(try! rustCall() {
+open func onPassphraseRequest(onDevice: Bool) -> PassphraseResponse  {
+    return try!  FfiConverterTypePassphraseResponse_lift(try! rustCall() {
     uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request(self.uniffiClonePointer(),
         FfiConverterBool.lower(onDevice),$0
     )
@@ -1477,7 +1667,7 @@ fileprivate struct UniffiCallbackInterfaceTrezorUiCallback {
             uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
         ) in
             let makeCall = {
-                () throws -> String in
+                () throws -> PassphraseResponse in
                 guard let uniffiObj = try? FfiConverterTypeTrezorUiCallback.handleMap.get(handle: uniffiHandle) else {
                     throw UniffiInternalError.unexpectedStaleHandle
                 }
@@ -1487,7 +1677,7 @@ fileprivate struct UniffiCallbackInterfaceTrezorUiCallback {
             }
 
             
-            let writeReturn = { uniffiOutReturn.pointee = FfiConverterString.lower($0) }
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterTypePassphraseResponse_lower($0) }
             uniffiTraitInterfaceCall(
                 callStatus: uniffiCallStatus,
                 makeCall: makeCall,
@@ -12643,6 +12833,149 @@ public func FfiConverterTypeWalletParams_lower(_ value: WalletParams) -> RustBuf
 
 
 /**
+ * Parameters for starting an xpub transaction watcher.
+ */
+public struct WatcherParams {
+    /**
+     * Caller-supplied identifier for this watcher.
+     */
+    public var watcherId: String
+    /**
+     * Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
+     */
+    public var extendedKey: String
+    /**
+     * Electrum server URL (e.g. "ssl://electrum.example.com:50002").
+     */
+    public var electrumUrl: String
+    /**
+     * Bitcoin network override (auto-detected from key prefix if None).
+     */
+    public var network: Network?
+    /**
+     * Account type override (auto-detected from key prefix if None).
+     */
+    public var accountType: AccountType?
+    /**
+     * Number of unused addresses to monitor beyond the last used (default 20).
+     */
+    public var gapLimit: UInt32?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Caller-supplied identifier for this watcher.
+         */watcherId: String, 
+        /**
+         * Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
+         */extendedKey: String, 
+        /**
+         * Electrum server URL (e.g. "ssl://electrum.example.com:50002").
+         */electrumUrl: String, 
+        /**
+         * Bitcoin network override (auto-detected from key prefix if None).
+         */network: Network?, 
+        /**
+         * Account type override (auto-detected from key prefix if None).
+         */accountType: AccountType?, 
+        /**
+         * Number of unused addresses to monitor beyond the last used (default 20).
+         */gapLimit: UInt32?) {
+        self.watcherId = watcherId
+        self.extendedKey = extendedKey
+        self.electrumUrl = electrumUrl
+        self.network = network
+        self.accountType = accountType
+        self.gapLimit = gapLimit
+    }
+}
+
+#if compiler(>=6)
+extension WatcherParams: Sendable {}
+#endif
+
+
+extension WatcherParams: Equatable, Hashable {
+    public static func ==(lhs: WatcherParams, rhs: WatcherParams) -> Bool {
+        if lhs.watcherId != rhs.watcherId {
+            return false
+        }
+        if lhs.extendedKey != rhs.extendedKey {
+            return false
+        }
+        if lhs.electrumUrl != rhs.electrumUrl {
+            return false
+        }
+        if lhs.network != rhs.network {
+            return false
+        }
+        if lhs.accountType != rhs.accountType {
+            return false
+        }
+        if lhs.gapLimit != rhs.gapLimit {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(watcherId)
+        hasher.combine(extendedKey)
+        hasher.combine(electrumUrl)
+        hasher.combine(network)
+        hasher.combine(accountType)
+        hasher.combine(gapLimit)
+    }
+}
+
+extension WatcherParams: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeWatcherParams: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> WatcherParams {
+        return
+            try WatcherParams(
+                watcherId: FfiConverterString.read(from: &buf), 
+                extendedKey: FfiConverterString.read(from: &buf), 
+                electrumUrl: FfiConverterString.read(from: &buf), 
+                network: FfiConverterOptionTypeNetwork.read(from: &buf), 
+                accountType: FfiConverterOptionTypeAccountType.read(from: &buf), 
+                gapLimit: FfiConverterOptionUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: WatcherParams, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.watcherId, into: &buf)
+        FfiConverterString.write(value.extendedKey, into: &buf)
+        FfiConverterString.write(value.electrumUrl, into: &buf)
+        FfiConverterOptionTypeNetwork.write(value.network, into: &buf)
+        FfiConverterOptionTypeAccountType.write(value.accountType, into: &buf)
+        FfiConverterOptionUInt32.write(value.gapLimit, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWatcherParams_lift(_ buf: RustBuffer) throws -> WatcherParams {
+    return try FfiConverterTypeWatcherParams.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWatcherParams_lower(_ value: WatcherParams) -> RustBuffer {
+    return FfiConverterTypeWatcherParams.lower(value)
+}
+
+
+/**
  * Errors specific to account info operations (BDK/Electrum-based).
  */
 public enum AccountInfoError: Swift.Error {
@@ -12694,6 +13027,11 @@ public enum AccountInfoError: Swift.Error {
      */
     case TransactionNotFound(errorDetails: String
     )
+    /**
+     * Watcher lifecycle or subscription error
+     */
+    case WatcherError(errorDetails: String
+    )
 }
 
 
@@ -12735,6 +13073,9 @@ public struct FfiConverterTypeAccountInfoError: FfiConverterRustBuffer {
             errorDetails: try FfiConverterString.read(from: &buf)
             )
         case 9: return .TransactionNotFound(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 10: return .WatcherError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
 
@@ -12791,6 +13132,11 @@ public struct FfiConverterTypeAccountInfoError: FfiConverterRustBuffer {
         
         case let .TransactionNotFound(errorDetails):
             writeInt(&buf, Int32(9))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .WatcherError(errorDetails):
+            writeInt(&buf, Int32(10))
             FfiConverterString.write(errorDetails, into: &buf)
             
         }
@@ -15550,6 +15896,97 @@ extension NetworkType: Codable {}
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
+public enum PassphraseResponse {
+    
+    /**
+     * User cancelled — aborts the pending operation.
+     */
+    case cancel
+    /**
+     * Standard wallet — no passphrase, equivalent to `Some("")` on the device.
+     */
+    case standard
+    /**
+     * Hidden wallet — derived from the supplied passphrase.
+     */
+    case hidden(value: String
+    )
+}
+
+
+#if compiler(>=6)
+extension PassphraseResponse: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePassphraseResponse: FfiConverterRustBuffer {
+    typealias SwiftType = PassphraseResponse
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PassphraseResponse {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .cancel
+        
+        case 2: return .standard
+        
+        case 3: return .hidden(value: try FfiConverterString.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: PassphraseResponse, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .cancel:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .standard:
+            writeInt(&buf, Int32(2))
+        
+        
+        case let .hidden(value):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(value, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePassphraseResponse_lift(_ buf: RustBuffer) throws -> PassphraseResponse {
+    return try FfiConverterTypePassphraseResponse.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePassphraseResponse_lower(_ value: PassphraseResponse) -> RustBuffer {
+    return FfiConverterTypePassphraseResponse.lower(value)
+}
+
+
+extension PassphraseResponse: Equatable, Hashable {}
+
+extension PassphraseResponse: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 public enum PaymentState {
     
     case pending
@@ -16403,6 +16840,10 @@ public enum TrezorError: Swift.Error {
      */
     case PassphraseRequired
     /**
+     * Passphrase entry cancelled
+     */
+    case PassphraseCancelled
+    /**
      * Action cancelled by user on device
      */
     case UserCancelled
@@ -16473,20 +16914,21 @@ public struct FfiConverterTypeTrezorError: FfiConverterRustBuffer {
         case 9: return .PinCancelled
         case 10: return .InvalidPin
         case 11: return .PassphraseRequired
-        case 12: return .UserCancelled
-        case 13: return .Timeout
-        case 14: return .InvalidPath(
+        case 12: return .PassphraseCancelled
+        case 13: return .UserCancelled
+        case 14: return .Timeout
+        case 15: return .InvalidPath(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 15: return .DeviceError(
+        case 16: return .DeviceError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 16: return .NotInitialized
-        case 17: return .NotConnected
-        case 18: return .SessionError(
+        case 17: return .NotInitialized
+        case 18: return .NotConnected
+        case 19: return .SessionError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 19: return .IoError(
+        case 20: return .IoError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
 
@@ -16549,39 +16991,43 @@ public struct FfiConverterTypeTrezorError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(11))
         
         
-        case .UserCancelled:
+        case .PassphraseCancelled:
             writeInt(&buf, Int32(12))
         
         
-        case .Timeout:
+        case .UserCancelled:
             writeInt(&buf, Int32(13))
         
         
-        case let .InvalidPath(errorDetails):
+        case .Timeout:
             writeInt(&buf, Int32(14))
-            FfiConverterString.write(errorDetails, into: &buf)
-            
         
-        case let .DeviceError(errorDetails):
+        
+        case let .InvalidPath(errorDetails):
             writeInt(&buf, Int32(15))
             FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case .NotInitialized:
+        case let .DeviceError(errorDetails):
             writeInt(&buf, Int32(16))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
         
-        
-        case .NotConnected:
+        case .NotInitialized:
             writeInt(&buf, Int32(17))
         
         
-        case let .SessionError(errorDetails):
+        case .NotConnected:
             writeInt(&buf, Int32(18))
+        
+        
+        case let .SessionError(errorDetails):
+            writeInt(&buf, Int32(19))
             FfiConverterString.write(errorDetails, into: &buf)
             
         
         case let .IoError(errorDetails):
-            writeInt(&buf, Int32(19))
+            writeInt(&buf, Int32(20))
             FfiConverterString.write(errorDetails, into: &buf)
             
         }
@@ -16907,6 +17353,120 @@ public func FfiConverterTypeTxDirection_lower(_ value: TxDirection) -> RustBuffe
 extension TxDirection: Equatable, Hashable {}
 
 extension TxDirection: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Events emitted by the onchain xpub watcher.
+ */
+
+public enum WatcherEvent {
+    
+    /**
+     * Transaction activity changed — contains full updated state.
+     */
+    case transactionsChanged(transactions: [HistoryTransaction], balance: WalletBalance, txCount: UInt32, blockHeight: UInt32, accountType: AccountType
+    )
+    /**
+     * An error occurred in the watcher loop.
+     */
+    case error(message: String
+    )
+    /**
+     * Connection to the Electrum server was lost.
+     */
+    case disconnected(message: String
+    )
+    /**
+     * Connection to the Electrum server was restored.
+     */
+    case reconnected
+}
+
+
+#if compiler(>=6)
+extension WatcherEvent: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeWatcherEvent: FfiConverterRustBuffer {
+    typealias SwiftType = WatcherEvent
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> WatcherEvent {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .transactionsChanged(transactions: try FfiConverterSequenceTypeHistoryTransaction.read(from: &buf), balance: try FfiConverterTypeWalletBalance.read(from: &buf), txCount: try FfiConverterUInt32.read(from: &buf), blockHeight: try FfiConverterUInt32.read(from: &buf), accountType: try FfiConverterTypeAccountType.read(from: &buf)
+        )
+        
+        case 2: return .error(message: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 3: return .disconnected(message: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 4: return .reconnected
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: WatcherEvent, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case let .transactionsChanged(transactions,balance,txCount,blockHeight,accountType):
+            writeInt(&buf, Int32(1))
+            FfiConverterSequenceTypeHistoryTransaction.write(transactions, into: &buf)
+            FfiConverterTypeWalletBalance.write(balance, into: &buf)
+            FfiConverterUInt32.write(txCount, into: &buf)
+            FfiConverterUInt32.write(blockHeight, into: &buf)
+            FfiConverterTypeAccountType.write(accountType, into: &buf)
+            
+        
+        case let .error(message):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(message, into: &buf)
+            
+        
+        case let .disconnected(message):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(message, into: &buf)
+            
+        
+        case .reconnected:
+            writeInt(&buf, Int32(4))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWatcherEvent_lift(_ buf: RustBuffer) throws -> WatcherEvent {
+    return try FfiConverterTypeWatcherEvent.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWatcherEvent_lower(_ value: WatcherEvent) -> RustBuffer {
+    return FfiConverterTypeWatcherEvent.lower(value)
+}
+
+
+extension WatcherEvent: Equatable, Hashable {}
+
+extension WatcherEvent: Codable {}
 
 
 
@@ -19813,6 +20373,42 @@ public func onchainGetTransactionHistory(extendedKey: String, electrumUrl: Strin
             errorHandler: FfiConverterTypeAccountInfoError_lift
         )
 }
+/**
+ * Start monitoring an xpub for transaction activity via Electrum subscriptions.
+ *
+ * Each watcher receives its own listener — no global registration needed.
+ */
+public func onchainStartWatcher(params: WatcherParams, listener: EventListener)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_onchain_start_watcher(FfiConverterTypeWatcherParams_lower(params),FfiConverterTypeEventListener_lower(listener)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeAccountInfoError_lift
+        )
+}
+/**
+ * Stop all active xpub watchers.
+ */
+public func onchainStopAllWatchers()  {try! rustCall() {
+    uniffi_bitkitcore_fn_func_onchain_stop_all_watchers($0
+    )
+}
+}
+/**
+ * Stop a specific xpub watcher by ID.
+ */
+public func onchainStopWatcher(watcherId: String)throws   {try rustCallWithError(FfiConverterTypeAccountInfoError_lift) {
+    uniffi_bitkitcore_fn_func_onchain_stop_watcher(
+        FfiConverterString.lower(watcherId),$0
+    )
+}
+}
 public func openChannel(orderId: String, connectionString: String)async throws  -> IBtOrder  {
     return
         try  await uniffiRustCallAsync(
@@ -20875,6 +21471,15 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_onchain_get_transaction_history() != 4452) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_onchain_start_watcher() != 58125) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_onchain_stop_all_watchers() != 28485) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_onchain_stop_watcher() != 2426) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_open_channel() != 21402) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -21070,6 +21675,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_wipe_all_transaction_details() != 65339) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_method_eventlistener_on_event() != 35531) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices() != 18766) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -21106,10 +21714,11 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 50474) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 63487) {
+    if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 37914) {
         return InitializationResult.apiChecksumMismatch
     }
 
+    uniffiCallbackInitEventListener()
     uniffiCallbackInitTrezorTransportCallback()
     uniffiCallbackInitTrezorUiCallback()
     return InitializationResult.ok

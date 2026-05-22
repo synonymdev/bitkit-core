@@ -114,6 +114,28 @@ public object NoPointer
 
 
 /**
+ * Callback interface for receiving watcher events.
+ *
+ * Implement this trait in Swift/Kotlin/Python to receive typed notifications
+ * from xpub watchers.
+ */
+public interface EventListener {
+    
+    /**
+     * Called when a watcher event occurs.
+     *
+     * `watcher_id` identifies which watcher produced the event.
+     * `event` is a typed enum — no JSON parsing needed.
+     */
+    public fun `onEvent`(`watcherId`: kotlin.String, `event`: WatcherEvent)
+    
+    public companion object
+}
+
+
+
+
+/**
  * Callback interface for native Trezor transport operations
  *
  * This trait must be implemented by the native iOS/Android code.
@@ -248,12 +270,6 @@ public interface TrezorTransportCallback {
  *
  * The native layer (iOS/Android) should implement this to show PIN/passphrase
  * input UI when the device requests it during operations like signing.
- *
- * Methods return `String`:
- * - Empty string (`""`) = cancel the request
- * - Non-empty string = the user's input (PIN or passphrase)
- *
- * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
 public interface TrezorUiCallback {
     
@@ -268,13 +284,14 @@ public interface TrezorUiCallback {
     /**
      * Called when the device requests a passphrase.
      *
-     * If `on_device` is true, the user should enter on the Trezor itself —
-     * return any non-empty string (e.g., "ok") to acknowledge.
+     * If `on_device` is true, the user should enter the passphrase on the
+     * Trezor itself — return `PassphraseResponse::Standard` (or
+     * `Hidden { value: "ok" }`) to acknowledge.
      *
-     * If `on_device` is false, show a passphrase input UI and return the value.
-     * Return empty string to cancel.
+     * If `on_device` is false, show a passphrase input UI and return the
+     * matching `PassphraseResponse` variant.
      */
-    public fun `onPassphraseRequest`(`onDevice`: kotlin.Boolean): kotlin.String
+    public fun `onPassphraseRequest`(`onDevice`: kotlin.Boolean): PassphraseResponse
     
     public companion object
 }
@@ -2453,6 +2470,41 @@ public data class WalletParams (
 
 
 
+/**
+ * Parameters for starting an xpub transaction watcher.
+ */
+@kotlinx.serialization.Serializable
+public data class WatcherParams (
+    /**
+     * Caller-supplied identifier for this watcher.
+     */
+    val `watcherId`: kotlin.String, 
+    /**
+     * Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
+     */
+    val `extendedKey`: kotlin.String, 
+    /**
+     * Electrum server URL (e.g. "ssl://electrum.example.com:50002").
+     */
+    val `electrumUrl`: kotlin.String, 
+    /**
+     * Bitcoin network override (auto-detected from key prefix if None).
+     */
+    val `network`: Network?, 
+    /**
+     * Account type override (auto-detected from key prefix if None).
+     */
+    val `accountType`: AccountType?, 
+    /**
+     * Number of unused addresses to monitor beyond the last used (default 20).
+     */
+    val `gapLimit`: kotlin.UInt?
+) {
+    public companion object
+}
+
+
+
 
 
 /**
@@ -2544,6 +2596,16 @@ public sealed class AccountInfoException: kotlin.Exception() {
      * A valid transaction ID was not found in the wallet
      */
     public class TransactionNotFound(
+        public val `errorDetails`: kotlin.String,
+    ) : AccountInfoException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * Watcher lifecycle or subscription error
+     */
+    public class WatcherException(
         public val `errorDetails`: kotlin.String,
     ) : AccountInfoException() {
         override val message: String
@@ -3380,6 +3442,38 @@ public enum class NetworkType {
 
 
 
+@kotlinx.serialization.Serializable
+public sealed class PassphraseResponse {
+    
+    /**
+     * User cancelled — aborts the pending operation.
+     */
+    @kotlinx.serialization.Serializable
+    public data object Cancel : PassphraseResponse() 
+    
+    
+    /**
+     * Standard wallet — no passphrase, equivalent to `Some("")` on the device.
+     */
+    @kotlinx.serialization.Serializable
+    public data object Standard : PassphraseResponse() 
+    
+    
+    /**
+     * Hidden wallet — derived from the supplied passphrase.
+     */@kotlinx.serialization.Serializable
+    public data class Hidden(
+        val `value`: kotlin.String,
+    ) : PassphraseResponse() {
+    }
+    
+}
+
+
+
+
+
+
 
 @kotlinx.serialization.Serializable
 public enum class PaymentState {
@@ -3739,6 +3833,15 @@ public sealed class TrezorException: kotlin.Exception() {
     }
     
     /**
+     * Passphrase entry cancelled
+     */
+    public class PassphraseCancelled(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
      * Action cancelled by user on device
      */
     public class UserCancelled(
@@ -3901,6 +4004,54 @@ public enum class TxDirection {
      */
     SELF_TRANSFER;
     public companion object
+}
+
+
+
+
+
+
+/**
+ * Events emitted by the onchain xpub watcher.
+ */
+@kotlinx.serialization.Serializable
+public sealed class WatcherEvent {
+    
+    /**
+     * Transaction activity changed — contains full updated state.
+     */@kotlinx.serialization.Serializable
+    public data class TransactionsChanged(
+        val `transactions`: List<HistoryTransaction>,
+        val `balance`: WalletBalance,
+        val `txCount`: kotlin.UInt,
+        val `blockHeight`: kotlin.UInt,
+        val `accountType`: AccountType,
+    ) : WatcherEvent() {
+    }
+    
+    /**
+     * An error occurred in the watcher loop.
+     */@kotlinx.serialization.Serializable
+    public data class Error(
+        val `message`: kotlin.String,
+    ) : WatcherEvent() {
+    }
+    
+    /**
+     * Connection to the Electrum server was lost.
+     */@kotlinx.serialization.Serializable
+    public data class Disconnected(
+        val `message`: kotlin.String,
+    ) : WatcherEvent() {
+    }
+    
+    /**
+     * Connection to the Electrum server was restored.
+     */
+    @kotlinx.serialization.Serializable
+    public data object Reconnected : WatcherEvent() 
+    
+    
 }
 
 

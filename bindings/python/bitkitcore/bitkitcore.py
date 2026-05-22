@@ -607,6 +607,12 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_onchain_get_transaction_history() != 4452:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_onchain_start_watcher() != 58125:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_onchain_stop_all_watchers() != 28485:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_onchain_stop_watcher() != 2426:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_open_channel() != 21402:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972:
@@ -737,6 +743,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_wipe_all_transaction_details() != 65339:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_eventlistener_on_event() != 35531:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices() != 18766:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_open_device() != 44156:
@@ -761,7 +769,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 50474:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 63487:
+    if lib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 37914:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
 
 # A ctypes library to expose the extern-C FFI definitions.
@@ -869,6 +877,9 @@ class _UniffiForeignFutureStructVoid(ctypes.Structure):
     ]
 _UNIFFI_FOREIGN_FUTURE_COMPLETE_VOID = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiForeignFutureStructVoid,
 )
+_UNIFFI_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,_UniffiRustBuffer,ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
 _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,ctypes.POINTER(_UniffiRustBuffer),
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -908,6 +919,11 @@ _UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD0 = ctypes.CFUNCTYPE(None,ct
 _UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD1 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,ctypes.c_int8,ctypes.POINTER(_UniffiRustBuffer),
     ctypes.POINTER(_UniffiRustCallStatus),
 )
+class _UniffiVTableCallbackInterfaceEventListener(ctypes.Structure):
+    _fields_ = [
+        ("on_event", _UNIFFI_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0),
+        ("uniffi_free", _UNIFFI_CALLBACK_INTERFACE_FREE),
+    ]
 class _UniffiVTableCallbackInterfaceTrezorTransportCallback(ctypes.Structure):
     _fields_ = [
         ("enumerate_devices", _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0),
@@ -929,6 +945,27 @@ class _UniffiVTableCallbackInterfaceTrezorUiCallback(ctypes.Structure):
         ("on_passphrase_request", _UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD1),
         ("uniffi_free", _UNIFFI_CALLBACK_INTERFACE_FREE),
     ]
+_UniffiLib.uniffi_bitkitcore_fn_clone_eventlistener.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_clone_eventlistener.restype = ctypes.c_void_p
+_UniffiLib.uniffi_bitkitcore_fn_free_eventlistener.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_free_eventlistener.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_eventlistener.argtypes = (
+    ctypes.POINTER(_UniffiVTableCallbackInterfaceEventListener),
+)
+_UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_eventlistener.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_method_eventlistener_on_event.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_eventlistener_on_event.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_clone_trezortransportcallback.argtypes = (
     ctypes.c_void_p,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1439,6 +1476,20 @@ _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_transaction_history.argtypes = 
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_transaction_history.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_start_watcher.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.c_void_p,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_start_watcher.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_stop_all_watchers.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_stop_all_watchers.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_stop_watcher.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_onchain_stop_watcher.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_open_channel.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -2229,6 +2280,15 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_transaction_detail.restyp
 _UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_transaction_history.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_onchain_get_transaction_history.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_start_watcher.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_start_watcher.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_stop_all_watchers.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_stop_all_watchers.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_stop_watcher.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_onchain_stop_watcher.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.restype = ctypes.c_uint16
@@ -2424,6 +2484,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_databases.restype = ctypes.c
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_transaction_details.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_transaction_details.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_eventlistener_on_event.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_eventlistener_on_event.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices.restype = ctypes.c_uint16
@@ -2646,6 +2709,8 @@ class _UniffiConverterBytes(_UniffiConverterRustBuffer):
     def write(value, buf):
         buf.write_i32(len(value))
         buf.write(value)
+
+
 
 
 
@@ -9635,6 +9700,98 @@ class _UniffiConverterTypeWalletParams(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalTypeAccountType.write(value.account_type, buf)
 
 
+class WatcherParams:
+    """
+    Parameters for starting an xpub transaction watcher.
+    """
+
+    watcher_id: "str"
+    """
+    Caller-supplied identifier for this watcher.
+    """
+
+    extended_key: "str"
+    """
+    Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
+    """
+
+    electrum_url: "str"
+    """
+    Electrum server URL (e.g. "ssl://electrum.example.com:50002").
+    """
+
+    network: "typing.Optional[Network]"
+    """
+    Bitcoin network override (auto-detected from key prefix if None).
+    """
+
+    account_type: "typing.Optional[AccountType]"
+    """
+    Account type override (auto-detected from key prefix if None).
+    """
+
+    gap_limit: "typing.Optional[int]"
+    """
+    Number of unused addresses to monitor beyond the last used (default 20).
+    """
+
+    def __init__(self, *, watcher_id: "str", extended_key: "str", electrum_url: "str", network: "typing.Optional[Network]", account_type: "typing.Optional[AccountType]", gap_limit: "typing.Optional[int]"):
+        self.watcher_id = watcher_id
+        self.extended_key = extended_key
+        self.electrum_url = electrum_url
+        self.network = network
+        self.account_type = account_type
+        self.gap_limit = gap_limit
+
+    def __str__(self):
+        return "WatcherParams(watcher_id={}, extended_key={}, electrum_url={}, network={}, account_type={}, gap_limit={})".format(self.watcher_id, self.extended_key, self.electrum_url, self.network, self.account_type, self.gap_limit)
+
+    def __eq__(self, other):
+        if self.watcher_id != other.watcher_id:
+            return False
+        if self.extended_key != other.extended_key:
+            return False
+        if self.electrum_url != other.electrum_url:
+            return False
+        if self.network != other.network:
+            return False
+        if self.account_type != other.account_type:
+            return False
+        if self.gap_limit != other.gap_limit:
+            return False
+        return True
+
+class _UniffiConverterTypeWatcherParams(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return WatcherParams(
+            watcher_id=_UniffiConverterString.read(buf),
+            extended_key=_UniffiConverterString.read(buf),
+            electrum_url=_UniffiConverterString.read(buf),
+            network=_UniffiConverterOptionalTypeNetwork.read(buf),
+            account_type=_UniffiConverterOptionalTypeAccountType.read(buf),
+            gap_limit=_UniffiConverterOptionalUInt32.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.watcher_id)
+        _UniffiConverterString.check_lower(value.extended_key)
+        _UniffiConverterString.check_lower(value.electrum_url)
+        _UniffiConverterOptionalTypeNetwork.check_lower(value.network)
+        _UniffiConverterOptionalTypeAccountType.check_lower(value.account_type)
+        _UniffiConverterOptionalUInt32.check_lower(value.gap_limit)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.watcher_id, buf)
+        _UniffiConverterString.write(value.extended_key, buf)
+        _UniffiConverterString.write(value.electrum_url, buf)
+        _UniffiConverterOptionalTypeNetwork.write(value.network, buf)
+        _UniffiConverterOptionalTypeAccountType.write(value.account_type, buf)
+        _UniffiConverterOptionalUInt32.write(value.gap_limit, buf)
+
+
 # AccountInfoError
 # We want to define each variant as a nested class that's also a subclass,
 # which is tricky in Python.  To accomplish this we're going to create each
@@ -9781,6 +9938,20 @@ class AccountInfoError:  # type: ignore
         def __repr__(self):
             return "AccountInfoError.TransactionNotFound({})".format(str(self))
     _UniffiTempAccountInfoError.TransactionNotFound = TransactionNotFound # type: ignore
+    class WatcherError(_UniffiTempAccountInfoError):
+        """
+        Watcher lifecycle or subscription error
+        """
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "AccountInfoError.WatcherError({})".format(str(self))
+    _UniffiTempAccountInfoError.WatcherError = WatcherError # type: ignore
 
 AccountInfoError = _UniffiTempAccountInfoError # type: ignore
 del _UniffiTempAccountInfoError
@@ -9826,6 +9997,10 @@ class _UniffiConverterTypeAccountInfoError(_UniffiConverterRustBuffer):
             return AccountInfoError.TransactionNotFound(
                 _UniffiConverterString.read(buf),
             )
+        if variant == 10:
+            return AccountInfoError.WatcherError(
+                _UniffiConverterString.read(buf),
+            )
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
@@ -9857,6 +10032,9 @@ class _UniffiConverterTypeAccountInfoError(_UniffiConverterRustBuffer):
         if isinstance(value, AccountInfoError.TransactionNotFound):
             _UniffiConverterString.check_lower(value.error_details)
             return
+        if isinstance(value, AccountInfoError.WatcherError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
 
     @staticmethod
     def write(value, buf):
@@ -9886,6 +10064,9 @@ class _UniffiConverterTypeAccountInfoError(_UniffiConverterRustBuffer):
             _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, AccountInfoError.TransactionNotFound):
             buf.write_i32(9)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, AccountInfoError.WatcherError):
+            buf.write_i32(10)
             _UniffiConverterString.write(value.error_details, buf)
 
 
@@ -12427,6 +12608,136 @@ class _UniffiConverterTypeNetworkType(_UniffiConverterRustBuffer):
 
 
 
+class PassphraseResponse:
+    def __init__(self):
+        raise RuntimeError("PassphraseResponse cannot be instantiated directly")
+
+    # Each enum variant is a nested class of the enum itself.
+    class CANCEL:
+        """
+        User cancelled — aborts the pending operation.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "PassphraseResponse.CANCEL()".format()
+
+        def __eq__(self, other):
+            if not other.is_CANCEL():
+                return False
+            return True
+    
+    class STANDARD:
+        """
+        Standard wallet — no passphrase, equivalent to `Some("")` on the device.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "PassphraseResponse.STANDARD()".format()
+
+        def __eq__(self, other):
+            if not other.is_STANDARD():
+                return False
+            return True
+    
+    class HIDDEN:
+        """
+        Hidden wallet — derived from the supplied passphrase.
+        """
+
+        value: "str"
+
+        def __init__(self,value: "str"):
+            self.value = value
+
+        def __str__(self):
+            return "PassphraseResponse.HIDDEN(value={})".format(self.value)
+
+        def __eq__(self, other):
+            if not other.is_HIDDEN():
+                return False
+            if self.value != other.value:
+                return False
+            return True
+    
+    
+
+    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
+    # whether an instance is that variant.
+    def is_CANCEL(self) -> bool:
+        return isinstance(self, PassphraseResponse.CANCEL)
+    def is_cancel(self) -> bool:
+        return isinstance(self, PassphraseResponse.CANCEL)
+    def is_STANDARD(self) -> bool:
+        return isinstance(self, PassphraseResponse.STANDARD)
+    def is_standard(self) -> bool:
+        return isinstance(self, PassphraseResponse.STANDARD)
+    def is_HIDDEN(self) -> bool:
+        return isinstance(self, PassphraseResponse.HIDDEN)
+    def is_hidden(self) -> bool:
+        return isinstance(self, PassphraseResponse.HIDDEN)
+    
+
+# Now, a little trick - we make each nested variant class be a subclass of the main
+# enum class, so that method calls and instance checks etc will work intuitively.
+# We might be able to do this a little more neatly with a metaclass, but this'll do.
+PassphraseResponse.CANCEL = type("PassphraseResponse.CANCEL", (PassphraseResponse.CANCEL, PassphraseResponse,), {})  # type: ignore
+PassphraseResponse.STANDARD = type("PassphraseResponse.STANDARD", (PassphraseResponse.STANDARD, PassphraseResponse,), {})  # type: ignore
+PassphraseResponse.HIDDEN = type("PassphraseResponse.HIDDEN", (PassphraseResponse.HIDDEN, PassphraseResponse,), {})  # type: ignore
+
+
+
+
+class _UniffiConverterTypePassphraseResponse(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return PassphraseResponse.CANCEL(
+            )
+        if variant == 2:
+            return PassphraseResponse.STANDARD(
+            )
+        if variant == 3:
+            return PassphraseResponse.HIDDEN(
+                _UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value.is_CANCEL():
+            return
+        if value.is_STANDARD():
+            return
+        if value.is_HIDDEN():
+            _UniffiConverterString.check_lower(value.value)
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value.is_CANCEL():
+            buf.write_i32(1)
+        if value.is_STANDARD():
+            buf.write_i32(2)
+        if value.is_HIDDEN():
+            buf.write_i32(3)
+            _UniffiConverterString.write(value.value, buf)
+
+
+
+
+
+
+
 class PaymentState(enum.Enum):
     PENDING = 0
     
@@ -13457,6 +13768,17 @@ class TrezorError:  # type: ignore
         def __repr__(self):
             return "TrezorError.PassphraseRequired({})".format(str(self))
     _UniffiTempTrezorError.PassphraseRequired = PassphraseRequired # type: ignore
+    class PassphraseCancelled(_UniffiTempTrezorError):
+        """
+        Passphrase entry cancelled
+        """
+
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.PassphraseCancelled({})".format(str(self))
+    _UniffiTempTrezorError.PassphraseCancelled = PassphraseCancelled # type: ignore
     class UserCancelled(_UniffiTempTrezorError):
         """
         Action cancelled by user on device
@@ -13604,30 +13926,33 @@ class _UniffiConverterTypeTrezorError(_UniffiConverterRustBuffer):
             return TrezorError.PassphraseRequired(
             )
         if variant == 12:
-            return TrezorError.UserCancelled(
+            return TrezorError.PassphraseCancelled(
             )
         if variant == 13:
-            return TrezorError.Timeout(
+            return TrezorError.UserCancelled(
             )
         if variant == 14:
+            return TrezorError.Timeout(
+            )
+        if variant == 15:
             return TrezorError.InvalidPath(
                 _UniffiConverterString.read(buf),
             )
-        if variant == 15:
+        if variant == 16:
             return TrezorError.DeviceError(
                 _UniffiConverterString.read(buf),
             )
-        if variant == 16:
+        if variant == 17:
             return TrezorError.NotInitialized(
             )
-        if variant == 17:
+        if variant == 18:
             return TrezorError.NotConnected(
             )
-        if variant == 18:
+        if variant == 19:
             return TrezorError.SessionError(
                 _UniffiConverterString.read(buf),
             )
-        if variant == 19:
+        if variant == 20:
             return TrezorError.IoError(
                 _UniffiConverterString.read(buf),
             )
@@ -13660,6 +13985,8 @@ class _UniffiConverterTypeTrezorError(_UniffiConverterRustBuffer):
         if isinstance(value, TrezorError.InvalidPin):
             return
         if isinstance(value, TrezorError.PassphraseRequired):
+            return
+        if isinstance(value, TrezorError.PassphraseCancelled):
             return
         if isinstance(value, TrezorError.UserCancelled):
             return
@@ -13710,25 +14037,27 @@ class _UniffiConverterTypeTrezorError(_UniffiConverterRustBuffer):
             buf.write_i32(10)
         if isinstance(value, TrezorError.PassphraseRequired):
             buf.write_i32(11)
-        if isinstance(value, TrezorError.UserCancelled):
+        if isinstance(value, TrezorError.PassphraseCancelled):
             buf.write_i32(12)
-        if isinstance(value, TrezorError.Timeout):
+        if isinstance(value, TrezorError.UserCancelled):
             buf.write_i32(13)
-        if isinstance(value, TrezorError.InvalidPath):
+        if isinstance(value, TrezorError.Timeout):
             buf.write_i32(14)
-            _UniffiConverterString.write(value.error_details, buf)
-        if isinstance(value, TrezorError.DeviceError):
+        if isinstance(value, TrezorError.InvalidPath):
             buf.write_i32(15)
             _UniffiConverterString.write(value.error_details, buf)
-        if isinstance(value, TrezorError.NotInitialized):
+        if isinstance(value, TrezorError.DeviceError):
             buf.write_i32(16)
-        if isinstance(value, TrezorError.NotConnected):
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, TrezorError.NotInitialized):
             buf.write_i32(17)
-        if isinstance(value, TrezorError.SessionError):
+        if isinstance(value, TrezorError.NotConnected):
             buf.write_i32(18)
+        if isinstance(value, TrezorError.SessionError):
+            buf.write_i32(19)
             _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, TrezorError.IoError):
-            buf.write_i32(19)
+            buf.write_i32(20)
             _UniffiConverterString.write(value.error_details, buf)
 
 
@@ -13938,6 +14267,209 @@ class _UniffiConverterTypeTxDirection(_UniffiConverterRustBuffer):
             buf.write_i32(2)
         if value == TxDirection.SELF_TRANSFER:
             buf.write_i32(3)
+
+
+
+
+
+
+
+class WatcherEvent:
+    """
+    Events emitted by the onchain xpub watcher.
+    """
+
+    def __init__(self):
+        raise RuntimeError("WatcherEvent cannot be instantiated directly")
+
+    # Each enum variant is a nested class of the enum itself.
+    class TRANSACTIONS_CHANGED:
+        """
+        Transaction activity changed — contains full updated state.
+        """
+
+        transactions: "typing.List[HistoryTransaction]"
+        balance: "WalletBalance"
+        tx_count: "int"
+        block_height: "int"
+        account_type: "AccountType"
+
+        def __init__(self,transactions: "typing.List[HistoryTransaction]", balance: "WalletBalance", tx_count: "int", block_height: "int", account_type: "AccountType"):
+            self.transactions = transactions
+            self.balance = balance
+            self.tx_count = tx_count
+            self.block_height = block_height
+            self.account_type = account_type
+
+        def __str__(self):
+            return "WatcherEvent.TRANSACTIONS_CHANGED(transactions={}, balance={}, tx_count={}, block_height={}, account_type={})".format(self.transactions, self.balance, self.tx_count, self.block_height, self.account_type)
+
+        def __eq__(self, other):
+            if not other.is_TRANSACTIONS_CHANGED():
+                return False
+            if self.transactions != other.transactions:
+                return False
+            if self.balance != other.balance:
+                return False
+            if self.tx_count != other.tx_count:
+                return False
+            if self.block_height != other.block_height:
+                return False
+            if self.account_type != other.account_type:
+                return False
+            return True
+    
+    class ERROR:
+        """
+        An error occurred in the watcher loop.
+        """
+
+        message: "str"
+
+        def __init__(self,message: "str"):
+            self.message = message
+
+        def __str__(self):
+            return "WatcherEvent.ERROR(message={})".format(self.message)
+
+        def __eq__(self, other):
+            if not other.is_ERROR():
+                return False
+            if self.message != other.message:
+                return False
+            return True
+    
+    class DISCONNECTED:
+        """
+        Connection to the Electrum server was lost.
+        """
+
+        message: "str"
+
+        def __init__(self,message: "str"):
+            self.message = message
+
+        def __str__(self):
+            return "WatcherEvent.DISCONNECTED(message={})".format(self.message)
+
+        def __eq__(self, other):
+            if not other.is_DISCONNECTED():
+                return False
+            if self.message != other.message:
+                return False
+            return True
+    
+    class RECONNECTED:
+        """
+        Connection to the Electrum server was restored.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "WatcherEvent.RECONNECTED()".format()
+
+        def __eq__(self, other):
+            if not other.is_RECONNECTED():
+                return False
+            return True
+    
+    
+
+    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
+    # whether an instance is that variant.
+    def is_TRANSACTIONS_CHANGED(self) -> bool:
+        return isinstance(self, WatcherEvent.TRANSACTIONS_CHANGED)
+    def is_transactions_changed(self) -> bool:
+        return isinstance(self, WatcherEvent.TRANSACTIONS_CHANGED)
+    def is_ERROR(self) -> bool:
+        return isinstance(self, WatcherEvent.ERROR)
+    def is_error(self) -> bool:
+        return isinstance(self, WatcherEvent.ERROR)
+    def is_DISCONNECTED(self) -> bool:
+        return isinstance(self, WatcherEvent.DISCONNECTED)
+    def is_disconnected(self) -> bool:
+        return isinstance(self, WatcherEvent.DISCONNECTED)
+    def is_RECONNECTED(self) -> bool:
+        return isinstance(self, WatcherEvent.RECONNECTED)
+    def is_reconnected(self) -> bool:
+        return isinstance(self, WatcherEvent.RECONNECTED)
+    
+
+# Now, a little trick - we make each nested variant class be a subclass of the main
+# enum class, so that method calls and instance checks etc will work intuitively.
+# We might be able to do this a little more neatly with a metaclass, but this'll do.
+WatcherEvent.TRANSACTIONS_CHANGED = type("WatcherEvent.TRANSACTIONS_CHANGED", (WatcherEvent.TRANSACTIONS_CHANGED, WatcherEvent,), {})  # type: ignore
+WatcherEvent.ERROR = type("WatcherEvent.ERROR", (WatcherEvent.ERROR, WatcherEvent,), {})  # type: ignore
+WatcherEvent.DISCONNECTED = type("WatcherEvent.DISCONNECTED", (WatcherEvent.DISCONNECTED, WatcherEvent,), {})  # type: ignore
+WatcherEvent.RECONNECTED = type("WatcherEvent.RECONNECTED", (WatcherEvent.RECONNECTED, WatcherEvent,), {})  # type: ignore
+
+
+
+
+class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return WatcherEvent.TRANSACTIONS_CHANGED(
+                _UniffiConverterSequenceTypeHistoryTransaction.read(buf),
+                _UniffiConverterTypeWalletBalance.read(buf),
+                _UniffiConverterUInt32.read(buf),
+                _UniffiConverterUInt32.read(buf),
+                _UniffiConverterTypeAccountType.read(buf),
+            )
+        if variant == 2:
+            return WatcherEvent.ERROR(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return WatcherEvent.DISCONNECTED(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 4:
+            return WatcherEvent.RECONNECTED(
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value.is_TRANSACTIONS_CHANGED():
+            _UniffiConverterSequenceTypeHistoryTransaction.check_lower(value.transactions)
+            _UniffiConverterTypeWalletBalance.check_lower(value.balance)
+            _UniffiConverterUInt32.check_lower(value.tx_count)
+            _UniffiConverterUInt32.check_lower(value.block_height)
+            _UniffiConverterTypeAccountType.check_lower(value.account_type)
+            return
+        if value.is_ERROR():
+            _UniffiConverterString.check_lower(value.message)
+            return
+        if value.is_DISCONNECTED():
+            _UniffiConverterString.check_lower(value.message)
+            return
+        if value.is_RECONNECTED():
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value.is_TRANSACTIONS_CHANGED():
+            buf.write_i32(1)
+            _UniffiConverterSequenceTypeHistoryTransaction.write(value.transactions, buf)
+            _UniffiConverterTypeWalletBalance.write(value.balance, buf)
+            _UniffiConverterUInt32.write(value.tx_count, buf)
+            _UniffiConverterUInt32.write(value.block_height, buf)
+            _UniffiConverterTypeAccountType.write(value.account_type, buf)
+        if value.is_ERROR():
+            buf.write_i32(2)
+            _UniffiConverterString.write(value.message, buf)
+        if value.is_DISCONNECTED():
+            buf.write_i32(3)
+            _UniffiConverterString.write(value.message, buf)
+        if value.is_RECONNECTED():
+            buf.write_i32(4)
 
 
 
@@ -16126,6 +16658,165 @@ class _UniffiConverterMapStringString(_UniffiConverterRustBuffer):
         return d
 
 # objects.
+class EventListenerProtocol(typing.Protocol):
+    """
+    Callback interface for receiving watcher events.
+
+    Implement this trait in Swift/Kotlin/Python to receive typed notifications
+    from xpub watchers.
+    """
+
+    def on_event(self, watcher_id: "str",event: "WatcherEvent"):
+        """
+        Called when a watcher event occurs.
+
+        `watcher_id` identifies which watcher produced the event.
+        `event` is a typed enum — no JSON parsing needed.
+        """
+
+        raise NotImplementedError
+# EventListener is a foreign trait so treated like a callback interface, where the
+# primary use-case is the trait being implemented locally.
+# It is a base-class local implementations might subclass.
+
+
+class EventListener():
+    """
+    Callback interface for receiving watcher events.
+
+    Implement this trait in Swift/Kotlin/Python to receive typed notifications
+    from xpub watchers.
+    """
+
+    def on_event(self, watcher_id: "str",event: "WatcherEvent"):
+        """
+        Called when a watcher event occurs.
+
+        `watcher_id` identifies which watcher produced the event.
+        `event` is a typed enum — no JSON parsing needed.
+        """
+
+        raise NotImplementedError
+# `EventListenerImpl` is the implementation for a Rust implemented version.
+class EventListenerImpl():
+    """
+    Callback interface for receiving watcher events.
+
+    Implement this trait in Swift/Kotlin/Python to receive typed notifications
+    from xpub watchers.
+    """
+
+    _pointer: ctypes.c_void_p
+    
+    def __init__(self, *args, **kwargs):
+        raise ValueError("This class has no default constructor")
+
+    def __del__(self):
+        # In case of partial initialization of instances.
+        pointer = getattr(self, "_pointer", None)
+        if pointer is not None:
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_free_eventlistener, pointer)
+
+    def _uniffi_clone_pointer(self):
+        return _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_clone_eventlistener, self._pointer)
+
+    # Used by alternative constructors or any methods which return this type.
+    @classmethod
+    def _make_instance_(cls, pointer):
+        # Lightly yucky way to bypass the usual __init__ logic
+        # and just create a new instance with the required pointer.
+        inst = cls.__new__(cls)
+        inst._pointer = pointer
+        return inst
+
+
+    def on_event(self, watcher_id: "str",event: "WatcherEvent") -> None:
+        """
+        Called when a watcher event occurs.
+
+        `watcher_id` identifies which watcher produced the event.
+        `event` is a typed enum — no JSON parsing needed.
+        """
+
+        _UniffiConverterString.check_lower(watcher_id)
+        
+        _UniffiConverterTypeWatcherEvent.check_lower(event)
+        
+        _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_eventlistener_on_event,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(watcher_id),
+        _UniffiConverterTypeWatcherEvent.lower(event))
+
+
+
+
+
+
+# Put all the bits inside a class to keep the top-level namespace clean
+class _UniffiTraitImplEventListener:
+    # For each method, generate a callback function to pass to Rust
+
+    @_UNIFFI_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0
+    def on_event(
+            uniffi_handle,
+            watcher_id,
+            event,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeEventListener._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(watcher_id), _UniffiConverterTypeWatcherEvent.lift(event), )
+            method = uniffi_obj.on_event
+            return method(*args)
+
+        
+        write_return_value = lambda v: None
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_FREE
+    def _uniffi_free(uniffi_handle):
+        _UniffiConverterTypeEventListener._handle_map.remove(uniffi_handle)
+
+    # Generate the FFI VTable.  This has a field for each callback interface method.
+    _uniffi_vtable = _UniffiVTableCallbackInterfaceEventListener(
+        on_event,
+        _uniffi_free
+    )
+    # Send Rust a pointer to the VTable.  Note: this means we need to keep the struct alive forever,
+    # or else bad things will happen when Rust tries to access it.
+    _UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_eventlistener(ctypes.byref(_uniffi_vtable))
+
+
+
+class _UniffiConverterTypeEventListener:
+    _handle_map = _UniffiHandleMap()
+
+    @staticmethod
+    def lift(value: int):
+        return EventListenerImpl._make_instance_(value)
+
+    @staticmethod
+    def check_lower(value: EventListener):
+        pass
+
+    @staticmethod
+    def lower(value: EventListenerProtocol):
+        return _UniffiConverterTypeEventListener._handle_map.insert(value)
+
+    @classmethod
+    def read(cls, buf: _UniffiRustBuffer):
+        ptr = buf.read_u64()
+        if ptr == 0:
+            raise InternalError("Raw pointer value was null")
+        return cls.lift(ptr)
+
+    @classmethod
+    def write(cls, value: EventListenerProtocol, buf: _UniffiRustBuffer):
+        buf.write_u64(cls.lower(value))
 class TrezorTransportCallbackProtocol(typing.Protocol):
     """
     Callback interface for native Trezor transport operations
@@ -16983,12 +17674,6 @@ class TrezorUiCallbackProtocol(typing.Protocol):
 
     The native layer (iOS/Android) should implement this to show PIN/passphrase
     input UI when the device requests it during operations like signing.
-
-    Methods return `String`:
-    - Empty string (`""`) = cancel the request
-    - Non-empty string = the user's input (PIN or passphrase)
-
-    This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
     """
 
     def on_pin_request(self, ):
@@ -17004,11 +17689,12 @@ class TrezorUiCallbackProtocol(typing.Protocol):
         """
         Called when the device requests a passphrase.
 
-        If `on_device` is true, the user should enter on the Trezor itself —
-        return any non-empty string (e.g., "ok") to acknowledge.
+        If `on_device` is true, the user should enter the passphrase on the
+        Trezor itself — return `PassphraseResponse::Standard` (or
+        `Hidden { value: "ok" }`) to acknowledge.
 
-        If `on_device` is false, show a passphrase input UI and return the value.
-        Return empty string to cancel.
+        If `on_device` is false, show a passphrase input UI and return the
+        matching `PassphraseResponse` variant.
         """
 
         raise NotImplementedError
@@ -17023,12 +17709,6 @@ class TrezorUiCallback():
 
     The native layer (iOS/Android) should implement this to show PIN/passphrase
     input UI when the device requests it during operations like signing.
-
-    Methods return `String`:
-    - Empty string (`""`) = cancel the request
-    - Non-empty string = the user's input (PIN or passphrase)
-
-    This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
     """
 
     def on_pin_request(self, ):
@@ -17044,11 +17724,12 @@ class TrezorUiCallback():
         """
         Called when the device requests a passphrase.
 
-        If `on_device` is true, the user should enter on the Trezor itself —
-        return any non-empty string (e.g., "ok") to acknowledge.
+        If `on_device` is true, the user should enter the passphrase on the
+        Trezor itself — return `PassphraseResponse::Standard` (or
+        `Hidden { value: "ok" }`) to acknowledge.
 
-        If `on_device` is false, show a passphrase input UI and return the value.
-        Return empty string to cancel.
+        If `on_device` is false, show a passphrase input UI and return the
+        matching `PassphraseResponse` variant.
         """
 
         raise NotImplementedError
@@ -17059,12 +17740,6 @@ class TrezorUiCallbackImpl():
 
     The native layer (iOS/Android) should implement this to show PIN/passphrase
     input UI when the device requests it during operations like signing.
-
-    Methods return `String`:
-    - Empty string (`""`) = cancel the request
-    - Non-empty string = the user's input (PIN or passphrase)
-
-    This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
     """
 
     _pointer: ctypes.c_void_p
@@ -17107,20 +17782,21 @@ class TrezorUiCallbackImpl():
 
 
 
-    def on_passphrase_request(self, on_device: "bool") -> "str":
+    def on_passphrase_request(self, on_device: "bool") -> "PassphraseResponse":
         """
         Called when the device requests a passphrase.
 
-        If `on_device` is true, the user should enter on the Trezor itself —
-        return any non-empty string (e.g., "ok") to acknowledge.
+        If `on_device` is true, the user should enter the passphrase on the
+        Trezor itself — return `PassphraseResponse::Standard` (or
+        `Hidden { value: "ok" }`) to acknowledge.
 
-        If `on_device` is false, show a passphrase input UI and return the value.
-        Return empty string to cancel.
+        If `on_device` is false, show a passphrase input UI and return the
+        matching `PassphraseResponse` variant.
         """
 
         _UniffiConverterBool.check_lower(on_device)
         
-        return _UniffiConverterString.lift(
+        return _UniffiConverterTypePassphraseResponse.lift(
             _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request,self._uniffi_clone_pointer(),
         _UniffiConverterBool.lower(on_device))
         )
@@ -17169,7 +17845,7 @@ class _UniffiTraitImplTrezorUiCallback:
 
         
         def write_return_value(v):
-            uniffi_out_return[0] = _UniffiConverterString.lower(v)
+            uniffi_out_return[0] = _UniffiConverterTypePassphraseResponse.lower(v)
         _uniffi_trait_interface_call(
                 uniffi_call_status_ptr.contents,
                 make_call,
@@ -18370,6 +19046,52 @@ async def onchain_get_transaction_history(extended_key: "str",electrum_url: "str
 _UniffiConverterTypeAccountInfoError,
 
     )
+async def onchain_start_watcher(params: "WatcherParams",listener: "EventListener") -> None:
+
+    """
+    Start monitoring an xpub for transaction activity via Electrum subscriptions.
+
+    Each watcher receives its own listener — no global registration needed.
+    """
+
+    _UniffiConverterTypeWatcherParams.check_lower(params)
+    
+    _UniffiConverterTypeEventListener.check_lower(listener)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_onchain_start_watcher(
+        _UniffiConverterTypeWatcherParams.lower(params),
+        _UniffiConverterTypeEventListener.lower(listener)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeAccountInfoError,
+
+    )
+
+def onchain_stop_all_watchers() -> None:
+    """
+    Stop all active xpub watchers.
+    """
+
+    _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_onchain_stop_all_watchers,)
+
+
+def onchain_stop_watcher(watcher_id: "str") -> None:
+    """
+    Stop a specific xpub watcher by ID.
+    """
+
+    _UniffiConverterString.check_lower(watcher_id)
+    
+    _uniffi_rust_call_with_error(_UniffiConverterTypeAccountInfoError,_UniffiLib.uniffi_bitkitcore_fn_func_onchain_stop_watcher,
+        _UniffiConverterString.lower(watcher_id))
+
 async def open_channel(order_id: "str",connection_string: "str") -> "IBtOrder":
 
     _UniffiConverterString.check_lower(order_id)
@@ -19454,6 +20176,7 @@ __all__ = [
     "ManualRefundStateEnum",
     "Network",
     "NetworkType",
+    "PassphraseResponse",
     "PaymentState",
     "PaymentType",
     "PubkyAuthKind",
@@ -19466,6 +20189,7 @@ __all__ = [
     "TrezorScriptType",
     "TrezorTransportType",
     "TxDirection",
+    "WatcherEvent",
     "WordCount",
     "AccountAddresses",
     "AccountInfoResult",
@@ -19559,6 +20283,7 @@ __all__ = [
     "ValidationResult",
     "WalletBalance",
     "WalletParams",
+    "WatcherParams",
     "activity_wipe_all",
     "add_pre_activity_metadata",
     "add_pre_activity_metadata_tags",
@@ -19632,6 +20357,9 @@ __all__ = [
     "onchain_get_address_info",
     "onchain_get_transaction_detail",
     "onchain_get_transaction_history",
+    "onchain_start_watcher",
+    "onchain_stop_all_watchers",
+    "onchain_stop_watcher",
     "open_channel",
     "parse_pubky_auth_url",
     "prepare_sweep_transaction",
@@ -19697,6 +20425,7 @@ __all__ = [
     "wipe_all_closed_channels",
     "wipe_all_databases",
     "wipe_all_transaction_details",
+    "EventListener",
     "TrezorTransportCallback",
     "TrezorUiCallback",
 ]

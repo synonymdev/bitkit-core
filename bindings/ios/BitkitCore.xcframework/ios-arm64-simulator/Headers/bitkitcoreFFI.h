@@ -251,6 +251,13 @@ typedef void (*UniffiForeignFutureCompleteVoid)(uint64_t, UniffiForeignFutureStr
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0
+typedef void (*UniffiCallbackInterfaceEventListenerMethod0)(uint64_t, RustBuffer, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0
 typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod0)(uint64_t, RustBuffer* _Nonnull, 
@@ -342,6 +349,14 @@ typedef void (*UniffiCallbackInterfaceTrezorUiCallbackMethod1)(uint64_t, int8_t,
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_EVENT_LISTENER
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_EVENT_LISTENER
+typedef struct UniffiVTableCallbackInterfaceEventListener {
+    UniffiCallbackInterfaceEventListenerMethod0 _Nonnull onEvent;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfaceEventListener;
+
+#endif
 #ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK
 #define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK
 typedef struct UniffiVTableCallbackInterfaceTrezorTransportCallback {
@@ -368,6 +383,26 @@ typedef struct UniffiVTableCallbackInterfaceTrezorUiCallback {
     UniffiCallbackInterfaceFree _Nonnull uniffiFree;
 } UniffiVTableCallbackInterfaceTrezorUiCallback;
 
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_EVENTLISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_EVENTLISTENER
+void*_Nonnull uniffi_bitkitcore_fn_clone_eventlistener(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_EVENTLISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_EVENTLISTENER
+void uniffi_bitkitcore_fn_free_eventlistener(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_EVENTLISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_EVENTLISTENER
+void uniffi_bitkitcore_fn_init_callback_vtable_eventlistener(const UniffiVTableCallbackInterfaceEventListener* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_EVENTLISTENER_ON_EVENT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_EVENTLISTENER_ON_EVENT
+void uniffi_bitkitcore_fn_method_eventlistener_on_event(void*_Nonnull ptr, RustBuffer watcher_id, RustBuffer event, RustCallStatus *_Nonnull out_status
+);
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_TREZORTRANSPORTCALLBACK
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_TREZORTRANSPORTCALLBACK
@@ -838,6 +873,22 @@ uint64_t uniffi_bitkitcore_fn_func_onchain_get_transaction_detail(RustBuffer ext
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_GET_TRANSACTION_HISTORY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_GET_TRANSACTION_HISTORY
 uint64_t uniffi_bitkitcore_fn_func_onchain_get_transaction_history(RustBuffer extended_key, RustBuffer electrum_url, RustBuffer network, RustBuffer script_type
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_START_WATCHER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_START_WATCHER
+uint64_t uniffi_bitkitcore_fn_func_onchain_start_watcher(RustBuffer params, void*_Nonnull listener
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_STOP_ALL_WATCHERS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_STOP_ALL_WATCHERS
+void uniffi_bitkitcore_fn_func_onchain_stop_all_watchers(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_STOP_WATCHER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_STOP_WATCHER
+void uniffi_bitkitcore_fn_func_onchain_stop_watcher(RustBuffer watcher_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_OPEN_CHANNEL
@@ -1897,6 +1948,24 @@ uint16_t uniffi_bitkitcore_checksum_func_onchain_get_transaction_history(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_START_WATCHER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_START_WATCHER
+uint16_t uniffi_bitkitcore_checksum_func_onchain_start_watcher(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_STOP_ALL_WATCHERS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_STOP_ALL_WATCHERS
+uint16_t uniffi_bitkitcore_checksum_func_onchain_stop_all_watchers(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_STOP_WATCHER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_STOP_WATCHER
+uint16_t uniffi_bitkitcore_checksum_func_onchain_stop_watcher(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_OPEN_CHANNEL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_OPEN_CHANNEL
 uint16_t uniffi_bitkitcore_checksum_func_open_channel(void
@@ -2284,6 +2353,12 @@ uint16_t uniffi_bitkitcore_checksum_func_wipe_all_databases(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_TRANSACTION_DETAILS
 uint16_t uniffi_bitkitcore_checksum_func_wipe_all_transaction_details(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_EVENTLISTENER_ON_EVENT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_EVENTLISTENER_ON_EVENT
+uint16_t uniffi_bitkitcore_checksum_method_eventlistener_on_event(void
     
 );
 #endif
