@@ -310,12 +310,17 @@ impl TransportCallback for CallbackAdapter {
     }
 }
 
-/// Adapter bridging bitkit-core's `TrezorUiCallback` (String-based, UniFFI compatible)
-/// to trezor-connect-rs's `TrezorUiCallback` (Option-based).
+/// Adapter bridging bitkit-core's UniFFI-exported `TrezorUiCallback` to
+/// trezor-connect-rs's `TrezorUiCallback`.
 ///
-/// Conversion: empty string → `None` (cancel), non-empty → `Some(value)` (user input).
-struct UiCallbackAdapter {
-    callback: Arc<dyn crate::TrezorUiCallback>,
+/// PIN: empty string → `None` (cancel), non-empty → `Some(value)`. (No
+/// upstream enum exists for PIN; we keep the legacy `String → Option` encoding.)
+///
+/// Passphrase: a pure pass-through. Both traits return the same upstream
+/// `PassphraseResponse` type — bitkit-core attaches UniFFI scaffolding to it
+/// via `#[uniffi::remote(Enum)]` (see `callbacks.rs`).
+pub(super) struct UiCallbackAdapter {
+    pub(super) callback: Arc<dyn crate::TrezorUiCallback>,
 }
 
 impl trezor_connect_rs::TrezorUiCallback for UiCallbackAdapter {
@@ -328,13 +333,8 @@ impl trezor_connect_rs::TrezorUiCallback for UiCallbackAdapter {
         }
     }
 
-    fn on_passphrase_request(&self, on_device: bool) -> Option<String> {
-        let result = self.callback.on_passphrase_request(on_device);
-        if result.is_empty() {
-            None
-        } else {
-            Some(result)
-        }
+    fn on_passphrase_request(&self, on_device: bool) -> trezor_connect_rs::PassphraseResponse {
+        self.callback.on_passphrase_request(on_device)
     }
 }
 

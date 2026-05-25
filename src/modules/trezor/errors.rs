@@ -48,6 +48,10 @@ pub enum TrezorError {
     #[error("Passphrase is required")]
     PassphraseRequired,
 
+    /// Passphrase entry cancelled
+    #[error("Passphrase entry cancelled")]
+    PassphraseCancelled,
+
     /// Action cancelled by user on device
     #[error("Action cancelled by user")]
     UserCancelled,
@@ -174,6 +178,7 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
                 TcDeviceError::InvalidPin => TrezorError::InvalidPin,
                 TcDeviceError::PinCancelled => TrezorError::PinCancelled,
                 TcDeviceError::PassphraseRequired => TrezorError::PassphraseRequired,
+                TcDeviceError::PassphraseCancelled => TrezorError::PassphraseCancelled,
                 TcDeviceError::NotInitialized => TrezorError::DeviceError {
                     error_details: "Device is not initialized".to_string(),
                 },

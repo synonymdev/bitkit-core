@@ -172,16 +172,32 @@ pub trait TrezorTransportCallback: Send + Sync {
 // UI callback trait
 // ============================================================================
 
+/// Re-export the upstream `PassphraseResponse` and attach UniFFI scaffolding
+/// to it via `#[uniffi::remote(Enum)]`. trezor-connect-rs intentionally does
+/// not depend on uniffi, so we add the bindings metadata externally here.
+/// The variant list below is parsed by the macro but not redefined as a type
+/// — `PassphraseResponse` in scope resolves to the upstream enum.
+///
+/// NOTE: the variant list below must match `trezor_connect_rs::PassphraseResponse`
+/// exactly (currently trezor-connect-rs 0.3.x). If a future bump reshapes the
+/// upstream enum, update these variants in lockstep — the adapter tests in
+/// `tests.rs` (`test_passphrase_adapter_*`) guard the variant-for-variant mapping.
+pub use trezor_connect_rs::PassphraseResponse;
+
+#[uniffi::remote(Enum)]
+pub enum PassphraseResponse {
+    /// User cancelled — aborts the pending operation.
+    Cancel,
+    /// Standard wallet — no passphrase, equivalent to `Some("")` on the device.
+    Standard,
+    /// Hidden wallet — derived from the supplied passphrase.
+    Hidden { value: String },
+}
+
 /// Callback interface for handling PIN and passphrase requests from the Trezor device.
 ///
 /// The native layer (iOS/Android) should implement this to show PIN/passphrase
 /// input UI when the device requests it during operations like signing.
-///
-/// Methods return `String`:
-/// - Empty string (`""`) = cancel the request
-/// - Non-empty string = the user's input (PIN or passphrase)
-///
-/// This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
 #[uniffi::export(with_foreign)]
 pub trait TrezorUiCallback: Send + Sync {
     /// Called when the device requests a PIN.
@@ -192,12 +208,13 @@ pub trait TrezorUiCallback: Send + Sync {
 
     /// Called when the device requests a passphrase.
     ///
-    /// If `on_device` is true, the user should enter on the Trezor itself —
-    /// return any non-empty string (e.g., "ok") to acknowledge.
+    /// If `on_device` is true, the user should enter the passphrase on the
+    /// Trezor itself — return `PassphraseResponse::Standard` (or
+    /// `Hidden { value: "ok" }`) to acknowledge.
     ///
-    /// If `on_device` is false, show a passphrase input UI and return the value.
-    /// Return empty string to cancel.
-    fn on_passphrase_request(&self, on_device: bool) -> String;
+    /// If `on_device` is false, show a passphrase input UI and return the
+    /// matching `PassphraseResponse` variant.
+    fn on_passphrase_request(&self, on_device: bool) -> PassphraseResponse;
 }
 
 // ============================================================================

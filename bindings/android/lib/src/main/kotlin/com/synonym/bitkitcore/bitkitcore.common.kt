@@ -248,12 +248,6 @@ public interface TrezorTransportCallback {
  *
  * The native layer (iOS/Android) should implement this to show PIN/passphrase
  * input UI when the device requests it during operations like signing.
- *
- * Methods return `String`:
- * - Empty string (`""`) = cancel the request
- * - Non-empty string = the user's input (PIN or passphrase)
- *
- * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
 public interface TrezorUiCallback {
     
@@ -268,13 +262,14 @@ public interface TrezorUiCallback {
     /**
      * Called when the device requests a passphrase.
      *
-     * If `on_device` is true, the user should enter on the Trezor itself —
-     * return any non-empty string (e.g., "ok") to acknowledge.
+     * If `on_device` is true, the user should enter the passphrase on the
+     * Trezor itself — return `PassphraseResponse::Standard` (or
+     * `Hidden { value: "ok" }`) to acknowledge.
      *
-     * If `on_device` is false, show a passphrase input UI and return the value.
-     * Return empty string to cancel.
+     * If `on_device` is false, show a passphrase input UI and return the
+     * matching `PassphraseResponse` variant.
      */
-    public fun `onPassphraseRequest`(`onDevice`: kotlin.Boolean): kotlin.String
+    public fun `onPassphraseRequest`(`onDevice`: kotlin.Boolean): PassphraseResponse
     
     public companion object
 }
@@ -3380,6 +3375,38 @@ public enum class NetworkType {
 
 
 
+@kotlinx.serialization.Serializable
+public sealed class PassphraseResponse {
+    
+    /**
+     * User cancelled — aborts the pending operation.
+     */
+    @kotlinx.serialization.Serializable
+    public data object Cancel : PassphraseResponse() 
+    
+    
+    /**
+     * Standard wallet — no passphrase, equivalent to `Some("")` on the device.
+     */
+    @kotlinx.serialization.Serializable
+    public data object Standard : PassphraseResponse() 
+    
+    
+    /**
+     * Hidden wallet — derived from the supplied passphrase.
+     */@kotlinx.serialization.Serializable
+    public data class Hidden(
+        val `value`: kotlin.String,
+    ) : PassphraseResponse() {
+    }
+    
+}
+
+
+
+
+
+
 
 @kotlinx.serialization.Serializable
 public enum class PaymentState {
@@ -3733,6 +3760,15 @@ public sealed class TrezorException: kotlin.Exception() {
      * Passphrase is required
      */
     public class PassphraseRequired(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
+     * Passphrase entry cancelled
+     */
+    public class PassphraseCancelled(
     ) : TrezorException() {
         override val message: String
             get() = ""

@@ -1312,12 +1312,6 @@ public func FfiConverterTypeTrezorTransportCallback_lower(_ value: TrezorTranspo
  *
  * The native layer (iOS/Android) should implement this to show PIN/passphrase
  * input UI when the device requests it during operations like signing.
- *
- * Methods return `String`:
- * - Empty string (`""`) = cancel the request
- * - Non-empty string = the user's input (PIN or passphrase)
- *
- * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
 public protocol TrezorUiCallback: AnyObject, Sendable {
     
@@ -1332,13 +1326,14 @@ public protocol TrezorUiCallback: AnyObject, Sendable {
     /**
      * Called when the device requests a passphrase.
      *
-     * If `on_device` is true, the user should enter on the Trezor itself —
-     * return any non-empty string (e.g., "ok") to acknowledge.
+     * If `on_device` is true, the user should enter the passphrase on the
+     * Trezor itself — return `PassphraseResponse::Standard` (or
+     * `Hidden { value: "ok" }`) to acknowledge.
      *
-     * If `on_device` is false, show a passphrase input UI and return the value.
-     * Return empty string to cancel.
+     * If `on_device` is false, show a passphrase input UI and return the
+     * matching `PassphraseResponse` variant.
      */
-    func onPassphraseRequest(onDevice: Bool)  -> String
+    func onPassphraseRequest(onDevice: Bool)  -> PassphraseResponse
     
 }
 /**
@@ -1346,12 +1341,6 @@ public protocol TrezorUiCallback: AnyObject, Sendable {
  *
  * The native layer (iOS/Android) should implement this to show PIN/passphrase
  * input UI when the device requests it during operations like signing.
- *
- * Methods return `String`:
- * - Empty string (`""`) = cancel the request
- * - Non-empty string = the user's input (PIN or passphrase)
- *
- * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
 open class TrezorUiCallbackImpl: TrezorUiCallback, @unchecked Sendable {
     fileprivate let pointer: UnsafeMutableRawPointer!
@@ -1421,14 +1410,15 @@ open func onPinRequest() -> String  {
     /**
      * Called when the device requests a passphrase.
      *
-     * If `on_device` is true, the user should enter on the Trezor itself —
-     * return any non-empty string (e.g., "ok") to acknowledge.
+     * If `on_device` is true, the user should enter the passphrase on the
+     * Trezor itself — return `PassphraseResponse::Standard` (or
+     * `Hidden { value: "ok" }`) to acknowledge.
      *
-     * If `on_device` is false, show a passphrase input UI and return the value.
-     * Return empty string to cancel.
+     * If `on_device` is false, show a passphrase input UI and return the
+     * matching `PassphraseResponse` variant.
      */
-open func onPassphraseRequest(onDevice: Bool) -> String  {
-    return try!  FfiConverterString.lift(try! rustCall() {
+open func onPassphraseRequest(onDevice: Bool) -> PassphraseResponse  {
+    return try!  FfiConverterTypePassphraseResponse_lift(try! rustCall() {
     uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request(self.uniffiClonePointer(),
         FfiConverterBool.lower(onDevice),$0
     )
@@ -1477,7 +1467,7 @@ fileprivate struct UniffiCallbackInterfaceTrezorUiCallback {
             uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
         ) in
             let makeCall = {
-                () throws -> String in
+                () throws -> PassphraseResponse in
                 guard let uniffiObj = try? FfiConverterTypeTrezorUiCallback.handleMap.get(handle: uniffiHandle) else {
                     throw UniffiInternalError.unexpectedStaleHandle
                 }
@@ -1487,7 +1477,7 @@ fileprivate struct UniffiCallbackInterfaceTrezorUiCallback {
             }
 
             
-            let writeReturn = { uniffiOutReturn.pointee = FfiConverterString.lower($0) }
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterTypePassphraseResponse_lower($0) }
             uniffiTraitInterfaceCall(
                 callStatus: uniffiCallStatus,
                 makeCall: makeCall,
@@ -15550,6 +15540,97 @@ extension NetworkType: Codable {}
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
+public enum PassphraseResponse {
+    
+    /**
+     * User cancelled — aborts the pending operation.
+     */
+    case cancel
+    /**
+     * Standard wallet — no passphrase, equivalent to `Some("")` on the device.
+     */
+    case standard
+    /**
+     * Hidden wallet — derived from the supplied passphrase.
+     */
+    case hidden(value: String
+    )
+}
+
+
+#if compiler(>=6)
+extension PassphraseResponse: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePassphraseResponse: FfiConverterRustBuffer {
+    typealias SwiftType = PassphraseResponse
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PassphraseResponse {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .cancel
+        
+        case 2: return .standard
+        
+        case 3: return .hidden(value: try FfiConverterString.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: PassphraseResponse, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .cancel:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .standard:
+            writeInt(&buf, Int32(2))
+        
+        
+        case let .hidden(value):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(value, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePassphraseResponse_lift(_ buf: RustBuffer) throws -> PassphraseResponse {
+    return try FfiConverterTypePassphraseResponse.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePassphraseResponse_lower(_ value: PassphraseResponse) -> RustBuffer {
+    return FfiConverterTypePassphraseResponse.lower(value)
+}
+
+
+extension PassphraseResponse: Equatable, Hashable {}
+
+extension PassphraseResponse: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 public enum PaymentState {
     
     case pending
@@ -16403,6 +16484,10 @@ public enum TrezorError: Swift.Error {
      */
     case PassphraseRequired
     /**
+     * Passphrase entry cancelled
+     */
+    case PassphraseCancelled
+    /**
      * Action cancelled by user on device
      */
     case UserCancelled
@@ -16473,20 +16558,21 @@ public struct FfiConverterTypeTrezorError: FfiConverterRustBuffer {
         case 9: return .PinCancelled
         case 10: return .InvalidPin
         case 11: return .PassphraseRequired
-        case 12: return .UserCancelled
-        case 13: return .Timeout
-        case 14: return .InvalidPath(
+        case 12: return .PassphraseCancelled
+        case 13: return .UserCancelled
+        case 14: return .Timeout
+        case 15: return .InvalidPath(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 15: return .DeviceError(
+        case 16: return .DeviceError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 16: return .NotInitialized
-        case 17: return .NotConnected
-        case 18: return .SessionError(
+        case 17: return .NotInitialized
+        case 18: return .NotConnected
+        case 19: return .SessionError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 19: return .IoError(
+        case 20: return .IoError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
 
@@ -16549,39 +16635,43 @@ public struct FfiConverterTypeTrezorError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(11))
         
         
-        case .UserCancelled:
+        case .PassphraseCancelled:
             writeInt(&buf, Int32(12))
         
         
-        case .Timeout:
+        case .UserCancelled:
             writeInt(&buf, Int32(13))
         
         
-        case let .InvalidPath(errorDetails):
+        case .Timeout:
             writeInt(&buf, Int32(14))
-            FfiConverterString.write(errorDetails, into: &buf)
-            
         
-        case let .DeviceError(errorDetails):
+        
+        case let .InvalidPath(errorDetails):
             writeInt(&buf, Int32(15))
             FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case .NotInitialized:
+        case let .DeviceError(errorDetails):
             writeInt(&buf, Int32(16))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
         
-        
-        case .NotConnected:
+        case .NotInitialized:
             writeInt(&buf, Int32(17))
         
         
-        case let .SessionError(errorDetails):
+        case .NotConnected:
             writeInt(&buf, Int32(18))
+        
+        
+        case let .SessionError(errorDetails):
+            writeInt(&buf, Int32(19))
             FfiConverterString.write(errorDetails, into: &buf)
             
         
         case let .IoError(errorDetails):
-            writeInt(&buf, Int32(19))
+            writeInt(&buf, Int32(20))
             FfiConverterString.write(errorDetails, into: &buf)
             
         }
@@ -21106,7 +21196,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 50474) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 63487) {
+    if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 37914) {
         return InitializationResult.apiChecksumMismatch
     }
 
