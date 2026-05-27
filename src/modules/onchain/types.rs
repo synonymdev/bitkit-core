@@ -204,6 +204,38 @@ pub struct SweepableBalances {
 }
 
 // ============================================================================
+// Legacy RN close recovery types
+// ============================================================================
+
+#[derive(uniffi::Record, Debug, Clone)]
+pub struct LegacyRnCloseRecoveryScanResult {
+    /// Total balance found in legacy RN P2WPKH close outputs (in satoshis).
+    pub total_amount: u64,
+    /// Number of P2WPKH outputs found.
+    pub outputs_count: u32,
+}
+
+#[derive(uniffi::Record, Debug, Clone)]
+pub struct LegacyRnCloseRecoverySweepPreview {
+    /// Fully signed raw sweep transaction hex. Broadcast only after user confirmation.
+    pub tx_hex: String,
+    /// Transaction id of the sweep transaction.
+    pub txid: String,
+    /// Total input amount in satoshis.
+    pub total_amount: u64,
+    /// Fee in satoshis.
+    pub estimated_fee: u64,
+    /// Transaction virtual size in vbytes.
+    pub estimated_vsize: u64,
+    /// Number of recovered outputs swept.
+    pub outputs_count: u32,
+    /// Destination address receiving the sweep.
+    pub destination_address: String,
+    /// Amount sent to destination after fees.
+    pub amount_after_fees: u64,
+}
+
+// ============================================================================
 // Account info types
 // ============================================================================
 

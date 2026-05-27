@@ -13,7 +13,8 @@ pub use implementation::{
 pub use types::{
     AccountAddresses, AccountInfoResult, AccountType, AccountUtxo, AddressInfo, AddressType,
     CoinSelection, ComposeAccount, ComposeOutput, ComposeParams, ComposeResult, GetAddressResponse,
-    GetAddressesResponse, HistoryTransaction, Network, SingleAddressInfoResult, SweepResult,
+    GetAddressesResponse, HistoryTransaction, LegacyRnCloseRecoveryScanResult,
+    LegacyRnCloseRecoverySweepPreview, Network, SingleAddressInfoResult, SweepResult,
     SweepTransactionPreview, SweepableBalances, TransactionDetail, TransactionHistoryResult,
     TxDetailInput, TxDetailOutput, TxDirection, ValidationResult, WalletBalance, WalletParams,
     WordCount,

@@ -1,20 +1,23 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
 use base64::{engine::general_purpose, Engine as _};
 use bdk::bitcoin::absolute::LockTime;
-use bdk::bitcoin::bip32::ExtendedPubKey;
-use bdk::bitcoin::consensus::deserialize;
+use bdk::bitcoin::bip32::{
+    DerivationPath as BdkDerivationPath, ExtendedPrivKey as BdkExtendedPrivKey, ExtendedPubKey,
+};
+use bdk::bitcoin::consensus::{deserialize, serialize};
 use bdk::bitcoin::psbt::PartiallySignedTransaction as Psbt;
+use bdk::bitcoin::secp256k1::Secp256k1;
 use bdk::bitcoin::{
-    Address as BdkAddress, Network as BdkNetwork, OutPoint, ScriptBuf, Sequence, Transaction, TxIn,
-    TxOut, Txid, Witness,
+    Address as BdkAddress, Network as BdkNetwork, OutPoint, PrivateKey as BdkPrivateKey,
+    PublicKey as BdkPublicKey, ScriptBuf, Sequence, Transaction, TxIn, TxOut, Txid, Witness,
 };
 use bdk::blockchain::ElectrumBlockchain;
 use bdk::database::MemoryDatabase;
 use bdk::electrum_client::ElectrumApi;
 use bdk::keys::bip39::Mnemonic as BdkMnemonic;
-use bdk::template::{Bip44, Bip49, Bip86};
+use bdk::template::{Bip44, Bip49, Bip86, P2Wpkh};
 use bdk::wallet::signer::SignOptions;
 use bdk::wallet::{AddressIndex as BdkAddressIndex, SyncOptions, Wallet};
 use bdk::KeychainKind;
@@ -27,9 +30,10 @@ use bitcoin_address_generator;
 use super::errors::AccountInfoError;
 use super::types::{
     classify_tx, AccountAddresses, AccountInfoResult, AccountType, AccountUtxo, AddressInfo,
-    AddressType, ComposeAccount, HistoryTransaction, Network as OnchainNetwork,
-    SingleAddressInfoResult, TransactionDetail, TransactionHistoryResult, TxDetailInput,
-    TxDetailOutput, ValidationResult, WalletBalance,
+    AddressType, ComposeAccount, HistoryTransaction, LegacyRnCloseRecoveryScanResult,
+    LegacyRnCloseRecoverySweepPreview, Network as OnchainNetwork, SingleAddressInfoResult,
+    TransactionDetail, TransactionHistoryResult, TxDetailInput, TxDetailOutput, ValidationResult,
+    WalletBalance,
 };
 use crate::modules::scanner::NetworkType;
 use crate::onchain::types::{
@@ -42,6 +46,15 @@ struct SweepWallets {
     legacy_wallet: Wallet<MemoryDatabase>,
     p2sh_wallet: Wallet<MemoryDatabase>,
     taproot_wallet: Wallet<MemoryDatabase>,
+}
+
+// One-time recovery path for legacy React Native channel close funds that were
+// paid to P2WPKH scripts derived from legacy or nested-SegWit selected keys.
+struct LegacyRnNativeSegwitRecoverySpendable {
+    derivation_path: String,
+    txid: String,
+    vout: u32,
+    output: TxOut,
 }
 
 pub struct BitcoinAddressValidator;
@@ -337,6 +350,506 @@ impl BitcoinAddressValidator {
 
         Ok(())
     }
+
+    // ------------------------------------------------------------------------
+    // Legacy RN P2WPKH-from-legacy-or-nested-key close recovery
+    // ------------------------------------------------------------------------
+
+    fn legacy_rn_p2wpkh_from_selected_purpose_script_map(
+        mnemonic_phrase: &str,
+        index_limit: u32,
+        network: Network,
+        bip39_passphrase: Option<&str>,
+    ) -> Result<HashMap<Vec<u8>, String>, SweepError> {
+        let bdk_network = onchain_to_bdk_network(network.into());
+        let mnemonic =
+            Bip39Mnemonic::from_str(mnemonic_phrase).map_err(|_| SweepError::InvalidMnemonic)?;
+        let seed = mnemonic.to_seed(bip39_passphrase.unwrap_or(""));
+        let secp = Secp256k1::new();
+        let master = BdkExtendedPrivKey::new_master(bdk_network, &seed).map_err(|e| {
+            SweepError::SweepFailed(format!("Failed to derive legacy RN master key: {}", e))
+        })?;
+        let mut scripts = HashMap::new();
+        let coin_type = if network == Network::Bitcoin { 0 } else { 1 };
+
+        for purpose in [44, 49] {
+            for index in 0..index_limit {
+                for chain in 0..=1 {
+                    let derivation_path =
+                        format!("m/{}'/{}'/0'/{}/{}", purpose, coin_type, chain, index);
+                    let child_path =
+                        BdkDerivationPath::from_str(&derivation_path).map_err(|e| {
+                            SweepError::SweepFailed(format!(
+                                "Invalid legacy RN derivation path {}: {}",
+                                derivation_path, e
+                            ))
+                        })?;
+                    let child = master.derive_priv(&secp, &child_path).map_err(|e| {
+                        SweepError::SweepFailed(format!(
+                            "Failed to derive legacy RN private key {}: {}",
+                            derivation_path, e
+                        ))
+                    })?;
+                    let public_key =
+                        BdkPublicKey::new(bdk::bitcoin::secp256k1::PublicKey::from_secret_key(
+                            &secp,
+                            &child.private_key,
+                        ));
+                    let script =
+                        ScriptBuf::new_v0_p2wpkh(&public_key.wpubkey_hash().ok_or_else(|| {
+                            SweepError::SweepFailed(format!(
+                                "Legacy RN public key {} is not compressed",
+                                derivation_path
+                            ))
+                        })?);
+                    scripts.insert(script.to_bytes(), derivation_path);
+                }
+            }
+        }
+
+        Ok(scripts)
+    }
+
+    fn legacy_rn_native_segwit_recovery_spendables(
+        mnemonic_phrase: &str,
+        network: Network,
+        electrum_client: &bdk::electrum_client::Client,
+        index_limit: u32,
+        bip39_passphrase: Option<&str>,
+    ) -> Result<Vec<LegacyRnNativeSegwitRecoverySpendable>, SweepError> {
+        let scripts = Self::legacy_rn_p2wpkh_from_selected_purpose_script_map(
+            mnemonic_phrase,
+            index_limit,
+            network,
+            bip39_passphrase,
+        )?;
+        let mut spendables = Vec::new();
+        let mut seen_outpoints = HashSet::new();
+
+        let script_entries = scripts.into_iter().collect::<Vec<_>>();
+        for chunk in script_entries.chunks(100) {
+            let electrum_scripts = chunk
+                .iter()
+                .map(|(script_pubkey, _)| ScriptBuf::from_bytes(script_pubkey.clone()))
+                .collect::<Vec<_>>();
+            let electrum_script_refs = electrum_scripts
+                .iter()
+                .map(|script| script.as_script())
+                .collect::<Vec<_>>();
+            let unspent_batches = electrum_client
+                .batch_script_list_unspent(electrum_script_refs)
+                .map_err(|e| {
+                    SweepError::SweepFailed(format!(
+                        "Failed to scan legacy RN recovery addresses: {}",
+                        e
+                    ))
+                })?;
+
+            for ((script_pubkey, derivation_path), unspent_outputs) in
+                chunk.iter().zip(unspent_batches.into_iter())
+            {
+                for utxo in unspent_outputs {
+                    let vout_u32 = u32::try_from(utxo.tx_pos).map_err(|_| {
+                        SweepError::SweepFailed(format!(
+                            "Legacy RN recovery output index {} is invalid",
+                            utxo.tx_pos
+                        ))
+                    })?;
+                    let outpoint_key = format!("{}:{}", utxo.tx_hash, utxo.tx_pos);
+
+                    if !seen_outpoints.insert(outpoint_key) {
+                        continue;
+                    }
+
+                    spendables.push(LegacyRnNativeSegwitRecoverySpendable {
+                        derivation_path: derivation_path.clone(),
+                        txid: utxo.tx_hash.to_string(),
+                        vout: vout_u32,
+                        output: TxOut {
+                            value: utxo.value,
+                            script_pubkey: ScriptBuf::from_bytes(script_pubkey.clone()),
+                        },
+                    });
+                }
+            }
+        }
+
+        Ok(spendables)
+    }
+
+    fn sign_legacy_rn_native_segwit_recovery_psbt(
+        psbt: &mut Psbt,
+        spendables: &[LegacyRnNativeSegwitRecoverySpendable],
+        mnemonic_phrase: &str,
+        network: Network,
+        bip39_passphrase: Option<&str>,
+    ) -> Result<(), SweepError> {
+        let bdk_network = onchain_to_bdk_network(network.into());
+        let mnemonic =
+            Bip39Mnemonic::from_str(mnemonic_phrase).map_err(|_| SweepError::InvalidMnemonic)?;
+        let seed = mnemonic.to_seed(bip39_passphrase.unwrap_or(""));
+        let secp = Secp256k1::new();
+        let master = BdkExtendedPrivKey::new_master(bdk_network, &seed).map_err(|e| {
+            SweepError::SweepFailed(format!("Failed to derive legacy RN master key: {}", e))
+        })?;
+
+        let sign_options = SignOptions {
+            trust_witness_utxo: true,
+            allow_all_sighashes: true,
+            ..Default::default()
+        };
+
+        for item in spendables {
+            let derivation_path =
+                BdkDerivationPath::from_str(&item.derivation_path).map_err(|e| {
+                    SweepError::SweepFailed(format!(
+                        "Invalid legacy RN derivation path {}: {}",
+                        item.derivation_path, e
+                    ))
+                })?;
+            let child = master.derive_priv(&secp, &derivation_path).map_err(|e| {
+                SweepError::SweepFailed(format!(
+                    "Failed to derive legacy RN private key {}: {}",
+                    item.derivation_path, e
+                ))
+            })?;
+            let public_key = BdkPublicKey::new(
+                bdk::bitcoin::secp256k1::PublicKey::from_secret_key(&secp, &child.private_key),
+            );
+            let expected_script =
+                ScriptBuf::new_v0_p2wpkh(&public_key.wpubkey_hash().ok_or_else(|| {
+                    SweepError::SweepFailed(format!(
+                        "Legacy RN public key {} is not compressed",
+                        item.derivation_path
+                    ))
+                })?);
+            if expected_script != item.output.script_pubkey {
+                return Err(SweepError::SweepFailed(format!(
+                    "Derived script for {} does not match recovery output {}:{}",
+                    item.derivation_path, item.txid, item.vout
+                )));
+            }
+
+            let wallet = Wallet::new(
+                P2Wpkh(BdkPrivateKey::new(child.private_key, bdk_network)),
+                None,
+                bdk_network,
+                MemoryDatabase::new(),
+            )
+            .map_err(|e| {
+                SweepError::SweepFailed(format!(
+                    "Failed to create recovery signer for {}: {}",
+                    item.derivation_path, e
+                ))
+            })?;
+            wallet.ensure_addresses_cached(1).map_err(|e| {
+                SweepError::SweepFailed(format!(
+                    "Failed to cache recovery signer address {}: {}",
+                    item.derivation_path, e
+                ))
+            })?;
+            wallet.sign(psbt, sign_options.clone()).map_err(|e| {
+                SweepError::SweepFailed(format!(
+                    "Failed to sign recovery output {}:{}: {}",
+                    item.txid, item.vout, e
+                ))
+            })?;
+        }
+
+        for input in &psbt.inputs {
+            if input.final_script_sig.is_none() && input.final_script_witness.is_none() {
+                return Err(SweepError::SweepFailed(
+                    "Recovery transaction signing incomplete - some inputs not finalized"
+                        .to_string(),
+                ));
+            }
+        }
+
+        Ok(())
+    }
+
+    fn build_legacy_rn_native_segwit_recovery_sweep_tx(
+        mnemonic_phrase: &str,
+        spendables: &[LegacyRnNativeSegwitRecoverySpendable],
+        network: Network,
+        destination_address: &str,
+        fee_rate_sats_per_vbyte: Option<u32>,
+        bip39_passphrase: Option<&str>,
+    ) -> Result<LegacyRnCloseRecoverySweepPreview, SweepError> {
+        if spendables.is_empty() {
+            return Err(SweepError::NoUtxosFound);
+        }
+
+        let bdk_network = onchain_to_bdk_network(network.into());
+        let dest_addr = BdkAddress::from_str(destination_address)
+            .map_err(|e| SweepError::SweepFailed(format!("Invalid destination address: {}", e)))?
+            .require_network(bdk_network)
+            .map_err(|e| {
+                SweepError::SweepFailed(format!("Network mismatch for destination address: {}", e))
+            })?;
+        let total_amount = spendables.iter().map(|item| item.output.value).sum::<u64>();
+        let fee_rate_sats = fee_rate_sats_per_vbyte.unwrap_or(1) as u64;
+
+        let build_psbt = |output_value: u64| -> Result<Psbt, SweepError> {
+            let inputs = spendables
+                .iter()
+                .map(|item| {
+                    let txid = Txid::from_str(&item.txid).map_err(|e| {
+                        SweepError::SweepFailed(format!(
+                            "Invalid legacy RN recovery txid {}: {}",
+                            item.txid, e
+                        ))
+                    })?;
+                    Ok(TxIn {
+                        previous_output: OutPoint {
+                            txid,
+                            vout: item.vout,
+                        },
+                        script_sig: ScriptBuf::new(),
+                        sequence: Sequence::MAX,
+                        witness: Witness::new(),
+                    })
+                })
+                .collect::<Result<Vec<_>, SweepError>>()?;
+
+            let tx = Transaction {
+                version: 2,
+                lock_time: LockTime::from_consensus(0),
+                input: inputs,
+                output: vec![TxOut {
+                    value: output_value,
+                    script_pubkey: dest_addr.script_pubkey(),
+                }],
+            };
+
+            let mut psbt = Psbt::from_unsigned_tx(tx)
+                .map_err(|e| SweepError::SweepFailed(format!("Failed to create PSBT: {}", e)))?;
+            for (input, item) in psbt.inputs.iter_mut().zip(spendables.iter()) {
+                input.witness_utxo = Some(item.output.clone());
+            }
+            Ok(psbt)
+        };
+
+        let mut probe_psbt = build_psbt(total_amount)?;
+        Self::sign_legacy_rn_native_segwit_recovery_psbt(
+            &mut probe_psbt,
+            spendables,
+            mnemonic_phrase,
+            network,
+            bip39_passphrase,
+        )?;
+        let estimated_vsize = probe_psbt.extract_tx().weight().to_vbytes_ceil();
+        let estimated_fee = estimated_vsize.saturating_mul(fee_rate_sats);
+
+        if estimated_fee >= total_amount {
+            return Err(SweepError::SweepFailed(format!(
+                "Recovery amount {} sats is too small to sweep at {} sat/vB",
+                total_amount, fee_rate_sats
+            )));
+        }
+
+        let amount_after_fees = total_amount - estimated_fee;
+        let mut final_psbt = build_psbt(amount_after_fees)?;
+        Self::sign_legacy_rn_native_segwit_recovery_psbt(
+            &mut final_psbt,
+            spendables,
+            mnemonic_phrase,
+            network,
+            bip39_passphrase,
+        )?;
+        let tx = final_psbt.extract_tx();
+
+        Ok(LegacyRnCloseRecoverySweepPreview {
+            tx_hex: hex::encode(serialize(&tx)),
+            txid: tx.txid().to_string(),
+            total_amount,
+            estimated_fee,
+            estimated_vsize,
+            outputs_count: u32::try_from(spendables.len()).unwrap_or(u32::MAX),
+            destination_address: destination_address.to_string(),
+            amount_after_fees,
+        })
+    }
+
+    pub async fn scan_legacy_rn_native_segwit_recovery_funds(
+        mnemonic_phrase: &str,
+        network: Network,
+        electrum_url: &str,
+        index_limit: u32,
+        bip39_passphrase: Option<&str>,
+    ) -> Result<LegacyRnCloseRecoveryScanResult, SweepError> {
+        let mnemonic_phrase = mnemonic_phrase.to_string();
+        let electrum_url = electrum_url.to_string();
+        let bip39_passphrase = bip39_passphrase.map(str::to_string);
+        tokio::task::spawn_blocking(move || {
+            let electrum_client = Self::create_electrum_client(&electrum_url)?;
+            let spendables = Self::legacy_rn_native_segwit_recovery_spendables(
+                &mnemonic_phrase,
+                network,
+                &electrum_client,
+                index_limit,
+                bip39_passphrase.as_deref(),
+            )?;
+            Ok::<_, SweepError>(LegacyRnCloseRecoveryScanResult {
+                total_amount: spendables.iter().map(|item| item.output.value).sum(),
+                outputs_count: u32::try_from(spendables.len()).unwrap_or(u32::MAX),
+            })
+        })
+        .await
+        .map_err(|e| {
+            SweepError::SweepFailed(format!("Legacy RN recovery scan task failed: {}", e))
+        })?
+    }
+
+    pub async fn prepare_legacy_rn_native_segwit_recovery_sweep(
+        mnemonic_phrase: &str,
+        network: Network,
+        electrum_url: &str,
+        destination_address: &str,
+        fee_rate_sats_per_vbyte: Option<u32>,
+        index_limit: u32,
+        bip39_passphrase: Option<&str>,
+    ) -> Result<LegacyRnCloseRecoverySweepPreview, SweepError> {
+        let mnemonic_phrase = mnemonic_phrase.to_string();
+        let electrum_url = electrum_url.to_string();
+        let destination_address = destination_address.to_string();
+        let bip39_passphrase = bip39_passphrase.map(str::to_string);
+        tokio::task::spawn_blocking(move || {
+            let electrum_client = Self::create_electrum_client(&electrum_url)?;
+            let spendables = Self::legacy_rn_native_segwit_recovery_spendables(
+                &mnemonic_phrase,
+                network,
+                &electrum_client,
+                index_limit,
+                bip39_passphrase.as_deref(),
+            )?;
+            Self::build_legacy_rn_native_segwit_recovery_sweep_tx(
+                &mnemonic_phrase,
+                &spendables,
+                network,
+                &destination_address,
+                fee_rate_sats_per_vbyte,
+                bip39_passphrase.as_deref(),
+            )
+        })
+        .await
+        .map_err(|e| {
+            SweepError::SweepFailed(format!("Legacy RN recovery sweep task failed: {}", e))
+        })?
+    }
+
+    #[cfg(test)]
+    pub(crate) fn legacy_rn_native_segwit_recovery_address_for_test(
+        mnemonic_phrase: &str,
+        network: Network,
+        purpose: u32,
+        index: u32,
+        is_change: bool,
+        bip39_passphrase: Option<&str>,
+    ) -> Result<String, SweepError> {
+        let scripts = Self::legacy_rn_p2wpkh_from_selected_purpose_script_map(
+            mnemonic_phrase,
+            index + 1,
+            network,
+            bip39_passphrase,
+        )?;
+        let coin_type = if network == Network::Bitcoin { 0 } else { 1 };
+        let derivation_path = format!(
+            "m/{}'/{}'/0'/{}/{}",
+            purpose,
+            coin_type,
+            if is_change { 1 } else { 0 },
+            index
+        );
+        let script = scripts
+            .iter()
+            .find_map(|(script, path)| {
+                if path == &derivation_path {
+                    Some(ScriptBuf::from_bytes(script.clone()))
+                } else {
+                    None
+                }
+            })
+            .ok_or_else(|| {
+                SweepError::SweepFailed(format!(
+                    "Failed to derive legacy RN recovery address {}",
+                    derivation_path
+                ))
+            })?;
+        let address = BdkAddress::from_script(&script, onchain_to_bdk_network(network.into()))
+            .map_err(|e| {
+                SweepError::SweepFailed(format!(
+                    "Failed to encode legacy RN recovery address {}: {}",
+                    derivation_path, e
+                ))
+            })?;
+        Ok(address.to_string())
+    }
+
+    #[cfg(test)]
+    pub(crate) fn legacy_rn_native_segwit_recovery_sweep_preview_for_test(
+        mnemonic_phrase: &str,
+        network: Network,
+        purpose: u32,
+        derivation_index: u32,
+        is_change: bool,
+        amount: u64,
+        destination_address: &str,
+        fee_rate_sats_per_vbyte: Option<u32>,
+        bip39_passphrase: Option<&str>,
+    ) -> Result<LegacyRnCloseRecoverySweepPreview, SweepError> {
+        let coin_type = if network == Network::Bitcoin { 0 } else { 1 };
+        let derivation_path = format!(
+            "m/{}'/{}'/0'/{}/{}",
+            purpose,
+            coin_type,
+            if is_change { 1 } else { 0 },
+            derivation_index
+        );
+        let scripts = Self::legacy_rn_p2wpkh_from_selected_purpose_script_map(
+            mnemonic_phrase,
+            derivation_index + 1,
+            network,
+            bip39_passphrase,
+        )?;
+        let script = scripts
+            .iter()
+            .find_map(|(script, path)| {
+                if path == &derivation_path {
+                    Some(ScriptBuf::from_bytes(script.clone()))
+                } else {
+                    None
+                }
+            })
+            .ok_or_else(|| {
+                SweepError::SweepFailed(format!(
+                    "Failed to derive legacy RN recovery script {}",
+                    derivation_path
+                ))
+            })?;
+        let spendable = LegacyRnNativeSegwitRecoverySpendable {
+            derivation_path,
+            txid: "0101010101010101010101010101010101010101010101010101010101010101".to_string(),
+            vout: 0,
+            output: TxOut {
+                value: amount,
+                script_pubkey: script,
+            },
+        };
+
+        Self::build_legacy_rn_native_segwit_recovery_sweep_tx(
+            mnemonic_phrase,
+            &[spendable],
+            network,
+            destination_address,
+            fee_rate_sats_per_vbyte,
+            bip39_passphrase,
+        )
+    }
+
+    // ------------------------------------------------------------------------
+    // Standard wallet sweep
+    // ------------------------------------------------------------------------
 
     pub async fn check_sweepable_balances(
         mnemonic_phrase: &str,

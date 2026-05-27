@@ -3,6 +3,8 @@ mod tests {
     use crate::modules::onchain::{AccountType, AddressType, BitcoinAddressValidator};
     use crate::modules::scanner::NetworkType;
     use crate::onchain::types::WordCount;
+    use bdk::bitcoin::consensus::deserialize;
+    use bdk::bitcoin::Transaction;
     use bdk::database::MemoryDatabase;
     use bdk::wallet::{AddressIndex as BdkAddressIndex, Wallet};
     use bitcoin::bip32::Xpub;
@@ -273,6 +275,114 @@ mod tests {
             address.address.to_string(),
             "bcrt1q6rz28mcfaxtmd6v789l9rrlrusdprr9pz3cppk"
         );
+    }
+
+    #[test]
+    fn test_legacy_rn_recovery_uses_selected_address_type_key_as_p2wpkh_address() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let recovery_address_44 =
+            BitcoinAddressValidator::legacy_rn_native_segwit_recovery_address_for_test(
+                mnemonic,
+                Network::Regtest,
+                44,
+                0,
+                false,
+                None,
+            )
+            .unwrap();
+        let recovery_address_49 =
+            BitcoinAddressValidator::legacy_rn_native_segwit_recovery_address_for_test(
+                mnemonic,
+                Network::Regtest,
+                49,
+                0,
+                false,
+                None,
+            )
+            .unwrap();
+        assert_eq!(
+            recovery_address_44,
+            "bcrt1q8gk5z3dy7zv9ywe7synlrk58elz4hrnegvpv6m"
+        );
+        assert_eq!(
+            recovery_address_49,
+            "bcrt1q8zt37uunpakpg8vh0tz06jnj0jz5jddnkjxx8c"
+        );
+    }
+
+    #[test]
+    fn test_legacy_rn_recovery_sweep_signs_selected_address_type_p2wpkh_output() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let destination_address =
+            BitcoinAddressValidator::legacy_rn_native_segwit_recovery_address_for_test(
+                mnemonic,
+                Network::Regtest,
+                44,
+                1,
+                false,
+                None,
+            )
+            .unwrap();
+        let preview =
+            BitcoinAddressValidator::legacy_rn_native_segwit_recovery_sweep_preview_for_test(
+                mnemonic,
+                Network::Regtest,
+                49,
+                0,
+                false,
+                100_000,
+                &destination_address,
+                Some(2),
+                None,
+            )
+            .unwrap();
+
+        let tx: Transaction = deserialize(&hex::decode(&preview.tx_hex).unwrap()).unwrap();
+        assert_eq!(preview.total_amount, 100_000);
+        assert_eq!(preview.outputs_count, 1);
+        assert_eq!(preview.estimated_fee, preview.estimated_vsize * 2);
+        assert_eq!(
+            preview.amount_after_fees,
+            preview.total_amount - preview.estimated_fee
+        );
+        assert_eq!(tx.input.len(), 1);
+        assert_eq!(tx.output.len(), 1);
+        assert_eq!(tx.output[0].value, preview.amount_after_fees);
+        assert_eq!(tx.weight().to_vbytes_ceil(), preview.estimated_vsize);
+        assert!(!tx.input[0].witness.is_empty());
+    }
+
+    #[test]
+    fn test_legacy_rn_recovery_sweep_respects_explicit_zero_fee_rate() {
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let destination_address =
+            BitcoinAddressValidator::legacy_rn_native_segwit_recovery_address_for_test(
+                mnemonic,
+                Network::Regtest,
+                44,
+                1,
+                false,
+                None,
+            )
+            .unwrap();
+        let preview =
+            BitcoinAddressValidator::legacy_rn_native_segwit_recovery_sweep_preview_for_test(
+                mnemonic,
+                Network::Regtest,
+                44,
+                0,
+                false,
+                100_000,
+                &destination_address,
+                Some(0),
+                None,
+            )
+            .unwrap();
+
+        let tx: Transaction = deserialize(&hex::decode(&preview.tx_hex).unwrap()).unwrap();
+        assert_eq!(preview.estimated_fee, 0);
+        assert_eq!(preview.amount_after_fees, preview.total_amount);
+        assert_eq!(tx.output[0].value, preview.total_amount);
     }
 
     #[test]
