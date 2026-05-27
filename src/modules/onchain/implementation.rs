@@ -48,15 +48,6 @@ struct SweepWallets {
     taproot_wallet: Wallet<MemoryDatabase>,
 }
 
-// One-time recovery path for legacy React Native channel close funds that were
-// paid to P2WPKH scripts derived from legacy or nested-SegWit selected keys.
-pub(super) struct LegacyRnNativeSegwitRecoverySpendable {
-    pub(super) derivation_path: String,
-    pub(super) txid: String,
-    pub(super) vout: u32,
-    pub(super) output: TxOut,
-}
-
 pub struct BitcoinAddressValidator;
 
 impl BitcoinAddressValidator {
@@ -350,11 +341,22 @@ impl BitcoinAddressValidator {
 
         Ok(())
     }
+}
 
-    // ------------------------------------------------------------------------
-    // Legacy RN P2WPKH-from-legacy-or-nested-key close recovery
-    // ------------------------------------------------------------------------
+// ------------------------------------------------------------------------
+// Legacy RN P2WPKH-from-legacy-or-nested-key close recovery
+// ------------------------------------------------------------------------
 
+// One-time recovery path for legacy React Native channel close funds that were
+// paid to P2WPKH scripts derived from legacy or nested-SegWit selected keys.
+pub(super) struct LegacyRnNativeSegwitRecoverySpendable {
+    pub(super) derivation_path: String,
+    pub(super) txid: String,
+    pub(super) vout: u32,
+    pub(super) output: TxOut,
+}
+
+impl BitcoinAddressValidator {
     pub(super) fn legacy_rn_p2wpkh_from_selected_purpose_script_map(
         mnemonic_phrase: &str,
         index_limit: u32,
