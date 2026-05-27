@@ -262,12 +262,12 @@ public interface TrezorUiCallback {
     /**
      * Called when the device requests a passphrase.
      *
-     * If `on_device` is true, the user should enter the passphrase on the
-     * Trezor itself — return `PassphraseResponse::Standard` (or
-     * `Hidden { value: "ok" }`) to acknowledge.
+     * If `on_device` is true, the device is asking for the passphrase to be
+     * entered on the Trezor itself — return `PassphraseResponse::OnDevice`.
      *
-     * If `on_device` is false, show a passphrase input UI and return the
-     * matching `PassphraseResponse` variant.
+     * If `on_device` is false, show a passphrase input UI and return
+     * `Standard` (no passphrase), `Hidden { value }` (host-entered passphrase),
+     * `OnDevice` (defer entry to the Trezor), or `Cancel`.
      */
     public fun `onPassphraseRequest`(`onDevice`: kotlin.Boolean): PassphraseResponse
     
@@ -1810,7 +1810,12 @@ public data class TrezorFeatures (
     /**
      * Whether the device needs backup
      */
-    val `needsBackup`: kotlin.Boolean?
+    val `needsBackup`: kotlin.Boolean?, 
+    /**
+     * Whether the device can accept passphrase entry on the device itself
+     * (`Capability_PassphraseEntry`). When false/None, use host entry only.
+     */
+    val `passphraseEntryCapable`: kotlin.Boolean?
 ) {
     public companion object
 }
@@ -3393,12 +3398,19 @@ public sealed class PassphraseResponse {
     
     
     /**
-     * Hidden wallet — derived from the supplied passphrase.
+     * Hidden wallet — derived from the passphrase entered on the host.
      */@kotlinx.serialization.Serializable
     public data class Hidden(
         val `value`: kotlin.String,
     ) : PassphraseResponse() {
     }
+    
+    /**
+     * Enter the passphrase on the Trezor device itself instead of on the host.
+     */
+    @kotlinx.serialization.Serializable
+    public data object OnDevice : PassphraseResponse() 
+    
     
 }
 
@@ -3937,6 +3949,47 @@ public enum class TxDirection {
      */
     SELF_TRANSFER;
     public companion object
+}
+
+
+
+
+
+
+/**
+ * Which wallet a connection should open.
+ *
+ * Passed to `trezor_connect` and consumed at connect time — the passphrase is
+ * a one-shot input, not retained anywhere afterwards. On THP devices (Safe
+ * 5/7) it is bound to the session at `ThpCreateNewSession`; on legacy devices
+ * the mid-operation `PassphraseRequest` is answered from the UI callback
+ * instead (see [`TrezorUiCallback`]).
+ */
+@kotlinx.serialization.Serializable
+public sealed class WalletSelection {
+    
+    /**
+     * The standard wallet — no passphrase.
+     */
+    @kotlinx.serialization.Serializable
+    public data object Standard : WalletSelection() 
+    
+    
+    /**
+     * A hidden wallet whose passphrase is entered on the host.
+     */@kotlinx.serialization.Serializable
+    public data class Hidden(
+        val `passphrase`: kotlin.String,
+    ) : WalletSelection() {
+    }
+    
+    /**
+     * A hidden wallet whose passphrase is entered on the Trezor itself.
+     */
+    @kotlinx.serialization.Serializable
+    public data object OnDevice : WalletSelection() 
+    
+    
 }
 
 

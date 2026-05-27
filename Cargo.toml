@@ -1,6 +1,6 @@
 [package]
 name = "bitkitcore"
-version = "0.1.61"
+version = "0.1.62"
 edition = "2021"
 
 [lib]
@@ -25,6 +25,7 @@ lnurl-rs = "0.9.0"
 openssl = { version = "0.10", features = ["vendored"] }
 rand = "0.8.5"
 once_cell = "1.20.2"
+zeroize = "1.8"
 rusqlite = { version = "0.32.1", features = ["bundled", "unlock_notify"] }
 rust-blocktank-client = { version = "0.0.16", features = ["rustls-tls"] }
 reqwest = { version = "0.12.12", features = ["json", "rustls-tls", "rustls-tls-native-roots"], default-features = false }
@@ -46,11 +47,11 @@ btleplug = "0.11"
 
 # Trezor connect library - non-iOS platforms get USB + Bluetooth
 [target.'cfg(not(target_os = "ios"))'.dependencies]
-trezor-connect-rs = { version = "0.3.0", features = ["psbt"] }
+trezor-connect-rs = { version = "0.3.2", features = ["psbt"] }
 
 # iOS: Bluetooth only (libusb has no iOS backend, so no USB support)
 [target.'cfg(target_os = "ios")'.dependencies]
-trezor-connect-rs = { version = "0.3.0", default-features = false, features = ["bluetooth", "psbt"] }
+trezor-connect-rs = { version = "0.3.2", default-features = false, features = ["bluetooth", "psbt"] }
 
 # JNI for Android (must match btleplug's jni version)
 [target.'cfg(target_os = "android")'.dependencies]

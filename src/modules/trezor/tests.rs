@@ -760,6 +760,19 @@ mod tests {
     }
 
     #[test]
+    fn test_passphrase_adapter_on_device_maps_to_upstream_on_device() {
+        // On-device entry: the app defers passphrase entry to the Trezor, which
+        // must reach the device as the `OnDevice` variant so the library acks
+        // with `on_device = true` instead of sending a host passphrase.
+        let mock = MockUiCallback::new("", PassphraseResponse::OnDevice);
+        let adapter = adapter_with(mock);
+        assert_eq!(
+            adapter.on_passphrase_request(true),
+            trezor_connect_rs::PassphraseResponse::OnDevice
+        );
+    }
+
+    #[test]
     fn test_passphrase_adapter_forwards_on_device_flag() {
         let mock = MockUiCallback::new("", PassphraseResponse::Standard);
         let adapter = adapter_with(Arc::clone(&mock));

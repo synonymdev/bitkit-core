@@ -76,7 +76,14 @@ pub struct TrezorFeatures {
     pub initialized: Option<bool>,
     /// Whether the device needs backup
     pub needs_backup: Option<bool>,
+    /// Whether the device can accept passphrase entry on the device itself
+    /// (`Capability_PassphraseEntry`). When false/None, use host entry only.
+    pub passphrase_entry_capable: Option<bool>,
 }
+
+/// `Capability_PassphraseEntry` value from the Trezor management proto — the
+/// device is capable of passphrase entry directly on its own screen.
+const CAPABILITY_PASSPHRASE_ENTRY: u32 = 17;
 
 impl From<trezor_connect_rs::device::Features> for TrezorFeatures {
     fn from(f: trezor_connect_rs::device::Features) -> Self {
@@ -92,6 +99,7 @@ impl From<trezor_connect_rs::device::Features> for TrezorFeatures {
             passphrase_protection: f.passphrase_protection,
             initialized: f.initialized,
             needs_backup: f.needs_backup,
+            passphrase_entry_capable: Some(f.capabilities.contains(&CAPABILITY_PASSPHRASE_ENTRY)),
         }
     }
 }

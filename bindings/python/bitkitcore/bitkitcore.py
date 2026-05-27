@@ -661,7 +661,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_clear_credentials() != 41940:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_trezor_connect() != 6551:
+    if lib.uniffi_bitkitcore_checksum_func_trezor_connect() != 49232:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_disconnect() != 48780:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -761,7 +761,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 50474:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 37914:
+    if lib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
 
 # A ctypes library to expose the extern-C FFI definitions.
@@ -1584,6 +1584,7 @@ _UniffiLib.uniffi_bitkitcore_fn_func_trezor_clear_credentials.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_clear_credentials.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_connect.argtypes = (
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_connect.restype = ctypes.c_uint64
@@ -7936,7 +7937,13 @@ class TrezorFeatures:
     Whether the device needs backup
     """
 
-    def __init__(self, *, vendor: "typing.Optional[str]", model: "typing.Optional[str]", label: "typing.Optional[str]", device_id: "typing.Optional[str]", major_version: "typing.Optional[int]", minor_version: "typing.Optional[int]", patch_version: "typing.Optional[int]", pin_protection: "typing.Optional[bool]", passphrase_protection: "typing.Optional[bool]", initialized: "typing.Optional[bool]", needs_backup: "typing.Optional[bool]"):
+    passphrase_entry_capable: "typing.Optional[bool]"
+    """
+    Whether the device can accept passphrase entry on the device itself
+    (`Capability_PassphraseEntry`). When false/None, use host entry only.
+    """
+
+    def __init__(self, *, vendor: "typing.Optional[str]", model: "typing.Optional[str]", label: "typing.Optional[str]", device_id: "typing.Optional[str]", major_version: "typing.Optional[int]", minor_version: "typing.Optional[int]", patch_version: "typing.Optional[int]", pin_protection: "typing.Optional[bool]", passphrase_protection: "typing.Optional[bool]", initialized: "typing.Optional[bool]", needs_backup: "typing.Optional[bool]", passphrase_entry_capable: "typing.Optional[bool]"):
         self.vendor = vendor
         self.model = model
         self.label = label
@@ -7948,9 +7955,10 @@ class TrezorFeatures:
         self.passphrase_protection = passphrase_protection
         self.initialized = initialized
         self.needs_backup = needs_backup
+        self.passphrase_entry_capable = passphrase_entry_capable
 
     def __str__(self):
-        return "TrezorFeatures(vendor={}, model={}, label={}, device_id={}, major_version={}, minor_version={}, patch_version={}, pin_protection={}, passphrase_protection={}, initialized={}, needs_backup={})".format(self.vendor, self.model, self.label, self.device_id, self.major_version, self.minor_version, self.patch_version, self.pin_protection, self.passphrase_protection, self.initialized, self.needs_backup)
+        return "TrezorFeatures(vendor={}, model={}, label={}, device_id={}, major_version={}, minor_version={}, patch_version={}, pin_protection={}, passphrase_protection={}, initialized={}, needs_backup={}, passphrase_entry_capable={})".format(self.vendor, self.model, self.label, self.device_id, self.major_version, self.minor_version, self.patch_version, self.pin_protection, self.passphrase_protection, self.initialized, self.needs_backup, self.passphrase_entry_capable)
 
     def __eq__(self, other):
         if self.vendor != other.vendor:
@@ -7975,6 +7983,8 @@ class TrezorFeatures:
             return False
         if self.needs_backup != other.needs_backup:
             return False
+        if self.passphrase_entry_capable != other.passphrase_entry_capable:
+            return False
         return True
 
 class _UniffiConverterTypeTrezorFeatures(_UniffiConverterRustBuffer):
@@ -7992,6 +8002,7 @@ class _UniffiConverterTypeTrezorFeatures(_UniffiConverterRustBuffer):
             passphrase_protection=_UniffiConverterOptionalBool.read(buf),
             initialized=_UniffiConverterOptionalBool.read(buf),
             needs_backup=_UniffiConverterOptionalBool.read(buf),
+            passphrase_entry_capable=_UniffiConverterOptionalBool.read(buf),
         )
 
     @staticmethod
@@ -8007,6 +8018,7 @@ class _UniffiConverterTypeTrezorFeatures(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalBool.check_lower(value.passphrase_protection)
         _UniffiConverterOptionalBool.check_lower(value.initialized)
         _UniffiConverterOptionalBool.check_lower(value.needs_backup)
+        _UniffiConverterOptionalBool.check_lower(value.passphrase_entry_capable)
 
     @staticmethod
     def write(value, buf):
@@ -8021,6 +8033,7 @@ class _UniffiConverterTypeTrezorFeatures(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalBool.write(value.passphrase_protection, buf)
         _UniffiConverterOptionalBool.write(value.initialized, buf)
         _UniffiConverterOptionalBool.write(value.needs_backup, buf)
+        _UniffiConverterOptionalBool.write(value.passphrase_entry_capable, buf)
 
 
 class TrezorGetAddressParams:
@@ -12468,7 +12481,7 @@ class PassphraseResponse:
     
     class HIDDEN:
         """
-        Hidden wallet — derived from the supplied passphrase.
+        Hidden wallet — derived from the passphrase entered on the host.
         """
 
         value: "str"
@@ -12483,6 +12496,23 @@ class PassphraseResponse:
             if not other.is_HIDDEN():
                 return False
             if self.value != other.value:
+                return False
+            return True
+    
+    class ON_DEVICE:
+        """
+        Enter the passphrase on the Trezor device itself instead of on the host.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "PassphraseResponse.ON_DEVICE()".format()
+
+        def __eq__(self, other):
+            if not other.is_ON_DEVICE():
                 return False
             return True
     
@@ -12502,6 +12532,10 @@ class PassphraseResponse:
         return isinstance(self, PassphraseResponse.HIDDEN)
     def is_hidden(self) -> bool:
         return isinstance(self, PassphraseResponse.HIDDEN)
+    def is_ON_DEVICE(self) -> bool:
+        return isinstance(self, PassphraseResponse.ON_DEVICE)
+    def is_on_device(self) -> bool:
+        return isinstance(self, PassphraseResponse.ON_DEVICE)
     
 
 # Now, a little trick - we make each nested variant class be a subclass of the main
@@ -12510,6 +12544,7 @@ class PassphraseResponse:
 PassphraseResponse.CANCEL = type("PassphraseResponse.CANCEL", (PassphraseResponse.CANCEL, PassphraseResponse,), {})  # type: ignore
 PassphraseResponse.STANDARD = type("PassphraseResponse.STANDARD", (PassphraseResponse.STANDARD, PassphraseResponse,), {})  # type: ignore
 PassphraseResponse.HIDDEN = type("PassphraseResponse.HIDDEN", (PassphraseResponse.HIDDEN, PassphraseResponse,), {})  # type: ignore
+PassphraseResponse.ON_DEVICE = type("PassphraseResponse.ON_DEVICE", (PassphraseResponse.ON_DEVICE, PassphraseResponse,), {})  # type: ignore
 
 
 
@@ -12528,6 +12563,9 @@ class _UniffiConverterTypePassphraseResponse(_UniffiConverterRustBuffer):
             return PassphraseResponse.HIDDEN(
                 _UniffiConverterString.read(buf),
             )
+        if variant == 4:
+            return PassphraseResponse.ON_DEVICE(
+            )
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
@@ -12538,6 +12576,8 @@ class _UniffiConverterTypePassphraseResponse(_UniffiConverterRustBuffer):
             return
         if value.is_HIDDEN():
             _UniffiConverterString.check_lower(value.value)
+            return
+        if value.is_ON_DEVICE():
             return
         raise ValueError(value)
 
@@ -12550,6 +12590,8 @@ class _UniffiConverterTypePassphraseResponse(_UniffiConverterRustBuffer):
         if value.is_HIDDEN():
             buf.write_i32(3)
             _UniffiConverterString.write(value.value, buf)
+        if value.is_ON_DEVICE():
+            buf.write_i32(4)
 
 
 
@@ -14085,6 +14127,146 @@ class _UniffiConverterTypeTxDirection(_UniffiConverterRustBuffer):
         if value == TxDirection.RECEIVED:
             buf.write_i32(2)
         if value == TxDirection.SELF_TRANSFER:
+            buf.write_i32(3)
+
+
+
+
+
+
+
+class WalletSelection:
+    """
+    Which wallet a connection should open.
+
+    Passed to `trezor_connect` and consumed at connect time — the passphrase is
+    a one-shot input, not retained anywhere afterwards. On THP devices (Safe
+    5/7) it is bound to the session at `ThpCreateNewSession`; on legacy devices
+    the mid-operation `PassphraseRequest` is answered from the UI callback
+    instead (see [`TrezorUiCallback`]).
+    """
+
+    def __init__(self):
+        raise RuntimeError("WalletSelection cannot be instantiated directly")
+
+    # Each enum variant is a nested class of the enum itself.
+    class STANDARD:
+        """
+        The standard wallet — no passphrase.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "WalletSelection.STANDARD()".format()
+
+        def __eq__(self, other):
+            if not other.is_STANDARD():
+                return False
+            return True
+    
+    class HIDDEN:
+        """
+        A hidden wallet whose passphrase is entered on the host.
+        """
+
+        passphrase: "str"
+
+        def __init__(self,passphrase: "str"):
+            self.passphrase = passphrase
+
+        def __str__(self):
+            return "WalletSelection.HIDDEN(passphrase={})".format(self.passphrase)
+
+        def __eq__(self, other):
+            if not other.is_HIDDEN():
+                return False
+            if self.passphrase != other.passphrase:
+                return False
+            return True
+    
+    class ON_DEVICE:
+        """
+        A hidden wallet whose passphrase is entered on the Trezor itself.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "WalletSelection.ON_DEVICE()".format()
+
+        def __eq__(self, other):
+            if not other.is_ON_DEVICE():
+                return False
+            return True
+    
+    
+
+    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
+    # whether an instance is that variant.
+    def is_STANDARD(self) -> bool:
+        return isinstance(self, WalletSelection.STANDARD)
+    def is_standard(self) -> bool:
+        return isinstance(self, WalletSelection.STANDARD)
+    def is_HIDDEN(self) -> bool:
+        return isinstance(self, WalletSelection.HIDDEN)
+    def is_hidden(self) -> bool:
+        return isinstance(self, WalletSelection.HIDDEN)
+    def is_ON_DEVICE(self) -> bool:
+        return isinstance(self, WalletSelection.ON_DEVICE)
+    def is_on_device(self) -> bool:
+        return isinstance(self, WalletSelection.ON_DEVICE)
+    
+
+# Now, a little trick - we make each nested variant class be a subclass of the main
+# enum class, so that method calls and instance checks etc will work intuitively.
+# We might be able to do this a little more neatly with a metaclass, but this'll do.
+WalletSelection.STANDARD = type("WalletSelection.STANDARD", (WalletSelection.STANDARD, WalletSelection,), {})  # type: ignore
+WalletSelection.HIDDEN = type("WalletSelection.HIDDEN", (WalletSelection.HIDDEN, WalletSelection,), {})  # type: ignore
+WalletSelection.ON_DEVICE = type("WalletSelection.ON_DEVICE", (WalletSelection.ON_DEVICE, WalletSelection,), {})  # type: ignore
+
+
+
+
+class _UniffiConverterTypeWalletSelection(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return WalletSelection.STANDARD(
+            )
+        if variant == 2:
+            return WalletSelection.HIDDEN(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return WalletSelection.ON_DEVICE(
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value.is_STANDARD():
+            return
+        if value.is_HIDDEN():
+            _UniffiConverterString.check_lower(value.passphrase)
+            return
+        if value.is_ON_DEVICE():
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value.is_STANDARD():
+            buf.write_i32(1)
+        if value.is_HIDDEN():
+            buf.write_i32(2)
+            _UniffiConverterString.write(value.passphrase, buf)
+        if value.is_ON_DEVICE():
             buf.write_i32(3)
 
 
@@ -17146,12 +17328,12 @@ class TrezorUiCallbackProtocol(typing.Protocol):
         """
         Called when the device requests a passphrase.
 
-        If `on_device` is true, the user should enter the passphrase on the
-        Trezor itself — return `PassphraseResponse::Standard` (or
-        `Hidden { value: "ok" }`) to acknowledge.
+        If `on_device` is true, the device is asking for the passphrase to be
+        entered on the Trezor itself — return `PassphraseResponse::OnDevice`.
 
-        If `on_device` is false, show a passphrase input UI and return the
-        matching `PassphraseResponse` variant.
+        If `on_device` is false, show a passphrase input UI and return
+        `Standard` (no passphrase), `Hidden { value }` (host-entered passphrase),
+        `OnDevice` (defer entry to the Trezor), or `Cancel`.
         """
 
         raise NotImplementedError
@@ -17181,12 +17363,12 @@ class TrezorUiCallback():
         """
         Called when the device requests a passphrase.
 
-        If `on_device` is true, the user should enter the passphrase on the
-        Trezor itself — return `PassphraseResponse::Standard` (or
-        `Hidden { value: "ok" }`) to acknowledge.
+        If `on_device` is true, the device is asking for the passphrase to be
+        entered on the Trezor itself — return `PassphraseResponse::OnDevice`.
 
-        If `on_device` is false, show a passphrase input UI and return the
-        matching `PassphraseResponse` variant.
+        If `on_device` is false, show a passphrase input UI and return
+        `Standard` (no passphrase), `Hidden { value }` (host-entered passphrase),
+        `OnDevice` (defer entry to the Trezor), or `Cancel`.
         """
 
         raise NotImplementedError
@@ -17243,12 +17425,12 @@ class TrezorUiCallbackImpl():
         """
         Called when the device requests a passphrase.
 
-        If `on_device` is true, the user should enter the passphrase on the
-        Trezor itself — return `PassphraseResponse::Standard` (or
-        `Hidden { value: "ok" }`) to acknowledge.
+        If `on_device` is true, the device is asking for the passphrase to be
+        entered on the Trezor itself — return `PassphraseResponse::OnDevice`.
 
-        If `on_device` is false, show a passphrase input UI and return the
-        matching `PassphraseResponse` variant.
+        If `on_device` is false, show a passphrase input UI and return
+        `Standard` (no passphrase), `Hidden { value }` (host-entered passphrase),
+        `OnDevice` (defer entry to the Trezor), or `Cancel`.
         """
 
         _UniffiConverterBool.check_lower(on_device)
@@ -18990,20 +19172,28 @@ async def trezor_clear_credentials(device_id: "str") -> None:
 _UniffiConverterTypeTrezorError,
 
     )
-async def trezor_connect(device_id: "str") -> "TrezorFeatures":
+async def trezor_connect(device_id: "str",selection: "WalletSelection") -> "TrezorFeatures":
 
     """
     Connect to a Trezor device by its ID.
 
     For Bluetooth devices, this will use stored credentials if available,
     or trigger pairing if needed.
+
+    `selection` chooses which wallet to open. On THP devices (Safe 5/7) it is
+    bound to the session at creation, so it must be supplied on every connect;
+    there is no separate "set passphrase" step and nothing is cached between
+    calls. Reconnect with a different `selection` to switch wallets.
     """
 
     _UniffiConverterString.check_lower(device_id)
     
+    _UniffiConverterTypeWalletSelection.check_lower(selection)
+    
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_trezor_connect(
-        _UniffiConverterString.lower(device_id)),
+        _UniffiConverterString.lower(device_id),
+        _UniffiConverterTypeWalletSelection.lower(selection)),
         _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
         _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
@@ -19600,6 +19790,7 @@ __all__ = [
     "TrezorScriptType",
     "TrezorTransportType",
     "TxDirection",
+    "WalletSelection",
     "WordCount",
     "AccountAddresses",
     "AccountInfoResult",

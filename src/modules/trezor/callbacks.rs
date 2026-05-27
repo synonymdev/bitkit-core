@@ -190,8 +190,10 @@ pub enum PassphraseResponse {
     Cancel,
     /// Standard wallet — no passphrase, equivalent to `Some("")` on the device.
     Standard,
-    /// Hidden wallet — derived from the supplied passphrase.
+    /// Hidden wallet — derived from the passphrase entered on the host.
     Hidden { value: String },
+    /// Enter the passphrase on the Trezor device itself instead of on the host.
+    OnDevice,
 }
 
 /// Callback interface for handling PIN and passphrase requests from the Trezor device.
@@ -208,12 +210,12 @@ pub trait TrezorUiCallback: Send + Sync {
 
     /// Called when the device requests a passphrase.
     ///
-    /// If `on_device` is true, the user should enter the passphrase on the
-    /// Trezor itself — return `PassphraseResponse::Standard` (or
-    /// `Hidden { value: "ok" }`) to acknowledge.
+    /// If `on_device` is true, the device is asking for the passphrase to be
+    /// entered on the Trezor itself — return `PassphraseResponse::OnDevice`.
     ///
-    /// If `on_device` is false, show a passphrase input UI and return the
-    /// matching `PassphraseResponse` variant.
+    /// If `on_device` is false, show a passphrase input UI and return
+    /// `Standard` (no passphrase), `Hidden { value }` (host-entered passphrase),
+    /// `OnDevice` (defer entry to the Trezor), or `Cancel`.
     fn on_passphrase_request(&self, on_device: bool) -> PassphraseResponse;
 }
 
@@ -256,6 +258,53 @@ pub fn trezor_set_ui_callback(callback: Arc<dyn TrezorUiCallback>) {
 /// Get the UI callback (internal use)
 pub fn get_ui_callback() -> Option<&'static Arc<dyn TrezorUiCallback>> {
     UI_CALLBACK.get()
+}
+
+/// Which wallet a connection should open.
+///
+/// Passed to `trezor_connect` and consumed at connect time — the passphrase is
+/// a one-shot input, not retained anywhere afterwards. On THP devices (Safe
+/// 5/7) it is bound to the session at `ThpCreateNewSession`; on legacy devices
+/// the mid-operation `PassphraseRequest` is answered from the UI callback
+/// instead (see [`TrezorUiCallback`]).
+#[derive(Debug, Clone, uniffi::Enum)]
+pub enum WalletSelection {
+    /// The standard wallet — no passphrase.
+    Standard,
+    /// A hidden wallet whose passphrase is entered on the host.
+    Hidden { passphrase: String },
+    /// A hidden wallet whose passphrase is entered on the Trezor itself.
+    OnDevice,
+}
+
+impl Default for WalletSelection {
+    fn default() -> Self {
+        WalletSelection::Standard
+    }
+}
+
+// Only the callback (mobile) transport binds the passphrase at connect time;
+// the desktop path supplies it via the UI callback instead.
+#[cfg(any(target_os = "android", target_os = "ios"))]
+use zeroize::Zeroizing;
+
+#[cfg(any(target_os = "android", target_os = "ios"))]
+impl WalletSelection {
+    /// Lower the selection to the `(passphrase, on_device)` pair the THP
+    /// transport binds at session creation. `OnDevice` carries no host
+    /// passphrase: the transport omits the field so the Trezor prompts on its
+    /// own screen (firmware rejects an empty passphrase combined with
+    /// `on_device = true`).
+    ///
+    /// The passphrase is moved into a `Zeroizing<String>` so this crate's copy
+    /// is wiped from memory on drop instead of lingering in a freed allocation.
+    pub(crate) fn into_session_passphrase(self) -> (Zeroizing<String>, bool) {
+        match self {
+            WalletSelection::Standard => (Zeroizing::new(String::new()), false),
+            WalletSelection::Hidden { passphrase } => (Zeroizing::new(passphrase), false),
+            WalletSelection::OnDevice => (Zeroizing::new(String::new()), true),
+        }
+    }
 }
 
 // ============================================================================

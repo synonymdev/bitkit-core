@@ -11,7 +11,7 @@ use crate::modules::trezor::{
     TrezorAddressResponse, TrezorCoinType, TrezorDeviceInfo, TrezorError, TrezorFeatures,
     TrezorGetAddressParams, TrezorGetPublicKeyParams, TrezorPublicKeyResponse,
     TrezorSignMessageParams, TrezorSignTxParams, TrezorSignedMessageResponse, TrezorSignedTx,
-    TrezorTransportType, TrezorVerifyMessageParams,
+    TrezorTransportType, TrezorVerifyMessageParams, WalletSelection,
 };
 
 // Desktop: use full trezor-connect-rs
@@ -539,11 +539,18 @@ impl TrezorManager {
         }
     }
 
-    /// Connect to a device by its ID.
+    /// Connect to a device by its ID, opening the wallet given by `selection`.
     ///
-    /// On mobile: Opens device connection via native callback.
-    /// On desktop: Uses trezor-connect-rs library.
-    pub async fn connect(&self, device_id: &str) -> Result<TrezorFeatures, TrezorError> {
+    /// On mobile: Opens device connection via native callback. For THP devices
+    /// the `selection` passphrase is bound to the session created during
+    /// `acquire()`.
+    /// On desktop: Uses trezor-connect-rs library; the passphrase is supplied
+    /// via the UI callback, so `selection` is not consumed on that path.
+    pub async fn connect(
+        &self,
+        device_id: &str,
+        selection: WalletSelection,
+    ) -> Result<TrezorFeatures, TrezorError> {
         if !*self.initialized.lock().await {
             return Err(TrezorError::NotInitialized);
         }
@@ -569,8 +576,15 @@ impl TrezorManager {
             let adapter = Arc::new(CallbackAdapter {
                 callback: callback.clone(),
             });
-            let mut transport =
-                CallbackTransport::new(adapter).with_app_identity("Bitkit", "Bitkit");
+            // Bind the selected wallet's passphrase to the THP session that
+            // acquire() creates. On THP devices the passphrase is set at session
+            // creation, not via a mid-operation prompt. We hold our copy in
+            // `Zeroizing` so it is wiped on drop (including error paths); the
+            // transport re-wraps the value it receives in `Zeroizing` as well.
+            let (session_passphrase, session_on_device) = selection.into_session_passphrase();
+            let mut transport = CallbackTransport::new(adapter)
+                .with_app_identity("Bitkit", "Bitkit")
+                .with_session_passphrase(session_passphrase.to_string(), session_on_device);
             transport.init().await.map_err(TrezorError::from)?;
 
             // Acquire a session (this triggers THP handshake for BLE)
@@ -638,6 +652,11 @@ impl TrezorManager {
         // Desktop: Use trezor-connect-rs
         #[cfg(not(any(target_os = "android", target_os = "ios")))]
         {
+            // Desktop binds the passphrase through the UI callback
+            // (on_passphrase_request), not at connect time, so the selection is
+            // not consumed on this path.
+            let _ = selection;
+
             // Find the device in the cached list
             let device = {
                 let device_list = self.device_list.lock().await;
