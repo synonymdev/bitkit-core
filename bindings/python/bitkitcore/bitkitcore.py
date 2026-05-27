@@ -611,6 +611,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep() != 42719:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret() != 47481:
@@ -652,6 +654,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_resolve_pubky_url() != 43253:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds() != 52496:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_start_pubky_auth() != 18158:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -1449,6 +1453,16 @@ _UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_prepare_legacy_rn_native_segwit_recovery_sweep.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.c_uint32,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_prepare_legacy_rn_native_segwit_recovery_sweep.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_prepare_sweep_transaction.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1563,6 +1577,14 @@ _UniffiLib.uniffi_bitkitcore_fn_func_resolve_pubky_url.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_resolve_pubky_url.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_scan_legacy_rn_native_segwit_recovery_funds.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.c_uint32,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_scan_legacy_rn_native_segwit_recovery_funds.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_start_pubky_auth.argtypes = (
     _UniffiRustBuffer,
 )
@@ -2235,6 +2257,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.restype = ctypes.c_uint1
 _UniffiLib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction.restype = ctypes.c_uint16
@@ -2298,6 +2323,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags.rest
 _UniffiLib.uniffi_bitkitcore_checksum_func_resolve_pubky_url.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_resolve_pubky_url.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_start_pubky_auth.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_start_pubky_auth.restype = ctypes.c_uint16
@@ -5854,6 +5882,160 @@ class _UniffiConverterTypeIcJitEntry(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.expires_at, buf)
         _UniffiConverterString.write(value.updated_at, buf)
         _UniffiConverterString.write(value.created_at, buf)
+
+
+class LegacyRnCloseRecoveryScanResult:
+    total_amount: "int"
+    """
+    Total balance found in legacy RN P2WPKH close outputs (in satoshis).
+    """
+
+    outputs_count: "int"
+    """
+    Number of P2WPKH outputs found.
+    """
+
+    def __init__(self, *, total_amount: "int", outputs_count: "int"):
+        self.total_amount = total_amount
+        self.outputs_count = outputs_count
+
+    def __str__(self):
+        return "LegacyRnCloseRecoveryScanResult(total_amount={}, outputs_count={})".format(self.total_amount, self.outputs_count)
+
+    def __eq__(self, other):
+        if self.total_amount != other.total_amount:
+            return False
+        if self.outputs_count != other.outputs_count:
+            return False
+        return True
+
+class _UniffiConverterTypeLegacyRnCloseRecoveryScanResult(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return LegacyRnCloseRecoveryScanResult(
+            total_amount=_UniffiConverterUInt64.read(buf),
+            outputs_count=_UniffiConverterUInt32.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.total_amount)
+        _UniffiConverterUInt32.check_lower(value.outputs_count)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.total_amount, buf)
+        _UniffiConverterUInt32.write(value.outputs_count, buf)
+
+
+class LegacyRnCloseRecoverySweepPreview:
+    tx_hex: "str"
+    """
+    Fully signed raw sweep transaction hex. Broadcast only after user confirmation.
+    """
+
+    txid: "str"
+    """
+    Transaction id of the sweep transaction.
+    """
+
+    total_amount: "int"
+    """
+    Total input amount in satoshis.
+    """
+
+    estimated_fee: "int"
+    """
+    Fee in satoshis.
+    """
+
+    estimated_vsize: "int"
+    """
+    Transaction virtual size in vbytes.
+    """
+
+    outputs_count: "int"
+    """
+    Number of recovered outputs swept.
+    """
+
+    destination_address: "str"
+    """
+    Destination address receiving the sweep.
+    """
+
+    amount_after_fees: "int"
+    """
+    Amount sent to destination after fees.
+    """
+
+    def __init__(self, *, tx_hex: "str", txid: "str", total_amount: "int", estimated_fee: "int", estimated_vsize: "int", outputs_count: "int", destination_address: "str", amount_after_fees: "int"):
+        self.tx_hex = tx_hex
+        self.txid = txid
+        self.total_amount = total_amount
+        self.estimated_fee = estimated_fee
+        self.estimated_vsize = estimated_vsize
+        self.outputs_count = outputs_count
+        self.destination_address = destination_address
+        self.amount_after_fees = amount_after_fees
+
+    def __str__(self):
+        return "LegacyRnCloseRecoverySweepPreview(tx_hex={}, txid={}, total_amount={}, estimated_fee={}, estimated_vsize={}, outputs_count={}, destination_address={}, amount_after_fees={})".format(self.tx_hex, self.txid, self.total_amount, self.estimated_fee, self.estimated_vsize, self.outputs_count, self.destination_address, self.amount_after_fees)
+
+    def __eq__(self, other):
+        if self.tx_hex != other.tx_hex:
+            return False
+        if self.txid != other.txid:
+            return False
+        if self.total_amount != other.total_amount:
+            return False
+        if self.estimated_fee != other.estimated_fee:
+            return False
+        if self.estimated_vsize != other.estimated_vsize:
+            return False
+        if self.outputs_count != other.outputs_count:
+            return False
+        if self.destination_address != other.destination_address:
+            return False
+        if self.amount_after_fees != other.amount_after_fees:
+            return False
+        return True
+
+class _UniffiConverterTypeLegacyRnCloseRecoverySweepPreview(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return LegacyRnCloseRecoverySweepPreview(
+            tx_hex=_UniffiConverterString.read(buf),
+            txid=_UniffiConverterString.read(buf),
+            total_amount=_UniffiConverterUInt64.read(buf),
+            estimated_fee=_UniffiConverterUInt64.read(buf),
+            estimated_vsize=_UniffiConverterUInt64.read(buf),
+            outputs_count=_UniffiConverterUInt32.read(buf),
+            destination_address=_UniffiConverterString.read(buf),
+            amount_after_fees=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.tx_hex)
+        _UniffiConverterString.check_lower(value.txid)
+        _UniffiConverterUInt64.check_lower(value.total_amount)
+        _UniffiConverterUInt64.check_lower(value.estimated_fee)
+        _UniffiConverterUInt64.check_lower(value.estimated_vsize)
+        _UniffiConverterUInt32.check_lower(value.outputs_count)
+        _UniffiConverterString.check_lower(value.destination_address)
+        _UniffiConverterUInt64.check_lower(value.amount_after_fees)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.tx_hex, buf)
+        _UniffiConverterString.write(value.txid, buf)
+        _UniffiConverterUInt64.write(value.total_amount, buf)
+        _UniffiConverterUInt64.write(value.estimated_fee, buf)
+        _UniffiConverterUInt64.write(value.estimated_vsize, buf)
+        _UniffiConverterUInt32.write(value.outputs_count, buf)
+        _UniffiConverterString.write(value.destination_address, buf)
+        _UniffiConverterUInt64.write(value.amount_after_fees, buf)
 
 
 class LightningActivity:
@@ -18397,6 +18579,41 @@ def parse_pubky_auth_url(auth_url: "str") -> "PubkyAuthDetails":
     return _UniffiConverterTypePubkyAuthDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePubkyError,_UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url,
         _UniffiConverterString.lower(auth_url)))
 
+async def prepare_legacy_rn_native_segwit_recovery_sweep(mnemonic_phrase: "str",network: "typing.Optional[Network]",electrum_url: "str",destination_address: "str",fee_rate_sats_per_vbyte: "typing.Optional[int]",index_limit: "int",bip39_passphrase: "typing.Optional[str]") -> "LegacyRnCloseRecoverySweepPreview":
+
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+
+    _UniffiConverterString.check_lower(electrum_url)
+
+    _UniffiConverterString.check_lower(destination_address)
+
+    _UniffiConverterOptionalUInt32.check_lower(fee_rate_sats_per_vbyte)
+
+    _UniffiConverterUInt32.check_lower(index_limit)
+
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_prepare_legacy_rn_native_segwit_recovery_sweep(
+        _UniffiConverterString.lower(mnemonic_phrase),
+        _UniffiConverterOptionalTypeNetwork.lower(network),
+        _UniffiConverterString.lower(electrum_url),
+        _UniffiConverterString.lower(destination_address),
+        _UniffiConverterOptionalUInt32.lower(fee_rate_sats_per_vbyte),
+        _UniffiConverterUInt32.lower(index_limit),
+        _UniffiConverterOptionalString.lower(bip39_passphrase)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeLegacyRnCloseRecoverySweepPreview.lift,
+
+    # Error FFI converter
+_UniffiConverterTypeSweepError,
+
+    )
 async def prepare_sweep_transaction(mnemonic_phrase: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",electrum_url: "str",destination_address: "str",fee_rate_sats_per_vbyte: "typing.Optional[int]") -> "SweepTransactionPreview":
 
     _UniffiConverterString.check_lower(mnemonic_phrase)
@@ -18778,6 +18995,35 @@ def resolve_pubky_url(uri: "str") -> "str":
     return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePubkyError,_UniffiLib.uniffi_bitkitcore_fn_func_resolve_pubky_url,
         _UniffiConverterString.lower(uri)))
 
+async def scan_legacy_rn_native_segwit_recovery_funds(mnemonic_phrase: "str",network: "typing.Optional[Network]",electrum_url: "str",index_limit: "int",bip39_passphrase: "typing.Optional[str]") -> "LegacyRnCloseRecoveryScanResult":
+
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+
+    _UniffiConverterString.check_lower(electrum_url)
+
+    _UniffiConverterUInt32.check_lower(index_limit)
+
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_scan_legacy_rn_native_segwit_recovery_funds(
+        _UniffiConverterString.lower(mnemonic_phrase),
+        _UniffiConverterOptionalTypeNetwork.lower(network),
+        _UniffiConverterString.lower(electrum_url),
+        _UniffiConverterUInt32.lower(index_limit),
+        _UniffiConverterOptionalString.lower(bip39_passphrase)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeLegacyRnCloseRecoveryScanResult.lift,
+
+    # Error FFI converter
+_UniffiConverterTypeSweepError,
+
+    )
 async def start_pubky_auth(caps: "str") -> "str":
 
     _UniffiConverterString.check_lower(caps)
@@ -19511,6 +19757,8 @@ __all__ = [
     "ILspNode",
     "IManualRefund",
     "IcJitEntry",
+    "LegacyRnCloseRecoveryScanResult",
+    "LegacyRnCloseRecoverySweepPreview",
     "LightningActivity",
     "LightningInvoice",
     "LnurlAddressData",
@@ -19634,6 +19882,7 @@ __all__ = [
     "onchain_get_transaction_history",
     "open_channel",
     "parse_pubky_auth_url",
+    "prepare_legacy_rn_native_segwit_recovery_sweep",
     "prepare_sweep_transaction",
     "pubky_public_key_from_secret",
     "pubky_put_with_secret_key",
@@ -19655,6 +19904,7 @@ __all__ = [
     "remove_tags",
     "reset_pre_activity_metadata_tags",
     "resolve_pubky_url",
+    "scan_legacy_rn_native_segwit_recovery_funds",
     "start_pubky_auth",
     "test_notification",
     "trezor_account_type_to_script_type",
