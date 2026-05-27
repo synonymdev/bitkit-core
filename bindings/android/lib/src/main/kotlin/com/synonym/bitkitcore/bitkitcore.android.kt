@@ -437,11 +437,11 @@ internal open class UniffiForeignFutureStruct(
     @JvmField public var `free`: UniffiForeignFutureFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `handle` = 0.toLong(),
-        
+
         `free` = null,
-        
+
     )
 
     internal class UniffiByValue(
@@ -468,11 +468,11 @@ internal open class UniffiForeignFutureStructU8Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toByte(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -502,11 +502,11 @@ internal open class UniffiForeignFutureStructI8Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toByte(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -536,11 +536,11 @@ internal open class UniffiForeignFutureStructU16Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toShort(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -570,11 +570,11 @@ internal open class UniffiForeignFutureStructI16Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toShort(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -604,11 +604,11 @@ internal open class UniffiForeignFutureStructU32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -638,11 +638,11 @@ internal open class UniffiForeignFutureStructI32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -672,11 +672,11 @@ internal open class UniffiForeignFutureStructU64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toLong(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -706,11 +706,11 @@ internal open class UniffiForeignFutureStructI64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toLong(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -740,11 +740,11 @@ internal open class UniffiForeignFutureStructF32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.0f,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -774,11 +774,11 @@ internal open class UniffiForeignFutureStructF64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.0,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -808,11 +808,11 @@ internal open class UniffiForeignFutureStructPointerStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = NullPointer,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -842,11 +842,11 @@ internal open class UniffiForeignFutureStructRustBufferStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = RustBufferHelper.allocValue(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -875,9 +875,9 @@ internal open class UniffiForeignFutureStructVoidStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -953,31 +953,31 @@ internal open class UniffiVTableCallbackInterfaceTrezorTransportCallbackStruct(
     @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `enumerateDevices` = null,
-        
+
         `openDevice` = null,
-        
+
         `closeDevice` = null,
-        
+
         `readChunk` = null,
-        
+
         `writeChunk` = null,
-        
+
         `getChunkSize` = null,
-        
+
         `callMessage` = null,
-        
+
         `getPairingCode` = null,
-        
+
         `saveThpCredential` = null,
-        
+
         `loadThpCredential` = null,
-        
+
         `logDebug` = null,
-        
+
         `uniffiFree` = null,
-        
+
     )
 
     internal class UniffiByValue(
@@ -1035,13 +1035,13 @@ internal open class UniffiVTableCallbackInterfaceTrezorUiCallbackStruct(
     @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `onPinRequest` = null,
-        
+
         `onPassphraseRequest` = null,
-        
+
         `uniffiFree` = null,
-        
+
     )
 
     internal class UniffiByValue(
@@ -3940,7 +3940,7 @@ public open class TrezorTransportCallbackImpl: Disposable, TrezorTransportCallba
         }!!
     }
 
-    
+
     /**
      * Enumerate all connected Trezor devices
      */
@@ -4155,13 +4155,13 @@ public open class TrezorTransportCallbackImpl: Disposable, TrezorTransportCallba
     }
 
 
-    
-    
 
-    
-    
+
+
+
+
     public companion object
-    
+
 }
 
 
@@ -4544,7 +4544,7 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
         }!!
     }
 
-    
+
     /**
      * Called when the device requests a PIN.
      *
@@ -4584,13 +4584,13 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
     }
 
 
-    
-    
 
-    
-    
+
+
+
+
     public companion object
-    
+
 }
 
 
@@ -12322,7 +12322,7 @@ public suspend fun `approvePubkyAuth`(`authUrl`: kotlin.String, `secretKeyHex`: 
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -12339,7 +12339,7 @@ public suspend fun `blocktankRemoveAllCjitEntries`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -12356,7 +12356,7 @@ public suspend fun `blocktankRemoveAllOrders`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -12373,7 +12373,7 @@ public suspend fun `blocktankWipeAll`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -12420,7 +12420,7 @@ public suspend fun `cancelPubkyAuth`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -13421,7 +13421,7 @@ public suspend fun `pubkyPutWithSecretKey`(`secretKeyHex`: kotlin.String, `path`
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -13440,7 +13440,7 @@ public suspend fun `pubkySessionDelete`(`sessionSecret`: kotlin.String, `path`: 
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -13478,7 +13478,7 @@ public suspend fun `pubkySessionPut`(`sessionSecret`: kotlin.String, `path`: kot
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -13648,7 +13648,7 @@ public suspend fun `regtestMine`(`count`: kotlin.UInt?) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -13812,7 +13812,7 @@ public suspend fun `trezorClearCredentials`(`deviceId`: kotlin.String) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -13855,7 +13855,7 @@ public suspend fun `trezorDisconnect`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -13982,7 +13982,7 @@ public suspend fun `trezorInitialize`(`credentialPath`: kotlin.String?) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -14221,7 +14221,7 @@ public suspend fun `updateBlocktankUrl`(`newUrl`: kotlin.String) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -14259,7 +14259,7 @@ public suspend fun `upsertCjitEntries`(`entries`: List<IcJitEntry>) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -14297,7 +14297,7 @@ public suspend fun `upsertInfo`(`info`: IBtInfo) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -14335,7 +14335,7 @@ public suspend fun `upsertOrders`(`orders`: List<IBtOrder>) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
