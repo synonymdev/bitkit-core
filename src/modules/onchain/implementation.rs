@@ -50,11 +50,11 @@ struct SweepWallets {
 
 // One-time recovery path for legacy React Native channel close funds that were
 // paid to P2WPKH scripts derived from legacy or nested-SegWit selected keys.
-struct LegacyRnNativeSegwitRecoverySpendable {
-    derivation_path: String,
-    txid: String,
-    vout: u32,
-    output: TxOut,
+pub(super) struct LegacyRnNativeSegwitRecoverySpendable {
+    pub(super) derivation_path: String,
+    pub(super) txid: String,
+    pub(super) vout: u32,
+    pub(super) output: TxOut,
 }
 
 pub struct BitcoinAddressValidator;
@@ -355,7 +355,7 @@ impl BitcoinAddressValidator {
     // Legacy RN P2WPKH-from-legacy-or-nested-key close recovery
     // ------------------------------------------------------------------------
 
-    fn legacy_rn_p2wpkh_from_selected_purpose_script_map(
+    pub(super) fn legacy_rn_p2wpkh_from_selected_purpose_script_map(
         mnemonic_phrase: &str,
         index_limit: u32,
         network: Network,
@@ -568,7 +568,7 @@ impl BitcoinAddressValidator {
         Ok(())
     }
 
-    fn build_legacy_rn_native_segwit_recovery_sweep_tx(
+    pub(super) fn build_legacy_rn_native_segwit_recovery_sweep_tx(
         mnemonic_phrase: &str,
         spendables: &[LegacyRnNativeSegwitRecoverySpendable],
         network: Network,
@@ -736,115 +736,6 @@ impl BitcoinAddressValidator {
         .map_err(|e| {
             SweepError::SweepFailed(format!("Legacy RN recovery sweep task failed: {}", e))
         })?
-    }
-
-    #[cfg(test)]
-    pub(crate) fn legacy_rn_native_segwit_recovery_address_for_test(
-        mnemonic_phrase: &str,
-        network: Network,
-        purpose: u32,
-        index: u32,
-        is_change: bool,
-        bip39_passphrase: Option<&str>,
-    ) -> Result<String, SweepError> {
-        let scripts = Self::legacy_rn_p2wpkh_from_selected_purpose_script_map(
-            mnemonic_phrase,
-            index + 1,
-            network,
-            bip39_passphrase,
-        )?;
-        let coin_type = if network == Network::Bitcoin { 0 } else { 1 };
-        let derivation_path = format!(
-            "m/{}'/{}'/0'/{}/{}",
-            purpose,
-            coin_type,
-            if is_change { 1 } else { 0 },
-            index
-        );
-        let script = scripts
-            .iter()
-            .find_map(|(script, path)| {
-                if path == &derivation_path {
-                    Some(ScriptBuf::from_bytes(script.clone()))
-                } else {
-                    None
-                }
-            })
-            .ok_or_else(|| {
-                SweepError::SweepFailed(format!(
-                    "Failed to derive legacy RN recovery address {}",
-                    derivation_path
-                ))
-            })?;
-        let address = BdkAddress::from_script(&script, onchain_to_bdk_network(network.into()))
-            .map_err(|e| {
-                SweepError::SweepFailed(format!(
-                    "Failed to encode legacy RN recovery address {}: {}",
-                    derivation_path, e
-                ))
-            })?;
-        Ok(address.to_string())
-    }
-
-    #[cfg(test)]
-    pub(crate) fn legacy_rn_native_segwit_recovery_sweep_preview_for_test(
-        mnemonic_phrase: &str,
-        network: Network,
-        purpose: u32,
-        derivation_index: u32,
-        is_change: bool,
-        amount: u64,
-        destination_address: &str,
-        fee_rate_sats_per_vbyte: Option<u32>,
-        bip39_passphrase: Option<&str>,
-    ) -> Result<LegacyRnCloseRecoverySweepPreview, SweepError> {
-        let coin_type = if network == Network::Bitcoin { 0 } else { 1 };
-        let derivation_path = format!(
-            "m/{}'/{}'/0'/{}/{}",
-            purpose,
-            coin_type,
-            if is_change { 1 } else { 0 },
-            derivation_index
-        );
-        let scripts = Self::legacy_rn_p2wpkh_from_selected_purpose_script_map(
-            mnemonic_phrase,
-            derivation_index + 1,
-            network,
-            bip39_passphrase,
-        )?;
-        let script = scripts
-            .iter()
-            .find_map(|(script, path)| {
-                if path == &derivation_path {
-                    Some(ScriptBuf::from_bytes(script.clone()))
-                } else {
-                    None
-                }
-            })
-            .ok_or_else(|| {
-                SweepError::SweepFailed(format!(
-                    "Failed to derive legacy RN recovery script {}",
-                    derivation_path
-                ))
-            })?;
-        let spendable = LegacyRnNativeSegwitRecoverySpendable {
-            derivation_path,
-            txid: "0101010101010101010101010101010101010101010101010101010101010101".to_string(),
-            vout: 0,
-            output: TxOut {
-                value: amount,
-                script_pubkey: script,
-            },
-        };
-
-        Self::build_legacy_rn_native_segwit_recovery_sweep_tx(
-            mnemonic_phrase,
-            &[spendable],
-            network,
-            destination_address,
-            fee_rate_sats_per_vbyte,
-            bip39_passphrase,
-        )
     }
 
     // ------------------------------------------------------------------------

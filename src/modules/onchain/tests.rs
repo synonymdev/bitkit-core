@@ -1,15 +1,125 @@
 #[cfg(test)]
 mod tests {
+    use super::super::implementation::{
+        onchain_to_bdk_network, LegacyRnNativeSegwitRecoverySpendable,
+    };
     use crate::modules::onchain::{AccountType, AddressType, BitcoinAddressValidator};
     use crate::modules::scanner::NetworkType;
-    use crate::onchain::types::WordCount;
+    use crate::onchain::types::{LegacyRnCloseRecoverySweepPreview, WordCount};
+    use crate::onchain::SweepError;
     use bdk::bitcoin::consensus::deserialize;
-    use bdk::bitcoin::Transaction;
+    use bdk::bitcoin::{Address as BdkAddress, ScriptBuf, Transaction, TxOut};
     use bdk::database::MemoryDatabase;
     use bdk::wallet::{AddressIndex as BdkAddressIndex, Wallet};
     use bitcoin::bip32::Xpub;
     use bitcoin::{Network, NetworkKind};
     use std::str::FromStr;
+
+    fn legacy_rn_recovery_script(
+        mnemonic_phrase: &str,
+        network: Network,
+        purpose: u32,
+        index: u32,
+        is_change: bool,
+        bip39_passphrase: Option<&str>,
+    ) -> Result<(String, ScriptBuf), SweepError> {
+        let scripts = BitcoinAddressValidator::legacy_rn_p2wpkh_from_selected_purpose_script_map(
+            mnemonic_phrase,
+            index + 1,
+            network,
+            bip39_passphrase,
+        )?;
+        let coin_type = if network == Network::Bitcoin { 0 } else { 1 };
+        let derivation_path = format!(
+            "m/{}'/{}'/0'/{}/{}",
+            purpose,
+            coin_type,
+            if is_change { 1 } else { 0 },
+            index
+        );
+        let script = scripts
+            .into_iter()
+            .find_map(|(script, path)| {
+                if path == derivation_path {
+                    Some(ScriptBuf::from_bytes(script))
+                } else {
+                    None
+                }
+            })
+            .ok_or_else(|| {
+                SweepError::SweepFailed(format!(
+                    "Failed to derive legacy RN recovery script {}",
+                    derivation_path
+                ))
+            })?;
+
+        Ok((derivation_path, script))
+    }
+
+    fn legacy_rn_recovery_address(
+        mnemonic_phrase: &str,
+        network: Network,
+        purpose: u32,
+        index: u32,
+        is_change: bool,
+        bip39_passphrase: Option<&str>,
+    ) -> Result<String, SweepError> {
+        let (derivation_path, script) = legacy_rn_recovery_script(
+            mnemonic_phrase,
+            network,
+            purpose,
+            index,
+            is_change,
+            bip39_passphrase,
+        )?;
+        let address = BdkAddress::from_script(&script, onchain_to_bdk_network(network.into()))
+            .map_err(|e| {
+                SweepError::SweepFailed(format!(
+                    "Failed to encode legacy RN recovery address {}: {}",
+                    derivation_path, e
+                ))
+            })?;
+        Ok(address.to_string())
+    }
+
+    fn legacy_rn_recovery_sweep_preview(
+        mnemonic_phrase: &str,
+        network: Network,
+        purpose: u32,
+        derivation_index: u32,
+        is_change: bool,
+        amount: u64,
+        destination_address: &str,
+        fee_rate_sats_per_vbyte: Option<u32>,
+        bip39_passphrase: Option<&str>,
+    ) -> Result<LegacyRnCloseRecoverySweepPreview, SweepError> {
+        let (derivation_path, script_pubkey) = legacy_rn_recovery_script(
+            mnemonic_phrase,
+            network,
+            purpose,
+            derivation_index,
+            is_change,
+            bip39_passphrase,
+        )?;
+        let spendable = LegacyRnNativeSegwitRecoverySpendable {
+            derivation_path,
+            txid: "0101010101010101010101010101010101010101010101010101010101010101".to_string(),
+            vout: 0,
+            output: TxOut {
+                value: amount,
+                script_pubkey,
+            },
+        };
+
+        BitcoinAddressValidator::build_legacy_rn_native_segwit_recovery_sweep_tx(
+            mnemonic_phrase,
+            &[spendable],
+            network,
+            destination_address,
+            fee_rate_sats_per_vbyte,
+            bip39_passphrase,
+        )
+    }
 
     #[test]
     fn test_address_types() {
@@ -281,25 +391,9 @@ mod tests {
     fn test_legacy_rn_recovery_uses_selected_address_type_key_as_p2wpkh_address() {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let recovery_address_44 =
-            BitcoinAddressValidator::legacy_rn_native_segwit_recovery_address_for_test(
-                mnemonic,
-                Network::Regtest,
-                44,
-                0,
-                false,
-                None,
-            )
-            .unwrap();
+            legacy_rn_recovery_address(mnemonic, Network::Regtest, 44, 0, false, None).unwrap();
         let recovery_address_49 =
-            BitcoinAddressValidator::legacy_rn_native_segwit_recovery_address_for_test(
-                mnemonic,
-                Network::Regtest,
-                49,
-                0,
-                false,
-                None,
-            )
-            .unwrap();
+            legacy_rn_recovery_address(mnemonic, Network::Regtest, 49, 0, false, None).unwrap();
         assert_eq!(
             recovery_address_44,
             "bcrt1q8gk5z3dy7zv9ywe7synlrk58elz4hrnegvpv6m"
@@ -314,28 +408,19 @@ mod tests {
     fn test_legacy_rn_recovery_sweep_signs_selected_address_type_p2wpkh_output() {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let destination_address =
-            BitcoinAddressValidator::legacy_rn_native_segwit_recovery_address_for_test(
-                mnemonic,
-                Network::Regtest,
-                44,
-                1,
-                false,
-                None,
-            )
-            .unwrap();
-        let preview =
-            BitcoinAddressValidator::legacy_rn_native_segwit_recovery_sweep_preview_for_test(
-                mnemonic,
-                Network::Regtest,
-                49,
-                0,
-                false,
-                100_000,
-                &destination_address,
-                Some(2),
-                None,
-            )
-            .unwrap();
+            legacy_rn_recovery_address(mnemonic, Network::Regtest, 44, 1, false, None).unwrap();
+        let preview = legacy_rn_recovery_sweep_preview(
+            mnemonic,
+            Network::Regtest,
+            49,
+            0,
+            false,
+            100_000,
+            &destination_address,
+            Some(2),
+            None,
+        )
+        .unwrap();
 
         let tx: Transaction = deserialize(&hex::decode(&preview.tx_hex).unwrap()).unwrap();
         assert_eq!(preview.total_amount, 100_000);
@@ -356,28 +441,19 @@ mod tests {
     fn test_legacy_rn_recovery_sweep_respects_explicit_zero_fee_rate() {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let destination_address =
-            BitcoinAddressValidator::legacy_rn_native_segwit_recovery_address_for_test(
-                mnemonic,
-                Network::Regtest,
-                44,
-                1,
-                false,
-                None,
-            )
-            .unwrap();
-        let preview =
-            BitcoinAddressValidator::legacy_rn_native_segwit_recovery_sweep_preview_for_test(
-                mnemonic,
-                Network::Regtest,
-                44,
-                0,
-                false,
-                100_000,
-                &destination_address,
-                Some(0),
-                None,
-            )
-            .unwrap();
+            legacy_rn_recovery_address(mnemonic, Network::Regtest, 44, 1, false, None).unwrap();
+        let preview = legacy_rn_recovery_sweep_preview(
+            mnemonic,
+            Network::Regtest,
+            44,
+            0,
+            false,
+            100_000,
+            &destination_address,
+            Some(0),
+            None,
+        )
+        .unwrap();
 
         let tx: Transaction = deserialize(&hex::decode(&preview.tx_hex).unwrap()).unwrap();
         assert_eq!(preview.estimated_fee, 0);
