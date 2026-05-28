@@ -1770,7 +1770,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_trezor_clear_credentials() != 41940.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_connect() != 6551.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_connect() != 49232.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_disconnect() != 48780.toShort()) {
@@ -1920,7 +1920,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 50474.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 63487.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
     }
@@ -3057,6 +3057,7 @@ internal object UniffiLib : Library {
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_connect(
         `deviceId`: RustBufferByValue,
+        `selection`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_disconnect(
@@ -4413,12 +4414,6 @@ internal object uniffiCallbackInterfaceTrezorTransportCallback {
  *
  * The native layer (iOS/Android) should implement this to show PIN/passphrase
  * input UI when the device requests it during operations like signing.
- *
- * Methods return `String`:
- * - Empty string (`""`) = cancel the request
- * - Non-empty string = the user's input (PIN or passphrase)
- *
- * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
 public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
 
@@ -4531,14 +4526,15 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
     /**
      * Called when the device requests a passphrase.
      *
-     * If `on_device` is true, the user should enter on the Trezor itself —
-     * return any non-empty string (e.g., "ok") to acknowledge.
+     * If `on_device` is true, the device is asking for the passphrase to be
+     * entered on the Trezor itself — return `PassphraseResponse::OnDevice`.
      *
-     * If `on_device` is false, show a passphrase input UI and return the value.
-     * Return empty string to cancel.
+     * If `on_device` is false, show a passphrase input UI and return
+     * `Standard` (no passphrase), `Hidden { value }` (host-entered passphrase),
+     * `OnDevice` (defer entry to the Trezor), or `Cancel`.
      */
-    public override fun `onPassphraseRequest`(`onDevice`: kotlin.Boolean): kotlin.String {
-        return FfiConverterString.lift(callWithPointer {
+    public override fun `onPassphraseRequest`(`onDevice`: kotlin.Boolean): PassphraseResponse {
+        return FfiConverterTypePassphraseResponse.lift(callWithPointer {
             uniffiRustCall { uniffiRustCallStatus ->
                 UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request(
                     it,
@@ -4622,8 +4618,8 @@ internal object uniffiCallbackInterfaceTrezorUiCallback {
                     FfiConverterBoolean.lift(`onDevice`),
                 )
             }
-            val writeReturn = { uniffiResultValue: kotlin.String ->
-                uniffiOutReturn.setValue(FfiConverterString.lower(uniffiResultValue))
+            val writeReturn = { uniffiResultValue: PassphraseResponse ->
+                uniffiOutReturn.setValue(FfiConverterTypePassphraseResponse.lower(uniffiResultValue))
             }
             uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
         }
@@ -7128,6 +7124,7 @@ public object FfiConverterTypeTrezorFeatures: FfiConverterRustBuffer<TrezorFeatu
             FfiConverterOptionalBoolean.read(buf),
             FfiConverterOptionalBoolean.read(buf),
             FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
         )
     }
 
@@ -7142,7 +7139,8 @@ public object FfiConverterTypeTrezorFeatures: FfiConverterRustBuffer<TrezorFeatu
             FfiConverterOptionalBoolean.allocationSize(value.`pinProtection`) +
             FfiConverterOptionalBoolean.allocationSize(value.`passphraseProtection`) +
             FfiConverterOptionalBoolean.allocationSize(value.`initialized`) +
-            FfiConverterOptionalBoolean.allocationSize(value.`needsBackup`)
+            FfiConverterOptionalBoolean.allocationSize(value.`needsBackup`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`passphraseEntryCapable`)
     )
 
     override fun write(value: TrezorFeatures, buf: ByteBuffer) {
@@ -7157,6 +7155,7 @@ public object FfiConverterTypeTrezorFeatures: FfiConverterRustBuffer<TrezorFeatu
         FfiConverterOptionalBoolean.write(value.`passphraseProtection`, buf)
         FfiConverterOptionalBoolean.write(value.`initialized`, buf)
         FfiConverterOptionalBoolean.write(value.`needsBackup`, buf)
+        FfiConverterOptionalBoolean.write(value.`passphraseEntryCapable`, buf)
     }
 }
 
@@ -9211,6 +9210,74 @@ public object FfiConverterTypeNetworkType: FfiConverterRustBuffer<NetworkType> {
 
 
 
+public object FfiConverterTypePassphraseResponse : FfiConverterRustBuffer<PassphraseResponse>{
+    override fun read(buf: ByteBuffer): PassphraseResponse {
+        return when(buf.getInt()) {
+            1 -> PassphraseResponse.Cancel
+            2 -> PassphraseResponse.Standard
+            3 -> PassphraseResponse.Hidden(
+                FfiConverterString.read(buf),
+                )
+            4 -> PassphraseResponse.OnDevice
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: PassphraseResponse): ULong = when(value) {
+        is PassphraseResponse.Cancel -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is PassphraseResponse.Standard -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is PassphraseResponse.Hidden -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`value`)
+            )
+        }
+        is PassphraseResponse.OnDevice -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+    }
+
+    override fun write(value: PassphraseResponse, buf: ByteBuffer) {
+        when(value) {
+            is PassphraseResponse.Cancel -> {
+                buf.putInt(1)
+                Unit
+            }
+            is PassphraseResponse.Standard -> {
+                buf.putInt(2)
+                Unit
+            }
+            is PassphraseResponse.Hidden -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`value`, buf)
+                Unit
+            }
+            is PassphraseResponse.OnDevice -> {
+                buf.putInt(4)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
 public object FfiConverterTypePaymentState: FfiConverterRustBuffer<PaymentState> {
     override fun read(buf: ByteBuffer): PaymentState = try {
         PaymentState.entries[buf.getInt() - 1]
@@ -9692,20 +9759,21 @@ public object FfiConverterTypeTrezorError : FfiConverterRustBuffer<TrezorExcepti
             9 -> TrezorException.PinCancelled()
             10 -> TrezorException.InvalidPin()
             11 -> TrezorException.PassphraseRequired()
-            12 -> TrezorException.UserCancelled()
-            13 -> TrezorException.Timeout()
-            14 -> TrezorException.InvalidPath(
+            12 -> TrezorException.PassphraseCancelled()
+            13 -> TrezorException.UserCancelled()
+            14 -> TrezorException.Timeout()
+            15 -> TrezorException.InvalidPath(
                 FfiConverterString.read(buf),
                 )
-            15 -> TrezorException.DeviceException(
+            16 -> TrezorException.DeviceException(
                 FfiConverterString.read(buf),
                 )
-            16 -> TrezorException.NotInitialized()
-            17 -> TrezorException.NotConnected()
-            18 -> TrezorException.SessionException(
+            17 -> TrezorException.NotInitialized()
+            18 -> TrezorException.NotConnected()
+            19 -> TrezorException.SessionException(
                 FfiConverterString.read(buf),
                 )
-            19 -> TrezorException.IoException(
+            20 -> TrezorException.IoException(
                 FfiConverterString.read(buf),
                 )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
@@ -9759,6 +9827,10 @@ public object FfiConverterTypeTrezorError : FfiConverterRustBuffer<TrezorExcepti
                 4UL
             )
             is TrezorException.PassphraseRequired -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is TrezorException.PassphraseCancelled -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
             )
@@ -9851,39 +9923,43 @@ public object FfiConverterTypeTrezorError : FfiConverterRustBuffer<TrezorExcepti
                 buf.putInt(11)
                 Unit
             }
-            is TrezorException.UserCancelled -> {
+            is TrezorException.PassphraseCancelled -> {
                 buf.putInt(12)
                 Unit
             }
-            is TrezorException.Timeout -> {
+            is TrezorException.UserCancelled -> {
                 buf.putInt(13)
                 Unit
             }
-            is TrezorException.InvalidPath -> {
+            is TrezorException.Timeout -> {
                 buf.putInt(14)
-                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is TrezorException.DeviceException -> {
+            is TrezorException.InvalidPath -> {
                 buf.putInt(15)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is TrezorException.NotInitialized -> {
+            is TrezorException.DeviceException -> {
                 buf.putInt(16)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is TrezorException.NotConnected -> {
+            is TrezorException.NotInitialized -> {
                 buf.putInt(17)
                 Unit
             }
-            is TrezorException.SessionException -> {
+            is TrezorException.NotConnected -> {
                 buf.putInt(18)
+                Unit
+            }
+            is TrezorException.SessionException -> {
+                buf.putInt(19)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
             is TrezorException.IoException -> {
-                buf.putInt(19)
+                buf.putInt(20)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
@@ -9942,6 +10018,63 @@ public object FfiConverterTypeTxDirection: FfiConverterRustBuffer<TxDirection> {
 
     override fun write(value: TxDirection, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeWalletSelection : FfiConverterRustBuffer<WalletSelection>{
+    override fun read(buf: ByteBuffer): WalletSelection {
+        return when(buf.getInt()) {
+            1 -> WalletSelection.Standard
+            2 -> WalletSelection.Hidden(
+                FfiConverterString.read(buf),
+                )
+            3 -> WalletSelection.OnDevice
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: WalletSelection): ULong = when(value) {
+        is WalletSelection.Standard -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is WalletSelection.Hidden -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`passphrase`)
+            )
+        }
+        is WalletSelection.OnDevice -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+    }
+
+    override fun write(value: WalletSelection, buf: ByteBuffer) {
+        when(value) {
+            is WalletSelection.Standard -> {
+                buf.putInt(1)
+                Unit
+            }
+            is WalletSelection.Hidden -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`passphrase`, buf)
+                Unit
+            }
+            is WalletSelection.OnDevice -> {
+                buf.putInt(3)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
 }
 
@@ -13683,12 +13816,18 @@ public suspend fun `trezorClearCredentials`(`deviceId`: kotlin.String) {
  *
  * For Bluetooth devices, this will use stored credentials if available,
  * or trigger pairing if needed.
+ *
+ * `selection` chooses which wallet to open. On THP devices (Safe 5/7) it is
+ * bound to the session at creation, so it must be supplied on every connect;
+ * there is no separate "set passphrase" step and nothing is cached between
+ * calls. Reconnect with a different `selection` to switch wallets.
  */
 @Throws(TrezorException::class, kotlin.coroutines.cancellation.CancellationException::class)
-public suspend fun `trezorConnect`(`deviceId`: kotlin.String): TrezorFeatures {
+public suspend fun `trezorConnect`(`deviceId`: kotlin.String, `selection`: WalletSelection): TrezorFeatures {
     return uniffiRustCallAsync(
         UniffiLib.uniffi_bitkitcore_fn_func_trezor_connect(
             FfiConverterString.lower(`deviceId`),
+            FfiConverterTypeWalletSelection.lower(`selection`),
         ),
         { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },

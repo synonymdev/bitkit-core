@@ -48,6 +48,10 @@ pub enum TrezorError {
     #[error("Passphrase is required")]
     PassphraseRequired,
 
+    /// Passphrase entry cancelled
+    #[error("Passphrase entry cancelled")]
+    PassphraseCancelled,
+
     /// Action cancelled by user on device
     #[error("Action cancelled by user")]
     UserCancelled,
@@ -164,6 +168,9 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
                         ),
                     }
                 }
+                _ => TrezorError::ProtocolError {
+                    error_details: protocol_err.to_string(),
+                },
             },
 
             // Device errors
@@ -174,6 +181,7 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
                 TcDeviceError::InvalidPin => TrezorError::InvalidPin,
                 TcDeviceError::PinCancelled => TrezorError::PinCancelled,
                 TcDeviceError::PassphraseRequired => TrezorError::PassphraseRequired,
+                TcDeviceError::PassphraseCancelled => TrezorError::PassphraseCancelled,
                 TcDeviceError::NotInitialized => TrezorError::DeviceError {
                     error_details: "Device is not initialized".to_string(),
                 },
@@ -200,6 +208,16 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
                 },
                 TcDeviceError::InvalidInput(msg) => TrezorError::DeviceError {
                     error_details: format!("Invalid input: {}", msg),
+                },
+                // Wrong passphrase for a remembered wallet (static-session-id
+                // mismatch). Only produced if the caller opts into
+                // ConnectedDevice::verify_session_state, which bitkit-core does
+                // not currently call — mapped here to keep the match exhaustive.
+                TcDeviceError::InvalidState => TrezorError::DeviceError {
+                    error_details: "Passphrase is incorrect (device state mismatch)".to_string(),
+                },
+                _ => TrezorError::DeviceError {
+                    error_details: device_err.to_string(),
                 },
             },
 
@@ -234,6 +252,9 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
                 ThpError::SessionError(msg) => TrezorError::SessionError {
                     error_details: format!("THP session error: {}", msg),
                 },
+                _ => TrezorError::ConnectionError {
+                    error_details: format!("THP error: {}", thp_err),
+                },
             },
 
             // Session errors
@@ -249,6 +270,9 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
                 },
                 TcSessionError::Expired => TrezorError::SessionError {
                     error_details: "Session expired".to_string(),
+                },
+                _ => TrezorError::SessionError {
+                    error_details: session_err.to_string(),
                 },
             },
 
@@ -273,6 +297,15 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
                         expected, actual
                     ),
                 },
+                _ => TrezorError::DeviceError {
+                    error_details: bitcoin_err.to_string(),
+                },
+            },
+
+            // The upstream error enums are `#[non_exhaustive]`, so any future
+            // variant we don't explicitly map falls through to a generic error.
+            _ => TrezorError::DeviceError {
+                error_details: err.to_string(),
             },
         }
     }

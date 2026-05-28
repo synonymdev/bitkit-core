@@ -1312,12 +1312,6 @@ public func FfiConverterTypeTrezorTransportCallback_lower(_ value: TrezorTranspo
  *
  * The native layer (iOS/Android) should implement this to show PIN/passphrase
  * input UI when the device requests it during operations like signing.
- *
- * Methods return `String`:
- * - Empty string (`""`) = cancel the request
- * - Non-empty string = the user's input (PIN or passphrase)
- *
- * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
 public protocol TrezorUiCallback: AnyObject, Sendable {
     
@@ -1332,13 +1326,14 @@ public protocol TrezorUiCallback: AnyObject, Sendable {
     /**
      * Called when the device requests a passphrase.
      *
-     * If `on_device` is true, the user should enter on the Trezor itself —
-     * return any non-empty string (e.g., "ok") to acknowledge.
+     * If `on_device` is true, the device is asking for the passphrase to be
+     * entered on the Trezor itself — return `PassphraseResponse::OnDevice`.
      *
-     * If `on_device` is false, show a passphrase input UI and return the value.
-     * Return empty string to cancel.
+     * If `on_device` is false, show a passphrase input UI and return
+     * `Standard` (no passphrase), `Hidden { value }` (host-entered passphrase),
+     * `OnDevice` (defer entry to the Trezor), or `Cancel`.
      */
-    func onPassphraseRequest(onDevice: Bool)  -> String
+    func onPassphraseRequest(onDevice: Bool)  -> PassphraseResponse
     
 }
 /**
@@ -1346,12 +1341,6 @@ public protocol TrezorUiCallback: AnyObject, Sendable {
  *
  * The native layer (iOS/Android) should implement this to show PIN/passphrase
  * input UI when the device requests it during operations like signing.
- *
- * Methods return `String`:
- * - Empty string (`""`) = cancel the request
- * - Non-empty string = the user's input (PIN or passphrase)
- *
- * This matches the existing `get_pairing_code` pattern used in `TrezorTransportCallback`.
  */
 open class TrezorUiCallbackImpl: TrezorUiCallback, @unchecked Sendable {
     fileprivate let pointer: UnsafeMutableRawPointer!
@@ -1421,14 +1410,15 @@ open func onPinRequest() -> String  {
     /**
      * Called when the device requests a passphrase.
      *
-     * If `on_device` is true, the user should enter on the Trezor itself —
-     * return any non-empty string (e.g., "ok") to acknowledge.
+     * If `on_device` is true, the device is asking for the passphrase to be
+     * entered on the Trezor itself — return `PassphraseResponse::OnDevice`.
      *
-     * If `on_device` is false, show a passphrase input UI and return the value.
-     * Return empty string to cancel.
+     * If `on_device` is false, show a passphrase input UI and return
+     * `Standard` (no passphrase), `Hidden { value }` (host-entered passphrase),
+     * `OnDevice` (defer entry to the Trezor), or `Cancel`.
      */
-open func onPassphraseRequest(onDevice: Bool) -> String  {
-    return try!  FfiConverterString.lift(try! rustCall() {
+open func onPassphraseRequest(onDevice: Bool) -> PassphraseResponse  {
+    return try!  FfiConverterTypePassphraseResponse_lift(try! rustCall() {
     uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request(self.uniffiClonePointer(),
         FfiConverterBool.lower(onDevice),$0
     )
@@ -1477,7 +1467,7 @@ fileprivate struct UniffiCallbackInterfaceTrezorUiCallback {
             uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
         ) in
             let makeCall = {
-                () throws -> String in
+                () throws -> PassphraseResponse in
                 guard let uniffiObj = try? FfiConverterTypeTrezorUiCallback.handleMap.get(handle: uniffiHandle) else {
                     throw UniffiInternalError.unexpectedStaleHandle
                 }
@@ -1487,7 +1477,7 @@ fileprivate struct UniffiCallbackInterfaceTrezorUiCallback {
             }
 
             
-            let writeReturn = { uniffiOutReturn.pointee = FfiConverterString.lower($0) }
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterTypePassphraseResponse_lower($0) }
             uniffiTraitInterfaceCall(
                 callStatus: uniffiCallStatus,
                 makeCall: makeCall,
@@ -9856,6 +9846,11 @@ public struct TrezorFeatures {
      * Whether the device needs backup
      */
     public var needsBackup: Bool?
+    /**
+     * Whether the device can accept passphrase entry on the device itself
+     * (`Capability_PassphraseEntry`). When false/None, use host entry only.
+     */
+    public var passphraseEntryCapable: Bool?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -9892,7 +9887,11 @@ public struct TrezorFeatures {
          */initialized: Bool?, 
         /**
          * Whether the device needs backup
-         */needsBackup: Bool?) {
+         */needsBackup: Bool?, 
+        /**
+         * Whether the device can accept passphrase entry on the device itself
+         * (`Capability_PassphraseEntry`). When false/None, use host entry only.
+         */passphraseEntryCapable: Bool?) {
         self.vendor = vendor
         self.model = model
         self.label = label
@@ -9904,6 +9903,7 @@ public struct TrezorFeatures {
         self.passphraseProtection = passphraseProtection
         self.initialized = initialized
         self.needsBackup = needsBackup
+        self.passphraseEntryCapable = passphraseEntryCapable
     }
 }
 
@@ -9947,6 +9947,9 @@ extension TrezorFeatures: Equatable, Hashable {
         if lhs.needsBackup != rhs.needsBackup {
             return false
         }
+        if lhs.passphraseEntryCapable != rhs.passphraseEntryCapable {
+            return false
+        }
         return true
     }
 
@@ -9962,6 +9965,7 @@ extension TrezorFeatures: Equatable, Hashable {
         hasher.combine(passphraseProtection)
         hasher.combine(initialized)
         hasher.combine(needsBackup)
+        hasher.combine(passphraseEntryCapable)
     }
 }
 
@@ -9986,7 +9990,8 @@ public struct FfiConverterTypeTrezorFeatures: FfiConverterRustBuffer {
                 pinProtection: FfiConverterOptionBool.read(from: &buf), 
                 passphraseProtection: FfiConverterOptionBool.read(from: &buf), 
                 initialized: FfiConverterOptionBool.read(from: &buf), 
-                needsBackup: FfiConverterOptionBool.read(from: &buf)
+                needsBackup: FfiConverterOptionBool.read(from: &buf), 
+                passphraseEntryCapable: FfiConverterOptionBool.read(from: &buf)
         )
     }
 
@@ -10002,6 +10007,7 @@ public struct FfiConverterTypeTrezorFeatures: FfiConverterRustBuffer {
         FfiConverterOptionBool.write(value.passphraseProtection, into: &buf)
         FfiConverterOptionBool.write(value.initialized, into: &buf)
         FfiConverterOptionBool.write(value.needsBackup, into: &buf)
+        FfiConverterOptionBool.write(value.passphraseEntryCapable, into: &buf)
     }
 }
 
@@ -15550,6 +15556,107 @@ extension NetworkType: Codable {}
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
+public enum PassphraseResponse {
+    
+    /**
+     * User cancelled — aborts the pending operation.
+     */
+    case cancel
+    /**
+     * Standard wallet — no passphrase, equivalent to `Some("")` on the device.
+     */
+    case standard
+    /**
+     * Hidden wallet — derived from the passphrase entered on the host.
+     */
+    case hidden(value: String
+    )
+    /**
+     * Enter the passphrase on the Trezor device itself instead of on the host.
+     */
+    case onDevice
+}
+
+
+#if compiler(>=6)
+extension PassphraseResponse: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePassphraseResponse: FfiConverterRustBuffer {
+    typealias SwiftType = PassphraseResponse
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PassphraseResponse {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .cancel
+        
+        case 2: return .standard
+        
+        case 3: return .hidden(value: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 4: return .onDevice
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: PassphraseResponse, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .cancel:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .standard:
+            writeInt(&buf, Int32(2))
+        
+        
+        case let .hidden(value):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(value, into: &buf)
+            
+        
+        case .onDevice:
+            writeInt(&buf, Int32(4))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePassphraseResponse_lift(_ buf: RustBuffer) throws -> PassphraseResponse {
+    return try FfiConverterTypePassphraseResponse.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePassphraseResponse_lower(_ value: PassphraseResponse) -> RustBuffer {
+    return FfiConverterTypePassphraseResponse.lower(value)
+}
+
+
+extension PassphraseResponse: Equatable, Hashable {}
+
+extension PassphraseResponse: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 public enum PaymentState {
     
     case pending
@@ -16403,6 +16510,10 @@ public enum TrezorError: Swift.Error {
      */
     case PassphraseRequired
     /**
+     * Passphrase entry cancelled
+     */
+    case PassphraseCancelled
+    /**
      * Action cancelled by user on device
      */
     case UserCancelled
@@ -16473,20 +16584,21 @@ public struct FfiConverterTypeTrezorError: FfiConverterRustBuffer {
         case 9: return .PinCancelled
         case 10: return .InvalidPin
         case 11: return .PassphraseRequired
-        case 12: return .UserCancelled
-        case 13: return .Timeout
-        case 14: return .InvalidPath(
+        case 12: return .PassphraseCancelled
+        case 13: return .UserCancelled
+        case 14: return .Timeout
+        case 15: return .InvalidPath(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 15: return .DeviceError(
+        case 16: return .DeviceError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 16: return .NotInitialized
-        case 17: return .NotConnected
-        case 18: return .SessionError(
+        case 17: return .NotInitialized
+        case 18: return .NotConnected
+        case 19: return .SessionError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 19: return .IoError(
+        case 20: return .IoError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
 
@@ -16549,39 +16661,43 @@ public struct FfiConverterTypeTrezorError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(11))
         
         
-        case .UserCancelled:
+        case .PassphraseCancelled:
             writeInt(&buf, Int32(12))
         
         
-        case .Timeout:
+        case .UserCancelled:
             writeInt(&buf, Int32(13))
         
         
-        case let .InvalidPath(errorDetails):
+        case .Timeout:
             writeInt(&buf, Int32(14))
-            FfiConverterString.write(errorDetails, into: &buf)
-            
         
-        case let .DeviceError(errorDetails):
+        
+        case let .InvalidPath(errorDetails):
             writeInt(&buf, Int32(15))
             FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case .NotInitialized:
+        case let .DeviceError(errorDetails):
             writeInt(&buf, Int32(16))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
         
-        
-        case .NotConnected:
+        case .NotInitialized:
             writeInt(&buf, Int32(17))
         
         
-        case let .SessionError(errorDetails):
+        case .NotConnected:
             writeInt(&buf, Int32(18))
+        
+        
+        case let .SessionError(errorDetails):
+            writeInt(&buf, Int32(19))
             FfiConverterString.write(errorDetails, into: &buf)
             
         
         case let .IoError(errorDetails):
-            writeInt(&buf, Int32(19))
+            writeInt(&buf, Int32(20))
             FfiConverterString.write(errorDetails, into: &buf)
             
         }
@@ -16907,6 +17023,106 @@ public func FfiConverterTypeTxDirection_lower(_ value: TxDirection) -> RustBuffe
 extension TxDirection: Equatable, Hashable {}
 
 extension TxDirection: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Which wallet a connection should open.
+ *
+ * Passed to `trezor_connect` and consumed at connect time — the passphrase is
+ * a one-shot input, not retained anywhere afterwards. On THP devices (Safe
+ * 5/7) it is bound to the session at `ThpCreateNewSession`; on legacy devices
+ * the mid-operation `PassphraseRequest` is answered from the UI callback
+ * instead (see [`TrezorUiCallback`]).
+ */
+
+public enum WalletSelection {
+    
+    /**
+     * The standard wallet — no passphrase.
+     */
+    case standard
+    /**
+     * A hidden wallet whose passphrase is entered on the host.
+     */
+    case hidden(passphrase: String
+    )
+    /**
+     * A hidden wallet whose passphrase is entered on the Trezor itself.
+     */
+    case onDevice
+}
+
+
+#if compiler(>=6)
+extension WalletSelection: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeWalletSelection: FfiConverterRustBuffer {
+    typealias SwiftType = WalletSelection
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> WalletSelection {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .standard
+        
+        case 2: return .hidden(passphrase: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 3: return .onDevice
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: WalletSelection, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .standard:
+            writeInt(&buf, Int32(1))
+        
+        
+        case let .hidden(passphrase):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(passphrase, into: &buf)
+            
+        
+        case .onDevice:
+            writeInt(&buf, Int32(3))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWalletSelection_lift(_ buf: RustBuffer) throws -> WalletSelection {
+    return try FfiConverterTypeWalletSelection.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWalletSelection_lower(_ value: WalletSelection) -> RustBuffer {
+    return FfiConverterTypeWalletSelection.lower(value)
+}
+
+
+extension WalletSelection: Equatable, Hashable {}
+
+extension WalletSelection: Codable {}
 
 
 
@@ -20154,12 +20370,17 @@ public func trezorClearCredentials(deviceId: String)async throws   {
  *
  * For Bluetooth devices, this will use stored credentials if available,
  * or trigger pairing if needed.
+ *
+ * `selection` chooses which wallet to open. On THP devices (Safe 5/7) it is
+ * bound to the session at creation, so it must be supplied on every connect;
+ * there is no separate "set passphrase" step and nothing is cached between
+ * calls. Reconnect with a different `selection` to switch wallets.
  */
-public func trezorConnect(deviceId: String)async throws  -> TrezorFeatures  {
+public func trezorConnect(deviceId: String, selection: WalletSelection)async throws  -> TrezorFeatures  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_trezor_connect(FfiConverterString.lower(deviceId)
+                uniffi_bitkitcore_fn_func_trezor_connect(FfiConverterString.lower(deviceId),FfiConverterTypeWalletSelection_lower(selection)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
@@ -20956,7 +21177,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_trezor_clear_credentials() != 41940) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_trezor_connect() != 6551) {
+    if (uniffi_bitkitcore_checksum_func_trezor_connect() != 49232) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_disconnect() != 48780) {
@@ -21106,7 +21327,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 50474) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 63487) {
+    if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994) {
         return InitializationResult.apiChecksumMismatch
     }
 

@@ -35,8 +35,9 @@ use crate::modules::pubky::{PubkyAuthDetails, PubkyAuthKind, PubkyError, PubkyPr
 use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
     get_transport_callback, trezor_is_ble_available, trezor_set_transport_callback,
-    trezor_set_ui_callback, NativeDeviceInfo, TrezorCallMessageResult, TrezorTransportCallback,
-    TrezorTransportReadResult, TrezorTransportWriteResult, TrezorUiCallback,
+    trezor_set_ui_callback, NativeDeviceInfo, PassphraseResponse, TrezorCallMessageResult,
+    TrezorTransportCallback, TrezorTransportReadResult, TrezorTransportWriteResult,
+    TrezorUiCallback, WalletSelection,
 };
 use crate::modules::trezor::{
     TrezorAddressResponse, TrezorCoinType, TrezorDeviceInfo, TrezorError, TrezorFeatures,
@@ -2178,10 +2179,18 @@ pub async fn trezor_list_devices() -> Result<Vec<TrezorDeviceInfo>, TrezorError>
 ///
 /// For Bluetooth devices, this will use stored credentials if available,
 /// or trigger pairing if needed.
+///
+/// `selection` chooses which wallet to open. On THP devices (Safe 5/7) it is
+/// bound to the session at creation, so it must be supplied on every connect;
+/// there is no separate "set passphrase" step and nothing is cached between
+/// calls. Reconnect with a different `selection` to switch wallets.
 #[uniffi::export]
-pub async fn trezor_connect(device_id: String) -> Result<TrezorFeatures, TrezorError> {
+pub async fn trezor_connect(
+    device_id: String,
+    selection: WalletSelection,
+) -> Result<TrezorFeatures, TrezorError> {
     let rt = ensure_runtime();
-    rt.spawn(async move { get_trezor_manager().connect(&device_id).await })
+    rt.spawn(async move { get_trezor_manager().connect(&device_id, selection).await })
         .await
         .unwrap_or_else(|e| {
             Err(TrezorError::IoError {
