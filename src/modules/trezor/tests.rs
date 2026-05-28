@@ -651,4 +651,132 @@ mod tests {
             assert_eq!(result, expected);
         }
     }
+
+    // ========================================================================
+    // UI Callback Adapter Tests
+    // ========================================================================
+    //
+    // These tests lock down the bridge between bitkit-core's UniFFI-friendly
+    // `TrezorUiCallback` and trezor-connect-rs's `TrezorUiCallback`. The
+    // passphrase variants are variant-for-variant identical across the two
+    // crates; the adapter just retypes them so UniFFI's foreign-callback
+    // requirements (which trezor-connect-rs intentionally doesn't depend on)
+    // can stay isolated to bitkit-core.
+
+    use crate::modules::trezor::implementation::UiCallbackAdapter;
+    use crate::modules::trezor::PassphraseResponse;
+    use std::sync::{Arc, Mutex};
+    use trezor_connect_rs::TrezorUiCallback as TcUiCallback;
+
+    /// Test double that returns canned responses and records call args.
+    struct MockUiCallback {
+        pin_response: String,
+        passphrase_response: Mutex<Option<PassphraseResponse>>,
+        last_passphrase_on_device: Mutex<Option<bool>>,
+    }
+
+    impl MockUiCallback {
+        fn new(pin: &str, passphrase: PassphraseResponse) -> Arc<Self> {
+            Arc::new(Self {
+                pin_response: pin.to_string(),
+                passphrase_response: Mutex::new(Some(passphrase)),
+                last_passphrase_on_device: Mutex::new(None),
+            })
+        }
+    }
+
+    impl crate::TrezorUiCallback for MockUiCallback {
+        fn on_pin_request(&self) -> String {
+            self.pin_response.clone()
+        }
+
+        fn on_passphrase_request(&self, on_device: bool) -> PassphraseResponse {
+            *self.last_passphrase_on_device.lock().unwrap() = Some(on_device);
+            self.passphrase_response
+                .lock()
+                .unwrap()
+                .take()
+                .expect("passphrase_response consumed twice")
+        }
+    }
+
+    fn adapter_with(mock: Arc<MockUiCallback>) -> UiCallbackAdapter {
+        UiCallbackAdapter { callback: mock }
+    }
+
+    #[test]
+    fn test_pin_adapter_empty_string_is_cancel() {
+        let mock = MockUiCallback::new("", PassphraseResponse::Cancel);
+        let adapter = adapter_with(mock);
+        assert_eq!(adapter.on_pin_request(), None);
+    }
+
+    #[test]
+    fn test_pin_adapter_value_passes_through() {
+        let mock = MockUiCallback::new("123456", PassphraseResponse::Cancel);
+        let adapter = adapter_with(mock);
+        assert_eq!(adapter.on_pin_request(), Some("123456".to_string()));
+    }
+
+    #[test]
+    fn test_passphrase_adapter_cancel_maps_to_upstream_cancel() {
+        let mock = MockUiCallback::new("", PassphraseResponse::Cancel);
+        let adapter = adapter_with(Arc::clone(&mock));
+        assert_eq!(
+            adapter.on_passphrase_request(false),
+            trezor_connect_rs::PassphraseResponse::Cancel
+        );
+        assert_eq!(*mock.last_passphrase_on_device.lock().unwrap(), Some(false));
+    }
+
+    #[test]
+    fn test_passphrase_adapter_standard_maps_to_upstream_standard() {
+        // The crucial case: standard wallet must reach the device as the
+        // `Standard` variant, not `Cancel`, otherwise the device will think
+        // the user cancelled.
+        let mock = MockUiCallback::new("", PassphraseResponse::Standard);
+        let adapter = adapter_with(mock);
+        assert_eq!(
+            adapter.on_passphrase_request(false),
+            trezor_connect_rs::PassphraseResponse::Standard
+        );
+    }
+
+    #[test]
+    fn test_passphrase_adapter_hidden_passes_value() {
+        let mock = MockUiCallback::new(
+            "",
+            PassphraseResponse::Hidden {
+                value: "hunter2".to_string(),
+            },
+        );
+        let adapter = adapter_with(mock);
+        assert_eq!(
+            adapter.on_passphrase_request(false),
+            trezor_connect_rs::PassphraseResponse::Hidden {
+                value: "hunter2".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_passphrase_adapter_on_device_maps_to_upstream_on_device() {
+        // On-device entry: the app defers passphrase entry to the Trezor, which
+        // must reach the device as the `OnDevice` variant so the library acks
+        // with `on_device = true` instead of sending a host passphrase.
+        let mock = MockUiCallback::new("", PassphraseResponse::OnDevice);
+        let adapter = adapter_with(mock);
+        assert_eq!(
+            adapter.on_passphrase_request(true),
+            trezor_connect_rs::PassphraseResponse::OnDevice
+        );
+    }
+
+    #[test]
+    fn test_passphrase_adapter_forwards_on_device_flag() {
+        let mock = MockUiCallback::new("", PassphraseResponse::Standard);
+        let adapter = adapter_with(Arc::clone(&mock));
+        let _ = adapter.on_passphrase_request(true);
+        assert_eq!(*mock.last_passphrase_on_device.lock().unwrap(), Some(true));
+    }
 }

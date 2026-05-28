@@ -989,7 +989,7 @@ uint64_t uniffi_bitkitcore_fn_func_trezor_clear_credentials(RustBuffer device_id
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_CONNECT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_CONNECT
-uint64_t uniffi_bitkitcore_fn_func_trezor_connect(RustBuffer device_id
+uint64_t uniffi_bitkitcore_fn_func_trezor_connect(RustBuffer device_id, RustBuffer selection
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_DISCONNECT
