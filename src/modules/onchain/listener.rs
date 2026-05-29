@@ -655,6 +655,11 @@ fn watcher_init_and_loop(
     // before pinging again so an idle watcher doesn't spin on `server.ping`.
 
     let mut needs_resync = false;
+    // Backoff for repeated resync failures while the subscription stays up, so a
+    // persistently failing sync doesn't spin or spam `Error` events. Reset on a
+    // successful sync; escalates like `reconnect_loop`.
+    let mut resync_backoff = Duration::from_secs(1);
+    let max_resync_backoff = Duration::from_secs(60);
 
     loop {
         if *shutdown_rx.borrow() {
@@ -755,9 +760,20 @@ fn watcher_init_and_loop(
                 );
                 // Leave needs_resync set so the next loop retries; a transient
                 // sync failure must not drop an already-popped notification.
+                // Back off first so a persistent failure doesn't busy-loop or
+                // spam Error events (the `continue` would otherwise skip the
+                // idle wait at the bottom of the loop).
+                if sleep_unless_shutdown(&shutdown_rx, resync_backoff) {
+                    for script in &subscribed_scripts {
+                        let _ = sub_client.script_unsubscribe(script);
+                    }
+                    return;
+                }
+                resync_backoff = (resync_backoff * 2).min(max_resync_backoff);
                 continue;
             }
             needs_resync = false;
+            resync_backoff = Duration::from_secs(1);
 
             // Extend the gap limit if new addresses were used.
             let new_external = wallet
