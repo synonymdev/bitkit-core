@@ -219,23 +219,26 @@ pub fn stop_all_watchers() {
 
 /// Socket read timeout for the subscription client (seconds).
 ///
-/// Controls the maximum idle interval between `server.ping` calls, and also
-/// bounds shutdown latency (see [`stop_watcher`]).
+/// Bounds how long a blocking socket read waits before returning, which in turn
+/// bounds detection of a dead connection and shutdown latency (a blocking read
+/// can't be interrupted mid-call; see [`stop_watcher`]).
 ///
-/// When `ping()` is called, it blocks on the socket waiting for the server's
-/// response. While blocked, any push notification that arrives (from
-/// `blockchain.scripthash.subscribe`) is read and queued immediately.
-///
-/// - If a notification arrives during the window: `ping()` returns as soon as
-///   the ping response follows, we process the notification, then send a new
-///   `ping()` — which blocks again for up to this duration.
-/// - If idle (no notifications): `ping()` times out after this duration, we
-///   check for shutdown, and loop back to send another `ping()`.
-///
-/// Net effect: ~1 ping per SOCKET_TIMEOUT_SECS when idle. After a notification
-/// burst, one extra ping is sent immediately, then it settles back to idle rate.
-/// This is well within Electrum server rate limits.
+/// Note: `ping()` returns as soon as the server answers `server.ping` (≈one
+/// round-trip), *not* after this timeout — the timeout only fires when the
+/// server sends nothing at all. The idle loop cadence is therefore governed by
+/// [`IDLE_POLL_INTERVAL_SECS`], not by this value.
 const SOCKET_TIMEOUT_SECS: u8 = 5;
+
+/// How long to wait between polls when a loop iteration finds no activity.
+///
+/// Each iteration sends `server.ping`, whose round-trip also pulls any pushed
+/// `blockchain.scripthash.subscribe` notifications off the socket into the
+/// client's queues. Because `ping()` returns immediately on reply, without this
+/// wait an idle watcher would spin — hammering the server with pings and
+/// risking rate-limiting/disconnect. Trade-off: a notification arriving during
+/// the wait is detected on the next ping, so this also bounds idle detection
+/// latency.
+const IDLE_POLL_INTERVAL_SECS: u64 = 2;
 
 /// Create an Electrum client with a read timeout for subscription use.
 ///
@@ -413,6 +416,24 @@ fn ensure_synced(
     }
 }
 
+/// Sleep for `duration`, waking early if shutdown is requested.
+///
+/// Returns `true` if shutdown was observed (the caller should tear down), or
+/// `false` if the full duration elapsed. Sleeps in short chunks so shutdown is
+/// honored promptly regardless of the interval.
+fn sleep_unless_shutdown(shutdown_rx: &watch::Receiver<bool>, duration: Duration) -> bool {
+    let mut remaining = duration.as_millis() as u64;
+    while remaining > 0 {
+        if *shutdown_rx.borrow() {
+            return true;
+        }
+        let chunk = remaining.min(1000);
+        std::thread::sleep(Duration::from_millis(chunk));
+        remaining = remaining.saturating_sub(chunk);
+    }
+    *shutdown_rx.borrow()
+}
+
 /// Attempt to reconnect the subscription client with exponential backoff.
 ///
 /// Returns the new client and the current tip height once connected, or `None`
@@ -577,13 +598,12 @@ fn watcher_init_and_loop(
 
     // --- Notification loop ---
     //
-    // Each iteration sends a single `server.ping` which blocks on the socket
-    // for up to SOCKET_TIMEOUT_SECS. While blocked, any push notification from
-    // `blockchain.scripthash.subscribe` is read off the wire and queued.
-    //
-    // After ping returns (or times out), we drain the queues. If changes were
+    // Each iteration sends a single `server.ping`. The ping round-trip also
+    // pulls any pushed `blockchain.scripthash.subscribe` notifications off the
+    // socket into the client's queues, which we then drain. If changes were
     // detected — or a previous resync failed — we resync the wallet and emit an
-    // event, then loop back to ping.
+    // event. When an iteration finds no activity, we wait IDLE_POLL_INTERVAL_SECS
+    // before pinging again so an idle watcher doesn't spin on `server.ping`.
 
     let mut needs_resync = false;
 
@@ -595,12 +615,15 @@ fn watcher_init_and_loop(
             return;
         }
 
-        // ping() keeps the connection alive and blocks on the socket, reading
-        // and dispatching any push notifications that arrive before/with the
-        // ping response. With the SOCKET_TIMEOUT_SECS read timeout it either:
-        // - returns Ok(()) quickly if there's socket activity (notifications!),
-        // - returns Err(timeout) after the timeout when idle, or
-        // - returns Err(other) on a real connection failure.
+        // ping() keeps the connection alive and, during its round-trip, reads
+        // and queues any pushed notifications already on the socket. It returns
+        // as soon as the server replies — it does NOT wait out the socket
+        // timeout when idle — so the idle wait at the bottom of the loop, not
+        // this call, paces an otherwise-quiet watcher. Outcomes:
+        // - Ok(()): normal reply (any notifications are now queued),
+        // - Err(timeout): server sent nothing within SOCKET_TIMEOUT_SECS,
+        // - Err(other): a real connection failure → reconnect.
+        let mut activity = false;
         match sub_client.ping() {
             Ok(()) => {}
             Err(ref e) if is_timeout_error(e) => {
@@ -624,6 +647,7 @@ fn watcher_init_and_loop(
                         // it, and force a resync to refresh post-reconnect state.
                         blockchain = None;
                         needs_resync = true;
+                        activity = true;
                     }
                     None => return, // Shutdown requested
                 }
@@ -636,6 +660,7 @@ fn watcher_init_and_loop(
             if new_height > tip_height {
                 tip_height = new_height;
                 needs_resync = true;
+                activity = true;
             }
         }
 
@@ -645,6 +670,7 @@ fn watcher_init_and_loop(
             match sub_client.script_pop(script) {
                 Ok(Some(_)) => {
                     needs_resync = true;
+                    activity = true;
                 }
                 Ok(None) => {}
                 Err(e) => {
@@ -661,6 +687,7 @@ fn watcher_init_and_loop(
                             listener.on_event(watcher_id.clone(), WatcherEvent::Reconnected);
                             blockchain = None;
                             needs_resync = true;
+                            activity = true;
                             break;
                         }
                         None => return,
@@ -719,6 +746,18 @@ fn watcher_init_and_loop(
                 watcher_id.clone(),
                 build_tx_changed_event(&wallet, tip_height, account_type),
             );
+        }
+
+        // Idle: nothing was popped and no resync ran this round. Wait before the
+        // next ping so a quiet watcher doesn't spin on `server.ping`. A
+        // notification arriving during the wait is picked up by the next ping.
+        if !activity
+            && sleep_unless_shutdown(&shutdown_rx, Duration::from_secs(IDLE_POLL_INTERVAL_SECS))
+        {
+            for script in &subscribed_scripts {
+                let _ = sub_client.script_unsubscribe(script);
+            }
+            return;
         }
     }
 }
