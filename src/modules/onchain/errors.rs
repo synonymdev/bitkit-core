@@ -80,4 +80,8 @@ pub enum AccountInfoError {
     /// A valid transaction ID was not found in the wallet
     #[error("Transaction not found: {error_details}")]
     TransactionNotFound { error_details: String },
+
+    /// Watcher lifecycle or subscription error
+    #[error("Watcher error: {error_details}")]
+    WatcherError { error_details: String },
 }

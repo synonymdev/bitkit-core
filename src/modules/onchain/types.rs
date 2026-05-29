@@ -524,6 +524,25 @@ impl From<bdk::Balance> for WalletBalance {
     }
 }
 
+/// Events emitted by the onchain xpub watcher.
+#[derive(Debug, Clone, uniffi::Enum)]
+pub enum WatcherEvent {
+    /// Transaction activity changed — contains full updated state.
+    TransactionsChanged {
+        transactions: Vec<HistoryTransaction>,
+        balance: WalletBalance,
+        tx_count: u32,
+        block_height: u32,
+        account_type: AccountType,
+    },
+    /// An error occurred in the watcher loop.
+    Error { message: String },
+    /// Connection to the Electrum server was lost.
+    Disconnected { message: String },
+    /// Connection to the Electrum server was restored.
+    Reconnected,
+}
+
 /// Result from querying transaction history for an xpub.
 #[derive(Debug, Clone, uniffi::Record)]
 pub struct TransactionHistoryResult {

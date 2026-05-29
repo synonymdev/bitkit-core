@@ -1308,6 +1308,39 @@ pub(crate) fn connect_and_get_tip(
     Ok((client, tip_height))
 }
 
+/// Create a BDK wallet (in-memory, unsynced) from the resolved setup.
+///
+/// Addresses can be derived from the returned wallet without syncing; call
+/// [`sync_wallet`] to populate balances and transaction history.
+pub(crate) fn create_wallet(
+    setup: &WalletSetup,
+) -> Result<Wallet<MemoryDatabase>, AccountInfoError> {
+    Wallet::new(
+        &setup.external_desc,
+        Some(&setup.internal_desc),
+        setup.network,
+        MemoryDatabase::new(),
+    )
+    .map_err(|e| AccountInfoError::WalletError {
+        error_details: format!("Failed to create wallet: {}", e),
+    })
+}
+
+/// Sync a wallet against an existing `ElectrumBlockchain`.
+///
+/// Unlike [`create_and_sync_wallet`], the blockchain is borrowed (not consumed),
+/// so a single connection can be reused across repeated syncs.
+pub(crate) fn sync_wallet(
+    wallet: &Wallet<MemoryDatabase>,
+    blockchain: &ElectrumBlockchain,
+) -> Result<(), AccountInfoError> {
+    wallet
+        .sync(blockchain, SyncOptions::default())
+        .map_err(|e| AccountInfoError::SyncError {
+            error_details: format!("Failed to sync wallet: {}", e),
+        })
+}
+
 /// Create a BDK wallet and sync it via the provided Electrum client.
 ///
 /// The client is consumed; make any pre-sync calls (e.g. `block_headers_subscribe`)
@@ -1316,24 +1349,53 @@ pub(crate) fn create_and_sync_wallet(
     setup: &WalletSetup,
     client: bdk::electrum_client::Client,
 ) -> Result<Wallet<MemoryDatabase>, AccountInfoError> {
-    let wallet = Wallet::new(
-        &setup.external_desc,
-        Some(&setup.internal_desc),
-        setup.network,
-        MemoryDatabase::new(),
-    )
-    .map_err(|e| AccountInfoError::WalletError {
-        error_details: format!("Failed to create wallet: {}", e),
-    })?;
-
+    let wallet = create_wallet(setup)?;
     let blockchain = ElectrumBlockchain::from(client);
-    wallet
-        .sync(&blockchain, SyncOptions::default())
-        .map_err(|e| AccountInfoError::SyncError {
-            error_details: format!("Failed to sync wallet: {}", e),
-        })?;
-
+    sync_wallet(&wallet, &blockchain)?;
     Ok(wallet)
+}
+
+// ============================================================================
+// Shared tx-mapping helpers
+// ============================================================================
+
+/// Map a single BDK TransactionDetails to a HistoryTransaction.
+pub(crate) fn map_bdk_tx_to_history(
+    tx: &bdk::TransactionDetails,
+    tip_height: u32,
+) -> HistoryTransaction {
+    let (direction, amount, net) = classify_tx(tx.sent, tx.received, tx.fee);
+
+    let (block_height, timestamp, confirmations) = match tx.confirmation_time.as_ref() {
+        Some(conf) => {
+            let confs = tip_height.saturating_sub(conf.height) + 1;
+            (Some(conf.height), Some(conf.timestamp), confs)
+        }
+        None => (None, None, 0),
+    };
+
+    HistoryTransaction {
+        txid: tx.txid.to_string(),
+        received: tx.received,
+        sent: tx.sent,
+        net,
+        fee: tx.fee,
+        amount,
+        direction,
+        block_height,
+        timestamp,
+        confirmations,
+    }
+}
+
+/// Sort history transactions: unconfirmed first, then by timestamp descending.
+pub(crate) fn sort_history_transactions(history: &mut [HistoryTransaction]) {
+    history.sort_by(|a, b| match (a.timestamp, b.timestamp) {
+        (None, Some(_)) => std::cmp::Ordering::Less,
+        (Some(_), None) => std::cmp::Ordering::Greater,
+        (None, None) => std::cmp::Ordering::Equal,
+        (Some(a_ts), Some(b_ts)) => b_ts.cmp(&a_ts),
+    });
 }
 
 // ============================================================================
@@ -1586,39 +1648,10 @@ pub async fn get_transaction_history(
 
         let mut history: Vec<HistoryTransaction> = txs
             .iter()
-            .map(|tx| {
-                let (direction, amount, net) = classify_tx(tx.sent, tx.received, tx.fee);
-
-                let (block_height, timestamp, confirmations) = match tx.confirmation_time.as_ref() {
-                    Some(conf) => {
-                        let confs = tip_height.saturating_sub(conf.height) + 1;
-                        (Some(conf.height), Some(conf.timestamp), confs)
-                    }
-                    None => (None, None, 0),
-                };
-
-                HistoryTransaction {
-                    txid: tx.txid.to_string(),
-                    received: tx.received,
-                    sent: tx.sent,
-                    net,
-                    fee: tx.fee,
-                    amount,
-                    direction,
-                    block_height,
-                    timestamp,
-                    confirmations,
-                }
-            })
+            .map(|tx| map_bdk_tx_to_history(tx, tip_height))
             .collect();
 
-        // Sort: unconfirmed first, then by timestamp descending
-        history.sort_by(|a, b| match (a.timestamp, b.timestamp) {
-            (None, Some(_)) => std::cmp::Ordering::Less,
-            (Some(_), None) => std::cmp::Ordering::Greater,
-            (None, None) => std::cmp::Ordering::Equal,
-            (Some(a_ts), Some(b_ts)) => b_ts.cmp(&a_ts),
-        });
+        sort_history_transactions(&mut history);
 
         let tx_count = u32::try_from(history.len()).unwrap_or(u32::MAX);
 

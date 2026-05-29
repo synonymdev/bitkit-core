@@ -437,11 +437,11 @@ internal open class UniffiForeignFutureStruct(
     @JvmField public var `free`: UniffiForeignFutureFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `handle` = 0.toLong(),
-
+        
         `free` = null,
-
+        
     )
 
     internal class UniffiByValue(
@@ -468,11 +468,11 @@ internal open class UniffiForeignFutureStructU8Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.toByte(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -502,11 +502,11 @@ internal open class UniffiForeignFutureStructI8Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.toByte(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -536,11 +536,11 @@ internal open class UniffiForeignFutureStructU16Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.toShort(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -570,11 +570,11 @@ internal open class UniffiForeignFutureStructI16Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.toShort(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -604,11 +604,11 @@ internal open class UniffiForeignFutureStructU32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0,
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -638,11 +638,11 @@ internal open class UniffiForeignFutureStructI32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0,
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -672,11 +672,11 @@ internal open class UniffiForeignFutureStructU64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.toLong(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -706,11 +706,11 @@ internal open class UniffiForeignFutureStructI64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.toLong(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -740,11 +740,11 @@ internal open class UniffiForeignFutureStructF32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.0f,
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -774,11 +774,11 @@ internal open class UniffiForeignFutureStructF64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.0,
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -808,11 +808,11 @@ internal open class UniffiForeignFutureStructPointerStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = NullPointer,
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -842,11 +842,11 @@ internal open class UniffiForeignFutureStructRustBufferStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = RustBufferHelper.allocValue(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -875,9 +875,9 @@ internal open class UniffiForeignFutureStructVoidStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -897,6 +897,9 @@ internal fun UniffiForeignFutureStructVoid.uniffiSetValue(other: UniffiForeignFu
 internal typealias UniffiForeignFutureStructVoidUniffiByValue = UniffiForeignFutureStructVoidStruct.UniffiByValue
 internal interface UniffiForeignFutureCompleteVoid: com.sun.jna.Callback {
     public fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructVoidUniffiByValue,)
+}
+internal interface UniffiCallbackInterfaceEventListenerMethod0: com.sun.jna.Callback {
+    public fun callback(`uniffiHandle`: Long,`watcherId`: RustBufferByValue,`event`: RustBufferByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
 }
 internal interface UniffiCallbackInterfaceTrezorTransportCallbackMethod0: com.sun.jna.Callback {
     public fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
@@ -937,6 +940,37 @@ internal interface UniffiCallbackInterfaceTrezorUiCallbackMethod0: com.sun.jna.C
 internal interface UniffiCallbackInterfaceTrezorUiCallbackMethod1: com.sun.jna.Callback {
     public fun callback(`uniffiHandle`: Long,`onDevice`: Byte,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
 }
+@Structure.FieldOrder("onEvent", "uniffiFree")
+internal open class UniffiVTableCallbackInterfaceEventListenerStruct(
+    @JvmField public var `onEvent`: UniffiCallbackInterfaceEventListenerMethod0?,
+    @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
+) : com.sun.jna.Structure() {
+    internal constructor(): this(
+        
+        `onEvent` = null,
+        
+        `uniffiFree` = null,
+        
+    )
+
+    internal class UniffiByValue(
+        `onEvent`: UniffiCallbackInterfaceEventListenerMethod0?,
+        `uniffiFree`: UniffiCallbackInterfaceFree?,
+    ): UniffiVTableCallbackInterfaceEventListener(`onEvent`,`uniffiFree`,), Structure.ByValue
+}
+
+internal typealias UniffiVTableCallbackInterfaceEventListener = UniffiVTableCallbackInterfaceEventListenerStruct
+
+internal fun UniffiVTableCallbackInterfaceEventListener.uniffiSetValue(other: UniffiVTableCallbackInterfaceEventListener) {
+    `onEvent` = other.`onEvent`
+    `uniffiFree` = other.`uniffiFree`
+}
+internal fun UniffiVTableCallbackInterfaceEventListener.uniffiSetValue(other: UniffiVTableCallbackInterfaceEventListenerUniffiByValue) {
+    `onEvent` = other.`onEvent`
+    `uniffiFree` = other.`uniffiFree`
+}
+
+internal typealias UniffiVTableCallbackInterfaceEventListenerUniffiByValue = UniffiVTableCallbackInterfaceEventListenerStruct.UniffiByValue
 @Structure.FieldOrder("enumerateDevices", "openDevice", "closeDevice", "readChunk", "writeChunk", "getChunkSize", "callMessage", "getPairingCode", "saveThpCredential", "loadThpCredential", "logDebug", "uniffiFree")
 internal open class UniffiVTableCallbackInterfaceTrezorTransportCallbackStruct(
     @JvmField public var `enumerateDevices`: UniffiCallbackInterfaceTrezorTransportCallbackMethod0?,
@@ -953,31 +987,31 @@ internal open class UniffiVTableCallbackInterfaceTrezorTransportCallbackStruct(
     @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `enumerateDevices` = null,
-
+        
         `openDevice` = null,
-
+        
         `closeDevice` = null,
-
+        
         `readChunk` = null,
-
+        
         `writeChunk` = null,
-
+        
         `getChunkSize` = null,
-
+        
         `callMessage` = null,
-
+        
         `getPairingCode` = null,
-
+        
         `saveThpCredential` = null,
-
+        
         `loadThpCredential` = null,
-
+        
         `logDebug` = null,
-
+        
         `uniffiFree` = null,
-
+        
     )
 
     internal class UniffiByValue(
@@ -1035,13 +1069,13 @@ internal open class UniffiVTableCallbackInterfaceTrezorUiCallbackStruct(
     @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `onPinRequest` = null,
-
+        
         `onPassphraseRequest` = null,
-
+        
         `uniffiFree` = null,
-
+        
     )
 
     internal class UniffiByValue(
@@ -1065,6 +1099,17 @@ internal fun UniffiVTableCallbackInterfaceTrezorUiCallback.uniffiSetValue(other:
 }
 
 internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = UniffiVTableCallbackInterfaceTrezorUiCallbackStruct.UniffiByValue
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1693,6 +1738,15 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_onchain_get_transaction_history() != 4452.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_onchain_start_watcher() != 58125.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_onchain_stop_all_watchers() != 28485.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_onchain_stop_watcher() != 2426.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_open_channel() != 21402.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1892,6 +1946,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_wipe_all_transaction_details() != 65339.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_eventlistener_on_event() != 35531.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices() != 18766.toShort()) {
@@ -2156,6 +2213,15 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_onchain_get_transaction_history(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_onchain_start_watcher(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_onchain_stop_all_watchers(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_onchain_stop_watcher(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_open_channel(
     ): Short
     @JvmStatic
@@ -2357,6 +2423,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_wipe_all_transaction_details(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_eventlistener_on_event(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices(
     ): Short
     @JvmStatic
@@ -2409,6 +2478,7 @@ internal object UniffiLib : Library {
         Native.register(UniffiLib::class.java, findLibraryName("bitkitcore"))
         // No need to check the contract version and checksums, since
         // we already did that with `IntegrityCheckingUniffiLib` above.
+        uniffiCallbackInterfaceEventListener.register(this)
         uniffiCallbackInterfaceTrezorTransportCallback.register(this)
         uniffiCallbackInterfaceTrezorUiCallback.register(this)
     }
@@ -2416,6 +2486,27 @@ internal object UniffiLib : Library {
     internal val CLEANER: UniffiCleaner by lazy {
         UniffiCleaner.create()
     }
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_clone_eventlistener(
+        `ptr`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Pointer?
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_free_eventlistener(
+        `ptr`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_init_callback_vtable_eventlistener(
+        `vtable`: UniffiVTableCallbackInterfaceEventListener,
+    ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_eventlistener_on_event(
+        `ptr`: Pointer?,
+        `watcherId`: RustBufferByValue,
+        `event`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
     @JvmStatic
     external fun uniffi_bitkitcore_fn_clone_trezortransportcallback(
         `ptr`: Pointer?,
@@ -2926,6 +3017,20 @@ internal object UniffiLib : Library {
         `network`: RustBufferByValue,
         `scriptType`: RustBufferByValue,
     ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_onchain_start_watcher(
+        `params`: RustBufferByValue,
+        `listener`: Pointer?,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_onchain_stop_all_watchers(
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_onchain_stop_watcher(
+        `watcherId`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_open_channel(
         `orderId`: RustBufferByValue,
@@ -3830,6 +3935,206 @@ public object FfiConverterByteArray: FfiConverterRustBuffer<ByteArray> {
 
 
 /**
+ * Callback interface for receiving watcher events.
+ *
+ * Implement this trait in Swift/Kotlin/Python to receive typed notifications
+ * from xpub watchers.
+ */
+public open class EventListenerImpl: Disposable, EventListener {
+
+    public constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiPointerDestroyer(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    public constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiPointerDestroyer(null))
+    }
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed: kotlinx.atomicfu.AtomicBoolean = kotlinx.atomicfu.atomic(false)
+    private val callCounter: kotlinx.atomicfu.AtomicLong = kotlinx.atomicfu.atomic(1L)
+
+    private val lock = kotlinx.atomicfu.locks.ReentrantLock()
+
+    private fun <T> synchronized(block: () -> T): T {
+        lock.lock()
+        try {
+            return block()
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    override fun close() {
+        synchronized { this.destroy() }
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.value
+            if (c == 0L) {
+                throw IllegalStateException("${this::class::simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this::class::simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiPointerDestroyer(private val pointer: Pointer?) : Disposable {
+        override fun destroy() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.uniffi_bitkitcore_fn_free_eventlistener(ptr, status)
+                }
+            }
+        }
+    }
+
+    public fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall { status ->
+            UniffiLib.uniffi_bitkitcore_fn_clone_eventlistener(pointer!!, status)
+        }!!
+    }
+
+    
+    /**
+     * Called when a watcher event occurs.
+     *
+     * `watcher_id` identifies which watcher produced the event.
+     * `event` is a typed enum — no JSON parsing needed.
+     */
+    public override fun `onEvent`(`watcherId`: kotlin.String, `event`: WatcherEvent) {
+        callWithPointer {
+            uniffiRustCall { uniffiRustCallStatus ->
+                UniffiLib.uniffi_bitkitcore_fn_method_eventlistener_on_event(
+                    it,
+                    FfiConverterString.lower(`watcherId`),
+                    FfiConverterTypeWatcherEvent.lower(`event`),
+                    uniffiRustCallStatus,
+                )
+            }
+        }
+    }
+
+
+    
+    
+
+    
+    
+    public companion object
+    
+}
+
+
+
+
+
+public object FfiConverterTypeEventListener: FfiConverter<EventListener, Pointer> {
+    internal val handleMap = UniffiHandleMap<EventListener>()
+
+    override fun lower(value: EventListener): Pointer {
+        return handleMap.insert(value).toPointer()
+    }
+
+    override fun lift(value: Pointer): EventListener {
+        return EventListenerImpl(value)
+    }
+
+    override fun read(buf: ByteBuffer): EventListener {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(buf.getLong().toPointer())
+    }
+
+    override fun allocationSize(value: EventListener): ULong = 8UL
+
+    override fun write(value: EventListener, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(lower(value).toLong())
+    }
+}
+
+
+// Put the implementation in an object so we don't pollute the top-level namespace
+internal object uniffiCallbackInterfaceEventListener {
+    internal object `onEvent`: UniffiCallbackInterfaceEventListenerMethod0 {
+        override fun callback (
+            `uniffiHandle`: Long,
+            `watcherId`: RustBufferByValue,
+            `event`: RustBufferByValue,
+            `uniffiOutReturn`: Pointer,
+            uniffiCallStatus: UniffiRustCallStatus,
+        ) {
+            val uniffiObj = FfiConverterTypeEventListener.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`onEvent`(
+                    FfiConverterString.lift(`watcherId`),
+                    FfiConverterTypeWatcherEvent.lift(`event`),
+                )
+            }
+            val writeReturn = { _: Unit ->
+                @Suppress("UNUSED_EXPRESSION")
+                uniffiOutReturn
+                Unit
+            }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object uniffiFree: UniffiCallbackInterfaceFree {
+        override fun callback(handle: Long) {
+            FfiConverterTypeEventListener.handleMap.remove(handle)
+        }
+    }
+
+    internal val vtable = UniffiVTableCallbackInterfaceEventListener(
+        `onEvent`,
+        uniffiFree,
+    )
+
+    internal fun register(lib: UniffiLib) {
+        lib.uniffi_bitkitcore_fn_init_callback_vtable_eventlistener(vtable)
+    }
+}
+
+
+
+/**
  * Callback interface for native Trezor transport operations
  *
  * This trait must be implemented by the native iOS/Android code.
@@ -3941,7 +4246,7 @@ public open class TrezorTransportCallbackImpl: Disposable, TrezorTransportCallba
         }!!
     }
 
-
+    
     /**
      * Enumerate all connected Trezor devices
      */
@@ -4156,13 +4461,13 @@ public open class TrezorTransportCallbackImpl: Disposable, TrezorTransportCallba
     }
 
 
+    
+    
 
-
-
-
-
+    
+    
     public companion object
-
+    
 }
 
 
@@ -4539,7 +4844,7 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
         }!!
     }
 
-
+    
     /**
      * Called when the device requests a PIN.
      *
@@ -4580,13 +4885,13 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
     }
 
 
+    
+    
 
-
-
-
-
+    
+    
     public companion object
-
+    
 }
 
 
@@ -7898,6 +8203,40 @@ public object FfiConverterTypeWalletParams: FfiConverterRustBuffer<WalletParams>
 
 
 
+public object FfiConverterTypeWatcherParams: FfiConverterRustBuffer<WatcherParams> {
+    override fun read(buf: ByteBuffer): WatcherParams {
+        return WatcherParams(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalTypeNetwork.read(buf),
+            FfiConverterOptionalTypeAccountType.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: WatcherParams): ULong = (
+            FfiConverterString.allocationSize(value.`watcherId`) +
+            FfiConverterString.allocationSize(value.`extendedKey`) +
+            FfiConverterString.allocationSize(value.`electrumUrl`) +
+            FfiConverterOptionalTypeNetwork.allocationSize(value.`network`) +
+            FfiConverterOptionalTypeAccountType.allocationSize(value.`accountType`) +
+            FfiConverterOptionalUInt.allocationSize(value.`gapLimit`)
+    )
+
+    override fun write(value: WatcherParams, buf: ByteBuffer) {
+        FfiConverterString.write(value.`watcherId`, buf)
+        FfiConverterString.write(value.`extendedKey`, buf)
+        FfiConverterString.write(value.`electrumUrl`, buf)
+        FfiConverterOptionalTypeNetwork.write(value.`network`, buf)
+        FfiConverterOptionalTypeAccountType.write(value.`accountType`, buf)
+        FfiConverterOptionalUInt.write(value.`gapLimit`, buf)
+    }
+}
+
+
+
+
 public object AccountInfoExceptionErrorHandler : UniffiRustCallStatusErrorHandler<AccountInfoException> {
     override fun lift(errorBuf: RustBufferByValue): AccountInfoException = FfiConverterTypeAccountInfoError.lift(errorBuf)
 }
@@ -7930,6 +8269,9 @@ public object FfiConverterTypeAccountInfoError : FfiConverterRustBuffer<AccountI
                 FfiConverterString.read(buf),
                 )
             9 -> AccountInfoException.TransactionNotFound(
+                FfiConverterString.read(buf),
+                )
+            10 -> AccountInfoException.WatcherException(
                 FfiConverterString.read(buf),
                 )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
@@ -7983,6 +8325,11 @@ public object FfiConverterTypeAccountInfoError : FfiConverterRustBuffer<AccountI
                 4UL
                 + FfiConverterString.allocationSize(value.`errorDetails`)
             )
+            is AccountInfoException.WatcherException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
         }
     }
 
@@ -8030,6 +8377,11 @@ public object FfiConverterTypeAccountInfoError : FfiConverterRustBuffer<AccountI
             }
             is AccountInfoException.TransactionNotFound -> {
                 buf.putInt(9)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is AccountInfoException.WatcherException -> {
+                buf.putInt(10)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
@@ -10168,6 +10520,94 @@ public object FfiConverterTypeWalletSelection : FfiConverterRustBuffer<WalletSel
             }
             is WalletSelection.OnDevice -> {
                 buf.putInt(3)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeWatcherEvent : FfiConverterRustBuffer<WatcherEvent>{
+    override fun read(buf: ByteBuffer): WatcherEvent {
+        return when(buf.getInt()) {
+            1 -> WatcherEvent.TransactionsChanged(
+                FfiConverterSequenceTypeHistoryTransaction.read(buf),
+                FfiConverterTypeWalletBalance.read(buf),
+                FfiConverterUInt.read(buf),
+                FfiConverterUInt.read(buf),
+                FfiConverterTypeAccountType.read(buf),
+                )
+            2 -> WatcherEvent.Error(
+                FfiConverterString.read(buf),
+                )
+            3 -> WatcherEvent.Disconnected(
+                FfiConverterString.read(buf),
+                )
+            4 -> WatcherEvent.Reconnected
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: WatcherEvent): ULong = when(value) {
+        is WatcherEvent.TransactionsChanged -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterSequenceTypeHistoryTransaction.allocationSize(value.`transactions`)
+                + FfiConverterTypeWalletBalance.allocationSize(value.`balance`)
+                + FfiConverterUInt.allocationSize(value.`txCount`)
+                + FfiConverterUInt.allocationSize(value.`blockHeight`)
+                + FfiConverterTypeAccountType.allocationSize(value.`accountType`)
+            )
+        }
+        is WatcherEvent.Error -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`message`)
+            )
+        }
+        is WatcherEvent.Disconnected -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`message`)
+            )
+        }
+        is WatcherEvent.Reconnected -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+    }
+
+    override fun write(value: WatcherEvent, buf: ByteBuffer) {
+        when(value) {
+            is WatcherEvent.TransactionsChanged -> {
+                buf.putInt(1)
+                FfiConverterSequenceTypeHistoryTransaction.write(value.`transactions`, buf)
+                FfiConverterTypeWalletBalance.write(value.`balance`, buf)
+                FfiConverterUInt.write(value.`txCount`, buf)
+                FfiConverterUInt.write(value.`blockHeight`, buf)
+                FfiConverterTypeAccountType.write(value.`accountType`, buf)
+                Unit
+            }
+            is WatcherEvent.Error -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`message`, buf)
+                Unit
+            }
+            is WatcherEvent.Disconnected -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`message`, buf)
+                Unit
+            }
+            is WatcherEvent.Reconnected -> {
+                buf.putInt(4)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -12455,7 +12895,7 @@ public suspend fun `approvePubkyAuth`(`authUrl`: kotlin.String, `secretKeyHex`: 
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -12472,7 +12912,7 @@ public suspend fun `blocktankRemoveAllCjitEntries`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -12489,7 +12929,7 @@ public suspend fun `blocktankRemoveAllOrders`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -12506,7 +12946,7 @@ public suspend fun `blocktankWipeAll`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -12553,7 +12993,7 @@ public suspend fun `cancelPubkyAuth`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -13457,6 +13897,54 @@ public suspend fun `onchainGetTransactionHistory`(`extendedKey`: kotlin.String, 
     )
 }
 
+/**
+ * Start monitoring an xpub for transaction activity via Electrum subscriptions.
+ *
+ * Each watcher receives its own listener — no global registration needed.
+ */
+@Throws(AccountInfoException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `onchainStartWatcher`(`params`: WatcherParams, `listener`: EventListener) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_onchain_start_watcher(
+            FfiConverterTypeWatcherParams.lower(`params`),
+            FfiConverterTypeEventListener.lower(`listener`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        AccountInfoExceptionErrorHandler,
+    )
+}
+
+/**
+ * Stop all active xpub watchers.
+ */
+public fun `onchainStopAllWatchers`() {
+    uniffiRustCall { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_onchain_stop_all_watchers(
+            uniffiRustCallStatus,
+        )
+    }
+}
+
+/**
+ * Stop a specific xpub watcher by ID.
+ */
+@Throws(AccountInfoException::class)
+public fun `onchainStopWatcher`(`watcherId`: kotlin.String) {
+    uniffiRustCallWithError(AccountInfoExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_onchain_stop_watcher(
+            FfiConverterString.lower(`watcherId`),
+            uniffiRustCallStatus,
+        )
+    }
+}
+
 @Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
 public suspend fun `openChannel`(`orderId`: kotlin.String, `connectionString`: kotlin.String): IBtOrder {
     return uniffiRustCallAsync(
@@ -13554,7 +14042,7 @@ public suspend fun `pubkyPutWithSecretKey`(`secretKeyHex`: kotlin.String, `path`
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -13573,7 +14061,7 @@ public suspend fun `pubkySessionDelete`(`sessionSecret`: kotlin.String, `path`: 
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -13611,7 +14099,7 @@ public suspend fun `pubkySessionPut`(`sessionSecret`: kotlin.String, `path`: kot
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -13781,7 +14269,7 @@ public suspend fun `regtestMine`(`count`: kotlin.UInt?) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -13945,7 +14433,7 @@ public suspend fun `trezorClearCredentials`(`deviceId`: kotlin.String) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -13994,7 +14482,7 @@ public suspend fun `trezorDisconnect`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -14121,7 +14609,7 @@ public suspend fun `trezorInitialize`(`credentialPath`: kotlin.String?) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -14360,7 +14848,7 @@ public suspend fun `updateBlocktankUrl`(`newUrl`: kotlin.String) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -14398,7 +14886,7 @@ public suspend fun `upsertCjitEntries`(`entries`: List<IcJitEntry>) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -14436,7 +14924,7 @@ public suspend fun `upsertInfo`(`info`: IBtInfo) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -14474,7 +14962,7 @@ public suspend fun `upsertOrders`(`orders`: List<IBtOrder>) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
