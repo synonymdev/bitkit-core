@@ -358,25 +358,15 @@ fn build_tx_changed_event(
     }
 }
 
-/// Subscribe to all scripts, best-effort (used on reconnect).
+/// Subscribe to all scripts in a single batched RPC.
 ///
-/// One batched RPC instead of one call per script, so reconnect stays cheap even
-/// with a large gap. Failures are ignored here because the resync that always
-/// follows a reconnect re-reads full wallet state regardless.
-fn subscribe_scripts(client: &electrum_client::Client, scripts: &HashSet<ScriptBuf>) {
-    if scripts.is_empty() {
-        return;
-    }
-    let _ = client.batch_script_subscribe(scripts.iter().map(|s| s.as_script()));
-}
-
-/// Subscribe to all scripts at init in a single batched RPC.
-///
-/// Unlike the best-effort reconnect path, an init failure is fatal: the batch is
-/// all-or-nothing, so a failure means no scripts are subscribed and the watcher
-/// would have no live push updates. Returning the error lets startup fail so a
-/// successful start means the watcher is fully subscribed. (Empty set: no-op.)
-fn subscribe_scripts_at_init(
+/// The failure is surfaced rather than ignored: `electrum-client` registers the
+/// local notification queue per script *before* the RPC and doesn't roll it back
+/// on error, so a dropped failure would leave `script_pop` returning `Ok(None)`
+/// (looks idle) while the server-side subscription is not actually active.
+/// Callers must treat an error as "not subscribed" — fail startup (init) or keep
+/// retrying the reconnect. (Empty set: no-op.)
+fn subscribe_scripts(
     client: &electrum_client::Client,
     scripts: &HashSet<ScriptBuf>,
 ) -> Result<(), AccountInfoError> {
@@ -494,16 +484,17 @@ fn reconnect_loop(
 
         match connect_electrum_with_timeout(electrum_url) {
             Ok(client) => {
-                subscribe_scripts(&client, scripts);
-                match client.block_headers_subscribe() {
-                    Ok(header) => {
+                // Require both script and header subscriptions to succeed before
+                // declaring the reconnect good — otherwise we'd silently lose
+                // push updates (a failed subscribe still leaves local queues, so
+                // script_pop looks idle). Retry with backoff until both stick.
+                if subscribe_scripts(&client, scripts).is_ok() {
+                    if let Ok(header) = client.block_headers_subscribe() {
                         let tip = u32::try_from(header.height).unwrap_or(0);
                         return Some((client, tip));
                     }
-                    Err(_) => {
-                        backoff = std::cmp::min(backoff * 2, max_backoff);
-                    }
                 }
+                backoff = std::cmp::min(backoff * 2, max_backoff);
             }
             Err(_) => {
                 backoff = std::cmp::min(backoff * 2, max_backoff);
@@ -608,7 +599,7 @@ fn watcher_init_and_loop(
 
     // A failed subscribe means no live push updates, so fail startup rather than
     // report success for a watcher that can only refresh on new blocks.
-    if let Err(e) = subscribe_scripts_at_init(&sub_client, &subscribed_scripts) {
+    if let Err(e) = subscribe_scripts(&sub_client, &subscribed_scripts) {
         let _ = init_tx.send(Err(e));
         return;
     }
@@ -808,8 +799,11 @@ fn watcher_init_and_loop(
                 for i in (last_external + gap)..(new_external + gap) {
                     if let Ok(addr) = wallet.get_address(BdkAddressIndex::Peek(i)) {
                         let script = addr.address.script_pubkey();
-                        let _ = sub_client.script_subscribe(&script);
-                        subscribed_scripts.insert(script);
+                        // Only track scripts we actually subscribed; a failed
+                        // subscribe falls back to the per-block resync.
+                        if sub_client.script_subscribe(&script).is_ok() {
+                            subscribed_scripts.insert(script);
+                        }
                     }
                 }
                 last_external = new_external;
@@ -819,8 +813,10 @@ fn watcher_init_and_loop(
                 for i in (last_internal + gap)..(new_internal + gap) {
                     if let Ok(addr) = wallet.get_internal_address(BdkAddressIndex::Peek(i)) {
                         let script = addr.address.script_pubkey();
-                        let _ = sub_client.script_subscribe(&script);
-                        subscribed_scripts.insert(script);
+                        // Only track scripts we actually subscribed (see above).
+                        if sub_client.script_subscribe(&script).is_ok() {
+                            subscribed_scripts.insert(script);
+                        }
                     }
                 }
                 last_internal = new_internal;
