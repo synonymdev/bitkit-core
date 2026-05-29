@@ -55,6 +55,9 @@ use crate::onchain::{
     ValidationResult,
 };
 use crate::onchain::{compose_transaction, ComposeParams, ComposeResult};
+use crate::onchain::{
+    start_watcher, stop_all_watchers, stop_watcher, EventListener, WatcherParams,
+};
 pub use modules::activity;
 pub use modules::lnurl;
 pub use modules::onchain;
@@ -64,7 +67,7 @@ use bip39::Mnemonic;
 use bitcoin::bip32::Xpriv;
 use bitcoin::Network as BitcoinNetwork;
 use std::str::FromStr;
-use std::sync::Mutex as StdMutex;
+use std::sync::{Arc, Mutex as StdMutex};
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex as TokioMutex;
 
@@ -2572,4 +2575,38 @@ pub async fn onchain_broadcast_raw_tx(
                 error_details: format!("Runtime error: {}", e),
             })
         })
+}
+
+// ============================================================================
+// Onchain xpub watcher
+// ============================================================================
+
+/// Start monitoring an xpub for transaction activity via Electrum subscriptions.
+///
+/// Each watcher receives its own listener — no global registration needed.
+#[uniffi::export]
+pub async fn onchain_start_watcher(
+    params: WatcherParams,
+    listener: Arc<dyn EventListener>,
+) -> Result<(), AccountInfoError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { start_watcher(params, listener).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(AccountInfoError::WatcherError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// Stop a specific xpub watcher by ID.
+#[uniffi::export]
+pub fn onchain_stop_watcher(watcher_id: String) -> Result<(), AccountInfoError> {
+    stop_watcher(&watcher_id)
+}
+
+/// Stop all active xpub watchers.
+#[uniffi::export]
+pub fn onchain_stop_all_watchers() {
+    stop_all_watchers();
 }
