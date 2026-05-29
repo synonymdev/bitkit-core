@@ -609,6 +609,19 @@ fn watcher_init_and_loop(
         return;
     }
 
+    // A stop can arrive (handle removed + shutdown signaled) while we were still
+    // initializing. If so, don't report success or call the listener for an
+    // already-stopped watcher — report the cancellation and tear down.
+    if *shutdown_rx.borrow() {
+        let _ = init_tx.send(Err(AccountInfoError::WatcherError {
+            error_details: "Watcher stopped during startup".to_string(),
+        }));
+        for script in &subscribed_scripts {
+            let _ = sub_client.script_unsubscribe(script);
+        }
+        return;
+    }
+
     // Init succeeded.
     let _ = init_tx.send(Ok(()));
 
