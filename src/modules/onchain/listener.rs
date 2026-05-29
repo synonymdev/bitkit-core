@@ -696,7 +696,9 @@ fn watcher_init_and_loop(
                 match reconnect_loop(&params.electrum_url, &shutdown_rx, &subscribed_scripts) {
                     Some((new_client, new_tip)) => {
                         sub_client = new_client;
-                        tip_height = tip_height.max(new_tip);
+                        // Adopt the reconnected server's tip; keeping a higher
+                        // stale tip would overstate confirmations.
+                        tip_height = new_tip;
                         listener.on_event(watcher_id.clone(), WatcherEvent::Reconnected);
                         // Drop the sync connection so the resync below rebuilds
                         // it, and force a resync to refresh post-reconnect state.
@@ -738,7 +740,8 @@ fn watcher_init_and_loop(
                     match reconnect_loop(&params.electrum_url, &shutdown_rx, &subscribed_scripts) {
                         Some((new_client, new_tip)) => {
                             sub_client = new_client;
-                            tip_height = tip_height.max(new_tip);
+                            // Adopt the reconnected server's tip (see above).
+                            tip_height = new_tip;
                             listener.on_event(watcher_id.clone(), WatcherEvent::Reconnected);
                             blockchain = None;
                             needs_resync = true;
