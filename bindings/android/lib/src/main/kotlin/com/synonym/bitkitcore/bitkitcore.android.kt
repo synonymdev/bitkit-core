@@ -437,11 +437,11 @@ internal open class UniffiForeignFutureStruct(
     @JvmField public var `free`: UniffiForeignFutureFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `handle` = 0.toLong(),
-        
+
         `free` = null,
-        
+
     )
 
     internal class UniffiByValue(
@@ -468,11 +468,11 @@ internal open class UniffiForeignFutureStructU8Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toByte(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -502,11 +502,11 @@ internal open class UniffiForeignFutureStructI8Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toByte(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -536,11 +536,11 @@ internal open class UniffiForeignFutureStructU16Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toShort(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -570,11 +570,11 @@ internal open class UniffiForeignFutureStructI16Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toShort(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -604,11 +604,11 @@ internal open class UniffiForeignFutureStructU32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -638,11 +638,11 @@ internal open class UniffiForeignFutureStructI32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -672,11 +672,11 @@ internal open class UniffiForeignFutureStructU64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toLong(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -706,11 +706,11 @@ internal open class UniffiForeignFutureStructI64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toLong(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -740,11 +740,11 @@ internal open class UniffiForeignFutureStructF32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.0f,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -774,11 +774,11 @@ internal open class UniffiForeignFutureStructF64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.0,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -808,11 +808,11 @@ internal open class UniffiForeignFutureStructPointerStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = NullPointer,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -842,11 +842,11 @@ internal open class UniffiForeignFutureStructRustBufferStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = RustBufferHelper.allocValue(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -875,9 +875,9 @@ internal open class UniffiForeignFutureStructVoidStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -953,31 +953,31 @@ internal open class UniffiVTableCallbackInterfaceTrezorTransportCallbackStruct(
     @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `enumerateDevices` = null,
-        
+
         `openDevice` = null,
-        
+
         `closeDevice` = null,
-        
+
         `readChunk` = null,
-        
+
         `writeChunk` = null,
-        
+
         `getChunkSize` = null,
-        
+
         `callMessage` = null,
-        
+
         `getPairingCode` = null,
-        
+
         `saveThpCredential` = null,
-        
+
         `loadThpCredential` = null,
-        
+
         `logDebug` = null,
-        
+
         `uniffiFree` = null,
-        
+
     )
 
     internal class UniffiByValue(
@@ -1035,13 +1035,13 @@ internal open class UniffiVTableCallbackInterfaceTrezorUiCallbackStruct(
     @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `onPinRequest` = null,
-        
+
         `onPassphraseRequest` = null,
-        
+
         `uniffiFree` = null,
-        
+
     )
 
     internal class UniffiByValue(
@@ -1065,6 +1065,10 @@ internal fun UniffiVTableCallbackInterfaceTrezorUiCallback.uniffiSetValue(other:
 }
 
 internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = UniffiVTableCallbackInterfaceTrezorUiCallbackStruct.UniffiByValue
+
+
+
+
 
 
 
@@ -1695,6 +1699,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep() != 42719.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1756,6 +1763,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_resolve_pubky_url() != 43253.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds() != 52496.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_start_pubky_auth() != 18158.toShort()) {
@@ -2152,6 +2162,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_parse_pubky_auth_url(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_prepare_sweep_transaction(
     ): Short
     @JvmStatic
@@ -2213,6 +2226,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_resolve_pubky_url(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_start_pubky_auth(
@@ -2921,6 +2937,16 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_prepare_legacy_rn_native_segwit_recovery_sweep(
+        `mnemonicPhrase`: RustBufferByValue,
+        `network`: RustBufferByValue,
+        `electrumUrl`: RustBufferByValue,
+        `destinationAddress`: RustBufferByValue,
+        `feeRateSatsPerVbyte`: RustBufferByValue,
+        `indexLimit`: Int,
+        `bip39Passphrase`: RustBufferByValue,
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_prepare_sweep_transaction(
         `mnemonicPhrase`: RustBufferByValue,
         `network`: RustBufferByValue,
@@ -3034,6 +3060,14 @@ internal object UniffiLib : Library {
         `uri`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_scan_legacy_rn_native_segwit_recovery_funds(
+        `mnemonicPhrase`: RustBufferByValue,
+        `network`: RustBufferByValue,
+        `electrumUrl`: RustBufferByValue,
+        `indexLimit`: Int,
+        `bip39Passphrase`: RustBufferByValue,
+    ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_start_pubky_auth(
         `caps`: RustBufferByValue,
@@ -3907,7 +3941,7 @@ public open class TrezorTransportCallbackImpl: Disposable, TrezorTransportCallba
         }!!
     }
 
-    
+
     /**
      * Enumerate all connected Trezor devices
      */
@@ -4122,13 +4156,13 @@ public open class TrezorTransportCallbackImpl: Disposable, TrezorTransportCallba
     }
 
 
-    
-    
 
-    
-    
+
+
+
+
     public companion object
-    
+
 }
 
 
@@ -4505,7 +4539,7 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
         }!!
     }
 
-    
+
     /**
      * Called when the device requests a PIN.
      *
@@ -4546,13 +4580,13 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
     }
 
 
-    
-    
 
-    
-    
+
+
+
+
     public companion object
-    
+
 }
 
 
@@ -6215,6 +6249,68 @@ public object FfiConverterTypeIManualRefund: FfiConverterRustBuffer<IManualRefun
         FfiConverterOptionalString.write(value.`votedByName`, buf)
         FfiConverterOptionalString.write(value.`reason`, buf)
         FfiConverterString.write(value.`targetType`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeLegacyRnCloseRecoveryScanResult: FfiConverterRustBuffer<LegacyRnCloseRecoveryScanResult> {
+    override fun read(buf: ByteBuffer): LegacyRnCloseRecoveryScanResult {
+        return LegacyRnCloseRecoveryScanResult(
+            FfiConverterULong.read(buf),
+            FfiConverterUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: LegacyRnCloseRecoveryScanResult): ULong = (
+            FfiConverterULong.allocationSize(value.`totalAmount`) +
+            FfiConverterUInt.allocationSize(value.`outputsCount`)
+    )
+
+    override fun write(value: LegacyRnCloseRecoveryScanResult, buf: ByteBuffer) {
+        FfiConverterULong.write(value.`totalAmount`, buf)
+        FfiConverterUInt.write(value.`outputsCount`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeLegacyRnCloseRecoverySweepPreview: FfiConverterRustBuffer<LegacyRnCloseRecoverySweepPreview> {
+    override fun read(buf: ByteBuffer): LegacyRnCloseRecoverySweepPreview {
+        return LegacyRnCloseRecoverySweepPreview(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: LegacyRnCloseRecoverySweepPreview): ULong = (
+            FfiConverterString.allocationSize(value.`txHex`) +
+            FfiConverterString.allocationSize(value.`txid`) +
+            FfiConverterULong.allocationSize(value.`totalAmount`) +
+            FfiConverterULong.allocationSize(value.`estimatedFee`) +
+            FfiConverterULong.allocationSize(value.`estimatedVsize`) +
+            FfiConverterUInt.allocationSize(value.`outputsCount`) +
+            FfiConverterString.allocationSize(value.`destinationAddress`) +
+            FfiConverterULong.allocationSize(value.`amountAfterFees`)
+    )
+
+    override fun write(value: LegacyRnCloseRecoverySweepPreview, buf: ByteBuffer) {
+        FfiConverterString.write(value.`txHex`, buf)
+        FfiConverterString.write(value.`txid`, buf)
+        FfiConverterULong.write(value.`totalAmount`, buf)
+        FfiConverterULong.write(value.`estimatedFee`, buf)
+        FfiConverterULong.write(value.`estimatedVsize`, buf)
+        FfiConverterUInt.write(value.`outputsCount`, buf)
+        FfiConverterString.write(value.`destinationAddress`, buf)
+        FfiConverterULong.write(value.`amountAfterFees`, buf)
     }
 }
 
@@ -12359,7 +12455,7 @@ public suspend fun `approvePubkyAuth`(`authUrl`: kotlin.String, `secretKeyHex`: 
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -12376,7 +12472,7 @@ public suspend fun `blocktankRemoveAllCjitEntries`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -12393,7 +12489,7 @@ public suspend fun `blocktankRemoveAllOrders`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -12410,7 +12506,7 @@ public suspend fun `blocktankWipeAll`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -12457,7 +12553,7 @@ public suspend fun `cancelPubkyAuth`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -13390,6 +13486,29 @@ public fun `parsePubkyAuthUrl`(`authUrl`: kotlin.String): PubkyAuthDetails {
 }
 
 @Throws(SweepException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `prepareLegacyRnNativeSegwitRecoverySweep`(`mnemonicPhrase`: kotlin.String, `network`: Network?, `electrumUrl`: kotlin.String, `destinationAddress`: kotlin.String, `feeRateSatsPerVbyte`: kotlin.UInt?, `indexLimit`: kotlin.UInt, `bip39Passphrase`: kotlin.String?): LegacyRnCloseRecoverySweepPreview {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_prepare_legacy_rn_native_segwit_recovery_sweep(
+            FfiConverterString.lower(`mnemonicPhrase`),
+            FfiConverterOptionalTypeNetwork.lower(`network`),
+            FfiConverterString.lower(`electrumUrl`),
+            FfiConverterString.lower(`destinationAddress`),
+            FfiConverterOptionalUInt.lower(`feeRateSatsPerVbyte`),
+            FfiConverterUInt.lower(`indexLimit`),
+            FfiConverterOptionalString.lower(`bip39Passphrase`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeLegacyRnCloseRecoverySweepPreview.lift(it) },
+        // Error FFI converter
+        SweepExceptionErrorHandler,
+    )
+}
+
+@Throws(SweepException::class, kotlin.coroutines.cancellation.CancellationException::class)
 public suspend fun `prepareSweepTransaction`(`mnemonicPhrase`: kotlin.String, `network`: Network?, `bip39Passphrase`: kotlin.String?, `electrumUrl`: kotlin.String, `destinationAddress`: kotlin.String, `feeRateSatsPerVbyte`: kotlin.UInt?): SweepTransactionPreview {
     return uniffiRustCallAsync(
         UniffiLib.uniffi_bitkitcore_fn_func_prepare_sweep_transaction(
@@ -13435,7 +13554,7 @@ public suspend fun `pubkyPutWithSecretKey`(`secretKeyHex`: kotlin.String, `path`
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -13454,7 +13573,7 @@ public suspend fun `pubkySessionDelete`(`sessionSecret`: kotlin.String, `path`: 
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -13492,7 +13611,7 @@ public suspend fun `pubkySessionPut`(`sessionSecret`: kotlin.String, `path`: kot
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -13662,7 +13781,7 @@ public suspend fun `regtestMine`(`count`: kotlin.UInt?) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -13738,6 +13857,27 @@ public fun `resolvePubkyUrl`(`uri`: kotlin.String): kotlin.String {
     })
 }
 
+@Throws(SweepException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `scanLegacyRnNativeSegwitRecoveryFunds`(`mnemonicPhrase`: kotlin.String, `network`: Network?, `electrumUrl`: kotlin.String, `indexLimit`: kotlin.UInt, `bip39Passphrase`: kotlin.String?): LegacyRnCloseRecoveryScanResult {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_scan_legacy_rn_native_segwit_recovery_funds(
+            FfiConverterString.lower(`mnemonicPhrase`),
+            FfiConverterOptionalTypeNetwork.lower(`network`),
+            FfiConverterString.lower(`electrumUrl`),
+            FfiConverterUInt.lower(`indexLimit`),
+            FfiConverterOptionalString.lower(`bip39Passphrase`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeLegacyRnCloseRecoveryScanResult.lift(it) },
+        // Error FFI converter
+        SweepExceptionErrorHandler,
+    )
+}
+
 @Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
 public suspend fun `startPubkyAuth`(`caps`: kotlin.String): kotlin.String {
     return uniffiRustCallAsync(
@@ -13805,7 +13945,7 @@ public suspend fun `trezorClearCredentials`(`deviceId`: kotlin.String) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -13854,7 +13994,7 @@ public suspend fun `trezorDisconnect`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -13981,7 +14121,7 @@ public suspend fun `trezorInitialize`(`credentialPath`: kotlin.String?) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -14220,7 +14360,7 @@ public suspend fun `updateBlocktankUrl`(`newUrl`: kotlin.String) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -14258,7 +14398,7 @@ public suspend fun `upsertCjitEntries`(`entries`: List<IcJitEntry>) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -14296,7 +14436,7 @@ public suspend fun `upsertInfo`(`info`: IBtInfo) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -14334,7 +14474,7 @@ public suspend fun `upsertOrders`(`orders`: List<IBtOrder>) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )

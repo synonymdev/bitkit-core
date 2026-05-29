@@ -49,9 +49,10 @@ pub use crate::onchain::WordCount;
 use crate::onchain::{
     broadcast_raw_tx, get_account_info, get_address_info, get_transaction_detail,
     get_transaction_history, AccountInfoError, AccountInfoResult, AccountType, AddressError,
-    BroadcastError, GetAddressResponse, GetAddressesResponse, Network, SingleAddressInfoResult,
-    SweepError, SweepResult, SweepTransactionPreview, SweepableBalances, TransactionDetail,
-    TransactionHistoryResult, ValidationResult,
+    BroadcastError, GetAddressResponse, GetAddressesResponse, LegacyRnCloseRecoveryScanResult,
+    LegacyRnCloseRecoverySweepPreview, Network, SingleAddressInfoResult, SweepError, SweepResult,
+    SweepTransactionPreview, SweepableBalances, TransactionDetail, TransactionHistoryResult,
+    ValidationResult,
 };
 use crate::onchain::{compose_transaction, ComposeParams, ComposeResult};
 pub use modules::activity;
@@ -322,6 +323,57 @@ pub async fn check_sweepable_balances(
             network.unwrap_or(Network::Bitcoin).into(),
             bip39_passphrase.as_deref(),
             &electrum_url,
+        )
+        .await
+    })
+    .await
+    .unwrap()
+}
+
+// One-time legacy React Native close recovery exports.
+#[uniffi::export]
+pub async fn scan_legacy_rn_native_segwit_recovery_funds(
+    mnemonic_phrase: String,
+    network: Option<Network>,
+    electrum_url: String,
+    index_limit: u32,
+    bip39_passphrase: Option<String>,
+) -> Result<LegacyRnCloseRecoveryScanResult, SweepError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        onchain::BitcoinAddressValidator::scan_legacy_rn_native_segwit_recovery_funds(
+            &mnemonic_phrase,
+            network.unwrap_or(Network::Bitcoin).into(),
+            &electrum_url,
+            index_limit,
+            bip39_passphrase.as_deref(),
+        )
+        .await
+    })
+    .await
+    .unwrap()
+}
+
+#[uniffi::export]
+pub async fn prepare_legacy_rn_native_segwit_recovery_sweep(
+    mnemonic_phrase: String,
+    network: Option<Network>,
+    electrum_url: String,
+    destination_address: String,
+    fee_rate_sats_per_vbyte: Option<u32>,
+    index_limit: u32,
+    bip39_passphrase: Option<String>,
+) -> Result<LegacyRnCloseRecoverySweepPreview, SweepError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        onchain::BitcoinAddressValidator::prepare_legacy_rn_native_segwit_recovery_sweep(
+            &mnemonic_phrase,
+            network.unwrap_or(Network::Bitcoin).into(),
+            &electrum_url,
+            &destination_address,
+            fee_rate_sats_per_vbyte,
+            index_limit,
+            bip39_passphrase.as_deref(),
         )
         .await
     })

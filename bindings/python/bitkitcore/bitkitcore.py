@@ -611,6 +611,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep() != 42719:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret() != 47481:
@@ -652,6 +654,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_resolve_pubky_url() != 43253:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds() != 52496:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_start_pubky_auth() != 18158:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -1449,6 +1453,16 @@ _UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_prepare_legacy_rn_native_segwit_recovery_sweep.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.c_uint32,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_prepare_legacy_rn_native_segwit_recovery_sweep.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_prepare_sweep_transaction.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1563,6 +1577,14 @@ _UniffiLib.uniffi_bitkitcore_fn_func_resolve_pubky_url.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_resolve_pubky_url.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_scan_legacy_rn_native_segwit_recovery_funds.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.c_uint32,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_scan_legacy_rn_native_segwit_recovery_funds.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_start_pubky_auth.argtypes = (
     _UniffiRustBuffer,
 )
@@ -2236,6 +2258,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.restype = ctypes.c_uint1
 _UniffiLib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_prepare_sweep_transaction.restype = ctypes.c_uint16
@@ -2299,6 +2324,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags.rest
 _UniffiLib.uniffi_bitkitcore_checksum_func_resolve_pubky_url.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_resolve_pubky_url.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_start_pubky_auth.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_start_pubky_auth.restype = ctypes.c_uint16
@@ -5855,6 +5883,160 @@ class _UniffiConverterTypeIcJitEntry(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.expires_at, buf)
         _UniffiConverterString.write(value.updated_at, buf)
         _UniffiConverterString.write(value.created_at, buf)
+
+
+class LegacyRnCloseRecoveryScanResult:
+    total_amount: "int"
+    """
+    Total balance found in legacy RN P2WPKH close outputs (in satoshis).
+    """
+
+    outputs_count: "int"
+    """
+    Number of P2WPKH outputs found.
+    """
+
+    def __init__(self, *, total_amount: "int", outputs_count: "int"):
+        self.total_amount = total_amount
+        self.outputs_count = outputs_count
+
+    def __str__(self):
+        return "LegacyRnCloseRecoveryScanResult(total_amount={}, outputs_count={})".format(self.total_amount, self.outputs_count)
+
+    def __eq__(self, other):
+        if self.total_amount != other.total_amount:
+            return False
+        if self.outputs_count != other.outputs_count:
+            return False
+        return True
+
+class _UniffiConverterTypeLegacyRnCloseRecoveryScanResult(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return LegacyRnCloseRecoveryScanResult(
+            total_amount=_UniffiConverterUInt64.read(buf),
+            outputs_count=_UniffiConverterUInt32.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterUInt64.check_lower(value.total_amount)
+        _UniffiConverterUInt32.check_lower(value.outputs_count)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterUInt64.write(value.total_amount, buf)
+        _UniffiConverterUInt32.write(value.outputs_count, buf)
+
+
+class LegacyRnCloseRecoverySweepPreview:
+    tx_hex: "str"
+    """
+    Fully signed raw sweep transaction hex. Broadcast only after user confirmation.
+    """
+
+    txid: "str"
+    """
+    Transaction id of the sweep transaction.
+    """
+
+    total_amount: "int"
+    """
+    Total input amount in satoshis.
+    """
+
+    estimated_fee: "int"
+    """
+    Fee in satoshis.
+    """
+
+    estimated_vsize: "int"
+    """
+    Transaction virtual size in vbytes.
+    """
+
+    outputs_count: "int"
+    """
+    Number of recovered outputs swept.
+    """
+
+    destination_address: "str"
+    """
+    Destination address receiving the sweep.
+    """
+
+    amount_after_fees: "int"
+    """
+    Amount sent to destination after fees.
+    """
+
+    def __init__(self, *, tx_hex: "str", txid: "str", total_amount: "int", estimated_fee: "int", estimated_vsize: "int", outputs_count: "int", destination_address: "str", amount_after_fees: "int"):
+        self.tx_hex = tx_hex
+        self.txid = txid
+        self.total_amount = total_amount
+        self.estimated_fee = estimated_fee
+        self.estimated_vsize = estimated_vsize
+        self.outputs_count = outputs_count
+        self.destination_address = destination_address
+        self.amount_after_fees = amount_after_fees
+
+    def __str__(self):
+        return "LegacyRnCloseRecoverySweepPreview(tx_hex={}, txid={}, total_amount={}, estimated_fee={}, estimated_vsize={}, outputs_count={}, destination_address={}, amount_after_fees={})".format(self.tx_hex, self.txid, self.total_amount, self.estimated_fee, self.estimated_vsize, self.outputs_count, self.destination_address, self.amount_after_fees)
+
+    def __eq__(self, other):
+        if self.tx_hex != other.tx_hex:
+            return False
+        if self.txid != other.txid:
+            return False
+        if self.total_amount != other.total_amount:
+            return False
+        if self.estimated_fee != other.estimated_fee:
+            return False
+        if self.estimated_vsize != other.estimated_vsize:
+            return False
+        if self.outputs_count != other.outputs_count:
+            return False
+        if self.destination_address != other.destination_address:
+            return False
+        if self.amount_after_fees != other.amount_after_fees:
+            return False
+        return True
+
+class _UniffiConverterTypeLegacyRnCloseRecoverySweepPreview(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return LegacyRnCloseRecoverySweepPreview(
+            tx_hex=_UniffiConverterString.read(buf),
+            txid=_UniffiConverterString.read(buf),
+            total_amount=_UniffiConverterUInt64.read(buf),
+            estimated_fee=_UniffiConverterUInt64.read(buf),
+            estimated_vsize=_UniffiConverterUInt64.read(buf),
+            outputs_count=_UniffiConverterUInt32.read(buf),
+            destination_address=_UniffiConverterString.read(buf),
+            amount_after_fees=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.tx_hex)
+        _UniffiConverterString.check_lower(value.txid)
+        _UniffiConverterUInt64.check_lower(value.total_amount)
+        _UniffiConverterUInt64.check_lower(value.estimated_fee)
+        _UniffiConverterUInt64.check_lower(value.estimated_vsize)
+        _UniffiConverterUInt32.check_lower(value.outputs_count)
+        _UniffiConverterString.check_lower(value.destination_address)
+        _UniffiConverterUInt64.check_lower(value.amount_after_fees)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.tx_hex, buf)
+        _UniffiConverterString.write(value.txid, buf)
+        _UniffiConverterUInt64.write(value.total_amount, buf)
+        _UniffiConverterUInt64.write(value.estimated_fee, buf)
+        _UniffiConverterUInt64.write(value.estimated_vsize, buf)
+        _UniffiConverterUInt32.write(value.outputs_count, buf)
+        _UniffiConverterString.write(value.destination_address, buf)
+        _UniffiConverterUInt64.write(value.amount_after_fees, buf)
 
 
 class LightningActivity:
@@ -9917,25 +10099,25 @@ class AccountType(enum.Enum):
     BIP44 legacy (P2PKH) — xpub/tpub prefix
     """
 
-    
+
     WRAPPED_SEGWIT = 1
     """
     BIP49 wrapped segwit (P2SH-P2WPKH) — ypub/upub prefix
     """
 
-    
+
     NATIVE_SEGWIT = 2
     """
     BIP84 native segwit (P2WPKH) — zpub/vpub prefix
     """
 
-    
+
     TAPROOT = 3
     """
     BIP86 taproot (P2TR)
     """
 
-    
+
 
 
 class _UniffiConverterTypeAccountType(_UniffiConverterRustBuffer):
@@ -10018,7 +10200,7 @@ class Activity:
             if not other.is_LIGHTNING():
                 return False
             return self._values == other._values
-    
+
 
     # For each variant, we have `is_NAME` and `is_name` methods for easily checking
     # whether an instance is that variant.
@@ -10030,7 +10212,7 @@ class Activity:
         return isinstance(self, Activity.LIGHTNING)
     def is_lightning(self) -> bool:
         return isinstance(self, Activity.LIGHTNING)
-    
+
 
 # Now, a little trick - we make each nested variant class be a subclass of the main
 # enum class, so that method calls and instance checks etc will work intuitively.
@@ -10252,11 +10434,11 @@ class _UniffiConverterTypeActivityError(_UniffiConverterRustBuffer):
 
 class ActivityFilter(enum.Enum):
     ALL = 0
-    
+
     LIGHTNING = 1
-    
+
     ONCHAIN = 2
-    
+
 
 
 class _UniffiConverterTypeActivityFilter(_UniffiConverterRustBuffer):
@@ -10298,9 +10480,9 @@ class _UniffiConverterTypeActivityFilter(_UniffiConverterRustBuffer):
 
 class ActivityType(enum.Enum):
     ONCHAIN = 0
-    
+
     LIGHTNING = 1
-    
+
 
 
 class _UniffiConverterTypeActivityType(_UniffiConverterRustBuffer):
@@ -10450,17 +10632,17 @@ class _UniffiConverterTypeAddressError(_UniffiConverterRustBuffer):
 
 class AddressType(enum.Enum):
     P2PKH = 0
-    
+
     P2SH = 1
-    
+
     P2WPKH = 2
-    
+
     P2WSH = 3
-    
+
     P2TR = 4
-    
+
     UNKNOWN = 5
-    
+
 
 
 class _UniffiConverterTypeAddressType(_UniffiConverterRustBuffer):
@@ -10520,13 +10702,13 @@ class _UniffiConverterTypeAddressType(_UniffiConverterRustBuffer):
 
 class BitcoinNetworkEnum(enum.Enum):
     MAINNET = 0
-    
+
     TESTNET = 1
-    
+
     SIGNET = 2
-    
+
     REGTEST = 3
-    
+
 
 
 class _UniffiConverterTypeBitcoinNetworkEnum(_UniffiConverterRustBuffer):
@@ -10979,13 +11161,13 @@ class _UniffiConverterTypeBroadcastError(_UniffiConverterRustBuffer):
 
 class BtBolt11InvoiceState(enum.Enum):
     PENDING = 0
-    
+
     HOLDING = 1
-    
+
     PAID = 2
-    
+
     CANCELED = 3
-    
+
 
 
 class _UniffiConverterTypeBtBolt11InvoiceState(_UniffiConverterRustBuffer):
@@ -11033,15 +11215,15 @@ class _UniffiConverterTypeBtBolt11InvoiceState(_UniffiConverterRustBuffer):
 
 class BtChannelOrderErrorType(enum.Enum):
     WRONG_ORDER_STATE = 0
-    
+
     PEER_NOT_REACHABLE = 1
-    
+
     CHANNEL_REJECTED_BY_DESTINATION = 2
-    
+
     CHANNEL_REJECTED_BY_LSP = 3
-    
+
     BLOCKTANK_NOT_READY = 4
-    
+
 
 
 class _UniffiConverterTypeBtChannelOrderErrorType(_UniffiConverterRustBuffer):
@@ -11095,11 +11277,11 @@ class _UniffiConverterTypeBtChannelOrderErrorType(_UniffiConverterRustBuffer):
 
 class BtOpenChannelState(enum.Enum):
     OPENING = 0
-    
+
     OPEN = 1
-    
+
     CLOSED = 2
-    
+
 
 
 class _UniffiConverterTypeBtOpenChannelState(_UniffiConverterRustBuffer):
@@ -11141,13 +11323,13 @@ class _UniffiConverterTypeBtOpenChannelState(_UniffiConverterRustBuffer):
 
 class BtOrderState(enum.Enum):
     CREATED = 0
-    
+
     EXPIRED = 1
-    
+
     OPEN = 2
-    
+
     CLOSED = 3
-    
+
 
 
 class _UniffiConverterTypeBtOrderState(_UniffiConverterRustBuffer):
@@ -11195,13 +11377,13 @@ class _UniffiConverterTypeBtOrderState(_UniffiConverterRustBuffer):
 
 class BtOrderState2(enum.Enum):
     CREATED = 0
-    
+
     EXPIRED = 1
-    
+
     EXECUTED = 2
-    
+
     PAID = 3
-    
+
 
 
 class _UniffiConverterTypeBtOrderState2(_UniffiConverterRustBuffer):
@@ -11249,15 +11431,15 @@ class _UniffiConverterTypeBtOrderState2(_UniffiConverterRustBuffer):
 
 class BtPaymentState(enum.Enum):
     CREATED = 0
-    
+
     PARTIALLY_PAID = 1
-    
+
     PAID = 2
-    
+
     REFUNDED = 3
-    
+
     REFUND_AVAILABLE = 4
-    
+
 
 
 class _UniffiConverterTypeBtPaymentState(_UniffiConverterRustBuffer):
@@ -11311,15 +11493,15 @@ class _UniffiConverterTypeBtPaymentState(_UniffiConverterRustBuffer):
 
 class BtPaymentState2(enum.Enum):
     CREATED = 0
-    
+
     PAID = 1
-    
+
     REFUNDED = 2
-    
+
     REFUND_AVAILABLE = 3
-    
+
     CANCELED = 4
-    
+
 
 
 class _UniffiConverterTypeBtPaymentState2(_UniffiConverterRustBuffer):
@@ -11373,13 +11555,13 @@ class _UniffiConverterTypeBtPaymentState2(_UniffiConverterRustBuffer):
 
 class CJitStateEnum(enum.Enum):
     CREATED = 0
-    
+
     COMPLETED = 1
-    
+
     EXPIRED = 2
-    
+
     FAILED = 3
-    
+
 
 
 class _UniffiConverterTypeCJitStateEnum(_UniffiConverterRustBuffer):
@@ -11435,19 +11617,19 @@ class CoinSelection(enum.Enum):
     Branch-and-bound (default). Minimizes change by searching for exact matches.
     """
 
-    
+
     LARGEST_FIRST = 1
     """
     Selects largest UTXOs first. Useful for UTXO consolidation.
     """
 
-    
+
     OLDEST_FIRST = 2
     """
     Selects oldest UTXOs first. Maximizes coin-age spending.
     """
 
-    
+
 
 
 class _UniffiConverterTypeCoinSelection(_UniffiConverterRustBuffer):
@@ -11519,7 +11701,7 @@ class ComposeOutput:
             if self.amount_sats != other.amount_sats:
                 return False
             return True
-    
+
     class SEND_MAX:
         """
         Send all remaining funds (after fees) to an address
@@ -11539,7 +11721,7 @@ class ComposeOutput:
             if self.address != other.address:
                 return False
             return True
-    
+
     class OP_RETURN:
         """
         OP_RETURN data output (hex-encoded payload)
@@ -11559,8 +11741,8 @@ class ComposeOutput:
             if self.data_hex != other.data_hex:
                 return False
             return True
-    
-    
+
+
 
     # For each variant, we have `is_NAME` and `is_name` methods for easily checking
     # whether an instance is that variant.
@@ -11576,7 +11758,7 @@ class ComposeOutput:
         return isinstance(self, ComposeOutput.OP_RETURN)
     def is_op_return(self) -> bool:
         return isinstance(self, ComposeOutput.OP_RETURN)
-    
+
 
 # Now, a little trick - we make each nested variant class be a subclass of the main
 # enum class, so that method calls and instance checks etc will work intuitively.
@@ -11698,7 +11880,7 @@ class ComposeResult:
             if self.total_spent != other.total_spent:
                 return False
             return True
-    
+
     class ERROR:
         """
         Composition failed (e.g. insufficient funds)
@@ -11718,8 +11900,8 @@ class ComposeResult:
             if self.error != other.error:
                 return False
             return True
-    
-    
+
+
 
     # For each variant, we have `is_NAME` and `is_name` methods for easily checking
     # whether an instance is that variant.
@@ -11731,7 +11913,7 @@ class ComposeResult:
         return isinstance(self, ComposeResult.ERROR)
     def is_error(self) -> bool:
         return isinstance(self, ComposeResult.ERROR)
-    
+
 
 # Now, a little trick - we make each nested variant class be a subclass of the main
 # enum class, so that method calls and instance checks etc will work intuitively.
@@ -12252,13 +12434,13 @@ class _UniffiConverterTypeLnurlError(_UniffiConverterRustBuffer):
 
 class ManualRefundStateEnum(enum.Enum):
     CREATED = 0
-    
+
     APPROVED = 1
-    
+
     REJECTED = 2
-    
+
     SENT = 3
-    
+
 
 
 class _UniffiConverterTypeManualRefundStateEnum(_UniffiConverterRustBuffer):
@@ -12310,31 +12492,31 @@ class Network(enum.Enum):
     Mainnet Bitcoin.
     """
 
-    
+
     TESTNET = 1
     """
     Bitcoin's testnet network.
     """
 
-    
+
     TESTNET4 = 2
     """
     Bitcoin's testnet4 network.
     """
 
-    
+
     SIGNET = 3
     """
     Bitcoin's signet network.
     """
 
-    
+
     REGTEST = 4
     """
     Bitcoin's regtest network.
     """
 
-    
+
 
 
 class _UniffiConverterTypeNetwork(_UniffiConverterRustBuffer):
@@ -12388,13 +12570,13 @@ class _UniffiConverterTypeNetwork(_UniffiConverterRustBuffer):
 
 class NetworkType(enum.Enum):
     BITCOIN = 0
-    
+
     TESTNET = 1
-    
+
     REGTEST = 2
-    
+
     SIGNET = 3
-    
+
 
 
 class _UniffiConverterTypeNetworkType(_UniffiConverterRustBuffer):
@@ -12461,7 +12643,7 @@ class PassphraseResponse:
             if not other.is_CANCEL():
                 return False
             return True
-    
+
     class STANDARD:
         """
         Standard wallet — no passphrase, equivalent to `Some("")` on the device.
@@ -12478,7 +12660,7 @@ class PassphraseResponse:
             if not other.is_STANDARD():
                 return False
             return True
-    
+
     class HIDDEN:
         """
         Hidden wallet — derived from the passphrase entered on the host.
@@ -12498,7 +12680,7 @@ class PassphraseResponse:
             if self.value != other.value:
                 return False
             return True
-    
+
     class ON_DEVICE:
         """
         Enter the passphrase on the Trezor device itself instead of on the host.
@@ -12515,8 +12697,8 @@ class PassphraseResponse:
             if not other.is_ON_DEVICE():
                 return False
             return True
-    
-    
+
+
 
     # For each variant, we have `is_NAME` and `is_name` methods for easily checking
     # whether an instance is that variant.
@@ -12536,7 +12718,7 @@ class PassphraseResponse:
         return isinstance(self, PassphraseResponse.ON_DEVICE)
     def is_on_device(self) -> bool:
         return isinstance(self, PassphraseResponse.ON_DEVICE)
-    
+
 
 # Now, a little trick - we make each nested variant class be a subclass of the main
 # enum class, so that method calls and instance checks etc will work intuitively.
@@ -12601,11 +12783,11 @@ class _UniffiConverterTypePassphraseResponse(_UniffiConverterRustBuffer):
 
 class PaymentState(enum.Enum):
     PENDING = 0
-    
+
     SUCCEEDED = 1
-    
+
     FAILED = 2
-    
+
 
 
 class _UniffiConverterTypePaymentState(_UniffiConverterRustBuffer):
@@ -12647,9 +12829,9 @@ class _UniffiConverterTypePaymentState(_UniffiConverterRustBuffer):
 
 class PaymentType(enum.Enum):
     SENT = 0
-    
+
     RECEIVED = 1
-    
+
 
 
 class _UniffiConverterTypePaymentType(_UniffiConverterRustBuffer):
@@ -12689,9 +12871,9 @@ class PubkyAuthKind(enum.Enum):
     """
 
     SIGNIN = 0
-    
+
     SIGNUP = 1
-    
+
 
 
 class _UniffiConverterTypePubkyAuthKind(_UniffiConverterRustBuffer):
@@ -12943,7 +13125,7 @@ class Scanner:
             if self.invoice != other.invoice:
                 return False
             return True
-    
+
     class LIGHTNING:
         invoice: "LightningInvoice"
 
@@ -12959,7 +13141,7 @@ class Scanner:
             if self.invoice != other.invoice:
                 return False
             return True
-    
+
     class PUBKY_AUTH:
         data: "str"
 
@@ -12975,7 +13157,7 @@ class Scanner:
             if self.data != other.data:
                 return False
             return True
-    
+
     class LNURL_CHANNEL:
         data: "LnurlChannelData"
 
@@ -12991,7 +13173,7 @@ class Scanner:
             if self.data != other.data:
                 return False
             return True
-    
+
     class LNURL_AUTH:
         data: "LnurlAuthData"
 
@@ -13007,7 +13189,7 @@ class Scanner:
             if self.data != other.data:
                 return False
             return True
-    
+
     class LNURL_WITHDRAW:
         data: "LnurlWithdrawData"
 
@@ -13023,7 +13205,7 @@ class Scanner:
             if self.data != other.data:
                 return False
             return True
-    
+
     class LNURL_ADDRESS:
         data: "LnurlAddressData"
 
@@ -13039,7 +13221,7 @@ class Scanner:
             if self.data != other.data:
                 return False
             return True
-    
+
     class LNURL_PAY:
         data: "LnurlPayData"
 
@@ -13055,7 +13237,7 @@ class Scanner:
             if self.data != other.data:
                 return False
             return True
-    
+
     class NODE_ID:
         url: "str"
         network: "NetworkType"
@@ -13075,7 +13257,7 @@ class Scanner:
             if self.network != other.network:
                 return False
             return True
-    
+
     class GIFT:
         code: "str"
         amount: "int"
@@ -13095,8 +13277,8 @@ class Scanner:
             if self.amount != other.amount:
                 return False
             return True
-    
-    
+
+
 
     # For each variant, we have `is_NAME` and `is_name` methods for easily checking
     # whether an instance is that variant.
@@ -13140,7 +13322,7 @@ class Scanner:
         return isinstance(self, Scanner.GIFT)
     def is_gift(self) -> bool:
         return isinstance(self, Scanner.GIFT)
-    
+
 
 # Now, a little trick - we make each nested variant class be a subclass of the main
 # enum class, so that method calls and instance checks etc will work intuitively.
@@ -13286,9 +13468,9 @@ class _UniffiConverterTypeScanner(_UniffiConverterRustBuffer):
 
 class SortDirection(enum.Enum):
     ASC = 0
-    
+
     DESC = 1
-    
+
 
 
 class _UniffiConverterTypeSortDirection(_UniffiConverterRustBuffer):
@@ -13415,25 +13597,25 @@ class TrezorCoinType(enum.Enum):
     Bitcoin mainnet
     """
 
-    
+
     TESTNET = 1
     """
     Bitcoin testnet
     """
 
-    
+
     SIGNET = 2
     """
     Bitcoin signet (treated as testnet by the device)
     """
 
-    
+
     REGTEST = 3
     """
     Bitcoin regtest
     """
 
-    
+
 
 
 class _UniffiConverterTypeTrezorCoinType(_UniffiConverterRustBuffer):
@@ -13935,37 +14117,37 @@ class TrezorScriptType(enum.Enum):
     P2PKH (legacy)
     """
 
-    
+
     SPEND_P2SH_WITNESS = 1
     """
     P2SH-P2WPKH (nested SegWit)
     """
 
-    
+
     SPEND_WITNESS = 2
     """
     P2WPKH (native SegWit)
     """
 
-    
+
     SPEND_TAPROOT = 3
     """
     P2TR (Taproot)
     """
 
-    
+
     SPEND_MULTISIG = 4
     """
     P2SH multisig
     """
 
-    
+
     EXTERNAL = 5
     """
     External/watch-only input (not signed by device)
     """
 
-    
+
 
 
 class _UniffiConverterTypeTrezorScriptType(_UniffiConverterRustBuffer):
@@ -14033,13 +14215,13 @@ class TrezorTransportType(enum.Enum):
     USB connection
     """
 
-    
+
     BLUETOOTH = 1
     """
     Bluetooth connection
     """
 
-    
+
 
 
 class _UniffiConverterTypeTrezorTransportType(_UniffiConverterRustBuffer):
@@ -14083,19 +14265,19 @@ class TxDirection(enum.Enum):
     Wallet sent funds to an external address
     """
 
-    
+
     RECEIVED = 1
     """
     Wallet received funds from an external source
     """
 
-    
+
     SELF_TRANSFER = 2
     """
     Wallet sent funds to itself (e.g. consolidation, change-only)
     """
 
-    
+
 
 
 class _UniffiConverterTypeTxDirection(_UniffiConverterRustBuffer):
@@ -14166,7 +14348,7 @@ class WalletSelection:
             if not other.is_STANDARD():
                 return False
             return True
-    
+
     class HIDDEN:
         """
         A hidden wallet whose passphrase is entered on the host.
@@ -14186,7 +14368,7 @@ class WalletSelection:
             if self.passphrase != other.passphrase:
                 return False
             return True
-    
+
     class ON_DEVICE:
         """
         A hidden wallet whose passphrase is entered on the Trezor itself.
@@ -14203,8 +14385,8 @@ class WalletSelection:
             if not other.is_ON_DEVICE():
                 return False
             return True
-    
-    
+
+
 
     # For each variant, we have `is_NAME` and `is_name` methods for easily checking
     # whether an instance is that variant.
@@ -14220,7 +14402,7 @@ class WalletSelection:
         return isinstance(self, WalletSelection.ON_DEVICE)
     def is_on_device(self) -> bool:
         return isinstance(self, WalletSelection.ON_DEVICE)
-    
+
 
 # Now, a little trick - we make each nested variant class be a subclass of the main
 # enum class, so that method calls and instance checks etc will work intuitively.
@@ -14281,31 +14463,31 @@ class WordCount(enum.Enum):
     12-word mnemonic (128 bits of entropy)
     """
 
-    
+
     WORDS15 = 15
     """
     15-word mnemonic (160 bits of entropy)
     """
 
-    
+
     WORDS18 = 18
     """
     18-word mnemonic (192 bits of entropy)
     """
 
-    
+
     WORDS21 = 21
     """
     21-word mnemonic (224 bits of entropy)
     """
 
-    
+
     WORDS24 = 24
     """
     24-word mnemonic (256 bits of entropy)
     """
 
-    
+
 
 
 class _UniffiConverterTypeWordCount(_UniffiConverterRustBuffer):
@@ -16757,7 +16939,7 @@ class TrezorTransportCallbackImpl():
     """
 
     _pointer: ctypes.c_void_p
-    
+
     def __init__(self, *args, **kwargs):
         raise ValueError("This class has no default constructor")
 
@@ -16799,7 +16981,7 @@ class TrezorTransportCallbackImpl():
         """
 
         _UniffiConverterString.check_lower(path)
-        
+
         return _UniffiConverterTypeTrezorTransportWriteResult.lift(
             _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_open_device,self._uniffi_clone_pointer(),
         _UniffiConverterString.lower(path))
@@ -16815,7 +16997,7 @@ class TrezorTransportCallbackImpl():
         """
 
         _UniffiConverterString.check_lower(path)
-        
+
         return _UniffiConverterTypeTrezorTransportWriteResult.lift(
             _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_close_device,self._uniffi_clone_pointer(),
         _UniffiConverterString.lower(path))
@@ -16831,7 +17013,7 @@ class TrezorTransportCallbackImpl():
         """
 
         _UniffiConverterString.check_lower(path)
-        
+
         return _UniffiConverterTypeTrezorTransportReadResult.lift(
             _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_read_chunk,self._uniffi_clone_pointer(),
         _UniffiConverterString.lower(path))
@@ -16847,9 +17029,9 @@ class TrezorTransportCallbackImpl():
         """
 
         _UniffiConverterString.check_lower(path)
-        
+
         _UniffiConverterBytes.check_lower(data)
-        
+
         return _UniffiConverterTypeTrezorTransportWriteResult.lift(
             _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_write_chunk,self._uniffi_clone_pointer(),
         _UniffiConverterString.lower(path),
@@ -16866,7 +17048,7 @@ class TrezorTransportCallbackImpl():
         """
 
         _UniffiConverterString.check_lower(path)
-        
+
         return _UniffiConverterUInt32.lift(
             _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_get_chunk_size,self._uniffi_clone_pointer(),
         _UniffiConverterString.lower(path))
@@ -16894,11 +17076,11 @@ class TrezorTransportCallbackImpl():
         """
 
         _UniffiConverterString.check_lower(path)
-        
+
         _UniffiConverterUInt16.check_lower(message_type)
-        
+
         _UniffiConverterBytes.check_lower(data)
-        
+
         return _UniffiConverterOptionalTypeTrezorCallMessageResult.lift(
             _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_call_message,self._uniffi_clone_pointer(),
         _UniffiConverterString.lower(path),
@@ -16946,9 +17128,9 @@ class TrezorTransportCallbackImpl():
         """
 
         _UniffiConverterString.check_lower(device_id)
-        
+
         _UniffiConverterString.check_lower(credential_json)
-        
+
         return _UniffiConverterBool.lift(
             _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_save_thp_credential,self._uniffi_clone_pointer(),
         _UniffiConverterString.lower(device_id),
@@ -16973,7 +17155,7 @@ class TrezorTransportCallbackImpl():
         """
 
         _UniffiConverterString.check_lower(device_id)
-        
+
         return _UniffiConverterOptionalString.lift(
             _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_load_thp_credential,self._uniffi_clone_pointer(),
         _UniffiConverterString.lower(device_id))
@@ -16997,9 +17179,9 @@ class TrezorTransportCallbackImpl():
         """
 
         _UniffiConverterString.check_lower(tag)
-        
+
         _UniffiConverterString.check_lower(message)
-        
+
         _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezortransportcallback_log_debug,self._uniffi_clone_pointer(),
         _UniffiConverterString.lower(tag),
         _UniffiConverterString.lower(message))
@@ -17025,7 +17207,7 @@ class _UniffiTraitImplTrezorTransportCallback:
             method = uniffi_obj.enumerate_devices
             return method(*args)
 
-        
+
         def write_return_value(v):
             uniffi_out_return[0] = _UniffiConverterSequenceTypeNativeDeviceInfo.lower(v)
         _uniffi_trait_interface_call(
@@ -17047,7 +17229,7 @@ class _UniffiTraitImplTrezorTransportCallback:
             method = uniffi_obj.open_device
             return method(*args)
 
-        
+
         def write_return_value(v):
             uniffi_out_return[0] = _UniffiConverterTypeTrezorTransportWriteResult.lower(v)
         _uniffi_trait_interface_call(
@@ -17069,7 +17251,7 @@ class _UniffiTraitImplTrezorTransportCallback:
             method = uniffi_obj.close_device
             return method(*args)
 
-        
+
         def write_return_value(v):
             uniffi_out_return[0] = _UniffiConverterTypeTrezorTransportWriteResult.lower(v)
         _uniffi_trait_interface_call(
@@ -17091,7 +17273,7 @@ class _UniffiTraitImplTrezorTransportCallback:
             method = uniffi_obj.read_chunk
             return method(*args)
 
-        
+
         def write_return_value(v):
             uniffi_out_return[0] = _UniffiConverterTypeTrezorTransportReadResult.lower(v)
         _uniffi_trait_interface_call(
@@ -17114,7 +17296,7 @@ class _UniffiTraitImplTrezorTransportCallback:
             method = uniffi_obj.write_chunk
             return method(*args)
 
-        
+
         def write_return_value(v):
             uniffi_out_return[0] = _UniffiConverterTypeTrezorTransportWriteResult.lower(v)
         _uniffi_trait_interface_call(
@@ -17136,7 +17318,7 @@ class _UniffiTraitImplTrezorTransportCallback:
             method = uniffi_obj.get_chunk_size
             return method(*args)
 
-        
+
         def write_return_value(v):
             uniffi_out_return[0] = _UniffiConverterUInt32.lower(v)
         _uniffi_trait_interface_call(
@@ -17160,7 +17342,7 @@ class _UniffiTraitImplTrezorTransportCallback:
             method = uniffi_obj.call_message
             return method(*args)
 
-        
+
         def write_return_value(v):
             uniffi_out_return[0] = _UniffiConverterOptionalTypeTrezorCallMessageResult.lower(v)
         _uniffi_trait_interface_call(
@@ -17181,7 +17363,7 @@ class _UniffiTraitImplTrezorTransportCallback:
             method = uniffi_obj.get_pairing_code
             return method(*args)
 
-        
+
         def write_return_value(v):
             uniffi_out_return[0] = _UniffiConverterString.lower(v)
         _uniffi_trait_interface_call(
@@ -17204,7 +17386,7 @@ class _UniffiTraitImplTrezorTransportCallback:
             method = uniffi_obj.save_thp_credential
             return method(*args)
 
-        
+
         def write_return_value(v):
             uniffi_out_return[0] = _UniffiConverterBool.lower(v)
         _uniffi_trait_interface_call(
@@ -17226,7 +17408,7 @@ class _UniffiTraitImplTrezorTransportCallback:
             method = uniffi_obj.load_thp_credential
             return method(*args)
 
-        
+
         def write_return_value(v):
             uniffi_out_return[0] = _UniffiConverterOptionalString.lower(v)
         _uniffi_trait_interface_call(
@@ -17249,7 +17431,7 @@ class _UniffiTraitImplTrezorTransportCallback:
             method = uniffi_obj.log_debug
             return method(*args)
 
-        
+
         write_return_value = lambda v: None
         _uniffi_trait_interface_call(
                 uniffi_call_status_ptr.contents,
@@ -17382,7 +17564,7 @@ class TrezorUiCallbackImpl():
     """
 
     _pointer: ctypes.c_void_p
-    
+
     def __init__(self, *args, **kwargs):
         raise ValueError("This class has no default constructor")
 
@@ -17434,7 +17616,7 @@ class TrezorUiCallbackImpl():
         """
 
         _UniffiConverterBool.check_lower(on_device)
-        
+
         return _UniffiConverterTypePassphraseResponse.lift(
             _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request,self._uniffi_clone_pointer(),
         _UniffiConverterBool.lower(on_device))
@@ -17460,7 +17642,7 @@ class _UniffiTraitImplTrezorUiCallback:
             method = uniffi_obj.on_pin_request
             return method(*args)
 
-        
+
         def write_return_value(v):
             uniffi_out_return[0] = _UniffiConverterString.lower(v)
         _uniffi_trait_interface_call(
@@ -17482,7 +17664,7 @@ class _UniffiTraitImplTrezorUiCallback:
             method = uniffi_obj.on_passphrase_request
             return method(*args)
 
-        
+
         def write_return_value(v):
             uniffi_out_return[0] = _UniffiConverterTypePassphraseResponse.lower(v)
         _uniffi_trait_interface_call(
@@ -17603,16 +17785,16 @@ def activity_wipe_all() -> None:
 
 def add_pre_activity_metadata(pre_activity_metadata: "PreActivityMetadata") -> None:
     _UniffiConverterTypePreActivityMetadata.check_lower(pre_activity_metadata)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata,
         _UniffiConverterTypePreActivityMetadata.lower(pre_activity_metadata))
 
 
 def add_pre_activity_metadata_tags(payment_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(payment_id)
-    
+
     _UniffiConverterSequenceString.check_lower(tags)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags,
         _UniffiConverterString.lower(payment_id),
         _UniffiConverterSequenceString.lower(tags))
@@ -17620,9 +17802,9 @@ def add_pre_activity_metadata_tags(payment_id: "str",tags: "typing.List[str]") -
 
 def add_tags(activity_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(activity_id)
-    
+
     _UniffiConverterSequenceString.check_lower(tags)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_add_tags,
         _UniffiConverterString.lower(activity_id),
         _UniffiConverterSequenceString.lower(tags))
@@ -17630,9 +17812,9 @@ def add_tags(activity_id: "str",tags: "typing.List[str]") -> None:
 async def approve_pubky_auth(auth_url: "str",secret_key_hex: "str") -> None:
 
     _UniffiConverterString.check_lower(auth_url)
-    
+
     _UniffiConverterString.check_lower(secret_key_hex)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_approve_pubky_auth(
         _UniffiConverterString.lower(auth_url),
@@ -17642,8 +17824,8 @@ async def approve_pubky_auth(auth_url: "str",secret_key_hex: "str") -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -17657,8 +17839,8 @@ async def blocktank_remove_all_cjit_entries() -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -17672,8 +17854,8 @@ async def blocktank_remove_all_orders() -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -17687,8 +17869,8 @@ async def blocktank_wipe_all() -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -17696,15 +17878,15 @@ _UniffiConverterTypeBlocktankError,
 async def broadcast_sweep_transaction(psbt: "str",mnemonic_phrase: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",electrum_url: "str") -> "SweepResult":
 
     _UniffiConverterString.check_lower(psbt)
-    
+
     _UniffiConverterString.check_lower(mnemonic_phrase)
-    
+
     _UniffiConverterOptionalTypeNetwork.check_lower(network)
-    
+
     _UniffiConverterOptionalString.check_lower(bip39_passphrase)
-    
+
     _UniffiConverterString.check_lower(electrum_url)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(
         _UniffiConverterString.lower(psbt),
@@ -17717,7 +17899,7 @@ async def broadcast_sweep_transaction(psbt: "str",mnemonic_phrase: "str",network
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeSweepResult.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeSweepError,
 
@@ -17725,7 +17907,7 @@ _UniffiConverterTypeSweepError,
 
 def calculate_channel_liquidity_options(params: "ChannelLiquidityParams") -> "ChannelLiquidityOptions":
     _UniffiConverterTypeChannelLiquidityParams.check_lower(params)
-    
+
     return _UniffiConverterTypeChannelLiquidityOptions.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options,
         _UniffiConverterTypeChannelLiquidityParams.lower(params)))
 
@@ -17738,8 +17920,8 @@ async def cancel_pubky_auth() -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -17747,13 +17929,13 @@ _UniffiConverterTypePubkyError,
 async def check_sweepable_balances(mnemonic_phrase: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",electrum_url: "str") -> "SweepableBalances":
 
     _UniffiConverterString.check_lower(mnemonic_phrase)
-    
+
     _UniffiConverterOptionalTypeNetwork.check_lower(network)
-    
+
     _UniffiConverterOptionalString.check_lower(bip39_passphrase)
-    
+
     _UniffiConverterString.check_lower(electrum_url)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_check_sweepable_balances(
         _UniffiConverterString.lower(mnemonic_phrase),
@@ -17765,7 +17947,7 @@ async def check_sweepable_balances(mnemonic_phrase: "str",network: "typing.Optio
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeSweepableBalances.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeSweepError,
 
@@ -17779,7 +17961,7 @@ async def complete_pubky_auth() -> "str":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -17787,15 +17969,15 @@ _UniffiConverterTypePubkyError,
 
 def create_channel_request_url(k1: "str",callback: "str",local_node_id: "str",is_private: "bool",cancel: "bool") -> "str":
     _UniffiConverterString.check_lower(k1)
-    
+
     _UniffiConverterString.check_lower(callback)
-    
+
     _UniffiConverterString.check_lower(local_node_id)
-    
+
     _UniffiConverterBool.check_lower(is_private)
-    
+
     _UniffiConverterBool.check_lower(cancel)
-    
+
     return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeLnurlError,_UniffiLib.uniffi_bitkitcore_fn_func_create_channel_request_url,
         _UniffiConverterString.lower(k1),
         _UniffiConverterString.lower(callback),
@@ -17806,17 +17988,17 @@ def create_channel_request_url(k1: "str",callback: "str",local_node_id: "str",is
 async def create_cjit_entry(channel_size_sat: "int",invoice_sat: "int",invoice_description: "str",node_id: "str",channel_expiry_weeks: "int",options: "typing.Optional[CreateCjitOptions]") -> "IcJitEntry":
 
     _UniffiConverterUInt64.check_lower(channel_size_sat)
-    
+
     _UniffiConverterUInt64.check_lower(invoice_sat)
-    
+
     _UniffiConverterString.check_lower(invoice_description)
-    
+
     _UniffiConverterString.check_lower(node_id)
-    
+
     _UniffiConverterUInt32.check_lower(channel_expiry_weeks)
-    
+
     _UniffiConverterOptionalTypeCreateCjitOptions.check_lower(options)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_create_cjit_entry(
         _UniffiConverterUInt64.lower(channel_size_sat),
@@ -17830,7 +18012,7 @@ async def create_cjit_entry(channel_size_sat: "int",invoice_sat: "int",invoice_d
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeIcJitEntry.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -17838,11 +18020,11 @@ _UniffiConverterTypeBlocktankError,
 async def create_order(lsp_balance_sat: "int",channel_expiry_weeks: "int",options: "typing.Optional[CreateOrderOptions]") -> "IBtOrder":
 
     _UniffiConverterUInt64.check_lower(lsp_balance_sat)
-    
+
     _UniffiConverterUInt32.check_lower(channel_expiry_weeks)
-    
+
     _UniffiConverterOptionalTypeCreateOrderOptions.check_lower(options)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_create_order(
         _UniffiConverterUInt64.lower(lsp_balance_sat),
@@ -17853,7 +18035,7 @@ async def create_order(lsp_balance_sat: "int",channel_expiry_weeks: "int",option
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeIBtOrder.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -17861,11 +18043,11 @@ _UniffiConverterTypeBlocktankError,
 
 def create_withdraw_callback_url(k1: "str",callback: "str",payment_request: "str") -> "str":
     _UniffiConverterString.check_lower(k1)
-    
+
     _UniffiConverterString.check_lower(callback)
-    
+
     _UniffiConverterString.check_lower(payment_request)
-    
+
     return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeLnurlError,_UniffiLib.uniffi_bitkitcore_fn_func_create_withdraw_callback_url,
         _UniffiConverterString.lower(k1),
         _UniffiConverterString.lower(callback),
@@ -17874,7 +18056,7 @@ def create_withdraw_callback_url(k1: "str",callback: "str",payment_request: "str
 async def decode(invoice: "str") -> "Scanner":
 
     _UniffiConverterString.check_lower(invoice)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_decode(
         _UniffiConverterString.lower(invoice)),
@@ -17883,7 +18065,7 @@ async def decode(invoice: "str") -> "Scanner":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeScanner.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeDecodingError,
 
@@ -17891,34 +18073,34 @@ _UniffiConverterTypeDecodingError,
 
 def delete_activity_by_id(activity_id: "str") -> "bool":
     _UniffiConverterString.check_lower(activity_id)
-    
+
     return _UniffiConverterBool.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id,
         _UniffiConverterString.lower(activity_id)))
 
 
 def delete_pre_activity_metadata(payment_id: "str") -> None:
     _UniffiConverterString.check_lower(payment_id)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_pre_activity_metadata,
         _UniffiConverterString.lower(payment_id))
 
 
 def delete_transaction_details(tx_id: "str") -> "bool":
     _UniffiConverterString.check_lower(tx_id)
-    
+
     return _UniffiConverterBool.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_transaction_details,
         _UniffiConverterString.lower(tx_id)))
 
 
 def derive_bitcoin_address(mnemonic_phrase: "str",derivation_path_str: "typing.Optional[str]",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]") -> "GetAddressResponse":
     _UniffiConverterString.check_lower(mnemonic_phrase)
-    
+
     _UniffiConverterOptionalString.check_lower(derivation_path_str)
-    
+
     _UniffiConverterOptionalTypeNetwork.check_lower(network)
-    
+
     _UniffiConverterOptionalString.check_lower(bip39_passphrase)
-    
+
     return _UniffiConverterTypeGetAddressResponse.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_derive_bitcoin_address,
         _UniffiConverterString.lower(mnemonic_phrase),
         _UniffiConverterOptionalString.lower(derivation_path_str),
@@ -17928,19 +18110,19 @@ def derive_bitcoin_address(mnemonic_phrase: "str",derivation_path_str: "typing.O
 
 def derive_bitcoin_addresses(mnemonic_phrase: "str",derivation_path_str: "typing.Optional[str]",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",is_change: "typing.Optional[bool]",start_index: "typing.Optional[int]",count: "typing.Optional[int]") -> "GetAddressesResponse":
     _UniffiConverterString.check_lower(mnemonic_phrase)
-    
+
     _UniffiConverterOptionalString.check_lower(derivation_path_str)
-    
+
     _UniffiConverterOptionalTypeNetwork.check_lower(network)
-    
+
     _UniffiConverterOptionalString.check_lower(bip39_passphrase)
-    
+
     _UniffiConverterOptionalBool.check_lower(is_change)
-    
+
     _UniffiConverterOptionalUInt32.check_lower(start_index)
-    
+
     _UniffiConverterOptionalUInt32.check_lower(count)
-    
+
     return _UniffiConverterTypeGetAddressesResponse.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_derive_bitcoin_addresses,
         _UniffiConverterString.lower(mnemonic_phrase),
         _UniffiConverterOptionalString.lower(derivation_path_str),
@@ -17953,15 +18135,15 @@ def derive_bitcoin_addresses(mnemonic_phrase: "str",derivation_path_str: "typing
 
 def derive_onchain_descriptor(mnemonic_phrase: "str",network: "Network",bip39_passphrase: "typing.Optional[str]",account_type: "AccountType",account_index: "int") -> "str":
     _UniffiConverterString.check_lower(mnemonic_phrase)
-    
+
     _UniffiConverterTypeNetwork.check_lower(network)
-    
+
     _UniffiConverterOptionalString.check_lower(bip39_passphrase)
-    
+
     _UniffiConverterTypeAccountType.check_lower(account_type)
-    
+
     _UniffiConverterUInt32.check_lower(account_index)
-    
+
     return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_derive_onchain_descriptor,
         _UniffiConverterString.lower(mnemonic_phrase),
         _UniffiConverterTypeNetwork.lower(network),
@@ -17972,13 +18154,13 @@ def derive_onchain_descriptor(mnemonic_phrase: "str",network: "Network",bip39_pa
 
 def derive_private_key(mnemonic_phrase: "str",derivation_path_str: "typing.Optional[str]",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]") -> "str":
     _UniffiConverterString.check_lower(mnemonic_phrase)
-    
+
     _UniffiConverterOptionalString.check_lower(derivation_path_str)
-    
+
     _UniffiConverterOptionalTypeNetwork.check_lower(network)
-    
+
     _UniffiConverterOptionalString.check_lower(bip39_passphrase)
-    
+
     return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_derive_private_key,
         _UniffiConverterString.lower(mnemonic_phrase),
         _UniffiConverterOptionalString.lower(derivation_path_str),
@@ -17988,25 +18170,25 @@ def derive_private_key(mnemonic_phrase: "str",derivation_path_str: "typing.Optio
 
 def derive_pubky_secret_key(seed: "bytes") -> "str":
     _UniffiConverterBytes.check_lower(seed)
-    
+
     return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePubkyError,_UniffiLib.uniffi_bitkitcore_fn_func_derive_pubky_secret_key,
         _UniffiConverterBytes.lower(seed)))
 
 
 def entropy_to_mnemonic(entropy: "bytes") -> "str":
     _UniffiConverterBytes.check_lower(entropy)
-    
+
     return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_entropy_to_mnemonic,
         _UniffiConverterBytes.lower(entropy)))
 
 async def estimate_order_fee(lsp_balance_sat: "int",channel_expiry_weeks: "int",options: "typing.Optional[CreateOrderOptions]") -> "IBtEstimateFeeResponse":
 
     _UniffiConverterUInt64.check_lower(lsp_balance_sat)
-    
+
     _UniffiConverterUInt32.check_lower(channel_expiry_weeks)
-    
+
     _UniffiConverterOptionalTypeCreateOrderOptions.check_lower(options)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee(
         _UniffiConverterUInt64.lower(lsp_balance_sat),
@@ -18017,7 +18199,7 @@ async def estimate_order_fee(lsp_balance_sat: "int",channel_expiry_weeks: "int",
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeIBtEstimateFeeResponse.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18025,11 +18207,11 @@ _UniffiConverterTypeBlocktankError,
 async def estimate_order_fee_full(lsp_balance_sat: "int",channel_expiry_weeks: "int",options: "typing.Optional[CreateOrderOptions]") -> "IBtEstimateFeeResponse2":
 
     _UniffiConverterUInt64.check_lower(lsp_balance_sat)
-    
+
     _UniffiConverterUInt32.check_lower(channel_expiry_weeks)
-    
+
     _UniffiConverterOptionalTypeCreateOrderOptions.check_lower(options)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_estimate_order_fee_full(
         _UniffiConverterUInt64.lower(lsp_balance_sat),
@@ -18040,7 +18222,7 @@ async def estimate_order_fee_full(lsp_balance_sat: "int",channel_expiry_weeks: "
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeIBtEstimateFeeResponse2.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18048,7 +18230,7 @@ _UniffiConverterTypeBlocktankError,
 async def fetch_pubky_contacts(public_key: "str") -> "typing.List[str]":
 
     _UniffiConverterString.check_lower(public_key)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_contacts(
         _UniffiConverterString.lower(public_key)),
@@ -18057,7 +18239,7 @@ async def fetch_pubky_contacts(public_key: "str") -> "typing.List[str]":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterSequenceString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -18065,7 +18247,7 @@ _UniffiConverterTypePubkyError,
 async def fetch_pubky_file(uri: "str") -> "bytes":
 
     _UniffiConverterString.check_lower(uri)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file(
         _UniffiConverterString.lower(uri)),
@@ -18074,7 +18256,7 @@ async def fetch_pubky_file(uri: "str") -> "bytes":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterBytes.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -18082,7 +18264,7 @@ _UniffiConverterTypePubkyError,
 async def fetch_pubky_file_string(uri: "str") -> "str":
 
     _UniffiConverterString.check_lower(uri)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_file_string(
         _UniffiConverterString.lower(uri)),
@@ -18091,7 +18273,7 @@ async def fetch_pubky_file_string(uri: "str") -> "str":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -18099,7 +18281,7 @@ _UniffiConverterTypePubkyError,
 async def fetch_pubky_profile(public_key: "str") -> "PubkyProfile":
 
     _UniffiConverterString.check_lower(public_key)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_profile(
         _UniffiConverterString.lower(public_key)),
@@ -18108,7 +18290,7 @@ async def fetch_pubky_profile(public_key: "str") -> "PubkyProfile":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypePubkyProfile.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -18116,28 +18298,28 @@ _UniffiConverterTypePubkyError,
 
 def generate_mnemonic(word_count: "typing.Optional[WordCount]") -> "str":
     _UniffiConverterOptionalTypeWordCount.check_lower(word_count)
-    
+
     return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_generate_mnemonic,
         _UniffiConverterOptionalTypeWordCount.lower(word_count)))
 
 
 def get_activities(filter: "typing.Optional[ActivityFilter]",tx_type: "typing.Optional[PaymentType]",tags: "typing.Optional[typing.List[str]]",search: "typing.Optional[str]",min_date: "typing.Optional[int]",max_date: "typing.Optional[int]",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
     _UniffiConverterOptionalTypeActivityFilter.check_lower(filter)
-    
+
     _UniffiConverterOptionalTypePaymentType.check_lower(tx_type)
-    
+
     _UniffiConverterOptionalSequenceString.check_lower(tags)
-    
+
     _UniffiConverterOptionalString.check_lower(search)
-    
+
     _UniffiConverterOptionalUInt64.check_lower(min_date)
-    
+
     _UniffiConverterOptionalUInt64.check_lower(max_date)
-    
+
     _UniffiConverterOptionalUInt32.check_lower(limit)
-    
+
     _UniffiConverterOptionalTypeSortDirection.check_lower(sort_direction)
-    
+
     return _UniffiConverterSequenceTypeActivity.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activities,
         _UniffiConverterOptionalTypeActivityFilter.lower(filter),
         _UniffiConverterOptionalTypePaymentType.lower(tx_type),
@@ -18151,11 +18333,11 @@ def get_activities(filter: "typing.Optional[ActivityFilter]",tx_type: "typing.Op
 
 def get_activities_by_tag(tag: "str",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
     _UniffiConverterString.check_lower(tag)
-    
+
     _UniffiConverterOptionalUInt32.check_lower(limit)
-    
+
     _UniffiConverterOptionalTypeSortDirection.check_lower(sort_direction)
-    
+
     return _UniffiConverterSequenceTypeActivity.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag,
         _UniffiConverterString.lower(tag),
         _UniffiConverterOptionalUInt32.lower(limit),
@@ -18164,14 +18346,14 @@ def get_activities_by_tag(tag: "str",limit: "typing.Optional[int]",sort_directio
 
 def get_activity_by_id(activity_id: "str") -> "typing.Optional[Activity]":
     _UniffiConverterString.check_lower(activity_id)
-    
+
     return _UniffiConverterOptionalTypeActivity.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id,
         _UniffiConverterString.lower(activity_id)))
 
 
 def get_activity_by_tx_id(tx_id: "str") -> "typing.Optional[OnchainActivity]":
     _UniffiConverterString.check_lower(tx_id)
-    
+
     return _UniffiConverterOptionalTypeOnchainActivity.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_tx_id,
         _UniffiConverterString.lower(tx_id)))
 
@@ -18182,7 +18364,7 @@ def get_all_activities_tags() -> "typing.List[ActivityTags]":
 
 def get_all_closed_channels(sort_direction: "typing.Optional[SortDirection]") -> "typing.List[ClosedChannelDetails]":
     _UniffiConverterOptionalTypeSortDirection.check_lower(sort_direction)
-    
+
     return _UniffiConverterSequenceTypeClosedChannelDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_all_closed_channels,
         _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)))
 
@@ -18201,9 +18383,9 @@ def get_all_unique_tags() -> "typing.List[str]":
 
 def get_bip39_suggestions(partial_word: "str",limit: "int") -> "typing.List[str]":
     _UniffiConverterString.check_lower(partial_word)
-    
+
     _UniffiConverterUInt32.check_lower(limit)
-    
+
     return _UniffiConverterSequenceString.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_get_bip39_suggestions,
         _UniffiConverterString.lower(partial_word),
         _UniffiConverterUInt32.lower(limit)))
@@ -18215,11 +18397,11 @@ def get_bip39_wordlist() -> "typing.List[str]":
 async def get_cjit_entries(entry_ids: "typing.Optional[typing.List[str]]",filter: "typing.Optional[CJitStateEnum]",refresh: "bool") -> "typing.List[IcJitEntry]":
 
     _UniffiConverterOptionalSequenceString.check_lower(entry_ids)
-    
+
     _UniffiConverterOptionalTypeCJitStateEnum.check_lower(filter)
-    
+
     _UniffiConverterBool.check_lower(refresh)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_get_cjit_entries(
         _UniffiConverterOptionalSequenceString.lower(entry_ids),
@@ -18230,7 +18412,7 @@ async def get_cjit_entries(entry_ids: "typing.Optional[typing.List[str]]",filter
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterSequenceTypeIcJitEntry.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18238,21 +18420,21 @@ _UniffiConverterTypeBlocktankError,
 
 def get_closed_channel_by_id(channel_id: "str") -> "typing.Optional[ClosedChannelDetails]":
     _UniffiConverterString.check_lower(channel_id)
-    
+
     return _UniffiConverterOptionalTypeClosedChannelDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id,
         _UniffiConverterString.lower(channel_id)))
 
 
 def get_default_lsp_balance(params: "DefaultLspBalanceParams") -> "int":
     _UniffiConverterTypeDefaultLspBalanceParams.check_lower(params)
-    
+
     return _UniffiConverterUInt64.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_get_default_lsp_balance,
         _UniffiConverterTypeDefaultLspBalanceParams.lower(params)))
 
 async def get_gift(gift_id: "str") -> "IGift":
 
     _UniffiConverterString.check_lower(gift_id)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_get_gift(
         _UniffiConverterString.lower(gift_id)),
@@ -18261,7 +18443,7 @@ async def get_gift(gift_id: "str") -> "IGift":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeIGift.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18269,7 +18451,7 @@ _UniffiConverterTypeBlocktankError,
 async def get_info(refresh: "typing.Optional[bool]") -> "typing.Optional[IBtInfo]":
 
     _UniffiConverterOptionalBool.check_lower(refresh)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_get_info(
         _UniffiConverterOptionalBool.lower(refresh)),
@@ -18278,7 +18460,7 @@ async def get_info(refresh: "typing.Optional[bool]") -> "typing.Optional[IBtInfo
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterOptionalTypeIBtInfo.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18286,9 +18468,9 @@ _UniffiConverterTypeBlocktankError,
 async def get_lnurl_invoice(address: "str",amount_satoshis: "int") -> "str":
 
     _UniffiConverterString.check_lower(address)
-    
+
     _UniffiConverterUInt64.check_lower(amount_satoshis)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice(
         _UniffiConverterString.lower(address),
@@ -18298,7 +18480,7 @@ async def get_lnurl_invoice(address: "str",amount_satoshis: "int") -> "str":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeLnurlError,
 
@@ -18306,7 +18488,7 @@ _UniffiConverterTypeLnurlError,
 async def get_min_zero_conf_tx_fee(order_id: "str") -> "IBt0ConfMinTxFeeWindow":
 
     _UniffiConverterString.check_lower(order_id)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_get_min_zero_conf_tx_fee(
         _UniffiConverterString.lower(order_id)),
@@ -18315,7 +18497,7 @@ async def get_min_zero_conf_tx_fee(order_id: "str") -> "IBt0ConfMinTxFeeWindow":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeIBt0ConfMinTxFeeWindow.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18323,11 +18505,11 @@ _UniffiConverterTypeBlocktankError,
 async def get_orders(order_ids: "typing.Optional[typing.List[str]]",filter: "typing.Optional[BtOrderState2]",refresh: "bool") -> "typing.List[IBtOrder]":
 
     _UniffiConverterOptionalSequenceString.check_lower(order_ids)
-    
+
     _UniffiConverterOptionalTypeBtOrderState2.check_lower(filter)
-    
+
     _UniffiConverterBool.check_lower(refresh)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_get_orders(
         _UniffiConverterOptionalSequenceString.lower(order_ids),
@@ -18338,7 +18520,7 @@ async def get_orders(order_ids: "typing.Optional[typing.List[str]]",filter: "typ
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterSequenceTypeIBtOrder.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18346,7 +18528,7 @@ _UniffiConverterTypeBlocktankError,
 async def get_payment(payment_id: "str") -> "IBtBolt11Invoice":
 
     _UniffiConverterString.check_lower(payment_id)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_get_payment(
         _UniffiConverterString.lower(payment_id)),
@@ -18355,7 +18537,7 @@ async def get_payment(payment_id: "str") -> "IBtBolt11Invoice":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeIBtBolt11Invoice.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18363,9 +18545,9 @@ _UniffiConverterTypeBlocktankError,
 
 def get_pre_activity_metadata(search_key: "str",search_by_address: "bool") -> "typing.Optional[PreActivityMetadata]":
     _UniffiConverterString.check_lower(search_key)
-    
+
     _UniffiConverterBool.check_lower(search_by_address)
-    
+
     return _UniffiConverterOptionalTypePreActivityMetadata.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata,
         _UniffiConverterString.lower(search_key),
         _UniffiConverterBool.lower(search_by_address)))
@@ -18373,23 +18555,23 @@ def get_pre_activity_metadata(search_key: "str",search_by_address: "bool") -> "t
 
 def get_tags(activity_id: "str") -> "typing.List[str]":
     _UniffiConverterString.check_lower(activity_id)
-    
+
     return _UniffiConverterSequenceString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_tags,
         _UniffiConverterString.lower(activity_id)))
 
 
 def get_transaction_details(tx_id: "str") -> "typing.Optional[TransactionDetails]":
     _UniffiConverterString.check_lower(tx_id)
-    
+
     return _UniffiConverterOptionalTypeTransactionDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_transaction_details,
         _UniffiConverterString.lower(tx_id)))
 
 async def gift_order(client_node_id: "str",code: "str") -> "IGift":
 
     _UniffiConverterString.check_lower(client_node_id)
-    
+
     _UniffiConverterString.check_lower(code)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_gift_order(
         _UniffiConverterString.lower(client_node_id),
@@ -18399,7 +18581,7 @@ async def gift_order(client_node_id: "str",code: "str") -> "IGift":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeIGift.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18407,7 +18589,7 @@ _UniffiConverterTypeBlocktankError,
 async def gift_pay(invoice: "str") -> "IGift":
 
     _UniffiConverterString.check_lower(invoice)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_gift_pay(
         _UniffiConverterString.lower(invoice)),
@@ -18416,7 +18598,7 @@ async def gift_pay(invoice: "str") -> "IGift":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeIGift.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18424,45 +18606,45 @@ _UniffiConverterTypeBlocktankError,
 
 def init_db(base_path: "str") -> "str":
     _UniffiConverterString.check_lower(base_path)
-    
+
     return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeDbError,_UniffiLib.uniffi_bitkitcore_fn_func_init_db,
         _UniffiConverterString.lower(base_path)))
 
 
 def insert_activity(activity: "Activity") -> None:
     _UniffiConverterTypeActivity.check_lower(activity)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_insert_activity,
         _UniffiConverterTypeActivity.lower(activity))
 
 
 def is_address_used(address: "str") -> "bool":
     _UniffiConverterString.check_lower(address)
-    
+
     return _UniffiConverterBool.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_is_address_used,
         _UniffiConverterString.lower(address)))
 
 
 def is_valid_bip39_word(word: "str") -> "bool":
     _UniffiConverterString.check_lower(word)
-    
+
     return _UniffiConverterBool.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_is_valid_bip39_word,
         _UniffiConverterString.lower(word)))
 
 async def lnurl_auth(domain: "str",k1: "str",callback: "str",bip32_mnemonic: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]") -> "str":
 
     _UniffiConverterString.check_lower(domain)
-    
+
     _UniffiConverterString.check_lower(k1)
-    
+
     _UniffiConverterString.check_lower(callback)
-    
+
     _UniffiConverterString.check_lower(bip32_mnemonic)
-    
+
     _UniffiConverterOptionalTypeNetwork.check_lower(network)
-    
+
     _UniffiConverterOptionalString.check_lower(bip39_passphrase)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_lnurl_auth(
         _UniffiConverterString.lower(domain),
@@ -18476,7 +18658,7 @@ async def lnurl_auth(domain: "str",k1: "str",callback: "str",bip32_mnemonic: "st
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeLnurlError,
 
@@ -18484,9 +18666,9 @@ _UniffiConverterTypeLnurlError,
 
 def mark_activity_as_seen(activity_id: "str",seen_at: "int") -> None:
     _UniffiConverterString.check_lower(activity_id)
-    
+
     _UniffiConverterUInt64.check_lower(seen_at)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_mark_activity_as_seen,
         _UniffiConverterString.lower(activity_id),
         _UniffiConverterUInt64.lower(seen_at))
@@ -18494,16 +18676,16 @@ def mark_activity_as_seen(activity_id: "str",seen_at: "int") -> None:
 
 def mnemonic_to_entropy(mnemonic_phrase: "str") -> "bytes":
     _UniffiConverterString.check_lower(mnemonic_phrase)
-    
+
     return _UniffiConverterBytes.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_mnemonic_to_entropy,
         _UniffiConverterString.lower(mnemonic_phrase)))
 
 
 def mnemonic_to_seed(mnemonic_phrase: "str",passphrase: "typing.Optional[str]") -> "bytes":
     _UniffiConverterString.check_lower(mnemonic_phrase)
-    
+
     _UniffiConverterOptionalString.check_lower(passphrase)
-    
+
     return _UniffiConverterBytes.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_mnemonic_to_seed,
         _UniffiConverterString.lower(mnemonic_phrase),
         _UniffiConverterOptionalString.lower(passphrase)))
@@ -18518,9 +18700,9 @@ async def onchain_broadcast_raw_tx(serialized_tx: "str",electrum_url: "str") -> 
     """
 
     _UniffiConverterString.check_lower(serialized_tx)
-    
+
     _UniffiConverterString.check_lower(electrum_url)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_onchain_broadcast_raw_tx(
         _UniffiConverterString.lower(serialized_tx),
@@ -18530,7 +18712,7 @@ async def onchain_broadcast_raw_tx(serialized_tx: "str",electrum_url: "str") -> 
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBroadcastError,
 
@@ -18547,7 +18729,7 @@ async def onchain_compose_transaction(params: "ComposeParams") -> "typing.List[C
     """
 
     _UniffiConverterTypeComposeParams.check_lower(params)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_onchain_compose_transaction(
         _UniffiConverterTypeComposeParams.lower(params)),
@@ -18556,7 +18738,7 @@ async def onchain_compose_transaction(params: "ComposeParams") -> "typing.List[C
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterSequenceTypeComposeResult.lift,
-        
+
     # Error FFI converter
 
     None,
@@ -18569,15 +18751,15 @@ async def onchain_get_account_info(extended_key: "str",electrum_url: "str",netwo
     """
 
     _UniffiConverterString.check_lower(extended_key)
-    
+
     _UniffiConverterString.check_lower(electrum_url)
-    
+
     _UniffiConverterOptionalTypeNetwork.check_lower(network)
-    
+
     _UniffiConverterOptionalUInt32.check_lower(gap_limit)
-    
+
     _UniffiConverterOptionalTypeAccountType.check_lower(script_type)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_account_info(
         _UniffiConverterString.lower(extended_key),
@@ -18590,7 +18772,7 @@ async def onchain_get_account_info(extended_key: "str",electrum_url: "str",netwo
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeAccountInfoResult.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeAccountInfoError,
 
@@ -18602,11 +18784,11 @@ async def onchain_get_address_info(address: "str",electrum_url: "str",network: "
     """
 
     _UniffiConverterString.check_lower(address)
-    
+
     _UniffiConverterString.check_lower(electrum_url)
-    
+
     _UniffiConverterOptionalTypeNetwork.check_lower(network)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_address_info(
         _UniffiConverterString.lower(address),
@@ -18617,7 +18799,7 @@ async def onchain_get_address_info(address: "str",electrum_url: "str",network: "
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeSingleAddressInfoResult.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeAccountInfoError,
 
@@ -18629,15 +18811,15 @@ async def onchain_get_transaction_detail(extended_key: "str",electrum_url: "str"
     """
 
     _UniffiConverterString.check_lower(extended_key)
-    
+
     _UniffiConverterString.check_lower(electrum_url)
-    
+
     _UniffiConverterString.check_lower(txid)
-    
+
     _UniffiConverterOptionalTypeNetwork.check_lower(network)
-    
+
     _UniffiConverterOptionalTypeAccountType.check_lower(script_type)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_transaction_detail(
         _UniffiConverterString.lower(extended_key),
@@ -18650,7 +18832,7 @@ async def onchain_get_transaction_detail(extended_key: "str",electrum_url: "str"
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeTransactionDetail.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeAccountInfoError,
 
@@ -18662,13 +18844,13 @@ async def onchain_get_transaction_history(extended_key: "str",electrum_url: "str
     """
 
     _UniffiConverterString.check_lower(extended_key)
-    
+
     _UniffiConverterString.check_lower(electrum_url)
-    
+
     _UniffiConverterOptionalTypeNetwork.check_lower(network)
-    
+
     _UniffiConverterOptionalTypeAccountType.check_lower(script_type)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_onchain_get_transaction_history(
         _UniffiConverterString.lower(extended_key),
@@ -18680,7 +18862,7 @@ async def onchain_get_transaction_history(extended_key: "str",electrum_url: "str
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeTransactionHistoryResult.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeAccountInfoError,
 
@@ -18688,9 +18870,9 @@ _UniffiConverterTypeAccountInfoError,
 async def open_channel(order_id: "str",connection_string: "str") -> "IBtOrder":
 
     _UniffiConverterString.check_lower(order_id)
-    
+
     _UniffiConverterString.check_lower(connection_string)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_open_channel(
         _UniffiConverterString.lower(order_id),
@@ -18700,7 +18882,7 @@ async def open_channel(order_id: "str",connection_string: "str") -> "IBtOrder":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeIBtOrder.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18708,24 +18890,59 @@ _UniffiConverterTypeBlocktankError,
 
 def parse_pubky_auth_url(auth_url: "str") -> "PubkyAuthDetails":
     _UniffiConverterString.check_lower(auth_url)
-    
+
     return _UniffiConverterTypePubkyAuthDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePubkyError,_UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url,
         _UniffiConverterString.lower(auth_url)))
 
+async def prepare_legacy_rn_native_segwit_recovery_sweep(mnemonic_phrase: "str",network: "typing.Optional[Network]",electrum_url: "str",destination_address: "str",fee_rate_sats_per_vbyte: "typing.Optional[int]",index_limit: "int",bip39_passphrase: "typing.Optional[str]") -> "LegacyRnCloseRecoverySweepPreview":
+
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+
+    _UniffiConverterString.check_lower(electrum_url)
+
+    _UniffiConverterString.check_lower(destination_address)
+
+    _UniffiConverterOptionalUInt32.check_lower(fee_rate_sats_per_vbyte)
+
+    _UniffiConverterUInt32.check_lower(index_limit)
+
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_prepare_legacy_rn_native_segwit_recovery_sweep(
+        _UniffiConverterString.lower(mnemonic_phrase),
+        _UniffiConverterOptionalTypeNetwork.lower(network),
+        _UniffiConverterString.lower(electrum_url),
+        _UniffiConverterString.lower(destination_address),
+        _UniffiConverterOptionalUInt32.lower(fee_rate_sats_per_vbyte),
+        _UniffiConverterUInt32.lower(index_limit),
+        _UniffiConverterOptionalString.lower(bip39_passphrase)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeLegacyRnCloseRecoverySweepPreview.lift,
+
+    # Error FFI converter
+_UniffiConverterTypeSweepError,
+
+    )
 async def prepare_sweep_transaction(mnemonic_phrase: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",electrum_url: "str",destination_address: "str",fee_rate_sats_per_vbyte: "typing.Optional[int]") -> "SweepTransactionPreview":
 
     _UniffiConverterString.check_lower(mnemonic_phrase)
-    
+
     _UniffiConverterOptionalTypeNetwork.check_lower(network)
-    
+
     _UniffiConverterOptionalString.check_lower(bip39_passphrase)
-    
+
     _UniffiConverterString.check_lower(electrum_url)
-    
+
     _UniffiConverterString.check_lower(destination_address)
-    
+
     _UniffiConverterOptionalUInt32.check_lower(fee_rate_sats_per_vbyte)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_prepare_sweep_transaction(
         _UniffiConverterString.lower(mnemonic_phrase),
@@ -18739,7 +18956,7 @@ async def prepare_sweep_transaction(mnemonic_phrase: "str",network: "typing.Opti
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeSweepTransactionPreview.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeSweepError,
 
@@ -18747,18 +18964,18 @@ _UniffiConverterTypeSweepError,
 
 def pubky_public_key_from_secret(secret_key_hex: "str") -> "str":
     _UniffiConverterString.check_lower(secret_key_hex)
-    
+
     return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePubkyError,_UniffiLib.uniffi_bitkitcore_fn_func_pubky_public_key_from_secret,
         _UniffiConverterString.lower(secret_key_hex)))
 
 async def pubky_put_with_secret_key(secret_key_hex: "str",path: "str",content: "bytes") -> None:
 
     _UniffiConverterString.check_lower(secret_key_hex)
-    
+
     _UniffiConverterString.check_lower(path)
-    
+
     _UniffiConverterBytes.check_lower(content)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_pubky_put_with_secret_key(
         _UniffiConverterString.lower(secret_key_hex),
@@ -18769,8 +18986,8 @@ async def pubky_put_with_secret_key(secret_key_hex: "str",path: "str",content: "
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -18778,9 +18995,9 @@ _UniffiConverterTypePubkyError,
 async def pubky_session_delete(session_secret: "str",path: "str") -> None:
 
     _UniffiConverterString.check_lower(session_secret)
-    
+
     _UniffiConverterString.check_lower(path)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_delete(
         _UniffiConverterString.lower(session_secret),
@@ -18790,8 +19007,8 @@ async def pubky_session_delete(session_secret: "str",path: "str") -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -18799,9 +19016,9 @@ _UniffiConverterTypePubkyError,
 async def pubky_session_list(session_secret: "str",dir_path: "str") -> "typing.List[str]":
 
     _UniffiConverterString.check_lower(session_secret)
-    
+
     _UniffiConverterString.check_lower(dir_path)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_list(
         _UniffiConverterString.lower(session_secret),
@@ -18811,7 +19028,7 @@ async def pubky_session_list(session_secret: "str",dir_path: "str") -> "typing.L
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterSequenceString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -18819,11 +19036,11 @@ _UniffiConverterTypePubkyError,
 async def pubky_session_put(session_secret: "str",path: "str",content: "bytes") -> None:
 
     _UniffiConverterString.check_lower(session_secret)
-    
+
     _UniffiConverterString.check_lower(path)
-    
+
     _UniffiConverterBytes.check_lower(content)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_pubky_session_put(
         _UniffiConverterString.lower(session_secret),
@@ -18834,8 +19051,8 @@ async def pubky_session_put(session_secret: "str",path: "str",content: "bytes") 
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -18843,7 +19060,7 @@ _UniffiConverterTypePubkyError,
 async def pubky_sign_in(secret_key_hex: "str") -> "str":
 
     _UniffiConverterString.check_lower(secret_key_hex)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_pubky_sign_in(
         _UniffiConverterString.lower(secret_key_hex)),
@@ -18852,7 +19069,7 @@ async def pubky_sign_in(secret_key_hex: "str") -> "str":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -18860,11 +19077,11 @@ _UniffiConverterTypePubkyError,
 async def pubky_sign_up(secret_key_hex: "str",homeserver_public_key_z32: "str",signup_code: "typing.Optional[str]") -> "str":
 
     _UniffiConverterString.check_lower(secret_key_hex)
-    
+
     _UniffiConverterString.check_lower(homeserver_public_key_z32)
-    
+
     _UniffiConverterOptionalString.check_lower(signup_code)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_pubky_sign_up(
         _UniffiConverterString.lower(secret_key_hex),
@@ -18875,7 +19092,7 @@ async def pubky_sign_up(secret_key_hex: "str",homeserver_public_key_z32: "str",s
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -18893,7 +19110,7 @@ async def refresh_active_cjit_entries() -> "typing.List[IcJitEntry]":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterSequenceTypeIcJitEntry.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18911,7 +19128,7 @@ async def refresh_active_orders() -> "typing.List[IBtOrder]":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterSequenceTypeIBtOrder.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18919,21 +19136,21 @@ _UniffiConverterTypeBlocktankError,
 async def register_device(device_token: "str",public_key: "str",features: "typing.List[str]",node_id: "str",iso_timestamp: "str",signature: "str",is_production: "typing.Optional[bool]",custom_url: "typing.Optional[str]") -> "str":
 
     _UniffiConverterString.check_lower(device_token)
-    
+
     _UniffiConverterString.check_lower(public_key)
-    
+
     _UniffiConverterSequenceString.check_lower(features)
-    
+
     _UniffiConverterString.check_lower(node_id)
-    
+
     _UniffiConverterString.check_lower(iso_timestamp)
-    
+
     _UniffiConverterString.check_lower(signature)
-    
+
     _UniffiConverterOptionalBool.check_lower(is_production)
-    
+
     _UniffiConverterOptionalString.check_lower(custom_url)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_register_device(
         _UniffiConverterString.lower(device_token),
@@ -18949,7 +19166,7 @@ async def register_device(device_token: "str",public_key: "str",features: "typin
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18957,11 +19174,11 @@ _UniffiConverterTypeBlocktankError,
 async def regtest_close_channel(funding_tx_id: "str",vout: "int",force_close_after_s: "typing.Optional[int]") -> "str":
 
     _UniffiConverterString.check_lower(funding_tx_id)
-    
+
     _UniffiConverterUInt32.check_lower(vout)
-    
+
     _UniffiConverterOptionalUInt64.check_lower(force_close_after_s)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_regtest_close_channel(
         _UniffiConverterString.lower(funding_tx_id),
@@ -18972,7 +19189,7 @@ async def regtest_close_channel(funding_tx_id: "str",vout: "int",force_close_aft
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -18980,9 +19197,9 @@ _UniffiConverterTypeBlocktankError,
 async def regtest_deposit(address: "str",amount_sat: "typing.Optional[int]") -> "str":
 
     _UniffiConverterString.check_lower(address)
-    
+
     _UniffiConverterOptionalUInt64.check_lower(amount_sat)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_regtest_deposit(
         _UniffiConverterString.lower(address),
@@ -18992,7 +19209,7 @@ async def regtest_deposit(address: "str",amount_sat: "typing.Optional[int]") -> 
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -19000,7 +19217,7 @@ _UniffiConverterTypeBlocktankError,
 async def regtest_get_payment(payment_id: "str") -> "IBtBolt11Invoice":
 
     _UniffiConverterString.check_lower(payment_id)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_regtest_get_payment(
         _UniffiConverterString.lower(payment_id)),
@@ -19009,7 +19226,7 @@ async def regtest_get_payment(payment_id: "str") -> "IBtBolt11Invoice":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeIBtBolt11Invoice.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -19017,7 +19234,7 @@ _UniffiConverterTypeBlocktankError,
 async def regtest_mine(count: "typing.Optional[int]") -> None:
 
     _UniffiConverterOptionalUInt32.check_lower(count)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_regtest_mine(
         _UniffiConverterOptionalUInt32.lower(count)),
@@ -19026,8 +19243,8 @@ async def regtest_mine(count: "typing.Optional[int]") -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -19035,9 +19252,9 @@ _UniffiConverterTypeBlocktankError,
 async def regtest_pay(invoice: "str",amount_sat: "typing.Optional[int]") -> "str":
 
     _UniffiConverterString.check_lower(invoice)
-    
+
     _UniffiConverterOptionalUInt64.check_lower(amount_sat)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_regtest_pay(
         _UniffiConverterString.lower(invoice),
@@ -19047,7 +19264,7 @@ async def regtest_pay(invoice: "str",amount_sat: "typing.Optional[int]") -> "str
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -19055,16 +19272,16 @@ _UniffiConverterTypeBlocktankError,
 
 def remove_closed_channel_by_id(channel_id: "str") -> "bool":
     _UniffiConverterString.check_lower(channel_id)
-    
+
     return _UniffiConverterBool.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_remove_closed_channel_by_id,
         _UniffiConverterString.lower(channel_id)))
 
 
 def remove_pre_activity_metadata_tags(payment_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(payment_id)
-    
+
     _UniffiConverterSequenceString.check_lower(tags)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags,
         _UniffiConverterString.lower(payment_id),
         _UniffiConverterSequenceString.lower(tags))
@@ -19072,9 +19289,9 @@ def remove_pre_activity_metadata_tags(payment_id: "str",tags: "typing.List[str]"
 
 def remove_tags(activity_id: "str",tags: "typing.List[str]") -> None:
     _UniffiConverterString.check_lower(activity_id)
-    
+
     _UniffiConverterSequenceString.check_lower(tags)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_remove_tags,
         _UniffiConverterString.lower(activity_id),
         _UniffiConverterSequenceString.lower(tags))
@@ -19082,21 +19299,50 @@ def remove_tags(activity_id: "str",tags: "typing.List[str]") -> None:
 
 def reset_pre_activity_metadata_tags(payment_id: "str") -> None:
     _UniffiConverterString.check_lower(payment_id)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags,
         _UniffiConverterString.lower(payment_id))
 
 
 def resolve_pubky_url(uri: "str") -> "str":
     _UniffiConverterString.check_lower(uri)
-    
+
     return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePubkyError,_UniffiLib.uniffi_bitkitcore_fn_func_resolve_pubky_url,
         _UniffiConverterString.lower(uri)))
 
+async def scan_legacy_rn_native_segwit_recovery_funds(mnemonic_phrase: "str",network: "typing.Optional[Network]",electrum_url: "str",index_limit: "int",bip39_passphrase: "typing.Optional[str]") -> "LegacyRnCloseRecoveryScanResult":
+
+    _UniffiConverterString.check_lower(mnemonic_phrase)
+
+    _UniffiConverterOptionalTypeNetwork.check_lower(network)
+
+    _UniffiConverterString.check_lower(electrum_url)
+
+    _UniffiConverterUInt32.check_lower(index_limit)
+
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_scan_legacy_rn_native_segwit_recovery_funds(
+        _UniffiConverterString.lower(mnemonic_phrase),
+        _UniffiConverterOptionalTypeNetwork.lower(network),
+        _UniffiConverterString.lower(electrum_url),
+        _UniffiConverterUInt32.lower(index_limit),
+        _UniffiConverterOptionalString.lower(bip39_passphrase)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeLegacyRnCloseRecoveryScanResult.lift,
+
+    # Error FFI converter
+_UniffiConverterTypeSweepError,
+
+    )
 async def start_pubky_auth(caps: "str") -> "str":
 
     _UniffiConverterString.check_lower(caps)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_start_pubky_auth(
         _UniffiConverterString.lower(caps)),
@@ -19105,7 +19351,7 @@ async def start_pubky_auth(caps: "str") -> "str":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypePubkyError,
 
@@ -19113,13 +19359,13 @@ _UniffiConverterTypePubkyError,
 async def test_notification(device_token: "str",secret_message: "str",notification_type: "typing.Optional[str]",custom_url: "typing.Optional[str]") -> "str":
 
     _UniffiConverterString.check_lower(device_token)
-    
+
     _UniffiConverterString.check_lower(secret_message)
-    
+
     _UniffiConverterOptionalString.check_lower(notification_type)
-    
+
     _UniffiConverterOptionalString.check_lower(custom_url)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_test_notification(
         _UniffiConverterString.lower(device_token),
@@ -19131,7 +19377,7 @@ async def test_notification(device_token: "str",secret_message: "str",notificati
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -19143,7 +19389,7 @@ def trezor_account_type_to_script_type(account_type: "AccountType") -> "TrezorSc
     """
 
     _UniffiConverterTypeAccountType.check_lower(account_type)
-    
+
     return _UniffiConverterTypeTrezorScriptType.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_trezor_account_type_to_script_type,
         _UniffiConverterTypeAccountType.lower(account_type)))
 
@@ -19157,7 +19403,7 @@ async def trezor_clear_credentials(device_id: "str") -> None:
     """
 
     _UniffiConverterString.check_lower(device_id)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_trezor_clear_credentials(
         _UniffiConverterString.lower(device_id)),
@@ -19166,8 +19412,8 @@ async def trezor_clear_credentials(device_id: "str") -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
 
@@ -19187,9 +19433,9 @@ async def trezor_connect(device_id: "str",selection: "WalletSelection") -> "Trez
     """
 
     _UniffiConverterString.check_lower(device_id)
-    
+
     _UniffiConverterTypeWalletSelection.check_lower(selection)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_trezor_connect(
         _UniffiConverterString.lower(device_id),
@@ -19199,7 +19445,7 @@ async def trezor_connect(device_id: "str",selection: "WalletSelection") -> "Trez
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeTrezorFeatures.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
 
@@ -19217,8 +19463,8 @@ async def trezor_disconnect() -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
 
@@ -19230,7 +19476,7 @@ async def trezor_get_address(params: "TrezorGetAddressParams") -> "TrezorAddress
     """
 
     _UniffiConverterTypeTrezorGetAddressParams.check_lower(params)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_address(
         _UniffiConverterTypeTrezorGetAddressParams.lower(params)),
@@ -19239,7 +19485,7 @@ async def trezor_get_address(params: "TrezorGetAddressParams") -> "TrezorAddress
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeTrezorAddressResponse.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
 
@@ -19257,7 +19503,7 @@ async def trezor_get_connected_device() -> "typing.Optional[TrezorDeviceInfo]":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterOptionalTypeTrezorDeviceInfo.lift,
-        
+
     # Error FFI converter
 
     None,
@@ -19279,7 +19525,7 @@ async def trezor_get_device_fingerprint() -> "str":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
 
@@ -19300,7 +19546,7 @@ async def trezor_get_features() -> "typing.Optional[TrezorFeatures]":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterOptionalTypeTrezorFeatures.lift,
-        
+
     # Error FFI converter
 
     None,
@@ -19313,7 +19559,7 @@ async def trezor_get_public_key(params: "TrezorGetPublicKeyParams") -> "TrezorPu
     """
 
     _UniffiConverterTypeTrezorGetPublicKeyParams.check_lower(params)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_public_key(
         _UniffiConverterTypeTrezorGetPublicKeyParams.lower(params)),
@@ -19322,7 +19568,7 @@ async def trezor_get_public_key(params: "TrezorGetPublicKeyParams") -> "TrezorPu
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeTrezorPublicKeyResponse.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
 
@@ -19339,7 +19585,7 @@ async def trezor_initialize(credential_path: "typing.Optional[str]") -> None:
     """
 
     _UniffiConverterOptionalString.check_lower(credential_path)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_trezor_initialize(
         _UniffiConverterOptionalString.lower(credential_path)),
@@ -19348,8 +19594,8 @@ async def trezor_initialize(credential_path: "typing.Optional[str]") -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
 
@@ -19378,7 +19624,7 @@ async def trezor_is_connected() -> "bool":
         _UniffiLib.ffi_bitkitcore_rust_future_free_i8,
         # lift function
         _UniffiConverterBool.lift,
-        
+
     # Error FFI converter
 
     None,
@@ -19397,7 +19643,7 @@ async def trezor_is_initialized() -> "bool":
         _UniffiLib.ffi_bitkitcore_rust_future_free_i8,
         # lift function
         _UniffiConverterBool.lift,
-        
+
     # Error FFI converter
 
     None,
@@ -19416,7 +19662,7 @@ async def trezor_list_devices() -> "typing.List[TrezorDeviceInfo]":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterSequenceTypeTrezorDeviceInfo.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
 
@@ -19437,7 +19683,7 @@ async def trezor_scan() -> "typing.List[TrezorDeviceInfo]":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterSequenceTypeTrezorDeviceInfo.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
 
@@ -19452,7 +19698,7 @@ def trezor_set_transport_callback(callback: "TrezorTransportCallback") -> None:
     """
 
     _UniffiConverterTypeTrezorTransportCallback.check_lower(callback)
-    
+
     _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_trezor_set_transport_callback,
         _UniffiConverterTypeTrezorTransportCallback.lower(callback))
 
@@ -19467,7 +19713,7 @@ def trezor_set_ui_callback(callback: "TrezorUiCallback") -> None:
     """
 
     _UniffiConverterTypeTrezorUiCallback.check_lower(callback)
-    
+
     _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_trezor_set_ui_callback,
         _UniffiConverterTypeTrezorUiCallback.lower(callback))
 
@@ -19478,7 +19724,7 @@ async def trezor_sign_message(params: "TrezorSignMessageParams") -> "TrezorSigne
     """
 
     _UniffiConverterTypeTrezorSignMessageParams.check_lower(params)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_message(
         _UniffiConverterTypeTrezorSignMessageParams.lower(params)),
@@ -19487,7 +19733,7 @@ async def trezor_sign_message(params: "TrezorSignMessageParams") -> "TrezorSigne
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeTrezorSignedMessageResponse.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
 
@@ -19499,7 +19745,7 @@ async def trezor_sign_tx(params: "TrezorSignTxParams") -> "TrezorSignedTx":
     """
 
     _UniffiConverterTypeTrezorSignTxParams.check_lower(params)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_tx(
         _UniffiConverterTypeTrezorSignTxParams.lower(params)),
@@ -19508,7 +19754,7 @@ async def trezor_sign_tx(params: "TrezorSignTxParams") -> "TrezorSignedTx":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeTrezorSignedTx.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
 
@@ -19527,9 +19773,9 @@ async def trezor_sign_tx_from_psbt(psbt_base64: "str",network: "typing.Optional[
     """
 
     _UniffiConverterString.check_lower(psbt_base64)
-    
+
     _UniffiConverterOptionalTypeTrezorCoinType.check_lower(network)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_trezor_sign_tx_from_psbt(
         _UniffiConverterString.lower(psbt_base64),
@@ -19539,7 +19785,7 @@ async def trezor_sign_tx_from_psbt(psbt_base64: "str",network: "typing.Optional[
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterTypeTrezorSignedTx.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
 
@@ -19551,7 +19797,7 @@ async def trezor_verify_message(params: "TrezorVerifyMessageParams") -> "bool":
     """
 
     _UniffiConverterTypeTrezorVerifyMessageParams.check_lower(params)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_trezor_verify_message(
         _UniffiConverterTypeTrezorVerifyMessageParams.lower(params)),
@@ -19560,7 +19806,7 @@ async def trezor_verify_message(params: "TrezorVerifyMessageParams") -> "bool":
         _UniffiLib.ffi_bitkitcore_rust_future_free_i8,
         # lift function
         _UniffiConverterBool.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeTrezorError,
 
@@ -19568,9 +19814,9 @@ _UniffiConverterTypeTrezorError,
 
 def update_activity(activity_id: "str",activity: "Activity") -> None:
     _UniffiConverterString.check_lower(activity_id)
-    
+
     _UniffiConverterTypeActivity.check_lower(activity)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_update_activity,
         _UniffiConverterString.lower(activity_id),
         _UniffiConverterTypeActivity.lower(activity))
@@ -19578,7 +19824,7 @@ def update_activity(activity_id: "str",activity: "Activity") -> None:
 async def update_blocktank_url(new_url: "str") -> None:
 
     _UniffiConverterString.check_lower(new_url)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_update_blocktank_url(
         _UniffiConverterString.lower(new_url)),
@@ -19587,8 +19833,8 @@ async def update_blocktank_url(new_url: "str") -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -19596,21 +19842,21 @@ _UniffiConverterTypeBlocktankError,
 
 def upsert_activities(activities: "typing.List[Activity]") -> None:
     _UniffiConverterSequenceTypeActivity.check_lower(activities)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_activities,
         _UniffiConverterSequenceTypeActivity.lower(activities))
 
 
 def upsert_activity(activity: "Activity") -> None:
     _UniffiConverterTypeActivity.check_lower(activity)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_activity,
         _UniffiConverterTypeActivity.lower(activity))
 
 async def upsert_cjit_entries(entries: "typing.List[IcJitEntry]") -> None:
 
     _UniffiConverterSequenceTypeIcJitEntry.check_lower(entries)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_upsert_cjit_entries(
         _UniffiConverterSequenceTypeIcJitEntry.lower(entries)),
@@ -19619,8 +19865,8 @@ async def upsert_cjit_entries(entries: "typing.List[IcJitEntry]") -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -19628,21 +19874,21 @@ _UniffiConverterTypeBlocktankError,
 
 def upsert_closed_channel(channel: "ClosedChannelDetails") -> None:
     _UniffiConverterTypeClosedChannelDetails.check_lower(channel)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_closed_channel,
         _UniffiConverterTypeClosedChannelDetails.lower(channel))
 
 
 def upsert_closed_channels(channels: "typing.List[ClosedChannelDetails]") -> None:
     _UniffiConverterSequenceTypeClosedChannelDetails.check_lower(channels)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_closed_channels,
         _UniffiConverterSequenceTypeClosedChannelDetails.lower(channels))
 
 async def upsert_info(info: "IBtInfo") -> None:
 
     _UniffiConverterTypeIBtInfo.check_lower(info)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_upsert_info(
         _UniffiConverterTypeIBtInfo.lower(info)),
@@ -19651,8 +19897,8 @@ async def upsert_info(info: "IBtInfo") -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -19660,21 +19906,21 @@ _UniffiConverterTypeBlocktankError,
 
 def upsert_lightning_activities(activities: "typing.List[LightningActivity]") -> None:
     _UniffiConverterSequenceTypeLightningActivity.check_lower(activities)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_lightning_activities,
         _UniffiConverterSequenceTypeLightningActivity.lower(activities))
 
 
 def upsert_onchain_activities(activities: "typing.List[OnchainActivity]") -> None:
     _UniffiConverterSequenceTypeOnchainActivity.check_lower(activities)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_onchain_activities,
         _UniffiConverterSequenceTypeOnchainActivity.lower(activities))
 
 async def upsert_orders(orders: "typing.List[IBtOrder]") -> None:
 
     _UniffiConverterSequenceTypeIBtOrder.check_lower(orders)
-    
+
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_upsert_orders(
         _UniffiConverterSequenceTypeIBtOrder.lower(orders)),
@@ -19683,8 +19929,8 @@ async def upsert_orders(orders: "typing.List[IBtOrder]") -> None:
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,
         # lift function
         lambda val: None,
-        
-        
+
+
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
 
@@ -19692,35 +19938,35 @@ _UniffiConverterTypeBlocktankError,
 
 def upsert_pre_activity_metadata(pre_activity_metadata: "typing.List[PreActivityMetadata]") -> None:
     _UniffiConverterSequenceTypePreActivityMetadata.check_lower(pre_activity_metadata)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_pre_activity_metadata,
         _UniffiConverterSequenceTypePreActivityMetadata.lower(pre_activity_metadata))
 
 
 def upsert_tags(activity_tags: "typing.List[ActivityTags]") -> None:
     _UniffiConverterSequenceTypeActivityTags.check_lower(activity_tags)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_tags,
         _UniffiConverterSequenceTypeActivityTags.lower(activity_tags))
 
 
 def upsert_transaction_details(details_list: "typing.List[TransactionDetails]") -> None:
     _UniffiConverterSequenceTypeTransactionDetails.check_lower(details_list)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_upsert_transaction_details,
         _UniffiConverterSequenceTypeTransactionDetails.lower(details_list))
 
 
 def validate_bitcoin_address(address: "str") -> "ValidationResult":
     _UniffiConverterString.check_lower(address)
-    
+
     return _UniffiConverterTypeValidationResult.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_validate_bitcoin_address,
         _UniffiConverterString.lower(address)))
 
 
 def validate_mnemonic(mnemonic_phrase: "str") -> None:
     _UniffiConverterString.check_lower(mnemonic_phrase)
-    
+
     _uniffi_rust_call_with_error(_UniffiConverterTypeAddressError,_UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic,
         _UniffiConverterString.lower(mnemonic_phrase))
 
@@ -19737,7 +19983,7 @@ async def wipe_all_databases() -> "str":
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-        
+
     # Error FFI converter
 _UniffiConverterTypeDbError,
 
@@ -19836,6 +20082,8 @@ __all__ = [
     "ILspNode",
     "IManualRefund",
     "IcJitEntry",
+    "LegacyRnCloseRecoveryScanResult",
+    "LegacyRnCloseRecoverySweepPreview",
     "LightningActivity",
     "LightningInvoice",
     "LnurlAddressData",
@@ -19959,6 +20207,7 @@ __all__ = [
     "onchain_get_transaction_history",
     "open_channel",
     "parse_pubky_auth_url",
+    "prepare_legacy_rn_native_segwit_recovery_sweep",
     "prepare_sweep_transaction",
     "pubky_public_key_from_secret",
     "pubky_put_with_secret_key",
@@ -19980,6 +20229,7 @@ __all__ = [
     "remove_tags",
     "reset_pre_activity_metadata_tags",
     "resolve_pubky_url",
+    "scan_legacy_rn_native_segwit_recovery_funds",
     "start_pubky_auth",
     "test_notification",
     "trezor_account_type_to_script_type",
