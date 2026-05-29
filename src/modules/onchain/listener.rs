@@ -360,34 +360,38 @@ fn build_tx_changed_event(
 
 /// Subscribe to all scripts, best-effort (used on reconnect).
 ///
-/// Subscribe failures are ignored here because the resync that always follows
-/// a reconnect re-reads full wallet state regardless.
+/// One batched RPC instead of one call per script, so reconnect stays cheap even
+/// with a large gap. Failures are ignored here because the resync that always
+/// follows a reconnect re-reads full wallet state regardless.
 fn subscribe_scripts(client: &electrum_client::Client, scripts: &HashSet<ScriptBuf>) {
-    for script in scripts {
-        let _ = client.script_subscribe(script);
+    if scripts.is_empty() {
+        return;
     }
+    let _ = client.batch_script_subscribe(scripts.iter().map(|s| s.as_script()));
 }
 
-/// Subscribe to all scripts at init, surfacing per-script failures as events.
+/// Subscribe to all scripts at init in a single batched RPC.
 ///
-/// A failed subscription means no push notifications for that script, but the
-/// block-header-driven resync (on every new block) is a backstop, so a missed
-/// script's changes still surface within ~1 block rather than being lost.
+/// The batch succeeds or fails as a whole, so a failure is surfaced as one
+/// event rather than per script. Either way the block-header-driven resync (on
+/// every new block) is a backstop, so any changes still surface within ~1 block
+/// rather than being lost.
 fn subscribe_scripts_reporting(
     client: &electrum_client::Client,
     scripts: &HashSet<ScriptBuf>,
     listener: &Arc<dyn EventListener>,
     watcher_id: &str,
 ) {
-    for script in scripts {
-        if let Err(e) = client.script_subscribe(script) {
-            listener.on_event(
-                watcher_id.to_string(),
-                WatcherEvent::Error {
-                    message: format!("Failed to subscribe to script: {}", e),
-                },
-            );
-        }
+    if scripts.is_empty() {
+        return;
+    }
+    if let Err(e) = client.batch_script_subscribe(scripts.iter().map(|s| s.as_script())) {
+        listener.on_event(
+            watcher_id.to_string(),
+            WatcherEvent::Error {
+                message: format!("Failed to subscribe to scripts: {}", e),
+            },
+        );
     }
 }
 
