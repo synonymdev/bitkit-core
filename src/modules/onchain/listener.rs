@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex as StdMutex};
 use std::time::Duration;
 
 use bdk::bitcoin::ScriptBuf;
-use bdk::blockchain::ElectrumBlockchain;
+use bdk::blockchain::{ConfigurableBlockchain, ElectrumBlockchain, ElectrumBlockchainConfig};
 use bdk::database::MemoryDatabase;
 use bdk::electrum_client::{self, ConfigBuilder, ElectrumApi};
 use bdk::wallet::{AddressIndex as BdkAddressIndex, Wallet};
@@ -14,8 +14,8 @@ use tokio::sync::{oneshot, watch};
 
 use super::errors::AccountInfoError;
 use super::implementation::{
-    connect_electrum, create_wallet, map_bdk_tx_to_history, resolve_wallet_setup,
-    sort_history_transactions, sync_wallet,
+    create_wallet, map_bdk_tx_to_history, resolve_wallet_setup, sort_history_transactions,
+    sync_wallet,
 };
 use super::types::{AccountType, Network as OnchainNetwork, WalletBalance, WatcherEvent};
 
@@ -391,8 +391,37 @@ fn subscribe_scripts_reporting(
     }
 }
 
+/// Build a sync blockchain whose stop gap covers the watcher's subscribed range.
+///
+/// BDK's `ElectrumBlockchain::from(client)` hardcodes a stop gap of 20. A
+/// watcher started with a larger `gap_limit` subscribes to addresses past that,
+/// so a notification for a far address could fire while wallet sync stopped
+/// short of it — emitting a `TransactionsChanged` that omits the detected tx.
+/// Building via `from_config` lets sync scan at least as far as we subscribe.
+///
+/// All other settings match `connect_electrum`'s defaults (`Client::new`).
+fn connect_sync_blockchain(
+    electrum_url: &str,
+    stop_gap: usize,
+) -> Result<ElectrumBlockchain, AccountInfoError> {
+    let config = ElectrumBlockchainConfig {
+        url: electrum_url.to_string(),
+        socks5: None,
+        retry: 1,
+        timeout: None,
+        stop_gap,
+        validate_domain: true,
+    };
+    ElectrumBlockchain::from_config(&config).map_err(|e| AccountInfoError::ElectrumError {
+        error_details: format!("Failed to connect to Electrum: {}", e),
+    })
+}
+
 /// Sync the wallet, reusing a persistent `ElectrumBlockchain` across calls to
 /// avoid opening a fresh TCP connection on every resync.
+///
+/// `stop_gap` must cover the watcher's gap limit so sync scans at least as far
+/// as the subscribed scripts (see [`connect_sync_blockchain`]).
 ///
 /// On sync failure the (possibly dead) connection is dropped so the next call
 /// rebuilds it — making the loop self-healing without a dedicated reconnect for
@@ -401,10 +430,10 @@ fn ensure_synced(
     wallet: &Wallet<MemoryDatabase>,
     blockchain: &mut Option<ElectrumBlockchain>,
     electrum_url: &str,
+    stop_gap: usize,
 ) -> Result<(), AccountInfoError> {
     if blockchain.is_none() {
-        let client = connect_electrum(electrum_url)?;
-        *blockchain = Some(ElectrumBlockchain::from(client));
+        *blockchain = Some(connect_sync_blockchain(electrum_url, stop_gap)?);
     }
     let bc = blockchain.as_ref().expect("blockchain set above");
     match sync_wallet(wallet, bc) {
@@ -519,6 +548,9 @@ fn watcher_init_and_loop(
     init_tx: oneshot::Sender<Result<(), AccountInfoError>>,
 ) {
     let gap = params.gap_limit.unwrap_or(20);
+    // Wallet sync must scan at least as far as the subscribed scripts (last used
+    // + gap). Never drop below BDK's default of 20.
+    let sync_stop_gap = (gap as usize).max(20);
     let account_type = setup.account_type;
     let watcher_id = params.watcher_id.clone();
 
@@ -556,7 +588,7 @@ fn watcher_init_and_loop(
 
     // First sync: establishes address usage so `derive_scripts` covers the
     // full used range.
-    if let Err(e) = ensure_synced(&wallet, &mut blockchain, &params.electrum_url) {
+    if let Err(e) = ensure_synced(&wallet, &mut blockchain, &params.electrum_url, sync_stop_gap) {
         let _ = init_tx.send(Err(e));
         return;
     }
@@ -572,7 +604,7 @@ fn watcher_init_and_loop(
     subscribe_scripts_reporting(&sub_client, &subscribed_scripts, &listener, &watcher_id);
 
     // Second sync: brackets the subscribe to close the sync/subscribe race.
-    if let Err(e) = ensure_synced(&wallet, &mut blockchain, &params.electrum_url) {
+    if let Err(e) = ensure_synced(&wallet, &mut blockchain, &params.electrum_url, sync_stop_gap) {
         let _ = init_tx.send(Err(e));
         return;
     }
@@ -697,7 +729,7 @@ fn watcher_init_and_loop(
         }
 
         if needs_resync {
-            if let Err(e) = ensure_synced(&wallet, &mut blockchain, &params.electrum_url) {
+            if let Err(e) = ensure_synced(&wallet, &mut blockchain, &params.electrum_url, sync_stop_gap) {
                 listener.on_event(
                     watcher_id.clone(),
                     WatcherEvent::Error {
