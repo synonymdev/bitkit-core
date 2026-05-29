@@ -372,27 +372,23 @@ fn subscribe_scripts(client: &electrum_client::Client, scripts: &HashSet<ScriptB
 
 /// Subscribe to all scripts at init in a single batched RPC.
 ///
-/// The batch succeeds or fails as a whole, so a failure is surfaced as one
-/// event rather than per script. Either way the block-header-driven resync (on
-/// every new block) is a backstop, so any changes still surface within ~1 block
-/// rather than being lost.
-fn subscribe_scripts_reporting(
+/// Unlike the best-effort reconnect path, an init failure is fatal: the batch is
+/// all-or-nothing, so a failure means no scripts are subscribed and the watcher
+/// would have no live push updates. Returning the error lets startup fail so a
+/// successful start means the watcher is fully subscribed. (Empty set: no-op.)
+fn subscribe_scripts_at_init(
     client: &electrum_client::Client,
     scripts: &HashSet<ScriptBuf>,
-    listener: &Arc<dyn EventListener>,
-    watcher_id: &str,
-) {
+) -> Result<(), AccountInfoError> {
     if scripts.is_empty() {
-        return;
+        return Ok(());
     }
-    if let Err(e) = client.batch_script_subscribe(scripts.iter().map(|s| s.as_script())) {
-        listener.on_event(
-            watcher_id.to_string(),
-            WatcherEvent::Error {
-                message: format!("Failed to subscribe to scripts: {}", e),
-            },
-        );
-    }
+    client
+        .batch_script_subscribe(scripts.iter().map(|s| s.as_script()))
+        .map(|_| ())
+        .map_err(|e| AccountInfoError::ElectrumError {
+            error_details: format!("Failed to subscribe to scripts: {}", e),
+        })
 }
 
 /// Build a sync blockchain whose stop gap covers the watcher's subscribed range.
@@ -605,7 +601,12 @@ fn watcher_init_and_loop(
         }
     };
 
-    subscribe_scripts_reporting(&sub_client, &subscribed_scripts, &listener, &watcher_id);
+    // A failed subscribe means no live push updates, so fail startup rather than
+    // report success for a watcher that can only refresh on new blocks.
+    if let Err(e) = subscribe_scripts_at_init(&sub_client, &subscribed_scripts) {
+        let _ = init_tx.send(Err(e));
+        return;
+    }
 
     // Second sync: brackets the subscribe to close the sync/subscribe race.
     if let Err(e) = ensure_synced(&wallet, &mut blockchain, &params.electrum_url, sync_stop_gap) {
