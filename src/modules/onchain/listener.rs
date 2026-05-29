@@ -588,7 +588,12 @@ fn watcher_init_and_loop(
 
     // First sync: establishes address usage so `derive_scripts` covers the
     // full used range.
-    if let Err(e) = ensure_synced(&wallet, &mut blockchain, &params.electrum_url, sync_stop_gap) {
+    if let Err(e) = ensure_synced(
+        &wallet,
+        &mut blockchain,
+        &params.electrum_url,
+        sync_stop_gap,
+    ) {
         let _ = init_tx.send(Err(e));
         return;
     }
@@ -609,7 +614,12 @@ fn watcher_init_and_loop(
     }
 
     // Second sync: brackets the subscribe to close the sync/subscribe race.
-    if let Err(e) = ensure_synced(&wallet, &mut blockchain, &params.electrum_url, sync_stop_gap) {
+    if let Err(e) = ensure_synced(
+        &wallet,
+        &mut blockchain,
+        &params.electrum_url,
+        sync_stop_gap,
+    ) {
         let _ = init_tx.send(Err(e));
         return;
     }
@@ -755,7 +765,12 @@ fn watcher_init_and_loop(
         }
 
         if needs_resync {
-            if let Err(e) = ensure_synced(&wallet, &mut blockchain, &params.electrum_url, sync_stop_gap) {
+            if let Err(e) = ensure_synced(
+                &wallet,
+                &mut blockchain,
+                &params.electrum_url,
+                sync_stop_gap,
+            ) {
                 listener.on_event(
                     watcher_id.clone(),
                     WatcherEvent::Error {
