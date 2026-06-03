@@ -1,4 +1,6 @@
+use std::any::Any;
 use std::collections::{HashMap, HashSet};
+use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::str::FromStr;
 
 use base64::{engine::general_purpose, Engine as _};
@@ -1308,6 +1310,39 @@ pub(crate) fn connect_and_get_tip(
     Ok((client, tip_height))
 }
 
+fn panic_payload_to_string(payload: &(dyn Any + Send)) -> String {
+    if let Some(message) = payload.downcast_ref::<&str>() {
+        (*message).to_string()
+    } else if let Some(message) = payload.downcast_ref::<String>() {
+        message.clone()
+    } else {
+        "unknown panic payload".to_string()
+    }
+}
+
+pub(super) async fn run_account_info_blocking<T, F>(
+    task_name: &'static str,
+    task: F,
+) -> Result<T, AccountInfoError>
+where
+    T: Send + 'static,
+    F: FnOnce() -> Result<T, AccountInfoError> + Send + 'static,
+{
+    tokio::task::spawn_blocking(move || {
+        catch_unwind(AssertUnwindSafe(task)).map_err(|payload| AccountInfoError::SyncError {
+            error_details: format!(
+                "{} task panicked: {}",
+                task_name,
+                panic_payload_to_string(payload.as_ref())
+            ),
+        })?
+    })
+    .await
+    .map_err(|e| AccountInfoError::SyncError {
+        error_details: format!("{} task failed: {}", task_name, e),
+    })?
+}
+
 /// Create a BDK wallet (in-memory, unsynced) from the resolved setup.
 ///
 /// Addresses can be derived from the returned wallet without syncing; call
@@ -1827,70 +1862,77 @@ pub async fn get_address_info(
     let electrum_url_owned = electrum_url.to_string();
     let addr_str = address.to_string();
 
-    let result =
-        tokio::task::spawn_blocking(move || {
-            let (client, tip_height) = connect_and_get_tip(&electrum_url_owned)?;
+    let result = run_account_info_blocking("address info", move || {
+        let (client, tip_height) = connect_and_get_tip(&electrum_url_owned)?;
 
-            let script = bdk_addr.script_pubkey();
+        let script = bdk_addr.script_pubkey();
 
-            // Get UTXOs for this address
-            let utxos = client.script_list_unspent(&script).map_err(|e| {
-                AccountInfoError::ElectrumError {
+        // Get UTXOs for this address
+        let utxos =
+            client
+                .script_list_unspent(&script)
+                .map_err(|e| AccountInfoError::ElectrumError {
                     error_details: format!("Failed to list UTXOs: {}", e),
-                }
-            })?;
+                })?;
 
-            // Get history for transfer count
-            let history = client.script_get_history(&script).map_err(|e| {
-                AccountInfoError::ElectrumError {
+        // Get history for transfer count
+        let history =
+            client
+                .script_get_history(&script)
+                .map_err(|e| AccountInfoError::ElectrumError {
                     error_details: format!("Failed to get history: {}", e),
-                }
-            })?;
+                })?;
 
-            let account_utxos: Vec<AccountUtxo> = utxos
-                .iter()
-                .map(|utxo| {
-                    let height = u32::try_from(utxo.height).unwrap_or(0);
-                    let confirmations = if height > 0 {
-                        tip_height.saturating_sub(height) + 1
-                    } else {
-                        0
-                    };
+        let account_utxos: Vec<AccountUtxo> = utxos
+            .iter()
+            .map(|utxo| {
+                let height =
+                    u32::try_from(utxo.height).map_err(|_| AccountInfoError::ElectrumError {
+                        error_details: format!("UTXO height {} exceeds u32", utxo.height),
+                    })?;
+                let confirmations = if height > 0 {
+                    tip_height.saturating_sub(height) + 1
+                } else {
+                    0
+                };
 
-                    let vout =
-                        u32::try_from(utxo.tx_pos).map_err(|_| AccountInfoError::WalletError {
-                            error_details: format!("Output index {} exceeds u32", utxo.tx_pos),
-                        })?;
+                let vout =
+                    u32::try_from(utxo.tx_pos).map_err(|_| AccountInfoError::WalletError {
+                        error_details: format!("Output index {} exceeds u32", utxo.tx_pos),
+                    })?;
 
-                    Ok(AccountUtxo {
-                        txid: utxo.tx_hash.to_string(),
-                        vout,
-                        amount: utxo.value,
-                        block_height: height,
-                        address: addr_str.clone(),
-                        path: String::new(), // No derivation path for single address
-                        confirmations,
-                        coinbase: false,
-                        own: true,
-                        required: None,
-                    })
+                Ok(AccountUtxo {
+                    txid: utxo.tx_hash.to_string(),
+                    vout,
+                    amount: utxo.value,
+                    block_height: height,
+                    address: addr_str.clone(),
+                    path: String::new(), // No derivation path for single address
+                    confirmations,
+                    coinbase: false,
+                    own: true,
+                    required: None,
                 })
-                .collect::<Result<Vec<_>, AccountInfoError>>()?;
-
-            let balance: u64 = utxos.iter().map(|u| u.value).sum();
-
-            Ok::<_, AccountInfoError>(SingleAddressInfoResult {
-                address: addr_str,
-                balance,
-                utxos: account_utxos,
-                transfers: u32::try_from(history.len()).unwrap_or(u32::MAX),
-                block_height: tip_height,
             })
+            .collect::<Result<Vec<_>, AccountInfoError>>()?;
+
+        let balance = utxos.iter().try_fold(0u64, |balance, utxo| {
+            balance
+                .checked_add(utxo.value)
+                .ok_or_else(|| AccountInfoError::ElectrumError {
+                    error_details: "Address UTXO balance overflow".to_string(),
+                })
+        })?;
+
+        Ok::<_, AccountInfoError>(SingleAddressInfoResult {
+            address: addr_str,
+            balance,
+            utxos: account_utxos,
+            transfers: u32::try_from(history.len()).unwrap_or(u32::MAX),
+            block_height: tip_height,
         })
-        .await
-        .map_err(|e| AccountInfoError::SyncError {
-            error_details: format!("Task failed: {}", e),
-        })??;
+    })
+    .await?;
 
     Ok(result)
 }

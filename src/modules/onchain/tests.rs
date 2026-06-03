@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use super::super::implementation::{
-        onchain_to_bdk_network, LegacyRnNativeSegwitRecoverySpendable,
+        onchain_to_bdk_network, run_account_info_blocking, LegacyRnNativeSegwitRecoverySpendable,
     };
     use crate::modules::onchain::{AccountType, AddressType, BitcoinAddressValidator};
     use crate::modules::scanner::NetworkType;
@@ -13,7 +13,11 @@ mod tests {
     use bdk::wallet::{AddressIndex as BdkAddressIndex, Wallet};
     use bitcoin::bip32::Xpub;
     use bitcoin::{Network, NetworkKind};
+    use serde_json::{json, Value};
+    use std::io::{BufRead, BufReader, Write};
+    use std::net::{Shutdown, TcpListener, TcpStream};
     use std::str::FromStr;
+    use std::thread;
 
     fn legacy_rn_recovery_script(
         mnemonic_phrase: &str,
@@ -860,6 +864,132 @@ mod tests {
     const TEST_REGTEST_BECH32_ADDR: &str = "bcrt1qj2gz3meule5mc4r4knv65vjds3g88rlxs0jlmq";
     const TEST_TESTNET_BECH32_ADDR: &str = "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx";
 
+    #[derive(Clone, Copy)]
+    enum FakeAddressInfoElectrum {
+        Empty,
+        MalformedUtxos,
+        MalformedHistory,
+        DisconnectAfterTip,
+    }
+
+    fn start_fake_address_info_electrum(scenario: FakeAddressInfoElectrum) -> String {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap();
+        thread::spawn(move || {
+            if let Ok((stream, _)) = listener.accept() {
+                handle_fake_address_info_electrum(stream, scenario);
+            }
+        });
+        format!("tcp://{}", addr)
+    }
+
+    fn handle_fake_address_info_electrum(mut stream: TcpStream, scenario: FakeAddressInfoElectrum) {
+        let read_stream = stream.try_clone().unwrap();
+        let mut reader = BufReader::new(read_stream);
+        let header_hex = "00".repeat(80);
+
+        if !write_electrum_method_response(
+            &mut reader,
+            &mut stream,
+            "blockchain.headers.subscribe",
+            json!({
+                "height": 100,
+                "hex": header_hex,
+            }),
+        ) {
+            return;
+        }
+
+        if matches!(scenario, FakeAddressInfoElectrum::DisconnectAfterTip) {
+            let _ = stream.shutdown(Shutdown::Both);
+            return;
+        }
+
+        let utxo_result = match scenario {
+            FakeAddressInfoElectrum::MalformedUtxos => json!([
+                {
+                    "height": "not-a-number",
+                    "tx_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+                    "tx_pos": 0,
+                    "value": 1
+                }
+            ]),
+            _ => json!([]),
+        };
+        if !write_electrum_method_response(
+            &mut reader,
+            &mut stream,
+            "blockchain.scripthash.listunspent",
+            utxo_result,
+        ) {
+            return;
+        }
+
+        let history_result = match scenario {
+            FakeAddressInfoElectrum::MalformedHistory => json!([
+                {
+                    "height": 0,
+                    "tx_hash": 42
+                }
+            ]),
+            _ => json!([]),
+        };
+        let _ = write_electrum_method_response(
+            &mut reader,
+            &mut stream,
+            "blockchain.scripthash.get_history",
+            history_result,
+        );
+    }
+
+    fn write_electrum_method_response(
+        reader: &mut BufReader<TcpStream>,
+        stream: &mut TcpStream,
+        expected_method: &str,
+        result: Value,
+    ) -> bool {
+        let Some((id, method)) = read_electrum_request(reader) else {
+            return false;
+        };
+        if method != expected_method {
+            let response = json!({
+                "jsonrpc": "2.0",
+                "id": id,
+                "error": {
+                    "code": -32601,
+                    "message": format!("unexpected method: {}", method),
+                },
+            });
+            writeln!(stream, "{}", response).unwrap();
+            stream.flush().unwrap();
+            return false;
+        }
+
+        let response = json!({
+            "jsonrpc": "2.0",
+            "id": id,
+            "result": result,
+        });
+        writeln!(stream, "{}", response).unwrap();
+        stream.flush().unwrap();
+        true
+    }
+
+    fn read_electrum_request(reader: &mut BufReader<TcpStream>) -> Option<(Value, String)> {
+        let mut line = String::new();
+        if reader.read_line(&mut line).unwrap() == 0 {
+            return None;
+        }
+        let request: Value = serde_json::from_str(&line).unwrap();
+        let id = request.get("id").cloned().unwrap_or(Value::Null);
+        let method = request
+            .get("method")
+            .and_then(Value::as_str)
+            .expect("Electrum request missing method")
+            .to_string();
+        Some((id, method))
+    }
+
     // --- Unit Tests: Helper Functions ---
 
     #[test]
@@ -1569,6 +1699,130 @@ mod tests {
         let result = get_address_info(TEST_LEGACY_ADDR, "invalid://url", None).await;
 
         assert!(result.is_err(), "Expected error for invalid electrum URL");
+    }
+
+    #[tokio::test]
+    async fn test_get_address_info_empty_history_and_utxos() {
+        use crate::modules::onchain::get_address_info;
+        use crate::modules::onchain::Network as OnchainNetwork;
+
+        let electrum_url = start_fake_address_info_electrum(FakeAddressInfoElectrum::Empty);
+        let result = get_address_info(
+            TEST_TESTNET_BECH32_ADDR,
+            &electrum_url,
+            Some(OnchainNetwork::Testnet),
+        )
+        .await
+        .expect("empty Electrum history and UTXOs should succeed");
+
+        assert_eq!(result.address, TEST_TESTNET_BECH32_ADDR);
+        assert_eq!(result.balance, 0);
+        assert!(result.utxos.is_empty());
+        assert_eq!(result.transfers, 0);
+        assert_eq!(result.block_height, 100);
+    }
+
+    #[tokio::test]
+    async fn test_get_address_info_malformed_utxo_response_returns_error() {
+        use crate::modules::onchain::get_address_info;
+        use crate::modules::onchain::{AccountInfoError, Network as OnchainNetwork};
+
+        let electrum_url =
+            start_fake_address_info_electrum(FakeAddressInfoElectrum::MalformedUtxos);
+        let result = get_address_info(
+            TEST_TESTNET_BECH32_ADDR,
+            &electrum_url,
+            Some(OnchainNetwork::Testnet),
+        )
+        .await;
+
+        match result.unwrap_err() {
+            AccountInfoError::ElectrumError { error_details } => {
+                assert!(error_details.contains("Failed to list UTXOs"));
+            }
+            other => panic!("Expected ElectrumError, got: {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_address_info_malformed_history_response_returns_error() {
+        use crate::modules::onchain::get_address_info;
+        use crate::modules::onchain::{AccountInfoError, Network as OnchainNetwork};
+
+        let electrum_url =
+            start_fake_address_info_electrum(FakeAddressInfoElectrum::MalformedHistory);
+        let result = get_address_info(
+            TEST_TESTNET_BECH32_ADDR,
+            &electrum_url,
+            Some(OnchainNetwork::Testnet),
+        )
+        .await;
+
+        match result.unwrap_err() {
+            AccountInfoError::ElectrumError { error_details } => {
+                assert!(error_details.contains("Failed to get history"));
+            }
+            other => panic!("Expected ElectrumError, got: {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_address_info_network_disconnect_returns_error() {
+        use crate::modules::onchain::get_address_info;
+        use crate::modules::onchain::{AccountInfoError, Network as OnchainNetwork};
+
+        let electrum_url =
+            start_fake_address_info_electrum(FakeAddressInfoElectrum::DisconnectAfterTip);
+        let result = get_address_info(
+            TEST_TESTNET_BECH32_ADDR,
+            &electrum_url,
+            Some(OnchainNetwork::Testnet),
+        )
+        .await;
+
+        match result.unwrap_err() {
+            AccountInfoError::ElectrumError { error_details } => {
+                assert!(error_details.contains("Failed to list UTXOs"));
+            }
+            other => panic!("Expected ElectrumError, got: {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_address_info_network_mismatch() {
+        use crate::modules::onchain::get_address_info;
+        use crate::modules::onchain::{AccountInfoError, Network as OnchainNetwork};
+
+        let result = get_address_info(
+            TEST_TESTNET_BECH32_ADDR,
+            ACCOUNT_INFO_ELECTRUM_URL,
+            Some(OnchainNetwork::Bitcoin),
+        )
+        .await;
+
+        match result.unwrap_err() {
+            AccountInfoError::NetworkMismatch { .. } => {}
+            other => panic!("Expected NetworkMismatch, got: {:?}", other),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_account_info_blocking_task_panic_returns_error() {
+        use crate::modules::onchain::AccountInfoError;
+
+        let result =
+            run_account_info_blocking("test address info", || -> Result<(), AccountInfoError> {
+                panic!("simulated address info panic")
+            })
+            .await;
+
+        match result.unwrap_err() {
+            AccountInfoError::SyncError { error_details } => {
+                assert!(error_details.contains("test address info task panicked"));
+                assert!(error_details.contains("simulated address info panic"));
+            }
+            other => panic!("Expected SyncError, got: {:?}", other),
+        }
     }
 
     // ========================================================================
