@@ -22,7 +22,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || github.event.release.tag_name }}
+        ref: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.event.release.tag_name }}
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
