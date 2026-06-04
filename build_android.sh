@@ -138,10 +138,16 @@ cargo build
 echo "Building release version..."
 cargo build --release
 
-# Install cargo-ndk if not already installed
-if ! command -v cargo-ndk &> /dev/null; then
-    echo "Installing cargo-ndk..."
-    cargo install cargo-ndk
+# Install the cargo-ndk version used by the mobile release scripts.
+CARGO_NDK_VERSION="3.5.4"
+if ! command -v cargo-ndk &> /dev/null || ! cargo ndk --version | grep -q "cargo-ndk $CARGO_NDK_VERSION"; then
+    echo "Installing cargo-ndk $CARGO_NDK_VERSION..."
+    cargo install cargo-ndk --version "$CARGO_NDK_VERSION" --locked --force
+fi
+
+CARGO_NDK_NO_STRIP_ARGS=()
+if cargo ndk --help 2>&1 | grep -q -- '--no-strip'; then
+    CARGO_NDK_NO_STRIP_ARGS+=(--no-strip)
 fi
 
 # Add Android targets
@@ -156,7 +162,7 @@ rustup target add \
 echo "Building for Android architectures..."
 cargo ndk \
     -o "$JNILIBS_DIR" \
-    --no-strip \
+    "${CARGO_NDK_NO_STRIP_ARGS[@]}" \
     --manifest-path ./Cargo.toml \
     -t armeabi-v7a \
     -t arm64-v8a \

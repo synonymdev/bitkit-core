@@ -39,6 +39,12 @@ android {
         }
     }
 
+    packaging {
+        jniLibs {
+            keepDebugSymbols += "**/libbitkitcore.so"
+        }
+    }
+
     publishing {
         singleVariant("release") {
             withSourcesJar()
