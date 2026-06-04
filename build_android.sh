@@ -110,6 +110,21 @@ validate_android_symbols() {
     done
 }
 
+host_library_path() {
+    case "$(uname -s)" in
+        Darwin)
+            echo "./target/release/libbitkitcore.dylib"
+            ;;
+        Linux)
+            echo "./target/release/libbitkitcore.so"
+            ;;
+        *)
+            echo "Error: Unsupported host OS for Kotlin binding generation: $(uname -s)" >&2
+            exit 1
+            ;;
+    esac
+}
+
 # Remove previous build
 echo "Removing previous build..."
 rm -rf "$BASE_DIR"/*
@@ -118,10 +133,6 @@ rm -rf "$JNILIBS_DIR"/*
 # Cargo Build
 echo "Building Rust libraries..."
 cargo build
-
-# Modify Cargo.toml
-echo "Updating Cargo.toml..."
-sed -i '' 's/crate_type = .*/crate_type = ["cdylib"]/' Cargo.toml
 
 # Build release
 echo "Building release version..."
@@ -157,7 +168,7 @@ validate_android_symbols
 
 # Generate Kotlin bindings
 echo "Generating Kotlin bindings..."
-LIBRARY_PATH="./target/release/libbitkitcore.dylib"
+LIBRARY_PATH=$(host_library_path)
 
 # Check if the library file exists
 if [ ! -f "$LIBRARY_PATH" ]; then
