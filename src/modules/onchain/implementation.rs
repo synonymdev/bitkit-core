@@ -1452,7 +1452,7 @@ pub async fn get_account_info(
 
     let electrum_url_owned = electrum_url.to_string();
 
-    let result = tokio::task::spawn_blocking(move || {
+    let result = run_account_info_blocking("account info", move || {
         let base_path = &setup.base_path;
 
         // Single Electrum connection: get tip height first, then sync wallet
@@ -1615,10 +1615,7 @@ pub async fn get_account_info(
             tip_height,
         ))
     })
-    .await
-    .map_err(|e| AccountInfoError::SyncError {
-        error_details: format!("Task failed: {}", e),
-    })??;
+    .await?;
 
     let (
         used_addresses,
@@ -1661,7 +1658,7 @@ pub async fn get_transaction_history(
 
     let electrum_url = electrum_url.to_string();
 
-    let result = tokio::task::spawn_blocking(move || {
+    let result = run_account_info_blocking("transaction history", move || {
         let (client, tip_height) = connect_and_get_tip(&electrum_url)?;
 
         let wallet = create_and_sync_wallet(&setup, client)?;
@@ -1692,10 +1689,7 @@ pub async fn get_transaction_history(
 
         Ok((history, balance, tx_count, tip_height))
     })
-    .await
-    .map_err(|e| AccountInfoError::SyncError {
-        error_details: format!("Task failed: {}", e),
-    })??;
+    .await?;
 
     let (transactions, balance, tx_count, block_height) = result;
 
@@ -1728,7 +1722,7 @@ pub async fn get_transaction_detail(
 
     let electrum_url = electrum_url.to_string();
 
-    let result = tokio::task::spawn_blocking(move || {
+    let result = run_account_info_blocking("transaction detail", move || {
         let (client, tip_height) = connect_and_get_tip(&electrum_url)?;
 
         let wallet = create_and_sync_wallet(&setup, client)?;
@@ -1825,10 +1819,7 @@ pub async fn get_transaction_detail(
             fee_rate,
         })
     })
-    .await
-    .map_err(|e| AccountInfoError::SyncError {
-        error_details: format!("Task failed: {}", e),
-    })??;
+    .await?;
 
     Ok(result)
 }
