@@ -85,6 +85,18 @@ find_readelf() {
         return
     fi
 
+    for ndk_dir in "${ANDROID_NDK_ROOT:-}" "${ANDROID_NDK_HOME:-}" "${NDK_HOME:-}"; do
+        if [ -z "$ndk_dir" ] || [ ! -d "$ndk_dir/toolchains/llvm/prebuilt" ]; then
+            continue
+        fi
+
+        ndk_readelf=$(find "$ndk_dir/toolchains/llvm/prebuilt" -path '*/bin/llvm-readelf' | head -n 1)
+        if [ -n "$ndk_readelf" ]; then
+            echo "$ndk_readelf"
+            return
+        fi
+    done
+
     echo "Error: llvm-readelf or readelf is required to validate Android native debug symbols"
     exit 1
 }
@@ -224,7 +236,6 @@ rustup target add \
 
 # Build for all Android architectures
 echo "Building for Android architectures..."
-export RUSTFLAGS="-C link-args=-Wl,-z,max-page-size=16384,-z,common-page-size=16384"
 cargo ndk \
     -o "$JNILIBS_DIR" \
     "${CARGO_NDK_NO_STRIP_ARGS[@]}" \
@@ -236,7 +247,6 @@ cargo ndk \
     build --release
 
 validate_android_symbols
-unset RUSTFLAGS
 
 # Generate Kotlin bindings
 echo "Generating Kotlin bindings..."
