@@ -93,6 +93,39 @@ has_debug_metadata() {
     "$READELF_BIN" -S "$1" | grep -Eq '\.(symtab|debug_|gnu_debugdata)'
 }
 
+has_16kb_load_alignment() {
+    alignments=$("$READELF_BIN" -l "$1" | awk '$1 == "LOAD" { print $NF }')
+    if [ -z "$alignments" ]; then
+        return 1
+    fi
+
+    while read -r alignment; do
+        if [ -z "$alignment" ]; then
+            continue
+        fi
+
+        if [ "$((alignment))" -lt 16384 ]; then
+            return 1
+        fi
+    done <<EOF
+$alignments
+EOF
+}
+
+validate_android_library() {
+    lib="$1"
+    if ! has_debug_metadata "$lib"; then
+        echo "Error: Android native library has no usable debug metadata: $lib"
+        exit 1
+    fi
+
+    if ! has_16kb_load_alignment "$lib"; then
+        echo "Error: Android native library is not 16 KB page-size aligned: $lib"
+        "$READELF_BIN" -l "$lib" | grep LOAD || true
+        exit 1
+    fi
+}
+
 validate_android_symbols() {
     READELF_BIN=$(find_readelf)
 
@@ -103,11 +136,33 @@ validate_android_symbols() {
             exit 1
         fi
 
-        if ! has_debug_metadata "$lib"; then
-            echo "Error: Android native library has no usable debug metadata: $lib"
+        validate_android_library "$lib"
+    done
+}
+
+validate_android_aar_symbols() {
+    READELF_BIN=$(find_readelf)
+    aar=$(find "$ANDROID_LIB_DIR" -path '*/build/outputs/aar/*release.aar' -print | head -n 1)
+    if [ -z "$aar" ]; then
+        echo "Error: Android release AAR missing under $ANDROID_LIB_DIR"
+        exit 1
+    fi
+
+    tmp_dir=$(mktemp -d)
+    unzip -q "$aar" -d "$tmp_dir"
+
+    for abi in armeabi-v7a arm64-v8a x86 x86_64; do
+        lib="$tmp_dir/jni/$abi/libbitkitcore.so"
+        if [ ! -f "$lib" ]; then
+            echo "Error: Android release AAR native library missing at $lib"
+            rm -rf "$tmp_dir"
             exit 1
         fi
+
+        validate_android_library "$lib"
     done
+
+    rm -rf "$tmp_dir"
 }
 
 host_library_path() {
@@ -160,6 +215,7 @@ rustup target add \
 
 # Build for all Android architectures
 echo "Building for Android architectures..."
+export RUSTFLAGS="-C link-args=-Wl,-z,max-page-size=16384,-z,common-page-size=16384"
 cargo ndk \
     -o "$JNILIBS_DIR" \
     "${CARGO_NDK_NO_STRIP_ARGS[@]}" \
@@ -171,6 +227,7 @@ cargo ndk \
     build --release
 
 validate_android_symbols
+unset RUSTFLAGS
 
 # Generate Kotlin bindings
 echo "Generating Kotlin bindings..."
@@ -221,5 +278,6 @@ rm -f "$ANDROID_LIB_DIR/gradle.properties.bak"
 # Verify android library publish
 echo "Testing android library publish to Maven Local..."
 "$ANDROID_LIB_DIR"/gradlew --project-dir "$ANDROID_LIB_DIR" clean publishToMavenLocal
+validate_android_aar_symbols
 
 echo "Android build process completed successfully!"
