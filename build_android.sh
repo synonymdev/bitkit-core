@@ -93,8 +93,17 @@ has_debug_metadata() {
     "$READELF_BIN" -S "$1" | grep -Eq '\.(symtab|debug_|gnu_debugdata)'
 }
 
+readelf_program_headers() {
+    if "$READELF_BIN" -W -l "$1" >/dev/null 2>&1; then
+        "$READELF_BIN" -W -l "$1"
+        return
+    fi
+
+    "$READELF_BIN" -l "$1"
+}
+
 has_16kb_load_alignment() {
-    alignments=$("$READELF_BIN" -l "$1" | awk '$1 == "LOAD" { print $NF }')
+    alignments=$(readelf_program_headers "$1" | awk '$1 == "LOAD" { print $NF }')
     if [ -z "$alignments" ]; then
         return 1
     fi
@@ -121,7 +130,7 @@ validate_android_library() {
 
     if ! has_16kb_load_alignment "$lib"; then
         echo "Error: Android native library is not 16 KB page-size aligned: $lib"
-        "$READELF_BIN" -l "$lib" | grep LOAD || true
+        readelf_program_headers "$lib" | grep LOAD || true
         exit 1
     fi
 }
