@@ -47,6 +47,9 @@ jobs:
         ndk-version: r28c
         add-to-path: true
 
+    - name: Export Android NDK root
+      run: echo "ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}" >> "$GITHUB_ENV"
+
     - name: Extract version from input or tag
       id: version
       shell: bash
@@ -58,8 +61,6 @@ jobs:
         echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
 
     - name: Generate Android bindings
-      env:
-        ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
       run: ./build_android.sh
 
     - name: Build with Gradle
