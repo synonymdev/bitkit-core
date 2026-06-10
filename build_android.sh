@@ -101,8 +101,8 @@ find_readelf() {
     exit 1
 }
 
-has_debug_metadata() {
-    "$READELF_BIN" -S "$1" | grep -Eq '\.(symtab|debug_|gnu_debugdata)'
+has_dwarf_debug_metadata() {
+    "$READELF_BIN" -S "$1" | grep -Eq '\.debug_'
 }
 
 readelf_program_headers() {
@@ -135,8 +135,8 @@ EOF
 
 validate_android_library() {
     lib="$1"
-    if ! has_debug_metadata "$lib"; then
-        echo "Error: Android native library has no usable debug metadata: $lib"
+    if ! has_dwarf_debug_metadata "$lib"; then
+        echo "Error: Android native library has no full DWARF debug metadata: $lib"
         exit 1
     fi
 

@@ -121,7 +121,7 @@ fun String.parseElfAlignment(): Long {
 
 val validateReleaseNativeLibraries by tasks.registering {
     group = "verification"
-    description = "Validates release JNI libraries keep debug metadata and 16 KB LOAD alignment."
+    description = "Validates release JNI libraries keep full DWARF metadata and 16 KB LOAD alignment."
 
     doLast {
         val readelf = findReadelf()
@@ -134,8 +134,8 @@ val validateReleaseNativeLibraries by tasks.registering {
             }
 
             val (sectionsExit, sections) = runReadelf(readelf, "-S", lib.absolutePath)
-            if (sectionsExit != 0 || !Regex("""\.(symtab|debug_|gnu_debugdata)""").containsMatchIn(sections)) {
-                throw GradleException("Android native library has no usable debug metadata: '${lib.path}'")
+            if (sectionsExit != 0 || !Regex("""\.debug_""").containsMatchIn(sections)) {
+                throw GradleException("Android native library has no full DWARF debug metadata: '${lib.path}'")
             }
 
             val wideHeaders = runReadelf(readelf, "-W", "-l", lib.absolutePath)
