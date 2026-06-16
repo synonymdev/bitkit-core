@@ -90,4 +90,4 @@ cd ./bindings/android
 ./gradlew publish -Pversion=0.1.0
 ```
 
-Run `./build_android.sh` before any direct Gradle publish so `jniLibs` is regenerated with native debug metadata and 16 KB page-size alignment.
+Run `./build_android.sh` before any direct Gradle publish so `jniLibs` is regenerated as stripped release libraries with separate `native-debug-symbols.zip` metadata and 16 KB page-size alignment.
