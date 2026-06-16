@@ -1,4 +1,5 @@
 target/
+bindings/android/native-debug-symbols.zip
 .idea/
 .DS_Store
 # AI
