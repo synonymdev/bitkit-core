@@ -175,6 +175,8 @@ pub struct ActivityTags {
 
 #[derive(Debug, Clone, uniffi::Record, Serialize, Deserialize)]
 pub struct PreActivityMetadata {
+    #[serde(default = "default_wallet_id")]
+    pub wallet_id: String,
     pub payment_id: String,
     pub tags: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

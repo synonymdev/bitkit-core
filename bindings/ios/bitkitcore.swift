@@ -8319,6 +8319,7 @@ public func FfiConverterTypeOnchainActivity_lower(_ value: OnchainActivity) -> R
 
 
 public struct PreActivityMetadata {
+    public var walletId: String
     public var paymentId: String
     public var tags: [String]
     public var paymentHash: String?
@@ -8332,7 +8333,8 @@ public struct PreActivityMetadata {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(paymentId: String, tags: [String], paymentHash: String?, txId: String?, address: String?, isReceive: Bool, feeRate: UInt64, isTransfer: Bool, channelId: String?, createdAt: UInt64) {
+    public init(walletId: String, paymentId: String, tags: [String], paymentHash: String?, txId: String?, address: String?, isReceive: Bool, feeRate: UInt64, isTransfer: Bool, channelId: String?, createdAt: UInt64) {
+        self.walletId = walletId
         self.paymentId = paymentId
         self.tags = tags
         self.paymentHash = paymentHash
@@ -8353,6 +8355,9 @@ extension PreActivityMetadata: Sendable {}
 
 extension PreActivityMetadata: Equatable, Hashable {
     public static func ==(lhs: PreActivityMetadata, rhs: PreActivityMetadata) -> Bool {
+        if lhs.walletId != rhs.walletId {
+            return false
+        }
         if lhs.paymentId != rhs.paymentId {
             return false
         }
@@ -8387,6 +8392,7 @@ extension PreActivityMetadata: Equatable, Hashable {
     }
 
     public func hash(into hasher: inout Hasher) {
+        hasher.combine(walletId)
         hasher.combine(paymentId)
         hasher.combine(tags)
         hasher.combine(paymentHash)
@@ -8411,6 +8417,7 @@ public struct FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PreActivityMetadata {
         return
             try PreActivityMetadata(
+                walletId: FfiConverterString.read(from: &buf),
                 paymentId: FfiConverterString.read(from: &buf),
                 tags: FfiConverterSequenceString.read(from: &buf),
                 paymentHash: FfiConverterOptionString.read(from: &buf),
@@ -8425,6 +8432,7 @@ public struct FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer {
     }
 
     public static func write(_ value: PreActivityMetadata, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.walletId, into: &buf)
         FfiConverterString.write(value.paymentId, into: &buf)
         FfiConverterSequenceString.write(value.tags, into: &buf)
         FfiConverterOptionString.write(value.paymentHash, into: &buf)
@@ -20001,8 +20009,9 @@ public func addPreActivityMetadata(preActivityMetadata: PreActivityMetadata)thro
     )
 }
 }
-public func addPreActivityMetadataTags(paymentId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+public func addPreActivityMetadataTags(walletId: String, paymentId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(paymentId),
         FfiConverterSequenceString.lower(tags),$0
     )
@@ -20212,8 +20221,9 @@ public func deleteActivityById(walletId: String, activityId: String)throws  -> B
     )
 })
 }
-public func deletePreActivityMetadata(paymentId: String)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+public func deletePreActivityMetadata(walletId: String, paymentId: String)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_delete_pre_activity_metadata(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(paymentId),$0
     )
 }
@@ -20579,9 +20589,10 @@ public func getPayment(paymentId: String)async throws  -> IBtBolt11Invoice  {
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
-public func getPreActivityMetadata(searchKey: String, searchByAddress: Bool)throws  -> PreActivityMetadata?  {
+public func getPreActivityMetadata(walletId: String, searchKey: String, searchByAddress: Bool)throws  -> PreActivityMetadata?  {
     return try  FfiConverterOptionTypePreActivityMetadata.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_pre_activity_metadata(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(searchKey),
         FfiConverterBool.lower(searchByAddress),$0
     )
@@ -21107,8 +21118,9 @@ public func removeClosedChannelById(channelId: String)throws  -> Bool  {
     )
 })
 }
-public func removePreActivityMetadataTags(paymentId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+public func removePreActivityMetadataTags(walletId: String, paymentId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(paymentId),
         FfiConverterSequenceString.lower(tags),$0
     )
@@ -21122,8 +21134,9 @@ public func removeTags(walletId: String, activityId: String, tags: [String])thro
     )
 }
 }
-public func resetPreActivityMetadataTags(paymentId: String)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+public func resetPreActivityMetadataTags(walletId: String, paymentId: String)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(paymentId),$0
     )
 }
@@ -21725,7 +21738,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata() != 17211) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags() != 28081) {
+    if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags() != 5813) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_add_tags() != 61276) {
@@ -21779,7 +21792,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 13256) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 46621) {
+    if (uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 63740) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_delete_transaction_details() != 43443) {
@@ -21887,7 +21900,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_get_payment() != 29170) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 53126) {
+    if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_tags() != 8596) {
@@ -22013,13 +22026,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 1991) {
+    if (uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 37046) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_remove_tags() != 53863) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703) {
+    if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 49760) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_resolve_pubky_url() != 43253) {

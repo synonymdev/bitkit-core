@@ -106,6 +106,7 @@ mod tests {
         tags: Vec<String>,
     ) -> PreActivityMetadata {
         PreActivityMetadata {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             payment_id,
             tags,
             payment_hash: None,
@@ -420,6 +421,59 @@ mod tests {
             db.get_tags(DEFAULT_WALLET_ID, "legacy_lightning").unwrap(),
             vec!["legacy_lightning_tag".to_string()]
         );
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_pre_activity_metadata_migration_defaults_rows_to_bitkit() {
+        let db_path = format!("test_db_{}.sqlite", random::<u64>());
+        {
+            let conn = rusqlite::Connection::open(&db_path).unwrap();
+            conn.execute(
+                "
+                CREATE TABLE pre_activity_metadata (
+                    payment_id TEXT PRIMARY KEY,
+                    tags TEXT NOT NULL,
+                    payment_hash TEXT,
+                    tx_id TEXT,
+                    address TEXT,
+                    is_receive BOOLEAN NOT NULL DEFAULT FALSE,
+                    fee_rate INTEGER NOT NULL DEFAULT 0,
+                    is_transfer BOOLEAN NOT NULL DEFAULT FALSE,
+                    channel_id TEXT,
+                    created_at INTEGER NOT NULL DEFAULT 0
+                )
+                ",
+                [],
+            )
+            .unwrap();
+            conn.execute(
+                "
+                INSERT INTO pre_activity_metadata (
+                    payment_id, tags, payment_hash, tx_id, address,
+                    is_receive, fee_rate, is_transfer, channel_id, created_at
+                ) VALUES (?1, ?2, NULL, NULL, ?3, 1, 0, 0, NULL, 1234)
+                ",
+                rusqlite::params!["legacy_payment", "[\"legacy\"]", "bc1qlegacy"],
+            )
+            .unwrap();
+        }
+
+        let db = ActivityDB::new(&db_path).unwrap();
+
+        assert_eq!(
+            primary_key_columns(&db, "pre_activity_metadata"),
+            vec!["wallet_id".to_string(), "payment_id".to_string()]
+        );
+
+        let metadata = db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, "legacy_payment", false)
+            .unwrap()
+            .unwrap();
+        assert_eq!(metadata.wallet_id, DEFAULT_WALLET_ID);
+        assert_eq!(metadata.payment_id, "legacy_payment");
+        assert_eq!(metadata.tags, vec!["legacy".to_string()]);
 
         cleanup(&db_path);
     }
@@ -3596,9 +3650,13 @@ mod tests {
         assert!(db.add_pre_activity_metadata(&metadata1).is_ok());
 
         // Verify it exists
-        let result1 = db.get_pre_activity_metadata(&payment_id1, false).unwrap();
+        let result1 = db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &payment_id1, false)
+            .unwrap();
         assert!(result1.is_some());
-        let result_by_address1 = db.get_pre_activity_metadata(&address, true).unwrap();
+        let result_by_address1 = db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &address, true)
+            .unwrap();
         assert!(result_by_address1.is_some());
         assert_eq!(result_by_address1.unwrap().payment_id, payment_id1);
 
@@ -3613,13 +3671,19 @@ mod tests {
         assert!(db.add_pre_activity_metadata(&metadata2).is_ok());
 
         // Verify metadata1 is gone
-        let result1_after = db.get_pre_activity_metadata(&payment_id1, false).unwrap();
+        let result1_after = db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &payment_id1, false)
+            .unwrap();
         assert!(result1_after.is_none());
 
         // Verify metadata2 exists and can be found by address
-        let result2 = db.get_pre_activity_metadata(&payment_id2, false).unwrap();
+        let result2 = db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &payment_id2, false)
+            .unwrap();
         assert!(result2.is_some());
-        let result_by_address2 = db.get_pre_activity_metadata(&address, true).unwrap();
+        let result_by_address2 = db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &address, true)
+            .unwrap();
         assert!(result_by_address2.is_some());
         let metadata2_retrieved = result_by_address2.unwrap();
         assert_eq!(metadata2_retrieved.payment_id, payment_id2);
@@ -3679,7 +3743,11 @@ mod tests {
 
         // Add more tags to existing metadata
         assert!(db
-            .add_pre_activity_metadata_tags(&address, &["tag2".to_string(), "tag3".to_string()])
+            .add_pre_activity_metadata_tags(
+                DEFAULT_WALLET_ID,
+                &address,
+                &["tag2".to_string(), "tag3".to_string()]
+            )
             .is_ok());
 
         // Verify all tags are present
@@ -3693,7 +3761,7 @@ mod tests {
 
         // Add duplicate tag (should not add duplicate)
         assert!(db
-            .add_pre_activity_metadata_tags(&address, &["tag2".to_string()])
+            .add_pre_activity_metadata_tags(DEFAULT_WALLET_ID, &address, &["tag2".to_string()])
             .is_ok());
 
         // Verify no duplicate was added
@@ -3715,7 +3783,8 @@ mod tests {
         let address = "bc1qtest123".to_string();
 
         // Try to add tags to non-existent metadata (should error)
-        let result = db.add_pre_activity_metadata_tags(&address, &["tag1".to_string()]);
+        let result =
+            db.add_pre_activity_metadata_tags(DEFAULT_WALLET_ID, &address, &["tag1".to_string()]);
         assert!(result.is_err());
 
         cleanup(&db_path);
@@ -3733,7 +3802,7 @@ mod tests {
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
         assert!(db
-            .remove_pre_activity_metadata_tags(&address, &["tag2".to_string()])
+            .remove_pre_activity_metadata_tags(DEFAULT_WALLET_ID, &address, &["tag2".to_string()])
             .is_ok());
 
         let mut activity = create_test_onchain_activity();
@@ -3767,7 +3836,11 @@ mod tests {
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
         assert!(db
-            .remove_pre_activity_metadata_tags(&address, &["tag1".to_string(), "tag3".to_string()])
+            .remove_pre_activity_metadata_tags(
+                DEFAULT_WALLET_ID,
+                &address,
+                &["tag1".to_string(), "tag3".to_string()]
+            )
             .is_ok());
 
         let mut activity = create_test_onchain_activity();
@@ -3790,7 +3863,11 @@ mod tests {
 
         // Try to remove tags that don't exist (should not error)
         assert!(db
-            .remove_pre_activity_metadata_tags(&address, &["nonexistent".to_string()])
+            .remove_pre_activity_metadata_tags(
+                DEFAULT_WALLET_ID,
+                &address,
+                &["nonexistent".to_string()]
+            )
             .is_ok());
 
         cleanup(&db_path);
@@ -3812,7 +3889,9 @@ mod tests {
             .is_ok());
 
         // Reset all tags
-        assert!(db.reset_pre_activity_metadata_tags(&address).is_ok());
+        assert!(db
+            .reset_pre_activity_metadata_tags(DEFAULT_WALLET_ID, &address)
+            .is_ok());
 
         // Verify no tags are transferred
         let mut activity = create_test_onchain_activity();
@@ -3832,7 +3911,9 @@ mod tests {
         let address = "bc1qtest123".to_string();
 
         // Reset tags that don't exist (should not error)
-        assert!(db.reset_pre_activity_metadata_tags(&address).is_ok());
+        assert!(db
+            .reset_pre_activity_metadata_tags(DEFAULT_WALLET_ID, &address)
+            .is_ok());
 
         cleanup(&db_path);
     }
@@ -3857,7 +3938,9 @@ mod tests {
         assert_eq!(all_metadata.len(), 1);
 
         // Delete all metadata
-        assert!(db.delete_pre_activity_metadata(&address).is_ok());
+        assert!(db
+            .delete_pre_activity_metadata(DEFAULT_WALLET_ID, &address)
+            .is_ok());
 
         // Verify metadata is deleted
         let all_metadata_after = db.get_all_pre_activity_metadata().unwrap();
@@ -4320,6 +4403,114 @@ mod tests {
     }
 
     #[test]
+    fn test_pre_activity_metadata_transfer_is_wallet_scoped() {
+        let (mut db, db_path) = setup();
+        let hardware_wallet_id = "hardware-wallet-1";
+        let address = "bc1qsharedaddress".to_string();
+
+        let mut metadata = create_test_pre_activity_metadata(
+            "bitkit_pending".to_string(),
+            ActivityType::Onchain,
+            vec!["bitkit_tag".to_string()],
+        );
+        metadata.address = Some(address.clone());
+        metadata.is_receive = true;
+        assert!(db.add_pre_activity_metadata(&metadata).is_ok());
+
+        let mut hardware_activity = create_test_onchain_activity();
+        hardware_activity.wallet_id = hardware_wallet_id.to_string();
+        hardware_activity.id = "hardware_shared_address_activity".to_string();
+        hardware_activity.tx_id = "hardware_shared_address_txid".to_string();
+        hardware_activity.address = address.clone();
+        hardware_activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&hardware_activity).unwrap();
+
+        let hardware_tags = db
+            .get_tags(hardware_wallet_id, &hardware_activity.id)
+            .unwrap();
+        assert!(hardware_tags.is_empty());
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &address, true)
+            .unwrap()
+            .is_some());
+
+        let mut bitkit_activity = create_test_onchain_activity();
+        bitkit_activity.id = "bitkit_shared_address_activity".to_string();
+        bitkit_activity.tx_id = "bitkit_shared_address_txid".to_string();
+        bitkit_activity.address = address.clone();
+        bitkit_activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&bitkit_activity).unwrap();
+
+        let bitkit_tags = db.get_tags(DEFAULT_WALLET_ID, &bitkit_activity.id).unwrap();
+        assert_eq!(bitkit_tags, vec!["bitkit_tag".to_string()]);
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &address, true)
+            .unwrap()
+            .is_none());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_pre_activity_metadata_allows_same_payment_id_across_wallets() {
+        let (mut db, db_path) = setup();
+        let hardware_wallet_id = "hardware-wallet-1";
+        let payment_id = "shared_pending_payment".to_string();
+
+        let default_metadata = create_test_pre_activity_metadata(
+            payment_id.clone(),
+            ActivityType::Lightning,
+            vec!["bitkit_tag".to_string()],
+        );
+        let mut hardware_metadata = create_test_pre_activity_metadata(
+            payment_id.clone(),
+            ActivityType::Lightning,
+            vec!["hardware_tag".to_string()],
+        );
+        hardware_metadata.wallet_id = hardware_wallet_id.to_string();
+
+        assert!(db.add_pre_activity_metadata(&default_metadata).is_ok());
+        assert!(db.add_pre_activity_metadata(&hardware_metadata).is_ok());
+
+        assert!(db
+            .add_pre_activity_metadata_tags(
+                hardware_wallet_id,
+                &payment_id,
+                &["hardware_extra".to_string()]
+            )
+            .is_ok());
+
+        let default_result = db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &payment_id, false)
+            .unwrap()
+            .unwrap();
+        let hardware_result = db
+            .get_pre_activity_metadata(hardware_wallet_id, &payment_id, false)
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(default_result.tags, vec!["bitkit_tag".to_string()]);
+        assert_eq!(
+            hardware_result.tags,
+            vec!["hardware_tag".to_string(), "hardware_extra".to_string()]
+        );
+
+        assert!(db
+            .delete_pre_activity_metadata(hardware_wallet_id, &payment_id)
+            .is_ok());
+        assert!(db
+            .get_pre_activity_metadata(hardware_wallet_id, &payment_id, false)
+            .unwrap()
+            .is_none());
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &payment_id, false)
+            .unwrap()
+            .is_some());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_pre_activity_metadata_onchain_and_lightning_separate() {
         let (mut db, db_path) = setup();
         let address = "bc1qtest123".to_string();
@@ -4438,7 +4629,9 @@ mod tests {
         let tags = vec!["tag1".to_string(), "tag2".to_string()];
 
         // Get non-existent metadata (should return None)
-        let result = db.get_pre_activity_metadata(&address, false).unwrap();
+        let result = db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &address, false)
+            .unwrap();
         assert!(result.is_none());
 
         // Add pre-activity metadata
@@ -4451,7 +4644,9 @@ mod tests {
             .is_ok());
 
         // Get existing metadata
-        let metadata = db.get_pre_activity_metadata(&address, false).unwrap();
+        let metadata = db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &address, false)
+            .unwrap();
         assert!(metadata.is_some());
         let metadata = metadata.unwrap();
         assert_eq!(metadata.payment_id, address);
@@ -4480,11 +4675,15 @@ mod tests {
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
         // Test searching by payment_id
-        let result_by_payment_id = db.get_pre_activity_metadata(&payment_id, false).unwrap();
+        let result_by_payment_id = db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &payment_id, false)
+            .unwrap();
         assert!(result_by_payment_id.is_some());
 
         // Test searching by address
-        let result_by_address = db.get_pre_activity_metadata(&address, true).unwrap();
+        let result_by_address = db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &address, true)
+            .unwrap();
         assert!(result_by_address.is_some());
         let metadata_by_address = result_by_address.unwrap();
         assert_eq!(metadata_by_address.payment_id, payment_id);
@@ -4493,7 +4692,9 @@ mod tests {
         assert!(metadata_by_address.tags.contains(&"tag2".to_string()));
 
         // Test that searching by address with wrong search type returns None
-        let result_wrong_search = db.get_pre_activity_metadata(&address, false).unwrap();
+        let result_wrong_search = db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &address, false)
+            .unwrap();
         assert!(result_wrong_search.is_none());
 
         cleanup(&db_path);
@@ -4576,6 +4777,7 @@ mod tests {
         // Create pre-activity metadata for backup/restore
         let pre_activity_metadata = vec![
             PreActivityMetadata {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
                 payment_id: "bc1qtest123".to_string(),
                 tags: vec!["tag1".to_string(), "tag2".to_string()],
                 payment_hash: None,
@@ -4588,6 +4790,7 @@ mod tests {
                 created_at: 0,
             },
             PreActivityMetadata {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
                 payment_id: "bc1qtest456".to_string(),
                 tags: vec!["tag3".to_string()],
                 payment_hash: None,
@@ -4600,6 +4803,7 @@ mod tests {
                 created_at: 0,
             },
             PreActivityMetadata {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
                 payment_id: "lightning:invoice123".to_string(),
                 tags: vec!["tag4".to_string(), "tag5".to_string()],
                 payment_hash: None,
@@ -4641,6 +4845,7 @@ mod tests {
         let (mut db, db_path) = setup();
 
         let pre_activity_metadata = vec![PreActivityMetadata {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             payment_id: "bc1qtest123".to_string(),
             tags: vec!["tag1".to_string(), "tag2".to_string()],
             payment_hash: None,
@@ -4686,6 +4891,7 @@ mod tests {
         assert!(db.add_pre_activity_metadata(&initial_metadata).is_ok());
 
         let pre_activity_metadata = vec![PreActivityMetadata {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             payment_id: "bc1qtest123".to_string(),
             tags: vec!["tag1".to_string(), "tag2".to_string(), "tag3".to_string()],
             payment_hash: None,
@@ -4732,6 +4938,7 @@ mod tests {
         let (mut db, db_path) = setup();
 
         let pre_activity_metadata = vec![PreActivityMetadata {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             payment_id: "".to_string(),
             tags: vec!["tag1".to_string()],
             payment_hash: None,
@@ -4776,10 +4983,10 @@ mod tests {
 
         // Simulate restore: Delete and restore
         assert!(db
-            .delete_pre_activity_metadata(&"bc1qtest123".to_string())
+            .delete_pre_activity_metadata(DEFAULT_WALLET_ID, &"bc1qtest123".to_string())
             .is_ok());
         assert!(db
-            .delete_pre_activity_metadata(&"lightning:invoice123".to_string())
+            .delete_pre_activity_metadata(DEFAULT_WALLET_ID, &"lightning:invoice123".to_string())
             .is_ok());
 
         // Verify cleared
@@ -4814,6 +5021,7 @@ mod tests {
         // Same identifier string (second one replaces first)
         let pre_activity_metadata = vec![
             PreActivityMetadata {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
                 payment_id: "same_id".to_string(),
                 tags: vec!["tag1".to_string()],
                 payment_hash: None,
@@ -4826,6 +5034,7 @@ mod tests {
                 created_at: 0,
             },
             PreActivityMetadata {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
                 payment_id: "same_id".to_string(),
                 tags: vec!["tag2".to_string()],
                 payment_hash: None,
@@ -4926,6 +5135,7 @@ mod tests {
 
         // Upsert with new tags for address2 (replaces existing tags)
         let updated = vec![PreActivityMetadata {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             payment_id: "address2".to_string(),
             tags: vec!["tag2_updated".to_string(), "tag2_new".to_string()],
             payment_hash: None,

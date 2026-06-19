@@ -437,11 +437,11 @@ internal open class UniffiForeignFutureStruct(
     @JvmField public var `free`: UniffiForeignFutureFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `handle` = 0.toLong(),
-        
+
         `free` = null,
-        
+
     )
 
     internal class UniffiByValue(
@@ -468,11 +468,11 @@ internal open class UniffiForeignFutureStructU8Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toByte(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -502,11 +502,11 @@ internal open class UniffiForeignFutureStructI8Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toByte(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -536,11 +536,11 @@ internal open class UniffiForeignFutureStructU16Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toShort(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -570,11 +570,11 @@ internal open class UniffiForeignFutureStructI16Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toShort(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -604,11 +604,11 @@ internal open class UniffiForeignFutureStructU32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -638,11 +638,11 @@ internal open class UniffiForeignFutureStructI32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -672,11 +672,11 @@ internal open class UniffiForeignFutureStructU64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toLong(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -706,11 +706,11 @@ internal open class UniffiForeignFutureStructI64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.toLong(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -740,11 +740,11 @@ internal open class UniffiForeignFutureStructF32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.0f,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -774,11 +774,11 @@ internal open class UniffiForeignFutureStructF64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = 0.0,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -808,11 +808,11 @@ internal open class UniffiForeignFutureStructPointerStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = NullPointer,
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -842,11 +842,11 @@ internal open class UniffiForeignFutureStructRustBufferStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `returnValue` = RustBufferHelper.allocValue(),
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -875,9 +875,9 @@ internal open class UniffiForeignFutureStructVoidStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-        
+
     )
 
     internal class UniffiByValue(
@@ -946,11 +946,11 @@ internal open class UniffiVTableCallbackInterfaceEventListenerStruct(
     @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `onEvent` = null,
-        
+
         `uniffiFree` = null,
-        
+
     )
 
     internal class UniffiByValue(
@@ -987,31 +987,31 @@ internal open class UniffiVTableCallbackInterfaceTrezorTransportCallbackStruct(
     @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `enumerateDevices` = null,
-        
+
         `openDevice` = null,
-        
+
         `closeDevice` = null,
-        
+
         `readChunk` = null,
-        
+
         `writeChunk` = null,
-        
+
         `getChunkSize` = null,
-        
+
         `callMessage` = null,
-        
+
         `getPairingCode` = null,
-        
+
         `saveThpCredential` = null,
-        
+
         `loadThpCredential` = null,
-        
+
         `logDebug` = null,
-        
+
         `uniffiFree` = null,
-        
+
     )
 
     internal class UniffiByValue(
@@ -1069,13 +1069,13 @@ internal open class UniffiVTableCallbackInterfaceTrezorUiCallbackStruct(
     @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-        
+
         `onPinRequest` = null,
-        
+
         `onPassphraseRequest` = null,
-        
+
         `uniffiFree` = null,
-        
+
     )
 
     internal class UniffiByValue(
@@ -1529,7 +1529,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata() != 17211.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags() != 28081.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags() != 5813.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_add_tags() != 61276.toShort()) {
@@ -1583,7 +1583,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 13256.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 46621.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 63740.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_delete_transaction_details() != 43443.toShort()) {
@@ -1691,7 +1691,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_get_payment() != 29170.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 53126.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_tags() != 8596.toShort()) {
@@ -1817,13 +1817,13 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 1991.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 37046.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_remove_tags() != 53863.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 49760.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_resolve_pubky_url() != 43253.toShort()) {
@@ -2642,6 +2642,7 @@ internal object UniffiLib : Library {
     ): Unit
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags(
+        `walletId`: RustBufferByValue,
         `paymentId`: RustBufferByValue,
         `tags`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
@@ -2741,6 +2742,7 @@ internal object UniffiLib : Library {
     ): Byte
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_delete_pre_activity_metadata(
+        `walletId`: RustBufferByValue,
         `paymentId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
@@ -2942,6 +2944,7 @@ internal object UniffiLib : Library {
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_pre_activity_metadata(
+        `walletId`: RustBufferByValue,
         `searchKey`: RustBufferByValue,
         `searchByAddress`: Byte,
         uniffiCallStatus: UniffiRustCallStatus,
@@ -3180,6 +3183,7 @@ internal object UniffiLib : Library {
     ): Byte
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags(
+        `walletId`: RustBufferByValue,
         `paymentId`: RustBufferByValue,
         `tags`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
@@ -3193,6 +3197,7 @@ internal object UniffiLib : Library {
     ): Unit
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags(
+        `walletId`: RustBufferByValue,
         `paymentId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
@@ -4066,7 +4071,7 @@ public open class EventListenerImpl: Disposable, EventListener {
         }!!
     }
 
-    
+
     /**
      * Called when a watcher event occurs.
      *
@@ -4087,13 +4092,13 @@ public open class EventListenerImpl: Disposable, EventListener {
     }
 
 
-    
-    
 
-    
-    
+
+
+
+
     public companion object
-    
+
 }
 
 
@@ -4282,7 +4287,7 @@ public open class TrezorTransportCallbackImpl: Disposable, TrezorTransportCallba
         }!!
     }
 
-    
+
     /**
      * Enumerate all connected Trezor devices
      */
@@ -4497,13 +4502,13 @@ public open class TrezorTransportCallbackImpl: Disposable, TrezorTransportCallba
     }
 
 
-    
-    
 
-    
-    
+
+
+
+
     public companion object
-    
+
 }
 
 
@@ -4880,7 +4885,7 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
         }!!
     }
 
-    
+
     /**
      * Called when the device requests a PIN.
      *
@@ -4921,13 +4926,13 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
     }
 
 
-    
-    
 
-    
-    
+
+
+
+
     public companion object
-    
+
 }
 
 
@@ -7065,6 +7070,7 @@ public object FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer<PreAct
     override fun read(buf: ByteBuffer): PreActivityMetadata {
         return PreActivityMetadata(
             FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
             FfiConverterSequenceString.read(buf),
             FfiConverterOptionalString.read(buf),
             FfiConverterOptionalString.read(buf),
@@ -7078,6 +7084,7 @@ public object FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer<PreAct
     }
 
     override fun allocationSize(value: PreActivityMetadata): ULong = (
+            FfiConverterString.allocationSize(value.`walletId`) +
             FfiConverterString.allocationSize(value.`paymentId`) +
             FfiConverterSequenceString.allocationSize(value.`tags`) +
             FfiConverterOptionalString.allocationSize(value.`paymentHash`) +
@@ -7091,6 +7098,7 @@ public object FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer<PreAct
     )
 
     override fun write(value: PreActivityMetadata, buf: ByteBuffer) {
+        FfiConverterString.write(value.`walletId`, buf)
         FfiConverterString.write(value.`paymentId`, buf)
         FfiConverterSequenceString.write(value.`tags`, buf)
         FfiConverterOptionalString.write(value.`paymentHash`, buf)
@@ -12909,9 +12917,10 @@ public fun `addPreActivityMetadata`(`preActivityMetadata`: PreActivityMetadata) 
 }
 
 @Throws(ActivityException::class)
-public fun `addPreActivityMetadataTags`(`paymentId`: kotlin.String, `tags`: List<kotlin.String>) {
+public fun `addPreActivityMetadataTags`(`walletId`: kotlin.String, `paymentId`: kotlin.String, `tags`: List<kotlin.String>) {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`paymentId`),
             FfiConverterSequenceString.lower(`tags`),
             uniffiRustCallStatus,
@@ -12944,7 +12953,7 @@ public suspend fun `approvePubkyAuth`(`authUrl`: kotlin.String, `secretKeyHex`: 
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -12961,7 +12970,7 @@ public suspend fun `blocktankRemoveAllCjitEntries`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -12978,7 +12987,7 @@ public suspend fun `blocktankRemoveAllOrders`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -12995,7 +13004,7 @@ public suspend fun `blocktankWipeAll`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -13042,7 +13051,7 @@ public suspend fun `cancelPubkyAuth`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -13190,9 +13199,10 @@ public fun `deleteActivityById`(`walletId`: kotlin.String, `activityId`: kotlin.
 }
 
 @Throws(ActivityException::class)
-public fun `deletePreActivityMetadata`(`paymentId`: kotlin.String) {
+public fun `deletePreActivityMetadata`(`walletId`: kotlin.String, `paymentId`: kotlin.String) {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_delete_pre_activity_metadata(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`paymentId`),
             uniffiRustCallStatus,
         )
@@ -13671,9 +13681,10 @@ public suspend fun `getPayment`(`paymentId`: kotlin.String): IBtBolt11Invoice {
 }
 
 @Throws(ActivityException::class)
-public fun `getPreActivityMetadata`(`searchKey`: kotlin.String, `searchByAddress`: kotlin.Boolean): PreActivityMetadata? {
+public fun `getPreActivityMetadata`(`walletId`: kotlin.String, `searchKey`: kotlin.String, `searchByAddress`: kotlin.Boolean): PreActivityMetadata? {
     return FfiConverterOptionalTypePreActivityMetadata.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`searchKey`),
             FfiConverterBoolean.lower(`searchByAddress`),
             uniffiRustCallStatus,
@@ -13991,7 +14002,7 @@ public suspend fun `onchainStartWatcher`(`params`: WatcherParams, `listener`: Ev
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         AccountInfoExceptionErrorHandler,
     )
@@ -14118,7 +14129,7 @@ public suspend fun `pubkyPutWithSecretKey`(`secretKeyHex`: kotlin.String, `path`
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -14137,7 +14148,7 @@ public suspend fun `pubkySessionDelete`(`sessionSecret`: kotlin.String, `path`: 
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -14175,7 +14186,7 @@ public suspend fun `pubkySessionPut`(`sessionSecret`: kotlin.String, `path`: kot
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -14345,7 +14356,7 @@ public suspend fun `regtestMine`(`count`: kotlin.UInt?) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -14380,9 +14391,10 @@ public fun `removeClosedChannelById`(`channelId`: kotlin.String): kotlin.Boolean
 }
 
 @Throws(ActivityException::class)
-public fun `removePreActivityMetadataTags`(`paymentId`: kotlin.String, `tags`: List<kotlin.String>) {
+public fun `removePreActivityMetadataTags`(`walletId`: kotlin.String, `paymentId`: kotlin.String, `tags`: List<kotlin.String>) {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`paymentId`),
             FfiConverterSequenceString.lower(`tags`),
             uniffiRustCallStatus,
@@ -14403,9 +14415,10 @@ public fun `removeTags`(`walletId`: kotlin.String, `activityId`: kotlin.String, 
 }
 
 @Throws(ActivityException::class)
-public fun `resetPreActivityMetadataTags`(`paymentId`: kotlin.String) {
+public fun `resetPreActivityMetadataTags`(`walletId`: kotlin.String, `paymentId`: kotlin.String) {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`paymentId`),
             uniffiRustCallStatus,
         )
@@ -14510,7 +14523,7 @@ public suspend fun `trezorClearCredentials`(`deviceId`: kotlin.String) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -14559,7 +14572,7 @@ public suspend fun `trezorDisconnect`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -14686,7 +14699,7 @@ public suspend fun `trezorInitialize`(`credentialPath`: kotlin.String?) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -14925,7 +14938,7 @@ public suspend fun `updateBlocktankUrl`(`newUrl`: kotlin.String) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -14963,7 +14976,7 @@ public suspend fun `upsertCjitEntries`(`entries`: List<IcJitEntry>) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -15001,7 +15014,7 @@ public suspend fun `upsertInfo`(`info`: IBtInfo) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -15039,7 +15052,7 @@ public suspend fun `upsertOrders`(`orders`: List<IBtOrder>) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-        
+
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )

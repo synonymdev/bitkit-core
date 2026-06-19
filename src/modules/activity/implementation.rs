@@ -84,7 +84,8 @@ const CREATE_TAGS_TABLE: &str = "
 
 const CREATE_PRE_ACTIVITY_METADATA_TABLE: &str = "
     CREATE TABLE IF NOT EXISTS pre_activity_metadata (
-        payment_id TEXT PRIMARY KEY,
+        wallet_id TEXT NOT NULL DEFAULT 'bitkit' CHECK (length(wallet_id) > 0),
+        payment_id TEXT NOT NULL,
         tags TEXT NOT NULL,
         payment_hash TEXT,
         tx_id TEXT,
@@ -93,7 +94,8 @@ const CREATE_PRE_ACTIVITY_METADATA_TABLE: &str = "
         fee_rate INTEGER NOT NULL DEFAULT 0,
         is_transfer BOOLEAN NOT NULL DEFAULT FALSE,
         channel_id TEXT,
-        created_at INTEGER NOT NULL DEFAULT 0
+        created_at INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (wallet_id, payment_id)
     )";
 
 const CREATE_CLOSED_CHANNELS_TABLE: &str = "
@@ -155,9 +157,9 @@ const INDEX_STATEMENTS: &[&str] = &[
     "CREATE INDEX IF NOT EXISTS idx_activity_tags_tag_activity ON activity_tags(tag, wallet_id, activity_id)",
 
     // Pre-activity metadata indexes
-    "CREATE INDEX IF NOT EXISTS idx_pre_activity_metadata_id ON pre_activity_metadata(payment_id)",
-    "CREATE INDEX IF NOT EXISTS idx_pre_activity_metadata_address ON pre_activity_metadata(address)",
-    "CREATE INDEX IF NOT EXISTS idx_pre_activity_metadata_tx_id ON pre_activity_metadata(tx_id)",
+    "CREATE INDEX IF NOT EXISTS idx_pre_activity_metadata_id ON pre_activity_metadata(wallet_id, payment_id)",
+    "CREATE INDEX IF NOT EXISTS idx_pre_activity_metadata_address ON pre_activity_metadata(wallet_id, address)",
+    "CREATE INDEX IF NOT EXISTS idx_pre_activity_metadata_tx_id ON pre_activity_metadata(wallet_id, tx_id)",
 
     // Closed channels indexes
     "CREATE INDEX IF NOT EXISTS idx_closed_channels_funding_txo ON closed_channels(funding_txo_txid)",
@@ -312,6 +314,7 @@ impl ActivityDB {
         self.run_activity_table_column_migrations()?;
         self.migrate_activity_tables_to_wallet_primary_keys()?;
         self.migrate_transaction_details_table()?;
+        self.migrate_pre_activity_metadata_table()?;
 
         // Create indexes
         for statement in INDEX_STATEMENTS {
@@ -599,6 +602,70 @@ impl ActivityDB {
         self.conn.execute_batch(&migration_sql).map_err(|e| {
             ActivityError::InitializationError {
                 error_details: format!("Failed to migrate transaction_details table: {}", e),
+            }
+        })?;
+
+        Ok(())
+    }
+
+    fn migrate_pre_activity_metadata_table(&self) -> Result<(), ActivityError> {
+        // Rebuild pre_activity_metadata when needed because SQLite cannot change the primary key
+        // in-place from payment_id to (wallet_id, payment_id).
+        let columns = self.table_columns("pre_activity_metadata")?;
+
+        let has_wallet_id = columns.iter().any(|column| column.name == "wallet_id");
+        let wallet_id_is_pk = columns
+            .iter()
+            .any(|column| column.name == "wallet_id" && column.pk_index > 0);
+        let payment_id_is_pk = columns
+            .iter()
+            .any(|column| column.name == "payment_id" && column.pk_index > 0);
+
+        if has_wallet_id && wallet_id_is_pk && payment_id_is_pk {
+            return Ok(());
+        }
+
+        let wallet_id_select = if has_wallet_id {
+            "COALESCE(NULLIF(wallet_id, ''), 'bitkit')"
+        } else {
+            "'bitkit'"
+        };
+
+        let migration_sql = format!(
+            "
+            BEGIN IMMEDIATE;
+            ALTER TABLE pre_activity_metadata RENAME TO pre_activity_metadata_legacy;
+            CREATE TABLE pre_activity_metadata (
+                wallet_id TEXT NOT NULL DEFAULT 'bitkit' CHECK (length(wallet_id) > 0),
+                payment_id TEXT NOT NULL,
+                tags TEXT NOT NULL,
+                payment_hash TEXT,
+                tx_id TEXT,
+                address TEXT,
+                is_receive BOOLEAN NOT NULL DEFAULT FALSE,
+                fee_rate INTEGER NOT NULL DEFAULT 0,
+                is_transfer BOOLEAN NOT NULL DEFAULT FALSE,
+                channel_id TEXT,
+                created_at INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (wallet_id, payment_id)
+            );
+            INSERT OR IGNORE INTO pre_activity_metadata (
+                wallet_id, payment_id, tags, payment_hash, tx_id, address,
+                is_receive, fee_rate, is_transfer, channel_id, created_at
+            )
+            SELECT
+                {}, payment_id, tags, payment_hash, tx_id, address,
+                is_receive, fee_rate, is_transfer, channel_id, created_at
+            FROM pre_activity_metadata_legacy;
+            DROP TABLE pre_activity_metadata_legacy;
+            COMMIT;
+            ",
+            wallet_id_select
+        );
+
+        self.conn.execute_batch(&migration_sql).map_err(|e| {
+            ActivityError::InitializationError {
+                error_details: format!("Failed to migrate pre_activity_metadata table: {}", e),
             }
         })?;
 
@@ -2149,6 +2216,7 @@ impl ActivityDB {
                 error_details: "Payment ID cannot be empty".to_string(),
             });
         }
+        let wallet_id = Self::normalize_wallet_id(&pre_activity_metadata.wallet_id)?;
 
         let tags_json = serde_json::to_string(&pre_activity_metadata.tags).map_err(|e| {
             ActivityError::DataError {
@@ -2166,8 +2234,8 @@ impl ActivityDB {
         if let Some(ref address) = pre_activity_metadata.address {
             if !address.is_empty() {
                 tx.execute(
-                    "DELETE FROM pre_activity_metadata WHERE address = ?1",
-                    [address],
+                    "DELETE FROM pre_activity_metadata WHERE wallet_id = ?1 AND address = ?2",
+                    rusqlite::params![&wallet_id, address],
                 )
                 .map_err(|e| ActivityError::DataError {
                     error_details: format!(
@@ -2179,8 +2247,9 @@ impl ActivityDB {
         }
 
         tx.execute(
-            "INSERT OR REPLACE INTO pre_activity_metadata (payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            "INSERT OR REPLACE INTO pre_activity_metadata (wallet_id, payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
             rusqlite::params![
+                &wallet_id,
                 &pre_activity_metadata.payment_id,
                 &tags_json,
                 &pre_activity_metadata.payment_hash,
@@ -2207,15 +2276,17 @@ impl ActivityDB {
     /// Returns an error if the metadata doesn't exist
     pub fn add_pre_activity_metadata_tags(
         &mut self,
+        wallet_id: &str,
         payment_id: &str,
         tags_to_add: &[String],
     ) -> Result<(), ActivityError> {
+        let wallet_id = Self::normalize_wallet_id(wallet_id)?;
         // Get current metadata
         let current_tags_json: Option<String> = self
             .conn
             .query_row(
-                "SELECT tags FROM pre_activity_metadata WHERE payment_id = ?1",
-                [payment_id],
+                "SELECT tags FROM pre_activity_metadata WHERE wallet_id = ?1 AND payment_id = ?2",
+                rusqlite::params![&wallet_id, payment_id],
                 |row| row.get(0),
             )
             .optional()
@@ -2251,8 +2322,8 @@ impl ActivityDB {
 
         self.conn
             .execute(
-                "UPDATE pre_activity_metadata SET tags = ?1 WHERE payment_id = ?2",
-                [&updated_tags_json, payment_id],
+                "UPDATE pre_activity_metadata SET tags = ?1 WHERE wallet_id = ?2 AND payment_id = ?3",
+                rusqlite::params![&updated_tags_json, &wallet_id, payment_id],
             )
             .map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to update tags: {}", e),
@@ -2264,15 +2335,17 @@ impl ActivityDB {
     /// Remove specific tags from pre-activity metadata for an onchain address or lightning invoice
     pub fn remove_pre_activity_metadata_tags(
         &mut self,
+        wallet_id: &str,
         payment_id: &str,
         tags_to_remove: &[String],
     ) -> Result<(), ActivityError> {
+        let wallet_id = Self::normalize_wallet_id(wallet_id)?;
         // Get current metadata
         let current_tags_json: Option<String> = self
             .conn
             .query_row(
-                "SELECT tags FROM pre_activity_metadata WHERE payment_id = ?1",
-                [payment_id],
+                "SELECT tags FROM pre_activity_metadata WHERE wallet_id = ?1 AND payment_id = ?2",
+                rusqlite::params![&wallet_id, payment_id],
                 |row| row.get(0),
             )
             .optional()
@@ -2297,8 +2370,8 @@ impl ActivityDB {
 
             self.conn
                 .execute(
-                    "UPDATE pre_activity_metadata SET tags = ?1 WHERE payment_id = ?2",
-                    [&updated_tags_json, payment_id],
+                    "UPDATE pre_activity_metadata SET tags = ?1 WHERE wallet_id = ?2 AND payment_id = ?3",
+                    rusqlite::params![&updated_tags_json, &wallet_id, payment_id],
                 )
                 .map_err(|e| ActivityError::DataError {
                     error_details: format!("Failed to update tags: {}", e),
@@ -2311,14 +2384,16 @@ impl ActivityDB {
     /// Reset (clear all tags) from pre-activity metadata for an onchain address or lightning invoice
     pub fn reset_pre_activity_metadata_tags(
         &mut self,
+        wallet_id: &str,
         payment_id: &str,
     ) -> Result<(), ActivityError> {
+        let wallet_id = Self::normalize_wallet_id(wallet_id)?;
         // Check if row exists first
         let exists: bool = self
             .conn
             .query_row(
-                "SELECT EXISTS(SELECT 1 FROM pre_activity_metadata WHERE payment_id = ?1)",
-                [payment_id],
+                "SELECT EXISTS(SELECT 1 FROM pre_activity_metadata WHERE wallet_id = ?1 AND payment_id = ?2)",
+                rusqlite::params![&wallet_id, payment_id],
                 |row| row.get(0),
             )
             .map_err(|e| ActivityError::RetrievalError {
@@ -2337,8 +2412,8 @@ impl ActivityDB {
 
         self.conn
             .execute(
-                "UPDATE pre_activity_metadata SET tags = ?1 WHERE payment_id = ?2",
-                [&empty_tags_json, payment_id],
+                "UPDATE pre_activity_metadata SET tags = ?1 WHERE wallet_id = ?2 AND payment_id = ?3",
+                rusqlite::params![&empty_tags_json, &wallet_id, payment_id],
             )
             .map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to reset pre-activity metadata tags: {}", e),
@@ -2348,11 +2423,16 @@ impl ActivityDB {
     }
 
     /// Delete all pre-activity metadata for an onchain address or lightning invoice
-    pub fn delete_pre_activity_metadata(&mut self, payment_id: &str) -> Result<(), ActivityError> {
+    pub fn delete_pre_activity_metadata(
+        &mut self,
+        wallet_id: &str,
+        payment_id: &str,
+    ) -> Result<(), ActivityError> {
+        let wallet_id = Self::normalize_wallet_id(wallet_id)?;
         self.conn
             .execute(
-                "DELETE FROM pre_activity_metadata WHERE payment_id = ?1",
-                [payment_id],
+                "DELETE FROM pre_activity_metadata WHERE wallet_id = ?1 AND payment_id = ?2",
+                rusqlite::params![&wallet_id, payment_id],
             )
             .map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to delete pre-activity metadata: {}", e),
@@ -2379,12 +2459,13 @@ impl ActivityDB {
 
         {
             let mut stmt = tx.prepare(
-                "INSERT OR REPLACE INTO pre_activity_metadata (payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
+                "INSERT OR REPLACE INTO pre_activity_metadata (wallet_id, payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)"
             ).map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to prepare statement: {}", e),
             })?;
 
             for metadata in pre_activity_metadata {
+                let wallet_id = Self::normalize_wallet_id(&metadata.wallet_id)?;
                 let tags_json = serde_json::to_string(&metadata.tags).map_err(|e| {
                     ActivityError::DataError {
                         error_details: format!("Failed to serialize tags: {}", e),
@@ -2392,6 +2473,7 @@ impl ActivityDB {
                 })?;
 
                 stmt.execute(rusqlite::params![
+                    &wallet_id,
                     &metadata.payment_id,
                     &tags_json,
                     &metadata.payment_hash,
@@ -2419,21 +2501,23 @@ impl ActivityDB {
     /// Get pre-activity metadata for a specific payment_id or address
     pub fn get_pre_activity_metadata(
         &self,
+        wallet_id: &str,
         search_key: &str,
         search_by_address: bool,
     ) -> Result<Option<PreActivityMetadata>, ActivityError> {
+        let wallet_id = Self::normalize_wallet_id(wallet_id)?;
         let sql = if search_by_address {
             "
             SELECT
-                payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at
+                wallet_id, payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at
             FROM pre_activity_metadata
-            WHERE address = ?1"
+            WHERE wallet_id = ?1 AND address = ?2"
         } else {
             "
             SELECT
-                payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at
+                wallet_id, payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at
             FROM pre_activity_metadata
-            WHERE payment_id = ?1"
+            WHERE wallet_id = ?1 AND payment_id = ?2"
         };
 
         let mut stmt = self
@@ -2443,22 +2527,23 @@ impl ActivityDB {
                 error_details: format!("Failed to prepare statement: {}", e),
             })?;
 
-        match stmt.query_row([search_key], |row| {
-            let payment_id_val: String = row.get(0)?;
-            let tags_json: String = row.get(1)?;
-            let payment_hash: Option<String> = row.get(2)?;
-            let tx_id: Option<String> = row.get(3)?;
-            let address: Option<String> = row.get(4)?;
-            let is_receive: bool = row.get(5)?;
-            let fee_rate: i64 = row.get(6)?;
-            let is_transfer: bool = row.get(7)?;
-            let channel_id: Option<String> = row.get(8)?;
-            let created_at: i64 = row.get(9)?;
+        match stmt.query_row(rusqlite::params![&wallet_id, search_key], |row| {
+            let wallet_id: String = row.get(0)?;
+            let payment_id_val: String = row.get(1)?;
+            let tags_json: String = row.get(2)?;
+            let payment_hash: Option<String> = row.get(3)?;
+            let tx_id: Option<String> = row.get(4)?;
+            let address: Option<String> = row.get(5)?;
+            let is_receive: bool = row.get(6)?;
+            let fee_rate: i64 = row.get(7)?;
+            let is_transfer: bool = row.get(8)?;
+            let channel_id: Option<String> = row.get(9)?;
+            let created_at: i64 = row.get(10)?;
 
             let tags: Vec<String> =
                 serde_json::from_str(&tags_json).map_err(|_e: serde_json::Error| {
                     rusqlite::Error::InvalidColumnType(
-                        1,
+                        2,
                         "tags".to_string(),
                         rusqlite::types::Type::Text,
                     )
@@ -2466,6 +2551,7 @@ impl ActivityDB {
             let created_at_u64 = created_at as u64;
 
             Ok(PreActivityMetadata {
+                wallet_id,
                 payment_id: payment_id_val,
                 tags,
                 payment_hash,
@@ -2490,12 +2576,13 @@ impl ActivityDB {
     #[allow(clippy::type_complexity)]
     pub fn get_all_pre_activity_metadata(&self) -> Result<Vec<PreActivityMetadata>, ActivityError> {
         let mut stmt = self.conn.prepare(
-            "SELECT payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at FROM pre_activity_metadata ORDER BY payment_id"
+            "SELECT wallet_id, payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at FROM pre_activity_metadata ORDER BY wallet_id, payment_id"
         ).map_err(|e| ActivityError::RetrievalError {
             error_details: format!("Failed to prepare statement: {}", e),
         })?;
 
         let rows: Vec<(
+            String,
             String,
             String,
             Option<String>,
@@ -2519,6 +2606,7 @@ impl ActivityDB {
                     row.get(7)?,
                     row.get(8)?,
                     row.get(9)?,
+                    row.get(10)?,
                 ))
             })
             .map_err(|e| ActivityError::RetrievalError {
@@ -2532,6 +2620,7 @@ impl ActivityDB {
         let mut result: Vec<PreActivityMetadata> = Vec::new();
 
         for (
+            wallet_id,
             payment_id,
             tags_json,
             payment_hash,
@@ -2551,6 +2640,7 @@ impl ActivityDB {
             let created_at_u64 = created_at as u64;
 
             result.push(PreActivityMetadata {
+                wallet_id,
                 payment_id,
                 tags,
                 payment_hash,
@@ -2565,7 +2655,11 @@ impl ActivityDB {
         }
 
         // Sort for consistent output
-        result.sort_by(|a, b| a.payment_id.cmp(&b.payment_id));
+        result.sort_by(|a, b| {
+            a.wallet_id
+                .cmp(&b.wallet_id)
+                .then_with(|| a.payment_id.cmp(&b.payment_id))
+        });
 
         Ok(result)
     }
@@ -2578,10 +2672,11 @@ impl ActivityDB {
         search_by_address: bool,
     ) -> Result<Vec<String>, ActivityError> {
         let wallet_id = Self::normalize_wallet_id(wallet_id)?;
-        let metadata = match self.get_pre_activity_metadata(search_key, search_by_address)? {
-            Some(m) => m,
-            None => return Ok(Vec::new()),
-        };
+        let metadata =
+            match self.get_pre_activity_metadata(&wallet_id, search_key, search_by_address)? {
+                Some(m) => m,
+                None => return Ok(Vec::new()),
+            };
 
         let tags = metadata.tags;
 
@@ -2657,16 +2752,16 @@ impl ActivityDB {
 
         if search_by_address {
             tx.execute(
-                "DELETE FROM pre_activity_metadata WHERE address = ?1 AND is_receive = 1",
-                [search_key],
+                "DELETE FROM pre_activity_metadata WHERE wallet_id = ?1 AND address = ?2 AND is_receive = 1",
+                rusqlite::params![&wallet_id, search_key],
             )
             .map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to delete pre-activity metadata: {}", e),
             })?;
         } else {
             tx.execute(
-                "DELETE FROM pre_activity_metadata WHERE payment_id = ?1",
-                [search_key],
+                "DELETE FROM pre_activity_metadata WHERE wallet_id = ?1 AND payment_id = ?2",
+                rusqlite::params![&wallet_id, search_key],
             )
             .map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to delete pre-activity metadata: {}", e),

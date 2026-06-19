@@ -9,6 +9,8 @@ The Activity module is responsible for storing and managing transaction/activity
     - [`LightningActivity`](#lightningactivity-fields): Lightning Network transactions
 - Tags
   - Add or remove tags from activities and filter activities by tags.
+- Pre-activity metadata
+  - Store pending metadata before an activity exists, scoped by wallet.
 
 ## Available Methods
 
@@ -57,6 +59,19 @@ fn add_tags(wallet_id: String, activity_id: String, tags: Vec<String>) -> Result
 fn remove_tags(wallet_id: String, activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
 fn get_tags(wallet_id: String, activity_id: String) -> Result<Vec<String>, ActivityError>
 fn get_all_unique_tags() -> Result<Vec<String>, ActivityError>
+
+// Pre-activity metadata
+fn add_pre_activity_metadata(pre_activity_metadata: PreActivityMetadata) -> Result<(), ActivityError>
+fn add_pre_activity_metadata_tags(wallet_id: String, payment_id: String, tags: Vec<String>) -> Result<(), ActivityError>
+fn remove_pre_activity_metadata_tags(wallet_id: String, payment_id: String, tags: Vec<String>) -> Result<(), ActivityError>
+fn reset_pre_activity_metadata_tags(wallet_id: String, payment_id: String) -> Result<(), ActivityError>
+fn delete_pre_activity_metadata(wallet_id: String, payment_id: String) -> Result<(), ActivityError>
+fn get_pre_activity_metadata(
+  wallet_id: String,
+  search_key: String,
+  search_by_address: bool
+) -> Result<Option<PreActivityMetadata>, ActivityError>
+fn get_all_pre_activity_metadata() -> Result<Vec<PreActivityMetadata>, ActivityError>
 
 // Database wipe
 fn activity_wipe_all() -> Result<(), ActivityError>
@@ -445,6 +460,19 @@ except Exception as e:
 - `preimage`: Option<String> - Payment preimage (optional)
 - `created_at`: Option<u64> - Creation timestamp (optional)
 - `updated_at`: Option<u64> - Last update timestamp (optional)
+
+### PreActivityMetadata Fields
+- `wallet_id`: String - Wallet identifier
+- `payment_id`: String - Pending payment identifier
+- `tags`: Vec<String> - Tags to attach when the activity is created
+- `payment_hash`: Option<String> - Lightning payment hash (optional)
+- `tx_id`: Option<String> - On-chain transaction ID (optional)
+- `address`: Option<String> - Bitcoin address used for lookup (optional)
+- `is_receive`: bool - Whether this metadata is for a receive flow
+- `fee_rate`: u64 - Fee rate to apply when transferred
+- `is_transfer`: bool - Internal transfer flag to apply when transferred
+- `channel_id`: Option<String> - Associated channel ID (optional)
+- `created_at`: u64 - Creation timestamp
 
 ## Activity Types and Data Structures
 

@@ -717,6 +717,7 @@ pub fn add_pre_activity_metadata(
 
 #[uniffi::export]
 pub fn add_pre_activity_metadata_tags(
+    wallet_id: String,
     payment_id: String,
     tags: Vec<String>,
 ) -> Result<(), ActivityError> {
@@ -727,11 +728,12 @@ pub fn add_pre_activity_metadata_tags(
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.add_pre_activity_metadata_tags(&payment_id, &tags)
+    db.add_pre_activity_metadata_tags(&wallet_id, &payment_id, &tags)
 }
 
 #[uniffi::export]
 pub fn remove_pre_activity_metadata_tags(
+    wallet_id: String,
     payment_id: String,
     tags: Vec<String>,
 ) -> Result<(), ActivityError> {
@@ -742,11 +744,14 @@ pub fn remove_pre_activity_metadata_tags(
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.remove_pre_activity_metadata_tags(&payment_id, &tags)
+    db.remove_pre_activity_metadata_tags(&wallet_id, &payment_id, &tags)
 }
 
 #[uniffi::export]
-pub fn reset_pre_activity_metadata_tags(payment_id: String) -> Result<(), ActivityError> {
+pub fn reset_pre_activity_metadata_tags(
+    wallet_id: String,
+    payment_id: String,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -754,11 +759,14 @@ pub fn reset_pre_activity_metadata_tags(payment_id: String) -> Result<(), Activi
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.reset_pre_activity_metadata_tags(&payment_id)
+    db.reset_pre_activity_metadata_tags(&wallet_id, &payment_id)
 }
 
 #[uniffi::export]
-pub fn delete_pre_activity_metadata(payment_id: String) -> Result<(), ActivityError> {
+pub fn delete_pre_activity_metadata(
+    wallet_id: String,
+    payment_id: String,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -766,7 +774,7 @@ pub fn delete_pre_activity_metadata(payment_id: String) -> Result<(), ActivityEr
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.delete_pre_activity_metadata(&payment_id)
+    db.delete_pre_activity_metadata(&wallet_id, &payment_id)
 }
 
 #[uniffi::export]
@@ -785,6 +793,7 @@ pub fn upsert_pre_activity_metadata(
 
 #[uniffi::export]
 pub fn get_pre_activity_metadata(
+    wallet_id: String,
     search_key: String,
     search_by_address: bool,
 ) -> Result<Option<PreActivityMetadata>, ActivityError> {
@@ -795,7 +804,7 @@ pub fn get_pre_activity_metadata(
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.get_pre_activity_metadata(&search_key, search_by_address)
+    db.get_pre_activity_metadata(&wallet_id, &search_key, search_by_address)
 }
 
 #[uniffi::export]

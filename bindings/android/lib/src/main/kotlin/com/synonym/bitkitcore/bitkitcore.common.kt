@@ -1391,6 +1391,7 @@ public data class OnchainActivity (
 
 @kotlinx.serialization.Serializable
 public data class PreActivityMetadata (
+    val `walletId`: kotlin.String,
     val `paymentId`: kotlin.String,
     val `tags`: List<kotlin.String>,
     val `paymentHash`: kotlin.String?,
