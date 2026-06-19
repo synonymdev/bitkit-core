@@ -181,6 +181,38 @@
     ```rust
     fn upsert_activity(activity: Activity) -> Result<(), ActivityError>
     ```
+  - [add_pre_activity_metadata](src/modules/activity/README.md#usage-examples): Store pending metadata before an activity exists
+    ```rust
+    fn add_pre_activity_metadata(pre_activity_metadata: PreActivityMetadata) -> Result<(), ActivityError>
+    ```
+  - [get_pre_activity_metadata](src/modules/activity/README.md#usage-examples): Get pending metadata by wallet ID and payment ID or address
+    ```rust
+    fn get_pre_activity_metadata(
+        wallet_id: String,
+        search_key: String,
+        search_by_address: bool
+    ) -> Result<Option<PreActivityMetadata>, ActivityError>
+    ```
+  - [add_pre_activity_metadata_tags](src/modules/activity/README.md#usage-examples): Add tags to pending metadata
+    ```rust
+    fn add_pre_activity_metadata_tags(wallet_id: String, payment_id: String, tags: Vec<String>) -> Result<(), ActivityError>
+    ```
+  - [remove_pre_activity_metadata_tags](src/modules/activity/README.md#usage-examples): Remove tags from pending metadata
+    ```rust
+    fn remove_pre_activity_metadata_tags(wallet_id: String, payment_id: String, tags: Vec<String>) -> Result<(), ActivityError>
+    ```
+  - [reset_pre_activity_metadata_tags](src/modules/activity/README.md#usage-examples): Remove all tags from pending metadata
+    ```rust
+    fn reset_pre_activity_metadata_tags(wallet_id: String, payment_id: String) -> Result<(), ActivityError>
+    ```
+  - [delete_pre_activity_metadata](src/modules/activity/README.md#usage-examples): Delete pending metadata by wallet ID and payment ID
+    ```rust
+    fn delete_pre_activity_metadata(wallet_id: String, payment_id: String) -> Result<(), ActivityError>
+    ```
+  - [upsert_pre_activity_metadata](src/modules/activity/README.md#usage-examples): Insert or update pending metadata records
+    ```rust
+    fn upsert_pre_activity_metadata(pre_activity_metadata: Vec<PreActivityMetadata>) -> Result<(), ActivityError>
+    ```
 - Blocktank:
   - [init_db](src/modules/blocktank/README.md#usage-examples): Initialize database
     ```rust

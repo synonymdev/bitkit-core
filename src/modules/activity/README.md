@@ -18,6 +18,9 @@ The Activity module is responsible for storing and managing transaction/activity
 // Initialize the database with a specified path
 fn init_db(base_path: String) -> Result<String, DbError>
 
+// Get the default wallet ID for the built-in Bitkit wallet
+fn get_default_wallet_id() -> String
+
 // Get activities with optional wallet, filter, tx_type, tags, search, min_date, max_date, limit, and sort direction
 fn get_activities(
   wallet_id: Option<String>,
@@ -66,6 +69,7 @@ fn add_pre_activity_metadata_tags(wallet_id: String, payment_id: String, tags: V
 fn remove_pre_activity_metadata_tags(wallet_id: String, payment_id: String, tags: Vec<String>) -> Result<(), ActivityError>
 fn reset_pre_activity_metadata_tags(wallet_id: String, payment_id: String) -> Result<(), ActivityError>
 fn delete_pre_activity_metadata(wallet_id: String, payment_id: String) -> Result<(), ActivityError>
+fn upsert_pre_activity_metadata(pre_activity_metadata: Vec<PreActivityMetadata>) -> Result<(), ActivityError>
 fn get_pre_activity_metadata(
   wallet_id: String,
   search_key: String,
@@ -90,23 +94,27 @@ func manageActivities() {
         
         // Create and store an onchain activity
         let onchainActivity = OnchainActivity(
-            wallet_id: "bitkit",
+            walletId: "bitkit",
             id: "tx123",
-            tx_type: .sent,
-            tx_id: "abc123",
+            txType: .sent,
+            txId: "abc123",
             value: 50000,
             fee: 500,
-            fee_rate: 1,
+            feeRate: 1,
             address: "bc1q...",
             confirmed: true,
             timestamp: 1234567890,
-            is_boosted: false,
-            boost_tx_ids: [],
-            is_transfer: false,
-            does_exist: true,
-            confirm_timestamp: 1234568890,
-            channel_id: nil,
-            transfer_tx_id: nil
+            isBoosted: false,
+            boostTxIds: [],
+            isTransfer: false,
+            doesExist: true,
+            confirmTimestamp: 1234568890,
+            channelId: nil,
+            transferTxId: nil,
+            contact: nil,
+            createdAt: nil,
+            updatedAt: nil,
+            seenAt: nil
         )
         
         // Wrap in Activity enum and insert
@@ -191,16 +199,20 @@ fun manageActivities() {
         
         // Create and store a lightning activity
         val lightningActivity = LightningActivity(
-            wallet_id = "bitkit",
+            walletId = "bitkit",
             id = "ln456",
-            tx_type = PaymentType.RECEIVED,
+            txType = PaymentType.RECEIVED,
             status = PaymentState.SUCCEEDED,
-            value = 10000,
-            fee = 1,
+            value = 10000uL,
+            fee = 1uL,
             invoice = "lnbc...",
             message = "Payment for coffee",
-            timestamp = 1234567890,
-            preimage = "def456"
+            timestamp = 1234567890uL,
+            preimage = "def456",
+            contact = null,
+            createdAt = null,
+            updatedAt = null,
+            seenAt = null
         )
 
         // Wrap in Activity enum and insert
@@ -214,9 +226,9 @@ fun manageActivities() {
             txType = PaymentType.SENT,
             tags = listOf("coffee", "food"),
             search = "bc1q",
-            minDate = 1234567890,
-            maxDate = 1234667890,
-            limit = 20,
+            minDate = 1234567890uL,
+            maxDate = 1234667890uL,
+            limit = 20u,
             sortDirection = SortDirection.DESC
         )
         
@@ -229,7 +241,7 @@ fun manageActivities() {
             search = null,
             minDate = null,
             maxDate = null,
-            limit = 20,
+            limit = 20u,
             sortDirection = SortDirection.DESC
         )
         
@@ -238,21 +250,36 @@ fun manageActivities() {
             walletId = "bitkit",
             filter = ActivityFilter.ALL,
             txType = PaymentType.SENT,
-            limit = 20
+            tags = null,
+            search = null,
+            minDate = null,
+            maxDate = null,
+            limit = 20u,
+            sortDirection = SortDirection.DESC
         )
         
         val recentLightning = getActivities(
             walletId = "bitkit",
             filter = ActivityFilter.LIGHTNING,
-            minDate = System.currentTimeMillis() / 1000 - 86400, // Last 24 hours
-            limit = 20
+            txType = null,
+            tags = null,
+            search = null,
+            minDate = ((System.currentTimeMillis() / 1000) - 86400).toULong(),
+            maxDate = null,
+            limit = 20u,
+            sortDirection = SortDirection.DESC
         )
         
         val taggedPayments = getActivities(
             walletId = "bitkit",
             filter = ActivityFilter.ALL,
+            txType = null,
             tags = listOf("coffee"),
-            limit = 20
+            search = null,
+            minDate = null,
+            maxDate = null,
+            limit = 20u,
+            sortDirection = SortDirection.DESC
         )
         
         // Get specific activity
@@ -273,7 +300,7 @@ fun manageActivities() {
         val taggedActivities = getActivitiesByTag(
             walletId = "bitkit",
             tag = "coffee",
-            limit = 5,
+            limit = 5u,
             sortDirection = SortDirection.DESC
         )
         

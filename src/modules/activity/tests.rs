@@ -479,6 +479,62 @@ mod tests {
     }
 
     #[test]
+    fn test_pre_activity_metadata_migration_handles_older_schema() {
+        let db_path = format!("test_db_{}.sqlite", random::<u64>());
+        {
+            let conn = rusqlite::Connection::open(&db_path).unwrap();
+            conn.execute(
+                "
+                CREATE TABLE pre_activity_metadata (
+                    payment_id TEXT PRIMARY KEY,
+                    payment_type TEXT NOT NULL,
+                    tags TEXT NOT NULL,
+                    payment_hash TEXT,
+                    tx_id TEXT,
+                    address TEXT,
+                    is_receive BOOLEAN NOT NULL DEFAULT FALSE,
+                    created_at INTEGER NOT NULL DEFAULT 0
+                )
+                ",
+                [],
+            )
+            .unwrap();
+            conn.execute(
+                "
+                INSERT INTO pre_activity_metadata (
+                    payment_id, payment_type, tags, payment_hash, tx_id,
+                    address, is_receive, created_at
+                ) VALUES (?1, 'onchain', ?2, NULL, NULL, ?3, 1, 1234)
+                ",
+                rusqlite::params!["older_payment", "[\"older\"]", "bc1qolder"],
+            )
+            .unwrap();
+        }
+
+        let db = ActivityDB::new(&db_path).unwrap();
+
+        assert_eq!(
+            primary_key_columns(&db, "pre_activity_metadata"),
+            vec!["wallet_id".to_string(), "payment_id".to_string()]
+        );
+
+        let metadata = db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, "older_payment", false)
+            .unwrap()
+            .unwrap();
+        assert_eq!(metadata.wallet_id, DEFAULT_WALLET_ID);
+        assert_eq!(metadata.payment_id, "older_payment");
+        assert_eq!(metadata.tags, vec!["older".to_string()]);
+        assert_eq!(metadata.address, Some("bc1qolder".to_string()));
+        assert!(metadata.is_receive);
+        assert_eq!(metadata.fee_rate, 0);
+        assert!(!metadata.is_transfer);
+        assert_eq!(metadata.channel_id, None);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_transaction_details_migration_rebuilds_wallet_primary_key() {
         let db_path = format!("test_db_{}.sqlite", random::<u64>());
         {
@@ -830,6 +886,24 @@ mod tests {
         db.upsert_transaction_details(&[main_details, hardware_details])
             .unwrap();
 
+        let mut main_metadata = create_test_pre_activity_metadata(
+            "bitkit:cleanup_pending".to_string(),
+            ActivityType::Onchain,
+            vec!["main-pending".to_string()],
+        );
+        main_metadata.address = Some("bc1qbitkitcleanup".to_string());
+
+        let mut hardware_metadata = create_test_pre_activity_metadata(
+            "hardware-wallet-1:cleanup_pending".to_string(),
+            ActivityType::Onchain,
+            vec!["hardware-pending".to_string()],
+        );
+        hardware_metadata.wallet_id = wallet_id.to_string();
+        hardware_metadata.address = Some("bc1qhardwarecleanup".to_string());
+
+        db.add_pre_activity_metadata(&main_metadata).unwrap();
+        db.add_pre_activity_metadata(&hardware_metadata).unwrap();
+
         let deleted = db.delete_activities_by_wallet_id(wallet_id).unwrap();
         assert_eq!(deleted, 1);
 
@@ -854,6 +928,14 @@ mod tests {
         assert_eq!(main_details.amount_sats, 1);
         assert!(db
             .get_transaction_details(wallet_id, "cleanup_txid")
+            .unwrap()
+            .is_none());
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &main_metadata.payment_id, false)
+            .unwrap()
+            .is_some());
+        assert!(db
+            .get_pre_activity_metadata(wallet_id, &hardware_metadata.payment_id, false)
             .unwrap()
             .is_none());
 

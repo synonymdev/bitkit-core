@@ -15,6 +15,14 @@ struct TableColumn {
     pk_index: i64,
 }
 
+fn select_or_default(columns: &[TableColumn], column: &str, default_sql: &str) -> String {
+    if columns.iter().any(|existing| existing.name == column) {
+        column.to_string()
+    } else {
+        default_sql.to_string()
+    }
+}
+
 const CREATE_ACTIVITIES_TABLE: &str = "
     CREATE TABLE IF NOT EXISTS activities (
         id TEXT NOT NULL,
@@ -631,6 +639,15 @@ impl ActivityDB {
             "'bitkit'"
         };
 
+        let payment_hash_select = select_or_default(&columns, "payment_hash", "NULL");
+        let tx_id_select = select_or_default(&columns, "tx_id", "NULL");
+        let address_select = select_or_default(&columns, "address", "NULL");
+        let is_receive_select = select_or_default(&columns, "is_receive", "FALSE");
+        let fee_rate_select = select_or_default(&columns, "fee_rate", "0");
+        let is_transfer_select = select_or_default(&columns, "is_transfer", "FALSE");
+        let channel_id_select = select_or_default(&columns, "channel_id", "NULL");
+        let created_at_select = select_or_default(&columns, "created_at", "0");
+
         let migration_sql = format!(
             "
             BEGIN IMMEDIATE;
@@ -654,13 +671,21 @@ impl ActivityDB {
                 is_receive, fee_rate, is_transfer, channel_id, created_at
             )
             SELECT
-                {}, payment_id, tags, payment_hash, tx_id, address,
-                is_receive, fee_rate, is_transfer, channel_id, created_at
+                {}, payment_id, tags, {}, {}, {},
+                {}, {}, {}, {}, {}
             FROM pre_activity_metadata_legacy;
             DROP TABLE pre_activity_metadata_legacy;
             COMMIT;
             ",
-            wallet_id_select
+            wallet_id_select,
+            payment_hash_select,
+            tx_id_select,
+            address_select,
+            is_receive_select,
+            fee_rate_select,
+            is_transfer_select,
+            channel_id_select,
+            created_at_select
         );
 
         self.conn.execute_batch(&migration_sql).map_err(|e| {
@@ -1857,6 +1882,13 @@ impl ActivityDB {
         )
         .map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to delete wallet transaction details: {}", e),
+        })?;
+        tx.execute(
+            "DELETE FROM pre_activity_metadata WHERE wallet_id = ?1",
+            [&wallet_id],
+        )
+        .map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to delete wallet pre-activity metadata: {}", e),
         })?;
 
         tx.commit().map_err(|e| ActivityError::DataError {
