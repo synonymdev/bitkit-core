@@ -118,45 +118,64 @@
     ```rust
     fn init_db(base_path: String) -> Result<String, DbError>
     ```
+  - [get_default_wallet_id](src/modules/activity/README.md#usage-examples): Get the default wallet ID for the built-in Bitkit wallet
+    ```rust
+    fn get_default_wallet_id() -> String
+    ```
   - [insert_activity](src/modules/activity/README.md#usage-examples): Insert an activity (onchain or lightning)
     ```rust
     fn insert_activity(activity: Activity) -> Result<(), ActivityError>
     ```
-  - [get_activities](src/modules/activity/README.md#usage-examples): Get activities with optional filtering, limit and sort direction
+  - [get_activities](src/modules/activity/README.md#usage-examples): Get activities with optional wallet scope, filtering, limit and sort direction
     ```rust
-    fn get_activities(filter: ActivityFilter, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError>
+    fn get_activities(
+        wallet_id: Option<String>,
+        filter: Option<ActivityFilter>,
+        tx_type: Option<PaymentType>,
+        tags: Option<Vec<String>>,
+        search: Option<String>,
+        min_date: Option<u64>,
+        max_date: Option<u64>,
+        limit: Option<u32>,
+        sort_direction: Option<SortDirection>
+    ) -> Result<Vec<Activity>, ActivityError>
     ```  
-  - [get_activity_by_id](src/modules/activity/README.md#usage-examples): Look up any activity by its ID
+  - [get_activity_by_id](src/modules/activity/README.md#usage-examples): Look up any activity by wallet ID and activity ID
     ```rust
-    fn get_activity_by_id(activity_id: String) -> Result<Option<Activity>, ActivityError>
+    fn get_activity_by_id(wallet_id: String, activity_id: String) -> Result<Option<Activity>, ActivityError>
     ```
   - [update_activity](src/modules/activity/README.md#usage-examples): Update an existing activity (onchain or lightning)
     ```rust
     fn update_activity(activity_id: String, activity: Activity) -> Result<(), ActivityError>
     ```
-  - [delete_activity_by_id](src/modules/activity/README.md#usage-examples): Delete any activity (onchain or lightning) by its ID. Returns true if activity was found and deleted, false if not found
+  - [delete_activity_by_id](src/modules/activity/README.md#usage-examples): Delete any activity by wallet ID and activity ID. Returns true if activity was found and deleted, false if not found
     ```rust
-    fn delete_activity_by_id(activity_id: String) -> Result<bool, ActivityError>
+    fn delete_activity_by_id(wallet_id: String, activity_id: String) -> Result<bool, ActivityError>
     ```
   - [add_tags](src/modules/activity/README.md#usage-examples): Add tags to an activity
     ```rust
-    fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
+    fn add_tags(wallet_id: String, activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
     ```
   - [remove_tags](src/modules/activity/README.md#usage-examples): Remove tags from an activity
     ```rust
-    fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
+    fn remove_tags(wallet_id: String, activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
     ```
   - [get_tags](src/modules/activity/README.md#usage-examples): Get all tags for an activity
     ```rust
-    fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError>
+    fn get_tags(wallet_id: String, activity_id: String) -> Result<Vec<String>, ActivityError>
     ```
   - [get_all_unique_tags](src/modules/activity/README.md#usage-examples): Get all unique tags in the database sorted alphabetically
     ```rust
     fn get_all_unique_tags() -> Result<Vec<String>, ActivityError>
     ```
-  - [get_activities_by_tag](src/modules/activity/README.md#usage-examples): Get all activities with a specific tag
+  - [get_activities_by_tag](src/modules/activity/README.md#usage-examples): Get activities with a specific tag and optional wallet scope
     ```rust
-    fn get_activities_by_tag(tag: String, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError>
+    fn get_activities_by_tag(
+        wallet_id: Option<String>,
+        tag: String,
+        limit: Option<u32>,
+        sort_direction: Option<SortDirection>
+    ) -> Result<Vec<Activity>, ActivityError>
     ```
   - [upsert_activity](src/modules/activity/README.md#usage-examples): Insert or update an activity
     ```rust
