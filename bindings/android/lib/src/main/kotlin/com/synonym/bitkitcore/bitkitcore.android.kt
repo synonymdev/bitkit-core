@@ -1480,6 +1480,10 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1528,7 +1532,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags() != 28081.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_add_tags() != 63739.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_add_tags() != 61276.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_approve_pubky_auth() != 22222.toShort()) {
@@ -1573,13 +1577,16 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_decode() != 28437.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_delete_activities_by_wallet_id() != 15848.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 13256.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 46621.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_delete_transaction_details() != 21670.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_delete_transaction_details() != 43443.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_derive_bitcoin_address() != 35090.toShort()) {
@@ -1621,16 +1628,16 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_activities() != 21347.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_activities() != 9879.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 52823.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 16182.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_activity_by_id() != 28490.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_activity_by_tx_id() != 2520.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_activity_by_tx_id() != 28432.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_all_activities_tags() != 29245.toShort()) {
@@ -1663,6 +1670,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_get_default_lsp_balance() != 35903.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_get_default_wallet_id() != 19552.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_get_gift() != 386.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1684,10 +1694,10 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 53126.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_tags() != 11308.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_tags() != 8596.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_transaction_details() != 6118.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_transaction_details() != 4810.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_gift_order() != 22040.toShort()) {
@@ -1711,7 +1721,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 65086.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 36622.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_mnemonic_to_entropy() != 36669.toShort()) {
@@ -1810,7 +1820,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 1991.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_remove_tags() != 58873.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_remove_tags() != 53863.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703.toShort()) {
@@ -2048,6 +2058,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_decode(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_delete_activities_by_wallet_id(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_delete_activity_by_id(
     ): Short
     @JvmStatic
@@ -2136,6 +2149,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_default_lsp_balance(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_default_wallet_id(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_gift(
@@ -2632,6 +2648,7 @@ internal object UniffiLib : Library {
     ): Unit
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_add_tags(
+        `walletId`: RustBufferByValue,
         `activityId`: RustBufferByValue,
         `tags`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
@@ -2712,7 +2729,13 @@ internal object UniffiLib : Library {
         `invoice`: RustBufferByValue,
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_delete_activities_by_wallet_id(
+        `walletId`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Int
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_delete_activity_by_id(
+        `walletId`: RustBufferByValue,
         `activityId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Byte
@@ -2723,6 +2746,7 @@ internal object UniffiLib : Library {
     ): Unit
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_delete_transaction_details(
+        `walletId`: RustBufferByValue,
         `txId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Byte
@@ -2807,6 +2831,7 @@ internal object UniffiLib : Library {
     ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_activities(
+        `walletId`: RustBufferByValue,
         `filter`: RustBufferByValue,
         `txType`: RustBufferByValue,
         `tags`: RustBufferByValue,
@@ -2819,6 +2844,7 @@ internal object UniffiLib : Library {
     ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_activities_by_tag(
+        `walletId`: RustBufferByValue,
         `tag`: RustBufferByValue,
         `limit`: RustBufferByValue,
         `sortDirection`: RustBufferByValue,
@@ -2826,11 +2852,13 @@ internal object UniffiLib : Library {
     ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_activity_by_id(
+        `walletId`: RustBufferByValue,
         `activityId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_activity_by_tx_id(
+        `walletId`: RustBufferByValue,
         `txId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
@@ -2882,6 +2910,10 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_default_wallet_id(
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_gift(
         `giftId`: RustBufferByValue,
     ): Long
@@ -2916,11 +2948,13 @@ internal object UniffiLib : Library {
     ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_tags(
+        `walletId`: RustBufferByValue,
         `activityId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_transaction_details(
+        `walletId`: RustBufferByValue,
         `txId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
@@ -2964,6 +2998,7 @@ internal object UniffiLib : Library {
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_mark_activity_as_seen(
+        `walletId`: RustBufferByValue,
         `activityId`: RustBufferByValue,
         `seenAt`: Long,
         uniffiCallStatus: UniffiRustCallStatus,
@@ -3151,6 +3186,7 @@ internal object UniffiLib : Library {
     ): Unit
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_remove_tags(
+        `walletId`: RustBufferByValue,
         `activityId`: RustBufferByValue,
         `tags`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
@@ -5089,16 +5125,19 @@ public object FfiConverterTypeActivityTags: FfiConverterRustBuffer<ActivityTags>
     override fun read(buf: ByteBuffer): ActivityTags {
         return ActivityTags(
             FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
             FfiConverterSequenceString.read(buf),
         )
     }
 
     override fun allocationSize(value: ActivityTags): ULong = (
+            FfiConverterString.allocationSize(value.`walletId`) +
             FfiConverterString.allocationSize(value.`activityId`) +
             FfiConverterSequenceString.allocationSize(value.`tags`)
     )
 
     override fun write(value: ActivityTags, buf: ByteBuffer) {
+        FfiConverterString.write(value.`walletId`, buf)
         FfiConverterString.write(value.`activityId`, buf)
         FfiConverterSequenceString.write(value.`tags`, buf)
     }
@@ -6626,6 +6665,7 @@ public object FfiConverterTypeLightningActivity: FfiConverterRustBuffer<Lightnin
     override fun read(buf: ByteBuffer): LightningActivity {
         return LightningActivity(
             FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
             FfiConverterTypePaymentType.read(buf),
             FfiConverterTypePaymentState.read(buf),
             FfiConverterULong.read(buf),
@@ -6642,6 +6682,7 @@ public object FfiConverterTypeLightningActivity: FfiConverterRustBuffer<Lightnin
     }
 
     override fun allocationSize(value: LightningActivity): ULong = (
+            FfiConverterString.allocationSize(value.`walletId`) +
             FfiConverterString.allocationSize(value.`id`) +
             FfiConverterTypePaymentType.allocationSize(value.`txType`) +
             FfiConverterTypePaymentState.allocationSize(value.`status`) +
@@ -6658,6 +6699,7 @@ public object FfiConverterTypeLightningActivity: FfiConverterRustBuffer<Lightnin
     )
 
     override fun write(value: LightningActivity, buf: ByteBuffer) {
+        FfiConverterString.write(value.`walletId`, buf)
         FfiConverterString.write(value.`id`, buf)
         FfiConverterTypePaymentType.write(value.`txType`, buf)
         FfiConverterTypePaymentState.write(value.`status`, buf)
@@ -6944,6 +6986,7 @@ public object FfiConverterTypeOnchainActivity: FfiConverterRustBuffer<OnchainAct
     override fun read(buf: ByteBuffer): OnchainActivity {
         return OnchainActivity(
             FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
             FfiConverterTypePaymentType.read(buf),
             FfiConverterString.read(buf),
             FfiConverterULong.read(buf),
@@ -6967,6 +7010,7 @@ public object FfiConverterTypeOnchainActivity: FfiConverterRustBuffer<OnchainAct
     }
 
     override fun allocationSize(value: OnchainActivity): ULong = (
+            FfiConverterString.allocationSize(value.`walletId`) +
             FfiConverterString.allocationSize(value.`id`) +
             FfiConverterTypePaymentType.allocationSize(value.`txType`) +
             FfiConverterString.allocationSize(value.`txId`) +
@@ -6990,6 +7034,7 @@ public object FfiConverterTypeOnchainActivity: FfiConverterRustBuffer<OnchainAct
     )
 
     override fun write(value: OnchainActivity, buf: ByteBuffer) {
+        FfiConverterString.write(value.`walletId`, buf)
         FfiConverterString.write(value.`id`, buf)
         FfiConverterTypePaymentType.write(value.`txType`, buf)
         FfiConverterString.write(value.`txId`, buf)
@@ -7369,6 +7414,7 @@ public object FfiConverterTypeTransactionDetails: FfiConverterRustBuffer<Transac
     override fun read(buf: ByteBuffer): TransactionDetails {
         return TransactionDetails(
             FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
             FfiConverterLong.read(buf),
             FfiConverterSequenceTypeTxInput.read(buf),
             FfiConverterSequenceTypeTxOutput.read(buf),
@@ -7376,6 +7422,7 @@ public object FfiConverterTypeTransactionDetails: FfiConverterRustBuffer<Transac
     }
 
     override fun allocationSize(value: TransactionDetails): ULong = (
+            FfiConverterString.allocationSize(value.`walletId`) +
             FfiConverterString.allocationSize(value.`txId`) +
             FfiConverterLong.allocationSize(value.`amountSats`) +
             FfiConverterSequenceTypeTxInput.allocationSize(value.`inputs`) +
@@ -7383,6 +7430,7 @@ public object FfiConverterTypeTransactionDetails: FfiConverterRustBuffer<Transac
     )
 
     override fun write(value: TransactionDetails, buf: ByteBuffer) {
+        FfiConverterString.write(value.`walletId`, buf)
         FfiConverterString.write(value.`txId`, buf)
         FfiConverterLong.write(value.`amountSats`, buf)
         FfiConverterSequenceTypeTxInput.write(value.`inputs`, buf)
@@ -12872,9 +12920,10 @@ public fun `addPreActivityMetadataTags`(`paymentId`: kotlin.String, `tags`: List
 }
 
 @Throws(ActivityException::class)
-public fun `addTags`(`activityId`: kotlin.String, `tags`: List<kotlin.String>) {
+public fun `addTags`(`walletId`: kotlin.String, `activityId`: kotlin.String, `tags`: List<kotlin.String>) {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_add_tags(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`activityId`),
             FfiConverterSequenceString.lower(`tags`),
             uniffiRustCallStatus,
@@ -13120,9 +13169,20 @@ public suspend fun `decode`(`invoice`: kotlin.String): Scanner {
 }
 
 @Throws(ActivityException::class)
-public fun `deleteActivityById`(`activityId`: kotlin.String): kotlin.Boolean {
+public fun `deleteActivitiesByWalletId`(`walletId`: kotlin.String): kotlin.UInt {
+    return FfiConverterUInt.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_delete_activities_by_wallet_id(
+            FfiConverterString.lower(`walletId`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+@Throws(ActivityException::class)
+public fun `deleteActivityById`(`walletId`: kotlin.String, `activityId`: kotlin.String): kotlin.Boolean {
     return FfiConverterBoolean.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`activityId`),
             uniffiRustCallStatus,
         )
@@ -13140,9 +13200,10 @@ public fun `deletePreActivityMetadata`(`paymentId`: kotlin.String) {
 }
 
 @Throws(ActivityException::class)
-public fun `deleteTransactionDetails`(`txId`: kotlin.String): kotlin.Boolean {
+public fun `deleteTransactionDetails`(`walletId`: kotlin.String, `txId`: kotlin.String): kotlin.Boolean {
     return FfiConverterBoolean.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_delete_transaction_details(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`txId`),
             uniffiRustCallStatus,
         )
@@ -13342,9 +13403,10 @@ public fun `generateMnemonic`(`wordCount`: WordCount?): kotlin.String {
 }
 
 @Throws(ActivityException::class)
-public fun `getActivities`(`filter`: ActivityFilter?, `txType`: PaymentType?, `tags`: List<kotlin.String>?, `search`: kotlin.String?, `minDate`: kotlin.ULong?, `maxDate`: kotlin.ULong?, `limit`: kotlin.UInt?, `sortDirection`: SortDirection?): List<Activity> {
+public fun `getActivities`(`walletId`: kotlin.String?, `filter`: ActivityFilter?, `txType`: PaymentType?, `tags`: List<kotlin.String>?, `search`: kotlin.String?, `minDate`: kotlin.ULong?, `maxDate`: kotlin.ULong?, `limit`: kotlin.UInt?, `sortDirection`: SortDirection?): List<Activity> {
     return FfiConverterSequenceTypeActivity.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_activities(
+            FfiConverterOptionalString.lower(`walletId`),
             FfiConverterOptionalTypeActivityFilter.lower(`filter`),
             FfiConverterOptionalTypePaymentType.lower(`txType`),
             FfiConverterOptionalSequenceString.lower(`tags`),
@@ -13359,9 +13421,10 @@ public fun `getActivities`(`filter`: ActivityFilter?, `txType`: PaymentType?, `t
 }
 
 @Throws(ActivityException::class)
-public fun `getActivitiesByTag`(`tag`: kotlin.String, `limit`: kotlin.UInt?, `sortDirection`: SortDirection?): List<Activity> {
+public fun `getActivitiesByTag`(`walletId`: kotlin.String?, `tag`: kotlin.String, `limit`: kotlin.UInt?, `sortDirection`: SortDirection?): List<Activity> {
     return FfiConverterSequenceTypeActivity.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag(
+            FfiConverterOptionalString.lower(`walletId`),
             FfiConverterString.lower(`tag`),
             FfiConverterOptionalUInt.lower(`limit`),
             FfiConverterOptionalTypeSortDirection.lower(`sortDirection`),
@@ -13371,9 +13434,10 @@ public fun `getActivitiesByTag`(`tag`: kotlin.String, `limit`: kotlin.UInt?, `so
 }
 
 @Throws(ActivityException::class)
-public fun `getActivityById`(`activityId`: kotlin.String): Activity? {
+public fun `getActivityById`(`walletId`: kotlin.String, `activityId`: kotlin.String): Activity? {
     return FfiConverterOptionalTypeActivity.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`activityId`),
             uniffiRustCallStatus,
         )
@@ -13381,9 +13445,10 @@ public fun `getActivityById`(`activityId`: kotlin.String): Activity? {
 }
 
 @Throws(ActivityException::class)
-public fun `getActivityByTxId`(`txId`: kotlin.String): OnchainActivity? {
+public fun `getActivityByTxId`(`walletId`: kotlin.String, `txId`: kotlin.String): OnchainActivity? {
     return FfiConverterOptionalTypeOnchainActivity.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_tx_id(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`txId`),
             uniffiRustCallStatus,
         )
@@ -13487,6 +13552,14 @@ public fun `getDefaultLspBalance`(`params`: DefaultLspBalanceParams): kotlin.ULo
     return FfiConverterULong.lift(uniffiRustCall { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_default_lsp_balance(
             FfiConverterTypeDefaultLspBalanceParams.lower(`params`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+public fun `getDefaultWalletId`(): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCall { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_get_default_wallet_id(
             uniffiRustCallStatus,
         )
     })
@@ -13609,9 +13682,10 @@ public fun `getPreActivityMetadata`(`searchKey`: kotlin.String, `searchByAddress
 }
 
 @Throws(ActivityException::class)
-public fun `getTags`(`activityId`: kotlin.String): List<kotlin.String> {
+public fun `getTags`(`walletId`: kotlin.String, `activityId`: kotlin.String): List<kotlin.String> {
     return FfiConverterSequenceString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_tags(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`activityId`),
             uniffiRustCallStatus,
         )
@@ -13619,9 +13693,10 @@ public fun `getTags`(`activityId`: kotlin.String): List<kotlin.String> {
 }
 
 @Throws(ActivityException::class)
-public fun `getTransactionDetails`(`txId`: kotlin.String): TransactionDetails? {
+public fun `getTransactionDetails`(`walletId`: kotlin.String, `txId`: kotlin.String): TransactionDetails? {
     return FfiConverterOptionalTypeTransactionDetails.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_transaction_details(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`txId`),
             uniffiRustCallStatus,
         )
@@ -13725,9 +13800,10 @@ public suspend fun `lnurlAuth`(`domain`: kotlin.String, `k1`: kotlin.String, `ca
 }
 
 @Throws(ActivityException::class)
-public fun `markActivityAsSeen`(`activityId`: kotlin.String, `seenAt`: kotlin.ULong) {
+public fun `markActivityAsSeen`(`walletId`: kotlin.String, `activityId`: kotlin.String, `seenAt`: kotlin.ULong) {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_mark_activity_as_seen(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`activityId`),
             FfiConverterULong.lower(`seenAt`),
             uniffiRustCallStatus,
@@ -14315,9 +14391,10 @@ public fun `removePreActivityMetadataTags`(`paymentId`: kotlin.String, `tags`: L
 }
 
 @Throws(ActivityException::class)
-public fun `removeTags`(`activityId`: kotlin.String, `tags`: List<kotlin.String>) {
+public fun `removeTags`(`walletId`: kotlin.String, `activityId`: kotlin.String, `tags`: List<kotlin.String>) {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_remove_tags(
+            FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`activityId`),
             FfiConverterSequenceString.lower(`tags`),
             uniffiRustCallStatus,

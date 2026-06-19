@@ -3,6 +3,12 @@ use crate::modules::blocktank::BlocktankError;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+pub const DEFAULT_WALLET_ID: &str = "bitkit";
+
+fn default_wallet_id() -> String {
+    DEFAULT_WALLET_ID.to_string()
+}
+
 #[derive(Debug, uniffi::Enum)]
 pub enum Activity {
     Onchain(OnchainActivity),
@@ -58,6 +64,13 @@ impl Activity {
             Activity::Lightning(l) => l.seen_at,
         }
     }
+
+    pub fn get_wallet_id(&self) -> &str {
+        match self {
+            Activity::Onchain(o) => &o.wallet_id,
+            Activity::Lightning(l) => &l.wallet_id,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy, uniffi::Enum)]
@@ -83,6 +96,8 @@ pub enum PaymentState {
 
 #[derive(Debug, Serialize, Deserialize, Clone, uniffi::Record)]
 pub struct OnchainActivity {
+    #[serde(default = "default_wallet_id")]
+    pub wallet_id: String,
     pub id: String,
     pub tx_type: PaymentType,
     pub tx_id: String,
@@ -111,6 +126,8 @@ pub struct OnchainActivity {
 
 #[derive(Debug, Serialize, Deserialize, Clone, uniffi::Record)]
 pub struct LightningActivity {
+    #[serde(default = "default_wallet_id")]
+    pub wallet_id: String,
     pub id: String,
     pub tx_type: PaymentType,
     pub status: PaymentState,
@@ -150,6 +167,8 @@ pub struct ClosedChannelDetails {
 
 #[derive(Debug, Clone, uniffi::Record, Serialize, Deserialize)]
 pub struct ActivityTags {
+    #[serde(default = "default_wallet_id")]
+    pub wallet_id: String,
     pub activity_id: String,
     pub tags: Vec<String>,
 }
@@ -205,6 +224,8 @@ pub struct TxOutput {
 /// Details about an onchain transaction.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Record)]
 pub struct TransactionDetails {
+    #[serde(default = "default_wallet_id")]
+    pub wallet_id: String,
     /// The transaction ID.
     pub tx_id: String,
     /// The net amount in this transaction (in satoshis).
@@ -220,15 +241,10 @@ pub struct TransactionDetails {
     pub outputs: Vec<TxOutput>,
 }
 
-impl Default for SortDirection {
-    fn default() -> Self {
-        SortDirection::Desc
-    }
-}
-
-#[derive(Debug, Clone, Copy, uniffi::Enum)]
+#[derive(Debug, Clone, Copy, Default, uniffi::Enum)]
 pub enum SortDirection {
     Asc,
+    #[default]
     Desc,
 }
 

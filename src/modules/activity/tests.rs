@@ -3,7 +3,7 @@ mod tests {
     use crate::activity::{
         Activity, ActivityDB, ActivityFilter, ActivityTags, ActivityType, ClosedChannelDetails,
         LightningActivity, OnchainActivity, PaymentState, PaymentType, PreActivityMetadata,
-        SortDirection, TransactionDetails, TxInput, TxOutput,
+        SortDirection, TransactionDetails, TxInput, TxOutput, DEFAULT_WALLET_ID,
     };
     use rand::random;
     use std::fs;
@@ -18,8 +18,27 @@ mod tests {
         fs::remove_file(db_path).ok();
     }
 
+    fn primary_key_columns(db: &ActivityDB, table: &str) -> Vec<String> {
+        let mut stmt = db
+            .conn
+            .prepare(&format!("PRAGMA table_info({})", table))
+            .unwrap();
+        let mut columns = stmt
+            .query_map([], |row| {
+                Ok((row.get::<_, i64>(5)?, row.get::<_, String>(1)?))
+            })
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+
+        columns.retain(|(pk_index, _)| *pk_index > 0);
+        columns.sort_by_key(|(pk_index, _)| *pk_index);
+        columns.into_iter().map(|(_, column)| column).collect()
+    }
+
     fn create_test_onchain_activity() -> OnchainActivity {
         OnchainActivity {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             id: "test_onchain_1".to_string(),
             tx_type: PaymentType::Sent,
             tx_id: "txid123".to_string(),
@@ -45,6 +64,7 @@ mod tests {
 
     fn create_test_lightning_activity() -> LightningActivity {
         LightningActivity {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             id: "test_lightning_1".to_string(),
             tx_type: PaymentType::Received,
             status: PaymentState::Succeeded,
@@ -139,6 +159,316 @@ mod tests {
 
         assert!(columns.contains(&"seen_at".to_string()));
         assert!(columns.contains(&"contact".to_string()));
+        assert!(columns.contains(&"wallet_id".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_activity_migration_rebuilds_wallet_primary_keys() {
+        let db_path = format!("test_db_{}.sqlite", random::<u64>());
+        {
+            let conn = rusqlite::Connection::open(&db_path).unwrap();
+            conn.execute_batch(
+                "
+                CREATE TABLE activities (
+                    id TEXT PRIMARY KEY,
+                    wallet_id TEXT NOT NULL DEFAULT 'bitkit' CHECK (length(wallet_id) > 0),
+                    activity_type TEXT NOT NULL CHECK (activity_type IN ('onchain', 'lightning')),
+                    tx_type TEXT NOT NULL CHECK (tx_type IN ('sent', 'received')),
+                    timestamp INTEGER NOT NULL CHECK (timestamp > 0),
+                    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+                    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+                    seen_at INTEGER CHECK (seen_at IS NULL OR seen_at > 0),
+                    contact TEXT CHECK (contact IS NULL OR length(contact) > 0)
+                );
+                CREATE TABLE onchain_activity (
+                    id TEXT PRIMARY KEY,
+                    tx_id TEXT NOT NULL,
+                    address TEXT NOT NULL CHECK (length(address) > 0),
+                    confirmed BOOLEAN NOT NULL,
+                    value INTEGER NOT NULL CHECK (value >= 0),
+                    fee INTEGER NOT NULL CHECK (fee >= 0),
+                    fee_rate INTEGER NOT NULL CHECK (fee_rate >= 0),
+                    is_boosted BOOLEAN NOT NULL,
+                    boost_tx_ids TEXT NOT NULL,
+                    is_transfer BOOLEAN NOT NULL,
+                    does_exist BOOLEAN NOT NULL,
+                    confirm_timestamp INTEGER CHECK (
+                        confirm_timestamp IS NULL OR confirm_timestamp >= 0
+                    ),
+                    channel_id TEXT CHECK (
+                        channel_id IS NULL OR length(channel_id) > 0
+                    ),
+                    transfer_tx_id TEXT CHECK (
+                        transfer_tx_id IS NULL OR length(transfer_tx_id) > 0
+                    )
+                );
+                CREATE TABLE lightning_activity (
+                    id TEXT PRIMARY KEY,
+                    invoice TEXT NOT NULL CHECK (length(invoice) > 0),
+                    value INTEGER NOT NULL CHECK (value >= 0),
+                    status TEXT NOT NULL CHECK (status IN ('pending', 'succeeded', 'failed')),
+                    fee INTEGER CHECK (fee IS NULL OR fee >= 0),
+                    message TEXT NOT NULL,
+                    preimage TEXT CHECK (
+                        preimage IS NULL OR length(preimage) > 0
+                    )
+                );
+                CREATE TABLE activity_tags (
+                    activity_id TEXT NOT NULL,
+                    tag TEXT NOT NULL,
+                    PRIMARY KEY (activity_id, tag)
+                );
+                INSERT INTO activities (
+                    id, wallet_id, activity_type, tx_type, timestamp, created_at,
+                    updated_at, seen_at, contact
+                )
+                VALUES (
+                    'legacy_activity', 'hardware-wallet-1', 'onchain', 'sent',
+                    1234567890, 1234567890, 1234567891, 1234567892, 'contact_pubky'
+                );
+                INSERT INTO onchain_activity (
+                    id, tx_id, address, confirmed, value, fee, fee_rate, is_boosted,
+                    boost_tx_ids, is_transfer, does_exist, confirm_timestamp,
+                    channel_id, transfer_tx_id
+                )
+                VALUES (
+                    'legacy_activity', 'legacy_txid', 'bc1qlegacy', 1, 5000, 50, 1,
+                    0, '', 0, 1, 1234567893, NULL, NULL
+                );
+                INSERT INTO activity_tags (activity_id, tag)
+                VALUES ('legacy_activity', 'legacy_tag');
+                ",
+            )
+            .unwrap();
+        }
+
+        let db = ActivityDB::new(&db_path).unwrap();
+        assert_eq!(
+            primary_key_columns(&db, "activities"),
+            vec!["wallet_id", "id"]
+        );
+        assert_eq!(
+            primary_key_columns(&db, "onchain_activity"),
+            vec!["wallet_id", "id"]
+        );
+        assert_eq!(
+            primary_key_columns(&db, "lightning_activity"),
+            vec!["wallet_id", "id"]
+        );
+        assert_eq!(
+            primary_key_columns(&db, "activity_tags"),
+            vec!["wallet_id", "activity_id", "tag"]
+        );
+
+        let activity = db
+            .get_activity_by_id("hardware-wallet-1", "legacy_activity")
+            .unwrap()
+            .unwrap();
+        match activity {
+            Activity::Onchain(activity) => {
+                assert_eq!(activity.wallet_id, "hardware-wallet-1");
+                assert_eq!(activity.tx_id, "legacy_txid");
+                assert_eq!(activity.contact, Some("contact_pubky".to_string()));
+                assert_eq!(activity.seen_at, Some(1234567892));
+            }
+            Activity::Lightning(_) => panic!("Expected onchain activity"),
+        }
+        assert_eq!(
+            db.get_tags("hardware-wallet-1", "legacy_activity").unwrap(),
+            vec!["legacy_tag".to_string()]
+        );
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_activity_migration_defaults_pre_wallet_rows_to_bitkit() {
+        let db_path = format!("test_db_{}.sqlite", random::<u64>());
+        {
+            let conn = rusqlite::Connection::open(&db_path).unwrap();
+            conn.execute_batch(
+                "
+                CREATE TABLE activities (
+                    id TEXT PRIMARY KEY,
+                    activity_type TEXT NOT NULL CHECK (activity_type IN ('onchain', 'lightning')),
+                    tx_type TEXT NOT NULL CHECK (tx_type IN ('sent', 'received')),
+                    timestamp INTEGER NOT NULL CHECK (timestamp > 0),
+                    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+                    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+                );
+                CREATE TABLE onchain_activity (
+                    id TEXT PRIMARY KEY,
+                    tx_id TEXT NOT NULL,
+                    address TEXT NOT NULL CHECK (length(address) > 0),
+                    confirmed BOOLEAN NOT NULL,
+                    value INTEGER NOT NULL CHECK (value >= 0),
+                    fee INTEGER NOT NULL CHECK (fee >= 0),
+                    fee_rate INTEGER NOT NULL CHECK (fee_rate >= 0),
+                    is_boosted BOOLEAN NOT NULL,
+                    boost_tx_ids TEXT NOT NULL,
+                    is_transfer BOOLEAN NOT NULL,
+                    does_exist BOOLEAN NOT NULL,
+                    confirm_timestamp INTEGER CHECK (
+                        confirm_timestamp IS NULL OR confirm_timestamp >= 0
+                    ),
+                    channel_id TEXT CHECK (
+                        channel_id IS NULL OR length(channel_id) > 0
+                    ),
+                    transfer_tx_id TEXT CHECK (
+                        transfer_tx_id IS NULL OR length(transfer_tx_id) > 0
+                    )
+                );
+                CREATE TABLE lightning_activity (
+                    id TEXT PRIMARY KEY,
+                    invoice TEXT NOT NULL CHECK (length(invoice) > 0),
+                    value INTEGER NOT NULL CHECK (value >= 0),
+                    status TEXT NOT NULL CHECK (status IN ('pending', 'succeeded', 'failed')),
+                    fee INTEGER CHECK (fee IS NULL OR fee >= 0),
+                    message TEXT NOT NULL,
+                    preimage TEXT CHECK (
+                        preimage IS NULL OR length(preimage) > 0
+                    )
+                );
+                CREATE TABLE activity_tags (
+                    activity_id TEXT NOT NULL,
+                    tag TEXT NOT NULL,
+                    PRIMARY KEY (activity_id, tag)
+                );
+                INSERT INTO activities (
+                    id, activity_type, tx_type, timestamp, created_at, updated_at
+                )
+                VALUES
+                    ('legacy_onchain', 'onchain', 'sent', 1234567890, 1234567890, 1234567891),
+                    ('legacy_lightning', 'lightning', 'received', 1234567990, 1234567990, 1234567991);
+                INSERT INTO onchain_activity (
+                    id, tx_id, address, confirmed, value, fee, fee_rate, is_boosted,
+                    boost_tx_ids, is_transfer, does_exist, confirm_timestamp,
+                    channel_id, transfer_tx_id
+                )
+                VALUES (
+                    'legacy_onchain', 'legacy_onchain_txid', 'bc1qlegacy', 1, 5000, 50, 1,
+                    0, '', 0, 1, 1234567893, NULL, NULL
+                );
+                INSERT INTO lightning_activity (
+                    id, invoice, value, status, fee, message, preimage
+                )
+                VALUES (
+                    'legacy_lightning', 'lightning:legacy', 7000, 'succeeded',
+                    3, 'legacy message', 'legacy_preimage'
+                );
+                INSERT INTO activity_tags (activity_id, tag)
+                VALUES
+                    ('legacy_onchain', 'legacy_onchain_tag'),
+                    ('legacy_lightning', 'legacy_lightning_tag');
+                ",
+            )
+            .unwrap();
+        }
+
+        let db = ActivityDB::new(&db_path).unwrap();
+        assert_eq!(
+            primary_key_columns(&db, "activities"),
+            vec!["wallet_id", "id"]
+        );
+        assert_eq!(
+            primary_key_columns(&db, "onchain_activity"),
+            vec!["wallet_id", "id"]
+        );
+        assert_eq!(
+            primary_key_columns(&db, "lightning_activity"),
+            vec!["wallet_id", "id"]
+        );
+        assert_eq!(
+            primary_key_columns(&db, "activity_tags"),
+            vec!["wallet_id", "activity_id", "tag"]
+        );
+
+        let onchain = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, "legacy_onchain")
+            .unwrap()
+            .unwrap();
+        match onchain {
+            Activity::Onchain(activity) => {
+                assert_eq!(activity.wallet_id, DEFAULT_WALLET_ID);
+                assert_eq!(activity.tx_id, "legacy_onchain_txid");
+                assert_eq!(activity.seen_at, None);
+                assert_eq!(activity.contact, None);
+            }
+            Activity::Lightning(_) => panic!("Expected onchain activity"),
+        }
+
+        let lightning = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, "legacy_lightning")
+            .unwrap()
+            .unwrap();
+        match lightning {
+            Activity::Lightning(activity) => {
+                assert_eq!(activity.wallet_id, DEFAULT_WALLET_ID);
+                assert_eq!(activity.invoice, "lightning:legacy");
+                assert_eq!(activity.message, "legacy message");
+            }
+            Activity::Onchain(_) => panic!("Expected lightning activity"),
+        }
+
+        assert_eq!(
+            db.get_tags(DEFAULT_WALLET_ID, "legacy_onchain").unwrap(),
+            vec!["legacy_onchain_tag".to_string()]
+        );
+        assert_eq!(
+            db.get_tags(DEFAULT_WALLET_ID, "legacy_lightning").unwrap(),
+            vec!["legacy_lightning_tag".to_string()]
+        );
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_transaction_details_migration_rebuilds_wallet_primary_key() {
+        let db_path = format!("test_db_{}.sqlite", random::<u64>());
+        {
+            let conn = rusqlite::Connection::open(&db_path).unwrap();
+            conn.execute_batch(
+                "
+                CREATE TABLE transaction_details (
+                    tx_id TEXT PRIMARY KEY,
+                    amount_sats INTEGER NOT NULL,
+                    inputs TEXT NOT NULL,
+                    outputs TEXT NOT NULL
+                );
+                INSERT INTO transaction_details (tx_id, amount_sats, inputs, outputs)
+                VALUES ('legacy_txid', 1234, '[]', '[]');
+                ",
+            )
+            .unwrap();
+        }
+
+        let db = ActivityDB::new(&db_path).unwrap();
+        let primary_keys = db
+            .conn
+            .prepare("PRAGMA table_info(transaction_details)")
+            .unwrap()
+            .query_map([], |row| {
+                Ok((row.get::<_, String>(1)?, row.get::<_, i64>(5)?))
+            })
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+
+        assert!(primary_keys
+            .iter()
+            .any(|(column, pk)| column == "wallet_id" && *pk > 0));
+        assert!(primary_keys
+            .iter()
+            .any(|(column, pk)| column == "tx_id" && *pk > 0));
+
+        let details = db
+            .get_transaction_details(DEFAULT_WALLET_ID, "legacy_txid")
+            .unwrap()
+            .unwrap();
+        assert_eq!(details.wallet_id, DEFAULT_WALLET_ID);
+        assert_eq!(details.amount_sats, 1234);
 
         cleanup(&db_path);
     }
@@ -151,6 +481,7 @@ mod tests {
 
         let activities = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Onchain),
                 None,
                 None,
@@ -163,6 +494,7 @@ mod tests {
             .unwrap();
         assert_eq!(activities.len(), 1);
         if let Activity::Onchain(retrieved) = &activities[0] {
+            assert_eq!(retrieved.wallet_id.as_str(), DEFAULT_WALLET_ID);
             assert_eq!(retrieved.id, activity.id);
             assert_eq!(retrieved.value, activity.value);
             assert_eq!(retrieved.fee, activity.fee);
@@ -176,6 +508,305 @@ mod tests {
     }
 
     #[test]
+    fn test_get_activities_optional_wallet_id_filters_and_sorts() {
+        let (mut db, db_path) = setup();
+        let wallet_id = "hardware-wallet-1";
+
+        let mut main = create_test_onchain_activity();
+        main.id = "main_tx".to_string();
+        main.tx_id = "main_txid".to_string();
+        main.timestamp = 100;
+
+        let mut hw_newer = create_test_onchain_activity();
+        hw_newer.wallet_id = wallet_id.to_string();
+        hw_newer.id = "hardware-wallet-1:tx_newer".to_string();
+        hw_newer.tx_id = "tx_newer".to_string();
+        hw_newer.timestamp = 300;
+
+        let mut hw_older = create_test_onchain_activity();
+        hw_older.wallet_id = wallet_id.to_string();
+        hw_older.id = "hardware-wallet-1:tx_older".to_string();
+        hw_older.tx_id = "tx_older".to_string();
+        hw_older.timestamp = 200;
+
+        db.upsert_onchain_activities(&[main.clone(), hw_newer.clone(), hw_older.clone()])
+            .unwrap();
+
+        let wallet_activities = db
+            .get_activities(
+                Some(wallet_id),
+                Some(ActivityFilter::Onchain),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(SortDirection::Desc),
+            )
+            .unwrap();
+
+        assert_eq!(wallet_activities.len(), 2);
+        assert_eq!(wallet_activities[0].get_id(), hw_newer.id);
+        assert_eq!(wallet_activities[1].get_id(), hw_older.id);
+
+        let unified = db
+            .get_activities(
+                None,
+                Some(ActivityFilter::Onchain),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(2),
+                Some(SortDirection::Desc),
+            )
+            .unwrap();
+
+        assert_eq!(unified.len(), 2);
+        assert_eq!(unified[0].get_id(), hw_newer.id);
+        assert_eq!(unified[1].get_id(), hw_older.id);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_wallet_scoped_txid_lookup_allows_collisions() {
+        let (mut db, db_path) = setup();
+        let wallet_id = "hardware-wallet-1";
+
+        let mut main = create_test_onchain_activity();
+        main.id = "bitkit:shared_txid".to_string();
+        main.tx_id = "shared_txid".to_string();
+        main.value = 10_000;
+
+        let mut hardware = create_test_onchain_activity();
+        hardware.wallet_id = wallet_id.to_string();
+        hardware.id = "hardware-wallet-1:shared_txid".to_string();
+        hardware.tx_id = "shared_txid".to_string();
+        hardware.value = 20_000;
+
+        db.upsert_onchain_activities(&[main.clone(), hardware.clone()])
+            .unwrap();
+
+        let default_lookup = db
+            .get_activity_by_tx_id(DEFAULT_WALLET_ID, "shared_txid")
+            .unwrap()
+            .unwrap();
+        assert_eq!(default_lookup.wallet_id.as_str(), DEFAULT_WALLET_ID);
+        assert_eq!(default_lookup.value, main.value);
+
+        let scoped_lookup = db
+            .get_activity_by_tx_id(wallet_id, "shared_txid")
+            .unwrap()
+            .unwrap();
+        assert_eq!(scoped_lookup.wallet_id.as_str(), wallet_id);
+        assert_eq!(scoped_lookup.value, hardware.value);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_wallet_scoped_app_shaped_activity_collision() {
+        let (mut db, db_path) = setup();
+        let wallet_id = "hardware-wallet-1";
+        let shared_id = "shared_activity_txid";
+        let shared_tag = "shared_tag";
+
+        let mut main = create_test_onchain_activity();
+        main.id = shared_id.to_string();
+        main.tx_id = shared_id.to_string();
+        main.value = 10_000;
+
+        let mut hardware = create_test_onchain_activity();
+        hardware.wallet_id = wallet_id.to_string();
+        hardware.id = shared_id.to_string();
+        hardware.tx_id = shared_id.to_string();
+        hardware.value = 20_000;
+
+        db.insert_onchain_activity(&main).unwrap();
+        db.insert_onchain_activity(&hardware).unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, shared_id, &[shared_tag.to_string()])
+            .unwrap();
+        db.add_tags(wallet_id, shared_id, &[shared_tag.to_string()])
+            .unwrap();
+
+        let default_lookup = db
+            .get_activity_by_tx_id(DEFAULT_WALLET_ID, shared_id)
+            .unwrap()
+            .unwrap();
+        assert_eq!(default_lookup.wallet_id, DEFAULT_WALLET_ID);
+        assert_eq!(default_lookup.value, main.value);
+
+        let hardware_lookup = db
+            .get_activity_by_tx_id(wallet_id, shared_id)
+            .unwrap()
+            .unwrap();
+        assert_eq!(hardware_lookup.wallet_id, wallet_id);
+        assert_eq!(hardware_lookup.value, hardware.value);
+
+        let all_tagged = db
+            .get_activities_by_tag(None, shared_tag, None, None)
+            .unwrap();
+        assert_eq!(all_tagged.len(), 2);
+        assert!(all_tagged
+            .iter()
+            .any(|activity| activity.get_wallet_id() == DEFAULT_WALLET_ID));
+        assert!(all_tagged
+            .iter()
+            .any(|activity| activity.get_wallet_id() == wallet_id));
+
+        let default_tagged = db
+            .get_activities_by_tag(Some(DEFAULT_WALLET_ID), shared_tag, None, None)
+            .unwrap();
+        assert_eq!(default_tagged.len(), 1);
+        assert_eq!(default_tagged[0].get_wallet_id(), DEFAULT_WALLET_ID);
+
+        let hardware_tagged = db
+            .get_activities_by_tag(Some(wallet_id), shared_tag, None, None)
+            .unwrap();
+        assert_eq!(hardware_tagged.len(), 1);
+        assert_eq!(hardware_tagged[0].get_wallet_id(), wallet_id);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_wallet_scoped_activity_ids_allow_collisions() {
+        let (mut db, db_path) = setup();
+        let wallet_id = "hardware-wallet-1";
+        let activity_id = "shared_activity_id";
+
+        let mut main = create_test_onchain_activity();
+        main.id = activity_id.to_string();
+        main.tx_id = "default_wallet_txid".to_string();
+        main.value = 10_000;
+
+        let mut hardware = create_test_onchain_activity();
+        hardware.wallet_id = wallet_id.to_string();
+        hardware.id = activity_id.to_string();
+        hardware.tx_id = "hardware_wallet_txid".to_string();
+        hardware.value = 20_000;
+
+        db.insert_onchain_activity(&main).unwrap();
+        db.insert_onchain_activity(&hardware).unwrap();
+
+        let default_activity = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, activity_id)
+            .unwrap()
+            .unwrap();
+        match default_activity {
+            Activity::Onchain(activity) => {
+                assert_eq!(activity.wallet_id, DEFAULT_WALLET_ID);
+                assert_eq!(activity.value, main.value);
+            }
+            Activity::Lightning(_) => panic!("Expected onchain activity"),
+        }
+
+        let hardware_activity = db
+            .get_activity_by_id(wallet_id, activity_id)
+            .unwrap()
+            .unwrap();
+        match hardware_activity {
+            Activity::Onchain(activity) => {
+                assert_eq!(activity.wallet_id, wallet_id);
+                assert_eq!(activity.value, hardware.value);
+            }
+            Activity::Lightning(_) => panic!("Expected onchain activity"),
+        }
+
+        db.add_tags(DEFAULT_WALLET_ID, activity_id, &["main".to_string()])
+            .unwrap();
+        db.add_tags(wallet_id, activity_id, &["hardware".to_string()])
+            .unwrap();
+
+        assert_eq!(
+            db.get_tags(DEFAULT_WALLET_ID, activity_id).unwrap(),
+            vec!["main".to_string()]
+        );
+        assert_eq!(
+            db.get_tags(wallet_id, activity_id).unwrap(),
+            vec!["hardware".to_string()]
+        );
+
+        assert!(db.delete_activity_by_id(wallet_id, activity_id).unwrap());
+        assert!(db
+            .get_activity_by_id(DEFAULT_WALLET_ID, activity_id)
+            .unwrap()
+            .is_some());
+        assert!(db
+            .get_activity_by_id(wallet_id, activity_id)
+            .unwrap()
+            .is_none());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_delete_activities_by_wallet_id_cleans_scoped_data() {
+        let (mut db, db_path) = setup();
+        let wallet_id = "hardware-wallet-1";
+
+        let mut main = create_test_onchain_activity();
+        main.id = "bitkit:cleanup_txid".to_string();
+        main.tx_id = "cleanup_txid".to_string();
+
+        let mut hardware = create_test_onchain_activity();
+        hardware.wallet_id = wallet_id.to_string();
+        hardware.id = "hardware-wallet-1:cleanup_txid".to_string();
+        hardware.tx_id = "cleanup_txid".to_string();
+
+        db.upsert_onchain_activities(&[main.clone(), hardware.clone()])
+            .unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &main.id, &["main".to_string()])
+            .unwrap();
+        db.add_tags(wallet_id, &hardware.id, &["hardware".to_string()])
+            .unwrap();
+
+        let mut main_details = create_test_transaction_details();
+        main_details.tx_id = "cleanup_txid".to_string();
+        main_details.amount_sats = 1;
+
+        let mut hardware_details = create_test_transaction_details();
+        hardware_details.wallet_id = wallet_id.to_string();
+        hardware_details.tx_id = "cleanup_txid".to_string();
+        hardware_details.amount_sats = 2;
+
+        db.upsert_transaction_details(&[main_details, hardware_details])
+            .unwrap();
+
+        let deleted = db.delete_activities_by_wallet_id(wallet_id).unwrap();
+        assert_eq!(deleted, 1);
+
+        assert!(db
+            .get_activity_by_id(wallet_id, &hardware.id)
+            .unwrap()
+            .is_none());
+        assert!(db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &main.id)
+            .unwrap()
+            .is_some());
+        assert_eq!(
+            db.get_tags(DEFAULT_WALLET_ID, &main.id).unwrap(),
+            vec!["main".to_string()]
+        );
+        assert!(db.get_tags(wallet_id, &hardware.id).unwrap().is_empty());
+
+        let main_details = db
+            .get_transaction_details(DEFAULT_WALLET_ID, "cleanup_txid")
+            .unwrap()
+            .unwrap();
+        assert_eq!(main_details.amount_sats, 1);
+        assert!(db
+            .get_transaction_details(wallet_id, "cleanup_txid")
+            .unwrap()
+            .is_none());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_insert_and_retrieve_lightning_activity() {
         let (mut db, db_path) = setup();
         let activity = create_test_lightning_activity();
@@ -183,6 +814,7 @@ mod tests {
 
         let activities = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Lightning),
                 None,
                 None,
@@ -219,7 +851,10 @@ mod tests {
         db.insert_onchain_activity(&onchain).unwrap();
         db.insert_lightning_activity(&lightning).unwrap();
 
-        let onchain_by_id = db.get_activity_by_id(&onchain.id).unwrap().unwrap();
+        let onchain_by_id = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &onchain.id)
+            .unwrap()
+            .unwrap();
         match onchain_by_id {
             Activity::Onchain(activity) => {
                 assert_eq!(activity.contact, Some("onchain_contact_pubky".to_string()));
@@ -227,7 +862,10 @@ mod tests {
             Activity::Lightning(_) => panic!("Expected Onchain activity"),
         }
 
-        let onchain_by_tx_id = db.get_activity_by_tx_id(&onchain.tx_id).unwrap().unwrap();
+        let onchain_by_tx_id = db
+            .get_activity_by_tx_id(DEFAULT_WALLET_ID, &onchain.tx_id)
+            .unwrap()
+            .unwrap();
         assert_eq!(
             onchain_by_tx_id.contact,
             Some("onchain_contact_pubky".to_string())
@@ -235,6 +873,7 @@ mod tests {
 
         let activities = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -268,6 +907,7 @@ mod tests {
 
         let results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -304,6 +944,7 @@ mod tests {
 
         let all_activities = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -332,6 +973,7 @@ mod tests {
 
         let retrieved = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Onchain),
                 None,
                 None,
@@ -366,6 +1008,7 @@ mod tests {
 
         let all_activities = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -398,6 +1041,7 @@ mod tests {
 
         let activities = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -434,6 +1078,7 @@ mod tests {
         // Test limits with different filters
         let all = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -448,6 +1093,7 @@ mod tests {
 
         let onchain = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Onchain),
                 None,
                 None,
@@ -462,6 +1108,7 @@ mod tests {
 
         let lightning = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Lightning),
                 None,
                 None,
@@ -477,6 +1124,7 @@ mod tests {
         // Test without limits
         let all = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -502,6 +1150,7 @@ mod tests {
 
         let all = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -516,6 +1165,7 @@ mod tests {
 
         let onchain = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Onchain),
                 None,
                 None,
@@ -530,6 +1180,7 @@ mod tests {
 
         let lightning = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Lightning),
                 None,
                 None,
@@ -552,8 +1203,8 @@ mod tests {
         db.insert_onchain_activity(&activity).unwrap();
 
         let tags = vec!["payment".to_string(), "coffee".to_string()];
-        db.add_tags(&activity.id, &tags).unwrap();
-        let retrieved_tags = db.get_tags(&activity.id).unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &activity.id, &tags).unwrap();
+        let retrieved_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(retrieved_tags.len(), 2);
         assert!(retrieved_tags.contains(&"payment".to_string()));
         assert!(retrieved_tags.contains(&"coffee".to_string()));
@@ -568,11 +1219,15 @@ mod tests {
         db.insert_onchain_activity(&activity).unwrap();
 
         let tags = vec!["payment".to_string(), "coffee".to_string()];
-        db.add_tags(&activity.id, &tags).unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &activity.id, &tags).unwrap();
 
-        db.remove_tags(&activity.id, &vec!["payment".to_string()])
-            .unwrap();
-        let remaining_tags = db.get_tags(&activity.id).unwrap();
+        db.remove_tags(
+            DEFAULT_WALLET_ID,
+            &activity.id,
+            &vec!["payment".to_string()],
+        )
+        .unwrap();
+        let remaining_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(remaining_tags.len(), 1);
         assert_eq!(remaining_tags[0], "coffee");
 
@@ -582,21 +1237,48 @@ mod tests {
     #[test]
     fn test_get_activities_by_tag() {
         let (mut db, db_path) = setup();
+        let hardware_wallet_id = "hardware-wallet-1";
         let onchain = create_test_onchain_activity();
         let mut lightning = create_test_lightning_activity();
         lightning.id = "test_lightning_tagged".to_string();
+        let mut hardware = create_test_onchain_activity();
+        hardware.wallet_id = hardware_wallet_id.to_string();
+        hardware.id = "hardware_tagged".to_string();
+        hardware.tx_id = "hardware_tagged_txid".to_string();
 
         db.insert_onchain_activity(&onchain).unwrap();
         db.insert_lightning_activity(&lightning).unwrap();
+        db.insert_onchain_activity(&hardware).unwrap();
 
-        db.add_tags(&onchain.id, &["payment".to_string()]).unwrap();
-        db.add_tags(&lightning.id, &["payment".to_string()])
+        db.add_tags(DEFAULT_WALLET_ID, &onchain.id, &["payment".to_string()])
+            .unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &lightning.id, &["payment".to_string()])
+            .unwrap();
+        db.add_tags(hardware_wallet_id, &hardware.id, &["payment".to_string()])
             .unwrap();
 
-        let activities = db.get_activities_by_tag("payment", None, None).unwrap();
-        assert_eq!(activities.len(), 2);
+        let activities = db
+            .get_activities_by_tag(None, "payment", None, None)
+            .unwrap();
+        assert_eq!(activities.len(), 3);
 
-        let limited = db.get_activities_by_tag("payment", Some(1), None).unwrap();
+        let default_wallet_activities = db
+            .get_activities_by_tag(Some(DEFAULT_WALLET_ID), "payment", None, None)
+            .unwrap();
+        assert_eq!(default_wallet_activities.len(), 2);
+        assert!(default_wallet_activities
+            .iter()
+            .all(|activity| activity.get_wallet_id() == DEFAULT_WALLET_ID));
+
+        let hardware_activities = db
+            .get_activities_by_tag(Some(hardware_wallet_id), "payment", None, None)
+            .unwrap();
+        assert_eq!(hardware_activities.len(), 1);
+        assert_eq!(hardware_activities[0].get_wallet_id(), hardware_wallet_id);
+
+        let limited = db
+            .get_activities_by_tag(None, "payment", Some(1), None)
+            .unwrap();
         assert_eq!(limited.len(), 1);
 
         cleanup(&db_path);
@@ -606,7 +1288,9 @@ mod tests {
     fn test_tags_on_nonexistent_activity() {
         let (mut db, db_path) = setup();
         let tags = vec!["test".to_string()];
-        assert!(db.add_tags("nonexistent", &tags).is_err());
+        assert!(db
+            .add_tags(DEFAULT_WALLET_ID, "nonexistent", &tags)
+            .is_err());
         cleanup(&db_path);
     }
 
@@ -617,9 +1301,9 @@ mod tests {
         db.insert_onchain_activity(&activity).unwrap();
 
         let tags = vec!["test".to_string(), "test".to_string()];
-        db.add_tags(&activity.id, &tags).unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &activity.id, &tags).unwrap();
 
-        let retrieved_tags = db.get_tags(&activity.id).unwrap();
+        let retrieved_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(retrieved_tags.len(), 1);
 
         cleanup(&db_path);
@@ -631,7 +1315,7 @@ mod tests {
         let activity = create_test_onchain_activity();
         db.insert_onchain_activity(&activity).unwrap();
 
-        let tags = db.get_tags(&activity.id).unwrap();
+        let tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert!(tags.is_empty());
 
         cleanup(&db_path);
@@ -643,10 +1327,12 @@ mod tests {
         let activity = create_test_onchain_activity();
         db.insert_onchain_activity(&activity).unwrap();
 
-        db.add_tags(&activity.id, &["test".to_string()]).unwrap();
-        db.delete_activity_by_id(&activity.id).unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &activity.id, &["test".to_string()])
+            .unwrap();
+        db.delete_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap();
 
-        let tags = db.get_tags(&activity.id).unwrap();
+        let tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert!(
             tags.is_empty(),
             "Tags should be removed after activity deletion"
@@ -658,7 +1344,9 @@ mod tests {
     #[test]
     fn test_get_activities_by_nonexistent_tag() {
         let (db, db_path) = setup();
-        let activities = db.get_activities_by_tag("nonexistent", None, None).unwrap();
+        let activities = db
+            .get_activities_by_tag(None, "nonexistent", None, None)
+            .unwrap();
         assert!(activities.is_empty());
         cleanup(&db_path);
     }
@@ -669,14 +1357,20 @@ mod tests {
 
         let activity = create_test_onchain_activity();
         db.insert_onchain_activity(&activity).unwrap();
-        db.delete_activity_by_id(&activity.id).unwrap();
+        db.delete_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap();
 
         // These operations should fail or return empty results after deletion
-        assert!(db.get_activity_by_id(&activity.id).unwrap().is_none());
+        assert!(db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap()
+            .is_none());
         assert!(db
             .update_onchain_activity_by_id(&activity.id, &activity)
             .is_err());
-        assert!(db.add_tags(&activity.id, &["test".to_string()]).is_err());
+        assert!(db
+            .add_tags(DEFAULT_WALLET_ID, &activity.id, &["test".to_string()])
+            .is_err());
 
         cleanup(&db_path);
     }
@@ -701,7 +1395,10 @@ mod tests {
             result.err()
         );
 
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap()
+            .unwrap();
         if let Activity::Onchain(retrieved) = retrieved {
             assert_eq!(retrieved.value, safe_max);
             assert_eq!(retrieved.fee, safe_max - 1);
@@ -727,7 +1424,10 @@ mod tests {
 
         assert!(db.insert_onchain_activity(&activity).is_ok());
 
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap()
+            .unwrap();
         if let Activity::Onchain(retrieved) = retrieved {
             assert_eq!(retrieved.value, 0);
             assert_eq!(retrieved.fee, 0);
@@ -760,6 +1460,7 @@ mod tests {
 
         let activities = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Lightning),
                 None,
                 None,
@@ -806,7 +1507,10 @@ mod tests {
         activity.confirm_timestamp = Some(2000);
         assert!(db.insert_onchain_activity(&activity).is_ok());
 
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap()
+            .unwrap();
         if let Activity::Onchain(retrieved) = retrieved {
             assert_eq!(retrieved.timestamp, 1000);
             assert_eq!(retrieved.confirm_timestamp, Some(2000));
@@ -835,7 +1539,10 @@ mod tests {
             .update_onchain_activity_by_id(&activity.id, &activity)
             .is_ok());
 
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap()
+            .unwrap();
         if let Activity::Onchain(retrieved) = retrieved {
             assert_eq!(retrieved.value, 1_000_000_000_000);
             assert!(retrieved.created_at.is_some());
@@ -858,7 +1565,10 @@ mod tests {
         // Test insert path
         assert!(db.upsert_activity(&activity).is_ok());
 
-        let retrieved = db.get_activity_by_id(&onchain.id).unwrap().unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &onchain.id)
+            .unwrap()
+            .unwrap();
         if let Activity::Onchain(retrieved) = retrieved {
             assert_eq!(retrieved.value, onchain.value);
             assert!(retrieved.created_at.is_some());
@@ -871,7 +1581,10 @@ mod tests {
             assert!(db.upsert_activity(&updated).is_ok());
 
             // Verify update
-            let retrieved = db.get_activity_by_id(&updated.get_id()).unwrap().unwrap();
+            let retrieved = db
+                .get_activity_by_id(DEFAULT_WALLET_ID, &updated.get_id())
+                .unwrap()
+                .unwrap();
             if let Activity::Onchain(retrieved) = retrieved {
                 assert_eq!(retrieved.value, 100_000);
                 assert!(retrieved.updated_at > first_update);
@@ -895,7 +1608,10 @@ mod tests {
         // Test insert
         assert!(db.upsert_activity(&activity).is_ok());
 
-        let retrieved = db.get_activity_by_id(&lightning.id).unwrap().unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &lightning.id)
+            .unwrap()
+            .unwrap();
         if let Activity::Lightning(retrieved) = retrieved {
             assert_eq!(retrieved.status, PaymentState::Pending);
 
@@ -906,7 +1622,10 @@ mod tests {
             assert!(db.upsert_activity(&updated).is_ok());
 
             // Verify status change
-            let retrieved = db.get_activity_by_id(&updated.get_id()).unwrap().unwrap();
+            let retrieved = db
+                .get_activity_by_id(DEFAULT_WALLET_ID, &updated.get_id())
+                .unwrap()
+                .unwrap();
             if let Activity::Lightning(retrieved) = retrieved {
                 assert_eq!(retrieved.status, PaymentState::Succeeded);
                 assert!(retrieved.created_at.is_some());
@@ -930,6 +1649,16 @@ mod tests {
     }
 
     #[test]
+    fn test_upsert_activity_empty_wallet_id_fails() {
+        let (mut db, db_path) = setup();
+        let mut activity = create_test_onchain_activity();
+        activity.wallet_id = "".to_string();
+        let activity = Activity::Onchain(activity);
+        assert!(db.upsert_activity(&activity).is_err());
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_upsert_activity_timestamps() {
         let (mut db, db_path) = setup();
 
@@ -937,7 +1666,10 @@ mod tests {
         let activity = Activity::Onchain(onchain.clone());
         assert!(db.upsert_activity(&activity).is_ok());
 
-        let initial = db.get_activity_by_id(&onchain.id).unwrap().unwrap();
+        let initial = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &onchain.id)
+            .unwrap()
+            .unwrap();
         if let Activity::Onchain(initial) = initial {
             let created_at = initial.created_at.unwrap();
 
@@ -947,7 +1679,10 @@ mod tests {
             let updated = Activity::Onchain(onchain);
             assert!(db.upsert_activity(&updated).is_ok());
 
-            let retrieved = db.get_activity_by_id(&updated.get_id()).unwrap().unwrap();
+            let retrieved = db
+                .get_activity_by_id(DEFAULT_WALLET_ID, &updated.get_id())
+                .unwrap()
+                .unwrap();
             if let Activity::Onchain(retrieved) = retrieved {
                 assert_eq!(retrieved.created_at.unwrap(), created_at);
                 assert!(retrieved.updated_at.unwrap() > initial.updated_at.unwrap());
@@ -977,6 +1712,7 @@ mod tests {
         // Test ascending order
         let asc_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -993,6 +1729,7 @@ mod tests {
         // Test descending order
         let desc_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1025,19 +1762,21 @@ mod tests {
 
         // Add same tag to both
         let tag = "test_tag".to_string();
-        db.add_tags(&onchain1.id, &[tag.clone()]).unwrap();
-        db.add_tags(&onchain2.id, &[tag.clone()]).unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &onchain1.id, &[tag.clone()])
+            .unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &onchain2.id, &[tag.clone()])
+            .unwrap();
 
         // Test ascending order
         let asc_activities = db
-            .get_activities_by_tag(&tag, None, Some(SortDirection::Asc))
+            .get_activities_by_tag(None, &tag, None, Some(SortDirection::Asc))
             .unwrap();
         let asc_timestamps: Vec<u64> = asc_activities.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(asc_timestamps, vec![1000, 2000]);
 
         // Test descending order
         let desc_activities = db
-            .get_activities_by_tag(&tag, None, Some(SortDirection::Desc))
+            .get_activities_by_tag(None, &tag, None, Some(SortDirection::Desc))
             .unwrap();
         let desc_timestamps: Vec<u64> = desc_activities.iter().map(|a| a.get_timestamp()).collect();
         assert_eq!(desc_timestamps, vec![2000, 1000]);
@@ -1060,6 +1799,7 @@ mod tests {
         // Test ascending order with limit
         let asc_limited = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1076,6 +1816,7 @@ mod tests {
         // Test descending order with limit
         let desc_limited = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1114,6 +1855,7 @@ mod tests {
         // Test ascending order
         let asc_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1152,6 +1894,7 @@ mod tests {
         // Test with None sort direction (should default to Desc)
         let default_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1186,6 +1929,7 @@ mod tests {
         // Test filtering by sent
         let sent_activities = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 Some(PaymentType::Sent),
                 None,
@@ -1204,6 +1948,7 @@ mod tests {
         // Test filtering by received
         let received_activities = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 Some(PaymentType::Received),
                 None,
@@ -1239,6 +1984,7 @@ mod tests {
         // Test address search
         let address_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1255,6 +2001,7 @@ mod tests {
         // Test message search
         let message_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1293,6 +2040,7 @@ mod tests {
         // Test min date
         let min_date_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1308,6 +2056,7 @@ mod tests {
         // Test max date
         let max_date_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1323,6 +2072,7 @@ mod tests {
         // Test date range
         let range_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1358,8 +2108,10 @@ mod tests {
         db.insert_onchain_activity(&onchain2).unwrap();
 
         // Add tags
-        db.add_tags(&onchain1.id, &["payment".to_string()]).unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &onchain1.id, &["payment".to_string()])
+            .unwrap();
         db.add_tags(
+            DEFAULT_WALLET_ID,
             &onchain2.id,
             &["payment".to_string(), "important".to_string()],
         )
@@ -1368,6 +2120,7 @@ mod tests {
         // Test combined filters
         let results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Onchain),
                 Some(PaymentType::Received),
                 Some(vec!["payment".to_string()]),
@@ -1402,6 +2155,7 @@ mod tests {
         // Test empty search string - should return all results, same as if no search was provided
         let empty_search = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1417,6 +2171,7 @@ mod tests {
         // Test empty tags array
         let empty_tags = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 Some(vec![]),
@@ -1448,16 +2203,29 @@ mod tests {
         db.insert_onchain_activity(&activity3).unwrap();
 
         // Add different tag combinations
-        db.add_tags(&activity1.id, &["tag1".to_string(), "tag2".to_string()])
-            .unwrap();
-        db.add_tags(&activity2.id, &["tag2".to_string(), "tag3".to_string()])
-            .unwrap();
-        db.add_tags(&activity3.id, &["tag1".to_string(), "tag3".to_string()])
-            .unwrap();
+        db.add_tags(
+            DEFAULT_WALLET_ID,
+            &activity1.id,
+            &["tag1".to_string(), "tag2".to_string()],
+        )
+        .unwrap();
+        db.add_tags(
+            DEFAULT_WALLET_ID,
+            &activity2.id,
+            &["tag2".to_string(), "tag3".to_string()],
+        )
+        .unwrap();
+        db.add_tags(
+            DEFAULT_WALLET_ID,
+            &activity3.id,
+            &["tag1".to_string(), "tag3".to_string()],
+        )
+        .unwrap();
 
         // Test filtering with multiple tags (OR condition)
         let results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 Some(vec!["tag1".to_string(), "tag2".to_string()]),
@@ -1473,6 +2241,7 @@ mod tests {
         // Test with non-existent tag mixed with existing tags
         let mixed_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 Some(vec!["tag1".to_string(), "nonexistent".to_string()]),
@@ -1498,6 +2267,7 @@ mod tests {
         // Test max date before min date
         let invalid_range = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1513,6 +2283,7 @@ mod tests {
         // Test dates way in the future
         let future_date = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1539,6 +2310,7 @@ mod tests {
         // Test lowercase search
         let lower_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1554,6 +2326,7 @@ mod tests {
         // Test uppercase search
         let upper_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1569,6 +2342,7 @@ mod tests {
         // Test mixed case search
         let mixed_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1593,14 +2367,16 @@ mod tests {
         db.insert_onchain_activity(&activity).unwrap();
 
         // Add tags from both connections
-        db.add_tags(&activity.id, &["tag1".to_string()]).unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &activity.id, &["tag1".to_string()])
+            .unwrap();
         db_clone
-            .add_tags(&activity.id, &["tag2".to_string()])
+            .add_tags(DEFAULT_WALLET_ID, &activity.id, &["tag2".to_string()])
             .unwrap();
 
         // Verify tags from both connections
         let results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 Some(vec!["tag1".to_string(), "tag2".to_string()]),
@@ -1632,6 +2408,7 @@ mod tests {
         // Search with special characters
         let special_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1647,6 +2424,7 @@ mod tests {
         // Search with underscore
         let underscore_results = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 None,
@@ -1676,13 +2454,15 @@ mod tests {
 
             // Add tags to even numbered activities
             if i % 2 == 0 {
-                db.add_tags(&activity.id, &["even".to_string()]).unwrap();
+                db.add_tags(DEFAULT_WALLET_ID, &activity.id, &["even".to_string()])
+                    .unwrap();
             }
         }
 
         // Test pagination with combined filters
         let page1 = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 Some(vec!["even".to_string()]),
@@ -1699,6 +2479,7 @@ mod tests {
         let min_date = page1.last().unwrap().get_timestamp();
         let page2 = db
             .get_activities(
+                None,
                 Some(ActivityFilter::All),
                 None,
                 Some(vec!["even".to_string()]),
@@ -1730,12 +2511,17 @@ mod tests {
 
         // Add various tags
         db.add_tags(
+            DEFAULT_WALLET_ID,
             &activity1.id,
             &["payment".to_string(), "coffee".to_string()],
         )
         .unwrap();
-        db.add_tags(&activity2.id, &["payment".to_string(), "food".to_string()])
-            .unwrap();
+        db.add_tags(
+            DEFAULT_WALLET_ID,
+            &activity2.id,
+            &["payment".to_string(), "food".to_string()],
+        )
+        .unwrap();
 
         // Get all unique tags
         let all_tags = db.get_all_unique_tags().unwrap();
@@ -1770,14 +2556,17 @@ mod tests {
         // Bulk upsert tags
         let activity_tags = vec![
             ActivityTags {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
                 activity_id: activity1.id.clone(),
                 tags: vec!["payment".to_string(), "coffee".to_string()],
             },
             ActivityTags {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
                 activity_id: activity2.id.clone(),
                 tags: vec!["payment".to_string(), "food".to_string()],
             },
             ActivityTags {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
                 activity_id: activity3.id.clone(),
                 tags: vec!["payment".to_string()],
             },
@@ -1786,17 +2575,17 @@ mod tests {
         assert!(db.upsert_tags(&activity_tags).is_ok());
 
         // Verify tags were added
-        let tags1 = db.get_tags(&activity1.id).unwrap();
+        let tags1 = db.get_tags(DEFAULT_WALLET_ID, &activity1.id).unwrap();
         assert_eq!(tags1.len(), 2);
         assert!(tags1.contains(&"payment".to_string()));
         assert!(tags1.contains(&"coffee".to_string()));
 
-        let tags2 = db.get_tags(&activity2.id).unwrap();
+        let tags2 = db.get_tags(DEFAULT_WALLET_ID, &activity2.id).unwrap();
         assert_eq!(tags2.len(), 2);
         assert!(tags2.contains(&"payment".to_string()));
         assert!(tags2.contains(&"food".to_string()));
 
-        let tags3 = db.get_tags(&activity3.id).unwrap();
+        let tags3 = db.get_tags(DEFAULT_WALLET_ID, &activity3.id).unwrap();
         assert_eq!(tags3.len(), 1);
         assert!(tags3.contains(&"payment".to_string()));
 
@@ -1813,6 +2602,7 @@ mod tests {
 
         // First upsert
         let activity_tags = vec![ActivityTags {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             activity_id: activity.id.clone(),
             tags: vec!["payment".to_string(), "coffee".to_string()],
         }];
@@ -1822,7 +2612,7 @@ mod tests {
         assert!(db.upsert_tags(&activity_tags).is_ok());
 
         // Verify tags are still there and not duplicated
-        let tags = db.get_tags(&activity.id).unwrap();
+        let tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(tags.len(), 2);
         assert!(tags.contains(&"payment".to_string()));
         assert!(tags.contains(&"coffee".to_string()));
@@ -1837,10 +2627,12 @@ mod tests {
         // Create activity and add initial tags
         let activity = create_test_onchain_activity();
         db.insert_onchain_activity(&activity).unwrap();
-        db.add_tags(&activity.id, &["payment".to_string()]).unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &activity.id, &["payment".to_string()])
+            .unwrap();
 
         // Upsert with additional tags (adds new tags, keeps existing)
         let activity_tags = vec![ActivityTags {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             activity_id: activity.id.clone(),
             tags: vec![
                 "payment".to_string(),
@@ -1851,7 +2643,7 @@ mod tests {
         assert!(db.upsert_tags(&activity_tags).is_ok());
 
         // Verify all tags are present (payment was already there, coffee and food are new)
-        let tags = db.get_tags(&activity.id).unwrap();
+        let tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert!(tags.len() >= 3);
         assert!(tags.contains(&"payment".to_string()));
         assert!(tags.contains(&"coffee".to_string()));
@@ -1870,13 +2662,14 @@ mod tests {
 
         // Upsert with empty tags mixed in
         let activity_tags = vec![ActivityTags {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             activity_id: activity.id.clone(),
             tags: vec!["payment".to_string(), "".to_string(), "coffee".to_string()],
         }];
         assert!(db.upsert_tags(&activity_tags).is_ok());
 
         // Verify only non-empty tags were added
-        let tags = db.get_tags(&activity.id).unwrap();
+        let tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(tags.len(), 2);
         assert!(tags.contains(&"payment".to_string()));
         assert!(tags.contains(&"coffee".to_string()));
@@ -1903,14 +2696,17 @@ mod tests {
         // Bulk upsert tags for all activities in one call
         let activity_tags = vec![
             ActivityTags {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
                 activity_id: activity1.id.clone(),
                 tags: vec!["tag1".to_string(), "tag2".to_string()],
             },
             ActivityTags {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
                 activity_id: activity2.id.clone(),
                 tags: vec!["tag2".to_string(), "tag3".to_string()],
             },
             ActivityTags {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
                 activity_id: activity3.id.clone(),
                 tags: vec!["tag1".to_string(), "tag3".to_string(), "tag4".to_string()],
             },
@@ -1919,17 +2715,17 @@ mod tests {
         assert!(db.upsert_tags(&activity_tags).is_ok());
 
         // Verify all tags were added correctly
-        let tags1 = db.get_tags(&activity1.id).unwrap();
+        let tags1 = db.get_tags(DEFAULT_WALLET_ID, &activity1.id).unwrap();
         assert_eq!(tags1.len(), 2);
         assert!(tags1.contains(&"tag1".to_string()));
         assert!(tags1.contains(&"tag2".to_string()));
 
-        let tags2 = db.get_tags(&activity2.id).unwrap();
+        let tags2 = db.get_tags(DEFAULT_WALLET_ID, &activity2.id).unwrap();
         assert_eq!(tags2.len(), 2);
         assert!(tags2.contains(&"tag2".to_string()));
         assert!(tags2.contains(&"tag3".to_string()));
 
-        let tags3 = db.get_tags(&activity3.id).unwrap();
+        let tags3 = db.get_tags(DEFAULT_WALLET_ID, &activity3.id).unwrap();
         assert_eq!(tags3.len(), 3);
         assert!(tags3.contains(&"tag1".to_string()));
         assert!(tags3.contains(&"tag3".to_string()));
@@ -1954,9 +2750,13 @@ mod tests {
         db.insert_lightning_activity(&lightning).unwrap();
 
         // Add tags
-        db.add_tags(&onchain.id, &["payment".to_string(), "coffee".to_string()])
-            .unwrap();
-        db.add_tags(&lightning.id, &["payment".to_string()])
+        db.add_tags(
+            DEFAULT_WALLET_ID,
+            &onchain.id,
+            &["payment".to_string(), "coffee".to_string()],
+        )
+        .unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &lightning.id, &["payment".to_string()])
             .unwrap();
 
         // Get all activity tags
@@ -1987,6 +2787,65 @@ mod tests {
     }
 
     #[test]
+    fn test_activity_tags_backup_keeps_duplicate_ids_wallet_scoped() {
+        let (mut db, db_path) = setup();
+        let wallet_id = "hardware-wallet-1";
+        let activity_id = "shared_activity_id";
+
+        let mut main = create_test_onchain_activity();
+        main.id = activity_id.to_string();
+        main.tx_id = "main_shared_activity_tags_txid".to_string();
+
+        let mut hardware = create_test_onchain_activity();
+        hardware.wallet_id = wallet_id.to_string();
+        hardware.id = activity_id.to_string();
+        hardware.tx_id = "hardware_shared_activity_tags_txid".to_string();
+
+        db.insert_onchain_activity(&main).unwrap();
+        db.insert_onchain_activity(&hardware).unwrap();
+
+        db.upsert_tags(&[
+            ActivityTags {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
+                activity_id: activity_id.to_string(),
+                tags: vec!["main".to_string()],
+            },
+            ActivityTags {
+                wallet_id: wallet_id.to_string(),
+                activity_id: activity_id.to_string(),
+                tags: vec!["hardware".to_string()],
+            },
+        ])
+        .unwrap();
+
+        assert_eq!(
+            db.get_tags(DEFAULT_WALLET_ID, activity_id).unwrap(),
+            vec!["main".to_string()]
+        );
+        assert_eq!(
+            db.get_tags(wallet_id, activity_id).unwrap(),
+            vec!["hardware".to_string()]
+        );
+
+        let activity_tags = db.get_all_activities_tags().unwrap();
+        assert_eq!(activity_tags.len(), 2);
+
+        let main_tags = activity_tags
+            .iter()
+            .find(|tags| tags.wallet_id == DEFAULT_WALLET_ID && tags.activity_id == activity_id)
+            .unwrap();
+        assert_eq!(main_tags.tags, vec!["main".to_string()]);
+
+        let hardware_tags = activity_tags
+            .iter()
+            .find(|tags| tags.wallet_id == wallet_id && tags.activity_id == activity_id)
+            .unwrap();
+        assert_eq!(hardware_tags.tags, vec!["hardware".to_string()]);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_get_all_activities_tags_empty() {
         let (db, db_path) = setup();
 
@@ -2003,10 +2862,12 @@ mod tests {
         // Create activity with tags
         let activity = create_test_onchain_activity();
         db.insert_onchain_activity(&activity).unwrap();
-        db.add_tags(&activity.id, &["old_tag".to_string()]).unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &activity.id, &["old_tag".to_string()])
+            .unwrap();
 
         // Upsert with empty tags (with INSERT OR IGNORE, won't clear existing tags)
         let activity_tags = vec![ActivityTags {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             activity_id: activity.id.clone(),
             tags: vec![],
         }];
@@ -2014,7 +2875,7 @@ mod tests {
         assert!(db.upsert_tags(&activity_tags).is_ok());
 
         // Verify old tags still exist (empty tags list doesn't clear)
-        let tags = db.get_tags(&activity.id).unwrap();
+        let tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert!(tags.contains(&"old_tag".to_string()));
 
         cleanup(&db_path);
@@ -2036,6 +2897,7 @@ mod tests {
 
         // Test with empty activity_id
         let activity_tags = vec![ActivityTags {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             activity_id: "".to_string(),
             tags: vec!["payment".to_string()],
         }];
@@ -2064,13 +2926,14 @@ mod tests {
         db.insert_lightning_activity(&activity4).unwrap();
 
         // Add tags
-        db.add_tags(&activity1.id, &["payment".to_string()])
+        db.add_tags(DEFAULT_WALLET_ID, &activity1.id, &["payment".to_string()])
             .unwrap();
-        db.add_tags(&activity2.id, &["invoice".to_string()])
+        db.add_tags(DEFAULT_WALLET_ID, &activity2.id, &["invoice".to_string()])
             .unwrap();
-        db.add_tags(&activity3.id, &["transfer".to_string()])
+        db.add_tags(DEFAULT_WALLET_ID, &activity3.id, &["transfer".to_string()])
             .unwrap();
         db.add_tags(
+            DEFAULT_WALLET_ID,
             &activity4.id,
             &["payment".to_string(), "invoice".to_string()],
         )
@@ -2086,7 +2949,7 @@ mod tests {
 
         // Verify data exists
         let activities = db
-            .get_activities(None, None, None, None, None, None, None, None)
+            .get_activities(None, None, None, None, None, None, None, None, None)
             .unwrap();
         assert_eq!(activities.len(), 4);
         let tags = db.get_all_unique_tags().unwrap();
@@ -2099,7 +2962,7 @@ mod tests {
 
         // Verify everything is deleted
         let activities_after = db
-            .get_activities(None, None, None, None, None, None, None, None)
+            .get_activities(None, None, None, None, None, None, None, None, None)
             .unwrap();
         assert_eq!(activities_after.len(), 0);
         let tags_after = db.get_all_unique_tags().unwrap();
@@ -2111,7 +2974,7 @@ mod tests {
         let new_activity = create_test_onchain_activity();
         db.insert_onchain_activity(&new_activity).unwrap();
         let activities_new = db
-            .get_activities(None, None, None, None, None, None, None, None)
+            .get_activities(None, None, None, None, None, None, None, None, None)
             .unwrap();
         assert_eq!(activities_new.len(), 1);
 
@@ -2387,6 +3250,7 @@ mod tests {
 
         let all = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Onchain),
                 None,
                 None,
@@ -2408,6 +3272,7 @@ mod tests {
 
         let after = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Onchain),
                 None,
                 None,
@@ -2434,11 +3299,85 @@ mod tests {
     }
 
     #[test]
+    fn test_bulk_upserts_preserve_tags_and_seen_state() {
+        let (mut db, db_path) = setup();
+        let seen_timestamp = 1234567999;
+
+        let mut onchain = create_test_onchain_activity();
+        onchain.id = "onchain_preserve_state".to_string();
+        onchain.tx_id = "onchain_preserve_state_txid".to_string();
+
+        db.upsert_onchain_activities(&[onchain.clone()]).unwrap();
+        db.add_tags(DEFAULT_WALLET_ID, &onchain.id, &["onchain_tag".to_string()])
+            .unwrap();
+        db.mark_activity_as_seen(DEFAULT_WALLET_ID, &onchain.id, seen_timestamp)
+            .unwrap();
+
+        let mut updated_onchain = onchain.clone();
+        updated_onchain.value = 99_999;
+        db.upsert_onchain_activities(&[updated_onchain]).unwrap();
+
+        let retrieved_onchain = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &onchain.id)
+            .unwrap()
+            .unwrap();
+        match retrieved_onchain {
+            Activity::Onchain(activity) => {
+                assert_eq!(activity.value, 99_999);
+                assert_eq!(activity.seen_at, Some(seen_timestamp));
+            }
+            Activity::Lightning(_) => panic!("Expected onchain activity"),
+        }
+        assert_eq!(
+            db.get_tags(DEFAULT_WALLET_ID, &onchain.id).unwrap(),
+            vec!["onchain_tag".to_string()]
+        );
+
+        let mut lightning = create_test_lightning_activity();
+        lightning.id = "lightning_preserve_state".to_string();
+
+        db.upsert_lightning_activities(&[lightning.clone()])
+            .unwrap();
+        db.add_tags(
+            DEFAULT_WALLET_ID,
+            &lightning.id,
+            &["lightning_tag".to_string()],
+        )
+        .unwrap();
+        db.mark_activity_as_seen(DEFAULT_WALLET_ID, &lightning.id, seen_timestamp)
+            .unwrap();
+
+        let mut updated_lightning = lightning.clone();
+        updated_lightning.value = 77_777;
+        db.upsert_lightning_activities(&[updated_lightning])
+            .unwrap();
+
+        let retrieved_lightning = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &lightning.id)
+            .unwrap()
+            .unwrap();
+        match retrieved_lightning {
+            Activity::Lightning(activity) => {
+                assert_eq!(activity.value, 77_777);
+                assert_eq!(activity.seen_at, Some(seen_timestamp));
+            }
+            Activity::Onchain(_) => panic!("Expected lightning activity"),
+        }
+        assert_eq!(
+            db.get_tags(DEFAULT_WALLET_ID, &lightning.id).unwrap(),
+            vec!["lightning_tag".to_string()]
+        );
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_upsert_onchain_activities_empty() {
         let (mut db, db_path) = setup();
         assert!(db.upsert_onchain_activities(&[]).is_ok());
         let all = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Onchain),
                 None,
                 None,
@@ -2471,6 +3410,7 @@ mod tests {
 
         let all = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Lightning),
                 None,
                 None,
@@ -2492,6 +3432,7 @@ mod tests {
 
         let after = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Lightning),
                 None,
                 None,
@@ -2523,6 +3464,7 @@ mod tests {
         assert!(db.upsert_lightning_activities(&[]).is_ok());
         let all = db
             .get_activities(
+                None,
                 Some(ActivityFilter::Lightning),
                 None,
                 None,
@@ -2556,7 +3498,7 @@ mod tests {
         activity.tx_type = PaymentType::Received;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(activity_tags.len(), 2);
         assert!(activity_tags.contains(&"payment".to_string()));
         assert!(activity_tags.contains(&"coffee".to_string()));
@@ -2584,7 +3526,7 @@ mod tests {
         activity.tx_type = PaymentType::Received;
         db.insert_lightning_activity(&activity).unwrap();
 
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(activity_tags.len(), 2);
         assert!(activity_tags.contains(&"invoice".to_string()));
         assert!(activity_tags.contains(&"payment".to_string()));
@@ -2629,7 +3571,7 @@ mod tests {
         activity.tx_type = PaymentType::Received;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(activity_tags.len(), 1);
         assert!(activity_tags.contains(&"payment".to_string()));
 
@@ -2713,7 +3655,7 @@ mod tests {
         activity.tx_type = PaymentType::Received;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(activity_tags.len(), 2);
         assert!(activity_tags.contains(&"tag2".to_string()));
         assert!(activity_tags.contains(&"tag3".to_string()));
@@ -2799,7 +3741,7 @@ mod tests {
         activity.tx_type = PaymentType::Received;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(activity_tags.len(), 2);
         assert!(activity_tags.contains(&"tag1".to_string()));
         assert!(activity_tags.contains(&"tag3".to_string()));
@@ -2833,7 +3775,7 @@ mod tests {
         activity.tx_type = PaymentType::Received;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(activity_tags.len(), 2);
         assert!(activity_tags.contains(&"tag2".to_string()));
         assert!(activity_tags.contains(&"tag4".to_string()));
@@ -2878,7 +3820,7 @@ mod tests {
         activity.tx_type = PaymentType::Received;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert!(activity_tags.is_empty());
 
         cleanup(&db_path);
@@ -2927,7 +3869,7 @@ mod tests {
         activity.tx_type = PaymentType::Received;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert!(activity_tags.is_empty());
 
         cleanup(&db_path);
@@ -2951,7 +3893,9 @@ mod tests {
         received_activity.tx_type = PaymentType::Received;
         db.insert_onchain_activity(&received_activity).unwrap();
 
-        let received_tags = db.get_tags(&received_activity.id).unwrap();
+        let received_tags = db
+            .get_tags(DEFAULT_WALLET_ID, &received_activity.id)
+            .unwrap();
         assert_eq!(received_tags.len(), 1);
         assert!(received_tags.contains(&"payment".to_string()));
 
@@ -2974,7 +3918,7 @@ mod tests {
         sent_activity.tx_type = PaymentType::Sent;
         db.insert_onchain_activity(&sent_activity).unwrap();
 
-        let sent_tags = db.get_tags(&sent_activity.id).unwrap();
+        let sent_tags = db.get_tags(DEFAULT_WALLET_ID, &sent_activity.id).unwrap();
         assert_eq!(sent_tags.len(), 1);
         assert!(sent_tags.contains(&"sent_payment".to_string()));
 
@@ -3000,14 +3944,16 @@ mod tests {
         sent_activity.tx_type = PaymentType::Sent;
         db.insert_onchain_activity(&sent_activity).unwrap();
 
-        let retrieved = db.get_activity_by_id(&sent_activity.id).unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &sent_activity.id)
+            .unwrap();
         if let Activity::Onchain(activity) = retrieved.unwrap() {
             assert_eq!(activity.address, metadata_address);
         } else {
             panic!("Expected Onchain activity");
         }
 
-        let sent_tags = db.get_tags(&sent_activity.id).unwrap();
+        let sent_tags = db.get_tags(DEFAULT_WALLET_ID, &sent_activity.id).unwrap();
         assert_eq!(sent_tags.len(), 1);
         assert!(sent_tags.contains(&"sent_payment".to_string()));
 
@@ -3033,7 +3979,9 @@ mod tests {
         activity.fee_rate = 0;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap();
         if let Activity::Onchain(activity) = retrieved.unwrap() {
             assert_eq!(activity.fee_rate, 10);
         } else {
@@ -3062,7 +4010,9 @@ mod tests {
         activity.is_transfer = false;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap();
         if let Activity::Onchain(activity) = retrieved.unwrap() {
             assert_eq!(activity.is_transfer, true);
         } else {
@@ -3092,7 +4042,9 @@ mod tests {
         activity.channel_id = None;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap();
         if let Activity::Onchain(activity) = retrieved.unwrap() {
             assert_eq!(activity.channel_id, Some(channel_id));
         } else {
@@ -3126,13 +4078,15 @@ mod tests {
         activity.channel_id = None;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap();
         if let Activity::Onchain(activity) = retrieved.unwrap() {
             assert_eq!(activity.address, address);
             assert_eq!(activity.fee_rate, 15);
             assert_eq!(activity.is_transfer, true);
             assert_eq!(activity.channel_id, Some(channel_id));
-            let activity_tags = db.get_tags(&activity.id).unwrap();
+            let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
             assert_eq!(activity_tags.len(), 2);
             assert!(activity_tags.contains(&"payment".to_string()));
             assert!(activity_tags.contains(&"transfer".to_string()));
@@ -3162,7 +4116,9 @@ mod tests {
         activity.fee_rate = 5;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap();
         if let Activity::Onchain(activity) = retrieved.unwrap() {
             assert_eq!(activity.fee_rate, 5);
         } else {
@@ -3191,7 +4147,9 @@ mod tests {
         activity.is_transfer = false;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap();
         if let Activity::Onchain(activity) = retrieved.unwrap() {
             assert_eq!(activity.is_transfer, false);
         } else {
@@ -3222,7 +4180,7 @@ mod tests {
         sent_activity.tx_type = PaymentType::Sent;
         db.insert_lightning_activity(&sent_activity).unwrap();
 
-        let sent_tags = db.get_tags(&sent_activity.id).unwrap();
+        let sent_tags = db.get_tags(DEFAULT_WALLET_ID, &sent_activity.id).unwrap();
         assert_eq!(sent_tags.len(), 1);
         assert!(sent_tags.contains(&"sent_invoice".to_string()));
 
@@ -3246,7 +4204,7 @@ mod tests {
         activity1.tx_type = PaymentType::Received;
         db.insert_onchain_activity(&activity1).unwrap();
 
-        let tags1 = db.get_tags(&activity1.id).unwrap();
+        let tags1 = db.get_tags(DEFAULT_WALLET_ID, &activity1.id).unwrap();
         assert_eq!(tags1.len(), 2);
 
         let mut activity2 = create_test_onchain_activity();
@@ -3255,7 +4213,7 @@ mod tests {
         activity2.tx_type = PaymentType::Received;
         db.insert_onchain_activity(&activity2).unwrap();
 
-        let tags2 = db.get_tags(&activity2.id).unwrap();
+        let tags2 = db.get_tags(DEFAULT_WALLET_ID, &activity2.id).unwrap();
         assert!(tags2.is_empty());
 
         cleanup(&db_path);
@@ -3280,7 +4238,7 @@ mod tests {
         activity.tx_type = PaymentType::Received;
         db.insert_lightning_activity(&activity).unwrap();
 
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(activity_tags.len(), 2);
         assert!(activity_tags.contains(&"invoice".to_string()));
         assert!(activity_tags.contains(&"payment".to_string()));
@@ -3306,7 +4264,7 @@ mod tests {
         activity.tx_type = PaymentType::Received;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(activity_tags.len(), 2);
         assert!(activity_tags.contains(&"payment".to_string()));
         assert!(activity_tags.contains(&"coffee".to_string()));
@@ -3350,11 +4308,11 @@ mod tests {
         db.insert_onchain_activity(&activity2).unwrap();
 
         // Verify each activity got its own tags
-        let tags1 = db.get_tags(&activity1.id).unwrap();
+        let tags1 = db.get_tags(DEFAULT_WALLET_ID, &activity1.id).unwrap();
         assert_eq!(tags1.len(), 1);
         assert!(tags1.contains(&"tag1".to_string()));
 
-        let tags2 = db.get_tags(&activity2.id).unwrap();
+        let tags2 = db.get_tags(DEFAULT_WALLET_ID, &activity2.id).unwrap();
         assert_eq!(tags2.len(), 1);
         assert!(tags2.contains(&"tag2".to_string()));
 
@@ -3395,11 +4353,15 @@ mod tests {
         db.insert_lightning_activity(&lightning_activity).unwrap();
 
         // Verify each got its own tags
-        let onchain_tags = db.get_tags(&onchain_activity.id).unwrap();
+        let onchain_tags = db
+            .get_tags(DEFAULT_WALLET_ID, &onchain_activity.id)
+            .unwrap();
         assert_eq!(onchain_tags.len(), 1);
         assert!(onchain_tags.contains(&"onchain_tag".to_string()));
 
-        let lightning_tags = db.get_tags(&lightning_activity.id).unwrap();
+        let lightning_tags = db
+            .get_tags(DEFAULT_WALLET_ID, &lightning_activity.id)
+            .unwrap();
         assert_eq!(lightning_tags.len(), 1);
         assert!(lightning_tags.contains(&"lightning_tag".to_string()));
 
@@ -3427,7 +4389,7 @@ mod tests {
         db.insert_onchain_activity(&activity).unwrap();
 
         // Verify no tags were transferred
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert!(activity_tags.is_empty());
 
         cleanup(&db_path);
@@ -3453,11 +4415,15 @@ mod tests {
         db.insert_onchain_activity(&activity).unwrap();
 
         // Add regular tags to the same activity
-        db.add_tags(&activity.id, &["regular_tag".to_string()])
-            .unwrap();
+        db.add_tags(
+            DEFAULT_WALLET_ID,
+            &activity.id,
+            &["regular_tag".to_string()],
+        )
+        .unwrap();
 
         // Verify both types of tags are present
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(activity_tags.len(), 2);
         assert!(activity_tags.contains(&"receiving_tag".to_string()));
         assert!(activity_tags.contains(&"regular_tag".to_string()));
@@ -3662,7 +4628,7 @@ mod tests {
         activity.tx_type = PaymentType::Received;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(activity_tags.len(), 2);
         assert!(activity_tags.contains(&"tag1".to_string()));
         assert!(activity_tags.contains(&"tag2".to_string()));
@@ -3833,7 +4799,7 @@ mod tests {
         activity.tx_type = PaymentType::Received;
         db.insert_onchain_activity(&activity).unwrap();
 
-        let activity_tags = db.get_tags(&activity.id).unwrap();
+        let activity_tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
         assert_eq!(activity_tags.len(), 2);
         assert!(activity_tags.contains(&"tag1".to_string()));
         assert!(activity_tags.contains(&"tag2".to_string()));
@@ -4195,7 +5161,7 @@ mod tests {
         let (db, db_path) = setup();
         let tx_id = "nonexistent_tx_id".to_string();
 
-        let activity = db.get_activity_by_tx_id(&tx_id).unwrap();
+        let activity = db.get_activity_by_tx_id(DEFAULT_WALLET_ID, &tx_id).unwrap();
         assert!(activity.is_none(), "Non-existent tx_id should return None");
 
         cleanup(&db_path);
@@ -4212,7 +5178,7 @@ mod tests {
 
         db.insert_onchain_activity(&activity).unwrap();
 
-        let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
+        let retrieved = db.get_activity_by_tx_id(DEFAULT_WALLET_ID, &tx_id).unwrap();
         assert!(retrieved.is_some(), "Activity should be found by tx_id");
 
         if let Some(retrieved_activity) = retrieved {
@@ -4246,7 +5212,7 @@ mod tests {
         db.insert_onchain_activity(&activity2).unwrap();
 
         // Should return the first one found
-        let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
+        let retrieved = db.get_activity_by_tx_id(DEFAULT_WALLET_ID, &tx_id).unwrap();
         assert!(retrieved.is_some(), "Activity should be found by tx_id");
 
         if let Some(retrieved_activity) = retrieved {
@@ -4277,7 +5243,9 @@ mod tests {
         db.insert_onchain_activity(&activity2).unwrap();
 
         // Get first activity
-        let retrieved1 = db.get_activity_by_tx_id(&tx_id1).unwrap();
+        let retrieved1 = db
+            .get_activity_by_tx_id(DEFAULT_WALLET_ID, &tx_id1)
+            .unwrap();
         assert!(retrieved1.is_some(), "First activity should be found");
         if let Some(retrieved) = retrieved1 {
             assert_eq!(retrieved.tx_id, tx_id1);
@@ -4287,7 +5255,9 @@ mod tests {
         }
 
         // Get second activity
-        let retrieved2 = db.get_activity_by_tx_id(&tx_id2).unwrap();
+        let retrieved2 = db
+            .get_activity_by_tx_id(DEFAULT_WALLET_ID, &tx_id2)
+            .unwrap();
         assert!(retrieved2.is_some(), "Second activity should be found");
         if let Some(retrieved) = retrieved2 {
             assert_eq!(retrieved.tx_id, tx_id2);
@@ -4309,7 +5279,7 @@ mod tests {
         db.insert_lightning_activity(&lightning_activity).unwrap();
 
         // Try to get by tx_id - should return None since lightning doesn't have tx_id
-        let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
+        let retrieved = db.get_activity_by_tx_id(DEFAULT_WALLET_ID, &tx_id).unwrap();
         assert!(
             retrieved.is_none(),
             "Lightning activities should not be found by tx_id"
@@ -4322,7 +5292,7 @@ mod tests {
         db.insert_onchain_activity(&onchain_activity).unwrap();
 
         // Now should find it
-        let retrieved = db.get_activity_by_tx_id(&tx_id).unwrap();
+        let retrieved = db.get_activity_by_tx_id(DEFAULT_WALLET_ID, &tx_id).unwrap();
         assert!(
             retrieved.is_some(),
             "Onchain activity should be found by tx_id"
@@ -4338,7 +5308,10 @@ mod tests {
         db.insert_onchain_activity(&activity).unwrap();
 
         // Verify initial state - seen_at should be None
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap()
+            .unwrap();
         assert!(
             retrieved.get_seen_at().is_none(),
             "seen_at should be None initially"
@@ -4346,11 +5319,14 @@ mod tests {
 
         // Mark as seen
         let seen_timestamp = 1234567900u64;
-        db.mark_activity_as_seen(&activity.id, seen_timestamp)
+        db.mark_activity_as_seen(DEFAULT_WALLET_ID, &activity.id, seen_timestamp)
             .unwrap();
 
         // Verify seen_at is now set
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap()
+            .unwrap();
         assert_eq!(
             retrieved.get_seen_at(),
             Some(seen_timestamp),
@@ -4367,7 +5343,10 @@ mod tests {
         db.insert_lightning_activity(&activity).unwrap();
 
         // Verify initial state - seen_at should be None
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap()
+            .unwrap();
         assert!(
             retrieved.get_seen_at().is_none(),
             "seen_at should be None initially"
@@ -4375,11 +5354,14 @@ mod tests {
 
         // Mark as seen
         let seen_timestamp = 1234567900u64;
-        db.mark_activity_as_seen(&activity.id, seen_timestamp)
+        db.mark_activity_as_seen(DEFAULT_WALLET_ID, &activity.id, seen_timestamp)
             .unwrap();
 
         // Verify seen_at is now set
-        let retrieved = db.get_activity_by_id(&activity.id).unwrap().unwrap();
+        let retrieved = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &activity.id)
+            .unwrap()
+            .unwrap();
         assert_eq!(
             retrieved.get_seen_at(),
             Some(seen_timestamp),
@@ -4394,7 +5376,7 @@ mod tests {
         let (mut db, db_path) = setup();
 
         // Try to mark a non-existent activity as seen
-        let result = db.mark_activity_as_seen("nonexistent_id", 1234567900);
+        let result = db.mark_activity_as_seen(DEFAULT_WALLET_ID, "nonexistent_id", 1234567900);
         assert!(result.is_err(), "Should fail for non-existent activity");
 
         cleanup(&db_path);
@@ -4415,12 +5397,12 @@ mod tests {
 
         // Mark only onchain as seen
         let seen_timestamp = 3000u64;
-        db.mark_activity_as_seen(&onchain.id, seen_timestamp)
+        db.mark_activity_as_seen(DEFAULT_WALLET_ID, &onchain.id, seen_timestamp)
             .unwrap();
 
         // Get all activities
         let activities = db
-            .get_activities(None, None, None, None, None, None, None, None)
+            .get_activities(None, None, None, None, None, None, None, None, None)
             .unwrap();
         assert_eq!(activities.len(), 2);
 
@@ -4450,11 +5432,14 @@ mod tests {
 
         // Mark as seen
         let seen_timestamp = 1234567900u64;
-        db.mark_activity_as_seen(&activity.id, seen_timestamp)
+        db.mark_activity_as_seen(DEFAULT_WALLET_ID, &activity.id, seen_timestamp)
             .unwrap();
 
         // Retrieve by tx_id and verify seen_at
-        let retrieved = db.get_activity_by_tx_id(&activity.tx_id).unwrap().unwrap();
+        let retrieved = db
+            .get_activity_by_tx_id(DEFAULT_WALLET_ID, &activity.tx_id)
+            .unwrap()
+            .unwrap();
         assert_eq!(
             retrieved.seen_at,
             Some(seen_timestamp),
@@ -4466,6 +5451,7 @@ mod tests {
 
     fn create_test_transaction_details() -> TransactionDetails {
         TransactionDetails {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             tx_id: "tx123abc".to_string(),
             amount_sats: 50000,
             inputs: vec![TxInput {
@@ -4503,7 +5489,10 @@ mod tests {
         db.upsert_transaction_details(&[details.clone()]).unwrap();
 
         // Retrieve
-        let retrieved = db.get_transaction_details(&details.tx_id).unwrap().unwrap();
+        let retrieved = db
+            .get_transaction_details(DEFAULT_WALLET_ID, &details.tx_id)
+            .unwrap()
+            .unwrap();
         assert_eq!(retrieved.tx_id, details.tx_id);
         assert_eq!(retrieved.amount_sats, details.amount_sats);
         assert_eq!(retrieved.inputs.len(), 1);
@@ -4518,7 +5507,9 @@ mod tests {
     fn test_transaction_details_not_found() {
         let (db, db_path) = setup();
 
-        let retrieved = db.get_transaction_details("nonexistent_tx").unwrap();
+        let retrieved = db
+            .get_transaction_details(DEFAULT_WALLET_ID, "nonexistent_tx")
+            .unwrap();
         assert!(retrieved.is_none());
 
         cleanup(&db_path);
@@ -4537,8 +5528,55 @@ mod tests {
         db.upsert_transaction_details(&[details.clone()]).unwrap();
 
         // Verify update
-        let retrieved = db.get_transaction_details(&details.tx_id).unwrap().unwrap();
+        let retrieved = db
+            .get_transaction_details(DEFAULT_WALLET_ID, &details.tx_id)
+            .unwrap()
+            .unwrap();
         assert_eq!(retrieved.amount_sats, 100000);
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_transaction_details_are_wallet_scoped() {
+        let (mut db, db_path) = setup();
+        let wallet_id = "hardware-wallet-1";
+
+        let mut main_details = create_test_transaction_details();
+        main_details.tx_id = "shared_details_txid".to_string();
+        main_details.amount_sats = 10_000;
+
+        let mut hardware_details = create_test_transaction_details();
+        hardware_details.wallet_id = wallet_id.to_string();
+        hardware_details.tx_id = "shared_details_txid".to_string();
+        hardware_details.amount_sats = -25_000;
+
+        db.upsert_transaction_details(&[main_details.clone(), hardware_details.clone()])
+            .unwrap();
+
+        let main = db
+            .get_transaction_details(DEFAULT_WALLET_ID, "shared_details_txid")
+            .unwrap()
+            .unwrap();
+        let hardware = db
+            .get_transaction_details(wallet_id, "shared_details_txid")
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(main.amount_sats, main_details.amount_sats);
+        assert_eq!(hardware.amount_sats, hardware_details.amount_sats);
+
+        db.delete_transaction_details(wallet_id, "shared_details_txid")
+            .unwrap();
+
+        assert!(db
+            .get_transaction_details(wallet_id, "shared_details_txid")
+            .unwrap()
+            .is_none());
+        assert!(db
+            .get_transaction_details(DEFAULT_WALLET_ID, "shared_details_txid")
+            .unwrap()
+            .is_some());
 
         cleanup(&db_path);
     }
@@ -4551,11 +5589,15 @@ mod tests {
         db.upsert_transaction_details(&[details.clone()]).unwrap();
 
         // Delete
-        let deleted = db.delete_transaction_details(&details.tx_id).unwrap();
+        let deleted = db
+            .delete_transaction_details(DEFAULT_WALLET_ID, &details.tx_id)
+            .unwrap();
         assert!(deleted);
 
         // Verify deletion
-        let retrieved = db.get_transaction_details(&details.tx_id).unwrap();
+        let retrieved = db
+            .get_transaction_details(DEFAULT_WALLET_ID, &details.tx_id)
+            .unwrap();
         assert!(retrieved.is_none());
 
         cleanup(&db_path);
@@ -4565,7 +5607,9 @@ mod tests {
     fn test_delete_nonexistent_transaction_details() {
         let (mut db, db_path) = setup();
 
-        let deleted = db.delete_transaction_details("nonexistent_tx").unwrap();
+        let deleted = db
+            .delete_transaction_details(DEFAULT_WALLET_ID, "nonexistent_tx")
+            .unwrap();
         assert!(!deleted);
 
         cleanup(&db_path);
@@ -4588,13 +5632,13 @@ mod tests {
         assert_eq!(all.len(), 2);
 
         let retrieved1 = db
-            .get_transaction_details(&details1.tx_id)
+            .get_transaction_details(DEFAULT_WALLET_ID, &details1.tx_id)
             .unwrap()
             .unwrap();
         assert_eq!(retrieved1.amount_sats, 50000);
 
         let retrieved2 = db
-            .get_transaction_details(&details2.tx_id)
+            .get_transaction_details(DEFAULT_WALLET_ID, &details2.tx_id)
             .unwrap()
             .unwrap();
         assert_eq!(retrieved2.amount_sats, -25000);
@@ -4662,6 +5706,7 @@ mod tests {
         let (mut db, db_path) = setup();
 
         let details = TransactionDetails {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
             tx_id: "tx_with_complex_witness".to_string(),
             amount_sats: 10000,
             inputs: vec![TxInput {
@@ -4686,7 +5731,10 @@ mod tests {
 
         db.upsert_transaction_details(&[details.clone()]).unwrap();
 
-        let retrieved = db.get_transaction_details(&details.tx_id).unwrap().unwrap();
+        let retrieved = db
+            .get_transaction_details(DEFAULT_WALLET_ID, &details.tx_id)
+            .unwrap()
+            .unwrap();
         assert_eq!(retrieved.inputs[0].witness.len(), 3);
         assert_eq!(
             retrieved.outputs[0].scriptpubkey_type,

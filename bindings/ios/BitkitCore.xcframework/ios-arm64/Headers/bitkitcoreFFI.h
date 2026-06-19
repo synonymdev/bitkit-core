@@ -253,98 +253,98 @@ typedef void (*UniffiForeignFutureCompleteVoid)(uint64_t, UniffiForeignFutureStr
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0
-typedef void (*UniffiCallbackInterfaceEventListenerMethod0)(uint64_t, RustBuffer, RustBuffer, void* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceEventListenerMethod0)(uint64_t, RustBuffer, RustBuffer, void* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0
-typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod0)(uint64_t, RustBuffer* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod0)(uint64_t, RustBuffer* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD1
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD1
-typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod1)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod1)(uint64_t, RustBuffer, RustBuffer* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD2
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD2
-typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod2)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod2)(uint64_t, RustBuffer, RustBuffer* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD3
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD3
-typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod3)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod3)(uint64_t, RustBuffer, RustBuffer* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD4
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD4
-typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod4)(uint64_t, RustBuffer, RustBuffer, RustBuffer* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod4)(uint64_t, RustBuffer, RustBuffer, RustBuffer* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD5
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD5
-typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod5)(uint64_t, RustBuffer, uint32_t* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod5)(uint64_t, RustBuffer, uint32_t* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD6
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD6
-typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod6)(uint64_t, RustBuffer, uint16_t, RustBuffer, RustBuffer* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod6)(uint64_t, RustBuffer, uint16_t, RustBuffer, RustBuffer* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD7
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD7
-typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod7)(uint64_t, RustBuffer* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod7)(uint64_t, RustBuffer* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD8
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD8
-typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod8)(uint64_t, RustBuffer, RustBuffer, int8_t* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod8)(uint64_t, RustBuffer, RustBuffer, int8_t* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD9
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD9
-typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod9)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod9)(uint64_t, RustBuffer, RustBuffer* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD10
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD10
-typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod10)(uint64_t, RustBuffer, RustBuffer, void* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod10)(uint64_t, RustBuffer, RustBuffer, void* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD0
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD0
-typedef void (*UniffiCallbackInterfaceTrezorUiCallbackMethod0)(uint64_t, RustBuffer* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTrezorUiCallbackMethod0)(uint64_t, RustBuffer* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD1
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD1
-typedef void (*UniffiCallbackInterfaceTrezorUiCallbackMethod1)(uint64_t, int8_t, RustBuffer* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTrezorUiCallbackMethod1)(uint64_t, int8_t, RustBuffer* _Nonnull,
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
@@ -502,7 +502,7 @@ RustBuffer uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request(vo
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITY_WIPE_ALL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITY_WIPE_ALL
 void uniffi_bitkitcore_fn_func_activity_wipe_all(RustCallStatus *_Nonnull out_status
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_PRE_ACTIVITY_METADATA
@@ -517,7 +517,7 @@ void uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags(RustBuffer payment
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_TAGS
-void uniffi_bitkitcore_fn_func_add_tags(RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
+void uniffi_bitkitcore_fn_func_add_tags(RustBuffer wallet_id, RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_APPROVE_PUBKY_AUTH
@@ -528,19 +528,19 @@ uint64_t uniffi_bitkitcore_fn_func_approve_pubky_auth(RustBuffer auth_url, RustB
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
 uint64_t uniffi_bitkitcore_fn_func_blocktank_remove_all_cjit_entries(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_REMOVE_ALL_ORDERS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_REMOVE_ALL_ORDERS
 uint64_t uniffi_bitkitcore_fn_func_blocktank_remove_all_orders(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_WIPE_ALL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_WIPE_ALL
 uint64_t uniffi_bitkitcore_fn_func_blocktank_wipe_all(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BROADCAST_SWEEP_TRANSACTION
@@ -556,7 +556,7 @@ RustBuffer uniffi_bitkitcore_fn_func_calculate_channel_liquidity_options(RustBuf
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CANCEL_PUBKY_AUTH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CANCEL_PUBKY_AUTH
 uint64_t uniffi_bitkitcore_fn_func_cancel_pubky_auth(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CHECK_SWEEPABLE_BALANCES
@@ -567,7 +567,7 @@ uint64_t uniffi_bitkitcore_fn_func_check_sweepable_balances(RustBuffer mnemonic_
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_COMPLETE_PUBKY_AUTH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_COMPLETE_PUBKY_AUTH
 uint64_t uniffi_bitkitcore_fn_func_complete_pubky_auth(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_CREATE_CHANNEL_REQUEST_URL
@@ -595,9 +595,14 @@ RustBuffer uniffi_bitkitcore_fn_func_create_withdraw_callback_url(RustBuffer k1,
 uint64_t uniffi_bitkitcore_fn_func_decode(RustBuffer invoice
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_ACTIVITIES_BY_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_ACTIVITIES_BY_WALLET_ID
+uint32_t uniffi_bitkitcore_fn_func_delete_activities_by_wallet_id(RustBuffer wallet_id, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_ACTIVITY_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_ACTIVITY_BY_ID
-int8_t uniffi_bitkitcore_fn_func_delete_activity_by_id(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
+int8_t uniffi_bitkitcore_fn_func_delete_activity_by_id(RustBuffer wallet_id, RustBuffer activity_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_PRE_ACTIVITY_METADATA
@@ -607,7 +612,7 @@ void uniffi_bitkitcore_fn_func_delete_pre_activity_metadata(RustBuffer payment_i
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_TRANSACTION_DETAILS
-int8_t uniffi_bitkitcore_fn_func_delete_transaction_details(RustBuffer tx_id, RustCallStatus *_Nonnull out_status
+int8_t uniffi_bitkitcore_fn_func_delete_transaction_details(RustBuffer wallet_id, RustBuffer tx_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_BITCOIN_ADDRESS
@@ -677,28 +682,28 @@ RustBuffer uniffi_bitkitcore_fn_func_generate_mnemonic(RustBuffer word_count, Ru
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES
-RustBuffer uniffi_bitkitcore_fn_func_get_activities(RustBuffer filter, RustBuffer tx_type, RustBuffer tags, RustBuffer search, RustBuffer min_date, RustBuffer max_date, RustBuffer limit, RustBuffer sort_direction, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_activities(RustBuffer wallet_id, RustBuffer filter, RustBuffer tx_type, RustBuffer tags, RustBuffer search, RustBuffer min_date, RustBuffer max_date, RustBuffer limit, RustBuffer sort_direction, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES_BY_TAG
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES_BY_TAG
-RustBuffer uniffi_bitkitcore_fn_func_get_activities_by_tag(RustBuffer tag, RustBuffer limit, RustBuffer sort_direction, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_activities_by_tag(RustBuffer wallet_id, RustBuffer tag, RustBuffer limit, RustBuffer sort_direction, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITY_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITY_BY_ID
-RustBuffer uniffi_bitkitcore_fn_func_get_activity_by_id(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_activity_by_id(RustBuffer wallet_id, RustBuffer activity_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITY_BY_TX_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITY_BY_TX_ID
-RustBuffer uniffi_bitkitcore_fn_func_get_activity_by_tx_id(RustBuffer tx_id, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_activity_by_tx_id(RustBuffer wallet_id, RustBuffer tx_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_ACTIVITIES_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_ACTIVITIES_TAGS
 RustBuffer uniffi_bitkitcore_fn_func_get_all_activities_tags(RustCallStatus *_Nonnull out_status
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_CLOSED_CHANNELS
@@ -709,19 +714,19 @@ RustBuffer uniffi_bitkitcore_fn_func_get_all_closed_channels(RustBuffer sort_dir
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_PRE_ACTIVITY_METADATA
 RustBuffer uniffi_bitkitcore_fn_func_get_all_pre_activity_metadata(RustCallStatus *_Nonnull out_status
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_TRANSACTION_DETAILS
 RustBuffer uniffi_bitkitcore_fn_func_get_all_transaction_details(RustCallStatus *_Nonnull out_status
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_UNIQUE_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_UNIQUE_TAGS
 RustBuffer uniffi_bitkitcore_fn_func_get_all_unique_tags(RustCallStatus *_Nonnull out_status
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_BIP39_SUGGESTIONS
@@ -732,7 +737,7 @@ RustBuffer uniffi_bitkitcore_fn_func_get_bip39_suggestions(RustBuffer partial_wo
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_BIP39_WORDLIST
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_BIP39_WORDLIST
 RustBuffer uniffi_bitkitcore_fn_func_get_bip39_wordlist(RustCallStatus *_Nonnull out_status
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_CJIT_ENTRIES
@@ -748,6 +753,12 @@ RustBuffer uniffi_bitkitcore_fn_func_get_closed_channel_by_id(RustBuffer channel
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_LSP_BALANCE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_LSP_BALANCE
 uint64_t uniffi_bitkitcore_fn_func_get_default_lsp_balance(RustBuffer params, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_WALLET_ID
+RustBuffer uniffi_bitkitcore_fn_func_get_default_wallet_id(RustCallStatus *_Nonnull out_status
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_GIFT
@@ -787,12 +798,12 @@ RustBuffer uniffi_bitkitcore_fn_func_get_pre_activity_metadata(RustBuffer search
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TAGS
-RustBuffer uniffi_bitkitcore_fn_func_get_tags(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_tags(RustBuffer wallet_id, RustBuffer activity_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TRANSACTION_DETAILS
-RustBuffer uniffi_bitkitcore_fn_func_get_transaction_details(RustBuffer tx_id, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_transaction_details(RustBuffer wallet_id, RustBuffer tx_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GIFT_ORDER
@@ -832,7 +843,7 @@ uint64_t uniffi_bitkitcore_fn_func_lnurl_auth(RustBuffer domain, RustBuffer k1, 
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_MARK_ACTIVITY_AS_SEEN
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_MARK_ACTIVITY_AS_SEEN
-void uniffi_bitkitcore_fn_func_mark_activity_as_seen(RustBuffer activity_id, uint64_t seen_at, RustCallStatus *_Nonnull out_status
+void uniffi_bitkitcore_fn_func_mark_activity_as_seen(RustBuffer wallet_id, RustBuffer activity_id, uint64_t seen_at, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_MNEMONIC_TO_ENTROPY
@@ -883,7 +894,7 @@ uint64_t uniffi_bitkitcore_fn_func_onchain_start_watcher(RustBuffer params, void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_STOP_ALL_WATCHERS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_STOP_ALL_WATCHERS
 void uniffi_bitkitcore_fn_func_onchain_stop_all_watchers(RustCallStatus *_Nonnull out_status
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ONCHAIN_STOP_WATCHER
@@ -949,13 +960,13 @@ uint64_t uniffi_bitkitcore_fn_func_pubky_sign_up(RustBuffer secret_key_hex, Rust
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REFRESH_ACTIVE_CJIT_ENTRIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REFRESH_ACTIVE_CJIT_ENTRIES
 uint64_t uniffi_bitkitcore_fn_func_refresh_active_cjit_entries(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REFRESH_ACTIVE_ORDERS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REFRESH_ACTIVE_ORDERS
 uint64_t uniffi_bitkitcore_fn_func_refresh_active_orders(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REGISTER_DEVICE
@@ -1000,7 +1011,7 @@ void uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags(RustBuffer paym
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_TAGS
-void uniffi_bitkitcore_fn_func_remove_tags(RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
+void uniffi_bitkitcore_fn_func_remove_tags(RustBuffer wallet_id, RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_RESET_PRE_ACTIVITY_METADATA_TAGS
@@ -1046,7 +1057,7 @@ uint64_t uniffi_bitkitcore_fn_func_trezor_connect(RustBuffer device_id, RustBuff
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_DISCONNECT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_DISCONNECT
 uint64_t uniffi_bitkitcore_fn_func_trezor_disconnect(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_ADDRESS
@@ -1057,19 +1068,19 @@ uint64_t uniffi_bitkitcore_fn_func_trezor_get_address(RustBuffer params
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_CONNECTED_DEVICE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_CONNECTED_DEVICE
 uint64_t uniffi_bitkitcore_fn_func_trezor_get_connected_device(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_DEVICE_FINGERPRINT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_DEVICE_FINGERPRINT
 uint64_t uniffi_bitkitcore_fn_func_trezor_get_device_fingerprint(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_FEATURES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_FEATURES
 uint64_t uniffi_bitkitcore_fn_func_trezor_get_features(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_PUBLIC_KEY
@@ -1085,31 +1096,31 @@ uint64_t uniffi_bitkitcore_fn_func_trezor_initialize(RustBuffer credential_path
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_IS_BLE_AVAILABLE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_IS_BLE_AVAILABLE
 int8_t uniffi_bitkitcore_fn_func_trezor_is_ble_available(RustCallStatus *_Nonnull out_status
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_IS_CONNECTED
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_IS_CONNECTED
 uint64_t uniffi_bitkitcore_fn_func_trezor_is_connected(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_IS_INITIALIZED
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_IS_INITIALIZED
 uint64_t uniffi_bitkitcore_fn_func_trezor_is_initialized(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_LIST_DEVICES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_LIST_DEVICES
 uint64_t uniffi_bitkitcore_fn_func_trezor_list_devices(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SCAN
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SCAN
 uint64_t uniffi_bitkitcore_fn_func_trezor_scan(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_SET_TRANSPORT_CALLBACK
@@ -1225,19 +1236,19 @@ void uniffi_bitkitcore_fn_func_validate_mnemonic(RustBuffer mnemonic_phrase, Rus
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_CLOSED_CHANNELS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_CLOSED_CHANNELS
 void uniffi_bitkitcore_fn_func_wipe_all_closed_channels(RustCallStatus *_Nonnull out_status
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_DATABASES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_DATABASES
 uint64_t uniffi_bitkitcore_fn_func_wipe_all_databases(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_TRANSACTION_DETAILS
 void uniffi_bitkitcore_fn_func_wipe_all_transaction_details(RustCallStatus *_Nonnull out_status
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_FFI_BITKITCORE_RUSTBUFFER_ALLOC
@@ -1523,949 +1534,961 @@ void ffi_bitkitcore_rust_future_complete_void(uint64_t handle, RustCallStatus *_
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ACTIVITY_WIPE_ALL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ACTIVITY_WIPE_ALL
 uint16_t uniffi_bitkitcore_checksum_func_activity_wipe_all(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_PRE_ACTIVITY_METADATA
 uint16_t uniffi_bitkitcore_checksum_func_add_pre_activity_metadata(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_PRE_ACTIVITY_METADATA_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_PRE_ACTIVITY_METADATA_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ADD_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_add_tags(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_APPROVE_PUBKY_AUTH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_APPROVE_PUBKY_AUTH
 uint16_t uniffi_bitkitcore_checksum_func_approve_pubky_auth(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
 uint16_t uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_REMOVE_ALL_ORDERS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_REMOVE_ALL_ORDERS
 uint16_t uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_WIPE_ALL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_WIPE_ALL
 uint16_t uniffi_bitkitcore_checksum_func_blocktank_wipe_all(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BROADCAST_SWEEP_TRANSACTION
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BROADCAST_SWEEP_TRANSACTION
 uint16_t uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CALCULATE_CHANNEL_LIQUIDITY_OPTIONS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CALCULATE_CHANNEL_LIQUIDITY_OPTIONS
 uint16_t uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CANCEL_PUBKY_AUTH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CANCEL_PUBKY_AUTH
 uint16_t uniffi_bitkitcore_checksum_func_cancel_pubky_auth(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CHECK_SWEEPABLE_BALANCES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CHECK_SWEEPABLE_BALANCES
 uint16_t uniffi_bitkitcore_checksum_func_check_sweepable_balances(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_COMPLETE_PUBKY_AUTH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_COMPLETE_PUBKY_AUTH
 uint16_t uniffi_bitkitcore_checksum_func_complete_pubky_auth(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CREATE_CHANNEL_REQUEST_URL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CREATE_CHANNEL_REQUEST_URL
 uint16_t uniffi_bitkitcore_checksum_func_create_channel_request_url(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CREATE_CJIT_ENTRY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CREATE_CJIT_ENTRY
 uint16_t uniffi_bitkitcore_checksum_func_create_cjit_entry(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CREATE_ORDER
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CREATE_ORDER
 uint16_t uniffi_bitkitcore_checksum_func_create_order(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CREATE_WITHDRAW_CALLBACK_URL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_CREATE_WITHDRAW_CALLBACK_URL
 uint16_t uniffi_bitkitcore_checksum_func_create_withdraw_callback_url(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DECODE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DECODE
 uint16_t uniffi_bitkitcore_checksum_func_decode(void
-    
+
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_ACTIVITIES_BY_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_ACTIVITIES_BY_WALLET_ID
+uint16_t uniffi_bitkitcore_checksum_func_delete_activities_by_wallet_id(void
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_ACTIVITY_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_ACTIVITY_BY_ID
 uint16_t uniffi_bitkitcore_checksum_func_delete_activity_by_id(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_PRE_ACTIVITY_METADATA
 uint16_t uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_TRANSACTION_DETAILS
 uint16_t uniffi_bitkitcore_checksum_func_delete_transaction_details(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_BITCOIN_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_BITCOIN_ADDRESS
 uint16_t uniffi_bitkitcore_checksum_func_derive_bitcoin_address(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_BITCOIN_ADDRESSES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_BITCOIN_ADDRESSES
 uint16_t uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_ONCHAIN_DESCRIPTOR
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_ONCHAIN_DESCRIPTOR
 uint16_t uniffi_bitkitcore_checksum_func_derive_onchain_descriptor(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_PRIVATE_KEY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_PRIVATE_KEY
 uint16_t uniffi_bitkitcore_checksum_func_derive_private_key(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_PUBKY_SECRET_KEY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_PUBKY_SECRET_KEY
 uint16_t uniffi_bitkitcore_checksum_func_derive_pubky_secret_key(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ENTROPY_TO_MNEMONIC
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ENTROPY_TO_MNEMONIC
 uint16_t uniffi_bitkitcore_checksum_func_entropy_to_mnemonic(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ESTIMATE_ORDER_FEE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ESTIMATE_ORDER_FEE
 uint16_t uniffi_bitkitcore_checksum_func_estimate_order_fee(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ESTIMATE_ORDER_FEE_FULL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ESTIMATE_ORDER_FEE_FULL
 uint16_t uniffi_bitkitcore_checksum_func_estimate_order_fee_full(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_CONTACTS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_CONTACTS
 uint16_t uniffi_bitkitcore_checksum_func_fetch_pubky_contacts(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_FILE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_FILE
 uint16_t uniffi_bitkitcore_checksum_func_fetch_pubky_file(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_FILE_STRING
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_FILE_STRING
 uint16_t uniffi_bitkitcore_checksum_func_fetch_pubky_file_string(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_PROFILE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FETCH_PUBKY_PROFILE
 uint16_t uniffi_bitkitcore_checksum_func_fetch_pubky_profile(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GENERATE_MNEMONIC
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GENERATE_MNEMONIC
 uint16_t uniffi_bitkitcore_checksum_func_generate_mnemonic(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ACTIVITIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ACTIVITIES
 uint16_t uniffi_bitkitcore_checksum_func_get_activities(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ACTIVITIES_BY_TAG
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ACTIVITIES_BY_TAG
 uint16_t uniffi_bitkitcore_checksum_func_get_activities_by_tag(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ACTIVITY_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ACTIVITY_BY_ID
 uint16_t uniffi_bitkitcore_checksum_func_get_activity_by_id(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ACTIVITY_BY_TX_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ACTIVITY_BY_TX_ID
 uint16_t uniffi_bitkitcore_checksum_func_get_activity_by_tx_id(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_ACTIVITIES_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_ACTIVITIES_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_get_all_activities_tags(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_CLOSED_CHANNELS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_CLOSED_CHANNELS
 uint16_t uniffi_bitkitcore_checksum_func_get_all_closed_channels(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_PRE_ACTIVITY_METADATA
 uint16_t uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_TRANSACTION_DETAILS
 uint16_t uniffi_bitkitcore_checksum_func_get_all_transaction_details(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_UNIQUE_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ALL_UNIQUE_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_get_all_unique_tags(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_BIP39_SUGGESTIONS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_BIP39_SUGGESTIONS
 uint16_t uniffi_bitkitcore_checksum_func_get_bip39_suggestions(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_BIP39_WORDLIST
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_BIP39_WORDLIST
 uint16_t uniffi_bitkitcore_checksum_func_get_bip39_wordlist(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CJIT_ENTRIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CJIT_ENTRIES
 uint16_t uniffi_bitkitcore_checksum_func_get_cjit_entries(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CLOSED_CHANNEL_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CLOSED_CHANNEL_BY_ID
 uint16_t uniffi_bitkitcore_checksum_func_get_closed_channel_by_id(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_LSP_BALANCE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_LSP_BALANCE
 uint16_t uniffi_bitkitcore_checksum_func_get_default_lsp_balance(void
-    
+
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_WALLET_ID
+uint16_t uniffi_bitkitcore_checksum_func_get_default_wallet_id(void
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_GIFT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_GIFT
 uint16_t uniffi_bitkitcore_checksum_func_get_gift(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_INFO
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_INFO
 uint16_t uniffi_bitkitcore_checksum_func_get_info(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_LNURL_INVOICE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_LNURL_INVOICE
 uint16_t uniffi_bitkitcore_checksum_func_get_lnurl_invoice(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_MIN_ZERO_CONF_TX_FEE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_MIN_ZERO_CONF_TX_FEE
 uint16_t uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ORDERS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ORDERS
 uint16_t uniffi_bitkitcore_checksum_func_get_orders(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PAYMENT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PAYMENT
 uint16_t uniffi_bitkitcore_checksum_func_get_payment(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA
 uint16_t uniffi_bitkitcore_checksum_func_get_pre_activity_metadata(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_get_tags(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_TRANSACTION_DETAILS
 uint16_t uniffi_bitkitcore_checksum_func_get_transaction_details(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GIFT_ORDER
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GIFT_ORDER
 uint16_t uniffi_bitkitcore_checksum_func_gift_order(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GIFT_PAY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GIFT_PAY
 uint16_t uniffi_bitkitcore_checksum_func_gift_pay(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INIT_DB
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INIT_DB
 uint16_t uniffi_bitkitcore_checksum_func_init_db(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INSERT_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_INSERT_ACTIVITY
 uint16_t uniffi_bitkitcore_checksum_func_insert_activity(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_IS_ADDRESS_USED
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_IS_ADDRESS_USED
 uint16_t uniffi_bitkitcore_checksum_func_is_address_used(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_IS_VALID_BIP39_WORD
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_IS_VALID_BIP39_WORD
 uint16_t uniffi_bitkitcore_checksum_func_is_valid_bip39_word(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_LNURL_AUTH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_LNURL_AUTH
 uint16_t uniffi_bitkitcore_checksum_func_lnurl_auth(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_MARK_ACTIVITY_AS_SEEN
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_MARK_ACTIVITY_AS_SEEN
 uint16_t uniffi_bitkitcore_checksum_func_mark_activity_as_seen(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_MNEMONIC_TO_ENTROPY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_MNEMONIC_TO_ENTROPY
 uint16_t uniffi_bitkitcore_checksum_func_mnemonic_to_entropy(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_MNEMONIC_TO_SEED
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_MNEMONIC_TO_SEED
 uint16_t uniffi_bitkitcore_checksum_func_mnemonic_to_seed(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_BROADCAST_RAW_TX
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_BROADCAST_RAW_TX
 uint16_t uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_COMPOSE_TRANSACTION
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_COMPOSE_TRANSACTION
 uint16_t uniffi_bitkitcore_checksum_func_onchain_compose_transaction(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_ACCOUNT_INFO
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_ACCOUNT_INFO
 uint16_t uniffi_bitkitcore_checksum_func_onchain_get_account_info(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_ADDRESS_INFO
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_ADDRESS_INFO
 uint16_t uniffi_bitkitcore_checksum_func_onchain_get_address_info(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_TRANSACTION_DETAIL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_TRANSACTION_DETAIL
 uint16_t uniffi_bitkitcore_checksum_func_onchain_get_transaction_detail(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_TRANSACTION_HISTORY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_GET_TRANSACTION_HISTORY
 uint16_t uniffi_bitkitcore_checksum_func_onchain_get_transaction_history(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_START_WATCHER
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_START_WATCHER
 uint16_t uniffi_bitkitcore_checksum_func_onchain_start_watcher(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_STOP_ALL_WATCHERS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_STOP_ALL_WATCHERS
 uint16_t uniffi_bitkitcore_checksum_func_onchain_stop_all_watchers(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_STOP_WATCHER
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ONCHAIN_STOP_WATCHER
 uint16_t uniffi_bitkitcore_checksum_func_onchain_stop_watcher(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_OPEN_CHANNEL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_OPEN_CHANNEL
 uint16_t uniffi_bitkitcore_checksum_func_open_channel(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PARSE_PUBKY_AUTH_URL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PARSE_PUBKY_AUTH_URL
 uint16_t uniffi_bitkitcore_checksum_func_parse_pubky_auth_url(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PREPARE_LEGACY_RN_NATIVE_SEGWIT_RECOVERY_SWEEP
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PREPARE_LEGACY_RN_NATIVE_SEGWIT_RECOVERY_SWEEP
 uint16_t uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PREPARE_SWEEP_TRANSACTION
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PREPARE_SWEEP_TRANSACTION
 uint16_t uniffi_bitkitcore_checksum_func_prepare_sweep_transaction(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_PUBLIC_KEY_FROM_SECRET
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_PUBLIC_KEY_FROM_SECRET
 uint16_t uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_PUT_WITH_SECRET_KEY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_PUT_WITH_SECRET_KEY
 uint16_t uniffi_bitkitcore_checksum_func_pubky_put_with_secret_key(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SESSION_DELETE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SESSION_DELETE
 uint16_t uniffi_bitkitcore_checksum_func_pubky_session_delete(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SESSION_LIST
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SESSION_LIST
 uint16_t uniffi_bitkitcore_checksum_func_pubky_session_list(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SESSION_PUT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SESSION_PUT
 uint16_t uniffi_bitkitcore_checksum_func_pubky_session_put(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SIGN_IN
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SIGN_IN
 uint16_t uniffi_bitkitcore_checksum_func_pubky_sign_in(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SIGN_UP
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SIGN_UP
 uint16_t uniffi_bitkitcore_checksum_func_pubky_sign_up(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REFRESH_ACTIVE_CJIT_ENTRIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REFRESH_ACTIVE_CJIT_ENTRIES
 uint16_t uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REFRESH_ACTIVE_ORDERS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REFRESH_ACTIVE_ORDERS
 uint16_t uniffi_bitkitcore_checksum_func_refresh_active_orders(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGISTER_DEVICE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGISTER_DEVICE
 uint16_t uniffi_bitkitcore_checksum_func_register_device(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGTEST_CLOSE_CHANNEL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGTEST_CLOSE_CHANNEL
 uint16_t uniffi_bitkitcore_checksum_func_regtest_close_channel(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGTEST_DEPOSIT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGTEST_DEPOSIT
 uint16_t uniffi_bitkitcore_checksum_func_regtest_deposit(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGTEST_GET_PAYMENT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGTEST_GET_PAYMENT
 uint16_t uniffi_bitkitcore_checksum_func_regtest_get_payment(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGTEST_MINE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGTEST_MINE
 uint16_t uniffi_bitkitcore_checksum_func_regtest_mine(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGTEST_PAY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REGTEST_PAY
 uint16_t uniffi_bitkitcore_checksum_func_regtest_pay(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REMOVE_CLOSED_CHANNEL_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REMOVE_CLOSED_CHANNEL_BY_ID
 uint16_t uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REMOVE_PRE_ACTIVITY_METADATA_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REMOVE_PRE_ACTIVITY_METADATA_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REMOVE_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_REMOVE_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_remove_tags(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_RESET_PRE_ACTIVITY_METADATA_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_RESET_PRE_ACTIVITY_METADATA_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_RESOLVE_PUBKY_URL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_RESOLVE_PUBKY_URL
 uint16_t uniffi_bitkitcore_checksum_func_resolve_pubky_url(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_SCAN_LEGACY_RN_NATIVE_SEGWIT_RECOVERY_FUNDS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_SCAN_LEGACY_RN_NATIVE_SEGWIT_RECOVERY_FUNDS
 uint16_t uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_START_PUBKY_AUTH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_START_PUBKY_AUTH
 uint16_t uniffi_bitkitcore_checksum_func_start_pubky_auth(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TEST_NOTIFICATION
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TEST_NOTIFICATION
 uint16_t uniffi_bitkitcore_checksum_func_test_notification(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_ACCOUNT_TYPE_TO_SCRIPT_TYPE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_ACCOUNT_TYPE_TO_SCRIPT_TYPE
 uint16_t uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_CLEAR_CREDENTIALS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_CLEAR_CREDENTIALS
 uint16_t uniffi_bitkitcore_checksum_func_trezor_clear_credentials(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_CONNECT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_CONNECT
 uint16_t uniffi_bitkitcore_checksum_func_trezor_connect(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_DISCONNECT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_DISCONNECT
 uint16_t uniffi_bitkitcore_checksum_func_trezor_disconnect(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_ADDRESS
 uint16_t uniffi_bitkitcore_checksum_func_trezor_get_address(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_CONNECTED_DEVICE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_CONNECTED_DEVICE
 uint16_t uniffi_bitkitcore_checksum_func_trezor_get_connected_device(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_DEVICE_FINGERPRINT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_DEVICE_FINGERPRINT
 uint16_t uniffi_bitkitcore_checksum_func_trezor_get_device_fingerprint(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_FEATURES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_FEATURES
 uint16_t uniffi_bitkitcore_checksum_func_trezor_get_features(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_PUBLIC_KEY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_GET_PUBLIC_KEY
 uint16_t uniffi_bitkitcore_checksum_func_trezor_get_public_key(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_INITIALIZE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_INITIALIZE
 uint16_t uniffi_bitkitcore_checksum_func_trezor_initialize(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_IS_BLE_AVAILABLE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_IS_BLE_AVAILABLE
 uint16_t uniffi_bitkitcore_checksum_func_trezor_is_ble_available(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_IS_CONNECTED
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_IS_CONNECTED
 uint16_t uniffi_bitkitcore_checksum_func_trezor_is_connected(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_IS_INITIALIZED
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_IS_INITIALIZED
 uint16_t uniffi_bitkitcore_checksum_func_trezor_is_initialized(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_LIST_DEVICES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_LIST_DEVICES
 uint16_t uniffi_bitkitcore_checksum_func_trezor_list_devices(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SCAN
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SCAN
 uint16_t uniffi_bitkitcore_checksum_func_trezor_scan(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SET_TRANSPORT_CALLBACK
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SET_TRANSPORT_CALLBACK
 uint16_t uniffi_bitkitcore_checksum_func_trezor_set_transport_callback(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SET_UI_CALLBACK
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SET_UI_CALLBACK
 uint16_t uniffi_bitkitcore_checksum_func_trezor_set_ui_callback(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_MESSAGE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_MESSAGE
 uint16_t uniffi_bitkitcore_checksum_func_trezor_sign_message(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TX
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TX
 uint16_t uniffi_bitkitcore_checksum_func_trezor_sign_tx(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TX_FROM_PSBT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_SIGN_TX_FROM_PSBT
 uint16_t uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_VERIFY_MESSAGE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_VERIFY_MESSAGE
 uint16_t uniffi_bitkitcore_checksum_func_trezor_verify_message(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPDATE_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPDATE_ACTIVITY
 uint16_t uniffi_bitkitcore_checksum_func_update_activity(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPDATE_BLOCKTANK_URL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPDATE_BLOCKTANK_URL
 uint16_t uniffi_bitkitcore_checksum_func_update_blocktank_url(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ACTIVITIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ACTIVITIES
 uint16_t uniffi_bitkitcore_checksum_func_upsert_activities(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ACTIVITY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ACTIVITY
 uint16_t uniffi_bitkitcore_checksum_func_upsert_activity(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_CJIT_ENTRIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_CJIT_ENTRIES
 uint16_t uniffi_bitkitcore_checksum_func_upsert_cjit_entries(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_CLOSED_CHANNEL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_CLOSED_CHANNEL
 uint16_t uniffi_bitkitcore_checksum_func_upsert_closed_channel(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_CLOSED_CHANNELS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_CLOSED_CHANNELS
 uint16_t uniffi_bitkitcore_checksum_func_upsert_closed_channels(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_INFO
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_INFO
 uint16_t uniffi_bitkitcore_checksum_func_upsert_info(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_LIGHTNING_ACTIVITIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_LIGHTNING_ACTIVITIES
 uint16_t uniffi_bitkitcore_checksum_func_upsert_lightning_activities(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ONCHAIN_ACTIVITIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ONCHAIN_ACTIVITIES
 uint16_t uniffi_bitkitcore_checksum_func_upsert_onchain_activities(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ORDERS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_ORDERS
 uint16_t uniffi_bitkitcore_checksum_func_upsert_orders(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_PRE_ACTIVITY_METADATA
 uint16_t uniffi_bitkitcore_checksum_func_upsert_pre_activity_metadata(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_TAGS
 uint16_t uniffi_bitkitcore_checksum_func_upsert_tags(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UPSERT_TRANSACTION_DETAILS
 uint16_t uniffi_bitkitcore_checksum_func_upsert_transaction_details(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 uint16_t uniffi_bitkitcore_checksum_func_validate_bitcoin_address(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_MNEMONIC
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_MNEMONIC
 uint16_t uniffi_bitkitcore_checksum_func_validate_mnemonic(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_CLOSED_CHANNELS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_CLOSED_CHANNELS
 uint16_t uniffi_bitkitcore_checksum_func_wipe_all_closed_channels(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_DATABASES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_DATABASES
 uint16_t uniffi_bitkitcore_checksum_func_wipe_all_databases(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_TRANSACTION_DETAILS
 uint16_t uniffi_bitkitcore_checksum_func_wipe_all_transaction_details(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_EVENTLISTENER_ON_EVENT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_EVENTLISTENER_ON_EVENT
 uint16_t uniffi_bitkitcore_checksum_method_eventlistener_on_event(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_ENUMERATE_DEVICES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_ENUMERATE_DEVICES
 uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_OPEN_DEVICE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_OPEN_DEVICE
 uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_open_device(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_CLOSE_DEVICE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_CLOSE_DEVICE
 uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_close_device(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_READ_CHUNK
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_READ_CHUNK
 uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_read_chunk(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_WRITE_CHUNK
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_WRITE_CHUNK
 uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_write_chunk(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_GET_CHUNK_SIZE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_GET_CHUNK_SIZE
 uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_get_chunk_size(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_CALL_MESSAGE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_CALL_MESSAGE
 uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_call_message(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_GET_PAIRING_CODE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_GET_PAIRING_CODE
 uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_get_pairing_code(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_SAVE_THP_CREDENTIAL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_SAVE_THP_CREDENTIAL
 uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_save_thp_credential(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_LOAD_THP_CREDENTIAL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_LOAD_THP_CREDENTIAL
 uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_load_thp_credential(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_LOG_DEBUG
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORTRANSPORTCALLBACK_LOG_DEBUG
 uint16_t uniffi_bitkitcore_checksum_method_trezortransportcallback_log_debug(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_PIN_REQUEST
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_PIN_REQUEST
 uint16_t uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_PASSPHRASE_REQUEST
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_PASSPHRASE_REQUEST
 uint16_t uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request(void
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_FFI_BITKITCORE_UNIFFI_CONTRACT_VERSION
 #define UNIFFI_FFIDEF_FFI_BITKITCORE_UNIFFI_CONTRACT_VERSION
 uint32_t ffi_bitkitcore_uniffi_contract_version(void
-    
+
 );
 #endif
 

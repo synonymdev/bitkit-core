@@ -23,7 +23,7 @@ use once_cell::sync::OnceCell;
 use crate::activity::{
     Activity, ActivityDB, ActivityError, ActivityFilter, ActivityTags, ClosedChannelDetails,
     DbError, LightningActivity, OnchainActivity, PaymentType, PreActivityMetadata, SortDirection,
-    TransactionDetails,
+    TransactionDetails, DEFAULT_WALLET_ID,
 };
 use crate::modules::blocktank::{
     BlocktankDB, BlocktankError, BtOrderState2, CJitStateEnum, ChannelLiquidityOptions,
@@ -466,7 +466,14 @@ pub fn init_db(base_path: String) -> Result<String, DbError> {
 }
 
 #[uniffi::export]
+pub fn get_default_wallet_id() -> String {
+    DEFAULT_WALLET_ID.to_string()
+}
+
+#[uniffi::export]
+#[allow(clippy::too_many_arguments)]
 pub fn get_activities(
+    wallet_id: Option<String>,
     filter: Option<ActivityFilter>,
     tx_type: Option<PaymentType>,
     tags: Option<Vec<String>>,
@@ -484,6 +491,7 @@ pub fn get_activities(
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
     db.get_activities(
+        wallet_id.as_deref(),
         filter,
         tx_type,
         tags,
@@ -540,7 +548,10 @@ pub fn update_activity(activity_id: String, activity: Activity) -> Result<(), Ac
 }
 
 #[uniffi::export]
-pub fn get_activity_by_id(activity_id: String) -> Result<Option<Activity>, ActivityError> {
+pub fn get_activity_by_id(
+    wallet_id: String,
+    activity_id: String,
+) -> Result<Option<Activity>, ActivityError> {
     let guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -548,11 +559,14 @@ pub fn get_activity_by_id(activity_id: String) -> Result<Option<Activity>, Activ
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.get_activity_by_id(&activity_id)
+    db.get_activity_by_id(&wallet_id, &activity_id)
 }
 
 #[uniffi::export]
-pub fn get_activity_by_tx_id(tx_id: String) -> Result<Option<OnchainActivity>, ActivityError> {
+pub fn get_activity_by_tx_id(
+    wallet_id: String,
+    tx_id: String,
+) -> Result<Option<OnchainActivity>, ActivityError> {
     let guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -560,11 +574,14 @@ pub fn get_activity_by_tx_id(tx_id: String) -> Result<Option<OnchainActivity>, A
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.get_activity_by_tx_id(&tx_id)
+    db.get_activity_by_tx_id(&wallet_id, &tx_id)
 }
 
 #[uniffi::export]
-pub fn delete_activity_by_id(activity_id: String) -> Result<bool, ActivityError> {
+pub fn delete_activity_by_id(
+    wallet_id: String,
+    activity_id: String,
+) -> Result<bool, ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -572,11 +589,11 @@ pub fn delete_activity_by_id(activity_id: String) -> Result<bool, ActivityError>
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.delete_activity_by_id(&activity_id)
+    db.delete_activity_by_id(&wallet_id, &activity_id)
 }
 
 #[uniffi::export]
-pub fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
+pub fn delete_activities_by_wallet_id(wallet_id: String) -> Result<u32, ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -584,11 +601,15 @@ pub fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityEr
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.add_tags(&activity_id, &tags)
+    db.delete_activities_by_wallet_id(&wallet_id)
 }
 
 #[uniffi::export]
-pub fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
+pub fn add_tags(
+    wallet_id: String,
+    activity_id: String,
+    tags: Vec<String>,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -596,11 +617,27 @@ pub fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), Activit
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.remove_tags(&activity_id, &tags)
+    db.add_tags(&wallet_id, &activity_id, &tags)
 }
 
 #[uniffi::export]
-pub fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError> {
+pub fn remove_tags(
+    wallet_id: String,
+    activity_id: String,
+    tags: Vec<String>,
+) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
+    db.remove_tags(&wallet_id, &activity_id, &tags)
+}
+
+#[uniffi::export]
+pub fn get_tags(wallet_id: String, activity_id: String) -> Result<Vec<String>, ActivityError> {
     let guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -608,11 +645,12 @@ pub fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError> {
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.get_tags(&activity_id)
+    db.get_tags(&wallet_id, &activity_id)
 }
 
 #[uniffi::export]
 pub fn get_activities_by_tag(
+    wallet_id: Option<String>,
     tag: String,
     limit: Option<u32>,
     sort_direction: Option<SortDirection>,
@@ -624,7 +662,7 @@ pub fn get_activities_by_tag(
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.get_activities_by_tag(&tag, limit, sort_direction)
+    db.get_activities_by_tag(wallet_id.as_deref(), &tag, limit, sort_direction)
 }
 
 #[uniffi::export]
@@ -1647,7 +1685,11 @@ pub fn is_address_used(address: String) -> Result<bool, ActivityError> {
 }
 
 #[uniffi::export]
-pub fn mark_activity_as_seen(activity_id: String, seen_at: u64) -> Result<(), ActivityError> {
+pub fn mark_activity_as_seen(
+    wallet_id: String,
+    activity_id: String,
+    seen_at: u64,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -1655,7 +1697,7 @@ pub fn mark_activity_as_seen(activity_id: String, seen_at: u64) -> Result<(), Ac
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.mark_activity_as_seen(&activity_id, seen_at)
+    db.mark_activity_as_seen(&wallet_id, &activity_id, seen_at)
 }
 
 #[uniffi::export]
@@ -1673,7 +1715,10 @@ pub fn upsert_transaction_details(
 }
 
 #[uniffi::export]
-pub fn get_transaction_details(tx_id: String) -> Result<Option<TransactionDetails>, ActivityError> {
+pub fn get_transaction_details(
+    wallet_id: String,
+    tx_id: String,
+) -> Result<Option<TransactionDetails>, ActivityError> {
     let guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -1681,7 +1726,7 @@ pub fn get_transaction_details(tx_id: String) -> Result<Option<TransactionDetail
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.get_transaction_details(&tx_id)
+    db.get_transaction_details(&wallet_id, &tx_id)
 }
 
 #[uniffi::export]
@@ -1697,7 +1742,7 @@ pub fn get_all_transaction_details() -> Result<Vec<TransactionDetails>, Activity
 }
 
 #[uniffi::export]
-pub fn delete_transaction_details(tx_id: String) -> Result<bool, ActivityError> {
+pub fn delete_transaction_details(wallet_id: String, tx_id: String) -> Result<bool, ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -1705,7 +1750,7 @@ pub fn delete_transaction_details(tx_id: String) -> Result<bool, ActivityError> 
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.delete_transaction_details(&tx_id)
+    db.delete_transaction_details(&wallet_id, &tx_id)
 }
 
 #[uniffi::export]

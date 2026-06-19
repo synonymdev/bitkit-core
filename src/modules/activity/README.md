@@ -16,8 +16,9 @@ The Activity module is responsible for storing and managing transaction/activity
 // Initialize the database with a specified path
 fn init_db(base_path: String) -> Result<String, DbError>
 
-// Get activities with optional filter, tx_type, tags, search, min_date, max_date, limit, and sort direction
+// Get activities with optional wallet, filter, tx_type, tags, search, min_date, max_date, limit, and sort direction
 fn get_activities(
+  wallet_id: Option<String>,
   filter: Option<ActivityFilter>,
   tx_type: Option<PaymentType>,
   tags: Option<Vec<String>>,
@@ -28,8 +29,9 @@ fn get_activities(
   sort_direction: Option<SortDirection>
 ) -> Result<Vec<Activity>, ActivityError>
 
-// Get activities by tag with optional limit and sort direction
+// Get activities by tag with optional wallet, limit, and sort direction
 fn get_activities_by_tag(
+  wallet_id: Option<String>,
   tag: String,
   limit: Option<u32>,
   sort_direction: Option<SortDirection>
@@ -44,16 +46,16 @@ fn update_activity(activity_id: String, activity: Activity) -> Result<(), Activi
 // Insert or update an activity
 fn upsert_activity(activity: Activity) -> Result<(), ActivityError>
 
-// Get a specific activity by ID
-fn get_activity_by_id(activity_id: String) -> Result<Option<Activity>, ActivityError>
+// Get a specific activity by wallet ID and activity ID
+fn get_activity_by_id(wallet_id: String, activity_id: String) -> Result<Option<Activity>, ActivityError>
 
-// Delete an activity by ID
-fn delete_activity_by_id(activity_id: String) -> Result<bool, ActivityError>
+// Delete an activity by wallet ID and activity ID
+fn delete_activity_by_id(wallet_id: String, activity_id: String) -> Result<bool, ActivityError>
 
 // Tag management
-fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
-fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
-fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError>
+fn add_tags(wallet_id: String, activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
+fn remove_tags(wallet_id: String, activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
+fn get_tags(wallet_id: String, activity_id: String) -> Result<Vec<String>, ActivityError>
 fn get_all_unique_tags() -> Result<Vec<String>, ActivityError>
 
 // Database wipe
@@ -73,6 +75,7 @@ func manageActivities() {
         
         // Create and store an onchain activity
         let onchainActivity = OnchainActivity(
+            wallet_id: "bitkit",
             id: "tx123",
             tx_type: .sent,
             tx_id: "abc123",
@@ -97,6 +100,7 @@ func manageActivities() {
         
         // Retrieve activities with advanced filtering
         let filteredActivities = try getActivities(
+            walletId: "bitkit",
             filter: .all,
             txType: .sent,
             tags: ["coffee", "food"],
@@ -109,6 +113,7 @@ func manageActivities() {
         
         // Simple query (all parameters are optional)
         let simpleQuery = try getActivities(
+            walletId: nil,
             filter: .all,
             txType: nil,
             tags: nil,
@@ -120,7 +125,7 @@ func manageActivities() {
         )
         
         // Get specific activity
-        if let foundActivity = try getActivityById(activityId: "tx123") {
+        if let foundActivity = try getActivityById(walletId: "bitkit", activityId: "tx123") {
             switch foundActivity {
             case .onchain(let onchain):
                 print("Found onchain activity: \(onchain.txId)")
@@ -134,17 +139,22 @@ func manageActivities() {
         try updateActivity(activityId: "tx123", activity: updatedActivity)
         
         // Tag operations
-        try addTags(activityId: "tx123", tags: ["payment", "coffee"])
-        let tags = try getTags(activityId: "tx123")
-        let taggedActivities = try getActivitiesByTag(tag: "coffee", limit: 5, sortDirection: .desc)
+        try addTags(walletId: "bitkit", activityId: "tx123", tags: ["payment", "coffee"])
+        let tags = try getTags(walletId: "bitkit", activityId: "tx123")
+        let taggedActivities = try getActivitiesByTag(
+            walletId: "bitkit",
+            tag: "coffee",
+            limit: 5,
+            sortDirection: .desc
+        )
         
         // Get all unique tags
         let allUniqueTags = try getAllUniqueTags()  // ["coffee", "food", "payment"]
         
-        try removeTags(activityId: "tx123", tags: ["payment"])
+        try removeTags(walletId: "bitkit", activityId: "tx123", tags: ["payment"])
         
         // Delete activity
-        let deleted = try deleteActivityById(activityId: "tx123")
+        let deleted = try deleteActivityById(walletId: "bitkit", activityId: "tx123")
 
         // Wipe all activity data (use with caution!)
         try activityWipeAll()
@@ -166,6 +176,7 @@ fun manageActivities() {
         
         // Create and store a lightning activity
         val lightningActivity = LightningActivity(
+            wallet_id = "bitkit",
             id = "ln456",
             tx_type = PaymentType.RECEIVED,
             status = PaymentState.SUCCEEDED,
@@ -183,6 +194,7 @@ fun manageActivities() {
         
         // Retrieve activities with advanced filtering
         val filteredActivities = getActivities(
+            walletId = "bitkit",
             filter = ActivityFilter.ALL,
             txType = PaymentType.SENT,
             tags = listOf("coffee", "food"),
@@ -195,6 +207,7 @@ fun manageActivities() {
         
         // Simple query (all parameters are optional)
         val simpleQuery = getActivities(
+            walletId = null,
             filter = ActivityFilter.ALL,
             txType = null,
             tags = null,
@@ -207,25 +220,28 @@ fun manageActivities() {
         
         // Filter by specific criteria
         val sentPayments = getActivities(
+            walletId = "bitkit",
             filter = ActivityFilter.ALL,
             txType = PaymentType.SENT,
             limit = 20
         )
         
         val recentLightning = getActivities(
+            walletId = "bitkit",
             filter = ActivityFilter.LIGHTNING,
             minDate = System.currentTimeMillis() / 1000 - 86400, // Last 24 hours
             limit = 20
         )
         
         val taggedPayments = getActivities(
+            walletId = "bitkit",
             filter = ActivityFilter.ALL,
             tags = listOf("coffee"),
             limit = 20
         )
         
         // Get specific activity
-        getActivityById("ln456")?.let { foundActivity ->
+        getActivityById(walletId = "bitkit", activityId = "ln456")?.let { foundActivity ->
             when (foundActivity) {
                 is Activity.Onchain -> println("Found onchain activity: ${foundActivity.txId}")
                 is Activity.Lightning -> println("Found lightning activity: ${foundActivity.preimage}")
@@ -237,9 +253,10 @@ fun manageActivities() {
         updateActivity(activityId = "ln456", activity = updatedActivity)
         
         // Tag operations
-        addTags(activityId = "ln456", tags = listOf("income", "coffee"))
-        val tags = getTags(activityId = "ln456")
+        addTags(walletId = "bitkit", activityId = "ln456", tags = listOf("income", "coffee"))
+        val tags = getTags(walletId = "bitkit", activityId = "ln456")
         val taggedActivities = getActivitiesByTag(
+            walletId = "bitkit",
             tag = "coffee",
             limit = 5,
             sortDirection = SortDirection.DESC
@@ -248,10 +265,10 @@ fun manageActivities() {
         // Get all unique tags
         val allUniqueTags = getAllUniqueTags()  // ["coffee", "food", "payment"]
 
-        removeTags(activityId = "ln456", tags = listOf("income"))
+        removeTags(walletId = "bitkit", activityId = "ln456", tags = listOf("income"))
         
         // Delete activity
-        val deleted = deleteActivityById(activityId = "ln456")
+        val deleted = deleteActivityById(walletId = "bitkit", activityId = "ln456")
 
         // Wipe all activity data (use with caution!)
         activityWipeAll()
@@ -272,6 +289,7 @@ try:
     
     # Create and store an onchain activity
     onchain_activity = OnchainActivity(
+        wallet_id="bitkit",
         id="tx123",
         tx_type=PaymentType.SENT,
         tx_id="abc123",
@@ -296,6 +314,7 @@ try:
     
     # Retrieve activities with advanced filtering
     filtered_activities = get_activities(
+        wallet_id="bitkit",
         filter=ActivityFilter.ALL,
         tx_type=PaymentType.SENT,
         tags=["coffee", "food"],
@@ -308,6 +327,7 @@ try:
     
     # Simple query (all parameters are optional)
     simple_query = get_activities(
+        wallet_id=None,
         filter=ActivityFilter.ALL,
         tx_type=None,
         tags=None,
@@ -320,25 +340,28 @@ try:
     
     # Filter by specific criteria
     sent_payments = get_activities(
+        wallet_id="bitkit",
         filter=ActivityFilter.ALL,
         tx_type=PaymentType.SENT,
         limit=10
     )
     
     recent_lightning = get_activities(
+        wallet_id="bitkit",
         filter=ActivityFilter.LIGHTNING,
         min_date=int(time.time()) - 86400,  # Last 24 hours
         limit=10
     )
     
     tagged_payments = get_activities(
+        wallet_id="bitkit",
         filter=ActivityFilter.ALL,
         tags=["coffee"],
         limit=10
     )
     
     # Get specific activity
-    if found_activity := get_activity_by_id("tx123"):
+    if found_activity := get_activity_by_id("bitkit", "tx123"):
         if isinstance(found_activity, Activity.Onchain):
             print(f"Found onchain activity: {found_activity.tx_id}")
         elif isinstance(found_activity, Activity.Lightning):
@@ -349,9 +372,10 @@ try:
     update_activity(activity_id="tx123", activity=updated_activity)
     
     # Tag operations
-    add_tags("tx123", ["payment", "coffee"])
-    tags = get_tags("tx123")
+    add_tags("bitkit", "tx123", ["payment", "coffee"])
+    tags = get_tags("bitkit", "tx123")
     tagged_activities = get_activities_by_tag(
+        wallet_id="bitkit",
         tag="coffee",
         limit=5,
         sort_direction=SortDirection.DESC
@@ -360,10 +384,10 @@ try:
     # Get all unique tags with optional sorting
     all_unique_tags = get_all_unique_tags()  # ["coffee", "food", "payment"]
     
-    remove_tags("tx123", ["payment"])
+    remove_tags("bitkit", "tx123", ["payment"])
 
     # Delete activity
-    deleted = delete_activity_by_id("tx123")
+    deleted = delete_activity_by_id("bitkit", "tx123")
 
     # Wipe all activity data (use with caution!)
     activity_wipe_all()
@@ -388,6 +412,7 @@ except Exception as e:
 - `Failed`: Payment failed
 
 ### OnchainActivity Fields
+- `wallet_id`: String - Wallet identifier
 - `id`: String - Unique identifier
 - `tx_type`: PaymentType - Type of transaction (Sent/Received)
 - `tx_id`: String - Transaction ID
@@ -408,6 +433,7 @@ except Exception as e:
 - `updated_at`: Option<u64> - Last update timestamp (optional)
 
 ### LightningActivity Fields
+- `wallet_id`: String - Wallet identifier
 - `id`: String - Unique identifier
 - `tx_type`: PaymentType - Type of transaction (Sent/Received)
 - `status`: PaymentState - Payment state (Pending/Succeeded/Failed)
