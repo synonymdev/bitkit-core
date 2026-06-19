@@ -8,6 +8,7 @@ echo "Starting Python build process..."
 PROJECT_NAME="bitkitcore"  # Using underscore for Python package name
 BASE_DIR="./bindings/python"
 PACKAGE_DIR="$BASE_DIR/$PROJECT_NAME"
+VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
 
 # Create output directories
 mkdir -p "$BASE_DIR"
@@ -49,7 +50,9 @@ cargo run --bin uniffi-bindgen generate \
     --out-dir "$PACKAGE_DIR"
 
 # Create __init__.py
-touch "$PACKAGE_DIR/__init__.py"
+cat > "$PACKAGE_DIR/__init__.py" << EOL
+from .bitkitcore import *
+EOL
 
 # Create setup.py
 cat > "$BASE_DIR/setup.py" << EOL
@@ -57,7 +60,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="$PROJECT_NAME",
-    version="0.1.0",
+    version="$VERSION",
     packages=find_packages(),
     package_data={
         "$PROJECT_NAME": ["*.so", "*.dylib", "*.dll"],

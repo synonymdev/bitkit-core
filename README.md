@@ -118,49 +118,120 @@
     ```rust
     fn init_db(base_path: String) -> Result<String, DbError>
     ```
+  - [get_default_wallet_id](src/modules/activity/README.md#usage-examples): Get the default wallet ID for the built-in Bitkit wallet
+    ```rust
+    fn get_default_wallet_id() -> String
+    ```
   - [insert_activity](src/modules/activity/README.md#usage-examples): Insert an activity (onchain or lightning)
     ```rust
     fn insert_activity(activity: Activity) -> Result<(), ActivityError>
     ```
-  - [get_activities](src/modules/activity/README.md#usage-examples): Get activities with optional filtering, limit and sort direction
+  - [get_activities](src/modules/activity/README.md#usage-examples): Get activities with optional wallet scope, filtering, limit and sort direction
     ```rust
-    fn get_activities(filter: ActivityFilter, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError>
+    fn get_activities(
+        wallet_id: Option<String>,
+        filter: Option<ActivityFilter>,
+        tx_type: Option<PaymentType>,
+        tags: Option<Vec<String>>,
+        search: Option<String>,
+        min_date: Option<u64>,
+        max_date: Option<u64>,
+        limit: Option<u32>,
+        sort_direction: Option<SortDirection>
+    ) -> Result<Vec<Activity>, ActivityError>
     ```  
-  - [get_activity_by_id](src/modules/activity/README.md#usage-examples): Look up any activity by its ID
+  - [get_activity_by_id](src/modules/activity/README.md#usage-examples): Look up any activity by wallet ID and activity ID
     ```rust
-    fn get_activity_by_id(activity_id: String) -> Result<Option<Activity>, ActivityError>
+    fn get_activity_by_id(wallet_id: String, activity_id: String) -> Result<Option<Activity>, ActivityError>
+    ```
+  - [get_activity_by_tx_id](src/modules/activity/README.md#usage-examples): Look up an onchain activity by wallet ID and transaction ID
+    ```rust
+    fn get_activity_by_tx_id(wallet_id: String, tx_id: String) -> Result<Option<OnchainActivity>, ActivityError>
     ```
   - [update_activity](src/modules/activity/README.md#usage-examples): Update an existing activity (onchain or lightning)
     ```rust
     fn update_activity(activity_id: String, activity: Activity) -> Result<(), ActivityError>
     ```
-  - [delete_activity_by_id](src/modules/activity/README.md#usage-examples): Delete any activity (onchain or lightning) by its ID. Returns true if activity was found and deleted, false if not found
+  - [delete_activity_by_id](src/modules/activity/README.md#usage-examples): Delete any activity by wallet ID and activity ID. Returns true if activity was found and deleted, false if not found
     ```rust
-    fn delete_activity_by_id(activity_id: String) -> Result<bool, ActivityError>
+    fn delete_activity_by_id(wallet_id: String, activity_id: String) -> Result<bool, ActivityError>
+    ```
+  - [delete_activities_by_wallet_id](src/modules/activity/README.md#usage-examples): Delete all activities and scoped activity data for a wallet
+    ```rust
+    fn delete_activities_by_wallet_id(wallet_id: String) -> Result<u32, ActivityError>
+    ```
+  - [mark_activity_as_seen](src/modules/activity/README.md#usage-examples): Mark an activity as seen by wallet ID and activity ID
+    ```rust
+    fn mark_activity_as_seen(wallet_id: String, activity_id: String, seen_at: u64) -> Result<(), ActivityError>
     ```
   - [add_tags](src/modules/activity/README.md#usage-examples): Add tags to an activity
     ```rust
-    fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
+    fn add_tags(wallet_id: String, activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
     ```
   - [remove_tags](src/modules/activity/README.md#usage-examples): Remove tags from an activity
     ```rust
-    fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
+    fn remove_tags(wallet_id: String, activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
     ```
   - [get_tags](src/modules/activity/README.md#usage-examples): Get all tags for an activity
     ```rust
-    fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError>
+    fn get_tags(wallet_id: String, activity_id: String) -> Result<Vec<String>, ActivityError>
     ```
   - [get_all_unique_tags](src/modules/activity/README.md#usage-examples): Get all unique tags in the database sorted alphabetically
     ```rust
     fn get_all_unique_tags() -> Result<Vec<String>, ActivityError>
     ```
-  - [get_activities_by_tag](src/modules/activity/README.md#usage-examples): Get all activities with a specific tag
+  - [get_activities_by_tag](src/modules/activity/README.md#usage-examples): Get activities with a specific tag and optional wallet scope
     ```rust
-    fn get_activities_by_tag(tag: String, limit: Option<u32>, sort_direction: Option<SortDirection>) -> Result<Vec<Activity>, ActivityError>
+    fn get_activities_by_tag(
+        wallet_id: Option<String>,
+        tag: String,
+        limit: Option<u32>,
+        sort_direction: Option<SortDirection>
+    ) -> Result<Vec<Activity>, ActivityError>
     ```
   - [upsert_activity](src/modules/activity/README.md#usage-examples): Insert or update an activity
     ```rust
     fn upsert_activity(activity: Activity) -> Result<(), ActivityError>
+    ```
+  - [add_pre_activity_metadata](src/modules/activity/README.md#usage-examples): Store pending metadata before an activity exists
+    ```rust
+    fn add_pre_activity_metadata(pre_activity_metadata: PreActivityMetadata) -> Result<(), ActivityError>
+    ```
+  - [get_pre_activity_metadata](src/modules/activity/README.md#usage-examples): Get pending metadata by wallet ID and payment ID or address
+    ```rust
+    fn get_pre_activity_metadata(
+        wallet_id: String,
+        search_key: String,
+        search_by_address: bool
+    ) -> Result<Option<PreActivityMetadata>, ActivityError>
+    ```
+  - [add_pre_activity_metadata_tags](src/modules/activity/README.md#usage-examples): Add tags to pending metadata
+    ```rust
+    fn add_pre_activity_metadata_tags(wallet_id: String, payment_id: String, tags: Vec<String>) -> Result<(), ActivityError>
+    ```
+  - [remove_pre_activity_metadata_tags](src/modules/activity/README.md#usage-examples): Remove tags from pending metadata
+    ```rust
+    fn remove_pre_activity_metadata_tags(wallet_id: String, payment_id: String, tags: Vec<String>) -> Result<(), ActivityError>
+    ```
+  - [reset_pre_activity_metadata_tags](src/modules/activity/README.md#usage-examples): Remove all tags from pending metadata
+    ```rust
+    fn reset_pre_activity_metadata_tags(wallet_id: String, payment_id: String) -> Result<(), ActivityError>
+    ```
+  - [delete_pre_activity_metadata](src/modules/activity/README.md#usage-examples): Delete pending metadata by wallet ID and payment ID
+    ```rust
+    fn delete_pre_activity_metadata(wallet_id: String, payment_id: String) -> Result<(), ActivityError>
+    ```
+  - [upsert_pre_activity_metadata](src/modules/activity/README.md#usage-examples): Insert or update pending metadata records
+    ```rust
+    fn upsert_pre_activity_metadata(pre_activity_metadata: Vec<PreActivityMetadata>) -> Result<(), ActivityError>
+    ```
+  - [get_transaction_details](src/modules/activity/README.md#usage-examples): Get transaction details by wallet ID and transaction ID
+    ```rust
+    fn get_transaction_details(wallet_id: String, tx_id: String) -> Result<Option<TransactionDetails>, ActivityError>
+    ```
+  - [delete_transaction_details](src/modules/activity/README.md#usage-examples): Delete transaction details by wallet ID and transaction ID
+    ```rust
+    fn delete_transaction_details(wallet_id: String, tx_id: String) -> Result<bool, ActivityError>
     ```
 - Blocktank:
   - [init_db](src/modules/blocktank/README.md#usage-examples): Initialize database
