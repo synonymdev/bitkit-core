@@ -1684,6 +1684,8 @@ impl ActivityDB {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
+        self.apply_pre_activity_metadata_for_onchain(activity);
+
         Ok(())
     }
 
@@ -1759,6 +1761,8 @@ impl ActivityDB {
         tx.commit().map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
+
+        self.apply_pre_activity_metadata_for_lightning(activity);
 
         Ok(())
     }
@@ -2245,8 +2249,8 @@ impl ActivityDB {
         Ok(())
     }
 
-    /// Add pre-activity metadata for an onchain address or lightning invoice
-    /// If the metadata has an address, any existing metadata with the same address will be removed first
+    /// Add pre-activity metadata for an onchain address or lightning invoice.
+    /// Receive metadata replaces previous receive metadata for the same wallet and address.
     pub fn add_pre_activity_metadata(
         &mut self,
         pre_activity_metadata: &PreActivityMetadata,
@@ -2271,18 +2275,21 @@ impl ActivityDB {
                 error_details: format!("Failed to start transaction: {}", e),
             })?;
 
-        if let Some(ref address) = pre_activity_metadata.address {
-            if !address.is_empty() {
-                tx.execute(
-                    "DELETE FROM pre_activity_metadata WHERE wallet_id = ?1 AND address = ?2",
-                    rusqlite::params![&wallet_id, address],
-                )
-                .map_err(|e| ActivityError::DataError {
-                    error_details: format!(
-                        "Failed to delete existing metadata with address: {}",
-                        e
-                    ),
-                })?;
+        if pre_activity_metadata.is_receive {
+            if let Some(ref address) = pre_activity_metadata.address {
+                if !address.is_empty() {
+                    tx.execute(
+                        "DELETE FROM pre_activity_metadata
+                         WHERE wallet_id = ?1 AND address = ?2 AND is_receive = 1",
+                        rusqlite::params![&wallet_id, address],
+                    )
+                    .map_err(|e| ActivityError::DataError {
+                        error_details: format!(
+                            "Failed to delete existing receive metadata with address: {}",
+                            e
+                        ),
+                    })?;
+                }
             }
         }
 
@@ -2498,6 +2505,18 @@ impl ActivityDB {
             })?;
 
         {
+            let mut delete_receive_address_stmt = tx
+                .prepare(
+                    "DELETE FROM pre_activity_metadata
+                 WHERE wallet_id = ?1 AND address = ?2 AND is_receive = 1",
+                )
+                .map_err(|e| ActivityError::DataError {
+                    error_details: format!(
+                        "Failed to prepare address replacement statement: {}",
+                        e
+                    ),
+                })?;
+
             let mut stmt = tx.prepare(
                 "INSERT OR REPLACE INTO pre_activity_metadata (wallet_id, payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)"
             ).map_err(|e| ActivityError::DataError {
@@ -2511,6 +2530,21 @@ impl ActivityDB {
                         error_details: format!("Failed to serialize tags: {}", e),
                     }
                 })?;
+
+                if metadata.is_receive {
+                    if let Some(address) = &metadata.address {
+                        if !address.is_empty() {
+                            delete_receive_address_stmt
+                                .execute(rusqlite::params![&wallet_id, address])
+                                .map_err(|e| ActivityError::DataError {
+                                    error_details: format!(
+                                        "Failed to delete existing receive metadata with address: {}",
+                                        e
+                                    ),
+                                })?;
+                        }
+                    }
+                }
 
                 stmt.execute(rusqlite::params![
                     &wallet_id,

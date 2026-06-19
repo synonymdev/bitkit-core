@@ -54,8 +54,17 @@ fn upsert_activity(activity: Activity) -> Result<(), ActivityError>
 // Get a specific activity by wallet ID and activity ID
 fn get_activity_by_id(wallet_id: String, activity_id: String) -> Result<Option<Activity>, ActivityError>
 
+// Get a specific onchain activity by wallet ID and transaction ID
+fn get_activity_by_tx_id(wallet_id: String, tx_id: String) -> Result<Option<OnchainActivity>, ActivityError>
+
 // Delete an activity by wallet ID and activity ID
 fn delete_activity_by_id(wallet_id: String, activity_id: String) -> Result<bool, ActivityError>
+
+// Delete all activity data for a wallet
+fn delete_activities_by_wallet_id(wallet_id: String) -> Result<u32, ActivityError>
+
+// Mark an activity as seen
+fn mark_activity_as_seen(wallet_id: String, activity_id: String, seen_at: u64) -> Result<(), ActivityError>
 
 // Tag management
 fn add_tags(wallet_id: String, activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
@@ -77,6 +86,13 @@ fn get_pre_activity_metadata(
 ) -> Result<Option<PreActivityMetadata>, ActivityError>
 fn get_all_pre_activity_metadata() -> Result<Vec<PreActivityMetadata>, ActivityError>
 
+// Transaction details
+fn upsert_transaction_details(details_list: Vec<TransactionDetails>) -> Result<(), ActivityError>
+fn get_transaction_details(wallet_id: String, tx_id: String) -> Result<Option<TransactionDetails>, ActivityError>
+fn get_all_transaction_details() -> Result<Vec<TransactionDetails>, ActivityError>
+fn delete_transaction_details(wallet_id: String, tx_id: String) -> Result<bool, ActivityError>
+fn wipe_all_transaction_details() -> Result<(), ActivityError>
+
 // Database wipe
 fn activity_wipe_all() -> Result<(), ActivityError>
 ```
@@ -90,7 +106,7 @@ import BitkitCore
 func manageActivities() {
     do {
         // Initialize database
-        try initDb("/path/to/data")  // Creates /path/to/data/activity.db
+        try initDb(basePath: "/path/to/data")  // Creates /path/to/data/activity.db
         
         // Create and store an onchain activity
         let onchainActivity = OnchainActivity(

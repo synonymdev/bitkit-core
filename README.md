@@ -144,6 +144,10 @@
     ```rust
     fn get_activity_by_id(wallet_id: String, activity_id: String) -> Result<Option<Activity>, ActivityError>
     ```
+  - [get_activity_by_tx_id](src/modules/activity/README.md#usage-examples): Look up an onchain activity by wallet ID and transaction ID
+    ```rust
+    fn get_activity_by_tx_id(wallet_id: String, tx_id: String) -> Result<Option<OnchainActivity>, ActivityError>
+    ```
   - [update_activity](src/modules/activity/README.md#usage-examples): Update an existing activity (onchain or lightning)
     ```rust
     fn update_activity(activity_id: String, activity: Activity) -> Result<(), ActivityError>
@@ -151,6 +155,14 @@
   - [delete_activity_by_id](src/modules/activity/README.md#usage-examples): Delete any activity by wallet ID and activity ID. Returns true if activity was found and deleted, false if not found
     ```rust
     fn delete_activity_by_id(wallet_id: String, activity_id: String) -> Result<bool, ActivityError>
+    ```
+  - [delete_activities_by_wallet_id](src/modules/activity/README.md#usage-examples): Delete all activities and scoped activity data for a wallet
+    ```rust
+    fn delete_activities_by_wallet_id(wallet_id: String) -> Result<u32, ActivityError>
+    ```
+  - [mark_activity_as_seen](src/modules/activity/README.md#usage-examples): Mark an activity as seen by wallet ID and activity ID
+    ```rust
+    fn mark_activity_as_seen(wallet_id: String, activity_id: String, seen_at: u64) -> Result<(), ActivityError>
     ```
   - [add_tags](src/modules/activity/README.md#usage-examples): Add tags to an activity
     ```rust
@@ -212,6 +224,14 @@
   - [upsert_pre_activity_metadata](src/modules/activity/README.md#usage-examples): Insert or update pending metadata records
     ```rust
     fn upsert_pre_activity_metadata(pre_activity_metadata: Vec<PreActivityMetadata>) -> Result<(), ActivityError>
+    ```
+  - [get_transaction_details](src/modules/activity/README.md#usage-examples): Get transaction details by wallet ID and transaction ID
+    ```rust
+    fn get_transaction_details(wallet_id: String, tx_id: String) -> Result<Option<TransactionDetails>, ActivityError>
+    ```
+  - [delete_transaction_details](src/modules/activity/README.md#usage-examples): Delete transaction details by wallet ID and transaction ID
+    ```rust
+    fn delete_transaction_details(wallet_id: String, tx_id: String) -> Result<bool, ActivityError>
     ```
 - Blocktank:
   - [init_db](src/modules/blocktank/README.md#usage-examples): Initialize database

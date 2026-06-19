@@ -1712,6 +1712,14 @@ mod tests {
 
             // Test update path
             std::thread::sleep(std::time::Duration::from_secs(1));
+            let mut metadata = create_test_pre_activity_metadata(
+                onchain.tx_id.clone(),
+                ActivityType::Onchain,
+                vec!["upsert-update-tag".to_string()],
+            );
+            metadata.tx_id = Some(onchain.tx_id.clone());
+            db.add_pre_activity_metadata(&metadata).unwrap();
+
             onchain.value = 100_000;
             let updated = Activity::Onchain(onchain);
             assert!(db.upsert_activity(&updated).is_ok());
@@ -1725,6 +1733,14 @@ mod tests {
                 assert_eq!(retrieved.value, 100_000);
                 assert!(retrieved.updated_at > first_update);
             }
+            assert_eq!(
+                db.get_tags(DEFAULT_WALLET_ID, &updated.get_id()).unwrap(),
+                vec!["upsert-update-tag".to_string()]
+            );
+            assert!(db
+                .get_pre_activity_metadata(DEFAULT_WALLET_ID, "txid123", false)
+                .unwrap()
+                .is_none());
         } else {
             panic!("Expected Onchain activity");
         }
@@ -1753,6 +1769,13 @@ mod tests {
 
             // Update to succeeded
             std::thread::sleep(std::time::Duration::from_millis(1));
+            let metadata = create_test_pre_activity_metadata(
+                lightning.id.clone(),
+                ActivityType::Lightning,
+                vec!["lightning-upsert-update-tag".to_string()],
+            );
+            db.add_pre_activity_metadata(&metadata).unwrap();
+
             lightning.status = PaymentState::Succeeded;
             let updated = Activity::Lightning(lightning);
             assert!(db.upsert_activity(&updated).is_ok());
@@ -1767,6 +1790,14 @@ mod tests {
                 assert!(retrieved.created_at.is_some());
                 assert!(retrieved.updated_at.is_some());
             }
+            assert_eq!(
+                db.get_tags(DEFAULT_WALLET_ID, &updated.get_id()).unwrap(),
+                vec!["lightning-upsert-update-tag".to_string()]
+            );
+            assert!(db
+                .get_pre_activity_metadata(DEFAULT_WALLET_ID, "test_lightning_1", false)
+                .unwrap()
+                .is_none());
         } else {
             panic!("Expected Lightning activity");
         }
@@ -3854,6 +3885,67 @@ mod tests {
     }
 
     #[test]
+    fn test_add_pre_activity_metadata_address_replacement_is_receive_scoped() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qsharedmetadataaddress".to_string();
+
+        let mut receive_metadata = create_test_pre_activity_metadata(
+            "receive_pending_1".to_string(),
+            ActivityType::Onchain,
+            vec!["receive-old".to_string()],
+        );
+        receive_metadata.address = Some(address.clone());
+        receive_metadata.is_receive = true;
+        db.add_pre_activity_metadata(&receive_metadata).unwrap();
+
+        let mut sent_metadata = create_test_pre_activity_metadata(
+            "sent_txid_1".to_string(),
+            ActivityType::Onchain,
+            vec!["sent".to_string()],
+        );
+        sent_metadata.tx_id = Some("sent_txid_1".to_string());
+        sent_metadata.address = Some(address.clone());
+        sent_metadata.is_receive = false;
+        db.add_pre_activity_metadata(&sent_metadata).unwrap();
+
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, "receive_pending_1", false)
+            .unwrap()
+            .is_some());
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, "sent_txid_1", false)
+            .unwrap()
+            .is_some());
+
+        let mut new_receive_metadata = create_test_pre_activity_metadata(
+            "receive_pending_2".to_string(),
+            ActivityType::Onchain,
+            vec!["receive-new".to_string()],
+        );
+        new_receive_metadata.address = Some(address.clone());
+        new_receive_metadata.is_receive = true;
+        db.add_pre_activity_metadata(&new_receive_metadata).unwrap();
+
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, "receive_pending_1", false)
+            .unwrap()
+            .is_none());
+        assert_eq!(
+            db.get_pre_activity_metadata(DEFAULT_WALLET_ID, &address, true)
+                .unwrap()
+                .unwrap()
+                .payment_id,
+            "receive_pending_2"
+        );
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, "sent_txid_1", false)
+            .unwrap()
+            .is_some());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_add_pre_activity_metadata_multiple() {
         let (mut db, db_path) = setup();
         let address = "bc1qtest123".to_string();
@@ -5039,6 +5131,75 @@ mod tests {
         assert_eq!(activity_tags.len(), 2);
         assert!(activity_tags.contains(&"tag1".to_string()));
         assert!(activity_tags.contains(&"tag2".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_pre_activity_metadata_replaces_receive_address_only() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qbulkrestoreaddress".to_string();
+
+        let pre_activity_metadata = vec![
+            PreActivityMetadata {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
+                payment_id: "receive_old".to_string(),
+                tags: vec!["receive-old".to_string()],
+                payment_hash: None,
+                tx_id: None,
+                address: Some(address.clone()),
+                is_receive: true,
+                fee_rate: 0,
+                is_transfer: false,
+                channel_id: None,
+                created_at: 0,
+            },
+            PreActivityMetadata {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
+                payment_id: "sent_txid".to_string(),
+                tags: vec!["sent".to_string()],
+                payment_hash: None,
+                tx_id: Some("sent_txid".to_string()),
+                address: Some(address.clone()),
+                is_receive: false,
+                fee_rate: 0,
+                is_transfer: false,
+                channel_id: None,
+                created_at: 0,
+            },
+            PreActivityMetadata {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
+                payment_id: "receive_new".to_string(),
+                tags: vec!["receive-new".to_string()],
+                payment_hash: None,
+                tx_id: None,
+                address: Some(address.clone()),
+                is_receive: true,
+                fee_rate: 0,
+                is_transfer: false,
+                channel_id: None,
+                created_at: 0,
+            },
+        ];
+
+        db.upsert_pre_activity_metadata(&pre_activity_metadata)
+            .unwrap();
+
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, "receive_old", false)
+            .unwrap()
+            .is_none());
+        assert_eq!(
+            db.get_pre_activity_metadata(DEFAULT_WALLET_ID, &address, true)
+                .unwrap()
+                .unwrap()
+                .payment_id,
+            "receive_new"
+        );
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, "sent_txid", false)
+            .unwrap()
+            .is_some());
 
         cleanup(&db_path);
     }
