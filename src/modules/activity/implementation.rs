@@ -1003,6 +1003,10 @@ impl ActivityDB {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
+        for activity in activities {
+            self.apply_pre_activity_metadata_for_onchain(activity);
+        }
+
         Ok(())
     }
 
@@ -1097,6 +1101,10 @@ impl ActivityDB {
         tx.commit().map_err(|e| ActivityError::DataError {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
+
+        for activity in activities {
+            self.apply_pre_activity_metadata_for_lightning(activity);
+        }
 
         Ok(())
     }
@@ -2543,7 +2551,7 @@ impl ActivityDB {
             SELECT
                 wallet_id, payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at
             FROM pre_activity_metadata
-            WHERE wallet_id = ?1 AND address = ?2"
+            WHERE wallet_id = ?1 AND address = ?2 AND is_receive = 1"
         } else {
             "
             SELECT
@@ -2805,6 +2813,44 @@ impl ActivityDB {
         })?;
 
         Ok(tags)
+    }
+
+    fn apply_pre_activity_metadata_for_onchain(&mut self, activity: &OnchainActivity) {
+        let Ok(wallet_id) = Self::normalize_wallet_id(&activity.wallet_id) else {
+            return;
+        };
+
+        match activity.tx_type {
+            PaymentType::Received => {
+                let _ = self.transfer_pre_activity_metadata_to_activity(
+                    &wallet_id,
+                    &activity.address,
+                    &activity.id,
+                    true,
+                );
+            }
+            PaymentType::Sent => {
+                let _ = self.transfer_pre_activity_metadata_to_activity(
+                    &wallet_id,
+                    &activity.tx_id,
+                    &activity.id,
+                    false,
+                );
+            }
+        }
+    }
+
+    fn apply_pre_activity_metadata_for_lightning(&mut self, activity: &LightningActivity) {
+        let Ok(wallet_id) = Self::normalize_wallet_id(&activity.wallet_id) else {
+            return;
+        };
+
+        let _ = self.transfer_pre_activity_metadata_to_activity(
+            &wallet_id,
+            &activity.id,
+            &activity.id,
+            false,
+        );
     }
 
     pub fn upsert_closed_channel(

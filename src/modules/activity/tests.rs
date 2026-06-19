@@ -3508,6 +3508,85 @@ mod tests {
     }
 
     #[test]
+    fn test_bulk_upsert_onchain_transfers_pre_activity_metadata() {
+        let (mut db, db_path) = setup();
+        let wallet_id = "hardware-wallet-1";
+        let address = "bc1qbulkmetadata".to_string();
+
+        let mut metadata = create_test_pre_activity_metadata(
+            "hardware_bulk_pending".to_string(),
+            ActivityType::Onchain,
+            vec!["bulk-tag".to_string()],
+        );
+        metadata.wallet_id = wallet_id.to_string();
+        metadata.address = Some(address.clone());
+        metadata.is_receive = true;
+        metadata.fee_rate = 7;
+        db.add_pre_activity_metadata(&metadata).unwrap();
+
+        let mut activity = create_test_onchain_activity();
+        activity.wallet_id = wallet_id.to_string();
+        activity.id = "hardware_bulk_activity".to_string();
+        activity.tx_id = "hardware_bulk_txid".to_string();
+        activity.address = address.clone();
+        activity.tx_type = PaymentType::Received;
+        activity.fee_rate = 1;
+
+        db.upsert_onchain_activities(&[activity.clone()]).unwrap();
+
+        assert_eq!(
+            db.get_tags(wallet_id, &activity.id).unwrap(),
+            vec!["bulk-tag".to_string()]
+        );
+        let retrieved = db
+            .get_activity_by_id(wallet_id, &activity.id)
+            .unwrap()
+            .unwrap();
+        match retrieved {
+            Activity::Onchain(onchain) => assert_eq!(onchain.fee_rate, 7),
+            Activity::Lightning(_) => panic!("Expected onchain activity"),
+        }
+        assert!(db
+            .get_pre_activity_metadata(wallet_id, &address, true)
+            .unwrap()
+            .is_none());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_bulk_upsert_lightning_transfers_pre_activity_metadata() {
+        let (mut db, db_path) = setup();
+        let wallet_id = "hardware-wallet-1";
+        let payment_id = "hardware_bulk_lightning".to_string();
+
+        let mut metadata = create_test_pre_activity_metadata(
+            payment_id.clone(),
+            ActivityType::Lightning,
+            vec!["lightning-bulk-tag".to_string()],
+        );
+        metadata.wallet_id = wallet_id.to_string();
+        db.add_pre_activity_metadata(&metadata).unwrap();
+
+        let mut activity = create_test_lightning_activity();
+        activity.wallet_id = wallet_id.to_string();
+        activity.id = payment_id.clone();
+
+        db.upsert_lightning_activities(&[activity.clone()]).unwrap();
+
+        assert_eq!(
+            db.get_tags(wallet_id, &activity.id).unwrap(),
+            vec!["lightning-bulk-tag".to_string()]
+        );
+        assert!(db
+            .get_pre_activity_metadata(wallet_id, &payment_id, false)
+            .unwrap()
+            .is_none());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_upsert_onchain_activities_empty() {
         let (mut db, db_path) = setup();
         assert!(db.upsert_onchain_activities(&[]).is_ok());
@@ -3881,6 +3960,7 @@ mod tests {
         let mut metadata =
             create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
+        metadata.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
         assert!(db
@@ -3915,6 +3995,7 @@ mod tests {
         let mut metadata =
             create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
+        metadata.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
         assert!(db
@@ -4063,6 +4144,45 @@ mod tests {
             .unwrap();
         assert_eq!(received_tags.len(), 1);
         assert!(received_tags.contains(&"payment".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_pre_activity_metadata_received_lookup_ignores_sent_only_address_metadata() {
+        let (mut db, db_path) = setup();
+        let address = "bc1qsentonlyaddress".to_string();
+
+        let mut metadata = create_test_pre_activity_metadata(
+            "sent_only_txid".to_string(),
+            ActivityType::Onchain,
+            vec!["sent-only".to_string()],
+        );
+        metadata.tx_id = Some("sent_only_txid".to_string());
+        metadata.address = Some(address.clone());
+        metadata.is_receive = false;
+        db.add_pre_activity_metadata(&metadata).unwrap();
+
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, &address, true)
+            .unwrap()
+            .is_none());
+
+        let mut received_activity = create_test_onchain_activity();
+        received_activity.id = "received_should_ignore_sent_metadata".to_string();
+        received_activity.tx_id = "received_should_ignore_sent_metadata_txid".to_string();
+        received_activity.address = address.clone();
+        received_activity.tx_type = PaymentType::Received;
+        db.insert_onchain_activity(&received_activity).unwrap();
+
+        assert!(db
+            .get_tags(DEFAULT_WALLET_ID, &received_activity.id)
+            .unwrap()
+            .is_empty());
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, "sent_only_txid", false)
+            .unwrap()
+            .is_some());
 
         cleanup(&db_path);
     }
@@ -4421,6 +4541,7 @@ mod tests {
         let mut metadata =
             create_test_pre_activity_metadata(address.clone(), ActivityType::Onchain, tags.clone());
         metadata.address = Some(address.clone());
+        metadata.is_receive = true;
         assert!(db.add_pre_activity_metadata(&metadata).is_ok());
 
         let mut activity = create_test_onchain_activity();
@@ -5051,6 +5172,7 @@ mod tests {
             vec!["tag1".to_string(), "tag2".to_string()],
         );
         metadata1.address = Some("bc1qtest123".to_string());
+        metadata1.is_receive = true;
         let metadata2 = create_test_pre_activity_metadata(
             "lightning:invoice123".to_string(),
             ActivityType::Lightning,

@@ -285,8 +285,8 @@ fun manageActivities() {
         // Get specific activity
         getActivityById(walletId = "bitkit", activityId = "ln456")?.let { foundActivity ->
             when (foundActivity) {
-                is Activity.Onchain -> println("Found onchain activity: ${foundActivity.txId}")
-                is Activity.Lightning -> println("Found lightning activity: ${foundActivity.preimage}")
+                is Activity.Onchain -> println("Found onchain activity: ${foundActivity.v1.txId}")
+                is Activity.Lightning -> println("Found lightning activity: ${foundActivity.v1.preimage}")
             }
         }
         
@@ -323,6 +323,7 @@ fun manageActivities() {
 
 ### Python
 ```python
+import time
 from bitkitcore import *
 
 try:
@@ -347,11 +348,15 @@ try:
         does_exist=True,
         confirm_timestamp=1234568890,
         channel_id=None,
-        transfer_tx_id=None
+        transfer_tx_id=None,
+        contact=None,
+        created_at=None,
+        updated_at=None,
+        seen_at=None
     )
 
     # Wrap in Activity enum and insert
-    activity = Activity.Onchain(onchain_activity)
+    activity = Activity.ONCHAIN(onchain_activity)
     insert_activity(activity)
     
     # Retrieve activities with advanced filtering
@@ -385,32 +390,47 @@ try:
         wallet_id="bitkit",
         filter=ActivityFilter.ALL,
         tx_type=PaymentType.SENT,
-        limit=10
+        tags=None,
+        search=None,
+        min_date=None,
+        max_date=None,
+        limit=10,
+        sort_direction=SortDirection.DESC
     )
     
     recent_lightning = get_activities(
         wallet_id="bitkit",
         filter=ActivityFilter.LIGHTNING,
+        tx_type=None,
+        tags=None,
+        search=None,
         min_date=int(time.time()) - 86400,  # Last 24 hours
-        limit=10
+        max_date=None,
+        limit=10,
+        sort_direction=SortDirection.DESC
     )
     
     tagged_payments = get_activities(
         wallet_id="bitkit",
         filter=ActivityFilter.ALL,
+        tx_type=None,
         tags=["coffee"],
-        limit=10
+        search=None,
+        min_date=None,
+        max_date=None,
+        limit=10,
+        sort_direction=SortDirection.DESC
     )
     
     # Get specific activity
     if found_activity := get_activity_by_id("bitkit", "tx123"):
-        if isinstance(found_activity, Activity.Onchain):
-            print(f"Found onchain activity: {found_activity.tx_id}")
-        elif isinstance(found_activity, Activity.Lightning):
-            print(f"Found lightning activity: {found_activity.preimage}")
+        if isinstance(found_activity, Activity.ONCHAIN):
+            print(f"Found onchain activity: {found_activity[0].tx_id}")
+        elif isinstance(found_activity, Activity.LIGHTNING):
+            print(f"Found lightning activity: {found_activity[0].preimage}")
             
     # Update activity
-    updated_activity = Activity.Onchain(onchain_activity)
+    updated_activity = Activity.ONCHAIN(onchain_activity)
     update_activity(activity_id="tx123", activity=updated_activity)
     
     # Tag operations
