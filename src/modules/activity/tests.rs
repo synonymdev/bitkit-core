@@ -1691,6 +1691,83 @@ mod tests {
     }
 
     #[test]
+    fn test_update_onchain_metadata_transfer_targets_activity_id_argument() {
+        let (mut db, db_path) = setup();
+
+        let activity = create_test_onchain_activity();
+        let activity_id = activity.id.clone();
+        db.insert_onchain_activity(&activity).unwrap();
+
+        let mut metadata = create_test_pre_activity_metadata(
+            "updated_txid".to_string(),
+            ActivityType::Onchain,
+            vec!["target-row".to_string()],
+        );
+        metadata.tx_id = Some("updated_txid".to_string());
+        db.add_pre_activity_metadata(&metadata).unwrap();
+
+        let mut updated = activity;
+        updated.id = "mismatched_activity_id".to_string();
+        updated.tx_id = "updated_txid".to_string();
+
+        db.update_onchain_activity_by_id(&activity_id, &updated)
+            .unwrap();
+
+        assert_eq!(
+            db.get_tags(DEFAULT_WALLET_ID, &activity_id).unwrap(),
+            vec!["target-row".to_string()]
+        );
+        assert!(db
+            .get_tags(DEFAULT_WALLET_ID, "mismatched_activity_id")
+            .unwrap()
+            .is_empty());
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, "updated_txid", false)
+            .unwrap()
+            .is_none());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_update_lightning_metadata_transfer_targets_activity_id_argument() {
+        let (mut db, db_path) = setup();
+
+        let activity = create_test_lightning_activity();
+        let activity_id = activity.id.clone();
+        db.insert_lightning_activity(&activity).unwrap();
+
+        let metadata = create_test_pre_activity_metadata(
+            "mismatched_lightning_id".to_string(),
+            ActivityType::Lightning,
+            vec!["target-row".to_string()],
+        );
+        db.add_pre_activity_metadata(&metadata).unwrap();
+
+        let mut updated = activity;
+        updated.id = "mismatched_lightning_id".to_string();
+        updated.status = PaymentState::Succeeded;
+
+        db.update_lightning_activity_by_id(&activity_id, &updated)
+            .unwrap();
+
+        assert_eq!(
+            db.get_tags(DEFAULT_WALLET_ID, &activity_id).unwrap(),
+            vec!["target-row".to_string()]
+        );
+        assert!(db
+            .get_tags(DEFAULT_WALLET_ID, "mismatched_lightning_id")
+            .unwrap()
+            .is_empty());
+        assert!(db
+            .get_pre_activity_metadata(DEFAULT_WALLET_ID, "mismatched_lightning_id", false)
+            .unwrap()
+            .is_none());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_upsert_onchain_activity_insert_then_update() {
         let (mut db, db_path) = setup();
 

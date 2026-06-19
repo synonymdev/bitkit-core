@@ -1004,7 +1004,7 @@ impl ActivityDB {
         })?;
 
         for activity in activities {
-            self.apply_pre_activity_metadata_for_onchain(activity);
+            self.apply_pre_activity_metadata_for_onchain(activity, &activity.id);
         }
 
         Ok(())
@@ -1103,7 +1103,7 @@ impl ActivityDB {
         })?;
 
         for activity in activities {
-            self.apply_pre_activity_metadata_for_lightning(activity);
+            self.apply_pre_activity_metadata_for_lightning(activity, &activity.id);
         }
 
         Ok(())
@@ -1684,7 +1684,7 @@ impl ActivityDB {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
-        self.apply_pre_activity_metadata_for_onchain(activity);
+        self.apply_pre_activity_metadata_for_onchain(activity, activity_id);
 
         Ok(())
     }
@@ -1762,7 +1762,7 @@ impl ActivityDB {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
-        self.apply_pre_activity_metadata_for_lightning(activity);
+        self.apply_pre_activity_metadata_for_lightning(activity, activity_id);
 
         Ok(())
     }
@@ -2849,7 +2849,11 @@ impl ActivityDB {
         Ok(tags)
     }
 
-    fn apply_pre_activity_metadata_for_onchain(&mut self, activity: &OnchainActivity) {
+    fn apply_pre_activity_metadata_for_onchain(
+        &mut self,
+        activity: &OnchainActivity,
+        activity_id: &str,
+    ) {
         let Ok(wallet_id) = Self::normalize_wallet_id(&activity.wallet_id) else {
             return;
         };
@@ -2859,7 +2863,7 @@ impl ActivityDB {
                 let _ = self.transfer_pre_activity_metadata_to_activity(
                     &wallet_id,
                     &activity.address,
-                    &activity.id,
+                    activity_id,
                     true,
                 );
             }
@@ -2867,14 +2871,18 @@ impl ActivityDB {
                 let _ = self.transfer_pre_activity_metadata_to_activity(
                     &wallet_id,
                     &activity.tx_id,
-                    &activity.id,
+                    activity_id,
                     false,
                 );
             }
         }
     }
 
-    fn apply_pre_activity_metadata_for_lightning(&mut self, activity: &LightningActivity) {
+    fn apply_pre_activity_metadata_for_lightning(
+        &mut self,
+        activity: &LightningActivity,
+        activity_id: &str,
+    ) {
         let Ok(wallet_id) = Self::normalize_wallet_id(&activity.wallet_id) else {
             return;
         };
@@ -2882,7 +2890,7 @@ impl ActivityDB {
         let _ = self.transfer_pre_activity_metadata_to_activity(
             &wallet_id,
             &activity.id,
-            &activity.id,
+            activity_id,
             false,
         );
     }
