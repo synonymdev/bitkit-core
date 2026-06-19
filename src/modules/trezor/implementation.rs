@@ -928,6 +928,20 @@ impl TrezorManager {
             .map(|f| TrezorFeatures::from(f.clone()))
     }
 
+    /// Refresh features from the currently connected Trezor device.
+    ///
+    /// This is an explicit one-shot device interaction. It does not start any
+    /// polling or retry loop. THP devices use `GetFeatures` via
+    /// trezor-connect-rs; V1 devices use the dependency's `Initialize` path,
+    /// which also refreshes its cached features.
+    pub async fn refresh_features(&self) -> Result<TrezorFeatures, TrezorError> {
+        let mut connected_device = self.connected_device.lock().await;
+        let device = connected_device.as_mut().ok_or(TrezorError::NotConnected)?;
+
+        let features = device.initialize().await.map_err(TrezorError::from)?;
+        Ok(TrezorFeatures::from(features))
+    }
+
     /// Get the device's master root fingerprint as an 8-character hex string.
     ///
     /// This is a convenience wrapper around `get_public_key()` that returns

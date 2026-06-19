@@ -70,6 +70,10 @@ pub struct TrezorFeatures {
     pub patch_version: Option<u32>,
     /// Whether PIN protection is enabled
     pub pin_protection: Option<bool>,
+    /// Whether the device is currently unlocked. When PIN protection is enabled
+    /// and this is `Some(false)`, mobile callers should back off and ask the
+    /// user to unlock the Trezor instead of repeatedly reconnecting.
+    pub unlocked: Option<bool>,
     /// Whether passphrase protection is enabled
     pub passphrase_protection: Option<bool>,
     /// Whether the device is initialized with a seed
@@ -96,6 +100,7 @@ impl From<trezor_connect_rs::device::Features> for TrezorFeatures {
             minor_version: f.minor_version,
             patch_version: f.patch_version,
             pin_protection: f.pin_protection,
+            unlocked: f.unlocked,
             passphrase_protection: f.passphrase_protection,
             initialized: f.initialized,
             needs_backup: f.needs_backup,

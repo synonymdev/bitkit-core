@@ -16,6 +16,10 @@ pub enum TrezorError {
     #[error("Device disconnected during operation")]
     DeviceDisconnected,
 
+    /// Device is busy and the caller should back off before retrying
+    #[error("Device is busy")]
+    DeviceBusy,
+
     /// Connection error
     #[error("Connection error: {error_details}")]
     ConnectionError { error_details: String },
@@ -103,9 +107,7 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
             TE::Transport(transport_err) => match transport_err {
                 TcTransportError::DeviceNotFound => TrezorError::DeviceNotFound,
                 TcTransportError::DeviceDisconnected => TrezorError::DeviceDisconnected,
-                TcTransportError::DeviceBusy => TrezorError::ConnectionError {
-                    error_details: "Device is busy".to_string(),
-                },
+                TcTransportError::DeviceBusy => TrezorError::DeviceBusy,
                 TcTransportError::UnableToOpen(msg) => TrezorError::TransportError {
                     error_details: format!("Unable to open device: {}", msg),
                 },
