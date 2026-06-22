@@ -10057,7 +10057,7 @@ public struct TrezorCallMessageResult {
          */data: Data, 
         /**
          * Error message (empty on success)
-         */error: String,
+         */error: String, 
         /**
          * Structured error code (None on success or when the native error is generic)
          */errorCode: TrezorTransportErrorCode?) {
@@ -10117,7 +10117,7 @@ public struct FfiConverterTypeTrezorCallMessageResult: FfiConverterRustBuffer {
                 success: FfiConverterBool.read(from: &buf), 
                 messageType: FfiConverterUInt16.read(from: &buf), 
                 data: FfiConverterData.read(from: &buf), 
-                error: FfiConverterString.read(from: &buf),
+                error: FfiConverterString.read(from: &buf), 
                 errorCode: FfiConverterOptionTypeTrezorTransportErrorCode.read(from: &buf)
         )
     }
@@ -11719,7 +11719,7 @@ public struct TrezorTransportReadResult {
          */data: Data, 
         /**
          * Error message (empty on success)
-         */error: String,
+         */error: String, 
         /**
          * Structured error code (None on success or when the native error is generic)
          */errorCode: TrezorTransportErrorCode?) {
@@ -11773,7 +11773,7 @@ public struct FfiConverterTypeTrezorTransportReadResult: FfiConverterRustBuffer 
             try TrezorTransportReadResult(
                 success: FfiConverterBool.read(from: &buf), 
                 data: FfiConverterData.read(from: &buf), 
-                error: FfiConverterString.read(from: &buf),
+                error: FfiConverterString.read(from: &buf), 
                 errorCode: FfiConverterOptionTypeTrezorTransportErrorCode.read(from: &buf)
         )
     }
@@ -11827,7 +11827,7 @@ public struct TrezorTransportWriteResult {
          */success: Bool, 
         /**
          * Error message (empty on success)
-         */error: String,
+         */error: String, 
         /**
          * Structured error code (None on success or when the native error is generic)
          */errorCode: TrezorTransportErrorCode?) {
@@ -11875,7 +11875,7 @@ public struct FfiConverterTypeTrezorTransportWriteResult: FfiConverterRustBuffer
         return
             try TrezorTransportWriteResult(
                 success: FfiConverterBool.read(from: &buf), 
-                error: FfiConverterString.read(from: &buf),
+                error: FfiConverterString.read(from: &buf), 
                 errorCode: FfiConverterOptionTypeTrezorTransportErrorCode.read(from: &buf)
         )
     }
@@ -17581,7 +17581,7 @@ extension TrezorScriptType: Codable {}
  */
 
 public enum TrezorTransportErrorCode {
-
+    
     /**
      * Device is busy and the caller should back off before retrying.
      */
@@ -17602,20 +17602,20 @@ public struct FfiConverterTypeTrezorTransportErrorCode: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorTransportErrorCode {
         let variant: Int32 = try readInt(&buf)
         switch variant {
-
+        
         case 1: return .deviceBusy
-
+        
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
 
     public static func write(_ value: TrezorTransportErrorCode, into buf: inout [UInt8]) {
         switch value {
-
-
+        
+        
         case .deviceBusy:
             writeInt(&buf, Int32(1))
-
+        
         }
     }
 }

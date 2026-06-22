@@ -14538,7 +14538,7 @@ class TrezorTransportErrorCode(enum.Enum):
     Device is busy and the caller should back off before retrying.
     """
 
-
+    
 
 
 class _UniffiConverterTypeTrezorTransportErrorCode(_UniffiConverterRustBuffer):
