@@ -36,8 +36,8 @@ use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
     get_transport_callback, trezor_is_ble_available, trezor_set_transport_callback,
     trezor_set_ui_callback, NativeDeviceInfo, PassphraseResponse, TrezorCallMessageResult,
-    TrezorTransportCallback, TrezorTransportReadResult, TrezorTransportWriteResult,
-    TrezorUiCallback, WalletSelection,
+    TrezorTransportCallback, TrezorTransportErrorCode, TrezorTransportReadResult,
+    TrezorTransportWriteResult, TrezorUiCallback, WalletSelection,
 };
 use crate::modules::trezor::{
     TrezorAddressResponse, TrezorCoinType, TrezorDeviceInfo, TrezorError, TrezorFeatures,
@@ -2388,6 +2388,23 @@ pub async fn trezor_get_features() -> Option<TrezorFeatures> {
     rt.spawn(async move { get_trezor_manager().get_features().await })
         .await
         .unwrap_or(None)
+}
+
+/// Refresh features from the currently connected Trezor device.
+///
+/// This performs a single explicit device request and updates the connected
+/// device's cached features. It does not start polling. Returns `NotConnected`
+/// if there is no connected device.
+#[uniffi::export]
+pub async fn trezor_refresh_features() -> Result<TrezorFeatures, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_trezor_manager().refresh_features().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Sign a message with the connected Trezor device.

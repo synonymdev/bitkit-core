@@ -97,11 +97,20 @@ pub trait TrezorTransportCallback: Send + Sync {
 pub async fn trezor_initialize(credential_path: Option<String>) -> Result<(), TrezorError>;
 pub async fn trezor_scan() -> Result<Vec<TrezorDeviceInfo>, TrezorError>;
 pub async fn trezor_connect(device_id: String) -> Result<TrezorFeatures, TrezorError>;
+pub async fn trezor_get_features() -> Option<TrezorFeatures>;
+pub async fn trezor_refresh_features() -> Result<TrezorFeatures, TrezorError>;
 pub async fn trezor_get_address(params: TrezorGetAddressParams) -> Result<TrezorAddressResponse, TrezorError>;
 pub async fn trezor_sign_message(params: TrezorSignMessageParams) -> Result<TrezorSignedMessageResponse, TrezorError>;
 pub async fn trezor_verify_message(params: TrezorVerifyMessageParams) -> Result<bool, TrezorError>;
 pub async fn trezor_disconnect() -> Result<(), TrezorError>;
 ```
+
+`trezor_get_features()` returns the cached connect-time features without
+touching the device. `trezor_refresh_features()` is an explicit one-shot device
+request that refreshes the cache; it does not start polling. Mobile callers can
+derive a locked state with `features.pin_protection == Some(true)` and
+`features.unlocked == Some(false)`, then show "Unlock your Trezor" and back off
+instead of repeatedly reconnecting.
 
 ## Connection Flow
 

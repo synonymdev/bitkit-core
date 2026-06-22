@@ -3,8 +3,9 @@
 #[cfg(test)]
 mod tests {
     use crate::modules::trezor::{
-        TrezorCoinType, TrezorDeviceInfo, TrezorError, TrezorFeatures, TrezorScriptType,
-        TrezorSignTxParams, TrezorSignedTx, TrezorTransportType, TrezorTxInput, TrezorTxOutput,
+        encode_callback_transport_error, TrezorCoinType, TrezorDeviceInfo, TrezorError,
+        TrezorFeatures, TrezorScriptType, TrezorSignTxParams, TrezorSignedTx,
+        TrezorTransportErrorCode, TrezorTransportType, TrezorTxInput, TrezorTxOutput,
     };
 
     // ========================================================================
@@ -31,6 +32,47 @@ mod tests {
         let err: TrezorError = tc_err.into();
 
         assert!(matches!(err, TrezorError::DeviceDisconnected));
+    }
+
+    #[test]
+    fn test_error_conversion_device_busy() {
+        use trezor_connect_rs::error::TransportError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        let tc_err = TcError::Transport(TransportError::DeviceBusy);
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::DeviceBusy));
+    }
+
+    #[test]
+    fn test_callback_open_device_busy_maps_to_device_busy() {
+        use trezor_connect_rs::error::TransportError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        let callback_error = encode_callback_transport_error(
+            "native transport busy".to_string(),
+            Some(TrezorTransportErrorCode::DeviceBusy),
+        );
+        let tc_err = TcError::Transport(TransportError::UnableToOpen(callback_error));
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::DeviceBusy));
+    }
+
+    #[test]
+    fn test_callback_data_transfer_busy_maps_to_device_busy() {
+        use trezor_connect_rs::error::TransportError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        let callback_error = encode_callback_transport_error(
+            String::new(),
+            Some(TrezorTransportErrorCode::DeviceBusy),
+        );
+        let tc_err = TcError::Transport(TransportError::DataTransfer(callback_error));
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::DeviceBusy));
     }
 
     #[test]
@@ -455,6 +497,7 @@ mod tests {
             minor_version: Some(8),
             patch_version: Some(0),
             pin_protection: Some(true),
+            unlocked: Some(true),
             passphrase_protection: Some(false),
             initialized: Some(true),
             needs_backup: Some(false),
@@ -471,9 +514,42 @@ mod tests {
         assert_eq!(result.minor_version, Some(8));
         assert_eq!(result.patch_version, Some(0));
         assert_eq!(result.pin_protection, Some(true));
+        assert_eq!(result.unlocked, Some(true));
         assert_eq!(result.passphrase_protection, Some(false));
         assert_eq!(result.initialized, Some(true));
         assert_eq!(result.needs_backup, Some(false));
+    }
+
+    #[test]
+    fn test_features_from_trezor_connect_maps_unlocked_false() {
+        use trezor_connect_rs::device::Features;
+
+        let tc_features = Features {
+            pin_protection: Some(true),
+            unlocked: Some(false),
+            ..Default::default()
+        };
+
+        let result: TrezorFeatures = tc_features.into();
+
+        assert_eq!(result.pin_protection, Some(true));
+        assert_eq!(result.unlocked, Some(false));
+    }
+
+    #[test]
+    fn test_features_from_trezor_connect_maps_unlocked_none() {
+        use trezor_connect_rs::device::Features;
+
+        let tc_features = Features {
+            pin_protection: Some(true),
+            unlocked: None,
+            ..Default::default()
+        };
+
+        let result: TrezorFeatures = tc_features.into();
+
+        assert_eq!(result.pin_protection, Some(true));
+        assert_eq!(result.unlocked, None);
     }
 
     // ========================================================================

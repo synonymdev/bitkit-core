@@ -10,6 +10,13 @@ use std::sync::Arc;
 // Transport callback types
 // ============================================================================
 
+/// Structured transport error code returned by native callback operations.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum TrezorTransportErrorCode {
+    /// Device is busy and the caller should back off before retrying.
+    DeviceBusy,
+}
+
 /// Result from a transport read operation
 #[derive(Debug, Clone, uniffi::Record)]
 pub struct TrezorTransportReadResult {
@@ -19,6 +26,8 @@ pub struct TrezorTransportReadResult {
     pub data: Vec<u8>,
     /// Error message (empty on success)
     pub error: String,
+    /// Structured error code (None on success or when the native error is generic)
+    pub error_code: Option<TrezorTransportErrorCode>,
 }
 
 /// Result from a transport write or open operation
@@ -28,6 +37,8 @@ pub struct TrezorTransportWriteResult {
     pub success: bool,
     /// Error message (empty on success)
     pub error: String,
+    /// Structured error code (None on success or when the native error is generic)
+    pub error_code: Option<TrezorTransportErrorCode>,
 }
 
 /// Result from a high-level message call (for BLE/THP devices)
@@ -41,6 +52,8 @@ pub struct TrezorCallMessageResult {
     pub data: Vec<u8>,
     /// Error message (empty on success)
     pub error: String,
+    /// Structured error code (None on success or when the native error is generic)
+    pub error_code: Option<TrezorTransportErrorCode>,
 }
 
 /// Native device information returned from enumeration

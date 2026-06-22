@@ -437,11 +437,11 @@ internal open class UniffiForeignFutureStruct(
     @JvmField public var `free`: UniffiForeignFutureFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `handle` = 0.toLong(),
-
+        
         `free` = null,
-
+        
     )
 
     internal class UniffiByValue(
@@ -468,11 +468,11 @@ internal open class UniffiForeignFutureStructU8Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.toByte(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -502,11 +502,11 @@ internal open class UniffiForeignFutureStructI8Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.toByte(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -536,11 +536,11 @@ internal open class UniffiForeignFutureStructU16Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.toShort(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -570,11 +570,11 @@ internal open class UniffiForeignFutureStructI16Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.toShort(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -604,11 +604,11 @@ internal open class UniffiForeignFutureStructU32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0,
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -638,11 +638,11 @@ internal open class UniffiForeignFutureStructI32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0,
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -672,11 +672,11 @@ internal open class UniffiForeignFutureStructU64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.toLong(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -706,11 +706,11 @@ internal open class UniffiForeignFutureStructI64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.toLong(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -740,11 +740,11 @@ internal open class UniffiForeignFutureStructF32Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.0f,
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -774,11 +774,11 @@ internal open class UniffiForeignFutureStructF64Struct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = 0.0,
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -808,11 +808,11 @@ internal open class UniffiForeignFutureStructPointerStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = NullPointer,
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -842,11 +842,11 @@ internal open class UniffiForeignFutureStructRustBufferStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `returnValue` = RustBufferHelper.allocValue(),
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -875,9 +875,9 @@ internal open class UniffiForeignFutureStructVoidStruct(
     @JvmField public var `callStatus`: UniffiRustCallStatusByValue,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `callStatus` = UniffiRustCallStatusHelper.allocValue(),
-
+        
     )
 
     internal class UniffiByValue(
@@ -946,11 +946,11 @@ internal open class UniffiVTableCallbackInterfaceEventListenerStruct(
     @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `onEvent` = null,
-
+        
         `uniffiFree` = null,
-
+        
     )
 
     internal class UniffiByValue(
@@ -987,31 +987,31 @@ internal open class UniffiVTableCallbackInterfaceTrezorTransportCallbackStruct(
     @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `enumerateDevices` = null,
-
+        
         `openDevice` = null,
-
+        
         `closeDevice` = null,
-
+        
         `readChunk` = null,
-
+        
         `writeChunk` = null,
-
+        
         `getChunkSize` = null,
-
+        
         `callMessage` = null,
-
+        
         `getPairingCode` = null,
-
+        
         `saveThpCredential` = null,
-
+        
         `loadThpCredential` = null,
-
+        
         `logDebug` = null,
-
+        
         `uniffiFree` = null,
-
+        
     )
 
     internal class UniffiByValue(
@@ -1069,13 +1069,13 @@ internal open class UniffiVTableCallbackInterfaceTrezorUiCallbackStruct(
     @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
 ) : com.sun.jna.Structure() {
     internal constructor(): this(
-
+        
         `onPinRequest` = null,
-
+        
         `onPassphraseRequest` = null,
-
+        
         `uniffiFree` = null,
-
+        
     )
 
     internal class UniffiByValue(
@@ -1099,6 +1099,8 @@ internal fun UniffiVTableCallbackInterfaceTrezorUiCallback.uniffiSetValue(other:
 }
 
 internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = UniffiVTableCallbackInterfaceTrezorUiCallbackStruct.UniffiByValue
+
+
 
 
 
@@ -1880,6 +1882,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_trezor_list_devices() != 32859.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_trezor_refresh_features() != 6918.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_trezor_scan() != 54763.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -2359,6 +2364,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_list_devices(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_trezor_refresh_features(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_scan(
@@ -3277,6 +3285,9 @@ internal object UniffiLib : Library {
     external fun uniffi_bitkitcore_fn_func_trezor_list_devices(
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_trezor_refresh_features(
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_scan(
     ): Long
     @JvmStatic
@@ -4071,7 +4082,7 @@ public open class EventListenerImpl: Disposable, EventListener {
         }!!
     }
 
-
+    
     /**
      * Called when a watcher event occurs.
      *
@@ -4092,13 +4103,13 @@ public open class EventListenerImpl: Disposable, EventListener {
     }
 
 
+    
+    
 
-
-
-
-
+    
+    
     public companion object
-
+    
 }
 
 
@@ -4287,7 +4298,7 @@ public open class TrezorTransportCallbackImpl: Disposable, TrezorTransportCallba
         }!!
     }
 
-
+    
     /**
      * Enumerate all connected Trezor devices
      */
@@ -4502,13 +4513,13 @@ public open class TrezorTransportCallbackImpl: Disposable, TrezorTransportCallba
     }
 
 
+    
+    
 
-
-
-
-
+    
+    
     public companion object
-
+    
 }
 
 
@@ -4885,7 +4896,7 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
         }!!
     }
 
-
+    
     /**
      * Called when the device requests a PIN.
      *
@@ -4926,13 +4937,13 @@ public open class TrezorUiCallbackImpl: Disposable, TrezorUiCallback {
     }
 
 
+    
+    
 
-
-
-
-
+    
+    
     public companion object
-
+    
 }
 
 
@@ -7509,6 +7520,7 @@ public object FfiConverterTypeTrezorCallMessageResult: FfiConverterRustBuffer<Tr
             FfiConverterUShort.read(buf),
             FfiConverterByteArray.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterOptionalTypeTrezorTransportErrorCode.read(buf),
         )
     }
 
@@ -7516,7 +7528,8 @@ public object FfiConverterTypeTrezorCallMessageResult: FfiConverterRustBuffer<Tr
             FfiConverterBoolean.allocationSize(value.`success`) +
             FfiConverterUShort.allocationSize(value.`messageType`) +
             FfiConverterByteArray.allocationSize(value.`data`) +
-            FfiConverterString.allocationSize(value.`error`)
+            FfiConverterString.allocationSize(value.`error`) +
+            FfiConverterOptionalTypeTrezorTransportErrorCode.allocationSize(value.`errorCode`)
     )
 
     override fun write(value: TrezorCallMessageResult, buf: ByteBuffer) {
@@ -7524,6 +7537,7 @@ public object FfiConverterTypeTrezorCallMessageResult: FfiConverterRustBuffer<Tr
         FfiConverterUShort.write(value.`messageType`, buf)
         FfiConverterByteArray.write(value.`data`, buf)
         FfiConverterString.write(value.`error`, buf)
+        FfiConverterOptionalTypeTrezorTransportErrorCode.write(value.`errorCode`, buf)
     }
 }
 
@@ -7582,6 +7596,7 @@ public object FfiConverterTypeTrezorFeatures: FfiConverterRustBuffer<TrezorFeatu
             FfiConverterOptionalBoolean.read(buf),
             FfiConverterOptionalBoolean.read(buf),
             FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
         )
     }
 
@@ -7594,6 +7609,7 @@ public object FfiConverterTypeTrezorFeatures: FfiConverterRustBuffer<TrezorFeatu
             FfiConverterOptionalUInt.allocationSize(value.`minorVersion`) +
             FfiConverterOptionalUInt.allocationSize(value.`patchVersion`) +
             FfiConverterOptionalBoolean.allocationSize(value.`pinProtection`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`unlocked`) +
             FfiConverterOptionalBoolean.allocationSize(value.`passphraseProtection`) +
             FfiConverterOptionalBoolean.allocationSize(value.`initialized`) +
             FfiConverterOptionalBoolean.allocationSize(value.`needsBackup`) +
@@ -7609,6 +7625,7 @@ public object FfiConverterTypeTrezorFeatures: FfiConverterRustBuffer<TrezorFeatu
         FfiConverterOptionalUInt.write(value.`minorVersion`, buf)
         FfiConverterOptionalUInt.write(value.`patchVersion`, buf)
         FfiConverterOptionalBoolean.write(value.`pinProtection`, buf)
+        FfiConverterOptionalBoolean.write(value.`unlocked`, buf)
         FfiConverterOptionalBoolean.write(value.`passphraseProtection`, buf)
         FfiConverterOptionalBoolean.write(value.`initialized`, buf)
         FfiConverterOptionalBoolean.write(value.`needsBackup`, buf)
@@ -7902,19 +7919,22 @@ public object FfiConverterTypeTrezorTransportReadResult: FfiConverterRustBuffer<
             FfiConverterBoolean.read(buf),
             FfiConverterByteArray.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterOptionalTypeTrezorTransportErrorCode.read(buf),
         )
     }
 
     override fun allocationSize(value: TrezorTransportReadResult): ULong = (
             FfiConverterBoolean.allocationSize(value.`success`) +
             FfiConverterByteArray.allocationSize(value.`data`) +
-            FfiConverterString.allocationSize(value.`error`)
+            FfiConverterString.allocationSize(value.`error`) +
+            FfiConverterOptionalTypeTrezorTransportErrorCode.allocationSize(value.`errorCode`)
     )
 
     override fun write(value: TrezorTransportReadResult, buf: ByteBuffer) {
         FfiConverterBoolean.write(value.`success`, buf)
         FfiConverterByteArray.write(value.`data`, buf)
         FfiConverterString.write(value.`error`, buf)
+        FfiConverterOptionalTypeTrezorTransportErrorCode.write(value.`errorCode`, buf)
     }
 }
 
@@ -7926,17 +7946,20 @@ public object FfiConverterTypeTrezorTransportWriteResult: FfiConverterRustBuffer
         return TrezorTransportWriteResult(
             FfiConverterBoolean.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterOptionalTypeTrezorTransportErrorCode.read(buf),
         )
     }
 
     override fun allocationSize(value: TrezorTransportWriteResult): ULong = (
             FfiConverterBoolean.allocationSize(value.`success`) +
-            FfiConverterString.allocationSize(value.`error`)
+            FfiConverterString.allocationSize(value.`error`) +
+            FfiConverterOptionalTypeTrezorTransportErrorCode.allocationSize(value.`errorCode`)
     )
 
     override fun write(value: TrezorTransportWriteResult, buf: ByteBuffer) {
         FfiConverterBoolean.write(value.`success`, buf)
         FfiConverterString.write(value.`error`, buf)
+        FfiConverterOptionalTypeTrezorTransportErrorCode.write(value.`errorCode`, buf)
     }
 }
 
@@ -10249,35 +10272,36 @@ public object FfiConverterTypeTrezorError : FfiConverterRustBuffer<TrezorExcepti
                 )
             2 -> TrezorException.DeviceNotFound()
             3 -> TrezorException.DeviceDisconnected()
-            4 -> TrezorException.ConnectionException(
+            4 -> TrezorException.DeviceBusy()
+            5 -> TrezorException.ConnectionException(
                 FfiConverterString.read(buf),
                 )
-            5 -> TrezorException.ProtocolException(
+            6 -> TrezorException.ProtocolException(
                 FfiConverterString.read(buf),
                 )
-            6 -> TrezorException.PairingRequired()
-            7 -> TrezorException.PairingFailed(
+            7 -> TrezorException.PairingRequired()
+            8 -> TrezorException.PairingFailed(
                 FfiConverterString.read(buf),
                 )
-            8 -> TrezorException.PinRequired()
-            9 -> TrezorException.PinCancelled()
-            10 -> TrezorException.InvalidPin()
-            11 -> TrezorException.PassphraseRequired()
-            12 -> TrezorException.PassphraseCancelled()
-            13 -> TrezorException.UserCancelled()
-            14 -> TrezorException.Timeout()
-            15 -> TrezorException.InvalidPath(
+            9 -> TrezorException.PinRequired()
+            10 -> TrezorException.PinCancelled()
+            11 -> TrezorException.InvalidPin()
+            12 -> TrezorException.PassphraseRequired()
+            13 -> TrezorException.PassphraseCancelled()
+            14 -> TrezorException.UserCancelled()
+            15 -> TrezorException.Timeout()
+            16 -> TrezorException.InvalidPath(
                 FfiConverterString.read(buf),
                 )
-            16 -> TrezorException.DeviceException(
+            17 -> TrezorException.DeviceException(
                 FfiConverterString.read(buf),
                 )
-            17 -> TrezorException.NotInitialized()
-            18 -> TrezorException.NotConnected()
-            19 -> TrezorException.SessionException(
+            18 -> TrezorException.NotInitialized()
+            19 -> TrezorException.NotConnected()
+            20 -> TrezorException.SessionException(
                 FfiConverterString.read(buf),
                 )
-            20 -> TrezorException.IoException(
+            21 -> TrezorException.IoException(
                 FfiConverterString.read(buf),
                 )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
@@ -10296,6 +10320,10 @@ public object FfiConverterTypeTrezorError : FfiConverterRustBuffer<TrezorExcepti
                 4UL
             )
             is TrezorException.DeviceDisconnected -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is TrezorException.DeviceBusy -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
             )
@@ -10392,78 +10420,82 @@ public object FfiConverterTypeTrezorError : FfiConverterRustBuffer<TrezorExcepti
                 buf.putInt(3)
                 Unit
             }
-            is TrezorException.ConnectionException -> {
+            is TrezorException.DeviceBusy -> {
                 buf.putInt(4)
-                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is TrezorException.ProtocolException -> {
+            is TrezorException.ConnectionException -> {
                 buf.putInt(5)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is TrezorException.PairingRequired -> {
+            is TrezorException.ProtocolException -> {
                 buf.putInt(6)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is TrezorException.PairingRequired -> {
+                buf.putInt(7)
                 Unit
             }
             is TrezorException.PairingFailed -> {
-                buf.putInt(7)
+                buf.putInt(8)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
             is TrezorException.PinRequired -> {
-                buf.putInt(8)
-                Unit
-            }
-            is TrezorException.PinCancelled -> {
                 buf.putInt(9)
                 Unit
             }
-            is TrezorException.InvalidPin -> {
+            is TrezorException.PinCancelled -> {
                 buf.putInt(10)
                 Unit
             }
-            is TrezorException.PassphraseRequired -> {
+            is TrezorException.InvalidPin -> {
                 buf.putInt(11)
                 Unit
             }
-            is TrezorException.PassphraseCancelled -> {
+            is TrezorException.PassphraseRequired -> {
                 buf.putInt(12)
                 Unit
             }
-            is TrezorException.UserCancelled -> {
+            is TrezorException.PassphraseCancelled -> {
                 buf.putInt(13)
                 Unit
             }
-            is TrezorException.Timeout -> {
+            is TrezorException.UserCancelled -> {
                 buf.putInt(14)
                 Unit
             }
-            is TrezorException.InvalidPath -> {
+            is TrezorException.Timeout -> {
                 buf.putInt(15)
-                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is TrezorException.DeviceException -> {
+            is TrezorException.InvalidPath -> {
                 buf.putInt(16)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is TrezorException.NotInitialized -> {
+            is TrezorException.DeviceException -> {
                 buf.putInt(17)
+                FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is TrezorException.NotConnected -> {
+            is TrezorException.NotInitialized -> {
                 buf.putInt(18)
                 Unit
             }
-            is TrezorException.SessionException -> {
+            is TrezorException.NotConnected -> {
                 buf.putInt(19)
+                Unit
+            }
+            is TrezorException.SessionException -> {
+                buf.putInt(20)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
             is TrezorException.IoException -> {
-                buf.putInt(20)
+                buf.putInt(21)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
@@ -10485,6 +10517,24 @@ public object FfiConverterTypeTrezorScriptType: FfiConverterRustBuffer<TrezorScr
     override fun allocationSize(value: TrezorScriptType): ULong = 4UL
 
     override fun write(value: TrezorScriptType, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeTrezorTransportErrorCode: FfiConverterRustBuffer<TrezorTransportErrorCode> {
+    override fun read(buf: ByteBuffer): TrezorTransportErrorCode = try {
+        TrezorTransportErrorCode.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: TrezorTransportErrorCode): ULong = 4UL
+
+    override fun write(value: TrezorTransportErrorCode, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
@@ -11909,6 +11959,35 @@ public object FfiConverterOptionalTypeTrezorScriptType: FfiConverterRustBuffer<T
 
 
 
+public object FfiConverterOptionalTypeTrezorTransportErrorCode: FfiConverterRustBuffer<TrezorTransportErrorCode?> {
+    override fun read(buf: ByteBuffer): TrezorTransportErrorCode? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeTrezorTransportErrorCode.read(buf)
+    }
+
+    override fun allocationSize(value: TrezorTransportErrorCode?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeTrezorTransportErrorCode.allocationSize(value)
+        }
+    }
+
+    override fun write(value: TrezorTransportErrorCode?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeTrezorTransportErrorCode.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeWordCount: FfiConverterRustBuffer<WordCount?> {
     override fun read(buf: ByteBuffer): WordCount? {
         if (buf.get().toInt() == 0) {
@@ -12953,7 +13032,7 @@ public suspend fun `approvePubkyAuth`(`authUrl`: kotlin.String, `secretKeyHex`: 
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -12970,7 +13049,7 @@ public suspend fun `blocktankRemoveAllCjitEntries`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -12987,7 +13066,7 @@ public suspend fun `blocktankRemoveAllOrders`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -13004,7 +13083,7 @@ public suspend fun `blocktankWipeAll`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -13051,7 +13130,7 @@ public suspend fun `cancelPubkyAuth`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -14002,7 +14081,7 @@ public suspend fun `onchainStartWatcher`(`params`: WatcherParams, `listener`: Ev
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         AccountInfoExceptionErrorHandler,
     )
@@ -14129,7 +14208,7 @@ public suspend fun `pubkyPutWithSecretKey`(`secretKeyHex`: kotlin.String, `path`
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -14148,7 +14227,7 @@ public suspend fun `pubkySessionDelete`(`sessionSecret`: kotlin.String, `path`: 
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -14186,7 +14265,7 @@ public suspend fun `pubkySessionPut`(`sessionSecret`: kotlin.String, `path`: kot
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         PubkyExceptionErrorHandler,
     )
@@ -14356,7 +14435,7 @@ public suspend fun `regtestMine`(`count`: kotlin.UInt?) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -14523,7 +14602,7 @@ public suspend fun `trezorClearCredentials`(`deviceId`: kotlin.String) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -14572,7 +14651,7 @@ public suspend fun `trezorDisconnect`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -14699,7 +14778,7 @@ public suspend fun `trezorInitialize`(`credentialPath`: kotlin.String?) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -14769,6 +14848,29 @@ public suspend fun `trezorListDevices`(): List<TrezorDeviceInfo> {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
         // lift function
         { FfiConverterSequenceTypeTrezorDeviceInfo.lift(it) },
+        // Error FFI converter
+        TrezorExceptionErrorHandler,
+    )
+}
+
+/**
+ * Refresh features from the currently connected Trezor device.
+ *
+ * This performs a single explicit device request and updates the connected
+ * device's cached features. It does not start polling. Returns `NotConnected`
+ * if there is no connected device.
+ */
+@Throws(TrezorException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `trezorRefreshFeatures`(): TrezorFeatures {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_trezor_refresh_features(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeTrezorFeatures.lift(it) },
         // Error FFI converter
         TrezorExceptionErrorHandler,
     )
@@ -14938,7 +15040,7 @@ public suspend fun `updateBlocktankUrl`(`newUrl`: kotlin.String) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -14976,7 +15078,7 @@ public suspend fun `upsertCjitEntries`(`entries`: List<IcJitEntry>) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -15014,7 +15116,7 @@ public suspend fun `upsertInfo`(`info`: IBtInfo) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
@@ -15052,7 +15154,7 @@ public suspend fun `upsertOrders`(`orders`: List<IBtOrder>) {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
