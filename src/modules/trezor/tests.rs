@@ -161,6 +161,88 @@ mod tests {
         assert!(matches!(err, TrezorError::NotConnected));
     }
 
+    // The following tests start from raw Trezor protocol `Failure` codes
+    // (FailureType in proto/messages-common.proto) and assert they surface as
+    // typed bitkit-core errors through the existing conversion path — i.e. a
+    // wrong-PIN `Failure { code: 7 }` reaches the app as TrezorError::InvalidPin
+    // rather than a generic device error.
+
+    #[test]
+    fn test_failure_code_pin_invalid_surfaces_as_invalid_pin() {
+        use trezor_connect_rs::error::DeviceError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        // Failure_PinInvalid = 7
+        let tc_err = TcError::Device(DeviceError::from_failure(
+            Some(7),
+            "invalid pin".to_string(),
+        ));
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::InvalidPin));
+    }
+
+    #[test]
+    fn test_failure_code_pin_cancelled_surfaces_as_pin_cancelled() {
+        use trezor_connect_rs::error::DeviceError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        // Failure_PinCancelled = 6
+        let tc_err = TcError::Device(DeviceError::from_failure(Some(6), "cancelled".to_string()));
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::PinCancelled));
+    }
+
+    #[test]
+    fn test_failure_code_pin_expected_surfaces_as_pin_required() {
+        use trezor_connect_rs::error::DeviceError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        // Failure_PinExpected = 5
+        let tc_err = TcError::Device(DeviceError::from_failure(
+            Some(5),
+            "pin expected".to_string(),
+        ));
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::PinRequired));
+    }
+
+    #[test]
+    fn test_failure_code_action_cancelled_surfaces_as_user_cancelled() {
+        use trezor_connect_rs::error::DeviceError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        // Failure_ActionCancelled = 4
+        let tc_err = TcError::Device(DeviceError::from_failure(
+            Some(4),
+            "action cancelled".to_string(),
+        ));
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::UserCancelled));
+    }
+
+    #[test]
+    fn test_failure_code_unknown_stays_generic_device_error() {
+        use trezor_connect_rs::error::DeviceError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        // Unknown code (Failure_FirmwareError = 99) must remain a generic device
+        // error so existing behavior is preserved.
+        let tc_err = TcError::Device(DeviceError::from_failure(Some(99), "boom".to_string()));
+        let err: TrezorError = tc_err.into();
+
+        match err {
+            TrezorError::DeviceError { error_details } => {
+                assert!(error_details.contains("99"));
+                assert!(error_details.contains("boom"));
+            }
+            other => panic!("expected generic DeviceError, got {other:?}"),
+        }
+    }
+
     #[test]
     fn test_error_conversion_pairing_required() {
         use trezor_connect_rs::error::ThpError;

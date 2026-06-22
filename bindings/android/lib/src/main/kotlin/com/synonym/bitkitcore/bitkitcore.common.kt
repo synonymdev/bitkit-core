@@ -1780,7 +1780,7 @@ public data class TrezorCallMessageResult (
     /**
      * Error message (empty on success)
      */
-    val `error`: kotlin.String,
+    val `error`: kotlin.String, 
     /**
      * Structured error code (None on success or when the native error is generic)
      */
@@ -2199,7 +2199,7 @@ public data class TrezorTransportReadResult (
     /**
      * Error message (empty on success)
      */
-    val `error`: kotlin.String,
+    val `error`: kotlin.String, 
     /**
      * Structured error code (None on success or when the native error is generic)
      */
@@ -2241,7 +2241,7 @@ public data class TrezorTransportWriteResult (
     /**
      * Error message (empty on success)
      */
-    val `error`: kotlin.String,
+    val `error`: kotlin.String, 
     /**
      * Structured error code (None on success or when the native error is generic)
      */
@@ -4071,7 +4071,7 @@ public enum class TrezorScriptType {
 
 @kotlinx.serialization.Serializable
 public enum class TrezorTransportErrorCode {
-
+    
     /**
      * Device is busy and the caller should back off before retrying.
      */
@@ -4249,6 +4249,8 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
 
 
 
