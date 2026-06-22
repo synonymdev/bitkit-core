@@ -3,8 +3,9 @@
 #[cfg(test)]
 mod tests {
     use crate::modules::trezor::{
-        TrezorCoinType, TrezorDeviceInfo, TrezorError, TrezorFeatures, TrezorScriptType,
-        TrezorSignTxParams, TrezorSignedTx, TrezorTransportType, TrezorTxInput, TrezorTxOutput,
+        encode_callback_transport_error, TrezorCoinType, TrezorDeviceInfo, TrezorError,
+        TrezorFeatures, TrezorScriptType, TrezorSignTxParams, TrezorSignedTx,
+        TrezorTransportErrorCode, TrezorTransportType, TrezorTxInput, TrezorTxOutput,
     };
 
     // ========================================================================
@@ -39,6 +40,36 @@ mod tests {
         use trezor_connect_rs::TrezorError as TcError;
 
         let tc_err = TcError::Transport(TransportError::DeviceBusy);
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::DeviceBusy));
+    }
+
+    #[test]
+    fn test_callback_open_device_busy_maps_to_device_busy() {
+        use trezor_connect_rs::error::TransportError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        let callback_error = encode_callback_transport_error(
+            "native transport busy".to_string(),
+            Some(TrezorTransportErrorCode::DeviceBusy),
+        );
+        let tc_err = TcError::Transport(TransportError::UnableToOpen(callback_error));
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::DeviceBusy));
+    }
+
+    #[test]
+    fn test_callback_data_transfer_busy_maps_to_device_busy() {
+        use trezor_connect_rs::error::TransportError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        let callback_error = encode_callback_transport_error(
+            String::new(),
+            Some(TrezorTransportErrorCode::DeviceBusy),
+        );
+        let tc_err = TcError::Transport(TransportError::DataTransfer(callback_error));
         let err: TrezorError = tc_err.into();
 
         assert!(matches!(err, TrezorError::DeviceBusy));

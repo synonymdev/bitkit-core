@@ -36,8 +36,8 @@ use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
     get_transport_callback, trezor_is_ble_available, trezor_set_transport_callback,
     trezor_set_ui_callback, NativeDeviceInfo, PassphraseResponse, TrezorCallMessageResult,
-    TrezorTransportCallback, TrezorTransportReadResult, TrezorTransportWriteResult,
-    TrezorUiCallback, WalletSelection,
+    TrezorTransportCallback, TrezorTransportErrorCode, TrezorTransportReadResult,
+    TrezorTransportWriteResult, TrezorUiCallback, WalletSelection,
 };
 use crate::modules::trezor::{
     TrezorAddressResponse, TrezorCoinType, TrezorDeviceInfo, TrezorError, TrezorFeatures,

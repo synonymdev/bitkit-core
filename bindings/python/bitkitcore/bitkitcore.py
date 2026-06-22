@@ -8054,14 +8054,20 @@ class TrezorCallMessageResult:
     Error message (empty on success)
     """
 
-    def __init__(self, *, success: "bool", message_type: "int", data: "bytes", error: "str"):
+    error_code: "typing.Optional[TrezorTransportErrorCode]"
+    """
+    Structured error code (None on success or when the native error is generic)
+    """
+
+    def __init__(self, *, success: "bool", message_type: "int", data: "bytes", error: "str", error_code: "typing.Optional[TrezorTransportErrorCode]"):
         self.success = success
         self.message_type = message_type
         self.data = data
         self.error = error
+        self.error_code = error_code
 
     def __str__(self):
-        return "TrezorCallMessageResult(success={}, message_type={}, data={}, error={})".format(self.success, self.message_type, self.data, self.error)
+        return "TrezorCallMessageResult(success={}, message_type={}, data={}, error={}, error_code={})".format(self.success, self.message_type, self.data, self.error, self.error_code)
 
     def __eq__(self, other):
         if self.success != other.success:
@@ -8071,6 +8077,8 @@ class TrezorCallMessageResult:
         if self.data != other.data:
             return False
         if self.error != other.error:
+            return False
+        if self.error_code != other.error_code:
             return False
         return True
 
@@ -8082,6 +8090,7 @@ class _UniffiConverterTypeTrezorCallMessageResult(_UniffiConverterRustBuffer):
             message_type=_UniffiConverterUInt16.read(buf),
             data=_UniffiConverterBytes.read(buf),
             error=_UniffiConverterString.read(buf),
+            error_code=_UniffiConverterOptionalTypeTrezorTransportErrorCode.read(buf),
         )
 
     @staticmethod
@@ -8090,6 +8099,7 @@ class _UniffiConverterTypeTrezorCallMessageResult(_UniffiConverterRustBuffer):
         _UniffiConverterUInt16.check_lower(value.message_type)
         _UniffiConverterBytes.check_lower(value.data)
         _UniffiConverterString.check_lower(value.error)
+        _UniffiConverterOptionalTypeTrezorTransportErrorCode.check_lower(value.error_code)
 
     @staticmethod
     def write(value, buf):
@@ -8097,6 +8107,7 @@ class _UniffiConverterTypeTrezorCallMessageResult(_UniffiConverterRustBuffer):
         _UniffiConverterUInt16.write(value.message_type, buf)
         _UniffiConverterBytes.write(value.data, buf)
         _UniffiConverterString.write(value.error, buf)
+        _UniffiConverterOptionalTypeTrezorTransportErrorCode.write(value.error_code, buf)
 
 
 class TrezorDeviceInfo:
@@ -9083,13 +9094,19 @@ class TrezorTransportReadResult:
     Error message (empty on success)
     """
 
-    def __init__(self, *, success: "bool", data: "bytes", error: "str"):
+    error_code: "typing.Optional[TrezorTransportErrorCode]"
+    """
+    Structured error code (None on success or when the native error is generic)
+    """
+
+    def __init__(self, *, success: "bool", data: "bytes", error: "str", error_code: "typing.Optional[TrezorTransportErrorCode]"):
         self.success = success
         self.data = data
         self.error = error
+        self.error_code = error_code
 
     def __str__(self):
-        return "TrezorTransportReadResult(success={}, data={}, error={})".format(self.success, self.data, self.error)
+        return "TrezorTransportReadResult(success={}, data={}, error={}, error_code={})".format(self.success, self.data, self.error, self.error_code)
 
     def __eq__(self, other):
         if self.success != other.success:
@@ -9097,6 +9114,8 @@ class TrezorTransportReadResult:
         if self.data != other.data:
             return False
         if self.error != other.error:
+            return False
+        if self.error_code != other.error_code:
             return False
         return True
 
@@ -9107,6 +9126,7 @@ class _UniffiConverterTypeTrezorTransportReadResult(_UniffiConverterRustBuffer):
             success=_UniffiConverterBool.read(buf),
             data=_UniffiConverterBytes.read(buf),
             error=_UniffiConverterString.read(buf),
+            error_code=_UniffiConverterOptionalTypeTrezorTransportErrorCode.read(buf),
         )
 
     @staticmethod
@@ -9114,12 +9134,14 @@ class _UniffiConverterTypeTrezorTransportReadResult(_UniffiConverterRustBuffer):
         _UniffiConverterBool.check_lower(value.success)
         _UniffiConverterBytes.check_lower(value.data)
         _UniffiConverterString.check_lower(value.error)
+        _UniffiConverterOptionalTypeTrezorTransportErrorCode.check_lower(value.error_code)
 
     @staticmethod
     def write(value, buf):
         _UniffiConverterBool.write(value.success, buf)
         _UniffiConverterBytes.write(value.data, buf)
         _UniffiConverterString.write(value.error, buf)
+        _UniffiConverterOptionalTypeTrezorTransportErrorCode.write(value.error_code, buf)
 
 
 class TrezorTransportWriteResult:
@@ -9137,17 +9159,25 @@ class TrezorTransportWriteResult:
     Error message (empty on success)
     """
 
-    def __init__(self, *, success: "bool", error: "str"):
+    error_code: "typing.Optional[TrezorTransportErrorCode]"
+    """
+    Structured error code (None on success or when the native error is generic)
+    """
+
+    def __init__(self, *, success: "bool", error: "str", error_code: "typing.Optional[TrezorTransportErrorCode]"):
         self.success = success
         self.error = error
+        self.error_code = error_code
 
     def __str__(self):
-        return "TrezorTransportWriteResult(success={}, error={})".format(self.success, self.error)
+        return "TrezorTransportWriteResult(success={}, error={}, error_code={})".format(self.success, self.error, self.error_code)
 
     def __eq__(self, other):
         if self.success != other.success:
             return False
         if self.error != other.error:
+            return False
+        if self.error_code != other.error_code:
             return False
         return True
 
@@ -9157,17 +9187,20 @@ class _UniffiConverterTypeTrezorTransportWriteResult(_UniffiConverterRustBuffer)
         return TrezorTransportWriteResult(
             success=_UniffiConverterBool.read(buf),
             error=_UniffiConverterString.read(buf),
+            error_code=_UniffiConverterOptionalTypeTrezorTransportErrorCode.read(buf),
         )
 
     @staticmethod
     def check_lower(value):
         _UniffiConverterBool.check_lower(value.success)
         _UniffiConverterString.check_lower(value.error)
+        _UniffiConverterOptionalTypeTrezorTransportErrorCode.check_lower(value.error_code)
 
     @staticmethod
     def write(value, buf):
         _UniffiConverterBool.write(value.success, buf)
         _UniffiConverterString.write(value.error, buf)
+        _UniffiConverterOptionalTypeTrezorTransportErrorCode.write(value.error_code, buf)
 
 
 class TrezorTxInput:
@@ -14495,6 +14528,44 @@ class _UniffiConverterTypeTrezorScriptType(_UniffiConverterRustBuffer):
 
 
 
+class TrezorTransportErrorCode(enum.Enum):
+    """
+    Structured transport error code returned by native callback operations.
+    """
+
+    DEVICE_BUSY = 0
+    """
+    Device is busy and the caller should back off before retrying.
+    """
+
+
+
+
+class _UniffiConverterTypeTrezorTransportErrorCode(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return TrezorTransportErrorCode.DEVICE_BUSY
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == TrezorTransportErrorCode.DEVICE_BUSY:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == TrezorTransportErrorCode.DEVICE_BUSY:
+            buf.write_i32(1)
+
+
+
+
+
+
+
 class TrezorTransportType(enum.Enum):
     """
     Transport type for Trezor devices.
@@ -16159,6 +16230,33 @@ class _UniffiConverterOptionalTypeTrezorScriptType(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterTypeTrezorScriptType.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeTrezorTransportErrorCode(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeTrezorTransportErrorCode.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeTrezorTransportErrorCode.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeTrezorTransportErrorCode.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -20813,6 +20911,7 @@ __all__ = [
     "TrezorCoinType",
     "TrezorError",
     "TrezorScriptType",
+    "TrezorTransportErrorCode",
     "TrezorTransportType",
     "TxDirection",
     "WalletSelection",

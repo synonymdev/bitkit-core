@@ -10038,6 +10038,10 @@ public struct TrezorCallMessageResult {
      * Error message (empty on success)
      */
     public var error: String
+    /**
+     * Structured error code (None on success or when the native error is generic)
+     */
+    public var errorCode: TrezorTransportErrorCode?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -10053,11 +10057,15 @@ public struct TrezorCallMessageResult {
          */data: Data, 
         /**
          * Error message (empty on success)
-         */error: String) {
+         */error: String,
+        /**
+         * Structured error code (None on success or when the native error is generic)
+         */errorCode: TrezorTransportErrorCode?) {
         self.success = success
         self.messageType = messageType
         self.data = data
         self.error = error
+        self.errorCode = errorCode
     }
 }
 
@@ -10080,6 +10088,9 @@ extension TrezorCallMessageResult: Equatable, Hashable {
         if lhs.error != rhs.error {
             return false
         }
+        if lhs.errorCode != rhs.errorCode {
+            return false
+        }
         return true
     }
 
@@ -10088,6 +10099,7 @@ extension TrezorCallMessageResult: Equatable, Hashable {
         hasher.combine(messageType)
         hasher.combine(data)
         hasher.combine(error)
+        hasher.combine(errorCode)
     }
 }
 
@@ -10105,7 +10117,8 @@ public struct FfiConverterTypeTrezorCallMessageResult: FfiConverterRustBuffer {
                 success: FfiConverterBool.read(from: &buf), 
                 messageType: FfiConverterUInt16.read(from: &buf), 
                 data: FfiConverterData.read(from: &buf), 
-                error: FfiConverterString.read(from: &buf)
+                error: FfiConverterString.read(from: &buf),
+                errorCode: FfiConverterOptionTypeTrezorTransportErrorCode.read(from: &buf)
         )
     }
 
@@ -10114,6 +10127,7 @@ public struct FfiConverterTypeTrezorCallMessageResult: FfiConverterRustBuffer {
         FfiConverterUInt16.write(value.messageType, into: &buf)
         FfiConverterData.write(value.data, into: &buf)
         FfiConverterString.write(value.error, into: &buf)
+        FfiConverterOptionTypeTrezorTransportErrorCode.write(value.errorCode, into: &buf)
     }
 }
 
@@ -11689,6 +11703,10 @@ public struct TrezorTransportReadResult {
      * Error message (empty on success)
      */
     public var error: String
+    /**
+     * Structured error code (None on success or when the native error is generic)
+     */
+    public var errorCode: TrezorTransportErrorCode?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -11701,10 +11719,14 @@ public struct TrezorTransportReadResult {
          */data: Data, 
         /**
          * Error message (empty on success)
-         */error: String) {
+         */error: String,
+        /**
+         * Structured error code (None on success or when the native error is generic)
+         */errorCode: TrezorTransportErrorCode?) {
         self.success = success
         self.data = data
         self.error = error
+        self.errorCode = errorCode
     }
 }
 
@@ -11724,6 +11746,9 @@ extension TrezorTransportReadResult: Equatable, Hashable {
         if lhs.error != rhs.error {
             return false
         }
+        if lhs.errorCode != rhs.errorCode {
+            return false
+        }
         return true
     }
 
@@ -11731,6 +11756,7 @@ extension TrezorTransportReadResult: Equatable, Hashable {
         hasher.combine(success)
         hasher.combine(data)
         hasher.combine(error)
+        hasher.combine(errorCode)
     }
 }
 
@@ -11747,7 +11773,8 @@ public struct FfiConverterTypeTrezorTransportReadResult: FfiConverterRustBuffer 
             try TrezorTransportReadResult(
                 success: FfiConverterBool.read(from: &buf), 
                 data: FfiConverterData.read(from: &buf), 
-                error: FfiConverterString.read(from: &buf)
+                error: FfiConverterString.read(from: &buf),
+                errorCode: FfiConverterOptionTypeTrezorTransportErrorCode.read(from: &buf)
         )
     }
 
@@ -11755,6 +11782,7 @@ public struct FfiConverterTypeTrezorTransportReadResult: FfiConverterRustBuffer 
         FfiConverterBool.write(value.success, into: &buf)
         FfiConverterData.write(value.data, into: &buf)
         FfiConverterString.write(value.error, into: &buf)
+        FfiConverterOptionTypeTrezorTransportErrorCode.write(value.errorCode, into: &buf)
     }
 }
 
@@ -11786,6 +11814,10 @@ public struct TrezorTransportWriteResult {
      * Error message (empty on success)
      */
     public var error: String
+    /**
+     * Structured error code (None on success or when the native error is generic)
+     */
+    public var errorCode: TrezorTransportErrorCode?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -11795,9 +11827,13 @@ public struct TrezorTransportWriteResult {
          */success: Bool, 
         /**
          * Error message (empty on success)
-         */error: String) {
+         */error: String,
+        /**
+         * Structured error code (None on success or when the native error is generic)
+         */errorCode: TrezorTransportErrorCode?) {
         self.success = success
         self.error = error
+        self.errorCode = errorCode
     }
 }
 
@@ -11814,12 +11850,16 @@ extension TrezorTransportWriteResult: Equatable, Hashable {
         if lhs.error != rhs.error {
             return false
         }
+        if lhs.errorCode != rhs.errorCode {
+            return false
+        }
         return true
     }
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(success)
         hasher.combine(error)
+        hasher.combine(errorCode)
     }
 }
 
@@ -11835,13 +11875,15 @@ public struct FfiConverterTypeTrezorTransportWriteResult: FfiConverterRustBuffer
         return
             try TrezorTransportWriteResult(
                 success: FfiConverterBool.read(from: &buf), 
-                error: FfiConverterString.read(from: &buf)
+                error: FfiConverterString.read(from: &buf),
+                errorCode: FfiConverterOptionTypeTrezorTransportErrorCode.read(from: &buf)
         )
     }
 
     public static func write(_ value: TrezorTransportWriteResult, into buf: inout [UInt8]) {
         FfiConverterBool.write(value.success, into: &buf)
         FfiConverterString.write(value.error, into: &buf)
+        FfiConverterOptionTypeTrezorTransportErrorCode.write(value.errorCode, into: &buf)
     }
 }
 
@@ -17535,6 +17577,77 @@ extension TrezorScriptType: Codable {}
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
+ * Structured transport error code returned by native callback operations.
+ */
+
+public enum TrezorTransportErrorCode {
+
+    /**
+     * Device is busy and the caller should back off before retrying.
+     */
+    case deviceBusy
+}
+
+
+#if compiler(>=6)
+extension TrezorTransportErrorCode: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTrezorTransportErrorCode: FfiConverterRustBuffer {
+    typealias SwiftType = TrezorTransportErrorCode
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorTransportErrorCode {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        case 1: return .deviceBusy
+
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: TrezorTransportErrorCode, into buf: inout [UInt8]) {
+        switch value {
+
+
+        case .deviceBusy:
+            writeInt(&buf, Int32(1))
+
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTrezorTransportErrorCode_lift(_ buf: RustBuffer) throws -> TrezorTransportErrorCode {
+    return try FfiConverterTypeTrezorTransportErrorCode.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTrezorTransportErrorCode_lower(_ value: TrezorTransportErrorCode) -> RustBuffer {
+    return FfiConverterTypeTrezorTransportErrorCode.lower(value)
+}
+
+
+extension TrezorTransportErrorCode: Equatable, Hashable {}
+
+extension TrezorTransportErrorCode: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
  * Transport type for Trezor devices.
  */
 
@@ -19029,6 +19142,30 @@ fileprivate struct FfiConverterOptionTypeTrezorScriptType: FfiConverterRustBuffe
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeTrezorScriptType.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeTrezorTransportErrorCode: FfiConverterRustBuffer {
+    typealias SwiftType = TrezorTransportErrorCode?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeTrezorTransportErrorCode.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeTrezorTransportErrorCode.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }

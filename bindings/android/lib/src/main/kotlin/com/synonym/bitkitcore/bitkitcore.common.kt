@@ -1780,7 +1780,11 @@ public data class TrezorCallMessageResult (
     /**
      * Error message (empty on success)
      */
-    val `error`: kotlin.String
+    val `error`: kotlin.String,
+    /**
+     * Structured error code (None on success or when the native error is generic)
+     */
+    val `errorCode`: TrezorTransportErrorCode?
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -1791,6 +1795,7 @@ public data class TrezorCallMessageResult (
         if (`messageType` != other.`messageType`) return false
         if (!`data`.contentEquals(other.`data`)) return false
         if (`error` != other.`error`) return false
+        if (`errorCode` != other.`errorCode`) return false
 
         return true
     }
@@ -1799,6 +1804,7 @@ public data class TrezorCallMessageResult (
         result = 31 * result + `messageType`.hashCode()
         result = 31 * result + `data`.contentHashCode()
         result = 31 * result + `error`.hashCode()
+        result = 31 * result + (`errorCode`?.hashCode() ?: 0)
         return result
     }
     public companion object
@@ -2193,7 +2199,11 @@ public data class TrezorTransportReadResult (
     /**
      * Error message (empty on success)
      */
-    val `error`: kotlin.String
+    val `error`: kotlin.String,
+    /**
+     * Structured error code (None on success or when the native error is generic)
+     */
+    val `errorCode`: TrezorTransportErrorCode?
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -2203,6 +2213,7 @@ public data class TrezorTransportReadResult (
         if (`success` != other.`success`) return false
         if (!`data`.contentEquals(other.`data`)) return false
         if (`error` != other.`error`) return false
+        if (`errorCode` != other.`errorCode`) return false
 
         return true
     }
@@ -2210,6 +2221,7 @@ public data class TrezorTransportReadResult (
         var result = `success`.hashCode()
         result = 31 * result + `data`.contentHashCode()
         result = 31 * result + `error`.hashCode()
+        result = 31 * result + (`errorCode`?.hashCode() ?: 0)
         return result
     }
     public companion object
@@ -2229,7 +2241,11 @@ public data class TrezorTransportWriteResult (
     /**
      * Error message (empty on success)
      */
-    val `error`: kotlin.String
+    val `error`: kotlin.String,
+    /**
+     * Structured error code (None on success or when the native error is generic)
+     */
+    val `errorCode`: TrezorTransportErrorCode?
 ) {
     public companion object
 }
@@ -4041,6 +4057,25 @@ public enum class TrezorScriptType {
      * External/watch-only input (not signed by device)
      */
     EXTERNAL;
+    public companion object
+}
+
+
+
+
+
+
+/**
+ * Structured transport error code returned by native callback operations.
+ */
+
+@kotlinx.serialization.Serializable
+public enum class TrezorTransportErrorCode {
+
+    /**
+     * Device is busy and the caller should back off before retrying.
+     */
+    DEVICE_BUSY;
     public companion object
 }
 

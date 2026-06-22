@@ -14,6 +14,9 @@ use crate::modules::trezor::{
     TrezorTransportType, TrezorVerifyMessageParams, WalletSelection,
 };
 
+#[cfg(any(target_os = "android", target_os = "ios"))]
+use crate::modules::trezor::encode_callback_transport_error;
+
 // Desktop: use full trezor-connect-rs
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use trezor_connect_rs::{
@@ -237,7 +240,7 @@ impl TransportCallback for CallbackAdapter {
         let result = self.callback.open_device(path.to_string());
         CallbackResult {
             success: result.success,
-            error: result.error,
+            error: encode_callback_transport_error(result.error, result.error_code),
         }
     }
 
@@ -245,7 +248,7 @@ impl TransportCallback for CallbackAdapter {
         let result = self.callback.close_device(path.to_string());
         CallbackResult {
             success: result.success,
-            error: result.error,
+            error: encode_callback_transport_error(result.error, result.error_code),
         }
     }
 
@@ -254,7 +257,7 @@ impl TransportCallback for CallbackAdapter {
         CallbackReadResult {
             success: result.success,
             data: result.data,
-            error: result.error,
+            error: encode_callback_transport_error(result.error, result.error_code),
         }
     }
 
@@ -262,7 +265,7 @@ impl TransportCallback for CallbackAdapter {
         let result = self.callback.write_chunk(path.to_string(), data.to_vec());
         CallbackResult {
             success: result.success,
-            error: result.error,
+            error: encode_callback_transport_error(result.error, result.error_code),
         }
     }
 
@@ -286,7 +289,7 @@ impl TransportCallback for CallbackAdapter {
             success: r.success,
             message_type: r.message_type,
             data: r.data,
-            error: r.error,
+            error: encode_callback_transport_error(r.error, r.error_code),
         })
     }
 

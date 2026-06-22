@@ -1,5 +1,9 @@
 use thiserror::Error;
 
+use super::callbacks::TrezorTransportErrorCode;
+
+const CALLBACK_ERROR_CODE_DEVICE_BUSY: &str = "__bitkit_trezor_callback_error:device_busy";
+
 /// Trezor-related errors exposed via FFI.
 #[derive(uniffi::Error, Debug, Error)]
 #[non_exhaustive]
@@ -89,6 +93,33 @@ pub enum TrezorError {
     IoError { error_details: String },
 }
 
+#[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
+pub(crate) fn encode_callback_transport_error(
+    error_details: String,
+    error_code: Option<TrezorTransportErrorCode>,
+) -> String {
+    match error_code {
+        Some(TrezorTransportErrorCode::DeviceBusy) => {
+            if error_details.is_empty() {
+                CALLBACK_ERROR_CODE_DEVICE_BUSY.to_string()
+            } else {
+                format!("{}: {}", CALLBACK_ERROR_CODE_DEVICE_BUSY, error_details)
+            }
+        }
+        None => error_details,
+    }
+}
+
+fn callback_transport_error_from_message(error_details: &str) -> Option<TrezorError> {
+    if error_details == CALLBACK_ERROR_CODE_DEVICE_BUSY
+        || error_details.starts_with(&format!("{}:", CALLBACK_ERROR_CODE_DEVICE_BUSY))
+    {
+        return Some(TrezorError::DeviceBusy);
+    }
+
+    None
+}
+
 impl From<trezor_connect_rs::TrezorError> for TrezorError {
     fn from(err: trezor_connect_rs::TrezorError) -> Self {
         use trezor_connect_rs::error::{
@@ -108,15 +139,17 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
                 TcTransportError::DeviceNotFound => TrezorError::DeviceNotFound,
                 TcTransportError::DeviceDisconnected => TrezorError::DeviceDisconnected,
                 TcTransportError::DeviceBusy => TrezorError::DeviceBusy,
-                TcTransportError::UnableToOpen(msg) => TrezorError::TransportError {
-                    error_details: format!("Unable to open device: {}", msg),
-                },
+                TcTransportError::UnableToOpen(msg) => callback_transport_error_from_message(&msg)
+                    .unwrap_or_else(|| TrezorError::TransportError {
+                        error_details: format!("Unable to open device: {}", msg),
+                    }),
                 TcTransportError::UnableToClose(msg) => TrezorError::TransportError {
                     error_details: format!("Unable to close device: {}", msg),
                 },
-                TcTransportError::DataTransfer(msg) => TrezorError::TransportError {
-                    error_details: format!("Data transfer error: {}", msg),
-                },
+                TcTransportError::DataTransfer(msg) => callback_transport_error_from_message(&msg)
+                    .unwrap_or_else(|| TrezorError::TransportError {
+                        error_details: format!("Data transfer error: {}", msg),
+                    }),
                 TcTransportError::PermissionDenied(msg) => TrezorError::TransportError {
                     error_details: format!("Permission denied: {}", msg),
                 },

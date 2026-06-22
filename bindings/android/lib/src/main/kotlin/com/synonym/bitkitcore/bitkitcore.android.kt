@@ -7520,6 +7520,7 @@ public object FfiConverterTypeTrezorCallMessageResult: FfiConverterRustBuffer<Tr
             FfiConverterUShort.read(buf),
             FfiConverterByteArray.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterOptionalTypeTrezorTransportErrorCode.read(buf),
         )
     }
 
@@ -7527,7 +7528,8 @@ public object FfiConverterTypeTrezorCallMessageResult: FfiConverterRustBuffer<Tr
             FfiConverterBoolean.allocationSize(value.`success`) +
             FfiConverterUShort.allocationSize(value.`messageType`) +
             FfiConverterByteArray.allocationSize(value.`data`) +
-            FfiConverterString.allocationSize(value.`error`)
+            FfiConverterString.allocationSize(value.`error`) +
+            FfiConverterOptionalTypeTrezorTransportErrorCode.allocationSize(value.`errorCode`)
     )
 
     override fun write(value: TrezorCallMessageResult, buf: ByteBuffer) {
@@ -7535,6 +7537,7 @@ public object FfiConverterTypeTrezorCallMessageResult: FfiConverterRustBuffer<Tr
         FfiConverterUShort.write(value.`messageType`, buf)
         FfiConverterByteArray.write(value.`data`, buf)
         FfiConverterString.write(value.`error`, buf)
+        FfiConverterOptionalTypeTrezorTransportErrorCode.write(value.`errorCode`, buf)
     }
 }
 
@@ -7916,19 +7919,22 @@ public object FfiConverterTypeTrezorTransportReadResult: FfiConverterRustBuffer<
             FfiConverterBoolean.read(buf),
             FfiConverterByteArray.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterOptionalTypeTrezorTransportErrorCode.read(buf),
         )
     }
 
     override fun allocationSize(value: TrezorTransportReadResult): ULong = (
             FfiConverterBoolean.allocationSize(value.`success`) +
             FfiConverterByteArray.allocationSize(value.`data`) +
-            FfiConverterString.allocationSize(value.`error`)
+            FfiConverterString.allocationSize(value.`error`) +
+            FfiConverterOptionalTypeTrezorTransportErrorCode.allocationSize(value.`errorCode`)
     )
 
     override fun write(value: TrezorTransportReadResult, buf: ByteBuffer) {
         FfiConverterBoolean.write(value.`success`, buf)
         FfiConverterByteArray.write(value.`data`, buf)
         FfiConverterString.write(value.`error`, buf)
+        FfiConverterOptionalTypeTrezorTransportErrorCode.write(value.`errorCode`, buf)
     }
 }
 
@@ -7940,17 +7946,20 @@ public object FfiConverterTypeTrezorTransportWriteResult: FfiConverterRustBuffer
         return TrezorTransportWriteResult(
             FfiConverterBoolean.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterOptionalTypeTrezorTransportErrorCode.read(buf),
         )
     }
 
     override fun allocationSize(value: TrezorTransportWriteResult): ULong = (
             FfiConverterBoolean.allocationSize(value.`success`) +
-            FfiConverterString.allocationSize(value.`error`)
+            FfiConverterString.allocationSize(value.`error`) +
+            FfiConverterOptionalTypeTrezorTransportErrorCode.allocationSize(value.`errorCode`)
     )
 
     override fun write(value: TrezorTransportWriteResult, buf: ByteBuffer) {
         FfiConverterBoolean.write(value.`success`, buf)
         FfiConverterString.write(value.`error`, buf)
+        FfiConverterOptionalTypeTrezorTransportErrorCode.write(value.`errorCode`, buf)
     }
 }
 
@@ -10516,6 +10525,24 @@ public object FfiConverterTypeTrezorScriptType: FfiConverterRustBuffer<TrezorScr
 
 
 
+public object FfiConverterTypeTrezorTransportErrorCode: FfiConverterRustBuffer<TrezorTransportErrorCode> {
+    override fun read(buf: ByteBuffer): TrezorTransportErrorCode = try {
+        TrezorTransportErrorCode.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: TrezorTransportErrorCode): ULong = 4UL
+
+    override fun write(value: TrezorTransportErrorCode, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
 public object FfiConverterTypeTrezorTransportType: FfiConverterRustBuffer<TrezorTransportType> {
     override fun read(buf: ByteBuffer): TrezorTransportType = try {
         TrezorTransportType.entries[buf.getInt() - 1]
@@ -11925,6 +11952,35 @@ public object FfiConverterOptionalTypeTrezorScriptType: FfiConverterRustBuffer<T
         } else {
             buf.put(1)
             FfiConverterTypeTrezorScriptType.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeTrezorTransportErrorCode: FfiConverterRustBuffer<TrezorTransportErrorCode?> {
+    override fun read(buf: ByteBuffer): TrezorTransportErrorCode? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeTrezorTransportErrorCode.read(buf)
+    }
+
+    override fun allocationSize(value: TrezorTransportErrorCode?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeTrezorTransportErrorCode.allocationSize(value)
+        }
+    }
+
+    override fun write(value: TrezorTransportErrorCode?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeTrezorTransportErrorCode.write(value, buf)
         }
     }
 }
