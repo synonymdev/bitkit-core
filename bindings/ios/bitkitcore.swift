@@ -20451,6 +20451,19 @@ public func derivePubkySecretKey(seed: Data)throws  -> String  {
     )
 })
 }
+/**
+ * Derive a stable, cross-platform `wallet_id` for a hardware (watch-only) wallet
+ * from its account extended public keys. See `derive_wallet_id` in the activity
+ * module for the exact derivation. Order of `xpubs` does not matter.
+ */
+public func deriveWalletId(deviceType: String, xpubs: [String]) -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_derive_wallet_id(
+        FfiConverterString.lower(deviceType),
+        FfiConverterSequenceString.lower(xpubs),$0
+    )
+})
+}
 public func entropyToMnemonic(entropy: Data)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeAddressError_lift) {
     uniffi_bitkitcore_fn_func_entropy_to_mnemonic(
@@ -21996,6 +22009,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_derive_pubky_secret_key() != 36989) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_derive_wallet_id() != 2549) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123) {
