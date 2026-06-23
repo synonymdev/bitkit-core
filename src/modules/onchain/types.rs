@@ -479,6 +479,8 @@ pub struct HistoryTransaction {
     pub net: i64,
     /// Transaction fee in sats (None if not available, e.g. for received-only txs)
     pub fee: Option<u64>,
+    /// Fee rate in sats per virtual byte (None if fee or tx size is unavailable).
+    pub fee_rate: Option<f64>,
     /// Display amount in sats:
     /// - Received: the received value
     /// - Sent: amount that left the wallet (sent - received - fee)

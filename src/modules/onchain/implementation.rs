@@ -1409,12 +1409,26 @@ pub(crate) fn map_bdk_tx_to_history(
         None => (None, None, 0),
     };
 
+    // Fee rate (sat/vB) requires both the fee and the raw transaction (for vsize).
+    let fee_rate = match (tx.fee, tx.transaction.as_ref()) {
+        (Some(fee), Some(raw_tx)) => {
+            let vsize = raw_tx.vsize();
+            if vsize > 0 {
+                Some(fee as f64 / vsize as f64)
+            } else {
+                None
+            }
+        }
+        _ => None,
+    };
+
     HistoryTransaction {
         txid: tx.txid.to_string(),
         received: tx.received,
         sent: tx.sent,
         net,
         fee: tx.fee,
+        fee_rate,
         amount,
         direction,
         block_height,

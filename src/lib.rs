@@ -49,10 +49,10 @@ pub use crate::onchain::WordCount;
 use crate::onchain::{
     broadcast_raw_tx, get_account_info, get_address_info, get_transaction_detail,
     get_transaction_history, AccountInfoError, AccountInfoResult, AccountType, AddressError,
-    BroadcastError, GetAddressResponse, GetAddressesResponse, LegacyRnCloseRecoveryScanResult,
-    LegacyRnCloseRecoverySweepPreview, Network, SingleAddressInfoResult, SweepError, SweepResult,
-    SweepTransactionPreview, SweepableBalances, TransactionDetail, TransactionHistoryResult,
-    ValidationResult,
+    BroadcastError, GetAddressResponse, GetAddressesResponse, HistoryTransaction,
+    LegacyRnCloseRecoveryScanResult, LegacyRnCloseRecoverySweepPreview, Network,
+    SingleAddressInfoResult, SweepError, SweepResult, SweepTransactionPreview, SweepableBalances,
+    TransactionDetail, TransactionHistoryResult, TxDirection, ValidationResult,
 };
 use crate::onchain::{compose_transaction, ComposeParams, ComposeResult};
 use crate::onchain::{
@@ -468,6 +468,58 @@ pub fn init_db(base_path: String) -> Result<String, DbError> {
 #[uniffi::export]
 pub fn get_default_wallet_id() -> String {
     DEFAULT_WALLET_ID.to_string()
+}
+
+/// Map a watch-only wallet's transaction history (as emitted by the xpub watcher
+/// in `WatcherEvent::TransactionsChanged`) into core `Activity` records, so iOS and
+/// Android don't each hand-reconstruct activities from `HistoryTransaction` and drift.
+///
+/// This is a pure conversion — it does not touch the database. Callers typically
+/// `upsert_activity` the results; the activity `id` is set to the `tx_id` so the
+/// watcher re-emitting the full list upserts in place instead of duplicating.
+///
+/// Notes:
+/// - `address` is left empty: a watch-only tx has no single canonical address.
+/// - `fee_rate` is rounded to the nearest sat/vB (0 when unavailable).
+/// - A self-transfer is recorded as `Sent` (its display amount is the fee paid).
+#[uniffi::export]
+pub fn watch_only_activity_from_history(
+    wallet_id: String,
+    transactions: Vec<HistoryTransaction>,
+) -> Vec<Activity> {
+    transactions
+        .into_iter()
+        .map(|tx| {
+            let tx_type = match tx.direction {
+                TxDirection::Received => PaymentType::Received,
+                TxDirection::Sent | TxDirection::SelfTransfer => PaymentType::Sent,
+            };
+
+            Activity::Onchain(OnchainActivity {
+                wallet_id: wallet_id.clone(),
+                id: tx.txid.clone(),
+                tx_type,
+                tx_id: tx.txid,
+                value: tx.amount,
+                fee: tx.fee.unwrap_or(0),
+                fee_rate: tx.fee_rate.map(|r| r.round() as u64).unwrap_or(0),
+                address: String::new(),
+                confirmed: tx.confirmations > 0,
+                timestamp: tx.timestamp.unwrap_or(0),
+                is_boosted: false,
+                boost_tx_ids: Vec::new(),
+                is_transfer: false,
+                does_exist: true,
+                confirm_timestamp: tx.timestamp,
+                channel_id: None,
+                transfer_tx_id: None,
+                contact: None,
+                created_at: None,
+                updated_at: None,
+                seen_at: None,
+            })
+        })
+        .collect()
 }
 
 #[uniffi::export]
@@ -2680,4 +2732,93 @@ pub fn onchain_stop_watcher(watcher_id: String) -> Result<(), AccountInfoError> 
 #[uniffi::export]
 pub fn onchain_stop_all_watchers() {
     stop_all_watchers();
+}
+
+#[cfg(test)]
+mod watch_only_activity_tests {
+    use super::*;
+
+    fn history_tx(direction: TxDirection) -> HistoryTransaction {
+        HistoryTransaction {
+            txid: "abc123".to_string(),
+            received: 50_000,
+            sent: 0,
+            net: 50_000,
+            fee: Some(450),
+            fee_rate: Some(2.0),
+            amount: 50_000,
+            direction,
+            block_height: Some(800_000),
+            timestamp: Some(1_700_000_000),
+            confirmations: 3,
+        }
+    }
+
+    #[test]
+    fn maps_received_to_received() {
+        let acts = watch_only_activity_from_history(
+            "trezor:abc".to_string(),
+            vec![history_tx(TxDirection::Received)],
+        );
+        assert_eq!(acts.len(), 1);
+        let Activity::Onchain(o) = &acts[0] else {
+            panic!("expected onchain")
+        };
+        assert_eq!(o.wallet_id, "trezor:abc");
+        assert_eq!(o.id, "abc123");
+        assert_eq!(o.tx_id, "abc123");
+        assert_eq!(o.tx_type, PaymentType::Received);
+        assert_eq!(o.value, 50_000);
+        assert_eq!(o.fee, 450);
+        assert_eq!(o.fee_rate, 2); // rounded, not the hardcoded 1
+        assert_eq!(o.address, "");
+        assert!(o.confirmed);
+        assert_eq!(o.timestamp, 1_700_000_000);
+        assert!(o.does_exist);
+        assert!(!o.is_transfer);
+    }
+
+    #[test]
+    fn maps_sent_and_self_transfer_to_sent() {
+        let acts = watch_only_activity_from_history(
+            "w".to_string(),
+            vec![
+                history_tx(TxDirection::Sent),
+                history_tx(TxDirection::SelfTransfer),
+            ],
+        );
+        for a in &acts {
+            let Activity::Onchain(o) = a else {
+                panic!("expected onchain")
+            };
+            assert_eq!(o.tx_type, PaymentType::Sent);
+        }
+    }
+
+    #[test]
+    fn unconfirmed_and_missing_fee_rate_default_safely() {
+        let mut tx = history_tx(TxDirection::Received);
+        tx.confirmations = 0;
+        tx.timestamp = None;
+        tx.fee = None;
+        tx.fee_rate = None;
+        let acts = watch_only_activity_from_history("w".to_string(), vec![tx]);
+        let Activity::Onchain(o) = &acts[0] else {
+            panic!("expected onchain")
+        };
+        assert!(!o.confirmed);
+        assert_eq!(o.timestamp, 0);
+        assert_eq!(o.fee, 0);
+        assert_eq!(o.fee_rate, 0);
+        assert_eq!(o.confirm_timestamp, None);
+    }
+
+    #[test]
+    fn id_is_deterministic_across_calls() {
+        let a =
+            watch_only_activity_from_history("w".to_string(), vec![history_tx(TxDirection::Sent)]);
+        let b =
+            watch_only_activity_from_history("w".to_string(), vec![history_tx(TxDirection::Sent)]);
+        assert_eq!(a[0].get_id(), b[0].get_id());
+    }
 }
