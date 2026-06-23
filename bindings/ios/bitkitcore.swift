@@ -13225,7 +13225,8 @@ public struct WatcherParams {
      */
     public var accountType: AccountType?
     /**
-     * Number of unused addresses to monitor beyond the last used (default 20).
+     * Number of unused addresses to monitor beyond the last used
+     * (defaults to `DEFAULT_GAP_LIMIT` when None).
      */
     public var gapLimit: UInt32?
 
@@ -13248,7 +13249,8 @@ public struct WatcherParams {
          * Account type override (auto-detected from key prefix if None).
          */accountType: AccountType?, 
         /**
-         * Number of unused addresses to monitor beyond the last used (default 20).
+         * Number of unused addresses to monitor beyond the last used
+         * (defaults to `DEFAULT_GAP_LIMIT` when None).
          */gapLimit: UInt32?) {
         self.watcherId = watcherId
         self.extendedKey = extendedKey
@@ -20656,6 +20658,16 @@ public func getClosedChannelById(channelId: String)throws  -> ClosedChannelDetai
     )
 })
 }
+/**
+ * The default address gap limit used by account scanning and the xpub watcher.
+ * Exposed so platforms reference one source of truth instead of hardcoding 20.
+ */
+public func getDefaultGapLimit() -> UInt32  {
+    return try!  FfiConverterUInt32.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_get_default_gap_limit($0
+    )
+})
+}
 public func getDefaultLspBalance(params: DefaultLspBalanceParams) -> UInt64  {
     return try!  FfiConverterUInt64.lift(try! rustCall() {
     uniffi_bitkitcore_fn_func_get_default_lsp_balance(
@@ -22059,6 +22071,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_default_gap_limit() != 24024) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_default_lsp_balance() != 35903) {
