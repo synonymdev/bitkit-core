@@ -747,6 +747,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_watch_only_activity_from_history() != 25829:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels() != 41511:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605:
@@ -1839,6 +1841,12 @@ _UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_watch_only_activity_from_history.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_watch_only_activity_from_history.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_closed_channels.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -2547,6 +2555,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.restype = ct
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_mnemonic.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_mnemonic.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_watch_only_activity_from_history.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_watch_only_activity_from_history.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels.restype = ctypes.c_uint16
@@ -3941,6 +3952,11 @@ class HistoryTransaction:
     Transaction fee in sats (None if not available, e.g. for received-only txs)
     """
 
+    fee_rate: "typing.Optional[float]"
+    """
+    Fee rate in sats per virtual byte (None if fee or tx size is unavailable).
+    """
+
     amount: "int"
     """
     Display amount in sats:
@@ -3969,12 +3985,13 @@ class HistoryTransaction:
     Number of confirmations (0 if unconfirmed)
     """
 
-    def __init__(self, *, txid: "str", received: "int", sent: "int", net: "int", fee: "typing.Optional[int]", amount: "int", direction: "TxDirection", block_height: "typing.Optional[int]", timestamp: "typing.Optional[int]", confirmations: "int"):
+    def __init__(self, *, txid: "str", received: "int", sent: "int", net: "int", fee: "typing.Optional[int]", fee_rate: "typing.Optional[float]", amount: "int", direction: "TxDirection", block_height: "typing.Optional[int]", timestamp: "typing.Optional[int]", confirmations: "int"):
         self.txid = txid
         self.received = received
         self.sent = sent
         self.net = net
         self.fee = fee
+        self.fee_rate = fee_rate
         self.amount = amount
         self.direction = direction
         self.block_height = block_height
@@ -3982,7 +3999,7 @@ class HistoryTransaction:
         self.confirmations = confirmations
 
     def __str__(self):
-        return "HistoryTransaction(txid={}, received={}, sent={}, net={}, fee={}, amount={}, direction={}, block_height={}, timestamp={}, confirmations={})".format(self.txid, self.received, self.sent, self.net, self.fee, self.amount, self.direction, self.block_height, self.timestamp, self.confirmations)
+        return "HistoryTransaction(txid={}, received={}, sent={}, net={}, fee={}, fee_rate={}, amount={}, direction={}, block_height={}, timestamp={}, confirmations={})".format(self.txid, self.received, self.sent, self.net, self.fee, self.fee_rate, self.amount, self.direction, self.block_height, self.timestamp, self.confirmations)
 
     def __eq__(self, other):
         if self.txid != other.txid:
@@ -3994,6 +4011,8 @@ class HistoryTransaction:
         if self.net != other.net:
             return False
         if self.fee != other.fee:
+            return False
+        if self.fee_rate != other.fee_rate:
             return False
         if self.amount != other.amount:
             return False
@@ -4016,6 +4035,7 @@ class _UniffiConverterTypeHistoryTransaction(_UniffiConverterRustBuffer):
             sent=_UniffiConverterUInt64.read(buf),
             net=_UniffiConverterInt64.read(buf),
             fee=_UniffiConverterOptionalUInt64.read(buf),
+            fee_rate=_UniffiConverterOptionalDouble.read(buf),
             amount=_UniffiConverterUInt64.read(buf),
             direction=_UniffiConverterTypeTxDirection.read(buf),
             block_height=_UniffiConverterOptionalUInt32.read(buf),
@@ -4030,6 +4050,7 @@ class _UniffiConverterTypeHistoryTransaction(_UniffiConverterRustBuffer):
         _UniffiConverterUInt64.check_lower(value.sent)
         _UniffiConverterInt64.check_lower(value.net)
         _UniffiConverterOptionalUInt64.check_lower(value.fee)
+        _UniffiConverterOptionalDouble.check_lower(value.fee_rate)
         _UniffiConverterUInt64.check_lower(value.amount)
         _UniffiConverterTypeTxDirection.check_lower(value.direction)
         _UniffiConverterOptionalUInt32.check_lower(value.block_height)
@@ -4043,6 +4064,7 @@ class _UniffiConverterTypeHistoryTransaction(_UniffiConverterRustBuffer):
         _UniffiConverterUInt64.write(value.sent, buf)
         _UniffiConverterInt64.write(value.net, buf)
         _UniffiConverterOptionalUInt64.write(value.fee, buf)
+        _UniffiConverterOptionalDouble.write(value.fee_rate, buf)
         _UniffiConverterUInt64.write(value.amount, buf)
         _UniffiConverterTypeTxDirection.write(value.direction, buf)
         _UniffiConverterOptionalUInt32.write(value.block_height, buf)
@@ -20848,6 +20870,44 @@ def validate_mnemonic(mnemonic_phrase: "str") -> None:
         _UniffiConverterString.lower(mnemonic_phrase))
 
 
+def watch_only_activity_from_history(wallet_id: "str",transactions: "typing.List[HistoryTransaction]") -> "typing.List[Activity]":
+    """
+    Map a watch-only wallet's transaction history (as emitted by the xpub watcher
+    in `WatcherEvent::TransactionsChanged`) into core `Activity` records, so iOS and
+    Android don't each hand-reconstruct activities from `HistoryTransaction` and drift.
+
+    A single hardware device often has several accounts/script-types, each watched
+    separately, so the same txid can appear once per account (e.g. an internal
+    transfer the device both sends and receives). Rows are therefore **merged by
+    txid** — `received`/`sent` are summed and the tx is then classified as a whole —
+    producing exactly one `Activity` per transaction. This mirrors the merge the
+    mobile apps currently do by hand. Output preserves first-seen txid order.
+
+    This is a pure conversion — it does not touch the database. These are
+    **in-memory display models**, rebuilt from watcher state, exactly as
+    bitkit-ios/bitkit-android use them — they are NOT meant to be inserted into
+    the activity DB (whose `onchain_activity.address` and `activities.timestamp`
+    CHECK constraints reject the empty address and zero timestamp produced here).
+    The activity `id` is set to the `tx_id` (matching how both apps key onchain
+    activities), giving each tx a stable identity across re-emitted watcher lists.
+
+    Notes:
+    - `address` is left empty: a watch-only tx has no single canonical address.
+    - `fee` / `fee_rate` use the real values from the account that paid the fee
+    (received-only rows carry none); `fee_rate` is rounded to sat/vB (0 if unknown).
+    - `timestamp` is 0 for still-unconfirmed txs (the UI supplies its own ordering).
+    - A self-transfer is recorded as `Sent` (its display amount is the fee paid).
+    """
+
+    _UniffiConverterString.check_lower(wallet_id)
+    
+    _UniffiConverterSequenceTypeHistoryTransaction.check_lower(transactions)
+    
+    return _UniffiConverterSequenceTypeActivity.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_watch_only_activity_from_history,
+        _UniffiConverterString.lower(wallet_id),
+        _UniffiConverterSequenceTypeHistoryTransaction.lower(transactions)))
+
+
 def wipe_all_closed_channels() -> None:
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_closed_channels,)
 
@@ -21155,6 +21215,7 @@ __all__ = [
     "upsert_transaction_details",
     "validate_bitcoin_address",
     "validate_mnemonic",
+    "watch_only_activity_from_history",
     "wipe_all_closed_channels",
     "wipe_all_databases",
     "wipe_all_transaction_details",

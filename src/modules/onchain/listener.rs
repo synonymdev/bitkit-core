@@ -332,7 +332,9 @@ fn build_tx_changed_event(
     };
     let balance: WalletBalance = bdk_balance.into();
 
-    let txs = match wallet.list_transactions(false) {
+    // `true` includes the raw transaction so map_bdk_tx_to_history can derive
+    // fee_rate from the tx vsize.
+    let txs = match wallet.list_transactions(true) {
         Ok(t) => t,
         Err(e) => {
             return WatcherEvent::Error {

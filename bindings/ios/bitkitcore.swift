@@ -3653,6 +3653,10 @@ public struct HistoryTransaction {
      */
     public var fee: UInt64?
     /**
+     * Fee rate in sats per virtual byte (None if fee or tx size is unavailable).
+     */
+    public var feeRate: Double?
+    /**
      * Display amount in sats:
      * - Received: the received value
      * - Sent: amount that left the wallet (sent - received - fee)
@@ -3695,6 +3699,9 @@ public struct HistoryTransaction {
          * Transaction fee in sats (None if not available, e.g. for received-only txs)
          */fee: UInt64?, 
         /**
+         * Fee rate in sats per virtual byte (None if fee or tx size is unavailable).
+         */feeRate: Double?, 
+        /**
          * Display amount in sats:
          * - Received: the received value
          * - Sent: amount that left the wallet (sent - received - fee)
@@ -3717,6 +3724,7 @@ public struct HistoryTransaction {
         self.sent = sent
         self.net = net
         self.fee = fee
+        self.feeRate = feeRate
         self.amount = amount
         self.direction = direction
         self.blockHeight = blockHeight
@@ -3747,6 +3755,9 @@ extension HistoryTransaction: Equatable, Hashable {
         if lhs.fee != rhs.fee {
             return false
         }
+        if lhs.feeRate != rhs.feeRate {
+            return false
+        }
         if lhs.amount != rhs.amount {
             return false
         }
@@ -3771,6 +3782,7 @@ extension HistoryTransaction: Equatable, Hashable {
         hasher.combine(sent)
         hasher.combine(net)
         hasher.combine(fee)
+        hasher.combine(feeRate)
         hasher.combine(amount)
         hasher.combine(direction)
         hasher.combine(blockHeight)
@@ -3795,6 +3807,7 @@ public struct FfiConverterTypeHistoryTransaction: FfiConverterRustBuffer {
                 sent: FfiConverterUInt64.read(from: &buf), 
                 net: FfiConverterInt64.read(from: &buf), 
                 fee: FfiConverterOptionUInt64.read(from: &buf), 
+                feeRate: FfiConverterOptionDouble.read(from: &buf), 
                 amount: FfiConverterUInt64.read(from: &buf), 
                 direction: FfiConverterTypeTxDirection.read(from: &buf), 
                 blockHeight: FfiConverterOptionUInt32.read(from: &buf), 
@@ -3809,6 +3822,7 @@ public struct FfiConverterTypeHistoryTransaction: FfiConverterRustBuffer {
         FfiConverterUInt64.write(value.sent, into: &buf)
         FfiConverterInt64.write(value.net, into: &buf)
         FfiConverterOptionUInt64.write(value.fee, into: &buf)
+        FfiConverterOptionDouble.write(value.feeRate, into: &buf)
         FfiConverterUInt64.write(value.amount, into: &buf)
         FfiConverterTypeTxDirection.write(value.direction, into: &buf)
         FfiConverterOptionUInt32.write(value.blockHeight, into: &buf)
@@ -21877,6 +21891,41 @@ public func validateMnemonic(mnemonicPhrase: String)throws   {try rustCallWithEr
     )
 }
 }
+/**
+ * Map a watch-only wallet's transaction history (as emitted by the xpub watcher
+ * in `WatcherEvent::TransactionsChanged`) into core `Activity` records, so iOS and
+ * Android don't each hand-reconstruct activities from `HistoryTransaction` and drift.
+ *
+ * A single hardware device often has several accounts/script-types, each watched
+ * separately, so the same txid can appear once per account (e.g. an internal
+ * transfer the device both sends and receives). Rows are therefore **merged by
+ * txid** — `received`/`sent` are summed and the tx is then classified as a whole —
+ * producing exactly one `Activity` per transaction. This mirrors the merge the
+ * mobile apps currently do by hand. Output preserves first-seen txid order.
+ *
+ * This is a pure conversion — it does not touch the database. These are
+ * **in-memory display models**, rebuilt from watcher state, exactly as
+ * bitkit-ios/bitkit-android use them — they are NOT meant to be inserted into
+ * the activity DB (whose `onchain_activity.address` and `activities.timestamp`
+ * CHECK constraints reject the empty address and zero timestamp produced here).
+ * The activity `id` is set to the `tx_id` (matching how both apps key onchain
+ * activities), giving each tx a stable identity across re-emitted watcher lists.
+ *
+ * Notes:
+ * - `address` is left empty: a watch-only tx has no single canonical address.
+ * - `fee` / `fee_rate` use the real values from the account that paid the fee
+ * (received-only rows carry none); `fee_rate` is rounded to sat/vB (0 if unknown).
+ * - `timestamp` is 0 for still-unconfirmed txs (the UI supplies its own ordering).
+ * - A self-transfer is recorded as `Sent` (its display amount is the fee paid).
+ */
+public func watchOnlyActivityFromHistory(walletId: String, transactions: [HistoryTransaction]) -> [Activity]  {
+    return try!  FfiConverterSequenceTypeActivity.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_watch_only_activity_from_history(
+        FfiConverterString.lower(walletId),
+        FfiConverterSequenceTypeHistoryTransaction.lower(transactions),$0
+    )
+})
+}
 public func wipeAllClosedChannels()throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_wipe_all_closed_channels($0
     )
@@ -22344,6 +22393,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_watch_only_activity_from_history() != 25829) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_wipe_all_closed_channels() != 41511) {

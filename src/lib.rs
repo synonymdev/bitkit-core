@@ -481,15 +481,19 @@ pub fn get_default_wallet_id() -> String {
 /// producing exactly one `Activity` per transaction. This mirrors the merge the
 /// mobile apps currently do by hand. Output preserves first-seen txid order.
 ///
-/// This is a pure conversion — it does not touch the database. Callers typically
-/// `upsert_activity` the results; the activity `id` is set to the `tx_id` (matching
-/// how bitkit-ios/bitkit-android key onchain activities) so the watcher re-emitting
-/// the full list upserts in place instead of duplicating.
+/// This is a pure conversion — it does not touch the database. These are
+/// **in-memory display models**, rebuilt from watcher state, exactly as
+/// bitkit-ios/bitkit-android use them — they are NOT meant to be inserted into
+/// the activity DB (whose `onchain_activity.address` and `activities.timestamp`
+/// CHECK constraints reject the empty address and zero timestamp produced here).
+/// The activity `id` is set to the `tx_id` (matching how both apps key onchain
+/// activities), giving each tx a stable identity across re-emitted watcher lists.
 ///
 /// Notes:
 /// - `address` is left empty: a watch-only tx has no single canonical address.
 /// - `fee` / `fee_rate` use the real values from the account that paid the fee
 ///   (received-only rows carry none); `fee_rate` is rounded to sat/vB (0 if unknown).
+/// - `timestamp` is 0 for still-unconfirmed txs (the UI supplies its own ordering).
 /// - A self-transfer is recorded as `Sent` (its display amount is the fee paid).
 #[uniffi::export]
 pub fn watch_only_activity_from_history(

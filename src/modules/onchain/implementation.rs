@@ -1685,9 +1685,10 @@ pub async fn get_transaction_history(
             })?;
         let balance: WalletBalance = bdk_balance.into();
 
-        // Transaction history
+        // Transaction history. `true` includes the raw transaction so
+        // map_bdk_tx_to_history can derive fee_rate from the tx vsize.
         let txs = wallet
-            .list_transactions(false)
+            .list_transactions(true)
             .map_err(|e| AccountInfoError::WalletError {
                 error_details: format!("Failed to list transactions: {}", e),
             })?;
