@@ -21,6 +21,8 @@ pub use types::{
     TxDetailInput, TxDetailOutput, TxDirection, ValidationResult, WalletBalance, WalletParams,
     WatcherEvent, WordCount,
 };
+// Crate-internal: shared transaction classifier reused by the watch-only Activity mapper.
+pub(crate) use types::classify_tx;
 
 #[cfg(test)]
 mod tests;

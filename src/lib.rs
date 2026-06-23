@@ -474,43 +474,101 @@ pub fn get_default_wallet_id() -> String {
 /// in `WatcherEvent::TransactionsChanged`) into core `Activity` records, so iOS and
 /// Android don't each hand-reconstruct activities from `HistoryTransaction` and drift.
 ///
+/// A single hardware device often has several accounts/script-types, each watched
+/// separately, so the same txid can appear once per account (e.g. an internal
+/// transfer the device both sends and receives). Rows are therefore **merged by
+/// txid** — `received`/`sent` are summed and the tx is then classified as a whole —
+/// producing exactly one `Activity` per transaction. This mirrors the merge the
+/// mobile apps currently do by hand. Output preserves first-seen txid order.
+///
 /// This is a pure conversion — it does not touch the database. Callers typically
-/// `upsert_activity` the results; the activity `id` is set to the `tx_id` so the
-/// watcher re-emitting the full list upserts in place instead of duplicating.
+/// `upsert_activity` the results; the activity `id` is set to the `tx_id` (matching
+/// how bitkit-ios/bitkit-android key onchain activities) so the watcher re-emitting
+/// the full list upserts in place instead of duplicating.
 ///
 /// Notes:
 /// - `address` is left empty: a watch-only tx has no single canonical address.
-/// - `fee_rate` is rounded to the nearest sat/vB (0 when unavailable).
+/// - `fee` / `fee_rate` use the real values from the account that paid the fee
+///   (received-only rows carry none); `fee_rate` is rounded to sat/vB (0 if unknown).
 /// - A self-transfer is recorded as `Sent` (its display amount is the fee paid).
 #[uniffi::export]
 pub fn watch_only_activity_from_history(
     wallet_id: String,
     transactions: Vec<HistoryTransaction>,
 ) -> Vec<Activity> {
-    transactions
+    use std::collections::HashMap;
+
+    // Accumulator per txid; `order` keeps first-seen output ordering stable.
+    struct Merged {
+        txid: String,
+        received: u64,
+        sent: u64,
+        fee: Option<u64>,
+        fee_rate: Option<f64>,
+        timestamp: Option<u64>,
+        confirmations: u32,
+    }
+
+    let mut order: Vec<String> = Vec::new();
+    let mut by_txid: HashMap<String, Merged> = HashMap::new();
+
+    for tx in transactions {
+        let entry = by_txid.entry(tx.txid.clone()).or_insert_with(|| {
+            order.push(tx.txid.clone());
+            Merged {
+                txid: tx.txid.clone(),
+                received: 0,
+                sent: 0,
+                fee: None,
+                fee_rate: None,
+                timestamp: None,
+                confirmations: 0,
+            }
+        });
+
+        entry.received = entry.received.saturating_add(tx.received);
+        entry.sent = entry.sent.saturating_add(tx.sent);
+        // The same physical tx reports an identical fee/fee_rate from whichever
+        // account paid it; received-only rows report none. Keep the larger (real) one.
+        entry.fee = entry.fee.max(tx.fee);
+        entry.fee_rate = match (entry.fee_rate, tx.fee_rate) {
+            (Some(a), Some(b)) => Some(a.max(b)),
+            (a, b) => a.or(b),
+        };
+        entry.timestamp = match (entry.timestamp, tx.timestamp) {
+            (Some(a), Some(b)) => Some(a.min(b)),
+            (a, b) => a.or(b),
+        };
+        entry.confirmations = entry.confirmations.max(tx.confirmations);
+    }
+
+    order
         .into_iter()
-        .map(|tx| {
-            let tx_type = match tx.direction {
+        .map(|txid| {
+            let m = by_txid.remove(&txid).expect("txid present");
+            let (direction, amount, _net) = onchain::classify_tx(m.sent, m.received, m.fee);
+            let tx_type = match direction {
                 TxDirection::Received => PaymentType::Received,
                 TxDirection::Sent | TxDirection::SelfTransfer => PaymentType::Sent,
             };
+            let confirmed = m.confirmations > 0;
 
             Activity::Onchain(OnchainActivity {
                 wallet_id: wallet_id.clone(),
-                id: tx.txid.clone(),
+                id: m.txid.clone(),
                 tx_type,
-                tx_id: tx.txid,
-                value: tx.amount,
-                fee: tx.fee.unwrap_or(0),
-                fee_rate: tx.fee_rate.map(|r| r.round() as u64).unwrap_or(0),
+                tx_id: m.txid,
+                value: amount,
+                fee: m.fee.unwrap_or(0),
+                fee_rate: m.fee_rate.map(|r| r.round() as u64).unwrap_or(0),
                 address: String::new(),
-                confirmed: tx.confirmations > 0,
-                timestamp: tx.timestamp.unwrap_or(0),
+                confirmed,
+                timestamp: m.timestamp.unwrap_or(0),
                 is_boosted: false,
                 boost_tx_ids: Vec::new(),
                 is_transfer: false,
                 does_exist: true,
-                confirm_timestamp: tx.timestamp,
+                confirm_timestamp: if confirmed { m.timestamp } else { None },
                 channel_id: None,
                 transfer_tx_id: None,
                 contact: None,
@@ -2738,39 +2796,47 @@ pub fn onchain_stop_all_watchers() {
 mod watch_only_activity_tests {
     use super::*;
 
-    fn history_tx(direction: TxDirection) -> HistoryTransaction {
+    /// Build a single-account `HistoryTransaction`. `direction`/`amount`/`net` are
+    /// recomputed by the mapper, so the values here just need to be self-consistent.
+    fn history_tx(txid: &str, received: u64, sent: u64, fee: Option<u64>) -> HistoryTransaction {
+        let net = received as i64 - sent as i64;
         HistoryTransaction {
-            txid: "abc123".to_string(),
-            received: 50_000,
-            sent: 0,
-            net: 50_000,
-            fee: Some(450),
-            fee_rate: Some(2.0),
-            amount: 50_000,
-            direction,
+            txid: txid.to_string(),
+            received,
+            sent,
+            net,
+            fee,
+            fee_rate: fee.map(|_| 2.0),
+            amount: received.max(sent),
+            direction: TxDirection::Received,
             block_height: Some(800_000),
             timestamp: Some(1_700_000_000),
             confirmations: 3,
         }
     }
 
+    fn onchain(act: &Activity) -> &OnchainActivity {
+        match act {
+            Activity::Onchain(o) => o,
+            _ => panic!("expected onchain"),
+        }
+    }
+
     #[test]
-    fn maps_received_to_received() {
+    fn maps_received() {
         let acts = watch_only_activity_from_history(
             "trezor:abc".to_string(),
-            vec![history_tx(TxDirection::Received)],
+            vec![history_tx("abc123", 50_000, 0, Some(450))],
         );
         assert_eq!(acts.len(), 1);
-        let Activity::Onchain(o) = &acts[0] else {
-            panic!("expected onchain")
-        };
+        let o = onchain(&acts[0]);
         assert_eq!(o.wallet_id, "trezor:abc");
         assert_eq!(o.id, "abc123");
         assert_eq!(o.tx_id, "abc123");
         assert_eq!(o.tx_type, PaymentType::Received);
         assert_eq!(o.value, 50_000);
         assert_eq!(o.fee, 450);
-        assert_eq!(o.fee_rate, 2); // rounded, not the hardcoded 1
+        assert_eq!(o.fee_rate, 2); // real rate, not the hardcoded 1
         assert_eq!(o.address, "");
         assert!(o.confirmed);
         assert_eq!(o.timestamp, 1_700_000_000);
@@ -2779,33 +2845,71 @@ mod watch_only_activity_tests {
     }
 
     #[test]
-    fn maps_sent_and_self_transfer_to_sent() {
+    fn maps_sent() {
+        // sent well above received -> Sent; value = sent - received - fee.
+        let acts = watch_only_activity_from_history(
+            "w".to_string(),
+            vec![history_tx("tx_sent", 10_000, 60_000, Some(500))],
+        );
+        let o = onchain(&acts[0]);
+        assert_eq!(o.tx_type, PaymentType::Sent);
+        assert_eq!(o.value, 60_000 - 10_000 - 500);
+    }
+
+    #[test]
+    fn maps_self_transfer_to_sent() {
+        // sent ~= received (within fee) -> SelfTransfer, recorded as Sent (value = fee).
+        let acts = watch_only_activity_from_history(
+            "w".to_string(),
+            vec![history_tx("tx_self", 49_800, 50_000, Some(300))],
+        );
+        let o = onchain(&acts[0]);
+        assert_eq!(o.tx_type, PaymentType::Sent);
+        assert_eq!(o.value, 300);
+    }
+
+    #[test]
+    fn merges_rows_with_same_txid_across_accounts() {
+        // Same tx seen by two of the device's accounts: one sends, the other receives.
+        // Merged -> sent and received both > 0 -> one activity (internal transfer).
         let acts = watch_only_activity_from_history(
             "w".to_string(),
             vec![
-                history_tx(TxDirection::Sent),
-                history_tx(TxDirection::SelfTransfer),
+                history_tx("shared", 0, 70_000, Some(400)), // sending account (carries the fee)
+                history_tx("shared", 69_600, 0, None),      // receiving account (no fee)
             ],
         );
-        for a in &acts {
-            let Activity::Onchain(o) = a else {
-                panic!("expected onchain")
-            };
-            assert_eq!(o.tx_type, PaymentType::Sent);
-        }
+        assert_eq!(acts.len(), 1, "same txid must collapse to one activity");
+        let o = onchain(&acts[0]);
+        assert_eq!(o.tx_id, "shared");
+        assert_eq!(o.fee, 400); // real fee preserved from the paying account
+        assert_eq!(o.fee_rate, 2); // real rate preserved (received-only row had none)
+        assert_eq!(o.tx_type, PaymentType::Sent); // sent - received <= fee -> self-transfer -> Sent
+    }
+
+    #[test]
+    fn preserves_first_seen_txid_order() {
+        let acts = watch_only_activity_from_history(
+            "w".to_string(),
+            vec![
+                history_tx("first", 1_000, 0, None),
+                history_tx("second", 2_000, 0, None),
+                history_tx("first", 500, 0, None), // duplicate -> merges into "first"
+            ],
+        );
+        assert_eq!(acts.len(), 2);
+        assert_eq!(onchain(&acts[0]).tx_id, "first");
+        assert_eq!(onchain(&acts[1]).tx_id, "second");
+        assert_eq!(onchain(&acts[0]).value, 1_500); // 1000 + 500 merged
     }
 
     #[test]
     fn unconfirmed_and_missing_fee_rate_default_safely() {
-        let mut tx = history_tx(TxDirection::Received);
+        let mut tx = history_tx("tx_u", 50_000, 0, None);
         tx.confirmations = 0;
         tx.timestamp = None;
-        tx.fee = None;
-        tx.fee_rate = None;
         let acts = watch_only_activity_from_history("w".to_string(), vec![tx]);
-        let Activity::Onchain(o) = &acts[0] else {
-            panic!("expected onchain")
-        };
+        let o = onchain(&acts[0]);
         assert!(!o.confirmed);
         assert_eq!(o.timestamp, 0);
         assert_eq!(o.fee, 0);
@@ -2815,10 +2919,14 @@ mod watch_only_activity_tests {
 
     #[test]
     fn id_is_deterministic_across_calls() {
-        let a =
-            watch_only_activity_from_history("w".to_string(), vec![history_tx(TxDirection::Sent)]);
-        let b =
-            watch_only_activity_from_history("w".to_string(), vec![history_tx(TxDirection::Sent)]);
+        let a = watch_only_activity_from_history(
+            "w".to_string(),
+            vec![history_tx("tx_d", 10_000, 60_000, Some(500))],
+        );
+        let b = watch_only_activity_from_history(
+            "w".to_string(),
+            vec![history_tx("tx_d", 10_000, 60_000, Some(500))],
+        );
         assert_eq!(a[0].get_id(), b[0].get_id());
     }
 }
