@@ -6416,4 +6416,64 @@ mod tests {
 
         cleanup(&db_path);
     }
+
+    #[test]
+    fn test_derive_wallet_id_is_order_independent() {
+        use crate::activity::derive_wallet_id;
+
+        let a = derive_wallet_id(
+            "trezor".to_string(),
+            vec![
+                "xpubA".to_string(),
+                "xpubB".to_string(),
+                "xpubC".to_string(),
+            ],
+        );
+        let b = derive_wallet_id(
+            "trezor".to_string(),
+            vec![
+                "xpubC".to_string(),
+                "xpubA".to_string(),
+                "xpubB".to_string(),
+            ],
+        );
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn test_derive_wallet_id_device_type_changes_id() {
+        use crate::activity::derive_wallet_id;
+
+        let xpubs = vec!["xpubA".to_string(), "xpubB".to_string()];
+        let trezor = derive_wallet_id("trezor".to_string(), xpubs.clone());
+        let ledger = derive_wallet_id("ledger".to_string(), xpubs);
+
+        assert_ne!(trezor, ledger);
+        assert!(trezor.starts_with("trezor:"));
+        assert!(ledger.starts_with("ledger:"));
+    }
+
+    #[test]
+    fn test_derive_wallet_id_known_vector() {
+        use crate::activity::derive_wallet_id;
+        use bitcoin::hashes::{sha256, Hash};
+
+        // Canonical form: sort lexicographically, join with "\n", SHA256, hex.
+        let expected_hash = hex::encode(sha256::Hash::hash(b"xpubA\nxpubB").to_byte_array());
+        let id = derive_wallet_id(
+            "trezor".to_string(),
+            vec!["xpubB".to_string(), "xpubA".to_string()],
+        );
+        assert_eq!(id, format!("trezor:{}", expected_hash));
+    }
+
+    #[test]
+    fn test_derive_wallet_id_empty_xpubs() {
+        use crate::activity::derive_wallet_id;
+        use bitcoin::hashes::{sha256, Hash};
+
+        let expected_hash = hex::encode(sha256::Hash::hash(b"").to_byte_array());
+        let id = derive_wallet_id("trezor".to_string(), vec![]);
+        assert_eq!(id, format!("trezor:{}", expected_hash));
+    }
 }

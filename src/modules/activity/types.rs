@@ -9,6 +9,28 @@ fn default_wallet_id() -> String {
     DEFAULT_WALLET_ID.to_string()
 }
 
+/// Deterministically derive a stable `wallet_id` for a hardware (watch-only) wallet
+/// from its set of account extended public keys.
+///
+/// The same physical device yields the same id on every platform *by construction*,
+/// so activity reconciles cross-platform. The derivation is:
+/// 1. sort `xpubs` lexicographically (so input order doesn't matter),
+/// 2. join them with a single `\n` separator,
+/// 3. SHA256 the UTF-8 bytes and hex-encode (lowercase),
+/// 4. return `"{device_type}:{hash}"` (e.g. `"trezor:ab12…"`).
+///
+/// `device_type` keeps ids from different hardware-wallet families distinct
+/// (e.g. `"trezor"`, `"ledger"`).
+pub fn derive_wallet_id(device_type: String, xpubs: Vec<String>) -> String {
+    use bitcoin::hashes::{sha256, Hash};
+
+    let mut sorted = xpubs;
+    sorted.sort();
+    let joined = sorted.join("\n");
+    let hash = sha256::Hash::hash(joined.as_bytes());
+    format!("{}:{}", device_type, hex::encode(hash.to_byte_array()))
+}
+
 #[derive(Debug, uniffi::Enum)]
 pub enum Activity {
     Onchain(OnchainActivity),

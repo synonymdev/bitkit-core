@@ -21,9 +21,10 @@ use once_cell::sync::OnceCell;
 
 // Re-export Trezor callback types and traits so UniFFI discovers them at the crate root
 use crate::activity::{
-    Activity, ActivityDB, ActivityError, ActivityFilter, ActivityTags, ClosedChannelDetails,
-    DbError, LightningActivity, OnchainActivity, PaymentType, PreActivityMetadata, SortDirection,
-    TransactionDetails, DEFAULT_WALLET_ID,
+    derive_wallet_id as derive_wallet_id_inner, Activity, ActivityDB, ActivityError,
+    ActivityFilter, ActivityTags, ClosedChannelDetails, DbError, LightningActivity,
+    OnchainActivity, PaymentType, PreActivityMetadata, SortDirection, TransactionDetails,
+    DEFAULT_WALLET_ID,
 };
 use crate::modules::blocktank::{
     BlocktankDB, BlocktankError, BtOrderState2, CJitStateEnum, ChannelLiquidityOptions,
@@ -468,6 +469,14 @@ pub fn init_db(base_path: String) -> Result<String, DbError> {
 #[uniffi::export]
 pub fn get_default_wallet_id() -> String {
     DEFAULT_WALLET_ID.to_string()
+}
+
+/// Derive a stable, cross-platform `wallet_id` for a hardware (watch-only) wallet
+/// from its account extended public keys. See `derive_wallet_id` in the activity
+/// module for the exact derivation. Order of `xpubs` does not matter.
+#[uniffi::export]
+pub fn derive_wallet_id(device_type: String, xpubs: Vec<String>) -> String {
+    derive_wallet_id_inner(device_type, xpubs)
 }
 
 #[uniffi::export]
