@@ -17,7 +17,9 @@ use super::implementation::{
     create_wallet, map_bdk_tx_to_history, resolve_wallet_setup, sort_history_transactions,
     sync_wallet,
 };
-use super::types::{AccountType, Network as OnchainNetwork, WalletBalance, WatcherEvent};
+use super::types::{
+    AccountType, Network as OnchainNetwork, WalletBalance, WatcherEvent, DEFAULT_GAP_LIMIT,
+};
 
 // ============================================================================
 // Callback trait
@@ -53,7 +55,8 @@ pub struct WatcherParams {
     pub network: Option<OnchainNetwork>,
     /// Account type override (auto-detected from key prefix if None).
     pub account_type: Option<AccountType>,
-    /// Number of unused addresses to monitor beyond the last used (default 20).
+    /// Number of unused addresses to monitor beyond the last used
+    /// (defaults to `DEFAULT_GAP_LIMIT` when None).
     pub gap_limit: Option<u32>,
 }
 
@@ -538,10 +541,10 @@ fn watcher_init_and_loop(
     listener: Arc<dyn EventListener>,
     init_tx: oneshot::Sender<Result<(), AccountInfoError>>,
 ) {
-    let gap = params.gap_limit.unwrap_or(20);
+    let gap = params.gap_limit.unwrap_or(DEFAULT_GAP_LIMIT);
     // Wallet sync must scan at least as far as the subscribed scripts (last used
-    // + gap). Never drop below BDK's default of 20.
-    let sync_stop_gap = (gap as usize).max(20);
+    // + gap). Never drop below BDK's default stop-gap.
+    let sync_stop_gap = (gap as usize).max(DEFAULT_GAP_LIMIT as usize);
     let account_type = setup.account_type;
     let watcher_id = params.watcher_id.clone();
 

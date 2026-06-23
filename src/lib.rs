@@ -56,7 +56,7 @@ use crate::onchain::{
 };
 use crate::onchain::{compose_transaction, ComposeParams, ComposeResult};
 use crate::onchain::{
-    start_watcher, stop_all_watchers, stop_watcher, EventListener, WatcherParams,
+    start_watcher, stop_all_watchers, stop_watcher, EventListener, WatcherParams, DEFAULT_GAP_LIMIT,
 };
 pub use modules::activity;
 pub use modules::lnurl;
@@ -468,6 +468,13 @@ pub fn init_db(base_path: String) -> Result<String, DbError> {
 #[uniffi::export]
 pub fn get_default_wallet_id() -> String {
     DEFAULT_WALLET_ID.to_string()
+}
+
+/// The default address gap limit used by account scanning and the xpub watcher.
+/// Exposed so platforms reference one source of truth instead of hardcoding 20.
+#[uniffi::export]
+pub fn get_default_gap_limit() -> u32 {
+    DEFAULT_GAP_LIMIT
 }
 
 #[uniffi::export]
