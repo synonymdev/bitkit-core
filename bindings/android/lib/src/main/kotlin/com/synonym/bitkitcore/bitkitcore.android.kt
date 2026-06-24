@@ -1486,6 +1486,8 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1667,6 +1669,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_get_default_gap_limit() != 24024.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_default_lsp_balance() != 35903.toShort()) {
@@ -2151,6 +2156,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_closed_channel_by_id(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_default_gap_limit(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_default_lsp_balance(
@@ -2914,6 +2922,10 @@ internal object UniffiLib : Library {
         `channelId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_default_gap_limit(
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_default_lsp_balance(
         `params`: RustBufferByValue,
@@ -13632,6 +13644,18 @@ public fun `getClosedChannelById`(`channelId`: kotlin.String): ClosedChannelDeta
     return FfiConverterOptionalTypeClosedChannelDetails.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id(
             FfiConverterString.lower(`channelId`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * The default address gap limit used by account scanning and the xpub watcher.
+ * Exposed so platforms reference one source of truth instead of hardcoding 20.
+ */
+public fun `getDefaultGapLimit`(): kotlin.UInt {
+    return FfiConverterUInt.lift(uniffiRustCall { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_get_default_gap_limit(
             uniffiRustCallStatus,
         )
     })
