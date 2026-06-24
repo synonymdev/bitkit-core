@@ -13223,6 +13223,13 @@ public struct WatcherParams {
      */
     public var watcherId: String
     /**
+     * Wallet id that scopes the activities this watcher emits. One watcher
+     * watches one address type, so this stays at the address-type boundary —
+     * the same txid seen under two address types yields two wallet-scoped
+     * activities under different `wallet_id`s, not one merged activity.
+     */
+    public var walletId: String
+    /**
      * Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
      */
     public var extendedKey: String
@@ -13250,6 +13257,12 @@ public struct WatcherParams {
          * Caller-supplied identifier for this watcher.
          */watcherId: String, 
         /**
+         * Wallet id that scopes the activities this watcher emits. One watcher
+         * watches one address type, so this stays at the address-type boundary —
+         * the same txid seen under two address types yields two wallet-scoped
+         * activities under different `wallet_id`s, not one merged activity.
+         */walletId: String, 
+        /**
          * Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
          */extendedKey: String, 
         /**
@@ -13265,6 +13278,7 @@ public struct WatcherParams {
          * Number of unused addresses to monitor beyond the last used (default 20).
          */gapLimit: UInt32?) {
         self.watcherId = watcherId
+        self.walletId = walletId
         self.extendedKey = extendedKey
         self.electrumUrl = electrumUrl
         self.network = network
@@ -13281,6 +13295,9 @@ extension WatcherParams: Sendable {}
 extension WatcherParams: Equatable, Hashable {
     public static func ==(lhs: WatcherParams, rhs: WatcherParams) -> Bool {
         if lhs.watcherId != rhs.watcherId {
+            return false
+        }
+        if lhs.walletId != rhs.walletId {
             return false
         }
         if lhs.extendedKey != rhs.extendedKey {
@@ -13303,6 +13320,7 @@ extension WatcherParams: Equatable, Hashable {
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(watcherId)
+        hasher.combine(walletId)
         hasher.combine(extendedKey)
         hasher.combine(electrumUrl)
         hasher.combine(network)
@@ -13323,6 +13341,7 @@ public struct FfiConverterTypeWatcherParams: FfiConverterRustBuffer {
         return
             try WatcherParams(
                 watcherId: FfiConverterString.read(from: &buf), 
+                walletId: FfiConverterString.read(from: &buf), 
                 extendedKey: FfiConverterString.read(from: &buf), 
                 electrumUrl: FfiConverterString.read(from: &buf), 
                 network: FfiConverterOptionTypeNetwork.read(from: &buf), 
@@ -13333,6 +13352,7 @@ public struct FfiConverterTypeWatcherParams: FfiConverterRustBuffer {
 
     public static func write(_ value: WatcherParams, into buf: inout [UInt8]) {
         FfiConverterString.write(value.watcherId, into: &buf)
+        FfiConverterString.write(value.walletId, into: &buf)
         FfiConverterString.write(value.extendedKey, into: &buf)
         FfiConverterString.write(value.electrumUrl, into: &buf)
         FfiConverterOptionTypeNetwork.write(value.network, into: &buf)
@@ -17941,8 +17961,14 @@ public enum WatcherEvent {
     
     /**
      * Transaction activity changed — contains full updated state.
+     *
+     * `activities` and `transaction_details` are persistence-ready: they carry
+     * the watcher's `wallet_id`, real decoded addresses, fees from the watched
+     * wallet's perspective, and DB-valid timestamps, so the app can store them
+     * directly through the normal Core activity APIs (e.g. `upsert_activity` /
+     * `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
      */
-    case transactionsChanged(transactions: [HistoryTransaction], balance: WalletBalance, txCount: UInt32, blockHeight: UInt32, accountType: AccountType
+    case transactionsChanged(activities: [Activity], transactionDetails: [TransactionDetails], balance: WalletBalance, txCount: UInt32, blockHeight: UInt32, accountType: AccountType
     )
     /**
      * An error occurred in the watcher loop.
@@ -17975,7 +18001,7 @@ public struct FfiConverterTypeWatcherEvent: FfiConverterRustBuffer {
         let variant: Int32 = try readInt(&buf)
         switch variant {
         
-        case 1: return .transactionsChanged(transactions: try FfiConverterSequenceTypeHistoryTransaction.read(from: &buf), balance: try FfiConverterTypeWalletBalance.read(from: &buf), txCount: try FfiConverterUInt32.read(from: &buf), blockHeight: try FfiConverterUInt32.read(from: &buf), accountType: try FfiConverterTypeAccountType.read(from: &buf)
+        case 1: return .transactionsChanged(activities: try FfiConverterSequenceTypeActivity.read(from: &buf), transactionDetails: try FfiConverterSequenceTypeTransactionDetails.read(from: &buf), balance: try FfiConverterTypeWalletBalance.read(from: &buf), txCount: try FfiConverterUInt32.read(from: &buf), blockHeight: try FfiConverterUInt32.read(from: &buf), accountType: try FfiConverterTypeAccountType.read(from: &buf)
         )
         
         case 2: return .error(message: try FfiConverterString.read(from: &buf)
@@ -17994,9 +18020,10 @@ public struct FfiConverterTypeWatcherEvent: FfiConverterRustBuffer {
         switch value {
         
         
-        case let .transactionsChanged(transactions,balance,txCount,blockHeight,accountType):
+        case let .transactionsChanged(activities,transactionDetails,balance,txCount,blockHeight,accountType):
             writeInt(&buf, Int32(1))
-            FfiConverterSequenceTypeHistoryTransaction.write(transactions, into: &buf)
+            FfiConverterSequenceTypeActivity.write(activities, into: &buf)
+            FfiConverterSequenceTypeTransactionDetails.write(transactionDetails, into: &buf)
             FfiConverterTypeWalletBalance.write(balance, into: &buf)
             FfiConverterUInt32.write(txCount, into: &buf)
             FfiConverterUInt32.write(blockHeight, into: &buf)
@@ -21891,41 +21918,6 @@ public func validateMnemonic(mnemonicPhrase: String)throws   {try rustCallWithEr
     )
 }
 }
-/**
- * Map a watch-only wallet's transaction history (as emitted by the xpub watcher
- * in `WatcherEvent::TransactionsChanged`) into core `Activity` records, so iOS and
- * Android don't each hand-reconstruct activities from `HistoryTransaction` and drift.
- *
- * A single hardware device often has several accounts/script-types, each watched
- * separately, so the same txid can appear once per account (e.g. an internal
- * transfer the device both sends and receives). Rows are therefore **merged by
- * txid** — `received`/`sent` are summed and the tx is then classified as a whole —
- * producing exactly one `Activity` per transaction. This mirrors the merge the
- * mobile apps currently do by hand. Output preserves first-seen txid order.
- *
- * This is a pure conversion — it does not touch the database. These are
- * **in-memory display models**, rebuilt from watcher state, exactly as
- * bitkit-ios/bitkit-android use them — they are NOT meant to be inserted into
- * the activity DB (whose `onchain_activity.address` and `activities.timestamp`
- * CHECK constraints reject the empty address and zero timestamp produced here).
- * The activity `id` is set to the `tx_id` (matching how both apps key onchain
- * activities), giving each tx a stable identity across re-emitted watcher lists.
- *
- * Notes:
- * - `address` is left empty: a watch-only tx has no single canonical address.
- * - `fee` / `fee_rate` use the real values from the account that paid the fee
- * (received-only rows carry none); `fee_rate` is rounded to sat/vB (0 if unknown).
- * - `timestamp` is 0 for still-unconfirmed txs (the UI supplies its own ordering).
- * - A self-transfer is recorded as `Sent` (its display amount is the fee paid).
- */
-public func watchOnlyActivityFromHistory(walletId: String, transactions: [HistoryTransaction]) -> [Activity]  {
-    return try!  FfiConverterSequenceTypeActivity.lift(try! rustCall() {
-    uniffi_bitkitcore_fn_func_watch_only_activity_from_history(
-        FfiConverterString.lower(walletId),
-        FfiConverterSequenceTypeHistoryTransaction.lower(transactions),$0
-    )
-})
-}
 public func wipeAllClosedChannels()throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_wipe_all_closed_channels($0
     )
@@ -22393,9 +22385,6 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_bitkitcore_checksum_func_watch_only_activity_from_history() != 25829) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_wipe_all_closed_channels() != 41511) {

@@ -6416,4 +6416,65 @@ mod tests {
 
         cleanup(&db_path);
     }
+
+    #[test]
+    fn test_upsert_preserves_contact_and_unconfirmed_timestamp() {
+        let (mut db, db_path) = setup();
+
+        // Seed: unconfirmed activity with a user-set contact and first-seen timestamp.
+        let mut seed = create_test_onchain_activity();
+        seed.confirmed = false;
+        seed.timestamp = 1_000;
+        seed.contact = Some("npub_alice".to_string());
+        db.insert_onchain_activity(&seed).unwrap();
+
+        // Watcher refresh: still unconfirmed, no contact known, fresh "now" timestamp.
+        let mut refresh = seed.clone();
+        refresh.contact = None;
+        refresh.timestamp = 9_999;
+        db.upsert_activity(&Activity::Onchain(refresh)).unwrap();
+
+        let got = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &seed.id)
+            .unwrap()
+            .unwrap();
+        let Activity::Onchain(o) = got else {
+            panic!("expected onchain")
+        };
+        assert_eq!(
+            o.contact.as_deref(),
+            Some("npub_alice"),
+            "contact must survive a None refresh"
+        );
+        assert_eq!(
+            o.timestamp, 1_000,
+            "unconfirmed timestamp must not churn on refresh"
+        );
+
+        // Once confirmed, the block timestamp is applied.
+        let mut confirmed = seed.clone();
+        confirmed.contact = None;
+        confirmed.confirmed = true;
+        confirmed.timestamp = 2_000;
+        db.upsert_activity(&Activity::Onchain(confirmed)).unwrap();
+
+        let got = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &seed.id)
+            .unwrap()
+            .unwrap();
+        let Activity::Onchain(o) = got else {
+            panic!("expected onchain")
+        };
+        assert_eq!(
+            o.timestamp, 2_000,
+            "confirmed tx adopts the block timestamp"
+        );
+        assert_eq!(
+            o.contact.as_deref(),
+            Some("npub_alice"),
+            "contact still preserved"
+        );
+
+        cleanup(&db_path);
+    }
 }

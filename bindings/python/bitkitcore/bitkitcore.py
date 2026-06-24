@@ -747,8 +747,6 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_watch_only_activity_from_history() != 25829:
-        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels() != 41511:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605:
@@ -1841,12 +1839,6 @@ _UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_validate_mnemonic.restype = None
-_UniffiLib.uniffi_bitkitcore_fn_func_watch_only_activity_from_history.argtypes = (
-    _UniffiRustBuffer,
-    _UniffiRustBuffer,
-    ctypes.POINTER(_UniffiRustCallStatus),
-)
-_UniffiLib.uniffi_bitkitcore_fn_func_watch_only_activity_from_history.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_closed_channels.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -2555,9 +2547,6 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.restype = ct
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_mnemonic.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_mnemonic.restype = ctypes.c_uint16
-_UniffiLib.uniffi_bitkitcore_checksum_func_watch_only_activity_from_history.argtypes = (
-)
-_UniffiLib.uniffi_bitkitcore_checksum_func_watch_only_activity_from_history.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_closed_channels.restype = ctypes.c_uint16
@@ -10051,6 +10040,14 @@ class WatcherParams:
     Caller-supplied identifier for this watcher.
     """
 
+    wallet_id: "str"
+    """
+    Wallet id that scopes the activities this watcher emits. One watcher
+    watches one address type, so this stays at the address-type boundary —
+    the same txid seen under two address types yields two wallet-scoped
+    activities under different `wallet_id`s, not one merged activity.
+    """
+
     extended_key: "str"
     """
     Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
@@ -10076,8 +10073,9 @@ class WatcherParams:
     Number of unused addresses to monitor beyond the last used (default 20).
     """
 
-    def __init__(self, *, watcher_id: "str", extended_key: "str", electrum_url: "str", network: "typing.Optional[Network]", account_type: "typing.Optional[AccountType]", gap_limit: "typing.Optional[int]"):
+    def __init__(self, *, watcher_id: "str", wallet_id: "str", extended_key: "str", electrum_url: "str", network: "typing.Optional[Network]", account_type: "typing.Optional[AccountType]", gap_limit: "typing.Optional[int]"):
         self.watcher_id = watcher_id
+        self.wallet_id = wallet_id
         self.extended_key = extended_key
         self.electrum_url = electrum_url
         self.network = network
@@ -10085,10 +10083,12 @@ class WatcherParams:
         self.gap_limit = gap_limit
 
     def __str__(self):
-        return "WatcherParams(watcher_id={}, extended_key={}, electrum_url={}, network={}, account_type={}, gap_limit={})".format(self.watcher_id, self.extended_key, self.electrum_url, self.network, self.account_type, self.gap_limit)
+        return "WatcherParams(watcher_id={}, wallet_id={}, extended_key={}, electrum_url={}, network={}, account_type={}, gap_limit={})".format(self.watcher_id, self.wallet_id, self.extended_key, self.electrum_url, self.network, self.account_type, self.gap_limit)
 
     def __eq__(self, other):
         if self.watcher_id != other.watcher_id:
+            return False
+        if self.wallet_id != other.wallet_id:
             return False
         if self.extended_key != other.extended_key:
             return False
@@ -10107,6 +10107,7 @@ class _UniffiConverterTypeWatcherParams(_UniffiConverterRustBuffer):
     def read(buf):
         return WatcherParams(
             watcher_id=_UniffiConverterString.read(buf),
+            wallet_id=_UniffiConverterString.read(buf),
             extended_key=_UniffiConverterString.read(buf),
             electrum_url=_UniffiConverterString.read(buf),
             network=_UniffiConverterOptionalTypeNetwork.read(buf),
@@ -10117,6 +10118,7 @@ class _UniffiConverterTypeWatcherParams(_UniffiConverterRustBuffer):
     @staticmethod
     def check_lower(value):
         _UniffiConverterString.check_lower(value.watcher_id)
+        _UniffiConverterString.check_lower(value.wallet_id)
         _UniffiConverterString.check_lower(value.extended_key)
         _UniffiConverterString.check_lower(value.electrum_url)
         _UniffiConverterOptionalTypeNetwork.check_lower(value.network)
@@ -10126,6 +10128,7 @@ class _UniffiConverterTypeWatcherParams(_UniffiConverterRustBuffer):
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.watcher_id, buf)
+        _UniffiConverterString.write(value.wallet_id, buf)
         _UniffiConverterString.write(value.extended_key, buf)
         _UniffiConverterString.write(value.electrum_url, buf)
         _UniffiConverterOptionalTypeNetwork.write(value.network, buf)
@@ -14852,28 +14855,38 @@ class WatcherEvent:
     class TRANSACTIONS_CHANGED:
         """
         Transaction activity changed — contains full updated state.
+
+        `activities` and `transaction_details` are persistence-ready: they carry
+        the watcher's `wallet_id`, real decoded addresses, fees from the watched
+        wallet's perspective, and DB-valid timestamps, so the app can store them
+        directly through the normal Core activity APIs (e.g. `upsert_activity` /
+        `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
         """
 
-        transactions: "typing.List[HistoryTransaction]"
+        activities: "typing.List[Activity]"
+        transaction_details: "typing.List[TransactionDetails]"
         balance: "WalletBalance"
         tx_count: "int"
         block_height: "int"
         account_type: "AccountType"
 
-        def __init__(self,transactions: "typing.List[HistoryTransaction]", balance: "WalletBalance", tx_count: "int", block_height: "int", account_type: "AccountType"):
-            self.transactions = transactions
+        def __init__(self,activities: "typing.List[Activity]", transaction_details: "typing.List[TransactionDetails]", balance: "WalletBalance", tx_count: "int", block_height: "int", account_type: "AccountType"):
+            self.activities = activities
+            self.transaction_details = transaction_details
             self.balance = balance
             self.tx_count = tx_count
             self.block_height = block_height
             self.account_type = account_type
 
         def __str__(self):
-            return "WatcherEvent.TRANSACTIONS_CHANGED(transactions={}, balance={}, tx_count={}, block_height={}, account_type={})".format(self.transactions, self.balance, self.tx_count, self.block_height, self.account_type)
+            return "WatcherEvent.TRANSACTIONS_CHANGED(activities={}, transaction_details={}, balance={}, tx_count={}, block_height={}, account_type={})".format(self.activities, self.transaction_details, self.balance, self.tx_count, self.block_height, self.account_type)
 
         def __eq__(self, other):
             if not other.is_TRANSACTIONS_CHANGED():
                 return False
-            if self.transactions != other.transactions:
+            if self.activities != other.activities:
+                return False
+            if self.transaction_details != other.transaction_details:
                 return False
             if self.balance != other.balance:
                 return False
@@ -14981,7 +14994,8 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
         variant = buf.read_i32()
         if variant == 1:
             return WatcherEvent.TRANSACTIONS_CHANGED(
-                _UniffiConverterSequenceTypeHistoryTransaction.read(buf),
+                _UniffiConverterSequenceTypeActivity.read(buf),
+                _UniffiConverterSequenceTypeTransactionDetails.read(buf),
                 _UniffiConverterTypeWalletBalance.read(buf),
                 _UniffiConverterUInt32.read(buf),
                 _UniffiConverterUInt32.read(buf),
@@ -15003,7 +15017,8 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
     @staticmethod
     def check_lower(value):
         if value.is_TRANSACTIONS_CHANGED():
-            _UniffiConverterSequenceTypeHistoryTransaction.check_lower(value.transactions)
+            _UniffiConverterSequenceTypeActivity.check_lower(value.activities)
+            _UniffiConverterSequenceTypeTransactionDetails.check_lower(value.transaction_details)
             _UniffiConverterTypeWalletBalance.check_lower(value.balance)
             _UniffiConverterUInt32.check_lower(value.tx_count)
             _UniffiConverterUInt32.check_lower(value.block_height)
@@ -15023,7 +15038,8 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
     def write(value, buf):
         if value.is_TRANSACTIONS_CHANGED():
             buf.write_i32(1)
-            _UniffiConverterSequenceTypeHistoryTransaction.write(value.transactions, buf)
+            _UniffiConverterSequenceTypeActivity.write(value.activities, buf)
+            _UniffiConverterSequenceTypeTransactionDetails.write(value.transaction_details, buf)
             _UniffiConverterTypeWalletBalance.write(value.balance, buf)
             _UniffiConverterUInt32.write(value.tx_count, buf)
             _UniffiConverterUInt32.write(value.block_height, buf)
@@ -20870,44 +20886,6 @@ def validate_mnemonic(mnemonic_phrase: "str") -> None:
         _UniffiConverterString.lower(mnemonic_phrase))
 
 
-def watch_only_activity_from_history(wallet_id: "str",transactions: "typing.List[HistoryTransaction]") -> "typing.List[Activity]":
-    """
-    Map a watch-only wallet's transaction history (as emitted by the xpub watcher
-    in `WatcherEvent::TransactionsChanged`) into core `Activity` records, so iOS and
-    Android don't each hand-reconstruct activities from `HistoryTransaction` and drift.
-
-    A single hardware device often has several accounts/script-types, each watched
-    separately, so the same txid can appear once per account (e.g. an internal
-    transfer the device both sends and receives). Rows are therefore **merged by
-    txid** — `received`/`sent` are summed and the tx is then classified as a whole —
-    producing exactly one `Activity` per transaction. This mirrors the merge the
-    mobile apps currently do by hand. Output preserves first-seen txid order.
-
-    This is a pure conversion — it does not touch the database. These are
-    **in-memory display models**, rebuilt from watcher state, exactly as
-    bitkit-ios/bitkit-android use them — they are NOT meant to be inserted into
-    the activity DB (whose `onchain_activity.address` and `activities.timestamp`
-    CHECK constraints reject the empty address and zero timestamp produced here).
-    The activity `id` is set to the `tx_id` (matching how both apps key onchain
-    activities), giving each tx a stable identity across re-emitted watcher lists.
-
-    Notes:
-    - `address` is left empty: a watch-only tx has no single canonical address.
-    - `fee` / `fee_rate` use the real values from the account that paid the fee
-    (received-only rows carry none); `fee_rate` is rounded to sat/vB (0 if unknown).
-    - `timestamp` is 0 for still-unconfirmed txs (the UI supplies its own ordering).
-    - A self-transfer is recorded as `Sent` (its display amount is the fee paid).
-    """
-
-    _UniffiConverterString.check_lower(wallet_id)
-    
-    _UniffiConverterSequenceTypeHistoryTransaction.check_lower(transactions)
-    
-    return _UniffiConverterSequenceTypeActivity.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_watch_only_activity_from_history,
-        _UniffiConverterString.lower(wallet_id),
-        _UniffiConverterSequenceTypeHistoryTransaction.lower(transactions)))
-
-
 def wipe_all_closed_channels() -> None:
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_wipe_all_closed_channels,)
 
@@ -21215,7 +21193,6 @@ __all__ = [
     "upsert_transaction_details",
     "validate_bitcoin_address",
     "validate_mnemonic",
-    "watch_only_activity_from_history",
     "wipe_all_closed_channels",
     "wipe_all_databases",
     "wipe_all_transaction_details",

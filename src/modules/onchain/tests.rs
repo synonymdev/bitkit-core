@@ -2451,4 +2451,177 @@ mod tests {
             "Compose with fingerprint should succeed"
         );
     }
+
+    // ------------------------------------------------------------------
+    // watch_only_activity_from_detail: persistence-ready activity building
+    // ------------------------------------------------------------------
+
+    mod watch_only_activity {
+        use super::super::super::implementation::watch_only_activity_from_detail;
+        use crate::activity::{Activity, PaymentType};
+        use crate::onchain::types::{TransactionDetail, TxDetailOutput, TxDirection};
+
+        fn output(value: u64, address: &str, is_mine: bool) -> TxDetailOutput {
+            TxDetailOutput {
+                value,
+                script_pubkey: "00".to_string(),
+                address: Some(address.to_string()),
+                is_mine,
+            }
+        }
+
+        fn detail(
+            direction: TxDirection,
+            sent: u64,
+            received: u64,
+            fee: Option<u64>,
+            confirmations: u32,
+            timestamp: Option<u64>,
+            outputs: Vec<TxDetailOutput>,
+        ) -> TransactionDetail {
+            TransactionDetail {
+                txid: "tx_abc".to_string(),
+                received,
+                sent,
+                net: received as i64 - sent as i64,
+                amount: 0,
+                fee,
+                direction,
+                block_height: timestamp.map(|_| 800_000),
+                timestamp,
+                confirmations,
+                inputs: vec![],
+                outputs,
+                size: 200,
+                vsize: 150,
+                weight: 600,
+                fee_rate: fee.map(|f| f as f64 / 150.0),
+            }
+        }
+
+        fn onchain(act: &Activity) -> &crate::activity::OnchainActivity {
+            match act {
+                Activity::Onchain(o) => o,
+                _ => panic!("expected onchain"),
+            }
+        }
+
+        #[test]
+        fn received_drops_sender_fee_and_uses_owned_address() {
+            // Receive-only row that still carries BDK's fee (paid by the sender).
+            let d = detail(
+                TxDirection::Received,
+                0,
+                50_000,
+                Some(450),
+                3,
+                Some(1_700_000_000),
+                vec![
+                    output(50_000, "bc1qowned", true),
+                    output(10_000, "bc1qexternal_change", false),
+                ],
+            );
+            let (act, _details) = watch_only_activity_from_detail("trezor:nw", &d, 999);
+            let o = onchain(&act);
+            assert_eq!(o.wallet_id, "trezor:nw");
+            assert_eq!(o.id, "tx_abc");
+            assert_eq!(o.tx_type, PaymentType::Received);
+            assert_eq!(o.value, 50_000);
+            assert_eq!(o.fee, 0, "sender's fee must not be attributed to us");
+            assert_eq!(o.fee_rate, 0);
+            assert_eq!(o.address, "bc1qowned");
+            assert!(o.confirmed);
+            assert_eq!(o.timestamp, 1_700_000_000);
+        }
+
+        #[test]
+        fn sent_keeps_value_and_fee_separate() {
+            // Bitkit renders sent rows as value + fee, so value excludes the fee.
+            let d = detail(
+                TxDirection::Sent,
+                60_000,
+                10_000,
+                Some(500),
+                1,
+                Some(1_700_000_000),
+                vec![
+                    output(49_500, "bc1qdestination", false),
+                    output(10_000, "bc1qchange", true),
+                ],
+            );
+            let (act, _d) = watch_only_activity_from_detail("w", &d, 999);
+            let o = onchain(&act);
+            assert_eq!(o.tx_type, PaymentType::Sent);
+            assert_eq!(o.value, 60_000 - 10_000 - 500);
+            assert_eq!(o.fee, 500);
+            assert_eq!(o.address, "bc1qdestination"); // external output
+        }
+
+        #[test]
+        fn self_transfer_is_zero_value_plus_fee() {
+            // value + fee must equal the true cost (the fee), not double it.
+            let d = detail(
+                TxDirection::SelfTransfer,
+                50_000,
+                49_800,
+                Some(300),
+                2,
+                Some(1_700_000_000),
+                vec![output(49_800, "bc1qown_change", true)],
+            );
+            let (act, _d) = watch_only_activity_from_detail("w", &d, 999);
+            let o = onchain(&act);
+            assert_eq!(o.tx_type, PaymentType::Sent);
+            assert_eq!(o.value, 0);
+            assert_eq!(o.fee, 300);
+        }
+
+        #[test]
+        fn unconfirmed_uses_now_and_no_confirm_timestamp() {
+            let d = detail(
+                TxDirection::Received,
+                0,
+                10_000,
+                None,
+                0,
+                None,
+                vec![output(10_000, "bc1qowned", true)],
+            );
+            let (act, _d) = watch_only_activity_from_detail("w", &d, 1_234);
+            let o = onchain(&act);
+            assert!(!o.confirmed);
+            assert_eq!(
+                o.timestamp, 1_234,
+                "positive (now) timestamp for unconfirmed"
+            );
+            assert_eq!(o.confirm_timestamp, None);
+        }
+
+        #[test]
+        fn emits_matching_transaction_details() {
+            let d = detail(
+                TxDirection::Sent,
+                60_000,
+                0,
+                Some(500),
+                1,
+                Some(1_700_000_000),
+                vec![
+                    output(59_500, "bc1qdestination", false),
+                    output(0, "bc1qopreturnish", false),
+                ],
+            );
+            let (act, details) = watch_only_activity_from_detail("w", &d, 999);
+            assert_eq!(details.wallet_id, "w");
+            assert_eq!(details.tx_id, onchain(&act).tx_id);
+            assert_eq!(details.outputs.len(), 2);
+            assert_eq!(details.outputs[0].n, 0);
+            assert_eq!(details.outputs[1].n, 1);
+            assert_eq!(details.outputs[0].value, 59_500);
+            assert_eq!(
+                details.outputs[0].scriptpubkey_address.as_deref(),
+                Some("bc1qdestination")
+            );
+        }
+    }
 }

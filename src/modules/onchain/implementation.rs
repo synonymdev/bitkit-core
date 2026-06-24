@@ -34,8 +34,11 @@ use super::types::{
     classify_tx, AccountAddresses, AccountInfoResult, AccountType, AccountUtxo, AddressInfo,
     AddressType, ComposeAccount, HistoryTransaction, LegacyRnCloseRecoveryScanResult,
     LegacyRnCloseRecoverySweepPreview, Network as OnchainNetwork, SingleAddressInfoResult,
-    TransactionDetail, TransactionHistoryResult, TxDetailInput, TxDetailOutput, ValidationResult,
-    WalletBalance,
+    TransactionDetail, TransactionHistoryResult, TxDetailInput, TxDetailOutput, TxDirection,
+    ValidationResult, WalletBalance,
+};
+use crate::modules::activity::{
+    Activity, OnchainActivity, PaymentType, TransactionDetails, TxInput, TxOutput,
 };
 use crate::modules::scanner::NetworkType;
 use crate::onchain::types::{
@@ -1447,6 +1450,214 @@ pub(crate) fn sort_history_transactions(history: &mut [HistoryTransaction]) {
     });
 }
 
+/// Decode a single BDK transaction into a rich [`TransactionDetail`] (addresses,
+/// per-output ownership, fee rate, vsize). Requires `tx.transaction` to be present,
+/// i.e. the tx must come from `list_transactions(true)`.
+pub(crate) fn map_bdk_tx_to_detail(
+    wallet: &Wallet<MemoryDatabase>,
+    tx: &bdk::TransactionDetails,
+    tip_height: u32,
+    wallet_network: BdkNetwork,
+) -> Result<TransactionDetail, AccountInfoError> {
+    let (direction, amount, net) = classify_tx(tx.sent, tx.received, tx.fee);
+
+    let (block_height, timestamp, confirmations) = match tx.confirmation_time.as_ref() {
+        Some(conf) => {
+            let confs = tip_height.saturating_sub(conf.height) + 1;
+            (Some(conf.height), Some(conf.timestamp), confs)
+        }
+        None => (None, None, 0),
+    };
+
+    let raw_tx = tx
+        .transaction
+        .as_ref()
+        .ok_or_else(|| AccountInfoError::WalletError {
+            error_details: format!("Raw transaction data not available for {}", tx.txid),
+        })?;
+
+    let inputs: Vec<TxDetailInput> = raw_tx
+        .input
+        .iter()
+        .map(|inp| TxDetailInput {
+            txid: inp.previous_output.txid.to_string(),
+            vout: inp.previous_output.vout,
+            sequence: inp.sequence.0,
+            script_sig: hex::encode(inp.script_sig.as_bytes()),
+            witness: inp.witness.iter().map(|w| hex::encode(w)).collect(),
+        })
+        .collect();
+
+    let outputs: Vec<TxDetailOutput> = raw_tx
+        .output
+        .iter()
+        .map(|out| {
+            let address = BdkAddress::from_script(&out.script_pubkey, wallet_network)
+                .ok()
+                .map(|a| a.to_string());
+            let is_mine =
+                wallet
+                    .is_mine(&out.script_pubkey)
+                    .map_err(|e| AccountInfoError::WalletError {
+                        error_details: format!("Failed to check script ownership: {}", e),
+                    })?;
+            Ok(TxDetailOutput {
+                value: out.value,
+                script_pubkey: hex::encode(out.script_pubkey.as_bytes()),
+                address,
+                is_mine,
+            })
+        })
+        .collect::<Result<Vec<_>, AccountInfoError>>()?;
+
+    let size = u32::try_from(raw_tx.size()).unwrap_or(u32::MAX);
+    let vsize = u32::try_from(raw_tx.vsize()).unwrap_or(u32::MAX);
+    let weight = u32::try_from(raw_tx.weight().to_wu()).unwrap_or(u32::MAX);
+    let fee_rate = match tx.fee {
+        Some(f) if vsize > 0 => Some(f as f64 / vsize as f64),
+        _ => None,
+    };
+
+    Ok(TransactionDetail {
+        txid: tx.txid.to_string(),
+        received: tx.received,
+        sent: tx.sent,
+        net,
+        amount,
+        fee: tx.fee,
+        direction,
+        block_height,
+        timestamp,
+        confirmations,
+        inputs,
+        outputs,
+        size,
+        vsize,
+        weight,
+        fee_rate,
+    })
+}
+
+/// Convert a decoded [`TransactionDetail`] into persistence-ready Core activity
+/// data scoped to `wallet_id`, from the *watched wallet's* perspective.
+///
+/// Semantics chosen so these render identically to any other onchain activity:
+/// - `Received`: `value` = amount received, `fee`/`fee_rate` = 0 (the fee was paid
+///   by the sender, not this wallet — even when BDK attaches one to the row).
+/// - `Sent`: `value` = amount that left the wallet (sent − received − fee),
+///   `fee`/`fee_rate` = the paid fee. Bitkit shows `value + fee` as the total.
+/// - `SelfTransfer`: `value` = 0, `fee`/`fee_rate` = the paid fee (total = fee).
+/// - `address`: the owned output for receives, the destination (non-owned) output
+///   for sends, falling back to any decodable output address.
+/// - `timestamp`: block time when confirmed, else `now` (always > 0 so the row is
+///   DB-valid and sorts to the top while pending).
+pub(crate) fn watch_only_activity_from_detail(
+    wallet_id: &str,
+    detail: &TransactionDetail,
+    now: u64,
+) -> (Activity, TransactionDetails) {
+    // Did the watched wallet actually spend inputs? If not, the fee isn't ours.
+    let spent = detail.sent > 0;
+    let fee = if spent { detail.fee.unwrap_or(0) } else { 0 };
+    let fee_rate = if spent {
+        detail.fee_rate.map(|r| r.round() as u64).unwrap_or(0)
+    } else {
+        0
+    };
+
+    let (tx_type, value) = match detail.direction {
+        TxDirection::Received => (PaymentType::Received, detail.received),
+        TxDirection::Sent => (
+            PaymentType::Sent,
+            detail
+                .sent
+                .saturating_sub(detail.received)
+                .saturating_sub(fee),
+        ),
+        // Pure self-transfer: nothing leaves the wallet but the fee.
+        TxDirection::SelfTransfer => (PaymentType::Sent, 0),
+    };
+
+    // Pick the most meaningful address for this direction.
+    let pick_address = || -> String {
+        let owned = detail
+            .outputs
+            .iter()
+            .find(|o| o.is_mine)
+            .and_then(|o| o.address.clone());
+        let external = detail
+            .outputs
+            .iter()
+            .find(|o| !o.is_mine)
+            .and_then(|o| o.address.clone());
+        let any = detail.outputs.iter().find_map(|o| o.address.clone());
+        let chosen = match detail.direction {
+            TxDirection::Received => owned.or(any),
+            TxDirection::Sent => external.or(any),
+            TxDirection::SelfTransfer => owned.or(any),
+        };
+        chosen.unwrap_or_default()
+    };
+
+    let confirmed = detail.confirmations > 0;
+    let timestamp = detail.timestamp.unwrap_or(now);
+
+    let activity = Activity::Onchain(OnchainActivity {
+        wallet_id: wallet_id.to_string(),
+        id: detail.txid.clone(),
+        tx_type,
+        tx_id: detail.txid.clone(),
+        value,
+        fee,
+        fee_rate,
+        address: pick_address(),
+        confirmed,
+        timestamp,
+        is_boosted: false,
+        boost_tx_ids: Vec::new(),
+        is_transfer: false,
+        does_exist: true,
+        confirm_timestamp: if confirmed { detail.timestamp } else { None },
+        channel_id: None,
+        transfer_tx_id: None,
+        contact: None,
+        created_at: None,
+        updated_at: None,
+        seen_at: None,
+    });
+
+    let details = TransactionDetails {
+        wallet_id: wallet_id.to_string(),
+        tx_id: detail.txid.clone(),
+        amount_sats: detail.net,
+        inputs: detail
+            .inputs
+            .iter()
+            .map(|i| TxInput {
+                txid: i.txid.clone(),
+                vout: i.vout,
+                scriptsig: i.script_sig.clone(),
+                witness: i.witness.clone(),
+                sequence: i.sequence,
+            })
+            .collect(),
+        outputs: detail
+            .outputs
+            .iter()
+            .enumerate()
+            .map(|(n, o)| TxOutput {
+                scriptpubkey: o.script_pubkey.clone(),
+                scriptpubkey_type: None,
+                scriptpubkey_address: o.address.clone(),
+                value: o.value as i64,
+                n: n as u32,
+            })
+            .collect(),
+    };
+
+    (activity, details)
+}
+
 // ============================================================================
 // Account info: main async functions
 // ============================================================================
@@ -1755,84 +1966,7 @@ pub async fn get_transaction_detail(
             }
         })?;
 
-        // Summary fields
-        let (direction, amount, net) = classify_tx(tx.sent, tx.received, tx.fee);
-
-        let (block_height, timestamp, confirmations) = match tx.confirmation_time.as_ref() {
-            Some(conf) => {
-                let confs = tip_height.saturating_sub(conf.height) + 1;
-                (Some(conf.height), Some(conf.timestamp), confs)
-            }
-            None => (None, None, 0),
-        };
-
-        // Raw transaction details
-        let raw_tx = tx
-            .transaction
-            .as_ref()
-            .ok_or_else(|| AccountInfoError::WalletError {
-                error_details: format!("Raw transaction data not available for {}", target_txid),
-            })?;
-
-        let inputs: Vec<TxDetailInput> = raw_tx
-            .input
-            .iter()
-            .map(|inp| TxDetailInput {
-                txid: inp.previous_output.txid.to_string(),
-                vout: inp.previous_output.vout,
-                sequence: inp.sequence.0,
-                script_sig: hex::encode(inp.script_sig.as_bytes()),
-                witness: inp.witness.iter().map(|w| hex::encode(w)).collect(),
-            })
-            .collect();
-
-        let outputs: Vec<TxDetailOutput> = raw_tx
-            .output
-            .iter()
-            .map(|out| {
-                let address = BdkAddress::from_script(&out.script_pubkey, wallet_network)
-                    .ok()
-                    .map(|a| a.to_string());
-                let is_mine = wallet.is_mine(&out.script_pubkey).map_err(|e| {
-                    AccountInfoError::WalletError {
-                        error_details: format!("Failed to check script ownership: {}", e),
-                    }
-                })?;
-                Ok(TxDetailOutput {
-                    value: out.value,
-                    script_pubkey: hex::encode(out.script_pubkey.as_bytes()),
-                    address,
-                    is_mine,
-                })
-            })
-            .collect::<Result<Vec<_>, AccountInfoError>>()?;
-
-        let size = u32::try_from(raw_tx.size()).unwrap_or(u32::MAX);
-        let vsize = u32::try_from(raw_tx.vsize()).unwrap_or(u32::MAX);
-        let weight = u32::try_from(raw_tx.weight().to_wu()).unwrap_or(u32::MAX);
-        let fee_rate = match tx.fee {
-            Some(f) if vsize > 0 => Some(f as f64 / vsize as f64),
-            _ => None,
-        };
-
-        Ok(TransactionDetail {
-            txid: tx.txid.to_string(),
-            received: tx.received,
-            sent: tx.sent,
-            net,
-            amount,
-            fee: tx.fee,
-            direction,
-            block_height,
-            timestamp,
-            confirmations,
-            inputs,
-            outputs,
-            size,
-            vsize,
-            weight,
-            fee_rate,
-        })
+        map_bdk_tx_to_detail(&wallet, tx, tip_height, wallet_network)
     })
     .await?;
 

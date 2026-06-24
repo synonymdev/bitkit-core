@@ -9,7 +9,7 @@ fn default_wallet_id() -> String {
     DEFAULT_WALLET_ID.to_string()
 }
 
-#[derive(Debug, uniffi::Enum)]
+#[derive(Debug, Clone, uniffi::Enum)]
 pub enum Activity {
     Onchain(OnchainActivity),
     Lightning(LightningActivity),

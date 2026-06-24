@@ -1609,11 +1609,18 @@ impl ActivityDB {
                 error_details: format!("Failed to start transaction: {}", e),
             })?;
 
+        // Preserve user-owned / first-seen state across re-emitted updates (e.g. an
+        // xpub watcher re-sending its full list each sync):
+        // - `contact`: keep the existing value when the incoming one is None, so a
+        //   refresh that doesn't know the contact can't wipe a user-set one.
+        // - `timestamp`: keep the existing value while the tx is still unconfirmed,
+        //   so a still-pending activity doesn't jump every refresh; snap to the
+        //   block time once confirmed.
         let activities_sql = "
             UPDATE activities SET
                 tx_type = ?1,
-                timestamp = ?2,
-                contact = ?3
+                timestamp = CASE WHEN ?6 THEN ?2 ELSE timestamp END,
+                contact = COALESCE(?3, contact)
             WHERE wallet_id = ?4 AND id = ?5 AND activity_type = 'onchain'";
 
         let rows = tx
@@ -1625,6 +1632,7 @@ impl ActivityDB {
                     &activity.contact,
                     &wallet_id,
                     activity_id,
+                    activity.confirmed,
                 ),
             )
             .map_err(|e| ActivityError::DataError {
