@@ -21,9 +21,10 @@ use once_cell::sync::OnceCell;
 
 // Re-export Trezor callback types and traits so UniFFI discovers them at the crate root
 use crate::activity::{
-    Activity, ActivityDB, ActivityError, ActivityFilter, ActivityTags, ClosedChannelDetails,
-    DbError, LightningActivity, OnchainActivity, PaymentType, PreActivityMetadata, SortDirection,
-    TransactionDetails, DEFAULT_WALLET_ID,
+    derive_wallet_id as derive_wallet_id_inner, Activity, ActivityDB, ActivityError,
+    ActivityFilter, ActivityTags, ClosedChannelDetails, DbError, LightningActivity,
+    OnchainActivity, PaymentType, PreActivityMetadata, SortDirection, TransactionDetails,
+    DEFAULT_WALLET_ID,
 };
 use crate::modules::blocktank::{
     BlocktankDB, BlocktankError, BtOrderState2, CJitStateEnum, ChannelLiquidityOptions,
@@ -52,11 +53,11 @@ use crate::onchain::{
     BroadcastError, GetAddressResponse, GetAddressesResponse, LegacyRnCloseRecoveryScanResult,
     LegacyRnCloseRecoverySweepPreview, Network, SingleAddressInfoResult, SweepError, SweepResult,
     SweepTransactionPreview, SweepableBalances, TransactionDetail, TransactionHistoryResult,
-    ValidationResult,
+    ValidationResult, DEFAULT_GAP_LIMIT,
 };
 use crate::onchain::{compose_transaction, ComposeParams, ComposeResult};
 use crate::onchain::{
-    start_watcher, stop_all_watchers, stop_watcher, EventListener, WatcherParams, DEFAULT_GAP_LIMIT,
+    start_watcher, stop_all_watchers, stop_watcher, EventListener, WatcherParams,
 };
 pub use modules::activity;
 pub use modules::lnurl;
@@ -475,6 +476,15 @@ pub fn get_default_wallet_id() -> String {
 #[uniffi::export]
 pub fn get_default_gap_limit() -> u32 {
     DEFAULT_GAP_LIMIT
+}
+
+/// Derive a stable, cross-platform `wallet_id` for a hardware (watch-only) wallet
+/// from its account extended public keys. See `derive_wallet_id` in the activity
+/// module for the exact derivation. Order of `xpubs` does not matter. Returns an
+/// error if `device_type` is blank or `xpubs` is empty / has a blank entry.
+#[uniffi::export]
+pub fn derive_wallet_id(device_type: String, xpubs: Vec<String>) -> Result<String, ActivityError> {
+    derive_wallet_id_inner(device_type, xpubs)
 }
 
 #[uniffi::export]
