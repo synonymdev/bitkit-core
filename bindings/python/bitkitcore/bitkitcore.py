@@ -515,6 +515,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_derive_pubky_secret_key() != 36989:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_derive_wallet_id() != 30111:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_estimate_order_fee() != 9548:
@@ -1246,6 +1248,12 @@ _UniffiLib.uniffi_bitkitcore_fn_func_derive_pubky_secret_key.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_derive_pubky_secret_key.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_wallet_id.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_wallet_id.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_entropy_to_mnemonic.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -2199,6 +2207,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_derive_private_key.restype = ctypes.c
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_pubky_secret_key.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_pubky_secret_key.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_wallet_id.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_wallet_id.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic.restype = ctypes.c_uint16
@@ -18947,6 +18958,23 @@ def derive_pubky_secret_key(seed: "bytes") -> "str":
         _UniffiConverterBytes.lower(seed)))
 
 
+def derive_wallet_id(device_type: "str",xpubs: "typing.List[str]") -> "str":
+    """
+    Derive a stable, cross-platform `wallet_id` for a hardware (watch-only) wallet
+    from its account extended public keys. See `derive_wallet_id` in the activity
+    module for the exact derivation. Order of `xpubs` does not matter. Returns an
+    error if `device_type` is blank or `xpubs` is empty / has a blank entry.
+    """
+
+    _UniffiConverterString.check_lower(device_type)
+    
+    _UniffiConverterSequenceString.check_lower(xpubs)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_derive_wallet_id,
+        _UniffiConverterString.lower(device_type),
+        _UniffiConverterSequenceString.lower(xpubs)))
+
+
 def entropy_to_mnemonic(entropy: "bytes") -> "str":
     _UniffiConverterBytes.check_lower(entropy)
     
@@ -21039,6 +21067,7 @@ __all__ = [
     "derive_onchain_descriptor",
     "derive_private_key",
     "derive_pubky_secret_key",
+    "derive_wallet_id",
     "entropy_to_mnemonic",
     "estimate_order_fee",
     "estimate_order_fee_full",
