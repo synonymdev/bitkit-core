@@ -5577,6 +5577,7 @@ public object FfiConverterTypeHistoryTransaction: FfiConverterRustBuffer<History
             FfiConverterULong.read(buf),
             FfiConverterLong.read(buf),
             FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalDouble.read(buf),
             FfiConverterULong.read(buf),
             FfiConverterTypeTxDirection.read(buf),
             FfiConverterOptionalUInt.read(buf),
@@ -5591,6 +5592,7 @@ public object FfiConverterTypeHistoryTransaction: FfiConverterRustBuffer<History
             FfiConverterULong.allocationSize(value.`sent`) +
             FfiConverterLong.allocationSize(value.`net`) +
             FfiConverterOptionalULong.allocationSize(value.`fee`) +
+            FfiConverterOptionalDouble.allocationSize(value.`feeRate`) +
             FfiConverterULong.allocationSize(value.`amount`) +
             FfiConverterTypeTxDirection.allocationSize(value.`direction`) +
             FfiConverterOptionalUInt.allocationSize(value.`blockHeight`) +
@@ -5604,6 +5606,7 @@ public object FfiConverterTypeHistoryTransaction: FfiConverterRustBuffer<History
         FfiConverterULong.write(value.`sent`, buf)
         FfiConverterLong.write(value.`net`, buf)
         FfiConverterOptionalULong.write(value.`fee`, buf)
+        FfiConverterOptionalDouble.write(value.`feeRate`, buf)
         FfiConverterULong.write(value.`amount`, buf)
         FfiConverterTypeTxDirection.write(value.`direction`, buf)
         FfiConverterOptionalUInt.write(value.`blockHeight`, buf)
@@ -8288,6 +8291,7 @@ public object FfiConverterTypeWatcherParams: FfiConverterRustBuffer<WatcherParam
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
             FfiConverterOptionalTypeNetwork.read(buf),
             FfiConverterOptionalTypeAccountType.read(buf),
             FfiConverterOptionalUInt.read(buf),
@@ -8296,6 +8300,7 @@ public object FfiConverterTypeWatcherParams: FfiConverterRustBuffer<WatcherParam
 
     override fun allocationSize(value: WatcherParams): ULong = (
             FfiConverterString.allocationSize(value.`watcherId`) +
+            FfiConverterString.allocationSize(value.`walletId`) +
             FfiConverterString.allocationSize(value.`extendedKey`) +
             FfiConverterString.allocationSize(value.`electrumUrl`) +
             FfiConverterOptionalTypeNetwork.allocationSize(value.`network`) +
@@ -8305,6 +8310,7 @@ public object FfiConverterTypeWatcherParams: FfiConverterRustBuffer<WatcherParam
 
     override fun write(value: WatcherParams, buf: ByteBuffer) {
         FfiConverterString.write(value.`watcherId`, buf)
+        FfiConverterString.write(value.`walletId`, buf)
         FfiConverterString.write(value.`extendedKey`, buf)
         FfiConverterString.write(value.`electrumUrl`, buf)
         FfiConverterOptionalTypeNetwork.write(value.`network`, buf)
@@ -10640,7 +10646,8 @@ public object FfiConverterTypeWatcherEvent : FfiConverterRustBuffer<WatcherEvent
     override fun read(buf: ByteBuffer): WatcherEvent {
         return when(buf.getInt()) {
             1 -> WatcherEvent.TransactionsChanged(
-                FfiConverterSequenceTypeHistoryTransaction.read(buf),
+                FfiConverterSequenceTypeActivity.read(buf),
+                FfiConverterSequenceTypeTransactionDetails.read(buf),
                 FfiConverterTypeWalletBalance.read(buf),
                 FfiConverterUInt.read(buf),
                 FfiConverterUInt.read(buf),
@@ -10662,7 +10669,8 @@ public object FfiConverterTypeWatcherEvent : FfiConverterRustBuffer<WatcherEvent
             // Add the size for the Int that specifies the variant plus the size needed for all fields
             (
                 4UL
-                + FfiConverterSequenceTypeHistoryTransaction.allocationSize(value.`transactions`)
+                + FfiConverterSequenceTypeActivity.allocationSize(value.`activities`)
+                + FfiConverterSequenceTypeTransactionDetails.allocationSize(value.`transactionDetails`)
                 + FfiConverterTypeWalletBalance.allocationSize(value.`balance`)
                 + FfiConverterUInt.allocationSize(value.`txCount`)
                 + FfiConverterUInt.allocationSize(value.`blockHeight`)
@@ -10695,7 +10703,8 @@ public object FfiConverterTypeWatcherEvent : FfiConverterRustBuffer<WatcherEvent
         when(value) {
             is WatcherEvent.TransactionsChanged -> {
                 buf.putInt(1)
-                FfiConverterSequenceTypeHistoryTransaction.write(value.`transactions`, buf)
+                FfiConverterSequenceTypeActivity.write(value.`activities`, buf)
+                FfiConverterSequenceTypeTransactionDetails.write(value.`transactionDetails`, buf)
                 FfiConverterTypeWalletBalance.write(value.`balance`, buf)
                 FfiConverterUInt.write(value.`txCount`, buf)
                 FfiConverterUInt.write(value.`blockHeight`, buf)

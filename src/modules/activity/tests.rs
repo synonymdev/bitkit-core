@@ -6477,4 +6477,68 @@ mod tests {
 
         cleanup(&db_path);
     }
+
+    #[test]
+    fn test_update_activity_is_pure_replacement() {
+        let (mut db, db_path) = setup();
+
+        let mut seed = create_test_onchain_activity();
+        seed.confirmed = false;
+        seed.timestamp = 1_000;
+        seed.contact = Some("npub_alice".to_string());
+        db.insert_onchain_activity(&seed).unwrap();
+
+        // update_* is a literal replacement: it clears the contact (None) and
+        // moves the timestamp even while the tx is unconfirmed.
+        let mut replaced = seed.clone();
+        replaced.contact = None;
+        replaced.timestamp = 5_000;
+        replaced.confirmed = false;
+        db.update_onchain_activity_by_id(&seed.id, &replaced)
+            .unwrap();
+
+        let got = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &seed.id)
+            .unwrap()
+            .unwrap();
+        let Activity::Onchain(o) = got else {
+            panic!("expected onchain")
+        };
+        assert_eq!(o.contact, None, "update clears contact");
+        assert_eq!(
+            o.timestamp, 5_000,
+            "update moves timestamp even when unconfirmed"
+        );
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_batch_upsert_preserves_contact_and_unconfirmed_timestamp() {
+        let (mut db, db_path) = setup();
+
+        let mut seed = create_test_onchain_activity();
+        seed.confirmed = false;
+        seed.timestamp = 1_000;
+        seed.contact = Some("npub_bob".to_string());
+        db.insert_onchain_activity(&seed).unwrap();
+
+        // Batch path (the watcher refresh entry point): same tx, no contact, new now.
+        let mut refresh = seed.clone();
+        refresh.contact = None;
+        refresh.timestamp = 9_999;
+        db.upsert_onchain_activities(&[refresh]).unwrap();
+
+        let got = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, &seed.id)
+            .unwrap()
+            .unwrap();
+        let Activity::Onchain(o) = got else {
+            panic!("expected onchain")
+        };
+        assert_eq!(o.contact.as_deref(), Some("npub_bob"));
+        assert_eq!(o.timestamp, 1_000);
+
+        cleanup(&db_path);
+    }
 }

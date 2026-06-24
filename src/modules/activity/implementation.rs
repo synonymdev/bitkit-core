@@ -699,16 +699,11 @@ impl ActivityDB {
 
     pub fn upsert_activity(&mut self, activity: &Activity) -> Result<(), ActivityError> {
         match activity {
+            // Route through the batch upsert so a single upsert gets the same
+            // insert-or-merge semantics (contact / unconfirmed-timestamp
+            // preservation) as a watcher refresh.
             Activity::Onchain(onchain) => {
-                match self.update_onchain_activity_by_id(&onchain.id, onchain) {
-                    Ok(_) => Ok(()),
-                    Err(ActivityError::DataError { error_details })
-                        if error_details == "No activity found with given ID" =>
-                    {
-                        self.insert_onchain_activity(onchain)
-                    }
-                    Err(e) => Err(e),
-                }
+                self.upsert_onchain_activities(std::slice::from_ref(onchain))
             }
             Activity::Lightning(lightning) => {
                 match self.update_lightning_activity_by_id(&lightning.id, lightning) {
@@ -912,6 +907,13 @@ impl ActivityDB {
         {
             let mut stmt_act = tx
                 .prepare(
+                    // Preserve user / first-seen state across watcher refreshes:
+                    // - keep the existing contact when the incoming one is NULL
+                    //   (COALESCE), so a refresh can't wipe a user-set contact;
+                    // - keep the existing timestamp while the tx is still
+                    //   unconfirmed (?6 = confirmed), so a pending activity's
+                    //   first-seen time doesn't churn; snap to the new (block)
+                    //   timestamp once it confirms.
                     "INSERT INTO activities (
                     id, wallet_id, activity_type, tx_type, timestamp, contact
                 ) VALUES (
@@ -920,8 +922,8 @@ impl ActivityDB {
                 ON CONFLICT(wallet_id, id) DO UPDATE SET
                     activity_type = excluded.activity_type,
                     tx_type = excluded.tx_type,
-                    timestamp = excluded.timestamp,
-                    contact = excluded.contact",
+                    timestamp = CASE WHEN ?6 THEN excluded.timestamp ELSE timestamp END,
+                    contact = COALESCE(excluded.contact, contact)",
                 )
                 .map_err(|e| ActivityError::DataError {
                     error_details: format!("Failed to prepare activities statement: {}", e),
@@ -969,6 +971,7 @@ impl ActivityDB {
                         Self::payment_type_to_string(&activity.tx_type),
                         activity.timestamp,
                         &activity.contact,
+                        activity.confirmed,
                     ))
                     .map_err(|e| ActivityError::InsertError {
                         error_details: format!("Failed to upsert activities: {}", e),
@@ -1609,18 +1612,15 @@ impl ActivityDB {
                 error_details: format!("Failed to start transaction: {}", e),
             })?;
 
-        // Preserve user-owned / first-seen state across re-emitted updates (e.g. an
-        // xpub watcher re-sending its full list each sync):
-        // - `contact`: keep the existing value when the incoming one is None, so a
-        //   refresh that doesn't know the contact can't wipe a user-set one.
-        // - `timestamp`: keep the existing value while the tx is still unconfirmed,
-        //   so a still-pending activity doesn't jump every refresh; snap to the
-        //   block time once confirmed.
+        // A literal replacement: callers using update_activity expect every field
+        // (including timestamp and contact) to be overwritten. Preservation of
+        // user/first-seen state across watcher refreshes lives in the upsert path
+        // (see upsert_onchain_activities), not here.
         let activities_sql = "
             UPDATE activities SET
                 tx_type = ?1,
-                timestamp = CASE WHEN ?6 THEN ?2 ELSE timestamp END,
-                contact = COALESCE(?3, contact)
+                timestamp = ?2,
+                contact = ?3
             WHERE wallet_id = ?4 AND id = ?5 AND activity_type = 'onchain'";
 
         let rows = tx
@@ -1632,7 +1632,6 @@ impl ActivityDB {
                     &activity.contact,
                     &wallet_id,
                     activity_id,
-                    activity.confirmed,
                 ),
             )
             .map_err(|e| ActivityError::DataError {

@@ -1629,7 +1629,10 @@ pub(crate) fn watch_only_activity_from_detail(
     let details = TransactionDetails {
         wallet_id: wallet_id.to_string(),
         tx_id: detail.txid.clone(),
-        amount_sats: detail.net,
+        // `amount_sats` is documented as fee-excluded. BDK's `sent` includes the
+        // fee, so `net` (received - sent) is fee-inclusive for spends; add our fee
+        // back to exclude it. For receive-only rows `fee` is 0 (sender paid it).
+        amount_sats: detail.net + fee as i64,
         inputs: detail
             .inputs
             .iter()

@@ -2521,7 +2521,7 @@ mod tests {
                     output(10_000, "bc1qexternal_change", false),
                 ],
             );
-            let (act, _details) = watch_only_activity_from_detail("trezor:nw", &d, 999);
+            let (act, details) = watch_only_activity_from_detail("trezor:nw", &d, 999);
             let o = onchain(&act);
             assert_eq!(o.wallet_id, "trezor:nw");
             assert_eq!(o.id, "tx_abc");
@@ -2532,6 +2532,8 @@ mod tests {
             assert_eq!(o.address, "bc1qowned");
             assert!(o.confirmed);
             assert_eq!(o.timestamp, 1_700_000_000);
+            // Fee-excluded; sender's fee is not subtracted from our received amount.
+            assert_eq!(details.amount_sats, 50_000);
         }
 
         #[test]
@@ -2622,6 +2624,9 @@ mod tests {
                 details.outputs[0].scriptpubkey_address.as_deref(),
                 Some("bc1qdestination")
             );
+            // Fee-excluded: net (-60000) + our fee (500) = -59500, matching the
+            // 59500 that actually left the wallet.
+            assert_eq!(details.amount_sats, -59_500);
         }
     }
 }
