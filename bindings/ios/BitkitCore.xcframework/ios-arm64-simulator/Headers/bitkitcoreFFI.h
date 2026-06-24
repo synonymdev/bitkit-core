@@ -640,6 +640,11 @@ RustBuffer uniffi_bitkitcore_fn_func_derive_private_key(RustBuffer mnemonic_phra
 RustBuffer uniffi_bitkitcore_fn_func_derive_pubky_secret_key(RustBuffer seed, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_WALLET_ID
+RustBuffer uniffi_bitkitcore_fn_func_derive_wallet_id(RustBuffer device_type, RustBuffer xpubs, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ENTROPY_TO_MNEMONIC
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ENTROPY_TO_MNEMONIC
 RustBuffer uniffi_bitkitcore_fn_func_entropy_to_mnemonic(RustBuffer entropy, RustCallStatus *_Nonnull out_status
@@ -1696,6 +1701,12 @@ uint16_t uniffi_bitkitcore_checksum_func_derive_private_key(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_PUBKY_SECRET_KEY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_PUBKY_SECRET_KEY
 uint16_t uniffi_bitkitcore_checksum_func_derive_pubky_secret_key(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_WALLET_ID
+uint16_t uniffi_bitkitcore_checksum_func_derive_wallet_id(void
     
 );
 #endif

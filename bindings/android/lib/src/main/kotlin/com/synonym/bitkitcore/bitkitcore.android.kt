@@ -1486,6 +1486,8 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1604,6 +1606,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_derive_pubky_secret_key() != 36989.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_derive_wallet_id() != 30111.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123.toShort()) {
@@ -2088,6 +2093,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_derive_pubky_secret_key(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_derive_wallet_id(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_entropy_to_mnemonic(
@@ -2799,6 +2807,12 @@ internal object UniffiLib : Library {
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_derive_pubky_secret_key(
         `seed`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_derive_wallet_id(
+        `deviceType`: RustBufferByValue,
+        `xpubs`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
@@ -13360,6 +13374,23 @@ public fun `derivePubkySecretKey`(`seed`: kotlin.ByteArray): kotlin.String {
     return FfiConverterString.lift(uniffiRustCallWithError(PubkyExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_derive_pubky_secret_key(
             FfiConverterByteArray.lower(`seed`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Derive a stable, cross-platform `wallet_id` for a hardware (watch-only) wallet
+ * from its account extended public keys. See `derive_wallet_id` in the activity
+ * module for the exact derivation. Order of `xpubs` does not matter. Returns an
+ * error if `device_type` is blank or `xpubs` is empty / has a blank entry.
+ */
+@Throws(ActivityException::class)
+public fun `deriveWalletId`(`deviceType`: kotlin.String, `xpubs`: List<kotlin.String>): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_derive_wallet_id(
+            FfiConverterString.lower(`deviceType`),
+            FfiConverterSequenceString.lower(`xpubs`),
             uniffiRustCallStatus,
         )
     })

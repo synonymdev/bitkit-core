@@ -6437,7 +6437,7 @@ mod tests {
                 "xpubB".to_string(),
             ],
         );
-        assert_eq!(a, b);
+        assert_eq!(a.unwrap(), b.unwrap());
     }
 
     #[test]
@@ -6445,8 +6445,8 @@ mod tests {
         use crate::activity::derive_wallet_id;
 
         let xpubs = vec!["xpubA".to_string(), "xpubB".to_string()];
-        let trezor = derive_wallet_id("trezor".to_string(), xpubs.clone());
-        let ledger = derive_wallet_id("ledger".to_string(), xpubs);
+        let trezor = derive_wallet_id("trezor".to_string(), xpubs.clone()).unwrap();
+        let ledger = derive_wallet_id("ledger".to_string(), xpubs).unwrap();
 
         assert_ne!(trezor, ledger);
         assert!(trezor.starts_with("trezor:"));
@@ -6463,17 +6463,20 @@ mod tests {
         let id = derive_wallet_id(
             "trezor".to_string(),
             vec!["xpubB".to_string(), "xpubA".to_string()],
-        );
+        )
+        .unwrap();
         assert_eq!(id, format!("trezor:{}", expected_hash));
     }
 
     #[test]
-    fn test_derive_wallet_id_empty_xpubs() {
+    fn test_derive_wallet_id_rejects_empty_and_blank_input() {
         use crate::activity::derive_wallet_id;
-        use bitcoin::hashes::{sha256, Hash};
 
-        let expected_hash = hex::encode(sha256::Hash::hash(b"").to_byte_array());
-        let id = derive_wallet_id("trezor".to_string(), vec![]);
-        assert_eq!(id, format!("trezor:{}", expected_hash));
+        // Empty xpubs must not collapse every device of a type into one id.
+        assert!(derive_wallet_id("trezor".to_string(), vec![]).is_err());
+        // Blank entries are rejected too.
+        assert!(derive_wallet_id("trezor".to_string(), vec!["".to_string()]).is_err());
+        // Blank device_type is rejected.
+        assert!(derive_wallet_id("".to_string(), vec!["xpubA".to_string()]).is_err());
     }
 }
