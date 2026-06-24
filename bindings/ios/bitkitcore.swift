@@ -3653,6 +3653,10 @@ public struct HistoryTransaction {
      */
     public var fee: UInt64?
     /**
+     * Fee rate in sats per virtual byte (None if fee or tx size is unavailable).
+     */
+    public var feeRate: Double?
+    /**
      * Display amount in sats:
      * - Received: the received value
      * - Sent: amount that left the wallet (sent - received - fee)
@@ -3695,6 +3699,9 @@ public struct HistoryTransaction {
          * Transaction fee in sats (None if not available, e.g. for received-only txs)
          */fee: UInt64?, 
         /**
+         * Fee rate in sats per virtual byte (None if fee or tx size is unavailable).
+         */feeRate: Double?, 
+        /**
          * Display amount in sats:
          * - Received: the received value
          * - Sent: amount that left the wallet (sent - received - fee)
@@ -3717,6 +3724,7 @@ public struct HistoryTransaction {
         self.sent = sent
         self.net = net
         self.fee = fee
+        self.feeRate = feeRate
         self.amount = amount
         self.direction = direction
         self.blockHeight = blockHeight
@@ -3747,6 +3755,9 @@ extension HistoryTransaction: Equatable, Hashable {
         if lhs.fee != rhs.fee {
             return false
         }
+        if lhs.feeRate != rhs.feeRate {
+            return false
+        }
         if lhs.amount != rhs.amount {
             return false
         }
@@ -3771,6 +3782,7 @@ extension HistoryTransaction: Equatable, Hashable {
         hasher.combine(sent)
         hasher.combine(net)
         hasher.combine(fee)
+        hasher.combine(feeRate)
         hasher.combine(amount)
         hasher.combine(direction)
         hasher.combine(blockHeight)
@@ -3795,6 +3807,7 @@ public struct FfiConverterTypeHistoryTransaction: FfiConverterRustBuffer {
                 sent: FfiConverterUInt64.read(from: &buf), 
                 net: FfiConverterInt64.read(from: &buf), 
                 fee: FfiConverterOptionUInt64.read(from: &buf), 
+                feeRate: FfiConverterOptionDouble.read(from: &buf), 
                 amount: FfiConverterUInt64.read(from: &buf), 
                 direction: FfiConverterTypeTxDirection.read(from: &buf), 
                 blockHeight: FfiConverterOptionUInt32.read(from: &buf), 
@@ -3809,6 +3822,7 @@ public struct FfiConverterTypeHistoryTransaction: FfiConverterRustBuffer {
         FfiConverterUInt64.write(value.sent, into: &buf)
         FfiConverterInt64.write(value.net, into: &buf)
         FfiConverterOptionUInt64.write(value.fee, into: &buf)
+        FfiConverterOptionDouble.write(value.feeRate, into: &buf)
         FfiConverterUInt64.write(value.amount, into: &buf)
         FfiConverterTypeTxDirection.write(value.direction, into: &buf)
         FfiConverterOptionUInt32.write(value.blockHeight, into: &buf)
@@ -13209,6 +13223,13 @@ public struct WatcherParams {
      */
     public var watcherId: String
     /**
+     * Wallet id that scopes the activities this watcher emits. One watcher
+     * watches one address type, so this stays at the address-type boundary —
+     * the same txid seen under two address types yields two wallet-scoped
+     * activities under different `wallet_id`s, not one merged activity.
+     */
+    public var walletId: String
+    /**
      * Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
      */
     public var extendedKey: String
@@ -13237,6 +13258,12 @@ public struct WatcherParams {
          * Caller-supplied identifier for this watcher.
          */watcherId: String, 
         /**
+         * Wallet id that scopes the activities this watcher emits. One watcher
+         * watches one address type, so this stays at the address-type boundary —
+         * the same txid seen under two address types yields two wallet-scoped
+         * activities under different `wallet_id`s, not one merged activity.
+         */walletId: String, 
+        /**
          * Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
          */extendedKey: String, 
         /**
@@ -13253,6 +13280,7 @@ public struct WatcherParams {
          * (defaults to `DEFAULT_GAP_LIMIT` when None).
          */gapLimit: UInt32?) {
         self.watcherId = watcherId
+        self.walletId = walletId
         self.extendedKey = extendedKey
         self.electrumUrl = electrumUrl
         self.network = network
@@ -13269,6 +13297,9 @@ extension WatcherParams: Sendable {}
 extension WatcherParams: Equatable, Hashable {
     public static func ==(lhs: WatcherParams, rhs: WatcherParams) -> Bool {
         if lhs.watcherId != rhs.watcherId {
+            return false
+        }
+        if lhs.walletId != rhs.walletId {
             return false
         }
         if lhs.extendedKey != rhs.extendedKey {
@@ -13291,6 +13322,7 @@ extension WatcherParams: Equatable, Hashable {
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(watcherId)
+        hasher.combine(walletId)
         hasher.combine(extendedKey)
         hasher.combine(electrumUrl)
         hasher.combine(network)
@@ -13311,6 +13343,7 @@ public struct FfiConverterTypeWatcherParams: FfiConverterRustBuffer {
         return
             try WatcherParams(
                 watcherId: FfiConverterString.read(from: &buf), 
+                walletId: FfiConverterString.read(from: &buf), 
                 extendedKey: FfiConverterString.read(from: &buf), 
                 electrumUrl: FfiConverterString.read(from: &buf), 
                 network: FfiConverterOptionTypeNetwork.read(from: &buf), 
@@ -13321,6 +13354,7 @@ public struct FfiConverterTypeWatcherParams: FfiConverterRustBuffer {
 
     public static func write(_ value: WatcherParams, into buf: inout [UInt8]) {
         FfiConverterString.write(value.watcherId, into: &buf)
+        FfiConverterString.write(value.walletId, into: &buf)
         FfiConverterString.write(value.extendedKey, into: &buf)
         FfiConverterString.write(value.electrumUrl, into: &buf)
         FfiConverterOptionTypeNetwork.write(value.network, into: &buf)
@@ -17929,8 +17963,14 @@ public enum WatcherEvent {
     
     /**
      * Transaction activity changed — contains full updated state.
+     *
+     * `activities` and `transaction_details` are persistence-ready: they carry
+     * the watcher's `wallet_id`, real decoded addresses, fees from the watched
+     * wallet's perspective, and DB-valid timestamps, so the app can store them
+     * directly through the normal Core activity APIs (e.g. `upsert_activity` /
+     * `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
      */
-    case transactionsChanged(transactions: [HistoryTransaction], balance: WalletBalance, txCount: UInt32, blockHeight: UInt32, accountType: AccountType
+    case transactionsChanged(activities: [Activity], transactionDetails: [TransactionDetails], balance: WalletBalance, txCount: UInt32, blockHeight: UInt32, accountType: AccountType
     )
     /**
      * An error occurred in the watcher loop.
@@ -17963,7 +18003,7 @@ public struct FfiConverterTypeWatcherEvent: FfiConverterRustBuffer {
         let variant: Int32 = try readInt(&buf)
         switch variant {
         
-        case 1: return .transactionsChanged(transactions: try FfiConverterSequenceTypeHistoryTransaction.read(from: &buf), balance: try FfiConverterTypeWalletBalance.read(from: &buf), txCount: try FfiConverterUInt32.read(from: &buf), blockHeight: try FfiConverterUInt32.read(from: &buf), accountType: try FfiConverterTypeAccountType.read(from: &buf)
+        case 1: return .transactionsChanged(activities: try FfiConverterSequenceTypeActivity.read(from: &buf), transactionDetails: try FfiConverterSequenceTypeTransactionDetails.read(from: &buf), balance: try FfiConverterTypeWalletBalance.read(from: &buf), txCount: try FfiConverterUInt32.read(from: &buf), blockHeight: try FfiConverterUInt32.read(from: &buf), accountType: try FfiConverterTypeAccountType.read(from: &buf)
         )
         
         case 2: return .error(message: try FfiConverterString.read(from: &buf)
@@ -17982,9 +18022,10 @@ public struct FfiConverterTypeWatcherEvent: FfiConverterRustBuffer {
         switch value {
         
         
-        case let .transactionsChanged(transactions,balance,txCount,blockHeight,accountType):
+        case let .transactionsChanged(activities,transactionDetails,balance,txCount,blockHeight,accountType):
             writeInt(&buf, Int32(1))
-            FfiConverterSequenceTypeHistoryTransaction.write(transactions, into: &buf)
+            FfiConverterSequenceTypeActivity.write(activities, into: &buf)
+            FfiConverterSequenceTypeTransactionDetails.write(transactionDetails, into: &buf)
             FfiConverterTypeWalletBalance.write(balance, into: &buf)
             FfiConverterUInt32.write(txCount, into: &buf)
             FfiConverterUInt32.write(blockHeight, into: &buf)

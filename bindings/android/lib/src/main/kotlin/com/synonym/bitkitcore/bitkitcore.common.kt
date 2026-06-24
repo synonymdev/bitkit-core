@@ -665,6 +665,10 @@ public data class HistoryTransaction (
      */
     val `fee`: kotlin.ULong?, 
     /**
+     * Fee rate in sats per virtual byte (None if fee or tx size is unavailable).
+     */
+    val `feeRate`: kotlin.Double?, 
+    /**
      * Display amount in sats:
      * - Received: the received value
      * - Sent: amount that left the wallet (sent - received - fee)
@@ -2568,6 +2572,13 @@ public data class WatcherParams (
      */
     val `watcherId`: kotlin.String, 
     /**
+     * Wallet id that scopes the activities this watcher emits. One watcher
+     * watches one address type, so this stays at the address-type boundary —
+     * the same txid seen under two address types yields two wallet-scoped
+     * activities under different `wallet_id`s, not one merged activity.
+     */
+    val `walletId`: kotlin.String, 
+    /**
      * Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
      */
     val `extendedKey`: kotlin.String, 
@@ -4184,9 +4195,16 @@ public sealed class WatcherEvent {
     
     /**
      * Transaction activity changed — contains full updated state.
+     *
+     * `activities` and `transaction_details` are persistence-ready: they carry
+     * the watcher's `wallet_id`, real decoded addresses, fees from the watched
+     * wallet's perspective, and DB-valid timestamps, so the app can store them
+     * directly through the normal Core activity APIs (e.g. `upsert_activity` /
+     * `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
      */@kotlinx.serialization.Serializable
     public data class TransactionsChanged(
-        val `transactions`: List<HistoryTransaction>,
+        val `activities`: List<Activity>,
+        val `transactionDetails`: List<TransactionDetails>,
         val `balance`: WalletBalance,
         val `txCount`: kotlin.UInt,
         val `blockHeight`: kotlin.UInt,

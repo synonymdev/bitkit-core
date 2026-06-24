@@ -3961,6 +3961,11 @@ class HistoryTransaction:
     Transaction fee in sats (None if not available, e.g. for received-only txs)
     """
 
+    fee_rate: "typing.Optional[float]"
+    """
+    Fee rate in sats per virtual byte (None if fee or tx size is unavailable).
+    """
+
     amount: "int"
     """
     Display amount in sats:
@@ -3989,12 +3994,13 @@ class HistoryTransaction:
     Number of confirmations (0 if unconfirmed)
     """
 
-    def __init__(self, *, txid: "str", received: "int", sent: "int", net: "int", fee: "typing.Optional[int]", amount: "int", direction: "TxDirection", block_height: "typing.Optional[int]", timestamp: "typing.Optional[int]", confirmations: "int"):
+    def __init__(self, *, txid: "str", received: "int", sent: "int", net: "int", fee: "typing.Optional[int]", fee_rate: "typing.Optional[float]", amount: "int", direction: "TxDirection", block_height: "typing.Optional[int]", timestamp: "typing.Optional[int]", confirmations: "int"):
         self.txid = txid
         self.received = received
         self.sent = sent
         self.net = net
         self.fee = fee
+        self.fee_rate = fee_rate
         self.amount = amount
         self.direction = direction
         self.block_height = block_height
@@ -4002,7 +4008,7 @@ class HistoryTransaction:
         self.confirmations = confirmations
 
     def __str__(self):
-        return "HistoryTransaction(txid={}, received={}, sent={}, net={}, fee={}, amount={}, direction={}, block_height={}, timestamp={}, confirmations={})".format(self.txid, self.received, self.sent, self.net, self.fee, self.amount, self.direction, self.block_height, self.timestamp, self.confirmations)
+        return "HistoryTransaction(txid={}, received={}, sent={}, net={}, fee={}, fee_rate={}, amount={}, direction={}, block_height={}, timestamp={}, confirmations={})".format(self.txid, self.received, self.sent, self.net, self.fee, self.fee_rate, self.amount, self.direction, self.block_height, self.timestamp, self.confirmations)
 
     def __eq__(self, other):
         if self.txid != other.txid:
@@ -4014,6 +4020,8 @@ class HistoryTransaction:
         if self.net != other.net:
             return False
         if self.fee != other.fee:
+            return False
+        if self.fee_rate != other.fee_rate:
             return False
         if self.amount != other.amount:
             return False
@@ -4036,6 +4044,7 @@ class _UniffiConverterTypeHistoryTransaction(_UniffiConverterRustBuffer):
             sent=_UniffiConverterUInt64.read(buf),
             net=_UniffiConverterInt64.read(buf),
             fee=_UniffiConverterOptionalUInt64.read(buf),
+            fee_rate=_UniffiConverterOptionalDouble.read(buf),
             amount=_UniffiConverterUInt64.read(buf),
             direction=_UniffiConverterTypeTxDirection.read(buf),
             block_height=_UniffiConverterOptionalUInt32.read(buf),
@@ -4050,6 +4059,7 @@ class _UniffiConverterTypeHistoryTransaction(_UniffiConverterRustBuffer):
         _UniffiConverterUInt64.check_lower(value.sent)
         _UniffiConverterInt64.check_lower(value.net)
         _UniffiConverterOptionalUInt64.check_lower(value.fee)
+        _UniffiConverterOptionalDouble.check_lower(value.fee_rate)
         _UniffiConverterUInt64.check_lower(value.amount)
         _UniffiConverterTypeTxDirection.check_lower(value.direction)
         _UniffiConverterOptionalUInt32.check_lower(value.block_height)
@@ -4063,6 +4073,7 @@ class _UniffiConverterTypeHistoryTransaction(_UniffiConverterRustBuffer):
         _UniffiConverterUInt64.write(value.sent, buf)
         _UniffiConverterInt64.write(value.net, buf)
         _UniffiConverterOptionalUInt64.write(value.fee, buf)
+        _UniffiConverterOptionalDouble.write(value.fee_rate, buf)
         _UniffiConverterUInt64.write(value.amount, buf)
         _UniffiConverterTypeTxDirection.write(value.direction, buf)
         _UniffiConverterOptionalUInt32.write(value.block_height, buf)
@@ -10049,6 +10060,14 @@ class WatcherParams:
     Caller-supplied identifier for this watcher.
     """
 
+    wallet_id: "str"
+    """
+    Wallet id that scopes the activities this watcher emits. One watcher
+    watches one address type, so this stays at the address-type boundary —
+    the same txid seen under two address types yields two wallet-scoped
+    activities under different `wallet_id`s, not one merged activity.
+    """
+
     extended_key: "str"
     """
     Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
@@ -10075,8 +10094,9 @@ class WatcherParams:
     (defaults to `DEFAULT_GAP_LIMIT` when None).
     """
 
-    def __init__(self, *, watcher_id: "str", extended_key: "str", electrum_url: "str", network: "typing.Optional[Network]", account_type: "typing.Optional[AccountType]", gap_limit: "typing.Optional[int]"):
+    def __init__(self, *, watcher_id: "str", wallet_id: "str", extended_key: "str", electrum_url: "str", network: "typing.Optional[Network]", account_type: "typing.Optional[AccountType]", gap_limit: "typing.Optional[int]"):
         self.watcher_id = watcher_id
+        self.wallet_id = wallet_id
         self.extended_key = extended_key
         self.electrum_url = electrum_url
         self.network = network
@@ -10084,10 +10104,12 @@ class WatcherParams:
         self.gap_limit = gap_limit
 
     def __str__(self):
-        return "WatcherParams(watcher_id={}, extended_key={}, electrum_url={}, network={}, account_type={}, gap_limit={})".format(self.watcher_id, self.extended_key, self.electrum_url, self.network, self.account_type, self.gap_limit)
+        return "WatcherParams(watcher_id={}, wallet_id={}, extended_key={}, electrum_url={}, network={}, account_type={}, gap_limit={})".format(self.watcher_id, self.wallet_id, self.extended_key, self.electrum_url, self.network, self.account_type, self.gap_limit)
 
     def __eq__(self, other):
         if self.watcher_id != other.watcher_id:
+            return False
+        if self.wallet_id != other.wallet_id:
             return False
         if self.extended_key != other.extended_key:
             return False
@@ -10106,6 +10128,7 @@ class _UniffiConverterTypeWatcherParams(_UniffiConverterRustBuffer):
     def read(buf):
         return WatcherParams(
             watcher_id=_UniffiConverterString.read(buf),
+            wallet_id=_UniffiConverterString.read(buf),
             extended_key=_UniffiConverterString.read(buf),
             electrum_url=_UniffiConverterString.read(buf),
             network=_UniffiConverterOptionalTypeNetwork.read(buf),
@@ -10116,6 +10139,7 @@ class _UniffiConverterTypeWatcherParams(_UniffiConverterRustBuffer):
     @staticmethod
     def check_lower(value):
         _UniffiConverterString.check_lower(value.watcher_id)
+        _UniffiConverterString.check_lower(value.wallet_id)
         _UniffiConverterString.check_lower(value.extended_key)
         _UniffiConverterString.check_lower(value.electrum_url)
         _UniffiConverterOptionalTypeNetwork.check_lower(value.network)
@@ -10125,6 +10149,7 @@ class _UniffiConverterTypeWatcherParams(_UniffiConverterRustBuffer):
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.watcher_id, buf)
+        _UniffiConverterString.write(value.wallet_id, buf)
         _UniffiConverterString.write(value.extended_key, buf)
         _UniffiConverterString.write(value.electrum_url, buf)
         _UniffiConverterOptionalTypeNetwork.write(value.network, buf)
@@ -14851,28 +14876,38 @@ class WatcherEvent:
     class TRANSACTIONS_CHANGED:
         """
         Transaction activity changed — contains full updated state.
+
+        `activities` and `transaction_details` are persistence-ready: they carry
+        the watcher's `wallet_id`, real decoded addresses, fees from the watched
+        wallet's perspective, and DB-valid timestamps, so the app can store them
+        directly through the normal Core activity APIs (e.g. `upsert_activity` /
+        `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
         """
 
-        transactions: "typing.List[HistoryTransaction]"
+        activities: "typing.List[Activity]"
+        transaction_details: "typing.List[TransactionDetails]"
         balance: "WalletBalance"
         tx_count: "int"
         block_height: "int"
         account_type: "AccountType"
 
-        def __init__(self,transactions: "typing.List[HistoryTransaction]", balance: "WalletBalance", tx_count: "int", block_height: "int", account_type: "AccountType"):
-            self.transactions = transactions
+        def __init__(self,activities: "typing.List[Activity]", transaction_details: "typing.List[TransactionDetails]", balance: "WalletBalance", tx_count: "int", block_height: "int", account_type: "AccountType"):
+            self.activities = activities
+            self.transaction_details = transaction_details
             self.balance = balance
             self.tx_count = tx_count
             self.block_height = block_height
             self.account_type = account_type
 
         def __str__(self):
-            return "WatcherEvent.TRANSACTIONS_CHANGED(transactions={}, balance={}, tx_count={}, block_height={}, account_type={})".format(self.transactions, self.balance, self.tx_count, self.block_height, self.account_type)
+            return "WatcherEvent.TRANSACTIONS_CHANGED(activities={}, transaction_details={}, balance={}, tx_count={}, block_height={}, account_type={})".format(self.activities, self.transaction_details, self.balance, self.tx_count, self.block_height, self.account_type)
 
         def __eq__(self, other):
             if not other.is_TRANSACTIONS_CHANGED():
                 return False
-            if self.transactions != other.transactions:
+            if self.activities != other.activities:
+                return False
+            if self.transaction_details != other.transaction_details:
                 return False
             if self.balance != other.balance:
                 return False
@@ -14980,7 +15015,8 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
         variant = buf.read_i32()
         if variant == 1:
             return WatcherEvent.TRANSACTIONS_CHANGED(
-                _UniffiConverterSequenceTypeHistoryTransaction.read(buf),
+                _UniffiConverterSequenceTypeActivity.read(buf),
+                _UniffiConverterSequenceTypeTransactionDetails.read(buf),
                 _UniffiConverterTypeWalletBalance.read(buf),
                 _UniffiConverterUInt32.read(buf),
                 _UniffiConverterUInt32.read(buf),
@@ -15002,7 +15038,8 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
     @staticmethod
     def check_lower(value):
         if value.is_TRANSACTIONS_CHANGED():
-            _UniffiConverterSequenceTypeHistoryTransaction.check_lower(value.transactions)
+            _UniffiConverterSequenceTypeActivity.check_lower(value.activities)
+            _UniffiConverterSequenceTypeTransactionDetails.check_lower(value.transaction_details)
             _UniffiConverterTypeWalletBalance.check_lower(value.balance)
             _UniffiConverterUInt32.check_lower(value.tx_count)
             _UniffiConverterUInt32.check_lower(value.block_height)
@@ -15022,7 +15059,8 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
     def write(value, buf):
         if value.is_TRANSACTIONS_CHANGED():
             buf.write_i32(1)
-            _UniffiConverterSequenceTypeHistoryTransaction.write(value.transactions, buf)
+            _UniffiConverterSequenceTypeActivity.write(value.activities, buf)
+            _UniffiConverterSequenceTypeTransactionDetails.write(value.transaction_details, buf)
             _UniffiConverterTypeWalletBalance.write(value.balance, buf)
             _UniffiConverterUInt32.write(value.tx_count, buf)
             _UniffiConverterUInt32.write(value.block_height, buf)
