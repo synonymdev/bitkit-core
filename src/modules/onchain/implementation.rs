@@ -35,7 +35,7 @@ use super::types::{
     AddressType, ComposeAccount, HistoryTransaction, LegacyRnCloseRecoveryScanResult,
     LegacyRnCloseRecoverySweepPreview, Network as OnchainNetwork, SingleAddressInfoResult,
     TransactionDetail, TransactionHistoryResult, TxDetailInput, TxDetailOutput, ValidationResult,
-    WalletBalance,
+    WalletBalance, DEFAULT_GAP_LIMIT,
 };
 use crate::modules::scanner::NetworkType;
 use crate::onchain::types::{
@@ -1446,7 +1446,7 @@ pub async fn get_account_info(
     script_type: Option<AccountType>,
 ) -> Result<AccountInfoResult, AccountInfoError> {
     let setup = resolve_wallet_setup(extended_key, network, script_type, None)?;
-    let gap = gap_limit.unwrap_or(20);
+    let gap = gap_limit.unwrap_or(DEFAULT_GAP_LIMIT);
     let base_path = setup.base_path.clone();
     let account_type = setup.account_type;
 

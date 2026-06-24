@@ -559,6 +559,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_default_gap_limit() != 24024:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_default_lsp_balance() != 35903:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_default_wallet_id() != 19552:
@@ -1367,6 +1369,10 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_default_gap_limit.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_default_gap_limit.restype = ctypes.c_uint32
 _UniffiLib.uniffi_bitkitcore_fn_func_get_default_lsp_balance.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -2273,6 +2279,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_cjit_entries.restype = ctypes.c_u
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_closed_channel_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_closed_channel_by_id.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_default_gap_limit.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_default_gap_limit.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_default_lsp_balance.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_default_lsp_balance.restype = ctypes.c_uint16
@@ -10062,7 +10071,8 @@ class WatcherParams:
 
     gap_limit: "typing.Optional[int]"
     """
-    Number of unused addresses to monitor beyond the last used (default 20).
+    Number of unused addresses to monitor beyond the last used
+    (defaults to `DEFAULT_GAP_LIMIT` when None).
     """
 
     def __init__(self, *, watcher_id: "str", extended_key: "str", electrum_url: "str", network: "typing.Optional[Network]", account_type: "typing.Optional[AccountType]", gap_limit: "typing.Optional[int]"):
@@ -19237,6 +19247,15 @@ def get_closed_channel_by_id(channel_id: "str") -> "typing.Optional[ClosedChanne
         _UniffiConverterString.lower(channel_id)))
 
 
+def get_default_gap_limit() -> "int":
+    """
+    The default address gap limit used by account scanning and the xpub watcher.
+    Exposed so platforms reference one source of truth instead of hardcoding 20.
+    """
+
+    return _UniffiConverterUInt32.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_get_default_gap_limit,))
+
+
 def get_default_lsp_balance(params: "DefaultLspBalanceParams") -> "int":
     _UniffiConverterTypeDefaultLspBalanceParams.check_lower(params)
     
@@ -21089,6 +21108,7 @@ __all__ = [
     "get_bip39_wordlist",
     "get_cjit_entries",
     "get_closed_channel_by_id",
+    "get_default_gap_limit",
     "get_default_lsp_balance",
     "get_default_wallet_id",
     "get_gift",

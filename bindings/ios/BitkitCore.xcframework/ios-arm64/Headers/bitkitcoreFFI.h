@@ -755,6 +755,12 @@ uint64_t uniffi_bitkitcore_fn_func_get_cjit_entries(RustBuffer entry_ids, RustBu
 RustBuffer uniffi_bitkitcore_fn_func_get_closed_channel_by_id(RustBuffer channel_id, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_GAP_LIMIT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_GAP_LIMIT
+uint32_t uniffi_bitkitcore_fn_func_get_default_gap_limit(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_LSP_BALANCE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_LSP_BALANCE
 uint64_t uniffi_bitkitcore_fn_func_get_default_lsp_balance(RustBuffer params, RustCallStatus *_Nonnull out_status
@@ -1833,6 +1839,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_cjit_entries(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CLOSED_CHANNEL_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CLOSED_CHANNEL_BY_ID
 uint16_t uniffi_bitkitcore_checksum_func_get_closed_channel_by_id(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_GAP_LIMIT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_GAP_LIMIT
+uint16_t uniffi_bitkitcore_checksum_func_get_default_gap_limit(void
     
 );
 #endif
