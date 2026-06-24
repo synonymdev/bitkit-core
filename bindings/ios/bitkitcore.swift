@@ -13246,7 +13246,8 @@ public struct WatcherParams {
      */
     public var accountType: AccountType?
     /**
-     * Number of unused addresses to monitor beyond the last used (default 20).
+     * Number of unused addresses to monitor beyond the last used
+     * (defaults to `DEFAULT_GAP_LIMIT` when None).
      */
     public var gapLimit: UInt32?
 
@@ -13275,7 +13276,8 @@ public struct WatcherParams {
          * Account type override (auto-detected from key prefix if None).
          */accountType: AccountType?, 
         /**
-         * Number of unused addresses to monitor beyond the last used (default 20).
+         * Number of unused addresses to monitor beyond the last used
+         * (defaults to `DEFAULT_GAP_LIMIT` when None).
          */gapLimit: UInt32?) {
         self.watcherId = watcherId
         self.walletId = walletId
@@ -20492,6 +20494,20 @@ public func derivePubkySecretKey(seed: Data)throws  -> String  {
     )
 })
 }
+/**
+ * Derive a stable, cross-platform `wallet_id` for a hardware (watch-only) wallet
+ * from its account extended public keys. See `derive_wallet_id` in the activity
+ * module for the exact derivation. Order of `xpubs` does not matter. Returns an
+ * error if `device_type` is blank or `xpubs` is empty / has a blank entry.
+ */
+public func deriveWalletId(deviceType: String, xpubs: [String])throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_derive_wallet_id(
+        FfiConverterString.lower(deviceType),
+        FfiConverterSequenceString.lower(xpubs),$0
+    )
+})
+}
 public func entropyToMnemonic(entropy: Data)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeAddressError_lift) {
     uniffi_bitkitcore_fn_func_entropy_to_mnemonic(
@@ -20694,6 +20710,16 @@ public func getClosedChannelById(channelId: String)throws  -> ClosedChannelDetai
     return try  FfiConverterOptionTypeClosedChannelDetails.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_closed_channel_by_id(
         FfiConverterString.lower(channelId),$0
+    )
+})
+}
+/**
+ * The default address gap limit used by account scanning and the xpub watcher.
+ * Exposed so platforms reference one source of truth instead of hardcoding 20.
+ */
+public func getDefaultGapLimit() -> UInt32  {
+    return try!  FfiConverterUInt32.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_get_default_gap_limit($0
     )
 })
 }
@@ -22039,6 +22065,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_derive_pubky_secret_key() != 36989) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_derive_wallet_id() != 30111) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -22100,6 +22129,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_default_gap_limit() != 24024) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_default_lsp_balance() != 35903) {

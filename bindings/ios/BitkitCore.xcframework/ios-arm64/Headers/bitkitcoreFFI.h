@@ -640,6 +640,11 @@ RustBuffer uniffi_bitkitcore_fn_func_derive_private_key(RustBuffer mnemonic_phra
 RustBuffer uniffi_bitkitcore_fn_func_derive_pubky_secret_key(RustBuffer seed, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_WALLET_ID
+RustBuffer uniffi_bitkitcore_fn_func_derive_wallet_id(RustBuffer device_type, RustBuffer xpubs, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ENTROPY_TO_MNEMONIC
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ENTROPY_TO_MNEMONIC
 RustBuffer uniffi_bitkitcore_fn_func_entropy_to_mnemonic(RustBuffer entropy, RustCallStatus *_Nonnull out_status
@@ -748,6 +753,12 @@ uint64_t uniffi_bitkitcore_fn_func_get_cjit_entries(RustBuffer entry_ids, RustBu
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_CLOSED_CHANNEL_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_CLOSED_CHANNEL_BY_ID
 RustBuffer uniffi_bitkitcore_fn_func_get_closed_channel_by_id(RustBuffer channel_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_GAP_LIMIT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_GAP_LIMIT
+uint32_t uniffi_bitkitcore_fn_func_get_default_gap_limit(RustCallStatus *_Nonnull out_status
+    
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_LSP_BALANCE
@@ -1699,6 +1710,12 @@ uint16_t uniffi_bitkitcore_checksum_func_derive_pubky_secret_key(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_WALLET_ID
+uint16_t uniffi_bitkitcore_checksum_func_derive_wallet_id(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ENTROPY_TO_MNEMONIC
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ENTROPY_TO_MNEMONIC
 uint16_t uniffi_bitkitcore_checksum_func_entropy_to_mnemonic(void
@@ -1822,6 +1839,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_cjit_entries(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CLOSED_CHANNEL_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_CLOSED_CHANNEL_BY_ID
 uint16_t uniffi_bitkitcore_checksum_func_get_closed_channel_by_id(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_GAP_LIMIT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_GAP_LIMIT
+uint16_t uniffi_bitkitcore_checksum_func_get_default_gap_limit(void
     
 );
 #endif

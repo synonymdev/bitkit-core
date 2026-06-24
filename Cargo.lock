@@ -475,7 +475,7 @@ dependencies = [
 
 [[package]]
 name = "bitkitcore"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "android_logger",
  "async-trait",

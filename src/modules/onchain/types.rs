@@ -8,6 +8,14 @@ use bitcoin_address_generator::{
 use serde::{Deserialize, Serialize};
 use uniffi::{Enum, Record};
 
+/// Default address gap limit: the number of consecutive unused addresses to scan
+/// past the last used one before concluding a wallet branch is exhausted.
+///
+/// 20 is the BIP44 standard and also BDK's hardcoded Electrum stop-gap floor, so
+/// this is the smallest value the watcher will effectively use. Exposed so callers
+/// (and the mobile bindings) reference one source of truth instead of hardcoding 20.
+pub const DEFAULT_GAP_LIMIT: u32 = 20;
+
 #[derive(Debug, Clone, Copy, Enum)]
 pub enum WordCount {
     /// 12-word mnemonic (128 bits of entropy)

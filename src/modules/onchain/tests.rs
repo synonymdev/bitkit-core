@@ -2629,4 +2629,11 @@ mod tests {
             assert_eq!(details.amount_sats, -59_500);
         }
     }
+
+    #[test]
+    fn default_gap_limit_is_twenty() {
+        use crate::onchain::DEFAULT_GAP_LIMIT;
+        assert_eq!(DEFAULT_GAP_LIMIT, 20);
+        assert_eq!(crate::get_default_gap_limit(), DEFAULT_GAP_LIMIT);
+    }
 }

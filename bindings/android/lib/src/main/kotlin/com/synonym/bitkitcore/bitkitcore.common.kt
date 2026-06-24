@@ -2595,7 +2595,8 @@ public data class WatcherParams (
      */
     val `accountType`: AccountType?, 
     /**
-     * Number of unused addresses to monitor beyond the last used (default 20).
+     * Number of unused addresses to monitor beyond the last used
+     * (defaults to `DEFAULT_GAP_LIMIT` when None).
      */
     val `gapLimit`: kotlin.UInt?
 ) {

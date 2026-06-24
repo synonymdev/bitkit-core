@@ -1486,6 +1486,10 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1606,6 +1610,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_derive_pubky_secret_key() != 36989.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_derive_wallet_id() != 30111.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1667,6 +1674,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_get_default_gap_limit() != 24024.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_default_lsp_balance() != 35903.toShort()) {
@@ -2090,6 +2100,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_derive_pubky_secret_key(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_derive_wallet_id(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_entropy_to_mnemonic(
     ): Short
     @JvmStatic
@@ -2151,6 +2164,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_closed_channel_by_id(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_default_gap_limit(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_default_lsp_balance(
@@ -2802,6 +2818,12 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_derive_wallet_id(
+        `deviceType`: RustBufferByValue,
+        `xpubs`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_entropy_to_mnemonic(
         `entropy`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
@@ -2914,6 +2936,10 @@ internal object UniffiLib : Library {
         `channelId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_default_gap_limit(
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_default_lsp_balance(
         `params`: RustBufferByValue,
@@ -13374,6 +13400,23 @@ public fun `derivePubkySecretKey`(`seed`: kotlin.ByteArray): kotlin.String {
     })
 }
 
+/**
+ * Derive a stable, cross-platform `wallet_id` for a hardware (watch-only) wallet
+ * from its account extended public keys. See `derive_wallet_id` in the activity
+ * module for the exact derivation. Order of `xpubs` does not matter. Returns an
+ * error if `device_type` is blank or `xpubs` is empty / has a blank entry.
+ */
+@Throws(ActivityException::class)
+public fun `deriveWalletId`(`deviceType`: kotlin.String, `xpubs`: List<kotlin.String>): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_derive_wallet_id(
+            FfiConverterString.lower(`deviceType`),
+            FfiConverterSequenceString.lower(`xpubs`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
 @Throws(AddressException::class)
 public fun `entropyToMnemonic`(`entropy`: kotlin.ByteArray): kotlin.String {
     return FfiConverterString.lift(uniffiRustCallWithError(AddressExceptionErrorHandler) { uniffiRustCallStatus ->
@@ -13641,6 +13684,18 @@ public fun `getClosedChannelById`(`channelId`: kotlin.String): ClosedChannelDeta
     return FfiConverterOptionalTypeClosedChannelDetails.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id(
             FfiConverterString.lower(`channelId`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * The default address gap limit used by account scanning and the xpub watcher.
+ * Exposed so platforms reference one source of truth instead of hardcoding 20.
+ */
+public fun `getDefaultGapLimit`(): kotlin.UInt {
+    return FfiConverterUInt.lift(uniffiRustCall { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_get_default_gap_limit(
             uniffiRustCallStatus,
         )
     })

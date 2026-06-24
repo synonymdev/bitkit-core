@@ -19,7 +19,7 @@ pub use types::{
     LegacyRnCloseRecoverySweepPreview, Network, SingleAddressInfoResult, SweepResult,
     SweepTransactionPreview, SweepableBalances, TransactionDetail, TransactionHistoryResult,
     TxDetailInput, TxDetailOutput, TxDirection, ValidationResult, WalletBalance, WalletParams,
-    WatcherEvent, WordCount,
+    WatcherEvent, WordCount, DEFAULT_GAP_LIMIT,
 };
 
 #[cfg(test)]
