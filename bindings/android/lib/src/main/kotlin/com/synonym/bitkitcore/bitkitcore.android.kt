@@ -1480,6 +1480,8 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1670,6 +1672,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data() != 50807.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee() != 6427.toShort()) {
@@ -2145,6 +2150,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_lnurl_invoice(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee(
@@ -2893,6 +2901,12 @@ internal object UniffiLib : Library {
     external fun uniffi_bitkitcore_fn_func_get_lnurl_invoice(
         `address`: RustBufferByValue,
         `amountSatoshis`: Long,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_lnurl_invoice_for_pay_data(
+        `data`: RustBufferByValue,
+        `amountMsats`: Long,
+        `comment`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_min_zero_conf_tx_fee(
@@ -9520,7 +9534,12 @@ public object FfiConverterTypeLnurlError : FfiConverterRustBuffer<LnurlException
             6 -> LnurlException.InvoiceCreationFailed(
                 FfiConverterString.read(buf),
                 )
-            7 -> LnurlException.AuthenticationFailed()
+            7 -> LnurlException.AmountMismatch(
+                FfiConverterULong.read(buf),
+                FfiConverterULong.read(buf),
+                )
+            8 -> LnurlException.MetadataMismatch()
+            9 -> LnurlException.AuthenticationFailed()
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
@@ -9554,6 +9573,16 @@ public object FfiConverterTypeLnurlError : FfiConverterRustBuffer<LnurlException
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
                 + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is LnurlException.AmountMismatch -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterULong.allocationSize(value.`requestedMsats`)
+                + FfiConverterULong.allocationSize(value.`invoiceMsats`)
+            )
+            is LnurlException.MetadataMismatch -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
             )
             is LnurlException.AuthenticationFailed -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
@@ -9592,8 +9621,18 @@ public object FfiConverterTypeLnurlError : FfiConverterRustBuffer<LnurlException
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is LnurlException.AuthenticationFailed -> {
+            is LnurlException.AmountMismatch -> {
                 buf.putInt(7)
+                FfiConverterULong.write(value.`requestedMsats`, buf)
+                FfiConverterULong.write(value.`invoiceMsats`, buf)
+                Unit
+            }
+            is LnurlException.MetadataMismatch -> {
+                buf.putInt(8)
+                Unit
+            }
+            is LnurlException.AuthenticationFailed -> {
+                buf.putInt(9)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -13532,6 +13571,25 @@ public suspend fun `getLnurlInvoice`(`address`: kotlin.String, `amountSatoshis`:
         UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice(
             FfiConverterString.lower(`address`),
             FfiConverterULong.lower(`amountSatoshis`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
+        // Error FFI converter
+        LnurlExceptionErrorHandler,
+    )
+}
+
+@Throws(LnurlException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `getLnurlInvoiceForPayData`(`data`: LnurlPayData, `amountMsats`: kotlin.ULong, `comment`: kotlin.String?): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice_for_pay_data(
+            FfiConverterTypeLnurlPayData.lower(`data`),
+            FfiConverterULong.lower(`amountMsats`),
+            FfiConverterOptionalString.lower(`comment`),
         ),
         { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
         { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },

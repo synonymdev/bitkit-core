@@ -765,6 +765,11 @@ uint64_t uniffi_bitkitcore_fn_func_get_info(RustBuffer refresh
 uint64_t uniffi_bitkitcore_fn_func_get_lnurl_invoice(RustBuffer address, uint64_t amount_satoshis
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_LNURL_INVOICE_FOR_PAY_DATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_LNURL_INVOICE_FOR_PAY_DATA
+uint64_t uniffi_bitkitcore_fn_func_get_lnurl_invoice_for_pay_data(RustBuffer data, uint64_t amount_msats, RustBuffer comment
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_MIN_ZERO_CONF_TX_FEE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_MIN_ZERO_CONF_TX_FEE
 uint64_t uniffi_bitkitcore_fn_func_get_min_zero_conf_tx_fee(RustBuffer order_id
@@ -1824,6 +1829,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_info(void
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_LNURL_INVOICE
 uint16_t uniffi_bitkitcore_checksum_func_get_lnurl_invoice(void
     
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_LNURL_INVOICE_FOR_PAY_DATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_LNURL_INVOICE_FOR_PAY_DATA
+uint16_t uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data(void
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_MIN_ZERO_CONF_TX_FEE

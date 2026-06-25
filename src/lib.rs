@@ -61,7 +61,7 @@ use crate::onchain::{
 pub use modules::activity;
 pub use modules::lnurl;
 pub use modules::onchain;
-pub use modules::scanner::{DecodingError, Scanner};
+pub use modules::scanner::{DecodingError, LnurlPayData, Scanner};
 
 use bip39::Mnemonic;
 use bitcoin::bip32::Xpriv;
@@ -113,6 +113,20 @@ pub async fn get_lnurl_invoice(
     rt.spawn(async move { lnurl::get_lnurl_invoice(&address, amount_satoshis).await })
         .await
         .unwrap()
+}
+
+#[uniffi::export]
+pub async fn get_lnurl_invoice_for_pay_data(
+    data: LnurlPayData,
+    amount_msats: u64,
+    comment: Option<String>,
+) -> Result<String, lnurl::LnurlError> {
+    let rt = ensure_runtime();
+    rt.spawn(
+        async move { lnurl::get_lnurl_invoice_for_pay_data(data, amount_msats, comment).await },
+    )
+    .await
+    .unwrap()
 }
 
 #[uniffi::export]

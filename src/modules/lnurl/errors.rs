@@ -19,6 +19,13 @@ pub enum LnurlError {
     },
     #[error("Failed to generate invoice: {error_details}")]
     InvoiceCreationFailed { error_details: String },
+    #[error("Invoice amount mismatch")]
+    AmountMismatch {
+        requested_msats: u64,
+        invoice_msats: u64,
+    },
+    #[error("Invoice metadata mismatch")]
+    MetadataMismatch,
     #[error("LNURL authentication failed")]
     AuthenticationFailed,
 }

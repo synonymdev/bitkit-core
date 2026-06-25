@@ -15772,6 +15772,9 @@ public enum LnurlError: Swift.Error {
     )
     case InvoiceCreationFailed(errorDetails: String
     )
+    case AmountMismatch(requestedMsats: UInt64, invoiceMsats: UInt64
+    )
+    case MetadataMismatch
     case AuthenticationFailed
 }
 
@@ -15801,7 +15804,12 @@ public struct FfiConverterTypeLnurlError: FfiConverterRustBuffer {
         case 6: return .InvoiceCreationFailed(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 7: return .AuthenticationFailed
+        case 7: return .AmountMismatch(
+            requestedMsats: try FfiConverterUInt64.read(from: &buf),
+            invoiceMsats: try FfiConverterUInt64.read(from: &buf)
+            )
+        case 8: return .MetadataMismatch
+        case 9: return .AuthenticationFailed
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -15842,8 +15850,18 @@ public struct FfiConverterTypeLnurlError: FfiConverterRustBuffer {
             FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case .AuthenticationFailed:
+        case let .AmountMismatch(requestedMsats,invoiceMsats):
             writeInt(&buf, Int32(7))
+            FfiConverterUInt64.write(requestedMsats, into: &buf)
+            FfiConverterUInt64.write(invoiceMsats, into: &buf)
+
+
+        case .MetadataMismatch:
+            writeInt(&buf, Int32(8))
+
+
+        case .AuthenticationFailed:
+            writeInt(&buf, Int32(9))
         
         }
     }
@@ -20485,6 +20503,20 @@ public func getLnurlInvoice(address: String, amountSatoshis: UInt64)async throws
             errorHandler: FfiConverterTypeLnurlError_lift
         )
 }
+public func getLnurlInvoiceForPayData(data: LnurlPayData, amountMsats: UInt64, comment: String?)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_get_lnurl_invoice_for_pay_data(FfiConverterTypeLnurlPayData_lower(data),FfiConverterUInt64.lower(amountMsats),FfiConverterOptionString.lower(comment)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeLnurlError_lift
+        )
+}
 public func getMinZeroConfTxFee(orderId: String)async throws  -> IBt0ConfMinTxFeeWindow  {
     return
         try  await uniffiRustCallAsync(
@@ -21814,6 +21846,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data() != 50807) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee() != 6427) {
