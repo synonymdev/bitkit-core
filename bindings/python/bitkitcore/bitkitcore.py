@@ -579,6 +579,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 36542:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_tags() != 8596:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_transaction_details() != 4810:
@@ -1416,6 +1418,10 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_supported_hardware_wallets.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_supported_hardware_wallets.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -2309,6 +2315,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_payment.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_tags.restype = ctypes.c_uint16
@@ -7370,6 +7379,88 @@ class _UniffiConverterTypeSingleAddressInfoResult(_UniffiConverterRustBuffer):
         _UniffiConverterSequenceTypeAccountUtxo.write(value.utxos, buf)
         _UniffiConverterUInt32.write(value.transfers, buf)
         _UniffiConverterUInt32.write(value.block_height, buf)
+
+
+class SupportedHardwareWallet:
+    """
+    A hardware-wallet model Bitkit supports, with the transports it can connect over.
+
+    Owned by core so iOS and Android render the same catalog instead of each
+    hardcoding it. Platforms filter by `transports`: Android supports every model,
+    while iOS (Bluetooth-only) shows just the models whose `transports` include
+    `Bluetooth`. `model` is a stable key apps can map to their own bundled image.
+    """
+
+    vendor: "HardwareWalletVendor"
+    vendor_name: "str"
+    """
+    Human-readable vendor name, e.g. "Trezor".
+    """
+
+    model: "str"
+    """
+    Model identifier, e.g. "Safe 7".
+    """
+
+    display_name: "str"
+    """
+    Full display name, e.g. "Trezor Safe 7".
+    """
+
+    transports: "typing.List[TrezorTransportType]"
+    """
+    Transports this model can connect over.
+    """
+
+    def __init__(self, *, vendor: "HardwareWalletVendor", vendor_name: "str", model: "str", display_name: "str", transports: "typing.List[TrezorTransportType]"):
+        self.vendor = vendor
+        self.vendor_name = vendor_name
+        self.model = model
+        self.display_name = display_name
+        self.transports = transports
+
+    def __str__(self):
+        return "SupportedHardwareWallet(vendor={}, vendor_name={}, model={}, display_name={}, transports={})".format(self.vendor, self.vendor_name, self.model, self.display_name, self.transports)
+
+    def __eq__(self, other):
+        if self.vendor != other.vendor:
+            return False
+        if self.vendor_name != other.vendor_name:
+            return False
+        if self.model != other.model:
+            return False
+        if self.display_name != other.display_name:
+            return False
+        if self.transports != other.transports:
+            return False
+        return True
+
+class _UniffiConverterTypeSupportedHardwareWallet(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return SupportedHardwareWallet(
+            vendor=_UniffiConverterTypeHardwareWalletVendor.read(buf),
+            vendor_name=_UniffiConverterString.read(buf),
+            model=_UniffiConverterString.read(buf),
+            display_name=_UniffiConverterString.read(buf),
+            transports=_UniffiConverterSequenceTypeTrezorTransportType.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterTypeHardwareWalletVendor.check_lower(value.vendor)
+        _UniffiConverterString.check_lower(value.vendor_name)
+        _UniffiConverterString.check_lower(value.model)
+        _UniffiConverterString.check_lower(value.display_name)
+        _UniffiConverterSequenceTypeTrezorTransportType.check_lower(value.transports)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterTypeHardwareWalletVendor.write(value.vendor, buf)
+        _UniffiConverterString.write(value.vendor_name, buf)
+        _UniffiConverterString.write(value.model, buf)
+        _UniffiConverterString.write(value.display_name, buf)
+        _UniffiConverterSequenceTypeTrezorTransportType.write(value.transports, buf)
 
 
 class SweepResult:
@@ -12630,6 +12721,41 @@ class _UniffiConverterTypeDecodingError(_UniffiConverterRustBuffer):
             _UniffiConverterString.write(value.error_message, buf)
 
 
+
+
+
+class HardwareWalletVendor(enum.Enum):
+    """
+    A hardware-wallet vendor supported by Bitkit. Trezor only for now; this leaves
+    room to add other vendors without changing the catalog's shape.
+    """
+
+    TREZOR = 0
+    
+
+
+class _UniffiConverterTypeHardwareWalletVendor(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return HardwareWalletVendor.TREZOR
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == HardwareWalletVendor.TREZOR:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == HardwareWalletVendor.TREZOR:
+            buf.write_i32(1)
+
+
+
+
 # LnurlError
 # We want to define each variant as a nested class that's also a subclass,
 # which is tricky in Python.  To accomplish this we're going to create each
@@ -16906,6 +17032,31 @@ class _UniffiConverterSequenceTypePubkyProfileLink(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterSequenceTypeSupportedHardwareWallet(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeSupportedHardwareWallet.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeSupportedHardwareWallet.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeSupportedHardwareWallet.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypeTransactionDetails(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -17252,6 +17403,31 @@ class _UniffiConverterSequenceTypeComposeResult(_UniffiConverterRustBuffer):
 
         return [
             _UniffiConverterTypeComposeResult.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeTrezorTransportType(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeTrezorTransportType.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeTrezorTransportType.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeTrezorTransportType.read(buf) for i in range(count)
         ]
 
 
@@ -19429,6 +19605,17 @@ def get_pre_activity_metadata(wallet_id: "str",search_key: "str",search_by_addre
         _UniffiConverterBool.lower(search_by_address)))
 
 
+def get_supported_hardware_wallets() -> "typing.List[SupportedHardwareWallet]":
+    """
+    The catalog of hardware wallets Bitkit supports.
+
+    Trezor's full lineup; only the Safe 7 currently offers Bluetooth, so it is the
+    only model iOS surfaces (apps filter on `transports`).
+    """
+
+    return _UniffiConverterSequenceTypeSupportedHardwareWallet.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_get_supported_hardware_wallets,))
+
+
 def get_tags(wallet_id: "str",activity_id: "str") -> "typing.List[str]":
     _UniffiConverterString.check_lower(wallet_id)
     
@@ -20981,6 +21168,7 @@ __all__ = [
     "ComposeResult",
     "DbError",
     "DecodingError",
+    "HardwareWalletVendor",
     "LnurlError",
     "ManualRefundStateEnum",
     "Network",
@@ -21064,6 +21252,7 @@ __all__ = [
     "PubkyProfile",
     "PubkyProfileLink",
     "SingleAddressInfoResult",
+    "SupportedHardwareWallet",
     "SweepResult",
     "SweepTransactionPreview",
     "SweepableBalances",
@@ -21156,6 +21345,7 @@ __all__ = [
     "get_orders",
     "get_payment",
     "get_pre_activity_metadata",
+    "get_supported_hardware_wallets",
     "get_tags",
     "get_transaction_details",
     "gift_order",
