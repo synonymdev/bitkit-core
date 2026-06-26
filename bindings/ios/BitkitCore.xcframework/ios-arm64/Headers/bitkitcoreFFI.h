@@ -502,7 +502,7 @@ RustBuffer uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request(vo
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITY_WIPE_ALL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITY_WIPE_ALL
 void uniffi_bitkitcore_fn_func_activity_wipe_all(RustCallStatus *_Nonnull out_status
-    
+
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_PRE_ACTIVITY_METADATA
@@ -2479,4 +2479,3 @@ uint32_t ffi_bitkitcore_uniffi_contract_version(void
     
 );
 #endif
-

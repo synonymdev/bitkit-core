@@ -268,7 +268,7 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_lnurl_pay_invoice_metadata_hash_match() {
+    fn test_validate_lnurl_pay_invoice_matching_amount_with_hash_description() {
         let invoice = create_test_invoice(Some(TEST_AMOUNT_MSATS), TEST_METADATA, true);
 
         let result = validate_lnurl_pay_invoice(&invoice, TEST_AMOUNT_MSATS, TEST_METADATA);
@@ -277,12 +277,21 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_lnurl_pay_invoice_metadata_mismatch() {
+    fn test_validate_lnurl_pay_invoice_matching_amount_with_text_description() {
+        let invoice = create_test_invoice(Some(TEST_AMOUNT_MSATS), "test payment", false);
+
+        let result = validate_lnurl_pay_invoice(&invoice, TEST_AMOUNT_MSATS, TEST_METADATA);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_lnurl_pay_invoice_matching_amount_with_different_description() {
         let invoice = create_test_invoice(Some(TEST_AMOUNT_MSATS), "other metadata", false);
 
         let result = validate_lnurl_pay_invoice(&invoice, TEST_AMOUNT_MSATS, TEST_METADATA);
 
-        assert!(matches!(result, Err(LnurlError::MetadataMismatch)));
+        assert!(result.is_ok());
     }
 
     #[test]

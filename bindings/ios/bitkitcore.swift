@@ -15843,13 +15843,13 @@ public struct FfiConverterTypeLnurlError: FfiConverterRustBuffer {
             FfiConverterUInt64.write(amountSatoshis, into: &buf)
             FfiConverterUInt64.write(min, into: &buf)
             FfiConverterUInt64.write(max, into: &buf)
-            
-        
+
+
         case let .InvoiceCreationFailed(errorDetails):
             writeInt(&buf, Int32(6))
             FfiConverterString.write(errorDetails, into: &buf)
             
-        
+
         case let .AmountMismatch(requestedMsats,invoiceMsats):
             writeInt(&buf, Int32(7))
             FfiConverterUInt64.write(requestedMsats, into: &buf)

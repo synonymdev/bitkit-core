@@ -120,7 +120,7 @@ public object NoPointer
  * from xpub watchers.
  */
 public interface EventListener {
-    
+
     /**
      * Called when a watcher event occurs.
      *
@@ -128,7 +128,7 @@ public interface EventListener {
      * `event` is a typed enum — no JSON parsing needed.
      */
     public fun `onEvent`(`watcherId`: kotlin.String, `event`: WatcherEvent)
-    
+
     public companion object
 }
 
@@ -4208,7 +4208,6 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
-
 
 
 

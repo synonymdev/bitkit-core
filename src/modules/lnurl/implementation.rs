@@ -1,9 +1,8 @@
 use crate::lnurl::{ChannelRequestParams, LnurlAuthParams, LnurlError, WithdrawCallbackParams};
 use crate::modules::scanner::LnurlPayData;
 use bitcoin::bip32::Xpriv;
-use bitcoin::hashes::{sha256, Hash as _};
 use bitcoin::secp256k1::{Message, PublicKey, Secp256k1};
-use lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
+use lightning_invoice::Bolt11Invoice;
 use lnurl::lightning_address::LightningAddress;
 use lnurl::lnurl::LnUrl;
 use lnurl::{get_derivation_path, AsyncClient, Builder, LnUrlResponse, Response};
@@ -141,7 +140,7 @@ pub(crate) fn build_lnurl_pay_callback_url(
 pub(crate) fn validate_lnurl_pay_invoice(
     pr: &str,
     amount_msats: u64,
-    metadata: &str,
+    _metadata: &str,
 ) -> Result<(), LnurlError> {
     let invoice = Bolt11Invoice::from_str(pr).map_err(|_| LnurlError::InvalidResponse)?;
     let invoice_msats = invoice
@@ -158,17 +157,7 @@ pub(crate) fn validate_lnurl_pay_invoice(
         });
     }
 
-    match invoice.description() {
-        Bolt11InvoiceDescription::Direct(description) if description.to_string() == metadata => {
-            Ok(())
-        }
-        Bolt11InvoiceDescription::Hash(hash)
-            if hash.0 == sha256::Hash::hash(metadata.as_bytes()) =>
-        {
-            Ok(())
-        }
-        _ => Err(LnurlError::MetadataMismatch),
-    }
+    Ok(())
 }
 
 pub fn create_channel_request_url(params: ChannelRequestParams) -> Result<String, LnurlError> {
