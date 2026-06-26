@@ -807,6 +807,12 @@ uint64_t uniffi_bitkitcore_fn_func_get_payment(RustBuffer payment_id
 RustBuffer uniffi_bitkitcore_fn_func_get_pre_activity_metadata(RustBuffer wallet_id, RustBuffer search_key, int8_t search_by_address, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_SUPPORTED_HARDWARE_WALLETS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_SUPPORTED_HARDWARE_WALLETS
+RustBuffer uniffi_bitkitcore_fn_func_get_supported_hardware_wallets(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TAGS
 RustBuffer uniffi_bitkitcore_fn_func_get_tags(RustBuffer wallet_id, RustBuffer activity_id, RustCallStatus *_Nonnull out_status
@@ -1899,6 +1905,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_payment(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA
 uint16_t uniffi_bitkitcore_checksum_func_get_pre_activity_metadata(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_SUPPORTED_HARDWARE_WALLETS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_SUPPORTED_HARDWARE_WALLETS
+uint16_t uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets(void
     
 );
 #endif

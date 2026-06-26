@@ -1506,6 +1506,39 @@ public data class SingleAddressInfoResult (
 
 
 
+/**
+ * A hardware-wallet model Bitkit supports, with the transports it can connect over.
+ *
+ * Owned by core so iOS and Android render the same catalog instead of each
+ * hardcoding it. Platforms filter by `transports`: Android supports every model,
+ * while iOS (Bluetooth-only) shows just the models whose `transports` include
+ * `Bluetooth`. `model` is a stable key apps can map to their own bundled image.
+ */
+@kotlinx.serialization.Serializable
+public data class SupportedHardwareWallet (
+    val `vendor`: HardwareWalletVendor, 
+    /**
+     * Human-readable vendor name, e.g. "Trezor".
+     */
+    val `vendorName`: kotlin.String, 
+    /**
+     * Model identifier, e.g. "Safe 7".
+     */
+    val `model`: kotlin.String, 
+    /**
+     * Full display name, e.g. "Trezor Safe 7".
+     */
+    val `displayName`: kotlin.String, 
+    /**
+     * Transports this model can connect over.
+     */
+    val `transports`: List<TrezorTransportType>
+) {
+    public companion object
+}
+
+
+
 @kotlinx.serialization.Serializable
 public data class SweepResult (
     /**
@@ -3424,6 +3457,23 @@ public sealed class DecodingException: kotlin.Exception() {
 
 
 
+/**
+ * A hardware-wallet vendor supported by Bitkit. Trezor only for now; this leaves
+ * room to add other vendors without changing the catalog's shape.
+ */
+
+@kotlinx.serialization.Serializable
+public enum class HardwareWalletVendor {
+    
+    TREZOR;
+    public companion object
+}
+
+
+
+
+
+
 
 public sealed class LnurlException: kotlin.Exception() {
     
@@ -4268,6 +4318,10 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
+
+
 
 
 
