@@ -1,5 +1,6 @@
 use crate::activity::ActivityError;
 use crate::modules::blocktank::BlocktankError;
+use crate::modules::boltz::BoltzError;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -306,6 +307,9 @@ pub enum DbError {
     #[error("DB Blocktank Error: {error_details}")]
     DbBlocktankError { error_details: BlocktankError },
 
+    #[error("DB Boltz Error: {error_details}")]
+    DbBoltzError { error_details: BoltzError },
+
     #[error("Initialization Error: {error_details}")]
     InitializationError { error_details: String },
 }
@@ -321,6 +325,14 @@ impl From<ActivityError> for DbError {
 impl From<BlocktankError> for DbError {
     fn from(error: BlocktankError) -> Self {
         DbError::DbBlocktankError {
+            error_details: error,
+        }
+    }
+}
+
+impl From<BoltzError> for DbError {
+    fn from(error: BoltzError) -> Self {
+        DbError::DbBoltzError {
             error_details: error,
         }
     }
