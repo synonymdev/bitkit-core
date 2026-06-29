@@ -10552,19 +10552,19 @@ class AccountType(enum.Enum):
     BIP44 legacy (P2PKH) — xpub/tpub prefix
     """
 
-
+    
     WRAPPED_SEGWIT = 1
     """
     BIP49 wrapped segwit (P2SH-P2WPKH) — ypub/upub prefix
     """
 
-
+    
     NATIVE_SEGWIT = 2
     """
     BIP84 native segwit (P2WPKH) — zpub/vpub prefix
     """
 
-
+    
     TAPROOT = 3
     """
     BIP86 taproot (P2TR)
@@ -12843,13 +12843,6 @@ class LnurlError:  # type: ignore
         def __repr__(self):
             return "LnurlError.AmountMismatch({})".format(str(self))
     _UniffiTempLnurlError.AmountMismatch = AmountMismatch # type: ignore
-    class MetadataMismatch(_UniffiTempLnurlError):
-        def __init__(self):
-            pass
-
-        def __repr__(self):
-            return "LnurlError.MetadataMismatch({})".format(str(self))
-    _UniffiTempLnurlError.MetadataMismatch = MetadataMismatch # type: ignore
     class AuthenticationFailed(_UniffiTempLnurlError):
         def __init__(self):
             pass
@@ -12894,9 +12887,6 @@ class _UniffiConverterTypeLnurlError(_UniffiConverterRustBuffer):
                 _UniffiConverterUInt64.read(buf),
             )
         if variant == 8:
-            return LnurlError.MetadataMismatch(
-            )
-        if variant == 9:
             return LnurlError.AuthenticationFailed(
             )
         raise InternalError("Raw enum value doesn't match any cases")
@@ -12923,8 +12913,6 @@ class _UniffiConverterTypeLnurlError(_UniffiConverterRustBuffer):
             _UniffiConverterUInt64.check_lower(value.requested_msats)
             _UniffiConverterUInt64.check_lower(value.invoice_msats)
             return
-        if isinstance(value, LnurlError.MetadataMismatch):
-            return
         if isinstance(value, LnurlError.AuthenticationFailed):
             return
 
@@ -12950,10 +12938,8 @@ class _UniffiConverterTypeLnurlError(_UniffiConverterRustBuffer):
             buf.write_i32(7)
             _UniffiConverterUInt64.write(value.requested_msats, buf)
             _UniffiConverterUInt64.write(value.invoice_msats, buf)
-        if isinstance(value, LnurlError.MetadataMismatch):
-            buf.write_i32(8)
         if isinstance(value, LnurlError.AuthenticationFailed):
-            buf.write_i32(9)
+            buf.write_i32(8)
 
 
 
@@ -17595,7 +17581,7 @@ class EventListenerImpl():
         """
 
         _UniffiConverterString.check_lower(watcher_id)
-
+        
         _UniffiConverterTypeWatcherEvent.check_lower(event)
         
         _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_eventlistener_on_event,self._uniffi_clone_pointer(),
@@ -19587,11 +19573,11 @@ _UniffiConverterTypeLnurlError,
 async def get_lnurl_invoice_for_pay_data(data: "LnurlPayData",amount_msats: "int",comment: "typing.Optional[str]") -> "str":
 
     _UniffiConverterTypeLnurlPayData.check_lower(data)
-
+    
     _UniffiConverterUInt64.check_lower(amount_msats)
-
+    
     _UniffiConverterOptionalString.check_lower(comment)
-
+    
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice_for_pay_data(
         _UniffiConverterTypeLnurlPayData.lower(data),
@@ -19602,7 +19588,7 @@ async def get_lnurl_invoice_for_pay_data(data: "LnurlPayData",amount_msats: "int
         _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
         # lift function
         _UniffiConverterString.lift,
-
+        
     # Error FFI converter
 _UniffiConverterTypeLnurlError,
 
@@ -21513,3 +21499,4 @@ __all__ = [
     "TrezorTransportCallback",
     "TrezorUiCallback",
 ]
+

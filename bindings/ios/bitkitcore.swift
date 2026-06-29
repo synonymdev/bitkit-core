@@ -16107,7 +16107,6 @@ public enum LnurlError: Swift.Error {
     )
     case AmountMismatch(requestedMsats: UInt64, invoiceMsats: UInt64
     )
-    case MetadataMismatch
     case AuthenticationFailed
 }
 
@@ -16138,11 +16137,10 @@ public struct FfiConverterTypeLnurlError: FfiConverterRustBuffer {
             errorDetails: try FfiConverterString.read(from: &buf)
             )
         case 7: return .AmountMismatch(
-            requestedMsats: try FfiConverterUInt64.read(from: &buf),
+            requestedMsats: try FfiConverterUInt64.read(from: &buf), 
             invoiceMsats: try FfiConverterUInt64.read(from: &buf)
             )
-        case 8: return .MetadataMismatch
-        case 9: return .AuthenticationFailed
+        case 8: return .AuthenticationFailed
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -16176,25 +16174,21 @@ public struct FfiConverterTypeLnurlError: FfiConverterRustBuffer {
             FfiConverterUInt64.write(amountSatoshis, into: &buf)
             FfiConverterUInt64.write(min, into: &buf)
             FfiConverterUInt64.write(max, into: &buf)
-
-
+            
+        
         case let .InvoiceCreationFailed(errorDetails):
             writeInt(&buf, Int32(6))
             FfiConverterString.write(errorDetails, into: &buf)
             
-
+        
         case let .AmountMismatch(requestedMsats,invoiceMsats):
             writeInt(&buf, Int32(7))
             FfiConverterUInt64.write(requestedMsats, into: &buf)
             FfiConverterUInt64.write(invoiceMsats, into: &buf)
-
-
-        case .MetadataMismatch:
-            writeInt(&buf, Int32(8))
-
-
+            
+        
         case .AuthenticationFailed:
-            writeInt(&buf, Int32(9))
+            writeInt(&buf, Int32(8))
         
         }
     }
