@@ -85,6 +85,9 @@ Create a GitHub Release with a new tag like `v0.1.0`. The workflow `gradle-publi
 ### Terminal
 
 ```sh
-cd bindings/android
+./build_android.sh
+cd ./bindings/android
 ./gradlew publish -Pversion=0.1.0
 ```
+
+Run `./build_android.sh` before any direct Gradle publish so `jniLibs` is regenerated as stripped release libraries with separate `native-debug-symbols.zip` metadata and 16 KB page-size alignment.

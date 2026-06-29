@@ -18,6 +18,57 @@ impl From<trezor_connect_rs::TransportType> for TrezorTransportType {
     }
 }
 
+/// A hardware-wallet vendor supported by Bitkit. Trezor only for now; this leaves
+/// room to add other vendors without changing the catalog's shape.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum HardwareWalletVendor {
+    Trezor,
+}
+
+/// A hardware-wallet model Bitkit supports, with the transports it can connect over.
+///
+/// Owned by core so iOS and Android render the same catalog instead of each
+/// hardcoding it. Platforms filter by `transports`: Android supports every model,
+/// while iOS (Bluetooth-only) shows just the models whose `transports` include
+/// `Bluetooth`. `model` is a stable key apps can map to their own bundled image.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct SupportedHardwareWallet {
+    pub vendor: HardwareWalletVendor,
+    /// Human-readable vendor name, e.g. "Trezor".
+    pub vendor_name: String,
+    /// Model identifier, e.g. "Safe 7".
+    pub model: String,
+    /// Full display name, e.g. "Trezor Safe 7".
+    pub display_name: String,
+    /// Transports this model can connect over.
+    pub transports: Vec<TrezorTransportType>,
+}
+
+/// The catalog of hardware wallets Bitkit supports.
+///
+/// Trezor's full lineup; only the Safe 7 currently offers Bluetooth, so it is the
+/// only model iOS surfaces (apps filter on `transports`).
+#[uniffi::export]
+pub fn get_supported_hardware_wallets() -> Vec<SupportedHardwareWallet> {
+    use TrezorTransportType::{Bluetooth, Usb};
+
+    let trezor = |model: &str, transports: Vec<TrezorTransportType>| SupportedHardwareWallet {
+        vendor: HardwareWalletVendor::Trezor,
+        vendor_name: "Trezor".to_string(),
+        model: model.to_string(),
+        display_name: format!("Trezor {}", model),
+        transports,
+    };
+
+    vec![
+        trezor("Model One", vec![Usb]),
+        trezor("Model T", vec![Usb]),
+        trezor("Safe 3", vec![Usb]),
+        trezor("Safe 5", vec![Usb]),
+        trezor("Safe 7", vec![Usb, Bluetooth]),
+    ]
+}
+
 /// Device information exposed to FFI.
 #[derive(Debug, Clone, uniffi::Record)]
 pub struct TrezorDeviceInfo {
@@ -70,6 +121,10 @@ pub struct TrezorFeatures {
     pub patch_version: Option<u32>,
     /// Whether PIN protection is enabled
     pub pin_protection: Option<bool>,
+    /// Whether the device is currently unlocked. When PIN protection is enabled
+    /// and this is `Some(false)`, mobile callers should back off and ask the
+    /// user to unlock the Trezor instead of repeatedly reconnecting.
+    pub unlocked: Option<bool>,
     /// Whether passphrase protection is enabled
     pub passphrase_protection: Option<bool>,
     /// Whether the device is initialized with a seed
@@ -96,6 +151,7 @@ impl From<trezor_connect_rs::device::Features> for TrezorFeatures {
             minor_version: f.minor_version,
             patch_version: f.patch_version,
             pin_protection: f.pin_protection,
+            unlocked: f.unlocked,
             passphrase_protection: f.passphrase_protection,
             initialized: f.initialized,
             needs_backup: f.needs_backup,

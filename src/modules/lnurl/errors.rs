@@ -24,8 +24,6 @@ pub enum LnurlError {
         requested_msats: u64,
         invoice_msats: u64,
     },
-    #[error("Invoice metadata mismatch")]
-    MetadataMismatch,
     #[error("LNURL authentication failed")]
     AuthenticationFailed,
 }

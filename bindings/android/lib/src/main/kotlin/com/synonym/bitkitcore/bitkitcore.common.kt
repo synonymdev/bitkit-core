@@ -120,7 +120,7 @@ public object NoPointer
  * from xpub watchers.
  */
 public interface EventListener {
-
+    
     /**
      * Called when a watcher event occurs.
      *
@@ -128,7 +128,7 @@ public interface EventListener {
      * `event` is a typed enum — no JSON parsing needed.
      */
     public fun `onEvent`(`watcherId`: kotlin.String, `event`: WatcherEvent)
-
+    
     public companion object
 }
 
@@ -406,6 +406,7 @@ public data class AccountUtxo (
 
 @kotlinx.serialization.Serializable
 public data class ActivityTags (
+    val `walletId`: kotlin.String, 
     val `activityId`: kotlin.String, 
     val `tags`: List<kotlin.String>
 ) {
@@ -663,6 +664,10 @@ public data class HistoryTransaction (
      * Transaction fee in sats (None if not available, e.g. for received-only txs)
      */
     val `fee`: kotlin.ULong?, 
+    /**
+     * Fee rate in sats per virtual byte (None if fee or tx size is unavailable).
+     */
+    val `feeRate`: kotlin.Double?, 
     /**
      * Display amount in sats:
      * - Received: the received value
@@ -1150,6 +1155,7 @@ public data class LegacyRnCloseRecoverySweepPreview (
 
 @kotlinx.serialization.Serializable
 public data class LightningActivity (
+    val `walletId`: kotlin.String, 
     val `id`: kotlin.String, 
     val `txType`: PaymentType, 
     val `status`: PaymentState, 
@@ -1360,6 +1366,7 @@ public data class OnChainInvoice (
 
 @kotlinx.serialization.Serializable
 public data class OnchainActivity (
+    val `walletId`: kotlin.String, 
     val `id`: kotlin.String, 
     val `txType`: PaymentType, 
     val `txId`: kotlin.String, 
@@ -1388,6 +1395,7 @@ public data class OnchainActivity (
 
 @kotlinx.serialization.Serializable
 public data class PreActivityMetadata (
+    val `walletId`: kotlin.String, 
     val `paymentId`: kotlin.String, 
     val `tags`: List<kotlin.String>, 
     val `paymentHash`: kotlin.String?, 
@@ -1492,6 +1500,39 @@ public data class SingleAddressInfoResult (
      * Current blockchain tip height
      */
     val `blockHeight`: kotlin.UInt
+) {
+    public companion object
+}
+
+
+
+/**
+ * A hardware-wallet model Bitkit supports, with the transports it can connect over.
+ *
+ * Owned by core so iOS and Android render the same catalog instead of each
+ * hardcoding it. Platforms filter by `transports`: Android supports every model,
+ * while iOS (Bluetooth-only) shows just the models whose `transports` include
+ * `Bluetooth`. `model` is a stable key apps can map to their own bundled image.
+ */
+@kotlinx.serialization.Serializable
+public data class SupportedHardwareWallet (
+    val `vendor`: HardwareWalletVendor, 
+    /**
+     * Human-readable vendor name, e.g. "Trezor".
+     */
+    val `vendorName`: kotlin.String, 
+    /**
+     * Model identifier, e.g. "Safe 7".
+     */
+    val `model`: kotlin.String, 
+    /**
+     * Full display name, e.g. "Trezor Safe 7".
+     */
+    val `displayName`: kotlin.String, 
+    /**
+     * Transports this model can connect over.
+     */
+    val `transports`: List<TrezorTransportType>
 ) {
     public companion object
 }
@@ -1678,6 +1719,7 @@ public data class TransactionDetail (
  */
 @kotlinx.serialization.Serializable
 public data class TransactionDetails (
+    val `walletId`: kotlin.String, 
     /**
      * The transaction ID.
      */
@@ -1775,7 +1817,11 @@ public data class TrezorCallMessageResult (
     /**
      * Error message (empty on success)
      */
-    val `error`: kotlin.String
+    val `error`: kotlin.String, 
+    /**
+     * Structured error code (None on success or when the native error is generic)
+     */
+    val `errorCode`: TrezorTransportErrorCode?
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -1786,6 +1832,7 @@ public data class TrezorCallMessageResult (
         if (`messageType` != other.`messageType`) return false
         if (!`data`.contentEquals(other.`data`)) return false
         if (`error` != other.`error`) return false
+        if (`errorCode` != other.`errorCode`) return false
 
         return true
     }
@@ -1794,6 +1841,7 @@ public data class TrezorCallMessageResult (
         result = 31 * result + `messageType`.hashCode()
         result = 31 * result + `data`.contentHashCode()
         result = 31 * result + `error`.hashCode()
+        result = 31 * result + (`errorCode`?.hashCode() ?: 0)
         return result
     }
     public companion object
@@ -1877,6 +1925,12 @@ public data class TrezorFeatures (
      * Whether PIN protection is enabled
      */
     val `pinProtection`: kotlin.Boolean?, 
+    /**
+     * Whether the device is currently unlocked. When PIN protection is enabled
+     * and this is `Some(false)`, mobile callers should back off and ask the
+     * user to unlock the Trezor instead of repeatedly reconnecting.
+     */
+    val `unlocked`: kotlin.Boolean?, 
     /**
      * Whether passphrase protection is enabled
      */
@@ -2182,7 +2236,11 @@ public data class TrezorTransportReadResult (
     /**
      * Error message (empty on success)
      */
-    val `error`: kotlin.String
+    val `error`: kotlin.String, 
+    /**
+     * Structured error code (None on success or when the native error is generic)
+     */
+    val `errorCode`: TrezorTransportErrorCode?
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -2192,6 +2250,7 @@ public data class TrezorTransportReadResult (
         if (`success` != other.`success`) return false
         if (!`data`.contentEquals(other.`data`)) return false
         if (`error` != other.`error`) return false
+        if (`errorCode` != other.`errorCode`) return false
 
         return true
     }
@@ -2199,6 +2258,7 @@ public data class TrezorTransportReadResult (
         var result = `success`.hashCode()
         result = 31 * result + `data`.contentHashCode()
         result = 31 * result + `error`.hashCode()
+        result = 31 * result + (`errorCode`?.hashCode() ?: 0)
         return result
     }
     public companion object
@@ -2218,7 +2278,11 @@ public data class TrezorTransportWriteResult (
     /**
      * Error message (empty on success)
      */
-    val `error`: kotlin.String
+    val `error`: kotlin.String, 
+    /**
+     * Structured error code (None on success or when the native error is generic)
+     */
+    val `errorCode`: TrezorTransportErrorCode?
 ) {
     public companion object
 }
@@ -2541,6 +2605,13 @@ public data class WatcherParams (
      */
     val `watcherId`: kotlin.String, 
     /**
+     * Wallet id that scopes the activities this watcher emits. One watcher
+     * watches one address type, so this stays at the address-type boundary —
+     * the same txid seen under two address types yields two wallet-scoped
+     * activities under different `wallet_id`s, not one merged activity.
+     */
+    val `walletId`: kotlin.String, 
+    /**
      * Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
      */
     val `extendedKey`: kotlin.String, 
@@ -2557,7 +2628,8 @@ public data class WatcherParams (
      */
     val `accountType`: AccountType?, 
     /**
-     * Number of unused addresses to monitor beyond the last used (default 20).
+     * Number of unused addresses to monitor beyond the last used
+     * (defaults to `DEFAULT_GAP_LIMIT` when None).
      */
     val `gapLimit`: kotlin.UInt?
 ) {
@@ -3385,6 +3457,23 @@ public sealed class DecodingException: kotlin.Exception() {
 
 
 
+/**
+ * A hardware-wallet vendor supported by Bitkit. Trezor only for now; this leaves
+ * room to add other vendors without changing the catalog's shape.
+ */
+
+@kotlinx.serialization.Serializable
+public enum class HardwareWalletVendor {
+    
+    TREZOR;
+    public companion object
+}
+
+
+
+
+
+
 
 public sealed class LnurlException: kotlin.Exception() {
     
@@ -3428,20 +3517,6 @@ public sealed class LnurlException: kotlin.Exception() {
             get() = "errorDetails=${ `errorDetails` }"
     }
     
-    public class AmountMismatch(
-        public val `requestedMsats`: kotlin.ULong,
-        public val `invoiceMsats`: kotlin.ULong,
-    ) : LnurlException() {
-        override val message: String
-            get() = "requestedMsats=${ `requestedMsats` }, invoiceMsats=${ `invoiceMsats` }"
-    }
-
-    public class MetadataMismatch(
-    ) : LnurlException() {
-        override val message: String
-            get() = ""
-    }
-
     public class AuthenticationFailed(
     ) : LnurlException() {
         override val message: String
@@ -3840,6 +3915,15 @@ public sealed class TrezorException: kotlin.Exception() {
     }
     
     /**
+     * Device is busy and the caller should back off before retrying
+     */
+    public class DeviceBusy(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
+    /**
      * Connection error
      */
     public class ConnectionException(
@@ -4044,6 +4128,25 @@ public enum class TrezorScriptType {
 
 
 /**
+ * Structured transport error code returned by native callback operations.
+ */
+
+@kotlinx.serialization.Serializable
+public enum class TrezorTransportErrorCode {
+    
+    /**
+     * Device is busy and the caller should back off before retrying.
+     */
+    DEVICE_BUSY;
+    public companion object
+}
+
+
+
+
+
+
+/**
  * Transport type for Trezor devices.
  */
 
@@ -4142,9 +4245,16 @@ public sealed class WatcherEvent {
     
     /**
      * Transaction activity changed — contains full updated state.
+     *
+     * `activities` and `transaction_details` are persistence-ready: they carry
+     * the watcher's `wallet_id`, real decoded addresses, fees from the watched
+     * wallet's perspective, and DB-valid timestamps, so the app can store them
+     * directly through the normal Core activity APIs (e.g. `upsert_activity` /
+     * `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
      */@kotlinx.serialization.Serializable
     public data class TransactionsChanged(
-        val `transactions`: List<HistoryTransaction>,
+        val `activities`: List<Activity>,
+        val `transactionDetails`: List<TransactionDetails>,
         val `balance`: WalletBalance,
         val `txCount`: kotlin.UInt,
         val `blockHeight`: kotlin.UInt,
@@ -4208,6 +4318,13 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
+
+
+
+
+
 
 
 

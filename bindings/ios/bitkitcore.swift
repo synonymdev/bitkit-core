@@ -2184,12 +2184,14 @@ public func FfiConverterTypeAccountUtxo_lower(_ value: AccountUtxo) -> RustBuffe
 
 
 public struct ActivityTags {
+    public var walletId: String
     public var activityId: String
     public var tags: [String]
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(activityId: String, tags: [String]) {
+    public init(walletId: String, activityId: String, tags: [String]) {
+        self.walletId = walletId
         self.activityId = activityId
         self.tags = tags
     }
@@ -2202,6 +2204,9 @@ extension ActivityTags: Sendable {}
 
 extension ActivityTags: Equatable, Hashable {
     public static func ==(lhs: ActivityTags, rhs: ActivityTags) -> Bool {
+        if lhs.walletId != rhs.walletId {
+            return false
+        }
         if lhs.activityId != rhs.activityId {
             return false
         }
@@ -2212,6 +2217,7 @@ extension ActivityTags: Equatable, Hashable {
     }
 
     public func hash(into hasher: inout Hasher) {
+        hasher.combine(walletId)
         hasher.combine(activityId)
         hasher.combine(tags)
     }
@@ -2228,12 +2234,14 @@ public struct FfiConverterTypeActivityTags: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ActivityTags {
         return
             try ActivityTags(
+                walletId: FfiConverterString.read(from: &buf), 
                 activityId: FfiConverterString.read(from: &buf), 
                 tags: FfiConverterSequenceString.read(from: &buf)
         )
     }
 
     public static func write(_ value: ActivityTags, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.walletId, into: &buf)
         FfiConverterString.write(value.activityId, into: &buf)
         FfiConverterSequenceString.write(value.tags, into: &buf)
     }
@@ -3645,6 +3653,10 @@ public struct HistoryTransaction {
      */
     public var fee: UInt64?
     /**
+     * Fee rate in sats per virtual byte (None if fee or tx size is unavailable).
+     */
+    public var feeRate: Double?
+    /**
      * Display amount in sats:
      * - Received: the received value
      * - Sent: amount that left the wallet (sent - received - fee)
@@ -3687,6 +3699,9 @@ public struct HistoryTransaction {
          * Transaction fee in sats (None if not available, e.g. for received-only txs)
          */fee: UInt64?, 
         /**
+         * Fee rate in sats per virtual byte (None if fee or tx size is unavailable).
+         */feeRate: Double?, 
+        /**
          * Display amount in sats:
          * - Received: the received value
          * - Sent: amount that left the wallet (sent - received - fee)
@@ -3709,6 +3724,7 @@ public struct HistoryTransaction {
         self.sent = sent
         self.net = net
         self.fee = fee
+        self.feeRate = feeRate
         self.amount = amount
         self.direction = direction
         self.blockHeight = blockHeight
@@ -3739,6 +3755,9 @@ extension HistoryTransaction: Equatable, Hashable {
         if lhs.fee != rhs.fee {
             return false
         }
+        if lhs.feeRate != rhs.feeRate {
+            return false
+        }
         if lhs.amount != rhs.amount {
             return false
         }
@@ -3763,6 +3782,7 @@ extension HistoryTransaction: Equatable, Hashable {
         hasher.combine(sent)
         hasher.combine(net)
         hasher.combine(fee)
+        hasher.combine(feeRate)
         hasher.combine(amount)
         hasher.combine(direction)
         hasher.combine(blockHeight)
@@ -3787,6 +3807,7 @@ public struct FfiConverterTypeHistoryTransaction: FfiConverterRustBuffer {
                 sent: FfiConverterUInt64.read(from: &buf), 
                 net: FfiConverterInt64.read(from: &buf), 
                 fee: FfiConverterOptionUInt64.read(from: &buf), 
+                feeRate: FfiConverterOptionDouble.read(from: &buf), 
                 amount: FfiConverterUInt64.read(from: &buf), 
                 direction: FfiConverterTypeTxDirection.read(from: &buf), 
                 blockHeight: FfiConverterOptionUInt32.read(from: &buf), 
@@ -3801,6 +3822,7 @@ public struct FfiConverterTypeHistoryTransaction: FfiConverterRustBuffer {
         FfiConverterUInt64.write(value.sent, into: &buf)
         FfiConverterInt64.write(value.net, into: &buf)
         FfiConverterOptionUInt64.write(value.fee, into: &buf)
+        FfiConverterOptionDouble.write(value.feeRate, into: &buf)
         FfiConverterUInt64.write(value.amount, into: &buf)
         FfiConverterTypeTxDirection.write(value.direction, into: &buf)
         FfiConverterOptionUInt32.write(value.blockHeight, into: &buf)
@@ -7078,6 +7100,7 @@ public func FfiConverterTypeLegacyRnCloseRecoverySweepPreview_lower(_ value: Leg
 
 
 public struct LightningActivity {
+    public var walletId: String
     public var id: String
     public var txType: PaymentType
     public var status: PaymentState
@@ -7094,7 +7117,8 @@ public struct LightningActivity {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, txType: PaymentType, status: PaymentState, value: UInt64, fee: UInt64?, invoice: String, message: String, timestamp: UInt64, preimage: String?, contact: String?, createdAt: UInt64?, updatedAt: UInt64?, seenAt: UInt64?) {
+    public init(walletId: String, id: String, txType: PaymentType, status: PaymentState, value: UInt64, fee: UInt64?, invoice: String, message: String, timestamp: UInt64, preimage: String?, contact: String?, createdAt: UInt64?, updatedAt: UInt64?, seenAt: UInt64?) {
+        self.walletId = walletId
         self.id = id
         self.txType = txType
         self.status = status
@@ -7118,6 +7142,9 @@ extension LightningActivity: Sendable {}
 
 extension LightningActivity: Equatable, Hashable {
     public static func ==(lhs: LightningActivity, rhs: LightningActivity) -> Bool {
+        if lhs.walletId != rhs.walletId {
+            return false
+        }
         if lhs.id != rhs.id {
             return false
         }
@@ -7161,6 +7188,7 @@ extension LightningActivity: Equatable, Hashable {
     }
 
     public func hash(into hasher: inout Hasher) {
+        hasher.combine(walletId)
         hasher.combine(id)
         hasher.combine(txType)
         hasher.combine(status)
@@ -7188,6 +7216,7 @@ public struct FfiConverterTypeLightningActivity: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> LightningActivity {
         return
             try LightningActivity(
+                walletId: FfiConverterString.read(from: &buf), 
                 id: FfiConverterString.read(from: &buf), 
                 txType: FfiConverterTypePaymentType.read(from: &buf), 
                 status: FfiConverterTypePaymentState.read(from: &buf), 
@@ -7205,6 +7234,7 @@ public struct FfiConverterTypeLightningActivity: FfiConverterRustBuffer {
     }
 
     public static func write(_ value: LightningActivity, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.walletId, into: &buf)
         FfiConverterString.write(value.id, into: &buf)
         FfiConverterTypePaymentType.write(value.txType, into: &buf)
         FfiConverterTypePaymentState.write(value.status, into: &buf)
@@ -8079,6 +8109,7 @@ public func FfiConverterTypeOnChainInvoice_lower(_ value: OnChainInvoice) -> Rus
 
 
 public struct OnchainActivity {
+    public var walletId: String
     public var id: String
     public var txType: PaymentType
     public var txId: String
@@ -8102,7 +8133,8 @@ public struct OnchainActivity {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, txType: PaymentType, txId: String, value: UInt64, fee: UInt64, feeRate: UInt64, address: String, confirmed: Bool, timestamp: UInt64, isBoosted: Bool, boostTxIds: [String], isTransfer: Bool, doesExist: Bool, confirmTimestamp: UInt64?, channelId: String?, transferTxId: String?, contact: String?, createdAt: UInt64?, updatedAt: UInt64?, seenAt: UInt64?) {
+    public init(walletId: String, id: String, txType: PaymentType, txId: String, value: UInt64, fee: UInt64, feeRate: UInt64, address: String, confirmed: Bool, timestamp: UInt64, isBoosted: Bool, boostTxIds: [String], isTransfer: Bool, doesExist: Bool, confirmTimestamp: UInt64?, channelId: String?, transferTxId: String?, contact: String?, createdAt: UInt64?, updatedAt: UInt64?, seenAt: UInt64?) {
+        self.walletId = walletId
         self.id = id
         self.txType = txType
         self.txId = txId
@@ -8133,6 +8165,9 @@ extension OnchainActivity: Sendable {}
 
 extension OnchainActivity: Equatable, Hashable {
     public static func ==(lhs: OnchainActivity, rhs: OnchainActivity) -> Bool {
+        if lhs.walletId != rhs.walletId {
+            return false
+        }
         if lhs.id != rhs.id {
             return false
         }
@@ -8197,6 +8232,7 @@ extension OnchainActivity: Equatable, Hashable {
     }
 
     public func hash(into hasher: inout Hasher) {
+        hasher.combine(walletId)
         hasher.combine(id)
         hasher.combine(txType)
         hasher.combine(txId)
@@ -8231,6 +8267,7 @@ public struct FfiConverterTypeOnchainActivity: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> OnchainActivity {
         return
             try OnchainActivity(
+                walletId: FfiConverterString.read(from: &buf), 
                 id: FfiConverterString.read(from: &buf), 
                 txType: FfiConverterTypePaymentType.read(from: &buf), 
                 txId: FfiConverterString.read(from: &buf), 
@@ -8255,6 +8292,7 @@ public struct FfiConverterTypeOnchainActivity: FfiConverterRustBuffer {
     }
 
     public static func write(_ value: OnchainActivity, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.walletId, into: &buf)
         FfiConverterString.write(value.id, into: &buf)
         FfiConverterTypePaymentType.write(value.txType, into: &buf)
         FfiConverterString.write(value.txId, into: &buf)
@@ -8295,6 +8333,7 @@ public func FfiConverterTypeOnchainActivity_lower(_ value: OnchainActivity) -> R
 
 
 public struct PreActivityMetadata {
+    public var walletId: String
     public var paymentId: String
     public var tags: [String]
     public var paymentHash: String?
@@ -8308,7 +8347,8 @@ public struct PreActivityMetadata {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(paymentId: String, tags: [String], paymentHash: String?, txId: String?, address: String?, isReceive: Bool, feeRate: UInt64, isTransfer: Bool, channelId: String?, createdAt: UInt64) {
+    public init(walletId: String, paymentId: String, tags: [String], paymentHash: String?, txId: String?, address: String?, isReceive: Bool, feeRate: UInt64, isTransfer: Bool, channelId: String?, createdAt: UInt64) {
+        self.walletId = walletId
         self.paymentId = paymentId
         self.tags = tags
         self.paymentHash = paymentHash
@@ -8329,6 +8369,9 @@ extension PreActivityMetadata: Sendable {}
 
 extension PreActivityMetadata: Equatable, Hashable {
     public static func ==(lhs: PreActivityMetadata, rhs: PreActivityMetadata) -> Bool {
+        if lhs.walletId != rhs.walletId {
+            return false
+        }
         if lhs.paymentId != rhs.paymentId {
             return false
         }
@@ -8363,6 +8406,7 @@ extension PreActivityMetadata: Equatable, Hashable {
     }
 
     public func hash(into hasher: inout Hasher) {
+        hasher.combine(walletId)
         hasher.combine(paymentId)
         hasher.combine(tags)
         hasher.combine(paymentHash)
@@ -8387,6 +8431,7 @@ public struct FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PreActivityMetadata {
         return
             try PreActivityMetadata(
+                walletId: FfiConverterString.read(from: &buf), 
                 paymentId: FfiConverterString.read(from: &buf), 
                 tags: FfiConverterSequenceString.read(from: &buf), 
                 paymentHash: FfiConverterOptionString.read(from: &buf), 
@@ -8401,6 +8446,7 @@ public struct FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer {
     }
 
     public static func write(_ value: PreActivityMetadata, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.walletId, into: &buf)
         FfiConverterString.write(value.paymentId, into: &buf)
         FfiConverterSequenceString.write(value.tags, into: &buf)
         FfiConverterOptionString.write(value.paymentHash, into: &buf)
@@ -8917,6 +8963,134 @@ public func FfiConverterTypeSingleAddressInfoResult_lift(_ buf: RustBuffer) thro
 #endif
 public func FfiConverterTypeSingleAddressInfoResult_lower(_ value: SingleAddressInfoResult) -> RustBuffer {
     return FfiConverterTypeSingleAddressInfoResult.lower(value)
+}
+
+
+/**
+ * A hardware-wallet model Bitkit supports, with the transports it can connect over.
+ *
+ * Owned by core so iOS and Android render the same catalog instead of each
+ * hardcoding it. Platforms filter by `transports`: Android supports every model,
+ * while iOS (Bluetooth-only) shows just the models whose `transports` include
+ * `Bluetooth`. `model` is a stable key apps can map to their own bundled image.
+ */
+public struct SupportedHardwareWallet {
+    public var vendor: HardwareWalletVendor
+    /**
+     * Human-readable vendor name, e.g. "Trezor".
+     */
+    public var vendorName: String
+    /**
+     * Model identifier, e.g. "Safe 7".
+     */
+    public var model: String
+    /**
+     * Full display name, e.g. "Trezor Safe 7".
+     */
+    public var displayName: String
+    /**
+     * Transports this model can connect over.
+     */
+    public var transports: [TrezorTransportType]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(vendor: HardwareWalletVendor, 
+        /**
+         * Human-readable vendor name, e.g. "Trezor".
+         */vendorName: String, 
+        /**
+         * Model identifier, e.g. "Safe 7".
+         */model: String, 
+        /**
+         * Full display name, e.g. "Trezor Safe 7".
+         */displayName: String, 
+        /**
+         * Transports this model can connect over.
+         */transports: [TrezorTransportType]) {
+        self.vendor = vendor
+        self.vendorName = vendorName
+        self.model = model
+        self.displayName = displayName
+        self.transports = transports
+    }
+}
+
+#if compiler(>=6)
+extension SupportedHardwareWallet: Sendable {}
+#endif
+
+
+extension SupportedHardwareWallet: Equatable, Hashable {
+    public static func ==(lhs: SupportedHardwareWallet, rhs: SupportedHardwareWallet) -> Bool {
+        if lhs.vendor != rhs.vendor {
+            return false
+        }
+        if lhs.vendorName != rhs.vendorName {
+            return false
+        }
+        if lhs.model != rhs.model {
+            return false
+        }
+        if lhs.displayName != rhs.displayName {
+            return false
+        }
+        if lhs.transports != rhs.transports {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(vendor)
+        hasher.combine(vendorName)
+        hasher.combine(model)
+        hasher.combine(displayName)
+        hasher.combine(transports)
+    }
+}
+
+extension SupportedHardwareWallet: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSupportedHardwareWallet: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SupportedHardwareWallet {
+        return
+            try SupportedHardwareWallet(
+                vendor: FfiConverterTypeHardwareWalletVendor.read(from: &buf), 
+                vendorName: FfiConverterString.read(from: &buf), 
+                model: FfiConverterString.read(from: &buf), 
+                displayName: FfiConverterString.read(from: &buf), 
+                transports: FfiConverterSequenceTypeTrezorTransportType.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SupportedHardwareWallet, into buf: inout [UInt8]) {
+        FfiConverterTypeHardwareWalletVendor.write(value.vendor, into: &buf)
+        FfiConverterString.write(value.vendorName, into: &buf)
+        FfiConverterString.write(value.model, into: &buf)
+        FfiConverterString.write(value.displayName, into: &buf)
+        FfiConverterSequenceTypeTrezorTransportType.write(value.transports, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSupportedHardwareWallet_lift(_ buf: RustBuffer) throws -> SupportedHardwareWallet {
+    return try FfiConverterTypeSupportedHardwareWallet.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSupportedHardwareWallet_lower(_ value: SupportedHardwareWallet) -> RustBuffer {
+    return FfiConverterTypeSupportedHardwareWallet.lower(value)
 }
 
 
@@ -9641,6 +9815,7 @@ public func FfiConverterTypeTransactionDetail_lower(_ value: TransactionDetail) 
  * Details about an onchain transaction.
  */
 public struct TransactionDetails {
+    public var walletId: String
     /**
      * The transaction ID.
      */
@@ -9665,7 +9840,7 @@ public struct TransactionDetails {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(
+    public init(walletId: String, 
         /**
          * The transaction ID.
          */txId: String, 
@@ -9683,6 +9858,7 @@ public struct TransactionDetails {
         /**
          * The transaction outputs with full details.
          */outputs: [TxOutput]) {
+        self.walletId = walletId
         self.txId = txId
         self.amountSats = amountSats
         self.inputs = inputs
@@ -9697,6 +9873,9 @@ extension TransactionDetails: Sendable {}
 
 extension TransactionDetails: Equatable, Hashable {
     public static func ==(lhs: TransactionDetails, rhs: TransactionDetails) -> Bool {
+        if lhs.walletId != rhs.walletId {
+            return false
+        }
         if lhs.txId != rhs.txId {
             return false
         }
@@ -9713,6 +9892,7 @@ extension TransactionDetails: Equatable, Hashable {
     }
 
     public func hash(into hasher: inout Hasher) {
+        hasher.combine(walletId)
         hasher.combine(txId)
         hasher.combine(amountSats)
         hasher.combine(inputs)
@@ -9731,6 +9911,7 @@ public struct FfiConverterTypeTransactionDetails: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TransactionDetails {
         return
             try TransactionDetails(
+                walletId: FfiConverterString.read(from: &buf), 
                 txId: FfiConverterString.read(from: &buf), 
                 amountSats: FfiConverterInt64.read(from: &buf), 
                 inputs: FfiConverterSequenceTypeTxInput.read(from: &buf), 
@@ -9739,6 +9920,7 @@ public struct FfiConverterTypeTransactionDetails: FfiConverterRustBuffer {
     }
 
     public static func write(_ value: TransactionDetails, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.walletId, into: &buf)
         FfiConverterString.write(value.txId, into: &buf)
         FfiConverterInt64.write(value.amountSats, into: &buf)
         FfiConverterSequenceTypeTxInput.write(value.inputs, into: &buf)
@@ -9998,6 +10180,10 @@ public struct TrezorCallMessageResult {
      * Error message (empty on success)
      */
     public var error: String
+    /**
+     * Structured error code (None on success or when the native error is generic)
+     */
+    public var errorCode: TrezorTransportErrorCode?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -10013,11 +10199,15 @@ public struct TrezorCallMessageResult {
          */data: Data, 
         /**
          * Error message (empty on success)
-         */error: String) {
+         */error: String, 
+        /**
+         * Structured error code (None on success or when the native error is generic)
+         */errorCode: TrezorTransportErrorCode?) {
         self.success = success
         self.messageType = messageType
         self.data = data
         self.error = error
+        self.errorCode = errorCode
     }
 }
 
@@ -10040,6 +10230,9 @@ extension TrezorCallMessageResult: Equatable, Hashable {
         if lhs.error != rhs.error {
             return false
         }
+        if lhs.errorCode != rhs.errorCode {
+            return false
+        }
         return true
     }
 
@@ -10048,6 +10241,7 @@ extension TrezorCallMessageResult: Equatable, Hashable {
         hasher.combine(messageType)
         hasher.combine(data)
         hasher.combine(error)
+        hasher.combine(errorCode)
     }
 }
 
@@ -10065,7 +10259,8 @@ public struct FfiConverterTypeTrezorCallMessageResult: FfiConverterRustBuffer {
                 success: FfiConverterBool.read(from: &buf), 
                 messageType: FfiConverterUInt16.read(from: &buf), 
                 data: FfiConverterData.read(from: &buf), 
-                error: FfiConverterString.read(from: &buf)
+                error: FfiConverterString.read(from: &buf), 
+                errorCode: FfiConverterOptionTypeTrezorTransportErrorCode.read(from: &buf)
         )
     }
 
@@ -10074,6 +10269,7 @@ public struct FfiConverterTypeTrezorCallMessageResult: FfiConverterRustBuffer {
         FfiConverterUInt16.write(value.messageType, into: &buf)
         FfiConverterData.write(value.data, into: &buf)
         FfiConverterString.write(value.error, into: &buf)
+        FfiConverterOptionTypeTrezorTransportErrorCode.write(value.errorCode, into: &buf)
     }
 }
 
@@ -10287,6 +10483,12 @@ public struct TrezorFeatures {
      */
     public var pinProtection: Bool?
     /**
+     * Whether the device is currently unlocked. When PIN protection is enabled
+     * and this is `Some(false)`, mobile callers should back off and ask the
+     * user to unlock the Trezor instead of repeatedly reconnecting.
+     */
+    public var unlocked: Bool?
+    /**
      * Whether passphrase protection is enabled
      */
     public var passphraseProtection: Bool?
@@ -10332,6 +10534,11 @@ public struct TrezorFeatures {
          * Whether PIN protection is enabled
          */pinProtection: Bool?, 
         /**
+         * Whether the device is currently unlocked. When PIN protection is enabled
+         * and this is `Some(false)`, mobile callers should back off and ask the
+         * user to unlock the Trezor instead of repeatedly reconnecting.
+         */unlocked: Bool?, 
+        /**
          * Whether passphrase protection is enabled
          */passphraseProtection: Bool?, 
         /**
@@ -10352,6 +10559,7 @@ public struct TrezorFeatures {
         self.minorVersion = minorVersion
         self.patchVersion = patchVersion
         self.pinProtection = pinProtection
+        self.unlocked = unlocked
         self.passphraseProtection = passphraseProtection
         self.initialized = initialized
         self.needsBackup = needsBackup
@@ -10390,6 +10598,9 @@ extension TrezorFeatures: Equatable, Hashable {
         if lhs.pinProtection != rhs.pinProtection {
             return false
         }
+        if lhs.unlocked != rhs.unlocked {
+            return false
+        }
         if lhs.passphraseProtection != rhs.passphraseProtection {
             return false
         }
@@ -10414,6 +10625,7 @@ extension TrezorFeatures: Equatable, Hashable {
         hasher.combine(minorVersion)
         hasher.combine(patchVersion)
         hasher.combine(pinProtection)
+        hasher.combine(unlocked)
         hasher.combine(passphraseProtection)
         hasher.combine(initialized)
         hasher.combine(needsBackup)
@@ -10440,6 +10652,7 @@ public struct FfiConverterTypeTrezorFeatures: FfiConverterRustBuffer {
                 minorVersion: FfiConverterOptionUInt32.read(from: &buf), 
                 patchVersion: FfiConverterOptionUInt32.read(from: &buf), 
                 pinProtection: FfiConverterOptionBool.read(from: &buf), 
+                unlocked: FfiConverterOptionBool.read(from: &buf), 
                 passphraseProtection: FfiConverterOptionBool.read(from: &buf), 
                 initialized: FfiConverterOptionBool.read(from: &buf), 
                 needsBackup: FfiConverterOptionBool.read(from: &buf), 
@@ -10456,6 +10669,7 @@ public struct FfiConverterTypeTrezorFeatures: FfiConverterRustBuffer {
         FfiConverterOptionUInt32.write(value.minorVersion, into: &buf)
         FfiConverterOptionUInt32.write(value.patchVersion, into: &buf)
         FfiConverterOptionBool.write(value.pinProtection, into: &buf)
+        FfiConverterOptionBool.write(value.unlocked, into: &buf)
         FfiConverterOptionBool.write(value.passphraseProtection, into: &buf)
         FfiConverterOptionBool.write(value.initialized, into: &buf)
         FfiConverterOptionBool.write(value.needsBackup, into: &buf)
@@ -11631,6 +11845,10 @@ public struct TrezorTransportReadResult {
      * Error message (empty on success)
      */
     public var error: String
+    /**
+     * Structured error code (None on success or when the native error is generic)
+     */
+    public var errorCode: TrezorTransportErrorCode?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -11643,10 +11861,14 @@ public struct TrezorTransportReadResult {
          */data: Data, 
         /**
          * Error message (empty on success)
-         */error: String) {
+         */error: String, 
+        /**
+         * Structured error code (None on success or when the native error is generic)
+         */errorCode: TrezorTransportErrorCode?) {
         self.success = success
         self.data = data
         self.error = error
+        self.errorCode = errorCode
     }
 }
 
@@ -11666,6 +11888,9 @@ extension TrezorTransportReadResult: Equatable, Hashable {
         if lhs.error != rhs.error {
             return false
         }
+        if lhs.errorCode != rhs.errorCode {
+            return false
+        }
         return true
     }
 
@@ -11673,6 +11898,7 @@ extension TrezorTransportReadResult: Equatable, Hashable {
         hasher.combine(success)
         hasher.combine(data)
         hasher.combine(error)
+        hasher.combine(errorCode)
     }
 }
 
@@ -11689,7 +11915,8 @@ public struct FfiConverterTypeTrezorTransportReadResult: FfiConverterRustBuffer 
             try TrezorTransportReadResult(
                 success: FfiConverterBool.read(from: &buf), 
                 data: FfiConverterData.read(from: &buf), 
-                error: FfiConverterString.read(from: &buf)
+                error: FfiConverterString.read(from: &buf), 
+                errorCode: FfiConverterOptionTypeTrezorTransportErrorCode.read(from: &buf)
         )
     }
 
@@ -11697,6 +11924,7 @@ public struct FfiConverterTypeTrezorTransportReadResult: FfiConverterRustBuffer 
         FfiConverterBool.write(value.success, into: &buf)
         FfiConverterData.write(value.data, into: &buf)
         FfiConverterString.write(value.error, into: &buf)
+        FfiConverterOptionTypeTrezorTransportErrorCode.write(value.errorCode, into: &buf)
     }
 }
 
@@ -11728,6 +11956,10 @@ public struct TrezorTransportWriteResult {
      * Error message (empty on success)
      */
     public var error: String
+    /**
+     * Structured error code (None on success or when the native error is generic)
+     */
+    public var errorCode: TrezorTransportErrorCode?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -11737,9 +11969,13 @@ public struct TrezorTransportWriteResult {
          */success: Bool, 
         /**
          * Error message (empty on success)
-         */error: String) {
+         */error: String, 
+        /**
+         * Structured error code (None on success or when the native error is generic)
+         */errorCode: TrezorTransportErrorCode?) {
         self.success = success
         self.error = error
+        self.errorCode = errorCode
     }
 }
 
@@ -11756,12 +11992,16 @@ extension TrezorTransportWriteResult: Equatable, Hashable {
         if lhs.error != rhs.error {
             return false
         }
+        if lhs.errorCode != rhs.errorCode {
+            return false
+        }
         return true
     }
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(success)
         hasher.combine(error)
+        hasher.combine(errorCode)
     }
 }
 
@@ -11777,13 +12017,15 @@ public struct FfiConverterTypeTrezorTransportWriteResult: FfiConverterRustBuffer
         return
             try TrezorTransportWriteResult(
                 success: FfiConverterBool.read(from: &buf), 
-                error: FfiConverterString.read(from: &buf)
+                error: FfiConverterString.read(from: &buf), 
+                errorCode: FfiConverterOptionTypeTrezorTransportErrorCode.read(from: &buf)
         )
     }
 
     public static func write(_ value: TrezorTransportWriteResult, into buf: inout [UInt8]) {
         FfiConverterBool.write(value.success, into: &buf)
         FfiConverterString.write(value.error, into: &buf)
+        FfiConverterOptionTypeTrezorTransportErrorCode.write(value.errorCode, into: &buf)
     }
 }
 
@@ -13109,6 +13351,13 @@ public struct WatcherParams {
      */
     public var watcherId: String
     /**
+     * Wallet id that scopes the activities this watcher emits. One watcher
+     * watches one address type, so this stays at the address-type boundary —
+     * the same txid seen under two address types yields two wallet-scoped
+     * activities under different `wallet_id`s, not one merged activity.
+     */
+    public var walletId: String
+    /**
      * Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
      */
     public var extendedKey: String
@@ -13125,7 +13374,8 @@ public struct WatcherParams {
      */
     public var accountType: AccountType?
     /**
-     * Number of unused addresses to monitor beyond the last used (default 20).
+     * Number of unused addresses to monitor beyond the last used
+     * (defaults to `DEFAULT_GAP_LIMIT` when None).
      */
     public var gapLimit: UInt32?
 
@@ -13135,6 +13385,12 @@ public struct WatcherParams {
         /**
          * Caller-supplied identifier for this watcher.
          */watcherId: String, 
+        /**
+         * Wallet id that scopes the activities this watcher emits. One watcher
+         * watches one address type, so this stays at the address-type boundary —
+         * the same txid seen under two address types yields two wallet-scoped
+         * activities under different `wallet_id`s, not one merged activity.
+         */walletId: String, 
         /**
          * Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
          */extendedKey: String, 
@@ -13148,9 +13404,11 @@ public struct WatcherParams {
          * Account type override (auto-detected from key prefix if None).
          */accountType: AccountType?, 
         /**
-         * Number of unused addresses to monitor beyond the last used (default 20).
+         * Number of unused addresses to monitor beyond the last used
+         * (defaults to `DEFAULT_GAP_LIMIT` when None).
          */gapLimit: UInt32?) {
         self.watcherId = watcherId
+        self.walletId = walletId
         self.extendedKey = extendedKey
         self.electrumUrl = electrumUrl
         self.network = network
@@ -13167,6 +13425,9 @@ extension WatcherParams: Sendable {}
 extension WatcherParams: Equatable, Hashable {
     public static func ==(lhs: WatcherParams, rhs: WatcherParams) -> Bool {
         if lhs.watcherId != rhs.watcherId {
+            return false
+        }
+        if lhs.walletId != rhs.walletId {
             return false
         }
         if lhs.extendedKey != rhs.extendedKey {
@@ -13189,6 +13450,7 @@ extension WatcherParams: Equatable, Hashable {
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(watcherId)
+        hasher.combine(walletId)
         hasher.combine(extendedKey)
         hasher.combine(electrumUrl)
         hasher.combine(network)
@@ -13209,6 +13471,7 @@ public struct FfiConverterTypeWatcherParams: FfiConverterRustBuffer {
         return
             try WatcherParams(
                 watcherId: FfiConverterString.read(from: &buf), 
+                walletId: FfiConverterString.read(from: &buf), 
                 extendedKey: FfiConverterString.read(from: &buf), 
                 electrumUrl: FfiConverterString.read(from: &buf), 
                 network: FfiConverterOptionTypeNetwork.read(from: &buf), 
@@ -13219,6 +13482,7 @@ public struct FfiConverterTypeWatcherParams: FfiConverterRustBuffer {
 
     public static func write(_ value: WatcherParams, into buf: inout [UInt8]) {
         FfiConverterString.write(value.watcherId, into: &buf)
+        FfiConverterString.write(value.walletId, into: &buf)
         FfiConverterString.write(value.extendedKey, into: &buf)
         FfiConverterString.write(value.electrumUrl, into: &buf)
         FfiConverterOptionTypeNetwork.write(value.network, into: &buf)
@@ -15759,6 +16023,75 @@ extension DecodingError: Foundation.LocalizedError {
 
 
 
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * A hardware-wallet vendor supported by Bitkit. Trezor only for now; this leaves
+ * room to add other vendors without changing the catalog's shape.
+ */
+
+public enum HardwareWalletVendor {
+    
+    case trezor
+}
+
+
+#if compiler(>=6)
+extension HardwareWalletVendor: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeHardwareWalletVendor: FfiConverterRustBuffer {
+    typealias SwiftType = HardwareWalletVendor
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> HardwareWalletVendor {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .trezor
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: HardwareWalletVendor, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .trezor:
+            writeInt(&buf, Int32(1))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeHardwareWalletVendor_lift(_ buf: RustBuffer) throws -> HardwareWalletVendor {
+    return try FfiConverterTypeHardwareWalletVendor.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeHardwareWalletVendor_lower(_ value: HardwareWalletVendor) -> RustBuffer {
+    return FfiConverterTypeHardwareWalletVendor.lower(value)
+}
+
+
+extension HardwareWalletVendor: Equatable, Hashable {}
+
+extension HardwareWalletVendor: Codable {}
+
+
+
+
+
+
 
 public enum LnurlError: Swift.Error {
 
@@ -17101,6 +17434,10 @@ public enum TrezorError: Swift.Error {
      */
     case DeviceDisconnected
     /**
+     * Device is busy and the caller should back off before retrying
+     */
+    case DeviceBusy
+    /**
      * Connection error
      */
     case ConnectionError(errorDetails: String
@@ -17196,35 +17533,36 @@ public struct FfiConverterTypeTrezorError: FfiConverterRustBuffer {
             )
         case 2: return .DeviceNotFound
         case 3: return .DeviceDisconnected
-        case 4: return .ConnectionError(
+        case 4: return .DeviceBusy
+        case 5: return .ConnectionError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 5: return .ProtocolError(
+        case 6: return .ProtocolError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 6: return .PairingRequired
-        case 7: return .PairingFailed(
+        case 7: return .PairingRequired
+        case 8: return .PairingFailed(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 8: return .PinRequired
-        case 9: return .PinCancelled
-        case 10: return .InvalidPin
-        case 11: return .PassphraseRequired
-        case 12: return .PassphraseCancelled
-        case 13: return .UserCancelled
-        case 14: return .Timeout
-        case 15: return .InvalidPath(
+        case 9: return .PinRequired
+        case 10: return .PinCancelled
+        case 11: return .InvalidPin
+        case 12: return .PassphraseRequired
+        case 13: return .PassphraseCancelled
+        case 14: return .UserCancelled
+        case 15: return .Timeout
+        case 16: return .InvalidPath(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 16: return .DeviceError(
+        case 17: return .DeviceError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 17: return .NotInitialized
-        case 18: return .NotConnected
-        case 19: return .SessionError(
+        case 18: return .NotInitialized
+        case 19: return .NotConnected
+        case 20: return .SessionError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 20: return .IoError(
+        case 21: return .IoError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
 
@@ -17252,78 +17590,82 @@ public struct FfiConverterTypeTrezorError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(3))
         
         
-        case let .ConnectionError(errorDetails):
+        case .DeviceBusy:
             writeInt(&buf, Int32(4))
-            FfiConverterString.write(errorDetails, into: &buf)
-            
         
-        case let .ProtocolError(errorDetails):
+        
+        case let .ConnectionError(errorDetails):
             writeInt(&buf, Int32(5))
             FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case .PairingRequired:
+        case let .ProtocolError(errorDetails):
             writeInt(&buf, Int32(6))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case .PairingRequired:
+            writeInt(&buf, Int32(7))
         
         
         case let .PairingFailed(errorDetails):
-            writeInt(&buf, Int32(7))
+            writeInt(&buf, Int32(8))
             FfiConverterString.write(errorDetails, into: &buf)
             
         
         case .PinRequired:
-            writeInt(&buf, Int32(8))
-        
-        
-        case .PinCancelled:
             writeInt(&buf, Int32(9))
         
         
-        case .InvalidPin:
+        case .PinCancelled:
             writeInt(&buf, Int32(10))
         
         
-        case .PassphraseRequired:
+        case .InvalidPin:
             writeInt(&buf, Int32(11))
         
         
-        case .PassphraseCancelled:
+        case .PassphraseRequired:
             writeInt(&buf, Int32(12))
         
         
-        case .UserCancelled:
+        case .PassphraseCancelled:
             writeInt(&buf, Int32(13))
         
         
-        case .Timeout:
+        case .UserCancelled:
             writeInt(&buf, Int32(14))
         
         
-        case let .InvalidPath(errorDetails):
+        case .Timeout:
             writeInt(&buf, Int32(15))
-            FfiConverterString.write(errorDetails, into: &buf)
-            
         
-        case let .DeviceError(errorDetails):
+        
+        case let .InvalidPath(errorDetails):
             writeInt(&buf, Int32(16))
             FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case .NotInitialized:
+        case let .DeviceError(errorDetails):
             writeInt(&buf, Int32(17))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
         
-        
-        case .NotConnected:
+        case .NotInitialized:
             writeInt(&buf, Int32(18))
         
         
-        case let .SessionError(errorDetails):
+        case .NotConnected:
             writeInt(&buf, Int32(19))
+        
+        
+        case let .SessionError(errorDetails):
+            writeInt(&buf, Int32(20))
             FfiConverterString.write(errorDetails, into: &buf)
             
         
         case let .IoError(errorDetails):
-            writeInt(&buf, Int32(20))
+            writeInt(&buf, Int32(21))
             FfiConverterString.write(errorDetails, into: &buf)
             
         }
@@ -17477,6 +17819,77 @@ public func FfiConverterTypeTrezorScriptType_lower(_ value: TrezorScriptType) ->
 extension TrezorScriptType: Equatable, Hashable {}
 
 extension TrezorScriptType: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Structured transport error code returned by native callback operations.
+ */
+
+public enum TrezorTransportErrorCode {
+    
+    /**
+     * Device is busy and the caller should back off before retrying.
+     */
+    case deviceBusy
+}
+
+
+#if compiler(>=6)
+extension TrezorTransportErrorCode: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTrezorTransportErrorCode: FfiConverterRustBuffer {
+    typealias SwiftType = TrezorTransportErrorCode
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TrezorTransportErrorCode {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .deviceBusy
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: TrezorTransportErrorCode, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .deviceBusy:
+            writeInt(&buf, Int32(1))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTrezorTransportErrorCode_lift(_ buf: RustBuffer) throws -> TrezorTransportErrorCode {
+    return try FfiConverterTypeTrezorTransportErrorCode.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTrezorTransportErrorCode_lower(_ value: TrezorTransportErrorCode) -> RustBuffer {
+    return FfiConverterTypeTrezorTransportErrorCode.lower(value)
+}
+
+
+extension TrezorTransportErrorCode: Equatable, Hashable {}
+
+extension TrezorTransportErrorCode: Codable {}
 
 
 
@@ -17765,8 +18178,14 @@ public enum WatcherEvent {
     
     /**
      * Transaction activity changed — contains full updated state.
+     *
+     * `activities` and `transaction_details` are persistence-ready: they carry
+     * the watcher's `wallet_id`, real decoded addresses, fees from the watched
+     * wallet's perspective, and DB-valid timestamps, so the app can store them
+     * directly through the normal Core activity APIs (e.g. `upsert_activity` /
+     * `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
      */
-    case transactionsChanged(transactions: [HistoryTransaction], balance: WalletBalance, txCount: UInt32, blockHeight: UInt32, accountType: AccountType
+    case transactionsChanged(activities: [Activity], transactionDetails: [TransactionDetails], balance: WalletBalance, txCount: UInt32, blockHeight: UInt32, accountType: AccountType
     )
     /**
      * An error occurred in the watcher loop.
@@ -17799,7 +18218,7 @@ public struct FfiConverterTypeWatcherEvent: FfiConverterRustBuffer {
         let variant: Int32 = try readInt(&buf)
         switch variant {
         
-        case 1: return .transactionsChanged(transactions: try FfiConverterSequenceTypeHistoryTransaction.read(from: &buf), balance: try FfiConverterTypeWalletBalance.read(from: &buf), txCount: try FfiConverterUInt32.read(from: &buf), blockHeight: try FfiConverterUInt32.read(from: &buf), accountType: try FfiConverterTypeAccountType.read(from: &buf)
+        case 1: return .transactionsChanged(activities: try FfiConverterSequenceTypeActivity.read(from: &buf), transactionDetails: try FfiConverterSequenceTypeTransactionDetails.read(from: &buf), balance: try FfiConverterTypeWalletBalance.read(from: &buf), txCount: try FfiConverterUInt32.read(from: &buf), blockHeight: try FfiConverterUInt32.read(from: &buf), accountType: try FfiConverterTypeAccountType.read(from: &buf)
         )
         
         case 2: return .error(message: try FfiConverterString.read(from: &buf)
@@ -17818,9 +18237,10 @@ public struct FfiConverterTypeWatcherEvent: FfiConverterRustBuffer {
         switch value {
         
         
-        case let .transactionsChanged(transactions,balance,txCount,blockHeight,accountType):
+        case let .transactionsChanged(activities,transactionDetails,balance,txCount,blockHeight,accountType):
             writeInt(&buf, Int32(1))
-            FfiConverterSequenceTypeHistoryTransaction.write(transactions, into: &buf)
+            FfiConverterSequenceTypeActivity.write(activities, into: &buf)
+            FfiConverterSequenceTypeTransactionDetails.write(transactionDetails, into: &buf)
             FfiConverterTypeWalletBalance.write(balance, into: &buf)
             FfiConverterUInt32.write(txCount, into: &buf)
             FfiConverterUInt32.write(blockHeight, into: &buf)
@@ -18988,6 +19408,30 @@ fileprivate struct FfiConverterOptionTypeTrezorScriptType: FfiConverterRustBuffe
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeTrezorTransportErrorCode: FfiConverterRustBuffer {
+    typealias SwiftType = TrezorTransportErrorCode?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeTrezorTransportErrorCode.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeTrezorTransportErrorCode.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypeWordCount: FfiConverterRustBuffer {
     typealias SwiftType = WordCount?
 
@@ -19558,6 +20002,31 @@ fileprivate struct FfiConverterSequenceTypePubkyProfileLink: FfiConverterRustBuf
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeSupportedHardwareWallet: FfiConverterRustBuffer {
+    typealias SwiftType = [SupportedHardwareWallet]
+
+    public static func write(_ value: [SupportedHardwareWallet], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeSupportedHardwareWallet.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [SupportedHardwareWallet] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [SupportedHardwareWallet]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeSupportedHardwareWallet.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeTransactionDetails: FfiConverterRustBuffer {
     typealias SwiftType = [TransactionDetails]
 
@@ -19908,6 +20377,31 @@ fileprivate struct FfiConverterSequenceTypeComposeResult: FfiConverterRustBuffer
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeTrezorTransportType: FfiConverterRustBuffer {
+    typealias SwiftType = [TrezorTransportType]
+
+    public static func write(_ value: [TrezorTransportType], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTrezorTransportType.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TrezorTransportType] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TrezorTransportType]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTrezorTransportType.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterDictionaryStringString: FfiConverterRustBuffer {
     public static func write(_ value: [String: String], into buf: inout [UInt8]) {
         let len = Int32(value.count)
@@ -19987,15 +20481,17 @@ public func addPreActivityMetadata(preActivityMetadata: PreActivityMetadata)thro
     )
 }
 }
-public func addPreActivityMetadataTags(paymentId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+public func addPreActivityMetadataTags(walletId: String, paymentId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(paymentId),
         FfiConverterSequenceString.lower(tags),$0
     )
 }
 }
-public func addTags(activityId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+public func addTags(walletId: String, activityId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_add_tags(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(activityId),
         FfiConverterSequenceString.lower(tags),$0
     )
@@ -20182,22 +20678,32 @@ public func decode(invoice: String)async throws  -> Scanner  {
             errorHandler: FfiConverterTypeDecodingError_lift
         )
 }
-public func deleteActivityById(activityId: String)throws  -> Bool  {
+public func deleteActivitiesByWalletId(walletId: String)throws  -> UInt32  {
+    return try  FfiConverterUInt32.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_delete_activities_by_wallet_id(
+        FfiConverterString.lower(walletId),$0
+    )
+})
+}
+public func deleteActivityById(walletId: String, activityId: String)throws  -> Bool  {
     return try  FfiConverterBool.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_delete_activity_by_id(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(activityId),$0
     )
 })
 }
-public func deletePreActivityMetadata(paymentId: String)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+public func deletePreActivityMetadata(walletId: String, paymentId: String)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_delete_pre_activity_metadata(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(paymentId),$0
     )
 }
 }
-public func deleteTransactionDetails(txId: String)throws  -> Bool  {
+public func deleteTransactionDetails(walletId: String, txId: String)throws  -> Bool  {
     return try  FfiConverterBool.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_delete_transaction_details(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(txId),$0
     )
 })
@@ -20250,6 +20756,20 @@ public func derivePubkySecretKey(seed: Data)throws  -> String  {
     return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypePubkyError_lift) {
     uniffi_bitkitcore_fn_func_derive_pubky_secret_key(
         FfiConverterData.lower(seed),$0
+    )
+})
+}
+/**
+ * Derive a stable, cross-platform `wallet_id` for a hardware (watch-only) wallet
+ * from its account extended public keys. See `derive_wallet_id` in the activity
+ * module for the exact derivation. Order of `xpubs` does not matter. Returns an
+ * error if `device_type` is blank or `xpubs` is empty / has a blank entry.
+ */
+public func deriveWalletId(deviceType: String, xpubs: [String])throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_derive_wallet_id(
+        FfiConverterString.lower(deviceType),
+        FfiConverterSequenceString.lower(xpubs),$0
     )
 })
 }
@@ -20351,9 +20871,10 @@ public func generateMnemonic(wordCount: WordCount?)throws  -> String  {
     )
 })
 }
-public func getActivities(filter: ActivityFilter?, txType: PaymentType?, tags: [String]?, search: String?, minDate: UInt64?, maxDate: UInt64?, limit: UInt32?, sortDirection: SortDirection?)throws  -> [Activity]  {
+public func getActivities(walletId: String?, filter: ActivityFilter?, txType: PaymentType?, tags: [String]?, search: String?, minDate: UInt64?, maxDate: UInt64?, limit: UInt32?, sortDirection: SortDirection?)throws  -> [Activity]  {
     return try  FfiConverterSequenceTypeActivity.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_activities(
+        FfiConverterOptionString.lower(walletId),
         FfiConverterOptionTypeActivityFilter.lower(filter),
         FfiConverterOptionTypePaymentType.lower(txType),
         FfiConverterOptionSequenceString.lower(tags),
@@ -20365,25 +20886,28 @@ public func getActivities(filter: ActivityFilter?, txType: PaymentType?, tags: [
     )
 })
 }
-public func getActivitiesByTag(tag: String, limit: UInt32?, sortDirection: SortDirection?)throws  -> [Activity]  {
+public func getActivitiesByTag(walletId: String?, tag: String, limit: UInt32?, sortDirection: SortDirection?)throws  -> [Activity]  {
     return try  FfiConverterSequenceTypeActivity.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_activities_by_tag(
+        FfiConverterOptionString.lower(walletId),
         FfiConverterString.lower(tag),
         FfiConverterOptionUInt32.lower(limit),
         FfiConverterOptionTypeSortDirection.lower(sortDirection),$0
     )
 })
 }
-public func getActivityById(activityId: String)throws  -> Activity?  {
+public func getActivityById(walletId: String, activityId: String)throws  -> Activity?  {
     return try  FfiConverterOptionTypeActivity.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_activity_by_id(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(activityId),$0
     )
 })
 }
-public func getActivityByTxId(txId: String)throws  -> OnchainActivity?  {
+public func getActivityByTxId(walletId: String, txId: String)throws  -> OnchainActivity?  {
     return try  FfiConverterOptionTypeOnchainActivity.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_activity_by_tx_id(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(txId),$0
     )
 })
@@ -20454,10 +20978,26 @@ public func getClosedChannelById(channelId: String)throws  -> ClosedChannelDetai
     )
 })
 }
+/**
+ * The default address gap limit used by account scanning and the xpub watcher.
+ * Exposed so platforms reference one source of truth instead of hardcoding 20.
+ */
+public func getDefaultGapLimit() -> UInt32  {
+    return try!  FfiConverterUInt32.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_get_default_gap_limit($0
+    )
+})
+}
 public func getDefaultLspBalance(params: DefaultLspBalanceParams) -> UInt64  {
     return try!  FfiConverterUInt64.lift(try! rustCall() {
     uniffi_bitkitcore_fn_func_get_default_lsp_balance(
         FfiConverterTypeDefaultLspBalanceParams_lower(params),$0
+    )
+})
+}
+public func getDefaultWalletId() -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_get_default_wallet_id($0
     )
 })
 }
@@ -20559,24 +21099,39 @@ public func getPayment(paymentId: String)async throws  -> IBtBolt11Invoice  {
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
-public func getPreActivityMetadata(searchKey: String, searchByAddress: Bool)throws  -> PreActivityMetadata?  {
+public func getPreActivityMetadata(walletId: String, searchKey: String, searchByAddress: Bool)throws  -> PreActivityMetadata?  {
     return try  FfiConverterOptionTypePreActivityMetadata.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_pre_activity_metadata(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(searchKey),
         FfiConverterBool.lower(searchByAddress),$0
     )
 })
 }
-public func getTags(activityId: String)throws  -> [String]  {
+/**
+ * The catalog of hardware wallets Bitkit supports.
+ *
+ * Trezor's full lineup; only the Safe 7 currently offers Bluetooth, so it is the
+ * only model iOS surfaces (apps filter on `transports`).
+ */
+public func getSupportedHardwareWallets() -> [SupportedHardwareWallet]  {
+    return try!  FfiConverterSequenceTypeSupportedHardwareWallet.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_get_supported_hardware_wallets($0
+    )
+})
+}
+public func getTags(walletId: String, activityId: String)throws  -> [String]  {
     return try  FfiConverterSequenceString.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_tags(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(activityId),$0
     )
 })
 }
-public func getTransactionDetails(txId: String)throws  -> TransactionDetails?  {
+public func getTransactionDetails(walletId: String, txId: String)throws  -> TransactionDetails?  {
     return try  FfiConverterOptionTypeTransactionDetails.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_transaction_details(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(txId),$0
     )
 })
@@ -20650,8 +21205,9 @@ public func lnurlAuth(domain: String, k1: String, callback: String, bip32Mnemoni
             errorHandler: FfiConverterTypeLnurlError_lift
         )
 }
-public func markActivityAsSeen(activityId: String, seenAt: UInt64)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+public func markActivityAsSeen(walletId: String, activityId: String, seenAt: UInt64)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_mark_activity_as_seen(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(activityId),
         FfiConverterUInt64.lower(seenAt),$0
     )
@@ -21084,22 +21640,25 @@ public func removeClosedChannelById(channelId: String)throws  -> Bool  {
     )
 })
 }
-public func removePreActivityMetadataTags(paymentId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+public func removePreActivityMetadataTags(walletId: String, paymentId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(paymentId),
         FfiConverterSequenceString.lower(tags),$0
     )
 }
 }
-public func removeTags(activityId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+public func removeTags(walletId: String, activityId: String, tags: [String])throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_remove_tags(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(activityId),
         FfiConverterSequenceString.lower(tags),$0
     )
 }
 }
-public func resetPreActivityMetadataTags(paymentId: String)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+public func resetPreActivityMetadataTags(walletId: String, paymentId: String)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags(
+        FfiConverterString.lower(walletId),
         FfiConverterString.lower(paymentId),$0
     )
 }
@@ -21406,6 +21965,27 @@ public func trezorListDevices()async throws  -> [TrezorDeviceInfo]  {
         )
 }
 /**
+ * Refresh features from the currently connected Trezor device.
+ *
+ * This performs a single explicit device request and updates the connected
+ * device's cached features. It does not start polling. Returns `NotConnected`
+ * if there is no connected device.
+ */
+public func trezorRefreshFeatures()async throws  -> TrezorFeatures  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_trezor_refresh_features(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeTrezorFeatures_lift,
+            errorHandler: FfiConverterTypeTrezorError_lift
+        )
+}
+/**
  * Scan for available Trezor devices (USB + Bluetooth).
  *
  * This performs an active Bluetooth scan and enumerates USB devices.
@@ -21701,10 +22281,10 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata() != 17211) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags() != 28081) {
+    if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags() != 5813) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_add_tags() != 63739) {
+    if (uniffi_bitkitcore_checksum_func_add_tags() != 61276) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_approve_pubky_auth() != 22222) {
@@ -21749,13 +22329,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_decode() != 28437) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867) {
+    if (uniffi_bitkitcore_checksum_func_delete_activities_by_wallet_id() != 15848) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 46621) {
+    if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 13256) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_delete_transaction_details() != 21670) {
+    if (uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 63740) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_delete_transaction_details() != 43443) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_derive_bitcoin_address() != 35090) {
@@ -21771,6 +22354,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_derive_pubky_secret_key() != 36989) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_derive_wallet_id() != 30111) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123) {
@@ -21797,16 +22383,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_activities() != 21347) {
+    if (uniffi_bitkitcore_checksum_func_get_activities() != 9879) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 52823) {
+    if (uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 16182) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227) {
+    if (uniffi_bitkitcore_checksum_func_get_activity_by_id() != 28490) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_activity_by_tx_id() != 2520) {
+    if (uniffi_bitkitcore_checksum_func_get_activity_by_tx_id() != 28432) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_all_activities_tags() != 29245) {
@@ -21836,7 +22422,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_get_default_gap_limit() != 24024) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_get_default_lsp_balance() != 35903) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_default_wallet_id() != 19552) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_gift() != 386) {
@@ -21860,13 +22452,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_get_payment() != 29170) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 53126) {
+    if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_tags() != 11308) {
+    if (uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 36542) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_get_transaction_details() != 6118) {
+    if (uniffi_bitkitcore_checksum_func_get_tags() != 8596) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_transaction_details() != 4810) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_gift_order() != 22040) {
@@ -21890,7 +22485,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 65086) {
+    if (uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 36622) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_mnemonic_to_entropy() != 36669) {
@@ -21986,13 +22581,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 1991) {
+    if (uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 37046) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_remove_tags() != 58873) {
+    if (uniffi_bitkitcore_checksum_func_remove_tags() != 53863) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703) {
+    if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 49760) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_resolve_pubky_url() != 43253) {
@@ -22047,6 +22642,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_list_devices() != 32859) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_trezor_refresh_features() != 6918) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_scan() != 54763) {

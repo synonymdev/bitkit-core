@@ -14,7 +14,9 @@ use bdk::wallet::Wallet;
 use bdk::FeeRate;
 
 use super::errors::AccountInfoError;
-use super::implementation::{connect_electrum, create_and_sync_wallet, resolve_wallet_setup};
+use super::implementation::{
+    connect_electrum, create_and_sync_wallet, resolve_wallet_setup, run_account_info_blocking,
+};
 use super::types::{CoinSelection, ComposeOutput, ComposeParams, ComposeResult};
 
 /// Compose transactions for multiple fee rates, returning one PSBT per rate.
@@ -63,7 +65,7 @@ async fn compose_inner(params: ComposeParams) -> Result<Vec<ComposeResult>, Acco
     let fee_rates = params.fee_rates;
     let coin_selection = params.coin_selection;
 
-    tokio::task::spawn_blocking(move || {
+    run_account_info_blocking("compose transaction", move || {
         let client = connect_electrum(&electrum_url)?;
         let mut wallet = create_and_sync_wallet(&setup, client)?;
 
@@ -84,9 +86,6 @@ async fn compose_inner(params: ComposeParams) -> Result<Vec<ComposeResult>, Acco
         Ok(results)
     })
     .await
-    .map_err(|e| AccountInfoError::SyncError {
-        error_details: format!("Task failed: {}", e),
-    })?
 }
 
 fn build_psbt(

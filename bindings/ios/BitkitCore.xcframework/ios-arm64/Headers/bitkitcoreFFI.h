@@ -512,12 +512,12 @@ void uniffi_bitkitcore_fn_func_add_pre_activity_metadata(RustBuffer pre_activity
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_PRE_ACTIVITY_METADATA_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_PRE_ACTIVITY_METADATA_TAGS
-void uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags(RustBuffer payment_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
+void uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags(RustBuffer wallet_id, RustBuffer payment_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ADD_TAGS
-void uniffi_bitkitcore_fn_func_add_tags(RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
+void uniffi_bitkitcore_fn_func_add_tags(RustBuffer wallet_id, RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_APPROVE_PUBKY_AUTH
@@ -595,19 +595,24 @@ RustBuffer uniffi_bitkitcore_fn_func_create_withdraw_callback_url(RustBuffer k1,
 uint64_t uniffi_bitkitcore_fn_func_decode(RustBuffer invoice
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_ACTIVITIES_BY_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_ACTIVITIES_BY_WALLET_ID
+uint32_t uniffi_bitkitcore_fn_func_delete_activities_by_wallet_id(RustBuffer wallet_id, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_ACTIVITY_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_ACTIVITY_BY_ID
-int8_t uniffi_bitkitcore_fn_func_delete_activity_by_id(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
+int8_t uniffi_bitkitcore_fn_func_delete_activity_by_id(RustBuffer wallet_id, RustBuffer activity_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_PRE_ACTIVITY_METADATA
-void uniffi_bitkitcore_fn_func_delete_pre_activity_metadata(RustBuffer payment_id, RustCallStatus *_Nonnull out_status
+void uniffi_bitkitcore_fn_func_delete_pre_activity_metadata(RustBuffer wallet_id, RustBuffer payment_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_TRANSACTION_DETAILS
-int8_t uniffi_bitkitcore_fn_func_delete_transaction_details(RustBuffer tx_id, RustCallStatus *_Nonnull out_status
+int8_t uniffi_bitkitcore_fn_func_delete_transaction_details(RustBuffer wallet_id, RustBuffer tx_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_BITCOIN_ADDRESS
@@ -633,6 +638,11 @@ RustBuffer uniffi_bitkitcore_fn_func_derive_private_key(RustBuffer mnemonic_phra
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_PUBKY_SECRET_KEY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_PUBKY_SECRET_KEY
 RustBuffer uniffi_bitkitcore_fn_func_derive_pubky_secret_key(RustBuffer seed, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DERIVE_WALLET_ID
+RustBuffer uniffi_bitkitcore_fn_func_derive_wallet_id(RustBuffer device_type, RustBuffer xpubs, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ENTROPY_TO_MNEMONIC
@@ -677,22 +687,22 @@ RustBuffer uniffi_bitkitcore_fn_func_generate_mnemonic(RustBuffer word_count, Ru
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES
-RustBuffer uniffi_bitkitcore_fn_func_get_activities(RustBuffer filter, RustBuffer tx_type, RustBuffer tags, RustBuffer search, RustBuffer min_date, RustBuffer max_date, RustBuffer limit, RustBuffer sort_direction, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_activities(RustBuffer wallet_id, RustBuffer filter, RustBuffer tx_type, RustBuffer tags, RustBuffer search, RustBuffer min_date, RustBuffer max_date, RustBuffer limit, RustBuffer sort_direction, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES_BY_TAG
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES_BY_TAG
-RustBuffer uniffi_bitkitcore_fn_func_get_activities_by_tag(RustBuffer tag, RustBuffer limit, RustBuffer sort_direction, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_activities_by_tag(RustBuffer wallet_id, RustBuffer tag, RustBuffer limit, RustBuffer sort_direction, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITY_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITY_BY_ID
-RustBuffer uniffi_bitkitcore_fn_func_get_activity_by_id(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_activity_by_id(RustBuffer wallet_id, RustBuffer activity_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITY_BY_TX_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITY_BY_TX_ID
-RustBuffer uniffi_bitkitcore_fn_func_get_activity_by_tx_id(RustBuffer tx_id, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_activity_by_tx_id(RustBuffer wallet_id, RustBuffer tx_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ALL_ACTIVITIES_TAGS
@@ -745,9 +755,21 @@ uint64_t uniffi_bitkitcore_fn_func_get_cjit_entries(RustBuffer entry_ids, RustBu
 RustBuffer uniffi_bitkitcore_fn_func_get_closed_channel_by_id(RustBuffer channel_id, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_GAP_LIMIT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_GAP_LIMIT
+uint32_t uniffi_bitkitcore_fn_func_get_default_gap_limit(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_LSP_BALANCE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_LSP_BALANCE
 uint64_t uniffi_bitkitcore_fn_func_get_default_lsp_balance(RustBuffer params, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_DEFAULT_WALLET_ID
+RustBuffer uniffi_bitkitcore_fn_func_get_default_wallet_id(RustCallStatus *_Nonnull out_status
+    
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_GIFT
@@ -787,17 +809,23 @@ uint64_t uniffi_bitkitcore_fn_func_get_payment(RustBuffer payment_id
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PRE_ACTIVITY_METADATA
-RustBuffer uniffi_bitkitcore_fn_func_get_pre_activity_metadata(RustBuffer search_key, int8_t search_by_address, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_pre_activity_metadata(RustBuffer wallet_id, RustBuffer search_key, int8_t search_by_address, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_SUPPORTED_HARDWARE_WALLETS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_SUPPORTED_HARDWARE_WALLETS
+RustBuffer uniffi_bitkitcore_fn_func_get_supported_hardware_wallets(RustCallStatus *_Nonnull out_status
+    
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TAGS
-RustBuffer uniffi_bitkitcore_fn_func_get_tags(RustBuffer activity_id, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_tags(RustBuffer wallet_id, RustBuffer activity_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TRANSACTION_DETAILS
-RustBuffer uniffi_bitkitcore_fn_func_get_transaction_details(RustBuffer tx_id, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_bitkitcore_fn_func_get_transaction_details(RustBuffer wallet_id, RustBuffer tx_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GIFT_ORDER
@@ -837,7 +865,7 @@ uint64_t uniffi_bitkitcore_fn_func_lnurl_auth(RustBuffer domain, RustBuffer k1, 
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_MARK_ACTIVITY_AS_SEEN
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_MARK_ACTIVITY_AS_SEEN
-void uniffi_bitkitcore_fn_func_mark_activity_as_seen(RustBuffer activity_id, uint64_t seen_at, RustCallStatus *_Nonnull out_status
+void uniffi_bitkitcore_fn_func_mark_activity_as_seen(RustBuffer wallet_id, RustBuffer activity_id, uint64_t seen_at, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_MNEMONIC_TO_ENTROPY
@@ -1000,17 +1028,17 @@ int8_t uniffi_bitkitcore_fn_func_remove_closed_channel_by_id(RustBuffer channel_
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_PRE_ACTIVITY_METADATA_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_PRE_ACTIVITY_METADATA_TAGS
-void uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags(RustBuffer payment_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
+void uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags(RustBuffer wallet_id, RustBuffer payment_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_REMOVE_TAGS
-void uniffi_bitkitcore_fn_func_remove_tags(RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
+void uniffi_bitkitcore_fn_func_remove_tags(RustBuffer wallet_id, RustBuffer activity_id, RustBuffer tags, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_RESET_PRE_ACTIVITY_METADATA_TAGS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_RESET_PRE_ACTIVITY_METADATA_TAGS
-void uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags(RustBuffer payment_id, RustCallStatus *_Nonnull out_status
+void uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags(RustBuffer wallet_id, RustBuffer payment_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_RESOLVE_PUBKY_URL
@@ -1108,6 +1136,12 @@ uint64_t uniffi_bitkitcore_fn_func_trezor_is_initialized(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_LIST_DEVICES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_LIST_DEVICES
 uint64_t uniffi_bitkitcore_fn_func_trezor_list_devices(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_REFRESH_FEATURES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_REFRESH_FEATURES
+uint64_t uniffi_bitkitcore_fn_func_trezor_refresh_features(void
     
 );
 #endif
@@ -1633,6 +1667,12 @@ uint16_t uniffi_bitkitcore_checksum_func_decode(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_ACTIVITIES_BY_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_ACTIVITIES_BY_WALLET_ID
+uint16_t uniffi_bitkitcore_checksum_func_delete_activities_by_wallet_id(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_ACTIVITY_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_ACTIVITY_BY_ID
 uint16_t uniffi_bitkitcore_checksum_func_delete_activity_by_id(void
@@ -1678,6 +1718,12 @@ uint16_t uniffi_bitkitcore_checksum_func_derive_private_key(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_PUBKY_SECRET_KEY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_PUBKY_SECRET_KEY
 uint16_t uniffi_bitkitcore_checksum_func_derive_pubky_secret_key(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DERIVE_WALLET_ID
+uint16_t uniffi_bitkitcore_checksum_func_derive_wallet_id(void
     
 );
 #endif
@@ -1807,9 +1853,21 @@ uint16_t uniffi_bitkitcore_checksum_func_get_closed_channel_by_id(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_GAP_LIMIT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_GAP_LIMIT
+uint16_t uniffi_bitkitcore_checksum_func_get_default_gap_limit(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_LSP_BALANCE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_LSP_BALANCE
 uint16_t uniffi_bitkitcore_checksum_func_get_default_lsp_balance(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_WALLET_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_DEFAULT_WALLET_ID
+uint16_t uniffi_bitkitcore_checksum_func_get_default_wallet_id(void
     
 );
 #endif
@@ -1858,6 +1916,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_payment(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA
 uint16_t uniffi_bitkitcore_checksum_func_get_pre_activity_metadata(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_SUPPORTED_HARDWARE_WALLETS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_SUPPORTED_HARDWARE_WALLETS
+uint16_t uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets(void
     
 );
 #endif
@@ -2230,6 +2294,12 @@ uint16_t uniffi_bitkitcore_checksum_func_trezor_is_initialized(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_LIST_DEVICES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_LIST_DEVICES
 uint16_t uniffi_bitkitcore_checksum_func_trezor_list_devices(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_REFRESH_FEATURES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_REFRESH_FEATURES
+uint16_t uniffi_bitkitcore_checksum_func_trezor_refresh_features(void
     
 );
 #endif

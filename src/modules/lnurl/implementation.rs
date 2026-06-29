@@ -53,7 +53,7 @@ pub async fn get_lnurl_invoice_for_pay_data(
         .map_err(|_| LnurlError::InvalidResponse)?;
     let pr = callback_response.pr.ok_or(LnurlError::InvalidResponse)?;
 
-    validate_lnurl_pay_invoice(&pr, amount_msats, &data.metadata_str)?;
+    validate_lnurl_pay_invoice(&pr, amount_msats)?;
 
     Ok(pr)
 }
@@ -100,7 +100,7 @@ async fn generate_invoice(
             error_details: e.to_string(),
         })?;
 
-    validate_lnurl_pay_invoice(&invoice.pr, amount_msats, &pay.metadata)?;
+    validate_lnurl_pay_invoice(&invoice.pr, amount_msats)?;
 
     Ok(invoice.pr)
 }
@@ -137,11 +137,7 @@ pub(crate) fn build_lnurl_pay_callback_url(
     Ok(url)
 }
 
-pub(crate) fn validate_lnurl_pay_invoice(
-    pr: &str,
-    amount_msats: u64,
-    _metadata: &str,
-) -> Result<(), LnurlError> {
+pub(crate) fn validate_lnurl_pay_invoice(pr: &str, amount_msats: u64) -> Result<(), LnurlError> {
     let invoice = Bolt11Invoice::from_str(pr).map_err(|_| LnurlError::InvalidResponse)?;
     let invoice_msats = invoice
         .amount_milli_satoshis()

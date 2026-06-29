@@ -1,3 +1,4 @@
+use crate::modules::activity::{Activity, TransactionDetails};
 use crate::modules::scanner::NetworkType;
 use bitcoin::Network as BitcoinNetwork;
 use bitcoin_address_generator::{
@@ -6,6 +7,14 @@ use bitcoin_address_generator::{
 };
 use serde::{Deserialize, Serialize};
 use uniffi::{Enum, Record};
+
+/// Default address gap limit: the number of consecutive unused addresses to scan
+/// past the last used one before concluding a wallet branch is exhausted.
+///
+/// 20 is the BIP44 standard and also BDK's hardcoded Electrum stop-gap floor, so
+/// this is the smallest value the watcher will effectively use. Exposed so callers
+/// (and the mobile bindings) reference one source of truth instead of hardcoding 20.
+pub const DEFAULT_GAP_LIMIT: u32 = 20;
 
 #[derive(Debug, Clone, Copy, Enum)]
 pub enum WordCount {
@@ -479,6 +488,8 @@ pub struct HistoryTransaction {
     pub net: i64,
     /// Transaction fee in sats (None if not available, e.g. for received-only txs)
     pub fee: Option<u64>,
+    /// Fee rate in sats per virtual byte (None if fee or tx size is unavailable).
+    pub fee_rate: Option<f64>,
     /// Display amount in sats:
     /// - Received: the received value
     /// - Sent: amount that left the wallet (sent - received - fee)
@@ -528,8 +539,15 @@ impl From<bdk::Balance> for WalletBalance {
 #[derive(Debug, Clone, uniffi::Enum)]
 pub enum WatcherEvent {
     /// Transaction activity changed — contains full updated state.
+    ///
+    /// `activities` and `transaction_details` are persistence-ready: they carry
+    /// the watcher's `wallet_id`, real decoded addresses, fees from the watched
+    /// wallet's perspective, and DB-valid timestamps, so the app can store them
+    /// directly through the normal Core activity APIs (e.g. `upsert_activity` /
+    /// `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
     TransactionsChanged {
-        transactions: Vec<HistoryTransaction>,
+        activities: Vec<Activity>,
+        transaction_details: Vec<TransactionDetails>,
         balance: WalletBalance,
         tx_count: u32,
         block_height: u32,

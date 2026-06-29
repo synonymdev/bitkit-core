@@ -14,10 +14,13 @@ use tokio::sync::{oneshot, watch};
 
 use super::errors::AccountInfoError;
 use super::implementation::{
-    create_wallet, map_bdk_tx_to_history, resolve_wallet_setup, sort_history_transactions,
-    sync_wallet,
+    create_wallet, map_bdk_tx_to_detail, resolve_wallet_setup, sync_wallet,
+    watch_only_activity_from_detail,
 };
-use super::types::{AccountType, Network as OnchainNetwork, WalletBalance, WatcherEvent};
+use super::types::{
+    AccountType, Network as OnchainNetwork, WalletBalance, WatcherEvent, DEFAULT_GAP_LIMIT,
+};
+use bdk::bitcoin::Network as BdkNetwork;
 
 // ============================================================================
 // Callback trait
@@ -45,6 +48,11 @@ pub trait EventListener: Send + Sync {
 pub struct WatcherParams {
     /// Caller-supplied identifier for this watcher.
     pub watcher_id: String,
+    /// Wallet id that scopes the activities this watcher emits. One watcher
+    /// watches one address type, so this stays at the address-type boundary —
+    /// the same txid seen under two address types yields two wallet-scoped
+    /// activities under different `wallet_id`s, not one merged activity.
+    pub wallet_id: String,
     /// Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
     pub extended_key: String,
     /// Electrum server URL (e.g. "ssl://electrum.example.com:50002").
@@ -53,7 +61,8 @@ pub struct WatcherParams {
     pub network: Option<OnchainNetwork>,
     /// Account type override (auto-detected from key prefix if None).
     pub account_type: Option<AccountType>,
-    /// Number of unused addresses to monitor beyond the last used (default 20).
+    /// Number of unused addresses to monitor beyond the last used
+    /// (defaults to `DEFAULT_GAP_LIMIT` when None).
     pub gap_limit: Option<u32>,
 }
 
@@ -316,11 +325,26 @@ fn derive_scripts(
     Ok(scripts)
 }
 
+/// Current unix time in seconds (used as the timestamp for still-unconfirmed txs
+/// so emitted activities are DB-valid and sort to the top while pending).
+fn now_secs() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
+
 /// Build a TransactionsChanged event from a synced wallet.
+///
+/// Emits persistence-ready Core activities + transaction details scoped to
+/// `wallet_id` (the watched address type). No cross-address-type merging: each
+/// tx in this wallet becomes exactly one activity.
 fn build_tx_changed_event(
     wallet: &Wallet<MemoryDatabase>,
     tip_height: u32,
     account_type: AccountType,
+    wallet_id: &str,
+    wallet_network: BdkNetwork,
 ) -> WatcherEvent {
     let bdk_balance = match wallet.get_balance() {
         Ok(b) => b,
@@ -332,7 +356,8 @@ fn build_tx_changed_event(
     };
     let balance: WalletBalance = bdk_balance.into();
 
-    let txs = match wallet.list_transactions(false) {
+    // `true` includes the raw transaction so we can decode addresses / vsize.
+    let txs = match wallet.list_transactions(true) {
         Ok(t) => t,
         Err(e) => {
             return WatcherEvent::Error {
@@ -341,16 +366,28 @@ fn build_tx_changed_event(
         }
     };
 
-    let mut history = txs
-        .iter()
-        .map(|tx| map_bdk_tx_to_history(tx, tip_height))
-        .collect::<Vec<_>>();
-    sort_history_transactions(&mut history);
+    let now = now_secs();
+    let mut activities = Vec::with_capacity(txs.len());
+    let mut transaction_details = Vec::with_capacity(txs.len());
+    for tx in &txs {
+        let detail = match map_bdk_tx_to_detail(wallet, tx, tip_height, wallet_network) {
+            Ok(d) => d,
+            Err(e) => {
+                return WatcherEvent::Error {
+                    message: format!("Failed to decode transaction: {}", e),
+                };
+            }
+        };
+        let (activity, details) = watch_only_activity_from_detail(wallet_id, &detail, now);
+        activities.push(activity);
+        transaction_details.push(details);
+    }
 
-    let tx_count = u32::try_from(history.len()).unwrap_or(u32::MAX);
+    let tx_count = u32::try_from(activities.len()).unwrap_or(u32::MAX);
 
     WatcherEvent::TransactionsChanged {
-        transactions: history,
+        activities,
+        transaction_details,
         balance,
         tx_count,
         block_height: tip_height,
@@ -538,11 +575,13 @@ fn watcher_init_and_loop(
     listener: Arc<dyn EventListener>,
     init_tx: oneshot::Sender<Result<(), AccountInfoError>>,
 ) {
-    let gap = params.gap_limit.unwrap_or(20);
+    let gap = params.gap_limit.unwrap_or(DEFAULT_GAP_LIMIT);
     // Wallet sync must scan at least as far as the subscribed scripts (last used
-    // + gap). Never drop below BDK's default of 20.
-    let sync_stop_gap = (gap as usize).max(20);
+    // + gap). Never drop below BDK's default stop-gap.
+    let sync_stop_gap = (gap as usize).max(DEFAULT_GAP_LIMIT as usize);
     let account_type = setup.account_type;
+    let wallet_network = setup.network;
+    let wallet_id = params.wallet_id.clone();
     let watcher_id = params.watcher_id.clone();
 
     // --- Initialization ---
@@ -634,7 +673,13 @@ fn watcher_init_and_loop(
     // Send initial state.
     listener.on_event(
         watcher_id.clone(),
-        build_tx_changed_event(&wallet, tip_height, account_type),
+        build_tx_changed_event(
+            &wallet,
+            tip_height,
+            account_type,
+            &wallet_id,
+            wallet_network,
+        ),
     );
 
     // Track the last-used indices to detect gap limit extensions.
@@ -824,7 +869,13 @@ fn watcher_init_and_loop(
 
             listener.on_event(
                 watcher_id.clone(),
-                build_tx_changed_event(&wallet, tip_height, account_type),
+                build_tx_changed_event(
+                    &wallet,
+                    tip_height,
+                    account_type,
+                    &wallet_id,
+                    wallet_network,
+                ),
             );
         }
 

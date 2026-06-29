@@ -3,8 +3,9 @@
 #[cfg(test)]
 mod tests {
     use crate::modules::trezor::{
-        TrezorCoinType, TrezorDeviceInfo, TrezorError, TrezorFeatures, TrezorScriptType,
-        TrezorSignTxParams, TrezorSignedTx, TrezorTransportType, TrezorTxInput, TrezorTxOutput,
+        encode_callback_transport_error, TrezorCoinType, TrezorDeviceInfo, TrezorError,
+        TrezorFeatures, TrezorScriptType, TrezorSignTxParams, TrezorSignedTx,
+        TrezorTransportErrorCode, TrezorTransportType, TrezorTxInput, TrezorTxOutput,
     };
 
     // ========================================================================
@@ -31,6 +32,47 @@ mod tests {
         let err: TrezorError = tc_err.into();
 
         assert!(matches!(err, TrezorError::DeviceDisconnected));
+    }
+
+    #[test]
+    fn test_error_conversion_device_busy() {
+        use trezor_connect_rs::error::TransportError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        let tc_err = TcError::Transport(TransportError::DeviceBusy);
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::DeviceBusy));
+    }
+
+    #[test]
+    fn test_callback_open_device_busy_maps_to_device_busy() {
+        use trezor_connect_rs::error::TransportError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        let callback_error = encode_callback_transport_error(
+            "native transport busy".to_string(),
+            Some(TrezorTransportErrorCode::DeviceBusy),
+        );
+        let tc_err = TcError::Transport(TransportError::UnableToOpen(callback_error));
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::DeviceBusy));
+    }
+
+    #[test]
+    fn test_callback_data_transfer_busy_maps_to_device_busy() {
+        use trezor_connect_rs::error::TransportError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        let callback_error = encode_callback_transport_error(
+            String::new(),
+            Some(TrezorTransportErrorCode::DeviceBusy),
+        );
+        let tc_err = TcError::Transport(TransportError::DataTransfer(callback_error));
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::DeviceBusy));
     }
 
     #[test]
@@ -117,6 +159,88 @@ mod tests {
         let err: TrezorError = tc_err.into();
 
         assert!(matches!(err, TrezorError::NotConnected));
+    }
+
+    // The following tests start from raw Trezor protocol `Failure` codes
+    // (FailureType in proto/messages-common.proto) and assert they surface as
+    // typed bitkit-core errors through the existing conversion path — i.e. a
+    // wrong-PIN `Failure { code: 7 }` reaches the app as TrezorError::InvalidPin
+    // rather than a generic device error.
+
+    #[test]
+    fn test_failure_code_pin_invalid_surfaces_as_invalid_pin() {
+        use trezor_connect_rs::error::DeviceError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        // Failure_PinInvalid = 7
+        let tc_err = TcError::Device(DeviceError::from_failure(
+            Some(7),
+            "invalid pin".to_string(),
+        ));
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::InvalidPin));
+    }
+
+    #[test]
+    fn test_failure_code_pin_cancelled_surfaces_as_pin_cancelled() {
+        use trezor_connect_rs::error::DeviceError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        // Failure_PinCancelled = 6
+        let tc_err = TcError::Device(DeviceError::from_failure(Some(6), "cancelled".to_string()));
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::PinCancelled));
+    }
+
+    #[test]
+    fn test_failure_code_pin_expected_surfaces_as_pin_required() {
+        use trezor_connect_rs::error::DeviceError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        // Failure_PinExpected = 5
+        let tc_err = TcError::Device(DeviceError::from_failure(
+            Some(5),
+            "pin expected".to_string(),
+        ));
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::PinRequired));
+    }
+
+    #[test]
+    fn test_failure_code_action_cancelled_surfaces_as_user_cancelled() {
+        use trezor_connect_rs::error::DeviceError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        // Failure_ActionCancelled = 4
+        let tc_err = TcError::Device(DeviceError::from_failure(
+            Some(4),
+            "action cancelled".to_string(),
+        ));
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::UserCancelled));
+    }
+
+    #[test]
+    fn test_failure_code_unknown_stays_generic_device_error() {
+        use trezor_connect_rs::error::DeviceError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        // Unknown code (Failure_FirmwareError = 99) must remain a generic device
+        // error so existing behavior is preserved.
+        let tc_err = TcError::Device(DeviceError::from_failure(Some(99), "boom".to_string()));
+        let err: TrezorError = tc_err.into();
+
+        match err {
+            TrezorError::DeviceError { error_details } => {
+                assert!(error_details.contains("99"));
+                assert!(error_details.contains("boom"));
+            }
+            other => panic!("expected generic DeviceError, got {other:?}"),
+        }
     }
 
     #[test]
@@ -455,6 +579,7 @@ mod tests {
             minor_version: Some(8),
             patch_version: Some(0),
             pin_protection: Some(true),
+            unlocked: Some(true),
             passphrase_protection: Some(false),
             initialized: Some(true),
             needs_backup: Some(false),
@@ -471,9 +596,42 @@ mod tests {
         assert_eq!(result.minor_version, Some(8));
         assert_eq!(result.patch_version, Some(0));
         assert_eq!(result.pin_protection, Some(true));
+        assert_eq!(result.unlocked, Some(true));
         assert_eq!(result.passphrase_protection, Some(false));
         assert_eq!(result.initialized, Some(true));
         assert_eq!(result.needs_backup, Some(false));
+    }
+
+    #[test]
+    fn test_features_from_trezor_connect_maps_unlocked_false() {
+        use trezor_connect_rs::device::Features;
+
+        let tc_features = Features {
+            pin_protection: Some(true),
+            unlocked: Some(false),
+            ..Default::default()
+        };
+
+        let result: TrezorFeatures = tc_features.into();
+
+        assert_eq!(result.pin_protection, Some(true));
+        assert_eq!(result.unlocked, Some(false));
+    }
+
+    #[test]
+    fn test_features_from_trezor_connect_maps_unlocked_none() {
+        use trezor_connect_rs::device::Features;
+
+        let tc_features = Features {
+            pin_protection: Some(true),
+            unlocked: None,
+            ..Default::default()
+        };
+
+        let result: TrezorFeatures = tc_features.into();
+
+        assert_eq!(result.pin_protection, Some(true));
+        assert_eq!(result.unlocked, None);
     }
 
     // ========================================================================
@@ -778,5 +936,36 @@ mod tests {
         let adapter = adapter_with(Arc::clone(&mock));
         let _ = adapter.on_passphrase_request(true);
         assert_eq!(*mock.last_passphrase_on_device.lock().unwrap(), Some(true));
+    }
+
+    // ========================================================================
+    // Supported hardware-wallet catalog
+    // ========================================================================
+
+    #[test]
+    fn test_supported_hardware_wallets_catalog() {
+        use crate::modules::trezor::{get_supported_hardware_wallets, HardwareWalletVendor};
+
+        let wallets = get_supported_hardware_wallets();
+
+        // Full Trezor lineup, all Trezor-vendored, every entry well-formed.
+        assert_eq!(wallets.len(), 5);
+        for w in &wallets {
+            assert_eq!(w.vendor, HardwareWalletVendor::Trezor);
+            assert_eq!(w.vendor_name, "Trezor");
+            assert_eq!(w.display_name, format!("Trezor {}", w.model));
+            assert!(
+                w.transports.contains(&TrezorTransportType::Usb),
+                "every model supports USB"
+            );
+        }
+
+        // iOS shows only Bluetooth-capable models -> exactly the Safe 7.
+        let ble: Vec<&str> = wallets
+            .iter()
+            .filter(|w| w.transports.contains(&TrezorTransportType::Bluetooth))
+            .map(|w| w.model.as_str())
+            .collect();
+        assert_eq!(ble, vec!["Safe 7"]);
     }
 }

@@ -21,9 +21,10 @@ use once_cell::sync::OnceCell;
 
 // Re-export Trezor callback types and traits so UniFFI discovers them at the crate root
 use crate::activity::{
-    Activity, ActivityDB, ActivityError, ActivityFilter, ActivityTags, ClosedChannelDetails,
-    DbError, LightningActivity, OnchainActivity, PaymentType, PreActivityMetadata, SortDirection,
-    TransactionDetails,
+    derive_wallet_id as derive_wallet_id_inner, Activity, ActivityDB, ActivityError,
+    ActivityFilter, ActivityTags, ClosedChannelDetails, DbError, LightningActivity,
+    OnchainActivity, PaymentType, PreActivityMetadata, SortDirection, TransactionDetails,
+    DEFAULT_WALLET_ID,
 };
 use crate::modules::blocktank::{
     BlocktankDB, BlocktankError, BtOrderState2, CJitStateEnum, ChannelLiquidityOptions,
@@ -34,9 +35,10 @@ use crate::modules::blocktank::{
 use crate::modules::pubky::{PubkyAuthDetails, PubkyAuthKind, PubkyError, PubkyProfile};
 use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
-    get_transport_callback, trezor_is_ble_available, trezor_set_transport_callback,
-    trezor_set_ui_callback, NativeDeviceInfo, PassphraseResponse, TrezorCallMessageResult,
-    TrezorTransportCallback, TrezorTransportReadResult, TrezorTransportWriteResult,
+    get_supported_hardware_wallets, get_transport_callback, trezor_is_ble_available,
+    trezor_set_transport_callback, trezor_set_ui_callback, HardwareWalletVendor, NativeDeviceInfo,
+    PassphraseResponse, SupportedHardwareWallet, TrezorCallMessageResult, TrezorTransportCallback,
+    TrezorTransportErrorCode, TrezorTransportReadResult, TrezorTransportWriteResult,
     TrezorUiCallback, WalletSelection,
 };
 use crate::modules::trezor::{
@@ -52,7 +54,7 @@ use crate::onchain::{
     BroadcastError, GetAddressResponse, GetAddressesResponse, LegacyRnCloseRecoveryScanResult,
     LegacyRnCloseRecoverySweepPreview, Network, SingleAddressInfoResult, SweepError, SweepResult,
     SweepTransactionPreview, SweepableBalances, TransactionDetail, TransactionHistoryResult,
-    ValidationResult,
+    ValidationResult, DEFAULT_GAP_LIMIT,
 };
 use crate::onchain::{compose_transaction, ComposeParams, ComposeResult};
 use crate::onchain::{
@@ -480,7 +482,30 @@ pub fn init_db(base_path: String) -> Result<String, DbError> {
 }
 
 #[uniffi::export]
+pub fn get_default_wallet_id() -> String {
+    DEFAULT_WALLET_ID.to_string()
+}
+
+/// The default address gap limit used by account scanning and the xpub watcher.
+/// Exposed so platforms reference one source of truth instead of hardcoding 20.
+#[uniffi::export]
+pub fn get_default_gap_limit() -> u32 {
+    DEFAULT_GAP_LIMIT
+}
+
+/// Derive a stable, cross-platform `wallet_id` for a hardware (watch-only) wallet
+/// from its account extended public keys. See `derive_wallet_id` in the activity
+/// module for the exact derivation. Order of `xpubs` does not matter. Returns an
+/// error if `device_type` is blank or `xpubs` is empty / has a blank entry.
+#[uniffi::export]
+pub fn derive_wallet_id(device_type: String, xpubs: Vec<String>) -> Result<String, ActivityError> {
+    derive_wallet_id_inner(device_type, xpubs)
+}
+
+#[uniffi::export]
+#[allow(clippy::too_many_arguments)]
 pub fn get_activities(
+    wallet_id: Option<String>,
     filter: Option<ActivityFilter>,
     tx_type: Option<PaymentType>,
     tags: Option<Vec<String>>,
@@ -498,6 +523,7 @@ pub fn get_activities(
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
     db.get_activities(
+        wallet_id.as_deref(),
         filter,
         tx_type,
         tags,
@@ -554,7 +580,10 @@ pub fn update_activity(activity_id: String, activity: Activity) -> Result<(), Ac
 }
 
 #[uniffi::export]
-pub fn get_activity_by_id(activity_id: String) -> Result<Option<Activity>, ActivityError> {
+pub fn get_activity_by_id(
+    wallet_id: String,
+    activity_id: String,
+) -> Result<Option<Activity>, ActivityError> {
     let guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -562,11 +591,14 @@ pub fn get_activity_by_id(activity_id: String) -> Result<Option<Activity>, Activ
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.get_activity_by_id(&activity_id)
+    db.get_activity_by_id(&wallet_id, &activity_id)
 }
 
 #[uniffi::export]
-pub fn get_activity_by_tx_id(tx_id: String) -> Result<Option<OnchainActivity>, ActivityError> {
+pub fn get_activity_by_tx_id(
+    wallet_id: String,
+    tx_id: String,
+) -> Result<Option<OnchainActivity>, ActivityError> {
     let guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -574,11 +606,14 @@ pub fn get_activity_by_tx_id(tx_id: String) -> Result<Option<OnchainActivity>, A
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.get_activity_by_tx_id(&tx_id)
+    db.get_activity_by_tx_id(&wallet_id, &tx_id)
 }
 
 #[uniffi::export]
-pub fn delete_activity_by_id(activity_id: String) -> Result<bool, ActivityError> {
+pub fn delete_activity_by_id(
+    wallet_id: String,
+    activity_id: String,
+) -> Result<bool, ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -586,11 +621,11 @@ pub fn delete_activity_by_id(activity_id: String) -> Result<bool, ActivityError>
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.delete_activity_by_id(&activity_id)
+    db.delete_activity_by_id(&wallet_id, &activity_id)
 }
 
 #[uniffi::export]
-pub fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
+pub fn delete_activities_by_wallet_id(wallet_id: String) -> Result<u32, ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -598,11 +633,15 @@ pub fn add_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityEr
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.add_tags(&activity_id, &tags)
+    db.delete_activities_by_wallet_id(&wallet_id)
 }
 
 #[uniffi::export]
-pub fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), ActivityError> {
+pub fn add_tags(
+    wallet_id: String,
+    activity_id: String,
+    tags: Vec<String>,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -610,11 +649,27 @@ pub fn remove_tags(activity_id: String, tags: Vec<String>) -> Result<(), Activit
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.remove_tags(&activity_id, &tags)
+    db.add_tags(&wallet_id, &activity_id, &tags)
 }
 
 #[uniffi::export]
-pub fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError> {
+pub fn remove_tags(
+    wallet_id: String,
+    activity_id: String,
+    tags: Vec<String>,
+) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
+    db.remove_tags(&wallet_id, &activity_id, &tags)
+}
+
+#[uniffi::export]
+pub fn get_tags(wallet_id: String, activity_id: String) -> Result<Vec<String>, ActivityError> {
     let guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -622,11 +677,12 @@ pub fn get_tags(activity_id: String) -> Result<Vec<String>, ActivityError> {
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.get_tags(&activity_id)
+    db.get_tags(&wallet_id, &activity_id)
 }
 
 #[uniffi::export]
 pub fn get_activities_by_tag(
+    wallet_id: Option<String>,
     tag: String,
     limit: Option<u32>,
     sort_direction: Option<SortDirection>,
@@ -638,7 +694,7 @@ pub fn get_activities_by_tag(
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.get_activities_by_tag(&tag, limit, sort_direction)
+    db.get_activities_by_tag(wallet_id.as_deref(), &tag, limit, sort_direction)
 }
 
 #[uniffi::export]
@@ -693,6 +749,7 @@ pub fn add_pre_activity_metadata(
 
 #[uniffi::export]
 pub fn add_pre_activity_metadata_tags(
+    wallet_id: String,
     payment_id: String,
     tags: Vec<String>,
 ) -> Result<(), ActivityError> {
@@ -703,11 +760,12 @@ pub fn add_pre_activity_metadata_tags(
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.add_pre_activity_metadata_tags(&payment_id, &tags)
+    db.add_pre_activity_metadata_tags(&wallet_id, &payment_id, &tags)
 }
 
 #[uniffi::export]
 pub fn remove_pre_activity_metadata_tags(
+    wallet_id: String,
     payment_id: String,
     tags: Vec<String>,
 ) -> Result<(), ActivityError> {
@@ -718,11 +776,14 @@ pub fn remove_pre_activity_metadata_tags(
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.remove_pre_activity_metadata_tags(&payment_id, &tags)
+    db.remove_pre_activity_metadata_tags(&wallet_id, &payment_id, &tags)
 }
 
 #[uniffi::export]
-pub fn reset_pre_activity_metadata_tags(payment_id: String) -> Result<(), ActivityError> {
+pub fn reset_pre_activity_metadata_tags(
+    wallet_id: String,
+    payment_id: String,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -730,11 +791,14 @@ pub fn reset_pre_activity_metadata_tags(payment_id: String) -> Result<(), Activi
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.reset_pre_activity_metadata_tags(&payment_id)
+    db.reset_pre_activity_metadata_tags(&wallet_id, &payment_id)
 }
 
 #[uniffi::export]
-pub fn delete_pre_activity_metadata(payment_id: String) -> Result<(), ActivityError> {
+pub fn delete_pre_activity_metadata(
+    wallet_id: String,
+    payment_id: String,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -742,7 +806,7 @@ pub fn delete_pre_activity_metadata(payment_id: String) -> Result<(), ActivityEr
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.delete_pre_activity_metadata(&payment_id)
+    db.delete_pre_activity_metadata(&wallet_id, &payment_id)
 }
 
 #[uniffi::export]
@@ -761,6 +825,7 @@ pub fn upsert_pre_activity_metadata(
 
 #[uniffi::export]
 pub fn get_pre_activity_metadata(
+    wallet_id: String,
     search_key: String,
     search_by_address: bool,
 ) -> Result<Option<PreActivityMetadata>, ActivityError> {
@@ -771,7 +836,7 @@ pub fn get_pre_activity_metadata(
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.get_pre_activity_metadata(&search_key, search_by_address)
+    db.get_pre_activity_metadata(&wallet_id, &search_key, search_by_address)
 }
 
 #[uniffi::export]
@@ -1661,7 +1726,11 @@ pub fn is_address_used(address: String) -> Result<bool, ActivityError> {
 }
 
 #[uniffi::export]
-pub fn mark_activity_as_seen(activity_id: String, seen_at: u64) -> Result<(), ActivityError> {
+pub fn mark_activity_as_seen(
+    wallet_id: String,
+    activity_id: String,
+    seen_at: u64,
+) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -1669,7 +1738,7 @@ pub fn mark_activity_as_seen(activity_id: String, seen_at: u64) -> Result<(), Ac
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.mark_activity_as_seen(&activity_id, seen_at)
+    db.mark_activity_as_seen(&wallet_id, &activity_id, seen_at)
 }
 
 #[uniffi::export]
@@ -1687,7 +1756,10 @@ pub fn upsert_transaction_details(
 }
 
 #[uniffi::export]
-pub fn get_transaction_details(tx_id: String) -> Result<Option<TransactionDetails>, ActivityError> {
+pub fn get_transaction_details(
+    wallet_id: String,
+    tx_id: String,
+) -> Result<Option<TransactionDetails>, ActivityError> {
     let guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -1695,7 +1767,7 @@ pub fn get_transaction_details(tx_id: String) -> Result<Option<TransactionDetail
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.get_transaction_details(&tx_id)
+    db.get_transaction_details(&wallet_id, &tx_id)
 }
 
 #[uniffi::export]
@@ -1711,7 +1783,7 @@ pub fn get_all_transaction_details() -> Result<Vec<TransactionDetails>, Activity
 }
 
 #[uniffi::export]
-pub fn delete_transaction_details(tx_id: String) -> Result<bool, ActivityError> {
+pub fn delete_transaction_details(wallet_id: String, tx_id: String) -> Result<bool, ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
@@ -1719,7 +1791,7 @@ pub fn delete_transaction_details(tx_id: String) -> Result<bool, ActivityError> 
         .ok_or(ActivityError::ConnectionError {
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
-    db.delete_transaction_details(&tx_id)
+    db.delete_transaction_details(&wallet_id, &tx_id)
 }
 
 #[uniffi::export]
@@ -2348,6 +2420,23 @@ pub async fn trezor_get_features() -> Option<TrezorFeatures> {
     rt.spawn(async move { get_trezor_manager().get_features().await })
         .await
         .unwrap_or(None)
+}
+
+/// Refresh features from the currently connected Trezor device.
+///
+/// This performs a single explicit device request and updates the connected
+/// device's cached features. It does not start polling. Returns `NotConnected`
+/// if there is no connected device.
+#[uniffi::export]
+pub async fn trezor_refresh_features() -> Result<TrezorFeatures, TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_trezor_manager().refresh_features().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Sign a message with the connected Trezor device.

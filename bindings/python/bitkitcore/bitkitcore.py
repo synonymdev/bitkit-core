@@ -465,9 +465,9 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata() != 17211:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags() != 28081:
+    if lib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags() != 5813:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_add_tags() != 63739:
+    if lib.uniffi_bitkitcore_checksum_func_add_tags() != 61276:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_approve_pubky_auth() != 22222:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -497,11 +497,13 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_decode() != 28437:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 29867:
+    if lib.uniffi_bitkitcore_checksum_func_delete_activities_by_wallet_id() != 15848:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 46621:
+    if lib.uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 13256:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_delete_transaction_details() != 21670:
+    if lib.uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 63740:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_delete_transaction_details() != 43443:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_derive_bitcoin_address() != 35090:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -512,6 +514,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_derive_private_key() != 25155:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_derive_pubky_secret_key() != 36989:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_derive_wallet_id() != 30111:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -529,13 +533,13 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_activities() != 21347:
+    if lib.uniffi_bitkitcore_checksum_func_get_activities() != 9879:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 52823:
+    if lib.uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 16182:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 44227:
+    if lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 28490:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_activity_by_tx_id() != 2520:
+    if lib.uniffi_bitkitcore_checksum_func_get_activity_by_tx_id() != 28432:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_all_activities_tags() != 29245:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -555,7 +559,11 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_default_gap_limit() != 24024:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_default_lsp_balance() != 35903:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_default_wallet_id() != 19552:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_gift() != 386:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -571,11 +579,13 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_payment() != 29170:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 53126:
+    if lib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_tags() != 11308:
+    if lib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 36542:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_transaction_details() != 6118:
+    if lib.uniffi_bitkitcore_checksum_func_get_tags() != 8596:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_transaction_details() != 4810:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_gift_order() != 22040:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -591,7 +601,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 65086:
+    if lib.uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 36622:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_mnemonic_to_entropy() != 36669:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -655,11 +665,11 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 1991:
+    if lib.uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 37046:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_remove_tags() != 58873:
+    if lib.uniffi_bitkitcore_checksum_func_remove_tags() != 53863:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 34703:
+    if lib.uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 49760:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_resolve_pubky_url() != 43253:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -696,6 +706,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_trezor_is_initialized() != 59329:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_list_devices() != 32859:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_trezor_refresh_features() != 6918:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_scan() != 54763:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -1092,10 +1104,12 @@ _UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
+    _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_add_tags.argtypes = (
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1176,17 +1190,25 @@ _UniffiLib.uniffi_bitkitcore_fn_func_decode.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_decode.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_delete_activities_by_wallet_id.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_delete_activities_by_wallet_id.restype = ctypes.c_uint32
 _UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.argtypes = (
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id.restype = ctypes.c_int8
 _UniffiLib.uniffi_bitkitcore_fn_func_delete_pre_activity_metadata.argtypes = (
     _UniffiRustBuffer,
+    _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_delete_pre_activity_metadata.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_delete_transaction_details.argtypes = (
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -1232,6 +1254,12 @@ _UniffiLib.uniffi_bitkitcore_fn_func_derive_pubky_secret_key.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_derive_pubky_secret_key.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_wallet_id.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_derive_wallet_id.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_entropy_to_mnemonic.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1279,10 +1307,12 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_activities.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
+    _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activities.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag.argtypes = (
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1291,10 +1321,12 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag.argtypes = (
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.argtypes = (
     _UniffiRustBuffer,
+    _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_tx_id.argtypes = (
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -1341,11 +1373,19 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_closed_channel_by_id.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_default_gap_limit.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_default_gap_limit.restype = ctypes.c_uint32
 _UniffiLib.uniffi_bitkitcore_fn_func_get_default_lsp_balance.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_default_lsp_balance.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_default_wallet_id.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_default_wallet_id.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_gift.argtypes = (
     _UniffiRustBuffer,
 )
@@ -1381,16 +1421,23 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_payment.argtypes = (
 _UniffiLib.uniffi_bitkitcore_fn_func_get_payment.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata.argtypes = (
     _UniffiRustBuffer,
+    _UniffiRustBuffer,
     ctypes.c_int8,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_supported_hardware_wallets.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_supported_hardware_wallets.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_tags.argtypes = (
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_tags.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_transaction_details.argtypes = (
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -1434,6 +1481,7 @@ _UniffiLib.uniffi_bitkitcore_fn_func_lnurl_auth.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_lnurl_auth.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_mark_activity_as_seen.argtypes = (
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.c_uint64,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1617,16 +1665,19 @@ _UniffiLib.uniffi_bitkitcore_fn_func_remove_closed_channel_by_id.restype = ctype
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
+    _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_tags.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
+    _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_remove_tags.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags.argtypes = (
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -1706,6 +1757,9 @@ _UniffiLib.uniffi_bitkitcore_fn_func_trezor_is_initialized.restype = ctypes.c_ui
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_list_devices.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_list_devices.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_refresh_features.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_refresh_features.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_scan.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_scan.restype = ctypes.c_uint64
@@ -2146,6 +2200,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_create_withdraw_callback_url.restype 
 _UniffiLib.uniffi_bitkitcore_checksum_func_decode.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_decode.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_delete_activities_by_wallet_id.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_delete_activities_by_wallet_id.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_delete_activity_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_delete_activity_by_id.restype = ctypes.c_uint16
@@ -2170,6 +2227,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_derive_private_key.restype = ctypes.c
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_pubky_secret_key.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_derive_pubky_secret_key.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_wallet_id.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_derive_wallet_id.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_entropy_to_mnemonic.restype = ctypes.c_uint16
@@ -2233,9 +2293,15 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_cjit_entries.restype = ctypes.c_u
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_closed_channel_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_closed_channel_by_id.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_default_gap_limit.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_default_gap_limit.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_default_lsp_balance.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_default_lsp_balance.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_default_wallet_id.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_default_wallet_id.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_gift.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_gift.restype = ctypes.c_uint16
@@ -2260,6 +2326,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_payment.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_tags.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_tags.restype = ctypes.c_uint16
@@ -2446,6 +2515,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_is_initialized.restype = ctype
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_list_devices.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_list_devices.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_refresh_features.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_refresh_features.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_scan.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_scan.restype = ctypes.c_uint16
@@ -3034,16 +3106,20 @@ class _UniffiConverterTypeAccountUtxo(_UniffiConverterRustBuffer):
 
 
 class ActivityTags:
+    wallet_id: "str"
     activity_id: "str"
     tags: "typing.List[str]"
-    def __init__(self, *, activity_id: "str", tags: "typing.List[str]"):
+    def __init__(self, *, wallet_id: "str", activity_id: "str", tags: "typing.List[str]"):
+        self.wallet_id = wallet_id
         self.activity_id = activity_id
         self.tags = tags
 
     def __str__(self):
-        return "ActivityTags(activity_id={}, tags={})".format(self.activity_id, self.tags)
+        return "ActivityTags(wallet_id={}, activity_id={}, tags={})".format(self.wallet_id, self.activity_id, self.tags)
 
     def __eq__(self, other):
+        if self.wallet_id != other.wallet_id:
+            return False
         if self.activity_id != other.activity_id:
             return False
         if self.tags != other.tags:
@@ -3054,17 +3130,20 @@ class _UniffiConverterTypeActivityTags(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
         return ActivityTags(
+            wallet_id=_UniffiConverterString.read(buf),
             activity_id=_UniffiConverterString.read(buf),
             tags=_UniffiConverterSequenceString.read(buf),
         )
 
     @staticmethod
     def check_lower(value):
+        _UniffiConverterString.check_lower(value.wallet_id)
         _UniffiConverterString.check_lower(value.activity_id)
         _UniffiConverterSequenceString.check_lower(value.tags)
 
     @staticmethod
     def write(value, buf):
+        _UniffiConverterString.write(value.wallet_id, buf)
         _UniffiConverterString.write(value.activity_id, buf)
         _UniffiConverterSequenceString.write(value.tags, buf)
 
@@ -3902,6 +3981,11 @@ class HistoryTransaction:
     Transaction fee in sats (None if not available, e.g. for received-only txs)
     """
 
+    fee_rate: "typing.Optional[float]"
+    """
+    Fee rate in sats per virtual byte (None if fee or tx size is unavailable).
+    """
+
     amount: "int"
     """
     Display amount in sats:
@@ -3930,12 +4014,13 @@ class HistoryTransaction:
     Number of confirmations (0 if unconfirmed)
     """
 
-    def __init__(self, *, txid: "str", received: "int", sent: "int", net: "int", fee: "typing.Optional[int]", amount: "int", direction: "TxDirection", block_height: "typing.Optional[int]", timestamp: "typing.Optional[int]", confirmations: "int"):
+    def __init__(self, *, txid: "str", received: "int", sent: "int", net: "int", fee: "typing.Optional[int]", fee_rate: "typing.Optional[float]", amount: "int", direction: "TxDirection", block_height: "typing.Optional[int]", timestamp: "typing.Optional[int]", confirmations: "int"):
         self.txid = txid
         self.received = received
         self.sent = sent
         self.net = net
         self.fee = fee
+        self.fee_rate = fee_rate
         self.amount = amount
         self.direction = direction
         self.block_height = block_height
@@ -3943,7 +4028,7 @@ class HistoryTransaction:
         self.confirmations = confirmations
 
     def __str__(self):
-        return "HistoryTransaction(txid={}, received={}, sent={}, net={}, fee={}, amount={}, direction={}, block_height={}, timestamp={}, confirmations={})".format(self.txid, self.received, self.sent, self.net, self.fee, self.amount, self.direction, self.block_height, self.timestamp, self.confirmations)
+        return "HistoryTransaction(txid={}, received={}, sent={}, net={}, fee={}, fee_rate={}, amount={}, direction={}, block_height={}, timestamp={}, confirmations={})".format(self.txid, self.received, self.sent, self.net, self.fee, self.fee_rate, self.amount, self.direction, self.block_height, self.timestamp, self.confirmations)
 
     def __eq__(self, other):
         if self.txid != other.txid:
@@ -3955,6 +4040,8 @@ class HistoryTransaction:
         if self.net != other.net:
             return False
         if self.fee != other.fee:
+            return False
+        if self.fee_rate != other.fee_rate:
             return False
         if self.amount != other.amount:
             return False
@@ -3977,6 +4064,7 @@ class _UniffiConverterTypeHistoryTransaction(_UniffiConverterRustBuffer):
             sent=_UniffiConverterUInt64.read(buf),
             net=_UniffiConverterInt64.read(buf),
             fee=_UniffiConverterOptionalUInt64.read(buf),
+            fee_rate=_UniffiConverterOptionalDouble.read(buf),
             amount=_UniffiConverterUInt64.read(buf),
             direction=_UniffiConverterTypeTxDirection.read(buf),
             block_height=_UniffiConverterOptionalUInt32.read(buf),
@@ -3991,6 +4079,7 @@ class _UniffiConverterTypeHistoryTransaction(_UniffiConverterRustBuffer):
         _UniffiConverterUInt64.check_lower(value.sent)
         _UniffiConverterInt64.check_lower(value.net)
         _UniffiConverterOptionalUInt64.check_lower(value.fee)
+        _UniffiConverterOptionalDouble.check_lower(value.fee_rate)
         _UniffiConverterUInt64.check_lower(value.amount)
         _UniffiConverterTypeTxDirection.check_lower(value.direction)
         _UniffiConverterOptionalUInt32.check_lower(value.block_height)
@@ -4004,6 +4093,7 @@ class _UniffiConverterTypeHistoryTransaction(_UniffiConverterRustBuffer):
         _UniffiConverterUInt64.write(value.sent, buf)
         _UniffiConverterInt64.write(value.net, buf)
         _UniffiConverterOptionalUInt64.write(value.fee, buf)
+        _UniffiConverterOptionalDouble.write(value.fee_rate, buf)
         _UniffiConverterUInt64.write(value.amount, buf)
         _UniffiConverterTypeTxDirection.write(value.direction, buf)
         _UniffiConverterOptionalUInt32.write(value.block_height, buf)
@@ -6116,6 +6206,7 @@ class _UniffiConverterTypeLegacyRnCloseRecoverySweepPreview(_UniffiConverterRust
 
 
 class LightningActivity:
+    wallet_id: "str"
     id: "str"
     tx_type: "PaymentType"
     status: "PaymentState"
@@ -6129,7 +6220,8 @@ class LightningActivity:
     created_at: "typing.Optional[int]"
     updated_at: "typing.Optional[int]"
     seen_at: "typing.Optional[int]"
-    def __init__(self, *, id: "str", tx_type: "PaymentType", status: "PaymentState", value: "int", fee: "typing.Optional[int]", invoice: "str", message: "str", timestamp: "int", preimage: "typing.Optional[str]", contact: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]", seen_at: "typing.Optional[int]"):
+    def __init__(self, *, wallet_id: "str", id: "str", tx_type: "PaymentType", status: "PaymentState", value: "int", fee: "typing.Optional[int]", invoice: "str", message: "str", timestamp: "int", preimage: "typing.Optional[str]", contact: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]", seen_at: "typing.Optional[int]"):
+        self.wallet_id = wallet_id
         self.id = id
         self.tx_type = tx_type
         self.status = status
@@ -6145,9 +6237,11 @@ class LightningActivity:
         self.seen_at = seen_at
 
     def __str__(self):
-        return "LightningActivity(id={}, tx_type={}, status={}, value={}, fee={}, invoice={}, message={}, timestamp={}, preimage={}, contact={}, created_at={}, updated_at={}, seen_at={})".format(self.id, self.tx_type, self.status, self.value, self.fee, self.invoice, self.message, self.timestamp, self.preimage, self.contact, self.created_at, self.updated_at, self.seen_at)
+        return "LightningActivity(wallet_id={}, id={}, tx_type={}, status={}, value={}, fee={}, invoice={}, message={}, timestamp={}, preimage={}, contact={}, created_at={}, updated_at={}, seen_at={})".format(self.wallet_id, self.id, self.tx_type, self.status, self.value, self.fee, self.invoice, self.message, self.timestamp, self.preimage, self.contact, self.created_at, self.updated_at, self.seen_at)
 
     def __eq__(self, other):
+        if self.wallet_id != other.wallet_id:
+            return False
         if self.id != other.id:
             return False
         if self.tx_type != other.tx_type:
@@ -6180,6 +6274,7 @@ class _UniffiConverterTypeLightningActivity(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
         return LightningActivity(
+            wallet_id=_UniffiConverterString.read(buf),
             id=_UniffiConverterString.read(buf),
             tx_type=_UniffiConverterTypePaymentType.read(buf),
             status=_UniffiConverterTypePaymentState.read(buf),
@@ -6197,6 +6292,7 @@ class _UniffiConverterTypeLightningActivity(_UniffiConverterRustBuffer):
 
     @staticmethod
     def check_lower(value):
+        _UniffiConverterString.check_lower(value.wallet_id)
         _UniffiConverterString.check_lower(value.id)
         _UniffiConverterTypePaymentType.check_lower(value.tx_type)
         _UniffiConverterTypePaymentState.check_lower(value.status)
@@ -6213,6 +6309,7 @@ class _UniffiConverterTypeLightningActivity(_UniffiConverterRustBuffer):
 
     @staticmethod
     def write(value, buf):
+        _UniffiConverterString.write(value.wallet_id, buf)
         _UniffiConverterString.write(value.id, buf)
         _UniffiConverterTypePaymentType.write(value.tx_type, buf)
         _UniffiConverterTypePaymentState.write(value.status, buf)
@@ -6744,6 +6841,7 @@ class _UniffiConverterTypeOnChainInvoice(_UniffiConverterRustBuffer):
 
 
 class OnchainActivity:
+    wallet_id: "str"
     id: "str"
     tx_type: "PaymentType"
     tx_id: "str"
@@ -6764,7 +6862,8 @@ class OnchainActivity:
     created_at: "typing.Optional[int]"
     updated_at: "typing.Optional[int]"
     seen_at: "typing.Optional[int]"
-    def __init__(self, *, id: "str", tx_type: "PaymentType", tx_id: "str", value: "int", fee: "int", fee_rate: "int", address: "str", confirmed: "bool", timestamp: "int", is_boosted: "bool", boost_tx_ids: "typing.List[str]", is_transfer: "bool", does_exist: "bool", confirm_timestamp: "typing.Optional[int]", channel_id: "typing.Optional[str]", transfer_tx_id: "typing.Optional[str]", contact: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]", seen_at: "typing.Optional[int]"):
+    def __init__(self, *, wallet_id: "str", id: "str", tx_type: "PaymentType", tx_id: "str", value: "int", fee: "int", fee_rate: "int", address: "str", confirmed: "bool", timestamp: "int", is_boosted: "bool", boost_tx_ids: "typing.List[str]", is_transfer: "bool", does_exist: "bool", confirm_timestamp: "typing.Optional[int]", channel_id: "typing.Optional[str]", transfer_tx_id: "typing.Optional[str]", contact: "typing.Optional[str]", created_at: "typing.Optional[int]", updated_at: "typing.Optional[int]", seen_at: "typing.Optional[int]"):
+        self.wallet_id = wallet_id
         self.id = id
         self.tx_type = tx_type
         self.tx_id = tx_id
@@ -6787,9 +6886,11 @@ class OnchainActivity:
         self.seen_at = seen_at
 
     def __str__(self):
-        return "OnchainActivity(id={}, tx_type={}, tx_id={}, value={}, fee={}, fee_rate={}, address={}, confirmed={}, timestamp={}, is_boosted={}, boost_tx_ids={}, is_transfer={}, does_exist={}, confirm_timestamp={}, channel_id={}, transfer_tx_id={}, contact={}, created_at={}, updated_at={}, seen_at={})".format(self.id, self.tx_type, self.tx_id, self.value, self.fee, self.fee_rate, self.address, self.confirmed, self.timestamp, self.is_boosted, self.boost_tx_ids, self.is_transfer, self.does_exist, self.confirm_timestamp, self.channel_id, self.transfer_tx_id, self.contact, self.created_at, self.updated_at, self.seen_at)
+        return "OnchainActivity(wallet_id={}, id={}, tx_type={}, tx_id={}, value={}, fee={}, fee_rate={}, address={}, confirmed={}, timestamp={}, is_boosted={}, boost_tx_ids={}, is_transfer={}, does_exist={}, confirm_timestamp={}, channel_id={}, transfer_tx_id={}, contact={}, created_at={}, updated_at={}, seen_at={})".format(self.wallet_id, self.id, self.tx_type, self.tx_id, self.value, self.fee, self.fee_rate, self.address, self.confirmed, self.timestamp, self.is_boosted, self.boost_tx_ids, self.is_transfer, self.does_exist, self.confirm_timestamp, self.channel_id, self.transfer_tx_id, self.contact, self.created_at, self.updated_at, self.seen_at)
 
     def __eq__(self, other):
+        if self.wallet_id != other.wallet_id:
+            return False
         if self.id != other.id:
             return False
         if self.tx_type != other.tx_type:
@@ -6836,6 +6937,7 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
         return OnchainActivity(
+            wallet_id=_UniffiConverterString.read(buf),
             id=_UniffiConverterString.read(buf),
             tx_type=_UniffiConverterTypePaymentType.read(buf),
             tx_id=_UniffiConverterString.read(buf),
@@ -6860,6 +6962,7 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
 
     @staticmethod
     def check_lower(value):
+        _UniffiConverterString.check_lower(value.wallet_id)
         _UniffiConverterString.check_lower(value.id)
         _UniffiConverterTypePaymentType.check_lower(value.tx_type)
         _UniffiConverterString.check_lower(value.tx_id)
@@ -6883,6 +6986,7 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
 
     @staticmethod
     def write(value, buf):
+        _UniffiConverterString.write(value.wallet_id, buf)
         _UniffiConverterString.write(value.id, buf)
         _UniffiConverterTypePaymentType.write(value.tx_type, buf)
         _UniffiConverterString.write(value.tx_id, buf)
@@ -6906,6 +7010,7 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
 
 
 class PreActivityMetadata:
+    wallet_id: "str"
     payment_id: "str"
     tags: "typing.List[str]"
     payment_hash: "typing.Optional[str]"
@@ -6916,7 +7021,8 @@ class PreActivityMetadata:
     is_transfer: "bool"
     channel_id: "typing.Optional[str]"
     created_at: "int"
-    def __init__(self, *, payment_id: "str", tags: "typing.List[str]", payment_hash: "typing.Optional[str]", tx_id: "typing.Optional[str]", address: "typing.Optional[str]", is_receive: "bool", fee_rate: "int", is_transfer: "bool", channel_id: "typing.Optional[str]", created_at: "int"):
+    def __init__(self, *, wallet_id: "str", payment_id: "str", tags: "typing.List[str]", payment_hash: "typing.Optional[str]", tx_id: "typing.Optional[str]", address: "typing.Optional[str]", is_receive: "bool", fee_rate: "int", is_transfer: "bool", channel_id: "typing.Optional[str]", created_at: "int"):
+        self.wallet_id = wallet_id
         self.payment_id = payment_id
         self.tags = tags
         self.payment_hash = payment_hash
@@ -6929,9 +7035,11 @@ class PreActivityMetadata:
         self.created_at = created_at
 
     def __str__(self):
-        return "PreActivityMetadata(payment_id={}, tags={}, payment_hash={}, tx_id={}, address={}, is_receive={}, fee_rate={}, is_transfer={}, channel_id={}, created_at={})".format(self.payment_id, self.tags, self.payment_hash, self.tx_id, self.address, self.is_receive, self.fee_rate, self.is_transfer, self.channel_id, self.created_at)
+        return "PreActivityMetadata(wallet_id={}, payment_id={}, tags={}, payment_hash={}, tx_id={}, address={}, is_receive={}, fee_rate={}, is_transfer={}, channel_id={}, created_at={})".format(self.wallet_id, self.payment_id, self.tags, self.payment_hash, self.tx_id, self.address, self.is_receive, self.fee_rate, self.is_transfer, self.channel_id, self.created_at)
 
     def __eq__(self, other):
+        if self.wallet_id != other.wallet_id:
+            return False
         if self.payment_id != other.payment_id:
             return False
         if self.tags != other.tags:
@@ -6958,6 +7066,7 @@ class _UniffiConverterTypePreActivityMetadata(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
         return PreActivityMetadata(
+            wallet_id=_UniffiConverterString.read(buf),
             payment_id=_UniffiConverterString.read(buf),
             tags=_UniffiConverterSequenceString.read(buf),
             payment_hash=_UniffiConverterOptionalString.read(buf),
@@ -6972,6 +7081,7 @@ class _UniffiConverterTypePreActivityMetadata(_UniffiConverterRustBuffer):
 
     @staticmethod
     def check_lower(value):
+        _UniffiConverterString.check_lower(value.wallet_id)
         _UniffiConverterString.check_lower(value.payment_id)
         _UniffiConverterSequenceString.check_lower(value.tags)
         _UniffiConverterOptionalString.check_lower(value.payment_hash)
@@ -6985,6 +7095,7 @@ class _UniffiConverterTypePreActivityMetadata(_UniffiConverterRustBuffer):
 
     @staticmethod
     def write(value, buf):
+        _UniffiConverterString.write(value.wallet_id, buf)
         _UniffiConverterString.write(value.payment_id, buf)
         _UniffiConverterSequenceString.write(value.tags, buf)
         _UniffiConverterOptionalString.write(value.payment_hash, buf)
@@ -7279,6 +7390,88 @@ class _UniffiConverterTypeSingleAddressInfoResult(_UniffiConverterRustBuffer):
         _UniffiConverterSequenceTypeAccountUtxo.write(value.utxos, buf)
         _UniffiConverterUInt32.write(value.transfers, buf)
         _UniffiConverterUInt32.write(value.block_height, buf)
+
+
+class SupportedHardwareWallet:
+    """
+    A hardware-wallet model Bitkit supports, with the transports it can connect over.
+
+    Owned by core so iOS and Android render the same catalog instead of each
+    hardcoding it. Platforms filter by `transports`: Android supports every model,
+    while iOS (Bluetooth-only) shows just the models whose `transports` include
+    `Bluetooth`. `model` is a stable key apps can map to their own bundled image.
+    """
+
+    vendor: "HardwareWalletVendor"
+    vendor_name: "str"
+    """
+    Human-readable vendor name, e.g. "Trezor".
+    """
+
+    model: "str"
+    """
+    Model identifier, e.g. "Safe 7".
+    """
+
+    display_name: "str"
+    """
+    Full display name, e.g. "Trezor Safe 7".
+    """
+
+    transports: "typing.List[TrezorTransportType]"
+    """
+    Transports this model can connect over.
+    """
+
+    def __init__(self, *, vendor: "HardwareWalletVendor", vendor_name: "str", model: "str", display_name: "str", transports: "typing.List[TrezorTransportType]"):
+        self.vendor = vendor
+        self.vendor_name = vendor_name
+        self.model = model
+        self.display_name = display_name
+        self.transports = transports
+
+    def __str__(self):
+        return "SupportedHardwareWallet(vendor={}, vendor_name={}, model={}, display_name={}, transports={})".format(self.vendor, self.vendor_name, self.model, self.display_name, self.transports)
+
+    def __eq__(self, other):
+        if self.vendor != other.vendor:
+            return False
+        if self.vendor_name != other.vendor_name:
+            return False
+        if self.model != other.model:
+            return False
+        if self.display_name != other.display_name:
+            return False
+        if self.transports != other.transports:
+            return False
+        return True
+
+class _UniffiConverterTypeSupportedHardwareWallet(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return SupportedHardwareWallet(
+            vendor=_UniffiConverterTypeHardwareWalletVendor.read(buf),
+            vendor_name=_UniffiConverterString.read(buf),
+            model=_UniffiConverterString.read(buf),
+            display_name=_UniffiConverterString.read(buf),
+            transports=_UniffiConverterSequenceTypeTrezorTransportType.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterTypeHardwareWalletVendor.check_lower(value.vendor)
+        _UniffiConverterString.check_lower(value.vendor_name)
+        _UniffiConverterString.check_lower(value.model)
+        _UniffiConverterString.check_lower(value.display_name)
+        _UniffiConverterSequenceTypeTrezorTransportType.check_lower(value.transports)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterTypeHardwareWalletVendor.write(value.vendor, buf)
+        _UniffiConverterString.write(value.vendor_name, buf)
+        _UniffiConverterString.write(value.model, buf)
+        _UniffiConverterString.write(value.display_name, buf)
+        _UniffiConverterSequenceTypeTrezorTransportType.write(value.transports, buf)
 
 
 class SweepResult:
@@ -7763,6 +7956,7 @@ class TransactionDetails:
     Details about an onchain transaction.
     """
 
+    wallet_id: "str"
     tx_id: "str"
     """
     The transaction ID.
@@ -7788,16 +7982,19 @@ class TransactionDetails:
     The transaction outputs with full details.
     """
 
-    def __init__(self, *, tx_id: "str", amount_sats: "int", inputs: "typing.List[TxInput]", outputs: "typing.List[TxOutput]"):
+    def __init__(self, *, wallet_id: "str", tx_id: "str", amount_sats: "int", inputs: "typing.List[TxInput]", outputs: "typing.List[TxOutput]"):
+        self.wallet_id = wallet_id
         self.tx_id = tx_id
         self.amount_sats = amount_sats
         self.inputs = inputs
         self.outputs = outputs
 
     def __str__(self):
-        return "TransactionDetails(tx_id={}, amount_sats={}, inputs={}, outputs={})".format(self.tx_id, self.amount_sats, self.inputs, self.outputs)
+        return "TransactionDetails(wallet_id={}, tx_id={}, amount_sats={}, inputs={}, outputs={})".format(self.wallet_id, self.tx_id, self.amount_sats, self.inputs, self.outputs)
 
     def __eq__(self, other):
+        if self.wallet_id != other.wallet_id:
+            return False
         if self.tx_id != other.tx_id:
             return False
         if self.amount_sats != other.amount_sats:
@@ -7812,6 +8009,7 @@ class _UniffiConverterTypeTransactionDetails(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
         return TransactionDetails(
+            wallet_id=_UniffiConverterString.read(buf),
             tx_id=_UniffiConverterString.read(buf),
             amount_sats=_UniffiConverterInt64.read(buf),
             inputs=_UniffiConverterSequenceTypeTxInput.read(buf),
@@ -7820,6 +8018,7 @@ class _UniffiConverterTypeTransactionDetails(_UniffiConverterRustBuffer):
 
     @staticmethod
     def check_lower(value):
+        _UniffiConverterString.check_lower(value.wallet_id)
         _UniffiConverterString.check_lower(value.tx_id)
         _UniffiConverterInt64.check_lower(value.amount_sats)
         _UniffiConverterSequenceTypeTxInput.check_lower(value.inputs)
@@ -7827,6 +8026,7 @@ class _UniffiConverterTypeTransactionDetails(_UniffiConverterRustBuffer):
 
     @staticmethod
     def write(value, buf):
+        _UniffiConverterString.write(value.wallet_id, buf)
         _UniffiConverterString.write(value.tx_id, buf)
         _UniffiConverterInt64.write(value.amount_sats, buf)
         _UniffiConverterSequenceTypeTxInput.write(value.inputs, buf)
@@ -7987,14 +8187,20 @@ class TrezorCallMessageResult:
     Error message (empty on success)
     """
 
-    def __init__(self, *, success: "bool", message_type: "int", data: "bytes", error: "str"):
+    error_code: "typing.Optional[TrezorTransportErrorCode]"
+    """
+    Structured error code (None on success or when the native error is generic)
+    """
+
+    def __init__(self, *, success: "bool", message_type: "int", data: "bytes", error: "str", error_code: "typing.Optional[TrezorTransportErrorCode]"):
         self.success = success
         self.message_type = message_type
         self.data = data
         self.error = error
+        self.error_code = error_code
 
     def __str__(self):
-        return "TrezorCallMessageResult(success={}, message_type={}, data={}, error={})".format(self.success, self.message_type, self.data, self.error)
+        return "TrezorCallMessageResult(success={}, message_type={}, data={}, error={}, error_code={})".format(self.success, self.message_type, self.data, self.error, self.error_code)
 
     def __eq__(self, other):
         if self.success != other.success:
@@ -8004,6 +8210,8 @@ class TrezorCallMessageResult:
         if self.data != other.data:
             return False
         if self.error != other.error:
+            return False
+        if self.error_code != other.error_code:
             return False
         return True
 
@@ -8015,6 +8223,7 @@ class _UniffiConverterTypeTrezorCallMessageResult(_UniffiConverterRustBuffer):
             message_type=_UniffiConverterUInt16.read(buf),
             data=_UniffiConverterBytes.read(buf),
             error=_UniffiConverterString.read(buf),
+            error_code=_UniffiConverterOptionalTypeTrezorTransportErrorCode.read(buf),
         )
 
     @staticmethod
@@ -8023,6 +8232,7 @@ class _UniffiConverterTypeTrezorCallMessageResult(_UniffiConverterRustBuffer):
         _UniffiConverterUInt16.check_lower(value.message_type)
         _UniffiConverterBytes.check_lower(value.data)
         _UniffiConverterString.check_lower(value.error)
+        _UniffiConverterOptionalTypeTrezorTransportErrorCode.check_lower(value.error_code)
 
     @staticmethod
     def write(value, buf):
@@ -8030,6 +8240,7 @@ class _UniffiConverterTypeTrezorCallMessageResult(_UniffiConverterRustBuffer):
         _UniffiConverterUInt16.write(value.message_type, buf)
         _UniffiConverterBytes.write(value.data, buf)
         _UniffiConverterString.write(value.error, buf)
+        _UniffiConverterOptionalTypeTrezorTransportErrorCode.write(value.error_code, buf)
 
 
 class TrezorDeviceInfo:
@@ -8180,6 +8391,13 @@ class TrezorFeatures:
     Whether PIN protection is enabled
     """
 
+    unlocked: "typing.Optional[bool]"
+    """
+    Whether the device is currently unlocked. When PIN protection is enabled
+    and this is `Some(false)`, mobile callers should back off and ask the
+    user to unlock the Trezor instead of repeatedly reconnecting.
+    """
+
     passphrase_protection: "typing.Optional[bool]"
     """
     Whether passphrase protection is enabled
@@ -8201,7 +8419,7 @@ class TrezorFeatures:
     (`Capability_PassphraseEntry`). When false/None, use host entry only.
     """
 
-    def __init__(self, *, vendor: "typing.Optional[str]", model: "typing.Optional[str]", label: "typing.Optional[str]", device_id: "typing.Optional[str]", major_version: "typing.Optional[int]", minor_version: "typing.Optional[int]", patch_version: "typing.Optional[int]", pin_protection: "typing.Optional[bool]", passphrase_protection: "typing.Optional[bool]", initialized: "typing.Optional[bool]", needs_backup: "typing.Optional[bool]", passphrase_entry_capable: "typing.Optional[bool]"):
+    def __init__(self, *, vendor: "typing.Optional[str]", model: "typing.Optional[str]", label: "typing.Optional[str]", device_id: "typing.Optional[str]", major_version: "typing.Optional[int]", minor_version: "typing.Optional[int]", patch_version: "typing.Optional[int]", pin_protection: "typing.Optional[bool]", unlocked: "typing.Optional[bool]", passphrase_protection: "typing.Optional[bool]", initialized: "typing.Optional[bool]", needs_backup: "typing.Optional[bool]", passphrase_entry_capable: "typing.Optional[bool]"):
         self.vendor = vendor
         self.model = model
         self.label = label
@@ -8210,13 +8428,14 @@ class TrezorFeatures:
         self.minor_version = minor_version
         self.patch_version = patch_version
         self.pin_protection = pin_protection
+        self.unlocked = unlocked
         self.passphrase_protection = passphrase_protection
         self.initialized = initialized
         self.needs_backup = needs_backup
         self.passphrase_entry_capable = passphrase_entry_capable
 
     def __str__(self):
-        return "TrezorFeatures(vendor={}, model={}, label={}, device_id={}, major_version={}, minor_version={}, patch_version={}, pin_protection={}, passphrase_protection={}, initialized={}, needs_backup={}, passphrase_entry_capable={})".format(self.vendor, self.model, self.label, self.device_id, self.major_version, self.minor_version, self.patch_version, self.pin_protection, self.passphrase_protection, self.initialized, self.needs_backup, self.passphrase_entry_capable)
+        return "TrezorFeatures(vendor={}, model={}, label={}, device_id={}, major_version={}, minor_version={}, patch_version={}, pin_protection={}, unlocked={}, passphrase_protection={}, initialized={}, needs_backup={}, passphrase_entry_capable={})".format(self.vendor, self.model, self.label, self.device_id, self.major_version, self.minor_version, self.patch_version, self.pin_protection, self.unlocked, self.passphrase_protection, self.initialized, self.needs_backup, self.passphrase_entry_capable)
 
     def __eq__(self, other):
         if self.vendor != other.vendor:
@@ -8234,6 +8453,8 @@ class TrezorFeatures:
         if self.patch_version != other.patch_version:
             return False
         if self.pin_protection != other.pin_protection:
+            return False
+        if self.unlocked != other.unlocked:
             return False
         if self.passphrase_protection != other.passphrase_protection:
             return False
@@ -8257,6 +8478,7 @@ class _UniffiConverterTypeTrezorFeatures(_UniffiConverterRustBuffer):
             minor_version=_UniffiConverterOptionalUInt32.read(buf),
             patch_version=_UniffiConverterOptionalUInt32.read(buf),
             pin_protection=_UniffiConverterOptionalBool.read(buf),
+            unlocked=_UniffiConverterOptionalBool.read(buf),
             passphrase_protection=_UniffiConverterOptionalBool.read(buf),
             initialized=_UniffiConverterOptionalBool.read(buf),
             needs_backup=_UniffiConverterOptionalBool.read(buf),
@@ -8273,6 +8495,7 @@ class _UniffiConverterTypeTrezorFeatures(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalUInt32.check_lower(value.minor_version)
         _UniffiConverterOptionalUInt32.check_lower(value.patch_version)
         _UniffiConverterOptionalBool.check_lower(value.pin_protection)
+        _UniffiConverterOptionalBool.check_lower(value.unlocked)
         _UniffiConverterOptionalBool.check_lower(value.passphrase_protection)
         _UniffiConverterOptionalBool.check_lower(value.initialized)
         _UniffiConverterOptionalBool.check_lower(value.needs_backup)
@@ -8288,6 +8511,7 @@ class _UniffiConverterTypeTrezorFeatures(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalUInt32.write(value.minor_version, buf)
         _UniffiConverterOptionalUInt32.write(value.patch_version, buf)
         _UniffiConverterOptionalBool.write(value.pin_protection, buf)
+        _UniffiConverterOptionalBool.write(value.unlocked, buf)
         _UniffiConverterOptionalBool.write(value.passphrase_protection, buf)
         _UniffiConverterOptionalBool.write(value.initialized, buf)
         _UniffiConverterOptionalBool.write(value.needs_backup, buf)
@@ -9003,13 +9227,19 @@ class TrezorTransportReadResult:
     Error message (empty on success)
     """
 
-    def __init__(self, *, success: "bool", data: "bytes", error: "str"):
+    error_code: "typing.Optional[TrezorTransportErrorCode]"
+    """
+    Structured error code (None on success or when the native error is generic)
+    """
+
+    def __init__(self, *, success: "bool", data: "bytes", error: "str", error_code: "typing.Optional[TrezorTransportErrorCode]"):
         self.success = success
         self.data = data
         self.error = error
+        self.error_code = error_code
 
     def __str__(self):
-        return "TrezorTransportReadResult(success={}, data={}, error={})".format(self.success, self.data, self.error)
+        return "TrezorTransportReadResult(success={}, data={}, error={}, error_code={})".format(self.success, self.data, self.error, self.error_code)
 
     def __eq__(self, other):
         if self.success != other.success:
@@ -9017,6 +9247,8 @@ class TrezorTransportReadResult:
         if self.data != other.data:
             return False
         if self.error != other.error:
+            return False
+        if self.error_code != other.error_code:
             return False
         return True
 
@@ -9027,6 +9259,7 @@ class _UniffiConverterTypeTrezorTransportReadResult(_UniffiConverterRustBuffer):
             success=_UniffiConverterBool.read(buf),
             data=_UniffiConverterBytes.read(buf),
             error=_UniffiConverterString.read(buf),
+            error_code=_UniffiConverterOptionalTypeTrezorTransportErrorCode.read(buf),
         )
 
     @staticmethod
@@ -9034,12 +9267,14 @@ class _UniffiConverterTypeTrezorTransportReadResult(_UniffiConverterRustBuffer):
         _UniffiConverterBool.check_lower(value.success)
         _UniffiConverterBytes.check_lower(value.data)
         _UniffiConverterString.check_lower(value.error)
+        _UniffiConverterOptionalTypeTrezorTransportErrorCode.check_lower(value.error_code)
 
     @staticmethod
     def write(value, buf):
         _UniffiConverterBool.write(value.success, buf)
         _UniffiConverterBytes.write(value.data, buf)
         _UniffiConverterString.write(value.error, buf)
+        _UniffiConverterOptionalTypeTrezorTransportErrorCode.write(value.error_code, buf)
 
 
 class TrezorTransportWriteResult:
@@ -9057,17 +9292,25 @@ class TrezorTransportWriteResult:
     Error message (empty on success)
     """
 
-    def __init__(self, *, success: "bool", error: "str"):
+    error_code: "typing.Optional[TrezorTransportErrorCode]"
+    """
+    Structured error code (None on success or when the native error is generic)
+    """
+
+    def __init__(self, *, success: "bool", error: "str", error_code: "typing.Optional[TrezorTransportErrorCode]"):
         self.success = success
         self.error = error
+        self.error_code = error_code
 
     def __str__(self):
-        return "TrezorTransportWriteResult(success={}, error={})".format(self.success, self.error)
+        return "TrezorTransportWriteResult(success={}, error={}, error_code={})".format(self.success, self.error, self.error_code)
 
     def __eq__(self, other):
         if self.success != other.success:
             return False
         if self.error != other.error:
+            return False
+        if self.error_code != other.error_code:
             return False
         return True
 
@@ -9077,17 +9320,20 @@ class _UniffiConverterTypeTrezorTransportWriteResult(_UniffiConverterRustBuffer)
         return TrezorTransportWriteResult(
             success=_UniffiConverterBool.read(buf),
             error=_UniffiConverterString.read(buf),
+            error_code=_UniffiConverterOptionalTypeTrezorTransportErrorCode.read(buf),
         )
 
     @staticmethod
     def check_lower(value):
         _UniffiConverterBool.check_lower(value.success)
         _UniffiConverterString.check_lower(value.error)
+        _UniffiConverterOptionalTypeTrezorTransportErrorCode.check_lower(value.error_code)
 
     @staticmethod
     def write(value, buf):
         _UniffiConverterBool.write(value.success, buf)
         _UniffiConverterString.write(value.error, buf)
+        _UniffiConverterOptionalTypeTrezorTransportErrorCode.write(value.error_code, buf)
 
 
 class TrezorTxInput:
@@ -9916,6 +10162,14 @@ class WatcherParams:
     Caller-supplied identifier for this watcher.
     """
 
+    wallet_id: "str"
+    """
+    Wallet id that scopes the activities this watcher emits. One watcher
+    watches one address type, so this stays at the address-type boundary —
+    the same txid seen under two address types yields two wallet-scoped
+    activities under different `wallet_id`s, not one merged activity.
+    """
+
     extended_key: "str"
     """
     Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
@@ -9938,11 +10192,13 @@ class WatcherParams:
 
     gap_limit: "typing.Optional[int]"
     """
-    Number of unused addresses to monitor beyond the last used (default 20).
+    Number of unused addresses to monitor beyond the last used
+    (defaults to `DEFAULT_GAP_LIMIT` when None).
     """
 
-    def __init__(self, *, watcher_id: "str", extended_key: "str", electrum_url: "str", network: "typing.Optional[Network]", account_type: "typing.Optional[AccountType]", gap_limit: "typing.Optional[int]"):
+    def __init__(self, *, watcher_id: "str", wallet_id: "str", extended_key: "str", electrum_url: "str", network: "typing.Optional[Network]", account_type: "typing.Optional[AccountType]", gap_limit: "typing.Optional[int]"):
         self.watcher_id = watcher_id
+        self.wallet_id = wallet_id
         self.extended_key = extended_key
         self.electrum_url = electrum_url
         self.network = network
@@ -9950,10 +10206,12 @@ class WatcherParams:
         self.gap_limit = gap_limit
 
     def __str__(self):
-        return "WatcherParams(watcher_id={}, extended_key={}, electrum_url={}, network={}, account_type={}, gap_limit={})".format(self.watcher_id, self.extended_key, self.electrum_url, self.network, self.account_type, self.gap_limit)
+        return "WatcherParams(watcher_id={}, wallet_id={}, extended_key={}, electrum_url={}, network={}, account_type={}, gap_limit={})".format(self.watcher_id, self.wallet_id, self.extended_key, self.electrum_url, self.network, self.account_type, self.gap_limit)
 
     def __eq__(self, other):
         if self.watcher_id != other.watcher_id:
+            return False
+        if self.wallet_id != other.wallet_id:
             return False
         if self.extended_key != other.extended_key:
             return False
@@ -9972,6 +10230,7 @@ class _UniffiConverterTypeWatcherParams(_UniffiConverterRustBuffer):
     def read(buf):
         return WatcherParams(
             watcher_id=_UniffiConverterString.read(buf),
+            wallet_id=_UniffiConverterString.read(buf),
             extended_key=_UniffiConverterString.read(buf),
             electrum_url=_UniffiConverterString.read(buf),
             network=_UniffiConverterOptionalTypeNetwork.read(buf),
@@ -9982,6 +10241,7 @@ class _UniffiConverterTypeWatcherParams(_UniffiConverterRustBuffer):
     @staticmethod
     def check_lower(value):
         _UniffiConverterString.check_lower(value.watcher_id)
+        _UniffiConverterString.check_lower(value.wallet_id)
         _UniffiConverterString.check_lower(value.extended_key)
         _UniffiConverterString.check_lower(value.electrum_url)
         _UniffiConverterOptionalTypeNetwork.check_lower(value.network)
@@ -9991,6 +10251,7 @@ class _UniffiConverterTypeWatcherParams(_UniffiConverterRustBuffer):
     @staticmethod
     def write(value, buf):
         _UniffiConverterString.write(value.watcher_id, buf)
+        _UniffiConverterString.write(value.wallet_id, buf)
         _UniffiConverterString.write(value.extended_key, buf)
         _UniffiConverterString.write(value.electrum_url, buf)
         _UniffiConverterOptionalTypeNetwork.write(value.network, buf)
@@ -12471,6 +12732,41 @@ class _UniffiConverterTypeDecodingError(_UniffiConverterRustBuffer):
             _UniffiConverterString.write(value.error_message, buf)
 
 
+
+
+
+class HardwareWalletVendor(enum.Enum):
+    """
+    A hardware-wallet vendor supported by Bitkit. Trezor only for now; this leaves
+    room to add other vendors without changing the catalog's shape.
+    """
+
+    TREZOR = 0
+    
+
+
+class _UniffiConverterTypeHardwareWalletVendor(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return HardwareWalletVendor.TREZOR
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == HardwareWalletVendor.TREZOR:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == HardwareWalletVendor.TREZOR:
+            buf.write_i32(1)
+
+
+
+
 # LnurlError
 # We want to define each variant as a nested class that's also a subclass,
 # which is tricky in Python.  To accomplish this we're going to create each
@@ -13945,6 +14241,17 @@ class TrezorError:  # type: ignore
         def __repr__(self):
             return "TrezorError.DeviceDisconnected({})".format(str(self))
     _UniffiTempTrezorError.DeviceDisconnected = DeviceDisconnected # type: ignore
+    class DeviceBusy(_UniffiTempTrezorError):
+        """
+        Device is busy and the caller should back off before retrying
+        """
+
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.DeviceBusy({})".format(str(self))
+    _UniffiTempTrezorError.DeviceBusy = DeviceBusy # type: ignore
     class ConnectionError(_UniffiTempTrezorError):
         """
         Connection error
@@ -14173,60 +14480,63 @@ class _UniffiConverterTypeTrezorError(_UniffiConverterRustBuffer):
             return TrezorError.DeviceDisconnected(
             )
         if variant == 4:
+            return TrezorError.DeviceBusy(
+            )
+        if variant == 5:
             return TrezorError.ConnectionError(
                 _UniffiConverterString.read(buf),
             )
-        if variant == 5:
+        if variant == 6:
             return TrezorError.ProtocolError(
                 _UniffiConverterString.read(buf),
             )
-        if variant == 6:
+        if variant == 7:
             return TrezorError.PairingRequired(
             )
-        if variant == 7:
+        if variant == 8:
             return TrezorError.PairingFailed(
                 _UniffiConverterString.read(buf),
             )
-        if variant == 8:
+        if variant == 9:
             return TrezorError.PinRequired(
             )
-        if variant == 9:
+        if variant == 10:
             return TrezorError.PinCancelled(
             )
-        if variant == 10:
+        if variant == 11:
             return TrezorError.InvalidPin(
             )
-        if variant == 11:
+        if variant == 12:
             return TrezorError.PassphraseRequired(
             )
-        if variant == 12:
+        if variant == 13:
             return TrezorError.PassphraseCancelled(
             )
-        if variant == 13:
+        if variant == 14:
             return TrezorError.UserCancelled(
             )
-        if variant == 14:
+        if variant == 15:
             return TrezorError.Timeout(
             )
-        if variant == 15:
+        if variant == 16:
             return TrezorError.InvalidPath(
                 _UniffiConverterString.read(buf),
             )
-        if variant == 16:
+        if variant == 17:
             return TrezorError.DeviceError(
                 _UniffiConverterString.read(buf),
             )
-        if variant == 17:
+        if variant == 18:
             return TrezorError.NotInitialized(
             )
-        if variant == 18:
+        if variant == 19:
             return TrezorError.NotConnected(
             )
-        if variant == 19:
+        if variant == 20:
             return TrezorError.SessionError(
                 _UniffiConverterString.read(buf),
             )
-        if variant == 20:
+        if variant == 21:
             return TrezorError.IoError(
                 _UniffiConverterString.read(buf),
             )
@@ -14240,6 +14550,8 @@ class _UniffiConverterTypeTrezorError(_UniffiConverterRustBuffer):
         if isinstance(value, TrezorError.DeviceNotFound):
             return
         if isinstance(value, TrezorError.DeviceDisconnected):
+            return
+        if isinstance(value, TrezorError.DeviceBusy):
             return
         if isinstance(value, TrezorError.ConnectionError):
             _UniffiConverterString.check_lower(value.error_details)
@@ -14292,46 +14604,48 @@ class _UniffiConverterTypeTrezorError(_UniffiConverterRustBuffer):
             buf.write_i32(2)
         if isinstance(value, TrezorError.DeviceDisconnected):
             buf.write_i32(3)
-        if isinstance(value, TrezorError.ConnectionError):
+        if isinstance(value, TrezorError.DeviceBusy):
             buf.write_i32(4)
-            _UniffiConverterString.write(value.error_details, buf)
-        if isinstance(value, TrezorError.ProtocolError):
+        if isinstance(value, TrezorError.ConnectionError):
             buf.write_i32(5)
             _UniffiConverterString.write(value.error_details, buf)
-        if isinstance(value, TrezorError.PairingRequired):
+        if isinstance(value, TrezorError.ProtocolError):
             buf.write_i32(6)
-        if isinstance(value, TrezorError.PairingFailed):
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, TrezorError.PairingRequired):
             buf.write_i32(7)
+        if isinstance(value, TrezorError.PairingFailed):
+            buf.write_i32(8)
             _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, TrezorError.PinRequired):
-            buf.write_i32(8)
-        if isinstance(value, TrezorError.PinCancelled):
             buf.write_i32(9)
-        if isinstance(value, TrezorError.InvalidPin):
+        if isinstance(value, TrezorError.PinCancelled):
             buf.write_i32(10)
-        if isinstance(value, TrezorError.PassphraseRequired):
+        if isinstance(value, TrezorError.InvalidPin):
             buf.write_i32(11)
-        if isinstance(value, TrezorError.PassphraseCancelled):
+        if isinstance(value, TrezorError.PassphraseRequired):
             buf.write_i32(12)
-        if isinstance(value, TrezorError.UserCancelled):
+        if isinstance(value, TrezorError.PassphraseCancelled):
             buf.write_i32(13)
-        if isinstance(value, TrezorError.Timeout):
+        if isinstance(value, TrezorError.UserCancelled):
             buf.write_i32(14)
-        if isinstance(value, TrezorError.InvalidPath):
+        if isinstance(value, TrezorError.Timeout):
             buf.write_i32(15)
-            _UniffiConverterString.write(value.error_details, buf)
-        if isinstance(value, TrezorError.DeviceError):
+        if isinstance(value, TrezorError.InvalidPath):
             buf.write_i32(16)
             _UniffiConverterString.write(value.error_details, buf)
-        if isinstance(value, TrezorError.NotInitialized):
+        if isinstance(value, TrezorError.DeviceError):
             buf.write_i32(17)
-        if isinstance(value, TrezorError.NotConnected):
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, TrezorError.NotInitialized):
             buf.write_i32(18)
-        if isinstance(value, TrezorError.SessionError):
+        if isinstance(value, TrezorError.NotConnected):
             buf.write_i32(19)
+        if isinstance(value, TrezorError.SessionError):
+            buf.write_i32(20)
             _UniffiConverterString.write(value.error_details, buf)
         if isinstance(value, TrezorError.IoError):
-            buf.write_i32(20)
+            buf.write_i32(21)
             _UniffiConverterString.write(value.error_details, buf)
 
 
@@ -14429,6 +14743,44 @@ class _UniffiConverterTypeTrezorScriptType(_UniffiConverterRustBuffer):
             buf.write_i32(5)
         if value == TrezorScriptType.EXTERNAL:
             buf.write_i32(6)
+
+
+
+
+
+
+
+class TrezorTransportErrorCode(enum.Enum):
+    """
+    Structured transport error code returned by native callback operations.
+    """
+
+    DEVICE_BUSY = 0
+    """
+    Device is busy and the caller should back off before retrying.
+    """
+
+    
+
+
+class _UniffiConverterTypeTrezorTransportErrorCode(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return TrezorTransportErrorCode.DEVICE_BUSY
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == TrezorTransportErrorCode.DEVICE_BUSY:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == TrezorTransportErrorCode.DEVICE_BUSY:
+            buf.write_i32(1)
 
 
 
@@ -14700,28 +15052,38 @@ class WatcherEvent:
     class TRANSACTIONS_CHANGED:
         """
         Transaction activity changed — contains full updated state.
+
+        `activities` and `transaction_details` are persistence-ready: they carry
+        the watcher's `wallet_id`, real decoded addresses, fees from the watched
+        wallet's perspective, and DB-valid timestamps, so the app can store them
+        directly through the normal Core activity APIs (e.g. `upsert_activity` /
+        `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
         """
 
-        transactions: "typing.List[HistoryTransaction]"
+        activities: "typing.List[Activity]"
+        transaction_details: "typing.List[TransactionDetails]"
         balance: "WalletBalance"
         tx_count: "int"
         block_height: "int"
         account_type: "AccountType"
 
-        def __init__(self,transactions: "typing.List[HistoryTransaction]", balance: "WalletBalance", tx_count: "int", block_height: "int", account_type: "AccountType"):
-            self.transactions = transactions
+        def __init__(self,activities: "typing.List[Activity]", transaction_details: "typing.List[TransactionDetails]", balance: "WalletBalance", tx_count: "int", block_height: "int", account_type: "AccountType"):
+            self.activities = activities
+            self.transaction_details = transaction_details
             self.balance = balance
             self.tx_count = tx_count
             self.block_height = block_height
             self.account_type = account_type
 
         def __str__(self):
-            return "WatcherEvent.TRANSACTIONS_CHANGED(transactions={}, balance={}, tx_count={}, block_height={}, account_type={})".format(self.transactions, self.balance, self.tx_count, self.block_height, self.account_type)
+            return "WatcherEvent.TRANSACTIONS_CHANGED(activities={}, transaction_details={}, balance={}, tx_count={}, block_height={}, account_type={})".format(self.activities, self.transaction_details, self.balance, self.tx_count, self.block_height, self.account_type)
 
         def __eq__(self, other):
             if not other.is_TRANSACTIONS_CHANGED():
                 return False
-            if self.transactions != other.transactions:
+            if self.activities != other.activities:
+                return False
+            if self.transaction_details != other.transaction_details:
                 return False
             if self.balance != other.balance:
                 return False
@@ -14829,7 +15191,8 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
         variant = buf.read_i32()
         if variant == 1:
             return WatcherEvent.TRANSACTIONS_CHANGED(
-                _UniffiConverterSequenceTypeHistoryTransaction.read(buf),
+                _UniffiConverterSequenceTypeActivity.read(buf),
+                _UniffiConverterSequenceTypeTransactionDetails.read(buf),
                 _UniffiConverterTypeWalletBalance.read(buf),
                 _UniffiConverterUInt32.read(buf),
                 _UniffiConverterUInt32.read(buf),
@@ -14851,7 +15214,8 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
     @staticmethod
     def check_lower(value):
         if value.is_TRANSACTIONS_CHANGED():
-            _UniffiConverterSequenceTypeHistoryTransaction.check_lower(value.transactions)
+            _UniffiConverterSequenceTypeActivity.check_lower(value.activities)
+            _UniffiConverterSequenceTypeTransactionDetails.check_lower(value.transaction_details)
             _UniffiConverterTypeWalletBalance.check_lower(value.balance)
             _UniffiConverterUInt32.check_lower(value.tx_count)
             _UniffiConverterUInt32.check_lower(value.block_height)
@@ -14871,7 +15235,8 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
     def write(value, buf):
         if value.is_TRANSACTIONS_CHANGED():
             buf.write_i32(1)
-            _UniffiConverterSequenceTypeHistoryTransaction.write(value.transactions, buf)
+            _UniffiConverterSequenceTypeActivity.write(value.activities, buf)
+            _UniffiConverterSequenceTypeTransactionDetails.write(value.transaction_details, buf)
             _UniffiConverterTypeWalletBalance.write(value.balance, buf)
             _UniffiConverterUInt32.write(value.tx_count, buf)
             _UniffiConverterUInt32.write(value.block_height, buf)
@@ -16105,6 +16470,33 @@ class _UniffiConverterOptionalTypeTrezorScriptType(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypeTrezorTransportErrorCode(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeTrezorTransportErrorCode.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeTrezorTransportErrorCode.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeTrezorTransportErrorCode.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypeWordCount(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -16690,6 +17082,31 @@ class _UniffiConverterSequenceTypePubkyProfileLink(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterSequenceTypeSupportedHardwareWallet(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeSupportedHardwareWallet.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeSupportedHardwareWallet.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeSupportedHardwareWallet.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypeTransactionDetails(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -17036,6 +17453,31 @@ class _UniffiConverterSequenceTypeComposeResult(_UniffiConverterRustBuffer):
 
         return [
             _UniffiConverterTypeComposeResult.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeTrezorTransportType(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeTrezorTransportType.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeTrezorTransportType.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeTrezorTransportType.read(buf) for i in range(count)
         ]
 
 
@@ -18383,22 +18825,28 @@ def add_pre_activity_metadata(pre_activity_metadata: "PreActivityMetadata") -> N
         _UniffiConverterTypePreActivityMetadata.lower(pre_activity_metadata))
 
 
-def add_pre_activity_metadata_tags(payment_id: "str",tags: "typing.List[str]") -> None:
+def add_pre_activity_metadata_tags(wallet_id: "str",payment_id: "str",tags: "typing.List[str]") -> None:
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(payment_id)
     
     _UniffiConverterSequenceString.check_lower(tags)
     
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_add_pre_activity_metadata_tags,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(payment_id),
         _UniffiConverterSequenceString.lower(tags))
 
 
-def add_tags(activity_id: "str",tags: "typing.List[str]") -> None:
+def add_tags(wallet_id: "str",activity_id: "str",tags: "typing.List[str]") -> None:
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(activity_id)
     
     _UniffiConverterSequenceString.check_lower(tags)
     
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_add_tags,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(activity_id),
         _UniffiConverterSequenceString.lower(tags))
 
@@ -18664,24 +19112,40 @@ _UniffiConverterTypeDecodingError,
 
     )
 
-def delete_activity_by_id(activity_id: "str") -> "bool":
+def delete_activities_by_wallet_id(wallet_id: "str") -> "int":
+    _UniffiConverterString.check_lower(wallet_id)
+    
+    return _UniffiConverterUInt32.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_activities_by_wallet_id,
+        _UniffiConverterString.lower(wallet_id)))
+
+
+def delete_activity_by_id(wallet_id: "str",activity_id: "str") -> "bool":
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(activity_id)
     
     return _UniffiConverterBool.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_activity_by_id,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(activity_id)))
 
 
-def delete_pre_activity_metadata(payment_id: "str") -> None:
+def delete_pre_activity_metadata(wallet_id: "str",payment_id: "str") -> None:
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(payment_id)
     
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_pre_activity_metadata,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(payment_id))
 
 
-def delete_transaction_details(tx_id: "str") -> "bool":
+def delete_transaction_details(wallet_id: "str",tx_id: "str") -> "bool":
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(tx_id)
     
     return _UniffiConverterBool.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_delete_transaction_details,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(tx_id)))
 
 
@@ -18766,6 +19230,23 @@ def derive_pubky_secret_key(seed: "bytes") -> "str":
     
     return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePubkyError,_UniffiLib.uniffi_bitkitcore_fn_func_derive_pubky_secret_key,
         _UniffiConverterBytes.lower(seed)))
+
+
+def derive_wallet_id(device_type: "str",xpubs: "typing.List[str]") -> "str":
+    """
+    Derive a stable, cross-platform `wallet_id` for a hardware (watch-only) wallet
+    from its account extended public keys. See `derive_wallet_id` in the activity
+    module for the exact derivation. Order of `xpubs` does not matter. Returns an
+    error if `device_type` is blank or `xpubs` is empty / has a blank entry.
+    """
+
+    _UniffiConverterString.check_lower(device_type)
+    
+    _UniffiConverterSequenceString.check_lower(xpubs)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_derive_wallet_id,
+        _UniffiConverterString.lower(device_type),
+        _UniffiConverterSequenceString.lower(xpubs)))
 
 
 def entropy_to_mnemonic(entropy: "bytes") -> "str":
@@ -18896,7 +19377,9 @@ def generate_mnemonic(word_count: "typing.Optional[WordCount]") -> "str":
         _UniffiConverterOptionalTypeWordCount.lower(word_count)))
 
 
-def get_activities(filter: "typing.Optional[ActivityFilter]",tx_type: "typing.Optional[PaymentType]",tags: "typing.Optional[typing.List[str]]",search: "typing.Optional[str]",min_date: "typing.Optional[int]",max_date: "typing.Optional[int]",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
+def get_activities(wallet_id: "typing.Optional[str]",filter: "typing.Optional[ActivityFilter]",tx_type: "typing.Optional[PaymentType]",tags: "typing.Optional[typing.List[str]]",search: "typing.Optional[str]",min_date: "typing.Optional[int]",max_date: "typing.Optional[int]",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
+    _UniffiConverterOptionalString.check_lower(wallet_id)
+    
     _UniffiConverterOptionalTypeActivityFilter.check_lower(filter)
     
     _UniffiConverterOptionalTypePaymentType.check_lower(tx_type)
@@ -18914,6 +19397,7 @@ def get_activities(filter: "typing.Optional[ActivityFilter]",tx_type: "typing.Op
     _UniffiConverterOptionalTypeSortDirection.check_lower(sort_direction)
     
     return _UniffiConverterSequenceTypeActivity.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activities,
+        _UniffiConverterOptionalString.lower(wallet_id),
         _UniffiConverterOptionalTypeActivityFilter.lower(filter),
         _UniffiConverterOptionalTypePaymentType.lower(tx_type),
         _UniffiConverterOptionalSequenceString.lower(tags),
@@ -18924,7 +19408,9 @@ def get_activities(filter: "typing.Optional[ActivityFilter]",tx_type: "typing.Op
         _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)))
 
 
-def get_activities_by_tag(tag: "str",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
+def get_activities_by_tag(wallet_id: "typing.Optional[str]",tag: "str",limit: "typing.Optional[int]",sort_direction: "typing.Optional[SortDirection]") -> "typing.List[Activity]":
+    _UniffiConverterOptionalString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(tag)
     
     _UniffiConverterOptionalUInt32.check_lower(limit)
@@ -18932,22 +19418,29 @@ def get_activities_by_tag(tag: "str",limit: "typing.Optional[int]",sort_directio
     _UniffiConverterOptionalTypeSortDirection.check_lower(sort_direction)
     
     return _UniffiConverterSequenceTypeActivity.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag,
+        _UniffiConverterOptionalString.lower(wallet_id),
         _UniffiConverterString.lower(tag),
         _UniffiConverterOptionalUInt32.lower(limit),
         _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)))
 
 
-def get_activity_by_id(activity_id: "str") -> "typing.Optional[Activity]":
+def get_activity_by_id(wallet_id: "str",activity_id: "str") -> "typing.Optional[Activity]":
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(activity_id)
     
     return _UniffiConverterOptionalTypeActivity.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(activity_id)))
 
 
-def get_activity_by_tx_id(tx_id: "str") -> "typing.Optional[OnchainActivity]":
+def get_activity_by_tx_id(wallet_id: "str",tx_id: "str") -> "typing.Optional[OnchainActivity]":
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(tx_id)
     
     return _UniffiConverterOptionalTypeOnchainActivity.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_tx_id,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(tx_id)))
 
 
@@ -19018,11 +19511,24 @@ def get_closed_channel_by_id(channel_id: "str") -> "typing.Optional[ClosedChanne
         _UniffiConverterString.lower(channel_id)))
 
 
+def get_default_gap_limit() -> "int":
+    """
+    The default address gap limit used by account scanning and the xpub watcher.
+    Exposed so platforms reference one source of truth instead of hardcoding 20.
+    """
+
+    return _UniffiConverterUInt32.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_get_default_gap_limit,))
+
+
 def get_default_lsp_balance(params: "DefaultLspBalanceParams") -> "int":
     _UniffiConverterTypeDefaultLspBalanceParams.check_lower(params)
     
     return _UniffiConverterUInt64.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_get_default_lsp_balance,
         _UniffiConverterTypeDefaultLspBalanceParams.lower(params)))
+
+
+def get_default_wallet_id() -> "str":
+    return _UniffiConverterString.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_get_default_wallet_id,))
 
 async def get_gift(gift_id: "str") -> "IGift":
 
@@ -19159,27 +19665,47 @@ _UniffiConverterTypeBlocktankError,
 
     )
 
-def get_pre_activity_metadata(search_key: "str",search_by_address: "bool") -> "typing.Optional[PreActivityMetadata]":
+def get_pre_activity_metadata(wallet_id: "str",search_key: "str",search_by_address: "bool") -> "typing.Optional[PreActivityMetadata]":
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(search_key)
     
     _UniffiConverterBool.check_lower(search_by_address)
     
     return _UniffiConverterOptionalTypePreActivityMetadata.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(search_key),
         _UniffiConverterBool.lower(search_by_address)))
 
 
-def get_tags(activity_id: "str") -> "typing.List[str]":
+def get_supported_hardware_wallets() -> "typing.List[SupportedHardwareWallet]":
+    """
+    The catalog of hardware wallets Bitkit supports.
+
+    Trezor's full lineup; only the Safe 7 currently offers Bluetooth, so it is the
+    only model iOS surfaces (apps filter on `transports`).
+    """
+
+    return _UniffiConverterSequenceTypeSupportedHardwareWallet.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_get_supported_hardware_wallets,))
+
+
+def get_tags(wallet_id: "str",activity_id: "str") -> "typing.List[str]":
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(activity_id)
     
     return _UniffiConverterSequenceString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_tags,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(activity_id)))
 
 
-def get_transaction_details(tx_id: "str") -> "typing.Optional[TransactionDetails]":
+def get_transaction_details(wallet_id: "str",tx_id: "str") -> "typing.Optional[TransactionDetails]":
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(tx_id)
     
     return _UniffiConverterOptionalTypeTransactionDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_transaction_details,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(tx_id)))
 
 async def gift_order(client_node_id: "str",code: "str") -> "IGift":
@@ -19280,12 +19806,15 @@ _UniffiConverterTypeLnurlError,
 
     )
 
-def mark_activity_as_seen(activity_id: "str",seen_at: "int") -> None:
+def mark_activity_as_seen(wallet_id: "str",activity_id: "str",seen_at: "int") -> None:
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(activity_id)
     
     _UniffiConverterUInt64.check_lower(seen_at)
     
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_mark_activity_as_seen,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(activity_id),
         _UniffiConverterUInt64.lower(seen_at))
 
@@ -19939,30 +20468,39 @@ def remove_closed_channel_by_id(channel_id: "str") -> "bool":
         _UniffiConverterString.lower(channel_id)))
 
 
-def remove_pre_activity_metadata_tags(payment_id: "str",tags: "typing.List[str]") -> None:
+def remove_pre_activity_metadata_tags(wallet_id: "str",payment_id: "str",tags: "typing.List[str]") -> None:
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(payment_id)
     
     _UniffiConverterSequenceString.check_lower(tags)
     
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_remove_pre_activity_metadata_tags,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(payment_id),
         _UniffiConverterSequenceString.lower(tags))
 
 
-def remove_tags(activity_id: "str",tags: "typing.List[str]") -> None:
+def remove_tags(wallet_id: "str",activity_id: "str",tags: "typing.List[str]") -> None:
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(activity_id)
     
     _UniffiConverterSequenceString.check_lower(tags)
     
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_remove_tags,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(activity_id),
         _UniffiConverterSequenceString.lower(tags))
 
 
-def reset_pre_activity_metadata_tags(payment_id: "str") -> None:
+def reset_pre_activity_metadata_tags(wallet_id: "str",payment_id: "str") -> None:
+    _UniffiConverterString.check_lower(wallet_id)
+    
     _UniffiConverterString.check_lower(payment_id)
     
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_reset_pre_activity_metadata_tags,
+        _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(payment_id))
 
 
@@ -20329,6 +20867,28 @@ async def trezor_list_devices() -> "typing.List[TrezorDeviceInfo]":
 _UniffiConverterTypeTrezorError,
 
     )
+async def trezor_refresh_features() -> "TrezorFeatures":
+
+    """
+    Refresh features from the currently connected Trezor device.
+
+    This performs a single explicit device request and updates the connected
+    device's cached features. It does not start polling. Returns `NotConnected`
+    if there is no connected device.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_refresh_features(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeTrezorFeatures.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeTrezorError,
+
+    )
 async def trezor_scan() -> "typing.List[TrezorDeviceInfo]":
 
     """
@@ -20681,6 +21241,7 @@ __all__ = [
     "ComposeResult",
     "DbError",
     "DecodingError",
+    "HardwareWalletVendor",
     "LnurlError",
     "ManualRefundStateEnum",
     "Network",
@@ -20696,6 +21257,7 @@ __all__ = [
     "TrezorCoinType",
     "TrezorError",
     "TrezorScriptType",
+    "TrezorTransportErrorCode",
     "TrezorTransportType",
     "TxDirection",
     "WalletSelection",
@@ -20763,6 +21325,7 @@ __all__ = [
     "PubkyProfile",
     "PubkyProfileLink",
     "SingleAddressInfoResult",
+    "SupportedHardwareWallet",
     "SweepResult",
     "SweepTransactionPreview",
     "SweepableBalances",
@@ -20814,6 +21377,7 @@ __all__ = [
     "create_order",
     "create_withdraw_callback_url",
     "decode",
+    "delete_activities_by_wallet_id",
     "delete_activity_by_id",
     "delete_pre_activity_metadata",
     "delete_transaction_details",
@@ -20822,6 +21386,7 @@ __all__ = [
     "derive_onchain_descriptor",
     "derive_private_key",
     "derive_pubky_secret_key",
+    "derive_wallet_id",
     "entropy_to_mnemonic",
     "estimate_order_fee",
     "estimate_order_fee_full",
@@ -20843,7 +21408,9 @@ __all__ = [
     "get_bip39_wordlist",
     "get_cjit_entries",
     "get_closed_channel_by_id",
+    "get_default_gap_limit",
     "get_default_lsp_balance",
+    "get_default_wallet_id",
     "get_gift",
     "get_info",
     "get_lnurl_invoice",
@@ -20852,6 +21419,7 @@ __all__ = [
     "get_orders",
     "get_payment",
     "get_pre_activity_metadata",
+    "get_supported_hardware_wallets",
     "get_tags",
     "get_transaction_details",
     "gift_order",
@@ -20914,6 +21482,7 @@ __all__ = [
     "trezor_is_connected",
     "trezor_is_initialized",
     "trezor_list_devices",
+    "trezor_refresh_features",
     "trezor_scan",
     "trezor_set_transport_callback",
     "trezor_set_ui_callback",

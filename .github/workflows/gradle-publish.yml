@@ -16,7 +16,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
@@ -34,6 +34,22 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
+    - name: Install native build dependencies
+      run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev pkg-config protobuf-compiler
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Set up Android NDK
+      id: setup-ndk
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: r28c
+        add-to-path: true
+
+    - name: Export Android NDK root
+      run: echo "ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}" >> "$GITHUB_ENV"
+
     - name: Extract version from input or tag
       id: version
       shell: bash
@@ -42,11 +58,26 @@ jobs:
         if [[ -z "$VERSION" ]]; then
           VERSION="$GITHUB_REF_NAME"
         fi
-        echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
+        echo "version=${VERSION#v}" >> "$GITHUB_OUTPUT"
+
+    - name: Generate Android bindings
+      run: ./build_android.sh
 
     - name: Build with Gradle
       working-directory: bindings/android
       run: ./gradlew build -Pversion=${{ steps.version.outputs.version }}
+
+    - name: Upload native debug symbols artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: bitkit-core-native-debug-symbols-${{ steps.version.outputs.version }}
+        path: bindings/android/native-debug-symbols.zip
+
+    - name: Upload native debug symbols to release
+      if: github.event_name == 'release'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh release upload "${{ github.event.release.tag_name }}" bindings/android/native-debug-symbols.zip --clobber
 
     # same credentials env vars used in the publishing section of build.gradle.kts
     - name: Publish to GitHub Packages
