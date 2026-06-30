@@ -58,6 +58,7 @@ impl From<LnurlError> for DecodingError {
                 min,
                 max,
             },
+            LnurlError::AmountMismatch { .. } => DecodingError::InvalidResponse,
             LnurlError::AuthenticationFailed => DecodingError::InvalidResponse,
         }
     }
