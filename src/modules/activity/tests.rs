@@ -1085,6 +1085,39 @@ mod tests {
             .unwrap();
         assert!(scoped_search.is_empty());
 
+        // Positive side: each wallet's own address search returns exactly its own row.
+        let hardware_search = db
+            .get_activities(
+                Some(wallet_id),
+                None,
+                None,
+                None,
+                Some("bc1qv2hardware".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+        assert_eq!(hardware_search.len(), 1);
+        assert_eq!(hardware_search[0].get_wallet_id(), wallet_id);
+
+        let default_search = db
+            .get_activities(
+                Some(DEFAULT_WALLET_ID),
+                None,
+                None,
+                None,
+                Some("bc1qv1default".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+        assert_eq!(default_search.len(), 1);
+        assert_eq!(default_search[0].get_wallet_id(), DEFAULT_WALLET_ID);
+
         cleanup(&db_path);
     }
 
