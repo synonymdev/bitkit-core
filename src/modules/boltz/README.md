@@ -73,7 +73,10 @@ back to `Unknown { raw }`). Register a `BoltzEventListener` via
 (cooperative key-path first, script-path fallback) and emits
 `BoltzSwapEvent.Claimed { txid }`. Claiming on confirmation (not mempool) avoids
 revealing the preimage before the lockup is final; call `boltzClaimReverseSwap`
-manually if you accept the 0-conf risk.
+manually if you accept the 0-conf risk. The auto-claim fee rate is the
+`feeRateSatPerVb` passed to `boltzStartSwapUpdates` — **Bitkit owns fee
+estimation** and should pass its current recommended rate so the claim confirms
+before the swap times out; restart the stream to apply an updated rate.
 
 **Submarine refunds are manual** (the module needs a destination address): on
 `invoice.failedToPay` / `transaction.lockupFailed` / `swap.expired`, call
@@ -91,7 +94,7 @@ boltzListPendingSwaps()                                  -> [BoltzSwap]
 boltzGetSwap(swapId)                                     -> BoltzSwap?
 boltzClaimReverseSwap(swapId, mnemonic, bip39Passphrase?, feeRateSatPerVb?)          -> String (txid)
 boltzRefundSubmarineSwap(swapId, refundAddress, mnemonic, bip39Passphrase?, feeRateSatPerVb?) -> String (txid)
-boltzStartSwapUpdates(network, listener, mnemonic, bip39Passphrase?)                 // managed WebSocket
+boltzStartSwapUpdates(network, listener, mnemonic, bip39Passphrase?, feeRateSatPerVb?) // managed WebSocket
 boltzStopSwapUpdates()
 ```
 
@@ -137,7 +140,8 @@ try await boltzStartSwapUpdates(
     network: .mainnet,
     listener: SwapListener(),
     mnemonic: wallet.mnemonic,
-    bip39Passphrase: nil
+    bip39Passphrase: nil,
+    feeRateSatPerVb: feeService.currentSatPerVb()   // Bitkit-provided fee for auto-claims
 )
 
 func drainToOnchain(amountSat: UInt64) async throws {
@@ -177,7 +181,8 @@ class SwapListener : BoltzEventListener {
 
 suspend fun drainToOnchain(amountSat: ULong) {
     // mnemonic = wallet seed phrase; pass the wallet's BIP39 passphrase or null.
-    boltzStartSwapUpdates(BoltzNetwork.MAINNET, SwapListener(), wallet.mnemonic, null)
+    // The last arg is Bitkit's fee rate (sat/vB) for auto-claims.
+    boltzStartSwapUpdates(BoltzNetwork.MAINNET, SwapListener(), wallet.mnemonic, null, feeService.currentSatPerVb())
 
     val claimAddress = lightningService.node.onchainPayment().newAddress()
     val swap = boltzCreateReverseSwap(
@@ -204,7 +209,7 @@ class SwapListener(BoltzEventListener):
     def on_event(self, event):
         print(event)
 
-await boltz_start_swap_updates(BoltzNetwork.MAINNET, SwapListener(), wallet_mnemonic, None)
+await boltz_start_swap_updates(BoltzNetwork.MAINNET, SwapListener(), wallet_mnemonic, None, 5.0)
 swap = await boltz_create_reverse_swap(
     network=BoltzNetwork.MAINNET,
     electrum_url="ssl://electrum.blockstream.info:50002",
@@ -270,7 +275,7 @@ On startup (after `initDb`), resume tracking and surface anything actionable:
 
 ```kotlin
 // re-subscribes all pending swaps; holds the mnemonic to auto-claim
-boltzStartSwapUpdates(BoltzNetwork.MAINNET, SwapListener(), wallet.mnemonic, null)
+boltzStartSwapUpdates(BoltzNetwork.MAINNET, SwapListener(), wallet.mnemonic, null, feeService.currentSatPerVb())
 val pending = boltzListPendingSwaps()                       // for UI / manual refunds
 ```
 

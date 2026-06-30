@@ -28,13 +28,18 @@ struct UpdatesHandle {
     process_task: JoinHandle<()>,
 }
 
-/// Wallet credentials needed by the background stream to re-derive swap keys for
-/// automatic reverse-swap claims. Held in memory only for the lifetime of the
-/// updates stream (dropped on [`stop_swap_updates`]); never persisted.
+/// Configuration the background stream needs to perform automatic
+/// reverse-swap claims. The wallet credentials (used to re-derive swap keys)
+/// are held in memory only for the lifetime of the updates stream (dropped on
+/// [`stop_swap_updates`]); never persisted.
 #[derive(Clone)]
-struct AutoClaimKeys {
+struct AutoClaimConfig {
     mnemonic: String,
     bip39_passphrase: Option<String>,
+    /// Fee rate, in sat/vByte, used for the automatic claim transaction. Supplied
+    /// by the caller (Bitkit owns fee estimation); falls back to
+    /// [`crate::modules::boltz::claim::DEFAULT_FEERATE_SAT_PER_VB`] when `None`.
+    fee_rate_sat_per_vb: Option<f64>,
 }
 
 static SWAP_UPDATES: OnceCell<TokioMutex<Option<UpdatesHandle>>> = OnceCell::new();
@@ -49,7 +54,9 @@ fn updates_cell() -> &'static TokioMutex<Option<UpdatesHandle>> {
 /// Any previously running updates stream is stopped first; only one stream (for
 /// one network) runs at a time. `mnemonic` is held in memory for the lifetime of
 /// the stream so confirmed reverse swaps can be auto-claimed (their keys are
-/// re-derived on demand). Must be invoked from within a Tokio runtime context
+/// re-derived on demand). `fee_rate_sat_per_vb` is the fee rate used for those
+/// automatic claims (Bitkit supplies the current rate; `None` falls back to a
+/// conservative default). Must be invoked from within a Tokio runtime context
 /// (it spawns background tasks).
 pub async fn start_swap_updates(
     db: Arc<BoltzDB>,
@@ -57,11 +64,13 @@ pub async fn start_swap_updates(
     listener: Arc<dyn BoltzEventListener>,
     mnemonic: String,
     bip39_passphrase: Option<String>,
+    fee_rate_sat_per_vb: Option<f64>,
 ) -> Result<(), BoltzError> {
     stop_swap_updates().await;
-    let keys = AutoClaimKeys {
+    let config = AutoClaimConfig {
         mnemonic,
         bip39_passphrase,
+        fee_rate_sat_per_vb,
     };
 
     let boltz_client = build_boltz_client(network);
@@ -84,12 +93,12 @@ pub async fn start_swap_updates(
         let ws = ws.clone();
         let db = db.clone();
         let listener = listener.clone();
-        let keys = keys.clone();
+        let config = config.clone();
         tokio::spawn(async move {
             let mut updates = ws.updates();
             loop {
                 match updates.recv().await {
-                    Ok(status) => process_status(&db, listener.as_ref(), &keys, status).await,
+                    Ok(status) => process_status(&db, listener.as_ref(), &config, status).await,
                     Err(RecvError::Lagged(_)) => continue,
                     Err(RecvError::Closed) => break,
                 }
@@ -136,7 +145,7 @@ pub async fn subscribe_if_active(network: BoltzNetwork, swap_id: &str) {
 async fn process_status(
     db: &Arc<BoltzDB>,
     listener: &dyn BoltzEventListener,
-    keys: &AutoClaimKeys,
+    config: &AutoClaimConfig,
     status: SwapStatus,
 ) {
     let swap_id = status.id.clone();
@@ -161,7 +170,7 @@ async fn process_status(
     };
 
     if should_auto_claim(&record, &raw) {
-        auto_claim(db, listener, keys, &record).await;
+        auto_claim(db, listener, config, &record).await;
     }
 }
 
@@ -183,14 +192,14 @@ fn should_auto_claim(record: &SwapRecord, raw_status: &str) -> bool {
 async fn auto_claim(
     db: &Arc<BoltzDB>,
     listener: &dyn BoltzEventListener,
-    keys: &AutoClaimKeys,
+    config: &AutoClaimConfig,
     record: &SwapRecord,
 ) {
     match claim_reverse_swap(
         record,
-        &keys.mnemonic,
-        keys.bip39_passphrase.as_deref(),
-        None,
+        &config.mnemonic,
+        config.bip39_passphrase.as_deref(),
+        config.fee_rate_sat_per_vb,
     )
     .await
     {

@@ -2947,17 +2947,31 @@ pub async fn boltz_refund_submarine_swap(
 /// time). `mnemonic` is held in memory for the lifetime of the stream so
 /// confirmed reverse swaps can be auto-claimed; it is never persisted. Events
 /// are delivered to `listener`.
+///
+/// `fee_rate_sat_per_vb` is the fee rate used for automatic claim transactions.
+/// Bitkit owns fee estimation and should pass its current recommended rate; when
+/// `None`, a conservative built-in default is used. To auto-claim at an updated
+/// fee rate, call this again (it restarts the stream).
 #[uniffi::export]
 pub async fn boltz_start_swap_updates(
     network: BoltzNetwork,
     listener: Arc<dyn BoltzEventListener>,
     mnemonic: String,
     bip39_passphrase: Option<String>,
+    fee_rate_sat_per_vb: Option<f64>,
 ) -> Result<(), BoltzError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         let db = get_boltz_db().await?;
-        boltz::start_swap_updates(db, network, listener, mnemonic, bip39_passphrase).await
+        boltz::start_swap_updates(
+            db,
+            network,
+            listener,
+            mnemonic,
+            bip39_passphrase,
+            fee_rate_sat_per_vb,
+        )
+        .await
     })
     .await
     .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
