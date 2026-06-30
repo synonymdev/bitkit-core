@@ -3517,6 +3517,14 @@ public sealed class LnurlException: kotlin.Exception() {
             get() = "errorDetails=${ `errorDetails` }"
     }
     
+    public class AmountMismatch(
+        public val `requestedMsats`: kotlin.ULong,
+        public val `invoiceMsats`: kotlin.ULong,
+    ) : LnurlException() {
+        override val message: String
+            get() = "requestedMsats=${ `requestedMsats` }, invoiceMsats=${ `invoiceMsats` }"
+    }
+    
     public class AuthenticationFailed(
     ) : LnurlException() {
         override val message: String
