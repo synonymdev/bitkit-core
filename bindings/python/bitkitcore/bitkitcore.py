@@ -571,6 +571,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data() != 50807:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee() != 6427:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_orders() != 47460:
@@ -1397,6 +1399,12 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice.argtypes = (
     ctypes.c_uint64,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice_for_pay_data.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.c_uint64,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice_for_pay_data.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_get_min_zero_conf_tx_fee.argtypes = (
     _UniffiRustBuffer,
 )
@@ -2303,6 +2311,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_info.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee.restype = ctypes.c_uint16
@@ -12820,6 +12831,18 @@ class LnurlError:  # type: ignore
         def __repr__(self):
             return "LnurlError.InvoiceCreationFailed({})".format(str(self))
     _UniffiTempLnurlError.InvoiceCreationFailed = InvoiceCreationFailed # type: ignore
+    class AmountMismatch(_UniffiTempLnurlError):
+        def __init__(self, requested_msats, invoice_msats):
+            super().__init__(", ".join([
+                "requested_msats={!r}".format(requested_msats),
+                "invoice_msats={!r}".format(invoice_msats),
+            ]))
+            self.requested_msats = requested_msats
+            self.invoice_msats = invoice_msats
+
+        def __repr__(self):
+            return "LnurlError.AmountMismatch({})".format(str(self))
+    _UniffiTempLnurlError.AmountMismatch = AmountMismatch # type: ignore
     class AuthenticationFailed(_UniffiTempLnurlError):
         def __init__(self):
             pass
@@ -12859,6 +12882,11 @@ class _UniffiConverterTypeLnurlError(_UniffiConverterRustBuffer):
                 _UniffiConverterString.read(buf),
             )
         if variant == 7:
+            return LnurlError.AmountMismatch(
+                _UniffiConverterUInt64.read(buf),
+                _UniffiConverterUInt64.read(buf),
+            )
+        if variant == 8:
             return LnurlError.AuthenticationFailed(
             )
         raise InternalError("Raw enum value doesn't match any cases")
@@ -12881,6 +12909,10 @@ class _UniffiConverterTypeLnurlError(_UniffiConverterRustBuffer):
         if isinstance(value, LnurlError.InvoiceCreationFailed):
             _UniffiConverterString.check_lower(value.error_details)
             return
+        if isinstance(value, LnurlError.AmountMismatch):
+            _UniffiConverterUInt64.check_lower(value.requested_msats)
+            _UniffiConverterUInt64.check_lower(value.invoice_msats)
+            return
         if isinstance(value, LnurlError.AuthenticationFailed):
             return
 
@@ -12902,8 +12934,12 @@ class _UniffiConverterTypeLnurlError(_UniffiConverterRustBuffer):
         if isinstance(value, LnurlError.InvoiceCreationFailed):
             buf.write_i32(6)
             _UniffiConverterString.write(value.error_details, buf)
-        if isinstance(value, LnurlError.AuthenticationFailed):
+        if isinstance(value, LnurlError.AmountMismatch):
             buf.write_i32(7)
+            _UniffiConverterUInt64.write(value.requested_msats, buf)
+            _UniffiConverterUInt64.write(value.invoice_msats, buf)
+        if isinstance(value, LnurlError.AuthenticationFailed):
+            buf.write_i32(8)
 
 
 
@@ -19534,6 +19570,29 @@ async def get_lnurl_invoice(address: "str",amount_satoshis: "int") -> "str":
 _UniffiConverterTypeLnurlError,
 
     )
+async def get_lnurl_invoice_for_pay_data(data: "LnurlPayData",amount_msats: "int",comment: "typing.Optional[str]") -> "str":
+
+    _UniffiConverterTypeLnurlPayData.check_lower(data)
+    
+    _UniffiConverterUInt64.check_lower(amount_msats)
+    
+    _UniffiConverterOptionalString.check_lower(comment)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice_for_pay_data(
+        _UniffiConverterTypeLnurlPayData.lower(data),
+        _UniffiConverterUInt64.lower(amount_msats),
+        _UniffiConverterOptionalString.lower(comment)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeLnurlError,
+
+    )
 async def get_min_zero_conf_tx_fee(order_id: "str") -> "IBt0ConfMinTxFeeWindow":
 
     _UniffiConverterString.check_lower(order_id)
@@ -21341,6 +21400,7 @@ __all__ = [
     "get_gift",
     "get_info",
     "get_lnurl_invoice",
+    "get_lnurl_invoice_for_pay_data",
     "get_min_zero_conf_tx_fee",
     "get_orders",
     "get_payment",
