@@ -4689,9 +4689,9 @@ dependencies = [
 
 [[package]]
 name = "trezor-connect-rs"
-version = "0.3.3"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71fbb6b200a4de26bca79396c7e1c9b582292a515d0438f505b03b758315f6a9"
+checksum = "d2c59a49eaa8a70bc09a6e7b3177eda0115ff20a4247244fd38bd484e832fd44"
 dependencies = [
  "aes-gcm",
  "async-trait",
