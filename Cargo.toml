@@ -1,6 +1,6 @@
 [package]
 name = "bitkitcore"
-version = "0.3.8"
+version = "0.3.9"
 edition = "2021"
 
 [lib]
@@ -47,11 +47,11 @@ btleplug = "0.11"
 
 # Trezor connect library - non-iOS platforms get USB + Bluetooth
 [target.'cfg(not(target_os = "ios"))'.dependencies]
-trezor-connect-rs = { version = "0.3.3", features = ["psbt"] }
+trezor-connect-rs = { version = "0.3.4", features = ["psbt"] }
 
 # iOS: Bluetooth only (libusb has no iOS backend, so no USB support)
 [target.'cfg(target_os = "ios")'.dependencies]
-trezor-connect-rs = { version = "0.3.3", default-features = false, features = ["bluetooth", "psbt"] }
+trezor-connect-rs = { version = "0.3.4", default-features = false, features = ["bluetooth", "psbt"] }
 
 # JNI for Android (must match btleplug's jni version)
 [target.'cfg(target_os = "android")'.dependencies]

@@ -269,6 +269,9 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
                 ThpError::HandshakeFailed(msg) => TrezorError::ConnectionError {
                     error_details: format!("THP handshake failed: {}", msg),
                 },
+                // The device is locked; the caller should back off and prompt the
+                // user to unlock rather than retrying the connection in a loop.
+                ThpError::DeviceLocked => TrezorError::DeviceBusy,
                 ThpError::EncryptionError(msg) => TrezorError::ProtocolError {
                     error_details: format!("THP encryption error: {}", msg),
                 },
@@ -343,5 +346,20 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
                 error_details: err.to_string(),
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use trezor_connect_rs::error::ThpError;
+    use trezor_connect_rs::TrezorError as TE;
+
+    #[test]
+    fn thp_device_locked_maps_to_device_busy() {
+        // A locked device must surface as the typed DeviceBusy signal so callers
+        // back off / prompt the user to unlock, not a generic ConnectionError.
+        let mapped: TrezorError = TE::Thp(ThpError::DeviceLocked).into();
+        assert!(matches!(mapped, TrezorError::DeviceBusy));
     }
 }
