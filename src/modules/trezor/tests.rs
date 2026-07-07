@@ -937,4 +937,35 @@ mod tests {
         let _ = adapter.on_passphrase_request(true);
         assert_eq!(*mock.last_passphrase_on_device.lock().unwrap(), Some(true));
     }
+
+    // ========================================================================
+    // Supported hardware-wallet catalog
+    // ========================================================================
+
+    #[test]
+    fn test_supported_hardware_wallets_catalog() {
+        use crate::modules::trezor::{get_supported_hardware_wallets, HardwareWalletVendor};
+
+        let wallets = get_supported_hardware_wallets();
+
+        // Full Trezor lineup, all Trezor-vendored, every entry well-formed.
+        assert_eq!(wallets.len(), 5);
+        for w in &wallets {
+            assert_eq!(w.vendor, HardwareWalletVendor::Trezor);
+            assert_eq!(w.vendor_name, "Trezor");
+            assert_eq!(w.display_name, format!("Trezor {}", w.model));
+            assert!(
+                w.transports.contains(&TrezorTransportType::Usb),
+                "every model supports USB"
+            );
+        }
+
+        // iOS shows only Bluetooth-capable models -> exactly the Safe 7.
+        let ble: Vec<&str> = wallets
+            .iter()
+            .filter(|w| w.transports.contains(&TrezorTransportType::Bluetooth))
+            .map(|w| w.model.as_str())
+            .collect();
+        assert_eq!(ble, vec!["Safe 7"]);
+    }
 }

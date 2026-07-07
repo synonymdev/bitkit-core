@@ -853,6 +853,274 @@ mod tests {
         cleanup(&db_path);
     }
 
+    fn json_has_wallet_id<T: serde::Serialize>(value: &T) -> bool {
+        serde_json::to_value(value)
+            .unwrap()
+            .get("wallet_id")
+            .is_some()
+    }
+
+    #[test]
+    fn test_default_wallet_activity_always_serializes_wallet_id() {
+        // The current/canonical payload always includes `wallet_id`, even for the default
+        // wallet. A freshly serialized default-wallet record is therefore distinguishable
+        // from legacy data, and round-trips back to the default wallet.
+        let onchain = create_test_onchain_activity();
+        assert_eq!(onchain.wallet_id, DEFAULT_WALLET_ID);
+        assert!(
+            json_has_wallet_id(&onchain),
+            "default-wallet onchain activity must serialize wallet_id (current payload)"
+        );
+        let onchain_json = serde_json::to_string(&onchain).unwrap();
+        let decoded: OnchainActivity = serde_json::from_str(&onchain_json).unwrap();
+        assert_eq!(decoded.wallet_id, DEFAULT_WALLET_ID);
+
+        let lightning = create_test_lightning_activity();
+        assert_eq!(lightning.wallet_id, DEFAULT_WALLET_ID);
+        assert!(
+            json_has_wallet_id(&lightning),
+            "default-wallet lightning activity must serialize wallet_id (current payload)"
+        );
+        let lightning_json = serde_json::to_string(&lightning).unwrap();
+        let decoded: LightningActivity = serde_json::from_str(&lightning_json).unwrap();
+        assert_eq!(decoded.wallet_id, DEFAULT_WALLET_ID);
+    }
+
+    #[test]
+    fn test_old_v1_activity_json_without_wallet_id_decodes() {
+        // Old JSON authored before wallet_id existed (no wallet_id key) must still decode,
+        // defaulting to the built-in Bitkit wallet.
+        let onchain_v1 = r#"{
+            "id": "legacy_onchain",
+            "tx_type": "Sent",
+            "tx_id": "legacy_txid",
+            "value": 5000,
+            "fee": 50,
+            "fee_rate": 1,
+            "address": "bc1qlegacy",
+            "confirmed": true,
+            "timestamp": 1234567890,
+            "is_boosted": false,
+            "boost_tx_ids": [],
+            "is_transfer": false,
+            "does_exist": true,
+            "confirm_timestamp": null,
+            "channel_id": null,
+            "transfer_tx_id": null
+        }"#;
+        let decoded: OnchainActivity = serde_json::from_str(onchain_v1).unwrap();
+        assert_eq!(decoded.wallet_id, DEFAULT_WALLET_ID);
+        assert_eq!(decoded.tx_id, "legacy_txid");
+
+        let lightning_v1 = r#"{
+            "id": "legacy_lightning",
+            "tx_type": "Received",
+            "status": "Succeeded",
+            "value": 7000,
+            "fee": 3,
+            "invoice": "lightning:legacy",
+            "message": "legacy message",
+            "timestamp": 1234567990,
+            "preimage": null
+        }"#;
+        let decoded: LightningActivity = serde_json::from_str(lightning_v1).unwrap();
+        assert_eq!(decoded.wallet_id, DEFAULT_WALLET_ID);
+        assert_eq!(decoded.invoice, "lightning:legacy");
+    }
+
+    #[test]
+    fn test_hardware_wallet_activity_serializes_wallet_id() {
+        // Wallet-scoped (non-default) records keep wallet_id in the JSON and round-trip it
+        // back unchanged.
+        let wallet_id = crate::activity::derive_wallet_id(
+            "trezor".to_string(),
+            vec!["xpubA".to_string(), "xpubB".to_string()],
+        )
+        .unwrap();
+
+        let mut onchain = create_test_onchain_activity();
+        onchain.wallet_id = wallet_id.clone();
+        assert!(json_has_wallet_id(&onchain));
+        let decoded: OnchainActivity =
+            serde_json::from_str(&serde_json::to_string(&onchain).unwrap()).unwrap();
+        assert_eq!(decoded.wallet_id, wallet_id);
+
+        let mut lightning = create_test_lightning_activity();
+        lightning.wallet_id = wallet_id.clone();
+        assert!(json_has_wallet_id(&lightning));
+        let decoded: LightningActivity =
+            serde_json::from_str(&serde_json::to_string(&lightning).unwrap()).unwrap();
+        assert_eq!(decoded.wallet_id, wallet_id);
+    }
+
+    #[test]
+    fn test_wallet_scoped_metadata_models_always_serialize_wallet_id() {
+        // Tags, pre-activity metadata and transaction details gained wallet_id in the same
+        // change; the current/canonical payload always carries wallet_id, for the default
+        // wallet and for any other scope alike.
+        let scoped = "hardware-wallet-1";
+
+        let default_tags = ActivityTags {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
+            activity_id: "act1".to_string(),
+            tags: vec!["tag".to_string()],
+        };
+        assert!(json_has_wallet_id(&default_tags));
+        let scoped_tags = ActivityTags {
+            wallet_id: scoped.to_string(),
+            ..default_tags.clone()
+        };
+        assert!(json_has_wallet_id(&scoped_tags));
+
+        let default_meta = create_test_pre_activity_metadata(
+            "pay1".to_string(),
+            ActivityType::Onchain,
+            vec!["tag".to_string()],
+        );
+        assert!(json_has_wallet_id(&default_meta));
+        let scoped_meta = PreActivityMetadata {
+            wallet_id: scoped.to_string(),
+            ..default_meta.clone()
+        };
+        assert!(json_has_wallet_id(&scoped_meta));
+
+        let default_details = TransactionDetails {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
+            tx_id: "txid".to_string(),
+            amount_sats: 1000,
+            inputs: vec![],
+            outputs: vec![],
+        };
+        assert!(json_has_wallet_id(&default_details));
+        let scoped_details = TransactionDetails {
+            wallet_id: scoped.to_string(),
+            ..default_details.clone()
+        };
+        assert!(json_has_wallet_id(&scoped_details));
+    }
+
+    #[test]
+    fn test_mixed_v1_v2_lookup_and_search_is_wallet_scoped() {
+        // A v1 (default-wallet) and v2 (hardware-wallet) activity sharing the same raw id
+        // must remain distinct: wallet-scoped lookup, list and search each return only the
+        // matching record, never a mixed or duplicated v1/v2 pair.
+        let (mut db, db_path) = setup();
+        let wallet_id = "hardware-wallet-1";
+        let shared_id = "shared_raw_id";
+
+        let mut v1 = create_test_onchain_activity();
+        v1.id = shared_id.to_string();
+        v1.tx_id = "v1_txid".to_string();
+        v1.address = "bc1qv1default".to_string();
+        v1.value = 10_000;
+
+        let mut v2 = create_test_onchain_activity();
+        v2.wallet_id = wallet_id.to_string();
+        v2.id = shared_id.to_string();
+        v2.tx_id = "v2_txid".to_string();
+        v2.address = "bc1qv2hardware".to_string();
+        v2.value = 20_000;
+
+        db.insert_onchain_activity(&v1).unwrap();
+        db.insert_onchain_activity(&v2).unwrap();
+
+        let default_activity = db
+            .get_activity_by_id(DEFAULT_WALLET_ID, shared_id)
+            .unwrap()
+            .unwrap();
+        assert_eq!(default_activity.get_wallet_id(), DEFAULT_WALLET_ID);
+
+        let scoped_activity = db
+            .get_activity_by_id(wallet_id, shared_id)
+            .unwrap()
+            .unwrap();
+        assert_eq!(scoped_activity.get_wallet_id(), wallet_id);
+
+        // Wallet-scoped list returns exactly one record for each wallet, not the mixed pair.
+        let default_list = db
+            .get_activities(
+                Some(DEFAULT_WALLET_ID),
+                Some(ActivityFilter::Onchain),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+        assert_eq!(default_list.len(), 1);
+        assert_eq!(default_list[0].get_wallet_id(), DEFAULT_WALLET_ID);
+
+        let scoped_list = db
+            .get_activities(
+                Some(wallet_id),
+                Some(ActivityFilter::Onchain),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+        assert_eq!(scoped_list.len(), 1);
+        assert_eq!(scoped_list[0].get_wallet_id(), wallet_id);
+
+        // Search stays wallet-scoped: the hardware address is invisible to the default wallet.
+        let scoped_search = db
+            .get_activities(
+                Some(DEFAULT_WALLET_ID),
+                None,
+                None,
+                None,
+                Some("bc1qv2hardware".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+        assert!(scoped_search.is_empty());
+
+        // Positive side: each wallet's own address search returns exactly its own row.
+        let hardware_search = db
+            .get_activities(
+                Some(wallet_id),
+                None,
+                None,
+                None,
+                Some("bc1qv2hardware".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+        assert_eq!(hardware_search.len(), 1);
+        assert_eq!(hardware_search[0].get_wallet_id(), wallet_id);
+
+        let default_search = db
+            .get_activities(
+                Some(DEFAULT_WALLET_ID),
+                None,
+                None,
+                None,
+                Some("bc1qv1default".to_string()),
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap();
+        assert_eq!(default_search.len(), 1);
+        assert_eq!(default_search[0].get_wallet_id(), DEFAULT_WALLET_ID);
+
+        cleanup(&db_path);
+    }
+
     #[test]
     fn test_delete_activities_by_wallet_id_cleans_scoped_data() {
         let (mut db, db_path) = setup();

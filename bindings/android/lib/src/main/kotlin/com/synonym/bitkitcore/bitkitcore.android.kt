@@ -1490,6 +1490,10 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1694,6 +1698,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data() != 50807.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee() != 6427.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1704,6 +1711,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 36542.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_tags() != 8596.toShort()) {
@@ -2184,6 +2194,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_get_lnurl_invoice(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee(
     ): Short
     @JvmStatic
@@ -2194,6 +2207,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_pre_activity_metadata(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_tags(
@@ -2963,6 +2979,12 @@ internal object UniffiLib : Library {
         `amountSatoshis`: Long,
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_lnurl_invoice_for_pay_data(
+        `data`: RustBufferByValue,
+        `amountMsats`: Long,
+        `comment`: RustBufferByValue,
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_min_zero_conf_tx_fee(
         `orderId`: RustBufferByValue,
     ): Long
@@ -2981,6 +3003,10 @@ internal object UniffiLib : Library {
         `walletId`: RustBufferByValue,
         `searchKey`: RustBufferByValue,
         `searchByAddress`: Byte,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_supported_hardware_wallets(
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
@@ -7289,6 +7315,37 @@ public object FfiConverterTypeSingleAddressInfoResult: FfiConverterRustBuffer<Si
 
 
 
+public object FfiConverterTypeSupportedHardwareWallet: FfiConverterRustBuffer<SupportedHardwareWallet> {
+    override fun read(buf: ByteBuffer): SupportedHardwareWallet {
+        return SupportedHardwareWallet(
+            FfiConverterTypeHardwareWalletVendor.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterSequenceTypeTrezorTransportType.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: SupportedHardwareWallet): ULong = (
+            FfiConverterTypeHardwareWalletVendor.allocationSize(value.`vendor`) +
+            FfiConverterString.allocationSize(value.`vendorName`) +
+            FfiConverterString.allocationSize(value.`model`) +
+            FfiConverterString.allocationSize(value.`displayName`) +
+            FfiConverterSequenceTypeTrezorTransportType.allocationSize(value.`transports`)
+    )
+
+    override fun write(value: SupportedHardwareWallet, buf: ByteBuffer) {
+        FfiConverterTypeHardwareWalletVendor.write(value.`vendor`, buf)
+        FfiConverterString.write(value.`vendorName`, buf)
+        FfiConverterString.write(value.`model`, buf)
+        FfiConverterString.write(value.`displayName`, buf)
+        FfiConverterSequenceTypeTrezorTransportType.write(value.`transports`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypeSweepResult: FfiConverterRustBuffer<SweepResult> {
     override fun read(buf: ByteBuffer): SweepResult {
         return SweepResult(
@@ -9612,6 +9669,24 @@ public object FfiConverterTypeDecodingError : FfiConverterRustBuffer<DecodingExc
 
 
 
+
+public object FfiConverterTypeHardwareWalletVendor: FfiConverterRustBuffer<HardwareWalletVendor> {
+    override fun read(buf: ByteBuffer): HardwareWalletVendor = try {
+        HardwareWalletVendor.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: HardwareWalletVendor): ULong = 4UL
+
+    override fun write(value: HardwareWalletVendor, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
 public object LnurlExceptionErrorHandler : UniffiRustCallStatusErrorHandler<LnurlException> {
     override fun lift(errorBuf: RustBufferByValue): LnurlException = FfiConverterTypeLnurlError.lift(errorBuf)
 }
@@ -9631,7 +9706,11 @@ public object FfiConverterTypeLnurlError : FfiConverterRustBuffer<LnurlException
             6 -> LnurlException.InvoiceCreationFailed(
                 FfiConverterString.read(buf),
                 )
-            7 -> LnurlException.AuthenticationFailed()
+            7 -> LnurlException.AmountMismatch(
+                FfiConverterULong.read(buf),
+                FfiConverterULong.read(buf),
+                )
+            8 -> LnurlException.AuthenticationFailed()
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
@@ -9665,6 +9744,12 @@ public object FfiConverterTypeLnurlError : FfiConverterRustBuffer<LnurlException
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
                 + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is LnurlException.AmountMismatch -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterULong.allocationSize(value.`requestedMsats`)
+                + FfiConverterULong.allocationSize(value.`invoiceMsats`)
             )
             is LnurlException.AuthenticationFailed -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
@@ -9703,8 +9788,14 @@ public object FfiConverterTypeLnurlError : FfiConverterRustBuffer<LnurlException
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is LnurlException.AuthenticationFailed -> {
+            is LnurlException.AmountMismatch -> {
                 buf.putInt(7)
+                FfiConverterULong.write(value.`requestedMsats`, buf)
+                FfiConverterULong.write(value.`invoiceMsats`, buf)
+                Unit
+            }
+            is LnurlException.AuthenticationFailed -> {
+                buf.putInt(8)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -12618,6 +12709,31 @@ public object FfiConverterSequenceTypePubkyProfileLink: FfiConverterRustBuffer<L
 
 
 
+public object FfiConverterSequenceTypeSupportedHardwareWallet: FfiConverterRustBuffer<List<SupportedHardwareWallet>> {
+    override fun read(buf: ByteBuffer): List<SupportedHardwareWallet> {
+        val len = buf.getInt()
+        return List<SupportedHardwareWallet>(len) {
+            FfiConverterTypeSupportedHardwareWallet.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<SupportedHardwareWallet>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeSupportedHardwareWallet.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<SupportedHardwareWallet>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeSupportedHardwareWallet.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceTypeTransactionDetails: FfiConverterRustBuffer<List<TransactionDetails>> {
     override fun read(buf: ByteBuffer): List<TransactionDetails> {
         val len = buf.getInt()
@@ -12961,6 +13077,31 @@ public object FfiConverterSequenceTypeComposeResult: FfiConverterRustBuffer<List
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeComposeResult.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeTrezorTransportType: FfiConverterRustBuffer<List<TrezorTransportType>> {
+    override fun read(buf: ByteBuffer): List<TrezorTransportType> {
+        val len = buf.getInt()
+        return List<TrezorTransportType>(len) {
+            FfiConverterTypeTrezorTransportType.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<TrezorTransportType>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeTrezorTransportType.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<TrezorTransportType>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeTrezorTransportType.write(it, buf)
         }
     }
 }
@@ -13770,6 +13911,25 @@ public suspend fun `getLnurlInvoice`(`address`: kotlin.String, `amountSatoshis`:
     )
 }
 
+@Throws(LnurlException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `getLnurlInvoiceForPayData`(`data`: LnurlPayData, `amountMsats`: kotlin.ULong, `comment`: kotlin.String?): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_get_lnurl_invoice_for_pay_data(
+            FfiConverterTypeLnurlPayData.lower(`data`),
+            FfiConverterULong.lower(`amountMsats`),
+            FfiConverterOptionalString.lower(`comment`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
+        // Error FFI converter
+        LnurlExceptionErrorHandler,
+    )
+}
+
 @Throws(BlocktankException::class, kotlin.coroutines.cancellation.CancellationException::class)
 public suspend fun `getMinZeroConfTxFee`(`orderId`: kotlin.String): IBt0ConfMinTxFeeWindow {
     return uniffiRustCallAsync(
@@ -13830,6 +13990,20 @@ public fun `getPreActivityMetadata`(`walletId`: kotlin.String, `searchKey`: kotl
             FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`searchKey`),
             FfiConverterBoolean.lower(`searchByAddress`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * The catalog of hardware wallets Bitkit supports.
+ *
+ * Trezor's full lineup; only the Safe 7 currently offers Bluetooth, so it is the
+ * only model iOS surfaces (apps filter on `transports`).
+ */
+public fun `getSupportedHardwareWallets`(): List<SupportedHardwareWallet> {
+    return FfiConverterSequenceTypeSupportedHardwareWallet.lift(uniffiRustCall { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_get_supported_hardware_wallets(
             uniffiRustCallStatus,
         )
     })

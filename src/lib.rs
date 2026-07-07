@@ -39,10 +39,11 @@ use crate::modules::boltz::{
 use crate::modules::pubky::{PubkyAuthDetails, PubkyAuthKind, PubkyError, PubkyProfile};
 use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
-    get_transport_callback, trezor_is_ble_available, trezor_set_transport_callback,
-    trezor_set_ui_callback, NativeDeviceInfo, PassphraseResponse, TrezorCallMessageResult,
-    TrezorTransportCallback, TrezorTransportErrorCode, TrezorTransportReadResult,
-    TrezorTransportWriteResult, TrezorUiCallback, WalletSelection,
+    get_supported_hardware_wallets, get_transport_callback, trezor_is_ble_available,
+    trezor_set_transport_callback, trezor_set_ui_callback, HardwareWalletVendor, NativeDeviceInfo,
+    PassphraseResponse, SupportedHardwareWallet, TrezorCallMessageResult, TrezorTransportCallback,
+    TrezorTransportErrorCode, TrezorTransportReadResult, TrezorTransportWriteResult,
+    TrezorUiCallback, WalletSelection,
 };
 use crate::modules::trezor::{
     TrezorAddressResponse, TrezorCoinType, TrezorDeviceInfo, TrezorError, TrezorFeatures,
@@ -67,7 +68,7 @@ pub use modules::activity;
 pub use modules::boltz as boltz_swaps;
 pub use modules::lnurl;
 pub use modules::onchain;
-pub use modules::scanner::{DecodingError, Scanner};
+pub use modules::scanner::{DecodingError, LnurlPayData, Scanner};
 
 use bip39::Mnemonic;
 use bitcoin::bip32::Xpriv;
@@ -120,6 +121,20 @@ pub async fn get_lnurl_invoice(
     rt.spawn(async move { lnurl::get_lnurl_invoice(&address, amount_satoshis).await })
         .await
         .unwrap()
+}
+
+#[uniffi::export]
+pub async fn get_lnurl_invoice_for_pay_data(
+    data: LnurlPayData,
+    amount_msats: u64,
+    comment: Option<String>,
+) -> Result<String, lnurl::LnurlError> {
+    let rt = ensure_runtime();
+    rt.spawn(
+        async move { lnurl::get_lnurl_invoice_for_pay_data(data, amount_msats, comment).await },
+    )
+    .await
+    .unwrap()
 }
 
 #[uniffi::export]

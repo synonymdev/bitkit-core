@@ -8966,6 +8966,134 @@ public func FfiConverterTypeSingleAddressInfoResult_lower(_ value: SingleAddress
 }
 
 
+/**
+ * A hardware-wallet model Bitkit supports, with the transports it can connect over.
+ *
+ * Owned by core so iOS and Android render the same catalog instead of each
+ * hardcoding it. Platforms filter by `transports`: Android supports every model,
+ * while iOS (Bluetooth-only) shows just the models whose `transports` include
+ * `Bluetooth`. `model` is a stable key apps can map to their own bundled image.
+ */
+public struct SupportedHardwareWallet {
+    public var vendor: HardwareWalletVendor
+    /**
+     * Human-readable vendor name, e.g. "Trezor".
+     */
+    public var vendorName: String
+    /**
+     * Model identifier, e.g. "Safe 7".
+     */
+    public var model: String
+    /**
+     * Full display name, e.g. "Trezor Safe 7".
+     */
+    public var displayName: String
+    /**
+     * Transports this model can connect over.
+     */
+    public var transports: [TrezorTransportType]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(vendor: HardwareWalletVendor, 
+        /**
+         * Human-readable vendor name, e.g. "Trezor".
+         */vendorName: String, 
+        /**
+         * Model identifier, e.g. "Safe 7".
+         */model: String, 
+        /**
+         * Full display name, e.g. "Trezor Safe 7".
+         */displayName: String, 
+        /**
+         * Transports this model can connect over.
+         */transports: [TrezorTransportType]) {
+        self.vendor = vendor
+        self.vendorName = vendorName
+        self.model = model
+        self.displayName = displayName
+        self.transports = transports
+    }
+}
+
+#if compiler(>=6)
+extension SupportedHardwareWallet: Sendable {}
+#endif
+
+
+extension SupportedHardwareWallet: Equatable, Hashable {
+    public static func ==(lhs: SupportedHardwareWallet, rhs: SupportedHardwareWallet) -> Bool {
+        if lhs.vendor != rhs.vendor {
+            return false
+        }
+        if lhs.vendorName != rhs.vendorName {
+            return false
+        }
+        if lhs.model != rhs.model {
+            return false
+        }
+        if lhs.displayName != rhs.displayName {
+            return false
+        }
+        if lhs.transports != rhs.transports {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(vendor)
+        hasher.combine(vendorName)
+        hasher.combine(model)
+        hasher.combine(displayName)
+        hasher.combine(transports)
+    }
+}
+
+extension SupportedHardwareWallet: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSupportedHardwareWallet: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SupportedHardwareWallet {
+        return
+            try SupportedHardwareWallet(
+                vendor: FfiConverterTypeHardwareWalletVendor.read(from: &buf), 
+                vendorName: FfiConverterString.read(from: &buf), 
+                model: FfiConverterString.read(from: &buf), 
+                displayName: FfiConverterString.read(from: &buf), 
+                transports: FfiConverterSequenceTypeTrezorTransportType.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SupportedHardwareWallet, into buf: inout [UInt8]) {
+        FfiConverterTypeHardwareWalletVendor.write(value.vendor, into: &buf)
+        FfiConverterString.write(value.vendorName, into: &buf)
+        FfiConverterString.write(value.model, into: &buf)
+        FfiConverterString.write(value.displayName, into: &buf)
+        FfiConverterSequenceTypeTrezorTransportType.write(value.transports, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSupportedHardwareWallet_lift(_ buf: RustBuffer) throws -> SupportedHardwareWallet {
+    return try FfiConverterTypeSupportedHardwareWallet.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSupportedHardwareWallet_lower(_ value: SupportedHardwareWallet) -> RustBuffer {
+    return FfiConverterTypeSupportedHardwareWallet.lower(value)
+}
+
+
 public struct SweepResult {
     /**
      * The transaction ID of the sweep transaction
@@ -15895,6 +16023,75 @@ extension DecodingError: Foundation.LocalizedError {
 
 
 
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * A hardware-wallet vendor supported by Bitkit. Trezor only for now; this leaves
+ * room to add other vendors without changing the catalog's shape.
+ */
+
+public enum HardwareWalletVendor {
+    
+    case trezor
+}
+
+
+#if compiler(>=6)
+extension HardwareWalletVendor: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeHardwareWalletVendor: FfiConverterRustBuffer {
+    typealias SwiftType = HardwareWalletVendor
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> HardwareWalletVendor {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .trezor
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: HardwareWalletVendor, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .trezor:
+            writeInt(&buf, Int32(1))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeHardwareWalletVendor_lift(_ buf: RustBuffer) throws -> HardwareWalletVendor {
+    return try FfiConverterTypeHardwareWalletVendor.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeHardwareWalletVendor_lower(_ value: HardwareWalletVendor) -> RustBuffer {
+    return FfiConverterTypeHardwareWalletVendor.lower(value)
+}
+
+
+extension HardwareWalletVendor: Equatable, Hashable {}
+
+extension HardwareWalletVendor: Codable {}
+
+
+
+
+
+
 
 public enum LnurlError: Swift.Error {
 
@@ -15907,6 +16104,8 @@ public enum LnurlError: Swift.Error {
     case InvalidAmount(amountSatoshis: UInt64, min: UInt64, max: UInt64
     )
     case InvoiceCreationFailed(errorDetails: String
+    )
+    case AmountMismatch(requestedMsats: UInt64, invoiceMsats: UInt64
     )
     case AuthenticationFailed
 }
@@ -15937,7 +16136,11 @@ public struct FfiConverterTypeLnurlError: FfiConverterRustBuffer {
         case 6: return .InvoiceCreationFailed(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
-        case 7: return .AuthenticationFailed
+        case 7: return .AmountMismatch(
+            requestedMsats: try FfiConverterUInt64.read(from: &buf), 
+            invoiceMsats: try FfiConverterUInt64.read(from: &buf)
+            )
+        case 8: return .AuthenticationFailed
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -15978,8 +16181,14 @@ public struct FfiConverterTypeLnurlError: FfiConverterRustBuffer {
             FfiConverterString.write(errorDetails, into: &buf)
             
         
-        case .AuthenticationFailed:
+        case let .AmountMismatch(requestedMsats,invoiceMsats):
             writeInt(&buf, Int32(7))
+            FfiConverterUInt64.write(requestedMsats, into: &buf)
+            FfiConverterUInt64.write(invoiceMsats, into: &buf)
+            
+        
+        case .AuthenticationFailed:
+            writeInt(&buf, Int32(8))
         
         }
     }
@@ -19787,6 +19996,31 @@ fileprivate struct FfiConverterSequenceTypePubkyProfileLink: FfiConverterRustBuf
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeSupportedHardwareWallet: FfiConverterRustBuffer {
+    typealias SwiftType = [SupportedHardwareWallet]
+
+    public static func write(_ value: [SupportedHardwareWallet], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeSupportedHardwareWallet.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [SupportedHardwareWallet] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [SupportedHardwareWallet]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeSupportedHardwareWallet.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeTransactionDetails: FfiConverterRustBuffer {
     typealias SwiftType = [TransactionDetails]
 
@@ -20129,6 +20363,31 @@ fileprivate struct FfiConverterSequenceTypeComposeResult: FfiConverterRustBuffer
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeComposeResult.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeTrezorTransportType: FfiConverterRustBuffer {
+    typealias SwiftType = [TrezorTransportType]
+
+    public static func write(_ value: [TrezorTransportType], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeTrezorTransportType.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [TrezorTransportType] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [TrezorTransportType]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeTrezorTransportType.read(from: &buf))
         }
         return seq
     }
@@ -20778,6 +21037,20 @@ public func getLnurlInvoice(address: String, amountSatoshis: UInt64)async throws
             errorHandler: FfiConverterTypeLnurlError_lift
         )
 }
+public func getLnurlInvoiceForPayData(data: LnurlPayData, amountMsats: UInt64, comment: String?)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_get_lnurl_invoice_for_pay_data(FfiConverterTypeLnurlPayData_lower(data),FfiConverterUInt64.lower(amountMsats),FfiConverterOptionString.lower(comment)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeLnurlError_lift
+        )
+}
 public func getMinZeroConfTxFee(orderId: String)async throws  -> IBt0ConfMinTxFeeWindow  {
     return
         try  await uniffiRustCallAsync(
@@ -20826,6 +21099,18 @@ public func getPreActivityMetadata(walletId: String, searchKey: String, searchBy
         FfiConverterString.lower(walletId),
         FfiConverterString.lower(searchKey),
         FfiConverterBool.lower(searchByAddress),$0
+    )
+})
+}
+/**
+ * The catalog of hardware wallets Bitkit supports.
+ *
+ * Trezor's full lineup; only the Safe 7 currently offers Bluetooth, so it is the
+ * only model iOS surfaces (apps filter on `transports`).
+ */
+public func getSupportedHardwareWallets() -> [SupportedHardwareWallet]  {
+    return try!  FfiConverterSequenceTypeSupportedHardwareWallet.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_get_supported_hardware_wallets($0
     )
 })
 }
@@ -22149,6 +22434,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data() != 50807) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee() != 6427) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -22159,6 +22447,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 36542) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_tags() != 8596) {

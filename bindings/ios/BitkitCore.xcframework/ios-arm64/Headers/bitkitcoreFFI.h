@@ -787,6 +787,11 @@ uint64_t uniffi_bitkitcore_fn_func_get_info(RustBuffer refresh
 uint64_t uniffi_bitkitcore_fn_func_get_lnurl_invoice(RustBuffer address, uint64_t amount_satoshis
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_LNURL_INVOICE_FOR_PAY_DATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_LNURL_INVOICE_FOR_PAY_DATA
+uint64_t uniffi_bitkitcore_fn_func_get_lnurl_invoice_for_pay_data(RustBuffer data, uint64_t amount_msats, RustBuffer comment
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_MIN_ZERO_CONF_TX_FEE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_MIN_ZERO_CONF_TX_FEE
 uint64_t uniffi_bitkitcore_fn_func_get_min_zero_conf_tx_fee(RustBuffer order_id
@@ -805,6 +810,12 @@ uint64_t uniffi_bitkitcore_fn_func_get_payment(RustBuffer payment_id
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PRE_ACTIVITY_METADATA
 RustBuffer uniffi_bitkitcore_fn_func_get_pre_activity_metadata(RustBuffer wallet_id, RustBuffer search_key, int8_t search_by_address, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_SUPPORTED_HARDWARE_WALLETS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_SUPPORTED_HARDWARE_WALLETS
+RustBuffer uniffi_bitkitcore_fn_func_get_supported_hardware_wallets(RustCallStatus *_Nonnull out_status
+    
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_TAGS
@@ -1878,6 +1889,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_lnurl_invoice(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_LNURL_INVOICE_FOR_PAY_DATA
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_LNURL_INVOICE_FOR_PAY_DATA
+uint16_t uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_MIN_ZERO_CONF_TX_FEE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_MIN_ZERO_CONF_TX_FEE
 uint16_t uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee(void
@@ -1899,6 +1916,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_payment(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA
 uint16_t uniffi_bitkitcore_checksum_func_get_pre_activity_metadata(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_SUPPORTED_HARDWARE_WALLETS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_SUPPORTED_HARDWARE_WALLETS
+uint16_t uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets(void
     
 );
 #endif

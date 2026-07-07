@@ -1,12 +1,58 @@
 #[cfg(test)]
 mod tests {
     use crate::lnurl::implementation::{
-        create_channel_request_url, create_withdraw_callback_url, lnurl_auth,
+        build_lnurl_pay_callback_url, create_channel_request_url, create_withdraw_callback_url,
+        get_lnurl_invoice_for_pay_data, lnurl_auth, validate_lnurl_pay_invoice,
     };
     use crate::lnurl::{ChannelRequestParams, LnurlAuthParams, LnurlError, WithdrawCallbackParams};
+    use crate::LnurlPayData;
+    use bitcoin::hashes::{sha256, Hash as _};
+    use bitcoin::secp256k1::{Secp256k1, SecretKey};
+    use lightning_invoice::{Currency, InvoiceBuilder, PaymentSecret};
     use lnurl::get_derivation_path;
 
     const TEST_MNEMONIC: &str = "stable inch effort skull suggest circle charge lemon amazing clean giant quantum party grow visa best rule icon gown disagree win drop smile love";
+    const TEST_METADATA: &str = "[[\"text/plain\",\"test payment\"]]";
+    const TEST_AMOUNT_MSATS: u64 = 12_345_000;
+
+    fn create_test_invoice(amount_msats: Option<u64>, metadata: &str, hashed: bool) -> String {
+        let secp = Secp256k1::new();
+        let secret_key = SecretKey::from_slice(&[0xab; 32]).unwrap();
+
+        let mut builder = InvoiceBuilder::new(Currency::Bitcoin)
+            .payment_hash(sha256::Hash::from_byte_array([1u8; 32]))
+            .payment_secret(PaymentSecret([2u8; 32]))
+            .current_timestamp()
+            .min_final_cltv_expiry_delta(144);
+
+        if let Some(amount_msats) = amount_msats {
+            builder = builder.amount_milli_satoshis(amount_msats);
+        }
+
+        let builder = if hashed {
+            builder.description_hash(sha256::Hash::hash(metadata.as_bytes()))
+        } else {
+            builder.description(metadata.to_string())
+        };
+
+        builder
+            .build_signed(|hash| secp.sign_ecdsa_recoverable(hash, &secret_key))
+            .unwrap()
+            .to_string()
+    }
+
+    fn test_pay_data() -> LnurlPayData {
+        LnurlPayData {
+            uri: "lnurl1test".to_string(),
+            callback: "https://example.com/callback?existing=1".to_string(),
+            min_sendable: 1_000,
+            max_sendable: 20_000_000,
+            metadata_str: TEST_METADATA.to_string(),
+            comment_allowed: Some(100),
+            allows_nostr: false,
+            nostr_pubkey: None,
+        }
+    }
 
     #[test]
     fn test_create_channel_request_url() {
@@ -134,6 +180,118 @@ mod tests {
         let result = create_channel_request_url(params);
         assert!(result.is_err());
         assert!(matches!(result, Err(LnurlError::InvalidAddress)));
+    }
+
+    #[test]
+    fn test_lnurl_pay_callback_url_preserves_existing_params() {
+        let url = build_lnurl_pay_callback_url(
+            "https://example.com/callback?existing=param",
+            TEST_AMOUNT_MSATS,
+            Some("hello"),
+        )
+        .unwrap();
+
+        assert_eq!(url.scheme(), "https");
+        assert!(url.as_str().contains("existing=param"));
+        assert!(url.as_str().contains("amount=12345000"));
+        assert!(url.as_str().contains("comment=hello"));
+    }
+
+    #[test]
+    fn test_validate_lnurl_pay_invoice_exact_match() {
+        let invoice = create_test_invoice(Some(TEST_AMOUNT_MSATS), TEST_METADATA, false);
+
+        let result = validate_lnurl_pay_invoice(&invoice, TEST_AMOUNT_MSATS);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_lnurl_pay_invoice_larger_mismatch() {
+        let invoice = create_test_invoice(Some(TEST_AMOUNT_MSATS + 1_000), TEST_METADATA, false);
+
+        let result = validate_lnurl_pay_invoice(&invoice, TEST_AMOUNT_MSATS);
+
+        assert!(matches!(
+            result,
+            Err(LnurlError::AmountMismatch {
+                requested_msats: TEST_AMOUNT_MSATS,
+                invoice_msats
+            }) if invoice_msats == TEST_AMOUNT_MSATS + 1_000
+        ));
+    }
+
+    #[test]
+    fn test_validate_lnurl_pay_invoice_smaller_mismatch() {
+        let invoice = create_test_invoice(Some(TEST_AMOUNT_MSATS - 1_000), TEST_METADATA, false);
+
+        let result = validate_lnurl_pay_invoice(&invoice, TEST_AMOUNT_MSATS);
+
+        assert!(matches!(
+            result,
+            Err(LnurlError::AmountMismatch {
+                requested_msats: TEST_AMOUNT_MSATS,
+                invoice_msats
+            }) if invoice_msats == TEST_AMOUNT_MSATS - 1_000
+        ));
+    }
+
+    #[test]
+    fn test_validate_lnurl_pay_invoice_amountless() {
+        let invoice = create_test_invoice(None, TEST_METADATA, false);
+
+        let result = validate_lnurl_pay_invoice(&invoice, TEST_AMOUNT_MSATS);
+
+        assert!(matches!(
+            result,
+            Err(LnurlError::AmountMismatch {
+                requested_msats: TEST_AMOUNT_MSATS,
+                invoice_msats: 0
+            })
+        ));
+    }
+
+    #[test]
+    fn test_validate_lnurl_pay_invoice_malformed() {
+        let result = validate_lnurl_pay_invoice("lnbc1malformed", TEST_AMOUNT_MSATS);
+
+        assert!(matches!(result, Err(LnurlError::InvalidResponse)));
+    }
+
+    #[tokio::test]
+    async fn test_get_lnurl_invoice_for_pay_data_amount_outside_range() {
+        let data = test_pay_data();
+
+        let result = get_lnurl_invoice_for_pay_data(data, 999, None).await;
+
+        assert!(matches!(result, Err(LnurlError::InvalidAmount { .. })));
+    }
+
+    #[test]
+    fn test_validate_lnurl_pay_invoice_matching_amount_with_hash_description() {
+        let invoice = create_test_invoice(Some(TEST_AMOUNT_MSATS), TEST_METADATA, true);
+
+        let result = validate_lnurl_pay_invoice(&invoice, TEST_AMOUNT_MSATS);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_lnurl_pay_invoice_matching_amount_with_text_description() {
+        let invoice = create_test_invoice(Some(TEST_AMOUNT_MSATS), "test payment", false);
+
+        let result = validate_lnurl_pay_invoice(&invoice, TEST_AMOUNT_MSATS);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_lnurl_pay_invoice_matching_amount_with_different_description() {
+        let invoice = create_test_invoice(Some(TEST_AMOUNT_MSATS), "other metadata", false);
+
+        let result = validate_lnurl_pay_invoice(&invoice, TEST_AMOUNT_MSATS);
+
+        assert!(result.is_ok());
     }
 
     #[test]
