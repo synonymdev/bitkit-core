@@ -104,21 +104,26 @@ impl BoltzDB {
         Ok(())
     }
 
-    /// Record the broadcast claim transaction id for a swap.
+    /// Record the broadcast claim transaction id for a swap and mark it claimed.
+    ///
+    /// The `status` column is normally advanced only by the live updates stream, so
+    /// claiming (manual or automatic) would otherwise leave a swap showing its
+    /// pre-claim status. Setting the terminal `transaction.claimed` status here keeps
+    /// the persisted state truthful and drops the swap from the pending set.
     pub async fn set_claim_tx(&self, swap_id: &str, txid: &str) -> Result<(), BoltzError> {
         let conn = self.conn.lock().await;
         conn.execute(
-            "UPDATE swaps SET claim_tx_id = ?1 WHERE id = ?2",
+            "UPDATE swaps SET claim_tx_id = ?1, status = 'transaction.claimed' WHERE id = ?2",
             params![txid, swap_id],
         )?;
         Ok(())
     }
 
-    /// Record the broadcast refund transaction id for a swap.
+    /// Record the broadcast refund transaction id for a swap and mark it refunded.
     pub async fn set_refund_tx(&self, swap_id: &str, txid: &str) -> Result<(), BoltzError> {
         let conn = self.conn.lock().await;
         conn.execute(
-            "UPDATE swaps SET refund_tx_id = ?1 WHERE id = ?2",
+            "UPDATE swaps SET refund_tx_id = ?1, status = 'transaction.refunded' WHERE id = ?2",
             params![txid, swap_id],
         )?;
         Ok(())
