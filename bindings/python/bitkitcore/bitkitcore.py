@@ -461,6 +461,14 @@ def _uniffi_check_contract_api_version(lib):
         raise InternalError("UniFFI contract version mismatch: try cleaning and rebuilding your project")
 
 def _uniffi_check_api_checksums(lib):
+    if lib.uniffi_bitkitcore_checksum_func_activities_from_json() != 13556:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_activities_to_json() != 63832:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_activity_tags_from_json() != 21773:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_activity_tags_to_json() != 43518:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_activity_wipe_all() != 19332:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_add_pre_activity_metadata() != 17211:
@@ -484,6 +492,10 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_cancel_pubky_auth() != 61962:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_check_sweepable_balances() != 64201:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_closed_channels_from_json() != 4471:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_closed_channels_to_json() != 54955:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_complete_pubky_auth() != 48191:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -603,6 +615,14 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 36622:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_migrate_backup_activities_json() != 6425:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_migrate_backup_activity_tags_json() != 10809:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_migrate_backup_pre_activity_metadata_json() != 51315:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_migrate_backup_transaction_details_json() != 30436:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_mnemonic_to_entropy() != 36669:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_mnemonic_to_seed() != 40039:
@@ -628,6 +648,10 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_open_channel() != 21402:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json() != 61978:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_pre_activity_metadata_to_json() != 3340:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep() != 42719:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -678,6 +702,10 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_start_pubky_auth() != 18158:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_test_notification() != 32857:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_transaction_details_from_json() != 54361:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_transaction_details_to_json() != 51037:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type() != 16116:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -1092,6 +1120,26 @@ _UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request.ar
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_activities_from_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_activities_from_json.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_activities_to_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_activities_to_json.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_activity_tags_from_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_activity_tags_from_json.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_activity_tags_to_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_activity_tags_to_json.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_activity_wipe_all.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -1152,6 +1200,16 @@ _UniffiLib.uniffi_bitkitcore_fn_func_check_sweepable_balances.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_check_sweepable_balances.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_closed_channels_from_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_closed_channels_from_json.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_closed_channels_to_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_closed_channels_to_json.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_complete_pubky_auth.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_complete_pubky_auth.restype = ctypes.c_uint64
@@ -1487,6 +1545,26 @@ _UniffiLib.uniffi_bitkitcore_fn_func_mark_activity_as_seen.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_mark_activity_as_seen.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_activities_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_activities_json.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_activity_tags_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_activity_tags_json.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_pre_activity_metadata_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_pre_activity_metadata_json.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_transaction_details_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_transaction_details_json.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_mnemonic_to_entropy.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1560,6 +1638,16 @@ _UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_pre_activity_metadata_from_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_pre_activity_metadata_from_json.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_pre_activity_metadata_to_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_pre_activity_metadata_to_json.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_prepare_legacy_rn_native_segwit_recovery_sweep.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1706,6 +1794,16 @@ _UniffiLib.uniffi_bitkitcore_fn_func_test_notification.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_test_notification.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_transaction_details_from_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_transaction_details_from_json.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_transaction_details_to_json.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_transaction_details_to_json.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_account_type_to_script_type.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -2146,6 +2244,18 @@ _UniffiLib.ffi_bitkitcore_rust_future_complete_void.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.ffi_bitkitcore_rust_future_complete_void.restype = None
+_UniffiLib.uniffi_bitkitcore_checksum_func_activities_from_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_activities_from_json.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_activities_to_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_activities_to_json.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_activity_tags_from_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_activity_tags_from_json.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_activity_tags_to_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_activity_tags_to_json.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_activity_wipe_all.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_activity_wipe_all.restype = ctypes.c_uint16
@@ -2182,6 +2292,12 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_cancel_pubky_auth.restype = ctypes.c_
 _UniffiLib.uniffi_bitkitcore_checksum_func_check_sweepable_balances.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_check_sweepable_balances.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_closed_channels_from_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_closed_channels_from_json.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_closed_channels_to_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_closed_channels_to_json.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_complete_pubky_auth.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_complete_pubky_auth.restype = ctypes.c_uint16
@@ -2359,6 +2475,18 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_lnurl_auth.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_mark_activity_as_seen.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_mark_activity_as_seen.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_migrate_backup_activities_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_migrate_backup_activities_json.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_migrate_backup_activity_tags_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_migrate_backup_activity_tags_json.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_migrate_backup_pre_activity_metadata_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_migrate_backup_pre_activity_metadata_json.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_migrate_backup_transaction_details_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_migrate_backup_transaction_details_json.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_mnemonic_to_entropy.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_mnemonic_to_entropy.restype = ctypes.c_uint16
@@ -2398,6 +2526,12 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.restype = ctypes.c_uint1
 _UniffiLib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_pre_activity_metadata_to_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_pre_activity_metadata_to_json.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep.restype = ctypes.c_uint16
@@ -2473,6 +2607,12 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_start_pubky_auth.restype = ctypes.c_u
 _UniffiLib.uniffi_bitkitcore_checksum_func_test_notification.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_test_notification.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_transaction_details_from_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_transaction_details_from_json.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_transaction_details_to_json.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_transaction_details_to_json.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type.restype = ctypes.c_uint16
@@ -18800,6 +18940,52 @@ async def _uniffi_rust_call_async(rust_future, ffi_poll, ffi_complete, ffi_free,
     finally:
         ffi_free(rust_future)
 
+def activities_from_json(json: "str") -> "typing.List[Activity]":
+    """
+    Decode activities from Core's canonical backup JSON, defaulting a
+    missing/empty wallet id to [`DEFAULT_WALLET_ID`].
+    """
+
+    _UniffiConverterString.check_lower(json)
+    
+    return _UniffiConverterSequenceTypeActivity.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_activities_from_json,
+        _UniffiConverterString.lower(json)))
+
+
+def activities_to_json(activities: "typing.List[Activity]") -> "str":
+    """
+    Serialize activities to Core's canonical backup JSON.
+    """
+
+    _UniffiConverterSequenceTypeActivity.check_lower(activities)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_activities_to_json,
+        _UniffiConverterSequenceTypeActivity.lower(activities)))
+
+
+def activity_tags_from_json(json: "str") -> "typing.List[ActivityTags]":
+    """
+    Decode activity tags from Core's canonical backup JSON, defaulting a
+    missing/empty wallet id to [`DEFAULT_WALLET_ID`].
+    """
+
+    _UniffiConverterString.check_lower(json)
+    
+    return _UniffiConverterSequenceTypeActivityTags.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_activity_tags_from_json,
+        _UniffiConverterString.lower(json)))
+
+
+def activity_tags_to_json(tags: "typing.List[ActivityTags]") -> "str":
+    """
+    Serialize activity tags to Core's canonical backup JSON.
+    """
+
+    _UniffiConverterSequenceTypeActivityTags.check_lower(tags)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_activity_tags_to_json,
+        _UniffiConverterSequenceTypeActivityTags.lower(tags)))
+
+
 def activity_wipe_all() -> None:
     _uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_activity_wipe_all,)
 
@@ -18979,6 +19165,29 @@ async def check_sweepable_balances(mnemonic_phrase: "str",network: "typing.Optio
 _UniffiConverterTypeSweepError,
 
     )
+
+def closed_channels_from_json(json: "str") -> "typing.List[ClosedChannelDetails]":
+    """
+    Decode closed channels from Core's canonical backup JSON.
+    """
+
+    _UniffiConverterString.check_lower(json)
+    
+    return _UniffiConverterSequenceTypeClosedChannelDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_closed_channels_from_json,
+        _UniffiConverterString.lower(json)))
+
+
+def closed_channels_to_json(channels: "typing.List[ClosedChannelDetails]") -> "str":
+    """
+    Serialize closed channels to Core's canonical backup JSON. Closed channels
+    are not wallet-scoped, so no wallet-id normalization is applied.
+    """
+
+    _UniffiConverterSequenceTypeClosedChannelDetails.check_lower(channels)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_closed_channels_to_json,
+        _UniffiConverterSequenceTypeClosedChannelDetails.lower(channels)))
+
 async def complete_pubky_auth() -> "str":
 
     return await _uniffi_rust_call_async(
@@ -19805,6 +20014,54 @@ def mark_activity_as_seen(wallet_id: "str",activity_id: "str",seen_at: "int") ->
         _UniffiConverterUInt64.lower(seen_at))
 
 
+def migrate_backup_activities_json(json: "str") -> "str":
+    """
+    Inject the default wallet id into a serialized `activities` slice from an
+    app backup envelope, preserving the app's original JSON shape. Handles the
+    Android, iOS and canonical `Activity`-union encodings.
+    """
+
+    _UniffiConverterString.check_lower(json)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_activities_json,
+        _UniffiConverterString.lower(json)))
+
+
+def migrate_backup_activity_tags_json(json: "str") -> "str":
+    """
+    Inject the default wallet id into a serialized `activityTags` slice.
+    """
+
+    _UniffiConverterString.check_lower(json)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_activity_tags_json,
+        _UniffiConverterString.lower(json)))
+
+
+def migrate_backup_pre_activity_metadata_json(json: "str") -> "str":
+    """
+    Inject the default wallet id into a serialized pre-activity metadata slice.
+    """
+
+    _UniffiConverterString.check_lower(json)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_pre_activity_metadata_json,
+        _UniffiConverterString.lower(json)))
+
+
+def migrate_backup_transaction_details_json(json: "str") -> "str":
+    """
+    Inject the default wallet id into a serialized transaction-details slice.
+    Transaction details are not in the current backup envelopes, but the helper
+    is provided for parity if they are ever added.
+    """
+
+    _UniffiConverterString.check_lower(json)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_transaction_details_json,
+        _UniffiConverterString.lower(json)))
+
+
 def mnemonic_to_entropy(mnemonic_phrase: "str") -> "bytes":
     _UniffiConverterString.check_lower(mnemonic_phrase)
     
@@ -20070,6 +20327,29 @@ def parse_pubky_auth_url(auth_url: "str") -> "PubkyAuthDetails":
     
     return _UniffiConverterTypePubkyAuthDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePubkyError,_UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url,
         _UniffiConverterString.lower(auth_url)))
+
+
+def pre_activity_metadata_from_json(json: "str") -> "typing.List[PreActivityMetadata]":
+    """
+    Decode pre-activity metadata from Core's canonical backup JSON, defaulting a
+    missing/empty wallet id to [`DEFAULT_WALLET_ID`].
+    """
+
+    _UniffiConverterString.check_lower(json)
+    
+    return _UniffiConverterSequenceTypePreActivityMetadata.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_pre_activity_metadata_from_json,
+        _UniffiConverterString.lower(json)))
+
+
+def pre_activity_metadata_to_json(metadata: "typing.List[PreActivityMetadata]") -> "str":
+    """
+    Serialize pre-activity metadata to Core's canonical backup JSON.
+    """
+
+    _UniffiConverterSequenceTypePreActivityMetadata.check_lower(metadata)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_pre_activity_metadata_to_json,
+        _UniffiConverterSequenceTypePreActivityMetadata.lower(metadata)))
 
 async def prepare_legacy_rn_native_segwit_recovery_sweep(mnemonic_phrase: "str",network: "typing.Optional[Network]",electrum_url: "str",destination_address: "str",fee_rate_sats_per_vbyte: "typing.Optional[int]",index_limit: "int",bip39_passphrase: "typing.Optional[str]") -> "LegacyRnCloseRecoverySweepPreview":
 
@@ -20568,6 +20848,29 @@ async def test_notification(device_token: "str",secret_message: "str",notificati
 _UniffiConverterTypeBlocktankError,
 
     )
+
+def transaction_details_from_json(json: "str") -> "typing.List[TransactionDetails]":
+    """
+    Decode transaction details from Core's canonical backup JSON, defaulting a
+    missing/empty wallet id to [`DEFAULT_WALLET_ID`].
+    """
+
+    _UniffiConverterString.check_lower(json)
+    
+    return _UniffiConverterSequenceTypeTransactionDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_transaction_details_from_json,
+        _UniffiConverterString.lower(json)))
+
+
+def transaction_details_to_json(details: "typing.List[TransactionDetails]") -> "str":
+    """
+    Serialize transaction details to Core's canonical backup JSON.
+    """
+
+    _UniffiConverterSequenceTypeTransactionDetails.check_lower(details)
+    
+    return _UniffiConverterString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_transaction_details_to_json,
+        _UniffiConverterSequenceTypeTransactionDetails.lower(details)))
+
 
 def trezor_account_type_to_script_type(account_type: "AccountType") -> "TrezorScriptType":
     """
@@ -21345,6 +21648,10 @@ __all__ = [
     "WalletBalance",
     "WalletParams",
     "WatcherParams",
+    "activities_from_json",
+    "activities_to_json",
+    "activity_tags_from_json",
+    "activity_tags_to_json",
     "activity_wipe_all",
     "add_pre_activity_metadata",
     "add_pre_activity_metadata_tags",
@@ -21357,6 +21664,8 @@ __all__ = [
     "calculate_channel_liquidity_options",
     "cancel_pubky_auth",
     "check_sweepable_balances",
+    "closed_channels_from_json",
+    "closed_channels_to_json",
     "complete_pubky_auth",
     "create_channel_request_url",
     "create_cjit_entry",
@@ -21416,6 +21725,10 @@ __all__ = [
     "is_valid_bip39_word",
     "lnurl_auth",
     "mark_activity_as_seen",
+    "migrate_backup_activities_json",
+    "migrate_backup_activity_tags_json",
+    "migrate_backup_pre_activity_metadata_json",
+    "migrate_backup_transaction_details_json",
     "mnemonic_to_entropy",
     "mnemonic_to_seed",
     "onchain_broadcast_raw_tx",
@@ -21429,6 +21742,8 @@ __all__ = [
     "onchain_stop_watcher",
     "open_channel",
     "parse_pubky_auth_url",
+    "pre_activity_metadata_from_json",
+    "pre_activity_metadata_to_json",
     "prepare_legacy_rn_native_segwit_recovery_sweep",
     "prepare_sweep_transaction",
     "pubky_public_key_from_secret",
@@ -21454,6 +21769,8 @@ __all__ = [
     "scan_legacy_rn_native_segwit_recovery_funds",
     "start_pubky_auth",
     "test_notification",
+    "transaction_details_from_json",
+    "transaction_details_to_json",
     "trezor_account_type_to_script_type",
     "trezor_clear_credentials",
     "trezor_connect",

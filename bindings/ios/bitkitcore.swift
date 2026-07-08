@@ -20464,6 +20464,48 @@ fileprivate func uniffiFutureContinuationCallback(handle: UInt64, pollResult: In
         print("uniffiFutureContinuationCallback invalid handle")
     }
 }
+/**
+ * Decode activities from Core's canonical backup JSON, defaulting a
+ * missing/empty wallet id to [`DEFAULT_WALLET_ID`].
+ */
+public func activitiesFromJson(json: String)throws  -> [Activity]  {
+    return try  FfiConverterSequenceTypeActivity.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_activities_from_json(
+        FfiConverterString.lower(json),$0
+    )
+})
+}
+/**
+ * Serialize activities to Core's canonical backup JSON.
+ */
+public func activitiesToJson(activities: [Activity])throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_activities_to_json(
+        FfiConverterSequenceTypeActivity.lower(activities),$0
+    )
+})
+}
+/**
+ * Decode activity tags from Core's canonical backup JSON, defaulting a
+ * missing/empty wallet id to [`DEFAULT_WALLET_ID`].
+ */
+public func activityTagsFromJson(json: String)throws  -> [ActivityTags]  {
+    return try  FfiConverterSequenceTypeActivityTags.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_activity_tags_from_json(
+        FfiConverterString.lower(json),$0
+    )
+})
+}
+/**
+ * Serialize activity tags to Core's canonical backup JSON.
+ */
+public func activityTagsToJson(tags: [ActivityTags])throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_activity_tags_to_json(
+        FfiConverterSequenceTypeActivityTags.lower(tags),$0
+    )
+})
+}
 public func activityWipeAll()throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_activity_wipe_all($0
     )
@@ -20595,6 +20637,27 @@ public func checkSweepableBalances(mnemonicPhrase: String, network: Network?, bi
             liftFunc: FfiConverterTypeSweepableBalances_lift,
             errorHandler: FfiConverterTypeSweepError_lift
         )
+}
+/**
+ * Decode closed channels from Core's canonical backup JSON.
+ */
+public func closedChannelsFromJson(json: String)throws  -> [ClosedChannelDetails]  {
+    return try  FfiConverterSequenceTypeClosedChannelDetails.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_closed_channels_from_json(
+        FfiConverterString.lower(json),$0
+    )
+})
+}
+/**
+ * Serialize closed channels to Core's canonical backup JSON. Closed channels
+ * are not wallet-scoped, so no wallet-id normalization is applied.
+ */
+public func closedChannelsToJson(channels: [ClosedChannelDetails])throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_closed_channels_to_json(
+        FfiConverterSequenceTypeClosedChannelDetails.lower(channels),$0
+    )
+})
 }
 public func completePubkyAuth()async throws  -> String  {
     return
@@ -21207,6 +21270,50 @@ public func markActivityAsSeen(walletId: String, activityId: String, seenAt: UIn
     )
 }
 }
+/**
+ * Inject the default wallet id into a serialized `activities` slice from an
+ * app backup envelope, preserving the app's original JSON shape. Handles the
+ * Android, iOS and canonical `Activity`-union encodings.
+ */
+public func migrateBackupActivitiesJson(json: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_migrate_backup_activities_json(
+        FfiConverterString.lower(json),$0
+    )
+})
+}
+/**
+ * Inject the default wallet id into a serialized `activityTags` slice.
+ */
+public func migrateBackupActivityTagsJson(json: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_migrate_backup_activity_tags_json(
+        FfiConverterString.lower(json),$0
+    )
+})
+}
+/**
+ * Inject the default wallet id into a serialized pre-activity metadata slice.
+ */
+public func migrateBackupPreActivityMetadataJson(json: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_migrate_backup_pre_activity_metadata_json(
+        FfiConverterString.lower(json),$0
+    )
+})
+}
+/**
+ * Inject the default wallet id into a serialized transaction-details slice.
+ * Transaction details are not in the current backup envelopes, but the helper
+ * is provided for parity if they are ever added.
+ */
+public func migrateBackupTransactionDetailsJson(json: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_migrate_backup_transaction_details_json(
+        FfiConverterString.lower(json),$0
+    )
+})
+}
 public func mnemonicToEntropy(mnemonicPhrase: String)throws  -> Data  {
     return try  FfiConverterData.lift(try rustCallWithError(FfiConverterTypeAddressError_lift) {
     uniffi_bitkitcore_fn_func_mnemonic_to_entropy(
@@ -21387,6 +21494,27 @@ public func parsePubkyAuthUrl(authUrl: String)throws  -> PubkyAuthDetails  {
     return try  FfiConverterTypePubkyAuthDetails_lift(try rustCallWithError(FfiConverterTypePubkyError_lift) {
     uniffi_bitkitcore_fn_func_parse_pubky_auth_url(
         FfiConverterString.lower(authUrl),$0
+    )
+})
+}
+/**
+ * Decode pre-activity metadata from Core's canonical backup JSON, defaulting a
+ * missing/empty wallet id to [`DEFAULT_WALLET_ID`].
+ */
+public func preActivityMetadataFromJson(json: String)throws  -> [PreActivityMetadata]  {
+    return try  FfiConverterSequenceTypePreActivityMetadata.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_pre_activity_metadata_from_json(
+        FfiConverterString.lower(json),$0
+    )
+})
+}
+/**
+ * Serialize pre-activity metadata to Core's canonical backup JSON.
+ */
+public func preActivityMetadataToJson(metadata: [PreActivityMetadata])throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_pre_activity_metadata_to_json(
+        FfiConverterSequenceTypePreActivityMetadata.lower(metadata),$0
     )
 })
 }
@@ -21705,6 +21833,27 @@ public func testNotification(deviceToken: String, secretMessage: String, notific
             liftFunc: FfiConverterString.lift,
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
+}
+/**
+ * Decode transaction details from Core's canonical backup JSON, defaulting a
+ * missing/empty wallet id to [`DEFAULT_WALLET_ID`].
+ */
+public func transactionDetailsFromJson(json: String)throws  -> [TransactionDetails]  {
+    return try  FfiConverterSequenceTypeTransactionDetails.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_transaction_details_from_json(
+        FfiConverterString.lower(json),$0
+    )
+})
+}
+/**
+ * Serialize transaction details to Core's canonical backup JSON.
+ */
+public func transactionDetailsToJson(details: [TransactionDetails])throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_transaction_details_to_json(
+        FfiConverterSequenceTypeTransactionDetails.lower(details),$0
+    )
+})
 }
 /**
  * Convert an account type to its corresponding Trezor script type.
@@ -22269,6 +22418,18 @@ private let initializationResult: InitializationResult = {
     if bindings_contract_version != scaffolding_contract_version {
         return InitializationResult.contractVersionMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_activities_from_json() != 13556) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_activities_to_json() != 63832) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_activity_tags_from_json() != 21773) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_activity_tags_to_json() != 43518) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_activity_wipe_all() != 19332) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -22303,6 +22464,12 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_check_sweepable_balances() != 64201) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_closed_channels_from_json() != 4471) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_closed_channels_to_json() != 54955) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_complete_pubky_auth() != 48191) {
@@ -22482,6 +22649,18 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 36622) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_migrate_backup_activities_json() != 6425) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_migrate_backup_activity_tags_json() != 10809) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_migrate_backup_pre_activity_metadata_json() != 51315) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_migrate_backup_transaction_details_json() != 30436) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_mnemonic_to_entropy() != 36669) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -22519,6 +22698,12 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json() != 61978) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_pre_activity_metadata_to_json() != 3340) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep() != 42719) {
@@ -22594,6 +22779,12 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_test_notification() != 32857) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_transaction_details_from_json() != 54361) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_transaction_details_to_json() != 51037) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type() != 16116) {
