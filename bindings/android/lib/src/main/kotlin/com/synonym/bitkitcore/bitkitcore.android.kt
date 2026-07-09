@@ -1494,6 +1494,34 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1533,6 +1561,18 @@ internal object IntegrityCheckingUniffiLib : Library {
         }
     }
     private fun uniffiCheckApiChecksums() {
+        if (uniffi_bitkitcore_checksum_func_activities_from_json() != 13556.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_activities_to_json() != 63832.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_activity_tags_from_json() != 21773.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_activity_tags_to_json() != 43518.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_activity_wipe_all() != 19332.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1567,6 +1607,12 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_check_sweepable_balances() != 64201.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_closed_channels_from_json() != 4471.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_closed_channels_to_json() != 54955.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_complete_pubky_auth() != 48191.toShort()) {
@@ -1746,6 +1792,18 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 36622.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_migrate_backup_activities_json() != 6425.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_migrate_backup_activity_tags_json() != 10809.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_migrate_backup_pre_activity_metadata_json() != 51315.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_migrate_backup_transaction_details_json() != 30436.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_mnemonic_to_entropy() != 36669.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1783,6 +1841,12 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json() != 61978.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_pre_activity_metadata_to_json() != 3340.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep() != 42719.toShort()) {
@@ -1858,6 +1922,12 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_test_notification() != 32857.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_transaction_details_from_json() != 54361.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_transaction_details_to_json() != 51037.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type() != 16116.toShort()) {
@@ -2029,6 +2099,18 @@ internal object IntegrityCheckingUniffiLib : Library {
 
     // Integrity check functions only
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_activities_from_json(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_activities_to_json(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_activity_tags_from_json(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_activity_tags_to_json(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_activity_wipe_all(
     ): Short
     @JvmStatic
@@ -2063,6 +2145,12 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_check_sweepable_balances(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_closed_channels_from_json(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_closed_channels_to_json(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_complete_pubky_auth(
@@ -2242,6 +2330,18 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_mark_activity_as_seen(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_migrate_backup_activities_json(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_migrate_backup_activity_tags_json(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_migrate_backup_pre_activity_metadata_json(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_migrate_backup_transaction_details_json(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_mnemonic_to_entropy(
     ): Short
     @JvmStatic
@@ -2279,6 +2379,12 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_parse_pubky_auth_url(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_pre_activity_metadata_to_json(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep(
@@ -2354,6 +2460,12 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_test_notification(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_transaction_details_from_json(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_transaction_details_to_json(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type(
@@ -2672,6 +2784,26 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_activities_from_json(
+        `json`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_activities_to_json(
+        `activities`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_activity_tags_from_json(
+        `json`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_activity_tags_to_json(
+        `tags`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_activity_wipe_all(
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
@@ -2731,6 +2863,16 @@ internal object UniffiLib : Library {
         `bip39Passphrase`: RustBufferByValue,
         `electrumUrl`: RustBufferByValue,
     ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_closed_channels_from_json(
+        `json`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_closed_channels_to_json(
+        `channels`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_complete_pubky_auth(
     ): Long
@@ -3067,6 +3209,26 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_migrate_backup_activities_json(
+        `json`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_migrate_backup_activity_tags_json(
+        `json`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_migrate_backup_pre_activity_metadata_json(
+        `json`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_migrate_backup_transaction_details_json(
+        `json`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_mnemonic_to_entropy(
         `mnemonicPhrase`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
@@ -3137,6 +3299,16 @@ internal object UniffiLib : Library {
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_parse_pubky_auth_url(
         `authUrl`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_pre_activity_metadata_from_json(
+        `json`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_pre_activity_metadata_to_json(
+        `metadata`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
@@ -3285,6 +3457,16 @@ internal object UniffiLib : Library {
         `notificationType`: RustBufferByValue,
         `customUrl`: RustBufferByValue,
     ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_transaction_details_from_json(
+        `json`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_transaction_details_to_json(
+        `details`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_account_type_to_script_type(
         `accountType`: RustBufferByValue,
@@ -13152,6 +13334,60 @@ public object FfiConverterMapStringString: FfiConverterRustBuffer<Map<kotlin.Str
 
 
 
+/**
+ * Decode activities from Core's canonical backup JSON, defaulting a
+ * missing/empty wallet id to [`DEFAULT_WALLET_ID`].
+ */
+@Throws(ActivityException::class)
+public fun `activitiesFromJson`(`json`: kotlin.String): List<Activity> {
+    return FfiConverterSequenceTypeActivity.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_activities_from_json(
+            FfiConverterString.lower(`json`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Serialize activities to Core's canonical backup JSON.
+ */
+@Throws(ActivityException::class)
+public fun `activitiesToJson`(`activities`: List<Activity>): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_activities_to_json(
+            FfiConverterSequenceTypeActivity.lower(`activities`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Decode activity tags from Core's canonical backup JSON, defaulting a
+ * missing/empty wallet id to [`DEFAULT_WALLET_ID`].
+ */
+@Throws(ActivityException::class)
+public fun `activityTagsFromJson`(`json`: kotlin.String): List<ActivityTags> {
+    return FfiConverterSequenceTypeActivityTags.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_activity_tags_from_json(
+            FfiConverterString.lower(`json`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Serialize activity tags to Core's canonical backup JSON.
+ */
+@Throws(ActivityException::class)
+public fun `activityTagsToJson`(`tags`: List<ActivityTags>): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_activity_tags_to_json(
+            FfiConverterSequenceTypeActivityTags.lower(`tags`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
 @Throws(ActivityException::class)
 public fun `activityWipeAll`() {
     uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
@@ -13330,6 +13566,33 @@ public suspend fun `checkSweepableBalances`(`mnemonicPhrase`: kotlin.String, `ne
         // Error FFI converter
         SweepExceptionErrorHandler,
     )
+}
+
+/**
+ * Decode closed channels from Core's canonical backup JSON.
+ */
+@Throws(ActivityException::class)
+public fun `closedChannelsFromJson`(`json`: kotlin.String): List<ClosedChannelDetails> {
+    return FfiConverterSequenceTypeClosedChannelDetails.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_closed_channels_from_json(
+            FfiConverterString.lower(`json`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Serialize closed channels to Core's canonical backup JSON. Closed channels
+ * are not wallet-scoped, so no wallet-id normalization is applied.
+ */
+@Throws(ActivityException::class)
+public fun `closedChannelsToJson`(`channels`: List<ClosedChannelDetails>): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_closed_channels_to_json(
+            FfiConverterSequenceTypeClosedChannelDetails.lower(`channels`),
+            uniffiRustCallStatus,
+        )
+    })
 }
 
 @Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)
@@ -14139,6 +14402,62 @@ public fun `markActivityAsSeen`(`walletId`: kotlin.String, `activityId`: kotlin.
     }
 }
 
+/**
+ * Inject the default wallet id into a serialized `activities` slice from an
+ * app backup envelope, preserving the app's original JSON shape. Handles the
+ * Android, iOS and canonical `Activity`-union encodings.
+ */
+@Throws(ActivityException::class)
+public fun `migrateBackupActivitiesJson`(`json`: kotlin.String): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_activities_json(
+            FfiConverterString.lower(`json`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Inject the default wallet id into a serialized `activityTags` slice.
+ */
+@Throws(ActivityException::class)
+public fun `migrateBackupActivityTagsJson`(`json`: kotlin.String): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_activity_tags_json(
+            FfiConverterString.lower(`json`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Inject the default wallet id into a serialized pre-activity metadata slice.
+ */
+@Throws(ActivityException::class)
+public fun `migrateBackupPreActivityMetadataJson`(`json`: kotlin.String): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_pre_activity_metadata_json(
+            FfiConverterString.lower(`json`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Inject the default wallet id into a serialized transaction-details slice.
+ * Transaction details are not in the current backup envelopes, but the helper
+ * is provided for parity if they are ever added.
+ */
+@Throws(ActivityException::class)
+public fun `migrateBackupTransactionDetailsJson`(`json`: kotlin.String): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_migrate_backup_transaction_details_json(
+            FfiConverterString.lower(`json`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
 @Throws(AddressException::class)
 public fun `mnemonicToEntropy`(`mnemonicPhrase`: kotlin.String): kotlin.ByteArray {
     return FfiConverterByteArray.lift(uniffiRustCallWithError(AddressExceptionErrorHandler) { uniffiRustCallStatus ->
@@ -14372,6 +14691,33 @@ public fun `parsePubkyAuthUrl`(`authUrl`: kotlin.String): PubkyAuthDetails {
     return FfiConverterTypePubkyAuthDetails.lift(uniffiRustCallWithError(PubkyExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url(
             FfiConverterString.lower(`authUrl`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Decode pre-activity metadata from Core's canonical backup JSON, defaulting a
+ * missing/empty wallet id to [`DEFAULT_WALLET_ID`].
+ */
+@Throws(ActivityException::class)
+public fun `preActivityMetadataFromJson`(`json`: kotlin.String): List<PreActivityMetadata> {
+    return FfiConverterSequenceTypePreActivityMetadata.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_pre_activity_metadata_from_json(
+            FfiConverterString.lower(`json`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Serialize pre-activity metadata to Core's canonical backup JSON.
+ */
+@Throws(ActivityException::class)
+public fun `preActivityMetadataToJson`(`metadata`: List<PreActivityMetadata>): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_pre_activity_metadata_to_json(
+            FfiConverterSequenceTypePreActivityMetadata.lower(`metadata`),
             uniffiRustCallStatus,
         )
     })
@@ -14808,6 +15154,33 @@ public suspend fun `testNotification`(`deviceToken`: kotlin.String, `secretMessa
         // Error FFI converter
         BlocktankExceptionErrorHandler,
     )
+}
+
+/**
+ * Decode transaction details from Core's canonical backup JSON, defaulting a
+ * missing/empty wallet id to [`DEFAULT_WALLET_ID`].
+ */
+@Throws(ActivityException::class)
+public fun `transactionDetailsFromJson`(`json`: kotlin.String): List<TransactionDetails> {
+    return FfiConverterSequenceTypeTransactionDetails.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_transaction_details_from_json(
+            FfiConverterString.lower(`json`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Serialize transaction details to Core's canonical backup JSON.
+ */
+@Throws(ActivityException::class)
+public fun `transactionDetailsToJson`(`details`: List<TransactionDetails>): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_transaction_details_to_json(
+            FfiConverterSequenceTypeTransactionDetails.lower(`details`),
+            uniffiRustCallStatus,
+        )
+    })
 }
 
 /**

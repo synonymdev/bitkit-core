@@ -56,7 +56,8 @@ pub fn derive_wallet_id(device_type: String, xpubs: Vec<String>) -> Result<Strin
     ))
 }
 
-#[derive(Debug, Clone, uniffi::Enum)]
+#[derive(Debug, Clone, uniffi::Enum, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Activity {
     Onchain(OnchainActivity),
     Lightning(LightningActivity),
