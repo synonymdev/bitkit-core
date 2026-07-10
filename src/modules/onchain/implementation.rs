@@ -1009,45 +1009,97 @@ impl BitcoinAddressValidator {
     }
 }
 
-/// Broadcast a signed raw transaction via Electrum.
+/// Returns true when an Electrum broadcast error indicates the transaction was
+/// already accepted (already in a block, in the mempool, or otherwise known)
+/// rather than a real failure, meaning a retry of a previously successful
+/// broadcast.
 ///
-/// Takes a hex-encoded serialized transaction and an Electrum server URL.
-/// Returns the transaction ID on success.
-pub async fn broadcast_raw_tx(
-    serialized_tx: String,
-    electrum_url: &str,
-) -> Result<String, BroadcastError> {
-    let tx_bytes = hex::decode(&serialized_tx).map_err(|e| BroadcastError::InvalidHex {
+/// Matching is case-insensitive. It must NOT classify relay-policy or
+/// invalid-transaction rejections (e.g. `bad-txns-inputs-missingorspent`,
+/// `min relay fee not met`) as already-known.
+pub(crate) fn is_already_known_broadcast_error(message: &str) -> bool {
+    const ALREADY_KNOWN_MARKERS: [&str; 7] = [
+        "already in block chain",
+        "already in blockchain",
+        "already in mempool",
+        "already-in-block-chain",
+        "already-in-mempool",
+        "txn-already-known",
+        "transaction already exists",
+    ];
+    let lowered = message.to_lowercase();
+    ALREADY_KNOWN_MARKERS
+        .iter()
+        .any(|marker| lowered.contains(marker))
+}
+
+/// Decode a hex-encoded transaction, validate that it deserializes, and compute
+/// its canonical txid. Returns the raw bytes (for broadcast) alongside the txid.
+///
+/// Note: within this module the transaction is a `bdk::bitcoin::Transaction`
+/// (bitcoin 0.30), whose canonical-txid method is `.txid()` (the equivalent of
+/// `compute_txid()` in newer bitcoin releases). It returns the txid, never the
+/// witness txid (wtxid).
+pub(crate) fn decode_and_compute_txid(
+    serialized_tx: &str,
+) -> Result<(Vec<u8>, Txid), BroadcastError> {
+    let tx_bytes = hex::decode(serialized_tx).map_err(|e| BroadcastError::InvalidHex {
         error_details: format!("Invalid transaction hex: {}", e),
     })?;
 
-    // Validate that the bytes are a valid transaction
-    let _tx: Transaction =
+    let tx: Transaction =
         deserialize(&tx_bytes).map_err(|e| BroadcastError::InvalidTransaction {
             error_details: format!("Invalid transaction data: {}", e),
         })?;
 
+    let txid = tx.txid();
+    Ok((tx_bytes, txid))
+}
+
+/// Broadcast a signed raw transaction via Electrum.
+///
+/// Takes a hex-encoded serialized transaction and an Electrum server URL.
+/// Returns the transaction's canonical txid (computed locally) on success.
+///
+/// If Electrum reports that the transaction is already known (already in a block,
+/// in the mempool, or otherwise accepted), this is treated as success and the same
+/// locally computed txid is returned, so retrying a broadcast after an ambiguous
+/// network failure completes cleanly. Genuine connectivity failures and unrelated
+/// broadcast rejections are preserved as typed errors.
+pub async fn broadcast_raw_tx(
+    serialized_tx: String,
+    electrum_url: &str,
+) -> Result<String, BroadcastError> {
+    let (tx_bytes, local_txid) = decode_and_compute_txid(&serialized_tx)?;
     let electrum_url_owned = electrum_url.to_string();
 
-    let txid = tokio::task::spawn_blocking(move || {
+    tokio::task::spawn_blocking(move || {
         let client = bdk::electrum_client::Client::new(&electrum_url_owned).map_err(|e| {
             BroadcastError::ElectrumError {
                 error_details: format!("Failed to connect to Electrum: {}", e),
             }
         })?;
 
-        client
-            .transaction_broadcast_raw(&tx_bytes)
-            .map_err(|e| BroadcastError::ElectrumError {
-                error_details: format!("Broadcast failed: {}", e),
-            })
+        match client.transaction_broadcast_raw(&tx_bytes) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                let message = e.to_string();
+                if is_already_known_broadcast_error(&message) {
+                    Ok(())
+                } else {
+                    Err(BroadcastError::ElectrumError {
+                        error_details: format!("Broadcast failed: {}", message),
+                    })
+                }
+            }
+        }
     })
     .await
     .map_err(|e| BroadcastError::TaskError {
         error_details: format!("Broadcast task failed: {}", e),
     })??;
 
-    Ok(txid.to_string())
+    Ok(local_txid.to_string())
 }
 
 // ============================================================================
