@@ -93,6 +93,17 @@ impl BoltzDB {
             .await
             .map_err(map_api_err("create submarine swap"))?;
 
+        // Prove Boltz's response before persisting it or handing the caller a
+        // lockup address to fund: this rebuilds the swap script from our own
+        // refund key and the invoice's preimage hash and checks it hashes to the
+        // address Boltz returned. Without it, a malicious or buggy server could
+        // hand back an address we cannot refund from.
+        response
+            .validate(&invoice, &refund_public_key, network.as_chain())
+            .map_err(|e| BoltzError::SwapError {
+                error_details: format!("Boltz submarine response failed validation: {}", e),
+            })?;
+
         let record = SwapRecord {
             id: response.id.clone(),
             swap_type: BoltzSwapType::Submarine,
@@ -176,6 +187,17 @@ impl BoltzDB {
             .post_reverse_req(request)
             .await
             .map_err(map_api_err("create reverse swap"))?;
+
+        // Prove Boltz's response before persisting it or handing the caller an
+        // invoice to pay: this checks the invoice commits to our preimage hash
+        // and that the swap script rebuilt from our own claim key hashes to the
+        // lockup address Boltz returned. Without it, the caller could pay an
+        // invoice for funds it has no key to claim.
+        response
+            .validate(&preimage, &claim_public_key, network.as_chain())
+            .map_err(|e| BoltzError::SwapError {
+                error_details: format!("Boltz reverse response failed validation: {}", e),
+            })?;
 
         let invoice = response.invoice.clone().ok_or(BoltzError::ApiError {
             error_details: "Reverse swap response missing invoice".to_string(),
