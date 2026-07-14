@@ -2884,8 +2884,9 @@ pub async fn boltz_get_swap(swap_id: String) -> Result<Option<BoltzSwap>, BoltzE
 /// Claim a reverse swap's onchain funds to its claim address, returning the
 /// broadcast claim transaction id. Normally happens automatically via the
 /// updates stream; exposed for manual recovery. The claim key is re-derived from
-/// `mnemonic`. If the swap was already claimed, the existing claim txid is
-/// returned without re-broadcasting.
+/// `mnemonic`. Claims are serialized per swap, so calling this while the updates
+/// stream is auto-claiming the same swap waits for that claim and returns its
+/// txid rather than broadcasting a second transaction.
 #[uniffi::export]
 pub async fn boltz_claim_reverse_swap(
     swap_id: String,
@@ -2896,23 +2897,15 @@ pub async fn boltz_claim_reverse_swap(
     let rt = ensure_runtime();
     rt.spawn(async move {
         let db = get_boltz_db().await?;
-        let record = db.get_swap(&swap_id).await?.ok_or(BoltzError::NotFound {
-            error_details: format!("Swap {} not found", swap_id),
-        })?;
-        // Idempotent: don't re-broadcast a swap that already has a claim tx
-        // (e.g. an auto-claim that ran first).
-        if let Some(existing) = record.claim_tx_id.clone() {
-            return Ok(existing);
-        }
-        let txid = boltz::claim_reverse_swap(
-            &record,
+        let outcome = boltz::claim_reverse_swap_guarded(
+            &db,
+            &swap_id,
             &mnemonic,
             bip39_passphrase.as_deref(),
             fee_rate_sat_per_vb,
         )
         .await?;
-        db.set_claim_tx(&swap_id, &txid).await?;
-        Ok(txid)
+        Ok(outcome.txid())
     })
     .await
     .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
@@ -2920,9 +2913,9 @@ pub async fn boltz_claim_reverse_swap(
 
 /// Refund a submarine swap's locked funds to `refund_address`, returning the
 /// broadcast refund transaction id. Used when Boltz fails to pay the invoice or
-/// the swap expires. The refund key is re-derived from `mnemonic`. If the swap
-/// was already refunded, the existing refund txid is returned without
-/// re-broadcasting.
+/// the swap expires. The refund key is re-derived from `mnemonic`. Refunds are
+/// serialized per swap, so two concurrent calls cannot both broadcast: the second
+/// waits for the first and returns its txid.
 #[uniffi::export]
 pub async fn boltz_refund_submarine_swap(
     swap_id: String,
@@ -2934,23 +2927,15 @@ pub async fn boltz_refund_submarine_swap(
     let rt = ensure_runtime();
     rt.spawn(async move {
         let db = get_boltz_db().await?;
-        let record = db.get_swap(&swap_id).await?.ok_or(BoltzError::NotFound {
-            error_details: format!("Swap {} not found", swap_id),
-        })?;
-        // Idempotent: don't re-broadcast a swap that already has a refund tx.
-        if let Some(existing) = record.refund_tx_id.clone() {
-            return Ok(existing);
-        }
-        let txid = boltz::refund_submarine_swap(
-            &record,
+        boltz::refund_submarine_swap_guarded(
+            &db,
+            &swap_id,
             refund_address,
             &mnemonic,
             bip39_passphrase.as_deref(),
             fee_rate_sat_per_vb,
         )
-        .await?;
-        db.set_refund_tx(&swap_id, &txid).await?;
-        Ok(txid)
+        .await
     })
     .await
     .unwrap_or_else(|e| Err(boltz_runtime_err(e)))

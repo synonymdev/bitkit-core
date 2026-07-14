@@ -1,5 +1,9 @@
 use crate::modules::boltz::api::{get_reverse_limits, get_submarine_limits};
+use crate::modules::boltz::claim::{claim_reverse_swap_guarded, ClaimOutcome};
+use crate::modules::boltz::errors::BoltzError;
+use crate::modules::boltz::guard::lock_swap;
 use crate::modules::boltz::models::{derive_swap_keypair, BoltzDB, SwapRecord};
+use crate::modules::boltz::refund::refund_submarine_swap_guarded;
 use crate::modules::boltz::types::{BoltzNetwork, BoltzSwapStatus, BoltzSwapType};
 use boltz_client::util::secrets::Preimage;
 
@@ -161,6 +165,101 @@ async fn db_round_trip_and_recovery() {
 
     // Terminal swaps are still listed, just no longer pending.
     assert_eq!(db.list_swaps().await.unwrap().len(), 2);
+}
+
+#[tokio::test]
+async fn guarded_claim_returns_recorded_txid_without_rebroadcasting() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("boltz.db");
+    let db = BoltzDB::new(path.to_str().unwrap()).await.unwrap();
+
+    let mut record = sample_record("rev-claimed", BoltzSwapType::Reverse);
+    record.claim_tx_id = Some("already-broadcast".to_string());
+    db.insert_swap(&record).await.unwrap();
+
+    // The record's electrum_url is unreachable, so reaching the broadcast path at
+    // all would fail the call rather than return the recorded txid.
+    let outcome = claim_reverse_swap_guarded(&db, "rev-claimed", TEST_MNEMONIC, None, None)
+        .await
+        .unwrap();
+    assert!(matches!(outcome, ClaimOutcome::AlreadyClaimed(_)));
+    assert_eq!(outcome.txid(), "already-broadcast");
+}
+
+#[tokio::test]
+async fn guarded_refund_returns_recorded_txid_without_rebroadcasting() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("boltz.db");
+    let db = BoltzDB::new(path.to_str().unwrap()).await.unwrap();
+
+    let mut record = sample_record("sub-refunded", BoltzSwapType::Submarine);
+    record.refund_tx_id = Some("already-refunded".to_string());
+    db.insert_swap(&record).await.unwrap();
+
+    let txid = refund_submarine_swap_guarded(
+        &db,
+        "sub-refunded",
+        "bc1qrefund".to_string(),
+        TEST_MNEMONIC,
+        None,
+        None,
+    )
+    .await
+    .unwrap();
+    assert_eq!(txid, "already-refunded");
+}
+
+#[tokio::test]
+async fn guarded_claim_reports_a_missing_swap() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("boltz.db");
+    let db = BoltzDB::new(path.to_str().unwrap()).await.unwrap();
+
+    let err = claim_reverse_swap_guarded(&db, "nope", TEST_MNEMONIC, None, None)
+        .await
+        .unwrap_err();
+    assert!(matches!(err, BoltzError::NotFound { .. }));
+}
+
+/// The lock is what stops an auto-claim and a manual claim of the same swap from
+/// both broadcasting, so assert it actually excludes: holders of one swap's lock
+/// never overlap, while a different swap's lock stays free.
+#[tokio::test]
+async fn swap_lock_excludes_per_swap_and_not_across_swaps() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
+
+    let live = Arc::new(AtomicUsize::new(0));
+    let peak = Arc::new(AtomicUsize::new(0));
+
+    let mut handles = Vec::new();
+    for _ in 0..4 {
+        let live = live.clone();
+        let peak = peak.clone();
+        handles.push(tokio::spawn(async move {
+            let _guard = lock_swap("contended").await;
+            let in_section = live.fetch_add(1, Ordering::SeqCst) + 1;
+            peak.fetch_max(in_section, Ordering::SeqCst);
+            // Yield while holding the lock: a claim awaits here, and this is
+            // exactly where an unguarded second caller would slip through.
+            tokio::task::yield_now().await;
+            live.fetch_sub(1, Ordering::SeqCst);
+        }));
+    }
+    for handle in handles {
+        handle.await.unwrap();
+    }
+    assert_eq!(
+        peak.load(Ordering::SeqCst),
+        1,
+        "two claims of the same swap must never run concurrently"
+    );
+
+    // Holding one swap's lock must not stall an unrelated swap.
+    let held = lock_swap("swap-a").await;
+    let other = tokio::time::timeout(std::time::Duration::from_secs(5), lock_swap("swap-b")).await;
+    assert!(other.is_ok(), "locks must be independent across swaps");
+    drop(held);
 }
 
 /// Returns true if a Boltz API error indicates the endpoint is temporarily

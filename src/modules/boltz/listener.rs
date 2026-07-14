@@ -1,4 +1,4 @@
-use crate::modules::boltz::claim::claim_reverse_swap;
+use crate::modules::boltz::claim::{claim_reverse_swap_guarded, ClaimOutcome};
 use crate::modules::boltz::client::build_boltz_client;
 use crate::modules::boltz::errors::BoltzError;
 use crate::modules::boltz::models::{BoltzDB, SwapRecord};
@@ -189,28 +189,32 @@ fn should_auto_claim(record: &SwapRecord, raw_status: &str) -> bool {
         && raw_status == "transaction.confirmed"
 }
 
+/// Claim through the guarded path, which serializes against a concurrent manual
+/// claim and persists the txid while still holding the swap's lock. If that
+/// manual claim won the race, this call broadcasts nothing and stays quiet:
+/// its caller already received the txid, so re-emitting [`BoltzSwapEvent::Claimed`]
+/// would double-report the same claim.
 async fn auto_claim(
     db: &Arc<BoltzDB>,
     listener: &dyn BoltzEventListener,
     config: &AutoClaimConfig,
     record: &SwapRecord,
 ) {
-    match claim_reverse_swap(
-        record,
+    match claim_reverse_swap_guarded(
+        db,
+        &record.id,
         &config.mnemonic,
         config.bip39_passphrase.as_deref(),
         config.fee_rate_sat_per_vb,
     )
     .await
     {
-        Ok(txid) => {
-            if let Err(e) = db.set_claim_tx(&record.id, &txid).await {
-                log::warn!("Failed to persist claim tx for swap {}: {}", record.id, e);
-            }
-            listener.on_event(BoltzSwapEvent::Claimed {
-                swap_id: record.id.clone(),
-                txid,
-            });
+        Ok(ClaimOutcome::Broadcast(txid)) => listener.on_event(BoltzSwapEvent::Claimed {
+            swap_id: record.id.clone(),
+            txid,
+        }),
+        Ok(ClaimOutcome::AlreadyClaimed(txid)) => {
+            log::info!("Swap {} was already claimed by tx {}", record.id, txid);
         }
         Err(e) => listener.on_event(BoltzSwapEvent::Error {
             swap_id: record.id.clone(),

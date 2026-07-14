@@ -1,11 +1,63 @@
 use crate::modules::boltz::client::{build_boltz_client, build_chain_client};
 use crate::modules::boltz::errors::BoltzError;
-use crate::modules::boltz::models::SwapRecord;
+use crate::modules::boltz::guard::lock_swap;
+use crate::modules::boltz::models::{BoltzDB, SwapRecord};
 use boltz_client::swaps::{SwapScript, SwapTransactionParams, TransactionOptions};
 use boltz_client::util::fees::Fee;
 
 /// Default claim fee rate in sat/vByte used when the caller doesn't specify one.
 pub(crate) const DEFAULT_FEERATE_SAT_PER_VB: f64 = 2.0;
+
+/// Result of a guarded claim attempt.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ClaimOutcome {
+    /// A claim transaction was built and broadcast by this call.
+    Broadcast(String),
+    /// The swap already had a claim txid recorded, so nothing was broadcast.
+    AlreadyClaimed(String),
+}
+
+impl ClaimOutcome {
+    /// The claim transaction id, however it was arrived at.
+    pub fn txid(self) -> String {
+        match self {
+            ClaimOutcome::Broadcast(txid) | ClaimOutcome::AlreadyClaimed(txid) => txid,
+        }
+    }
+}
+
+/// Claim a reverse swap, serialized against any other claim of the same swap.
+///
+/// This is the only path that should broadcast a claim. It holds the swap's lock
+/// across the whole read-broadcast-record sequence, so the automatic claim from
+/// the updates stream and a manual recovery call cannot both broadcast: whichever
+/// arrives second re-reads the swap under the lock, finds the first one's txid,
+/// and returns it as [`ClaimOutcome::AlreadyClaimed`].
+pub async fn claim_reverse_swap_guarded(
+    db: &BoltzDB,
+    swap_id: &str,
+    mnemonic: &str,
+    bip39_passphrase: Option<&str>,
+    fee_rate_sat_per_vb: Option<f64>,
+) -> Result<ClaimOutcome, BoltzError> {
+    let _guard = lock_swap(swap_id).await;
+
+    // Re-read under the lock. The record the caller checked may be stale: a
+    // concurrent claim can have completed while we waited to acquire.
+    let record = db
+        .get_swap(swap_id)
+        .await?
+        .ok_or_else(|| BoltzError::NotFound {
+            error_details: format!("Swap {} not found", swap_id),
+        })?;
+    if let Some(existing) = record.claim_tx_id {
+        return Ok(ClaimOutcome::AlreadyClaimed(existing));
+    }
+
+    let txid = claim_reverse_swap(&record, mnemonic, bip39_passphrase, fee_rate_sat_per_vb).await?;
+    db.set_claim_tx(swap_id, &txid).await?;
+    Ok(ClaimOutcome::Broadcast(txid))
+}
 
 /// Claim a reverse swap's onchain funds to the address captured at creation,
 /// revealing the preimage so Boltz can settle the Lightning invoice.

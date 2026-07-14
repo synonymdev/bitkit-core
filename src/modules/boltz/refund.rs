@@ -1,9 +1,49 @@
 use crate::modules::boltz::claim::DEFAULT_FEERATE_SAT_PER_VB;
 use crate::modules::boltz::client::{build_boltz_client, build_chain_client};
 use crate::modules::boltz::errors::BoltzError;
-use crate::modules::boltz::models::SwapRecord;
+use crate::modules::boltz::guard::lock_swap;
+use crate::modules::boltz::models::{BoltzDB, SwapRecord};
 use boltz_client::swaps::{SwapScript, SwapTransactionParams, TransactionOptions};
 use boltz_client::util::fees::Fee;
+
+/// Refund a submarine swap, serialized against any other refund of the same swap.
+///
+/// The counterpart to [`crate::modules::boltz::claim::claim_reverse_swap_guarded`]:
+/// it holds the swap's lock across the read-broadcast-record sequence so two
+/// concurrent recovery calls cannot both broadcast a refund. If the swap already
+/// has a refund txid recorded, that txid is returned without re-broadcasting.
+pub async fn refund_submarine_swap_guarded(
+    db: &BoltzDB,
+    swap_id: &str,
+    refund_address: String,
+    mnemonic: &str,
+    bip39_passphrase: Option<&str>,
+    fee_rate_sat_per_vb: Option<f64>,
+) -> Result<String, BoltzError> {
+    let _guard = lock_swap(swap_id).await;
+
+    // Re-read under the lock: a concurrent refund may have completed while we waited.
+    let record = db
+        .get_swap(swap_id)
+        .await?
+        .ok_or_else(|| BoltzError::NotFound {
+            error_details: format!("Swap {} not found", swap_id),
+        })?;
+    if let Some(existing) = record.refund_tx_id {
+        return Ok(existing);
+    }
+
+    let txid = refund_submarine_swap(
+        &record,
+        refund_address,
+        mnemonic,
+        bip39_passphrase,
+        fee_rate_sat_per_vb,
+    )
+    .await?;
+    db.set_refund_tx(swap_id, &txid).await?;
+    Ok(txid)
+}
 
 /// Refund a submarine swap's locked onchain funds back to `refund_address`.
 ///
