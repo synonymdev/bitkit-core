@@ -134,22 +134,33 @@ async fn db_round_trip_and_recovery() {
     assert_eq!(db.list_swaps().await.unwrap().len(), 2);
     assert_eq!(db.list_pending_swaps().await.unwrap().len(), 2);
 
-    // Status transitions and tx ids persist.
+    // A non-terminal status persists and leaves the swap in the pending set.
     db.update_status("rev-1", "transaction.mempool")
         .await
         .unwrap();
-    db.set_claim_tx("rev-1", "abc123").await.unwrap();
     let loaded = db.get_swap("rev-1").await.unwrap().unwrap();
     assert_eq!(loaded.status, "transaction.mempool");
-    assert_eq!(loaded.claim_tx_id, Some("abc123".to_string()));
+    assert_eq!(db.list_pending_swaps().await.unwrap().len(), 2);
 
-    // A terminal status drops the swap from the pending set.
-    db.update_status("sub-1", "transaction.refunded")
-        .await
-        .unwrap();
+    // Recording the claim tx id stores it and advances the swap to the terminal
+    // claimed status, which drops it from the pending set.
+    db.set_claim_tx("rev-1", "abc123").await.unwrap();
+    let loaded = db.get_swap("rev-1").await.unwrap().unwrap();
+    assert_eq!(loaded.status, "transaction.claimed");
+    assert_eq!(loaded.claim_tx_id, Some("abc123".to_string()));
     let pending = db.list_pending_swaps().await.unwrap();
     assert_eq!(pending.len(), 1);
-    assert_eq!(pending[0].id, "rev-1");
+    assert_eq!(pending[0].id, "sub-1");
+
+    // Recording the refund tx id does the same for the submarine swap.
+    db.set_refund_tx("sub-1", "def456").await.unwrap();
+    let loaded = db.get_swap("sub-1").await.unwrap().unwrap();
+    assert_eq!(loaded.status, "transaction.refunded");
+    assert_eq!(loaded.refund_tx_id, Some("def456".to_string()));
+    assert!(db.list_pending_swaps().await.unwrap().is_empty());
+
+    // Terminal swaps are still listed, just no longer pending.
+    assert_eq!(db.list_swaps().await.unwrap().len(), 2);
 }
 
 /// Returns true if a Boltz API error indicates the endpoint is temporarily
