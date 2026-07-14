@@ -1,5 +1,10 @@
 target/
 bindings/android/native-debug-symbols.zip
+# The xcframework's static libraries exceed GitHub's 100 MB file limit. They are
+# already shipped, compressed, inside BitkitCore.xcframework.zip, which is what
+# Package.swift downloads from the GitHub release, so tracking them here would
+# only duplicate that payload.
+bindings/ios/BitkitCore.xcframework/**/libbitkitcore.a
 .idea/
 .DS_Store
 # AI

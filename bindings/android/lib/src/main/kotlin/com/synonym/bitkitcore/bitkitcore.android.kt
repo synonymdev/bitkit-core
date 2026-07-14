@@ -898,6 +898,9 @@ internal typealias UniffiForeignFutureStructVoidUniffiByValue = UniffiForeignFut
 internal interface UniffiForeignFutureCompleteVoid: com.sun.jna.Callback {
     public fun callback(`callbackData`: Long,`result`: UniffiForeignFutureStructVoidUniffiByValue,)
 }
+internal interface UniffiCallbackInterfaceBoltzEventListenerMethod0: com.sun.jna.Callback {
+    public fun callback(`uniffiHandle`: Long,`event`: RustBufferByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
+}
 internal interface UniffiCallbackInterfaceEventListenerMethod0: com.sun.jna.Callback {
     public fun callback(`uniffiHandle`: Long,`watcherId`: RustBufferByValue,`event`: RustBufferByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
 }
@@ -940,6 +943,37 @@ internal interface UniffiCallbackInterfaceTrezorUiCallbackMethod0: com.sun.jna.C
 internal interface UniffiCallbackInterfaceTrezorUiCallbackMethod1: com.sun.jna.Callback {
     public fun callback(`uniffiHandle`: Long,`onDevice`: Byte,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
 }
+@Structure.FieldOrder("onEvent", "uniffiFree")
+internal open class UniffiVTableCallbackInterfaceBoltzEventListenerStruct(
+    @JvmField public var `onEvent`: UniffiCallbackInterfaceBoltzEventListenerMethod0?,
+    @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
+) : com.sun.jna.Structure() {
+    internal constructor(): this(
+        
+        `onEvent` = null,
+        
+        `uniffiFree` = null,
+        
+    )
+
+    internal class UniffiByValue(
+        `onEvent`: UniffiCallbackInterfaceBoltzEventListenerMethod0?,
+        `uniffiFree`: UniffiCallbackInterfaceFree?,
+    ): UniffiVTableCallbackInterfaceBoltzEventListener(`onEvent`,`uniffiFree`,), Structure.ByValue
+}
+
+internal typealias UniffiVTableCallbackInterfaceBoltzEventListener = UniffiVTableCallbackInterfaceBoltzEventListenerStruct
+
+internal fun UniffiVTableCallbackInterfaceBoltzEventListener.uniffiSetValue(other: UniffiVTableCallbackInterfaceBoltzEventListener) {
+    `onEvent` = other.`onEvent`
+    `uniffiFree` = other.`uniffiFree`
+}
+internal fun UniffiVTableCallbackInterfaceBoltzEventListener.uniffiSetValue(other: UniffiVTableCallbackInterfaceBoltzEventListenerUniffiByValue) {
+    `onEvent` = other.`onEvent`
+    `uniffiFree` = other.`uniffiFree`
+}
+
+internal typealias UniffiVTableCallbackInterfaceBoltzEventListenerUniffiByValue = UniffiVTableCallbackInterfaceBoltzEventListenerStruct.UniffiByValue
 @Structure.FieldOrder("onEvent", "uniffiFree")
 internal open class UniffiVTableCallbackInterfaceEventListenerStruct(
     @JvmField public var `onEvent`: UniffiCallbackInterfaceEventListenerMethod0?,
@@ -1522,6 +1556,33 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1595,6 +1656,39 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_claim_reverse_swap() != 52516.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_create_reverse_swap() != 20570.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_create_submarine_swap() != 27933.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_get_reverse_limits() != 59203.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_get_submarine_limits() != 5900.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_get_swap() != 17473.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_list_pending_swaps() != 20926.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_list_swaps() != 16447.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap() != 24549.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_start_swap_updates() != 24371.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_stop_swap_updates() != 63683.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 43422.toShort()) {
@@ -2053,6 +2147,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_wipe_all_transaction_details() != 65339.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event() != 11294.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_method_eventlistener_on_event() != 35531.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -2133,6 +2230,39 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_blocktank_wipe_all(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_claim_reverse_swap(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_create_reverse_swap(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_create_submarine_swap(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_get_reverse_limits(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_get_submarine_limits(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_get_swap(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_list_pending_swaps(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_list_swaps(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_start_swap_updates(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_stop_swap_updates(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction(
@@ -2591,6 +2721,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_wipe_all_transaction_details(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_eventlistener_on_event(
     ): Short
     @JvmStatic
@@ -2646,6 +2779,7 @@ internal object UniffiLib : Library {
         Native.register(UniffiLib::class.java, findLibraryName("bitkitcore"))
         // No need to check the contract version and checksums, since
         // we already did that with `IntegrityCheckingUniffiLib` above.
+        uniffiCallbackInterfaceBoltzEventListener.register(this)
         uniffiCallbackInterfaceEventListener.register(this)
         uniffiCallbackInterfaceTrezorTransportCallback.register(this)
         uniffiCallbackInterfaceTrezorUiCallback.register(this)
@@ -2654,6 +2788,26 @@ internal object UniffiLib : Library {
     internal val CLEANER: UniffiCleaner by lazy {
         UniffiCleaner.create()
     }
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_clone_boltzeventlistener(
+        `ptr`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Pointer?
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_free_boltzeventlistener(
+        `ptr`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_init_callback_vtable_boltzeventlistener(
+        `vtable`: UniffiVTableCallbackInterfaceBoltzEventListener,
+    ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_boltzeventlistener_on_event(
+        `ptr`: Pointer?,
+        `event`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
     @JvmStatic
     external fun uniffi_bitkitcore_fn_clone_eventlistener(
         `ptr`: Pointer?,
@@ -2839,6 +2993,67 @@ internal object UniffiLib : Library {
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_blocktank_wipe_all(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_claim_reverse_swap(
+        `swapId`: RustBufferByValue,
+        `mnemonic`: RustBufferByValue,
+        `bip39Passphrase`: RustBufferByValue,
+        `feeRateSatPerVb`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_create_reverse_swap(
+        `network`: RustBufferByValue,
+        `electrumUrl`: RustBufferByValue,
+        `amountSat`: Long,
+        `claimAddress`: RustBufferByValue,
+        `mnemonic`: RustBufferByValue,
+        `bip39Passphrase`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_create_submarine_swap(
+        `network`: RustBufferByValue,
+        `electrumUrl`: RustBufferByValue,
+        `invoice`: RustBufferByValue,
+        `mnemonic`: RustBufferByValue,
+        `bip39Passphrase`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_get_reverse_limits(
+        `network`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_get_submarine_limits(
+        `network`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_get_swap(
+        `swapId`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_list_pending_swaps(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_list_swaps(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_refund_submarine_swap(
+        `swapId`: RustBufferByValue,
+        `refundAddress`: RustBufferByValue,
+        `mnemonic`: RustBufferByValue,
+        `bip39Passphrase`: RustBufferByValue,
+        `feeRateSatPerVb`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_start_swap_updates(
+        `network`: RustBufferByValue,
+        `listener`: Pointer?,
+        `mnemonic`: RustBufferByValue,
+        `bip39Passphrase`: RustBufferByValue,
+        `feeRateSatPerVb`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_stop_swap_updates(
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_broadcast_sweep_transaction(
@@ -4221,6 +4436,199 @@ public object FfiConverterByteArray: FfiConverterRustBuffer<ByteArray> {
 
 
 /**
+ * Callback interface for receiving Boltz swap lifecycle events.
+ *
+ * Implement this in Swift/Kotlin/Python and register it via
+ * `boltz_start_swap_updates` to receive typed notifications as swaps progress.
+ * Reverse swaps are claimed automatically; the [`BoltzSwapEvent::Claimed`]
+ * event reports the resulting transaction id.
+ */
+public open class BoltzEventListenerImpl: Disposable, BoltzEventListener {
+
+    public constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiPointerDestroyer(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    public constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiPointerDestroyer(null))
+    }
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed: kotlinx.atomicfu.AtomicBoolean = kotlinx.atomicfu.atomic(false)
+    private val callCounter: kotlinx.atomicfu.AtomicLong = kotlinx.atomicfu.atomic(1L)
+
+    private val lock = kotlinx.atomicfu.locks.ReentrantLock()
+
+    private fun <T> synchronized(block: () -> T): T {
+        lock.lock()
+        try {
+            return block()
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    override fun close() {
+        synchronized { this.destroy() }
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.value
+            if (c == 0L) {
+                throw IllegalStateException("${this::class::simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this::class::simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiPointerDestroyer(private val pointer: Pointer?) : Disposable {
+        override fun destroy() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.uniffi_bitkitcore_fn_free_boltzeventlistener(ptr, status)
+                }
+            }
+        }
+    }
+
+    public fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall { status ->
+            UniffiLib.uniffi_bitkitcore_fn_clone_boltzeventlistener(pointer!!, status)
+        }!!
+    }
+
+    
+    public override fun `onEvent`(`event`: BoltzSwapEvent) {
+        callWithPointer {
+            uniffiRustCall { uniffiRustCallStatus ->
+                UniffiLib.uniffi_bitkitcore_fn_method_boltzeventlistener_on_event(
+                    it,
+                    FfiConverterTypeBoltzSwapEvent.lower(`event`),
+                    uniffiRustCallStatus,
+                )
+            }
+        }
+    }
+
+
+    
+    
+
+    
+    
+    public companion object
+    
+}
+
+
+
+
+
+public object FfiConverterTypeBoltzEventListener: FfiConverter<BoltzEventListener, Pointer> {
+    internal val handleMap = UniffiHandleMap<BoltzEventListener>()
+
+    override fun lower(value: BoltzEventListener): Pointer {
+        return handleMap.insert(value).toPointer()
+    }
+
+    override fun lift(value: Pointer): BoltzEventListener {
+        return BoltzEventListenerImpl(value)
+    }
+
+    override fun read(buf: ByteBuffer): BoltzEventListener {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(buf.getLong().toPointer())
+    }
+
+    override fun allocationSize(value: BoltzEventListener): ULong = 8UL
+
+    override fun write(value: BoltzEventListener, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(lower(value).toLong())
+    }
+}
+
+
+// Put the implementation in an object so we don't pollute the top-level namespace
+internal object uniffiCallbackInterfaceBoltzEventListener {
+    internal object `onEvent`: UniffiCallbackInterfaceBoltzEventListenerMethod0 {
+        override fun callback (
+            `uniffiHandle`: Long,
+            `event`: RustBufferByValue,
+            `uniffiOutReturn`: Pointer,
+            uniffiCallStatus: UniffiRustCallStatus,
+        ) {
+            val uniffiObj = FfiConverterTypeBoltzEventListener.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`onEvent`(
+                    FfiConverterTypeBoltzSwapEvent.lift(`event`),
+                )
+            }
+            val writeReturn = { _: Unit ->
+                @Suppress("UNUSED_EXPRESSION")
+                uniffiOutReturn
+                Unit
+            }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object uniffiFree: UniffiCallbackInterfaceFree {
+        override fun callback(handle: Long) {
+            FfiConverterTypeBoltzEventListener.handleMap.remove(handle)
+        }
+    }
+
+    internal val vtable = UniffiVTableCallbackInterfaceBoltzEventListener(
+        `onEvent`,
+        uniffiFree,
+    )
+
+    internal fun register(lib: UniffiLib) {
+        lib.uniffi_bitkitcore_fn_init_callback_vtable_boltzeventlistener(vtable)
+    }
+}
+
+
+
+/**
  * Callback interface for receiving watcher events.
  *
  * Implement this trait in Swift/Kotlin/Python to receive typed notifications
@@ -5415,6 +5823,98 @@ public object FfiConverterTypeAddressInfo: FfiConverterRustBuffer<AddressInfo> {
         FfiConverterString.write(value.`address`, buf)
         FfiConverterString.write(value.`path`, buf)
         FfiConverterUInt.write(value.`transfers`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeBoltzPairInfo: FfiConverterRustBuffer<BoltzPairInfo> {
+    override fun read(buf: ByteBuffer): BoltzPairInfo {
+        return BoltzPairInfo(
+            FfiConverterString.read(buf),
+            FfiConverterDouble.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterDouble.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: BoltzPairInfo): ULong = (
+            FfiConverterString.allocationSize(value.`hash`) +
+            FfiConverterDouble.allocationSize(value.`rate`) +
+            FfiConverterULong.allocationSize(value.`minimalSat`) +
+            FfiConverterULong.allocationSize(value.`maximalSat`) +
+            FfiConverterDouble.allocationSize(value.`feePercentage`) +
+            FfiConverterULong.allocationSize(value.`minerFeesSat`)
+    )
+
+    override fun write(value: BoltzPairInfo, buf: ByteBuffer) {
+        FfiConverterString.write(value.`hash`, buf)
+        FfiConverterDouble.write(value.`rate`, buf)
+        FfiConverterULong.write(value.`minimalSat`, buf)
+        FfiConverterULong.write(value.`maximalSat`, buf)
+        FfiConverterDouble.write(value.`feePercentage`, buf)
+        FfiConverterULong.write(value.`minerFeesSat`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeBoltzSwap: FfiConverterRustBuffer<BoltzSwap> {
+    override fun read(buf: ByteBuffer): BoltzSwap {
+        return BoltzSwap(
+            FfiConverterString.read(buf),
+            FfiConverterTypeBoltzSwapType.read(buf),
+            FfiConverterTypeBoltzSwapStatus.read(buf),
+            FfiConverterTypeBoltzNetwork.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterOptionalULong.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: BoltzSwap): ULong = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterTypeBoltzSwapType.allocationSize(value.`swapType`) +
+            FfiConverterTypeBoltzSwapStatus.allocationSize(value.`status`) +
+            FfiConverterTypeBoltzNetwork.allocationSize(value.`network`) +
+            FfiConverterULong.allocationSize(value.`swapIndex`) +
+            FfiConverterULong.allocationSize(value.`amountSat`) +
+            FfiConverterOptionalULong.allocationSize(value.`onchainAmountSat`) +
+            FfiConverterOptionalString.allocationSize(value.`invoice`) +
+            FfiConverterOptionalString.allocationSize(value.`lockupAddress`) +
+            FfiConverterOptionalString.allocationSize(value.`onchainAddress`) +
+            FfiConverterULong.allocationSize(value.`timeoutBlockHeight`) +
+            FfiConverterULong.allocationSize(value.`createdAt`) +
+            FfiConverterOptionalString.allocationSize(value.`claimTxId`) +
+            FfiConverterOptionalString.allocationSize(value.`refundTxId`)
+    )
+
+    override fun write(value: BoltzSwap, buf: ByteBuffer) {
+        FfiConverterString.write(value.`id`, buf)
+        FfiConverterTypeBoltzSwapType.write(value.`swapType`, buf)
+        FfiConverterTypeBoltzSwapStatus.write(value.`status`, buf)
+        FfiConverterTypeBoltzNetwork.write(value.`network`, buf)
+        FfiConverterULong.write(value.`swapIndex`, buf)
+        FfiConverterULong.write(value.`amountSat`, buf)
+        FfiConverterOptionalULong.write(value.`onchainAmountSat`, buf)
+        FfiConverterOptionalString.write(value.`invoice`, buf)
+        FfiConverterOptionalString.write(value.`lockupAddress`, buf)
+        FfiConverterOptionalString.write(value.`onchainAddress`, buf)
+        FfiConverterULong.write(value.`timeoutBlockHeight`, buf)
+        FfiConverterULong.write(value.`createdAt`, buf)
+        FfiConverterOptionalString.write(value.`claimTxId`, buf)
+        FfiConverterOptionalString.write(value.`refundTxId`, buf)
     }
 }
 
@@ -7466,6 +7966,37 @@ public object FfiConverterTypePubkyProfileLink: FfiConverterRustBuffer<PubkyProf
 
 
 
+public object FfiConverterTypeReverseSwapResponse: FfiConverterRustBuffer<ReverseSwapResponse> {
+    override fun read(buf: ByteBuffer): ReverseSwapResponse {
+        return ReverseSwapResponse(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: ReverseSwapResponse): ULong = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterString.allocationSize(value.`invoice`) +
+            FfiConverterString.allocationSize(value.`lockupAddress`) +
+            FfiConverterULong.allocationSize(value.`onchainAmountSat`) +
+            FfiConverterULong.allocationSize(value.`timeoutBlockHeight`)
+    )
+
+    override fun write(value: ReverseSwapResponse, buf: ByteBuffer) {
+        FfiConverterString.write(value.`id`, buf)
+        FfiConverterString.write(value.`invoice`, buf)
+        FfiConverterString.write(value.`lockupAddress`, buf)
+        FfiConverterULong.write(value.`onchainAmountSat`, buf)
+        FfiConverterULong.write(value.`timeoutBlockHeight`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypeSingleAddressInfoResult: FfiConverterRustBuffer<SingleAddressInfoResult> {
     override fun read(buf: ByteBuffer): SingleAddressInfoResult {
         return SingleAddressInfoResult(
@@ -7491,6 +8022,40 @@ public object FfiConverterTypeSingleAddressInfoResult: FfiConverterRustBuffer<Si
         FfiConverterSequenceTypeAccountUtxo.write(value.`utxos`, buf)
         FfiConverterUInt.write(value.`transfers`, buf)
         FfiConverterUInt.write(value.`blockHeight`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeSubmarineSwapResponse: FfiConverterRustBuffer<SubmarineSwapResponse> {
+    override fun read(buf: ByteBuffer): SubmarineSwapResponse {
+        return SubmarineSwapResponse(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterBoolean.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: SubmarineSwapResponse): ULong = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterString.allocationSize(value.`bip21`) +
+            FfiConverterULong.allocationSize(value.`expectedAmountSat`) +
+            FfiConverterBoolean.allocationSize(value.`acceptZeroConf`) +
+            FfiConverterULong.allocationSize(value.`timeoutBlockHeight`)
+    )
+
+    override fun write(value: SubmarineSwapResponse, buf: ByteBuffer) {
+        FfiConverterString.write(value.`id`, buf)
+        FfiConverterString.write(value.`address`, buf)
+        FfiConverterString.write(value.`bip21`, buf)
+        FfiConverterULong.write(value.`expectedAmountSat`, buf)
+        FfiConverterBoolean.write(value.`acceptZeroConf`, buf)
+        FfiConverterULong.write(value.`timeoutBlockHeight`, buf)
     }
 }
 
@@ -9274,6 +9839,476 @@ public object FfiConverterTypeBlocktankError : FfiConverterRustBuffer<BlocktankE
 
 
 
+public object BoltzExceptionErrorHandler : UniffiRustCallStatusErrorHandler<BoltzException> {
+    override fun lift(errorBuf: RustBufferByValue): BoltzException = FfiConverterTypeBoltzError.lift(errorBuf)
+}
+
+public object FfiConverterTypeBoltzError : FfiConverterRustBuffer<BoltzException> {
+    override fun read(buf: ByteBuffer): BoltzException {
+        return when (buf.getInt()) {
+            1 -> BoltzException.InitializationException(
+                FfiConverterString.read(buf),
+                )
+            2 -> BoltzException.ConnectionException(
+                FfiConverterString.read(buf),
+                )
+            3 -> BoltzException.DatabaseException(
+                FfiConverterString.read(buf),
+                )
+            4 -> BoltzException.ApiException(
+                FfiConverterString.read(buf),
+                )
+            5 -> BoltzException.SwapException(
+                FfiConverterString.read(buf),
+                )
+            6 -> BoltzException.BroadcastException(
+                FfiConverterString.read(buf),
+                )
+            7 -> BoltzException.InvalidInput(
+                FfiConverterString.read(buf),
+                )
+            8 -> BoltzException.SerializationException(
+                FfiConverterString.read(buf),
+                )
+            9 -> BoltzException.NotFound(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: BoltzException): ULong {
+        return when (value) {
+            is BoltzException.InitializationException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is BoltzException.ConnectionException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is BoltzException.DatabaseException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is BoltzException.ApiException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is BoltzException.SwapException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is BoltzException.BroadcastException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is BoltzException.InvalidInput -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is BoltzException.SerializationException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is BoltzException.NotFound -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+        }
+    }
+
+    override fun write(value: BoltzException, buf: ByteBuffer) {
+        when (value) {
+            is BoltzException.InitializationException -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is BoltzException.ConnectionException -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is BoltzException.DatabaseException -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is BoltzException.ApiException -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is BoltzException.SwapException -> {
+                buf.putInt(5)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is BoltzException.BroadcastException -> {
+                buf.putInt(6)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is BoltzException.InvalidInput -> {
+                buf.putInt(7)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is BoltzException.SerializationException -> {
+                buf.putInt(8)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is BoltzException.NotFound -> {
+                buf.putInt(9)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeBoltzNetwork: FfiConverterRustBuffer<BoltzNetwork> {
+    override fun read(buf: ByteBuffer): BoltzNetwork = try {
+        BoltzNetwork.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: BoltzNetwork): ULong = 4UL
+
+    override fun write(value: BoltzNetwork, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeBoltzSwapEvent : FfiConverterRustBuffer<BoltzSwapEvent>{
+    override fun read(buf: ByteBuffer): BoltzSwapEvent {
+        return when(buf.getInt()) {
+            1 -> BoltzSwapEvent.StatusUpdate(
+                FfiConverterString.read(buf),
+                FfiConverterTypeBoltzSwapStatus.read(buf),
+                )
+            2 -> BoltzSwapEvent.Claimed(
+                FfiConverterString.read(buf),
+                FfiConverterString.read(buf),
+                )
+            3 -> BoltzSwapEvent.Refunded(
+                FfiConverterString.read(buf),
+                FfiConverterString.read(buf),
+                )
+            4 -> BoltzSwapEvent.Error(
+                FfiConverterString.read(buf),
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: BoltzSwapEvent): ULong = when(value) {
+        is BoltzSwapEvent.StatusUpdate -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`swapId`)
+                + FfiConverterTypeBoltzSwapStatus.allocationSize(value.`status`)
+            )
+        }
+        is BoltzSwapEvent.Claimed -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`swapId`)
+                + FfiConverterString.allocationSize(value.`txid`)
+            )
+        }
+        is BoltzSwapEvent.Refunded -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`swapId`)
+                + FfiConverterString.allocationSize(value.`txid`)
+            )
+        }
+        is BoltzSwapEvent.Error -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`swapId`)
+                + FfiConverterString.allocationSize(value.`message`)
+            )
+        }
+    }
+
+    override fun write(value: BoltzSwapEvent, buf: ByteBuffer) {
+        when(value) {
+            is BoltzSwapEvent.StatusUpdate -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`swapId`, buf)
+                FfiConverterTypeBoltzSwapStatus.write(value.`status`, buf)
+                Unit
+            }
+            is BoltzSwapEvent.Claimed -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`swapId`, buf)
+                FfiConverterString.write(value.`txid`, buf)
+                Unit
+            }
+            is BoltzSwapEvent.Refunded -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`swapId`, buf)
+                FfiConverterString.write(value.`txid`, buf)
+                Unit
+            }
+            is BoltzSwapEvent.Error -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`swapId`, buf)
+                FfiConverterString.write(value.`message`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeBoltzSwapStatus : FfiConverterRustBuffer<BoltzSwapStatus>{
+    override fun read(buf: ByteBuffer): BoltzSwapStatus {
+        return when(buf.getInt()) {
+            1 -> BoltzSwapStatus.SwapCreated
+            2 -> BoltzSwapStatus.InvoiceSet
+            3 -> BoltzSwapStatus.TransactionMempool
+            4 -> BoltzSwapStatus.TransactionConfirmed
+            5 -> BoltzSwapStatus.InvoicePending
+            6 -> BoltzSwapStatus.InvoicePaid
+            7 -> BoltzSwapStatus.InvoiceSettled
+            8 -> BoltzSwapStatus.InvoiceFailedToPay
+            9 -> BoltzSwapStatus.InvoiceExpired
+            10 -> BoltzSwapStatus.TransactionClaimPending
+            11 -> BoltzSwapStatus.TransactionClaimed
+            12 -> BoltzSwapStatus.TransactionRefunded
+            13 -> BoltzSwapStatus.TransactionLockupFailed
+            14 -> BoltzSwapStatus.TransactionFailed
+            15 -> BoltzSwapStatus.SwapExpired
+            16 -> BoltzSwapStatus.Unknown(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: BoltzSwapStatus): ULong = when(value) {
+        is BoltzSwapStatus.SwapCreated -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.InvoiceSet -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.TransactionMempool -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.TransactionConfirmed -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.InvoicePending -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.InvoicePaid -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.InvoiceSettled -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.InvoiceFailedToPay -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.InvoiceExpired -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.TransactionClaimPending -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.TransactionClaimed -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.TransactionRefunded -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.TransactionLockupFailed -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.TransactionFailed -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.SwapExpired -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+            )
+        }
+        is BoltzSwapStatus.Unknown -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`raw`)
+            )
+        }
+    }
+
+    override fun write(value: BoltzSwapStatus, buf: ByteBuffer) {
+        when(value) {
+            is BoltzSwapStatus.SwapCreated -> {
+                buf.putInt(1)
+                Unit
+            }
+            is BoltzSwapStatus.InvoiceSet -> {
+                buf.putInt(2)
+                Unit
+            }
+            is BoltzSwapStatus.TransactionMempool -> {
+                buf.putInt(3)
+                Unit
+            }
+            is BoltzSwapStatus.TransactionConfirmed -> {
+                buf.putInt(4)
+                Unit
+            }
+            is BoltzSwapStatus.InvoicePending -> {
+                buf.putInt(5)
+                Unit
+            }
+            is BoltzSwapStatus.InvoicePaid -> {
+                buf.putInt(6)
+                Unit
+            }
+            is BoltzSwapStatus.InvoiceSettled -> {
+                buf.putInt(7)
+                Unit
+            }
+            is BoltzSwapStatus.InvoiceFailedToPay -> {
+                buf.putInt(8)
+                Unit
+            }
+            is BoltzSwapStatus.InvoiceExpired -> {
+                buf.putInt(9)
+                Unit
+            }
+            is BoltzSwapStatus.TransactionClaimPending -> {
+                buf.putInt(10)
+                Unit
+            }
+            is BoltzSwapStatus.TransactionClaimed -> {
+                buf.putInt(11)
+                Unit
+            }
+            is BoltzSwapStatus.TransactionRefunded -> {
+                buf.putInt(12)
+                Unit
+            }
+            is BoltzSwapStatus.TransactionLockupFailed -> {
+                buf.putInt(13)
+                Unit
+            }
+            is BoltzSwapStatus.TransactionFailed -> {
+                buf.putInt(14)
+                Unit
+            }
+            is BoltzSwapStatus.SwapExpired -> {
+                buf.putInt(15)
+                Unit
+            }
+            is BoltzSwapStatus.Unknown -> {
+                buf.putInt(16)
+                FfiConverterString.write(value.`raw`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeBoltzSwapType: FfiConverterRustBuffer<BoltzSwapType> {
+    override fun read(buf: ByteBuffer): BoltzSwapType = try {
+        BoltzSwapType.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: BoltzSwapType): ULong = 4UL
+
+    override fun write(value: BoltzSwapType, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
 public object BroadcastExceptionErrorHandler : UniffiRustCallStatusErrorHandler<BroadcastException> {
     override fun lift(errorBuf: RustBufferByValue): BroadcastException = FfiConverterTypeBroadcastError.lift(errorBuf)
 }
@@ -9653,7 +10688,10 @@ public object FfiConverterTypeDbError : FfiConverterRustBuffer<DbException> {
             2 -> DbException.DbBlocktankException(
                 FfiConverterTypeBlocktankError.read(buf),
                 )
-            3 -> DbException.InitializationException(
+            3 -> DbException.DbBoltzException(
+                FfiConverterTypeBoltzError.read(buf),
+                )
+            4 -> DbException.InitializationException(
                 FfiConverterString.read(buf),
                 )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
@@ -9671,6 +10709,11 @@ public object FfiConverterTypeDbError : FfiConverterRustBuffer<DbException> {
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
                 + FfiConverterTypeBlocktankError.allocationSize(value.`errorDetails`)
+            )
+            is DbException.DbBoltzException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterTypeBoltzError.allocationSize(value.`errorDetails`)
             )
             is DbException.InitializationException -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
@@ -9692,8 +10735,13 @@ public object FfiConverterTypeDbError : FfiConverterRustBuffer<DbException> {
                 FfiConverterTypeBlocktankError.write(value.`errorDetails`, buf)
                 Unit
             }
-            is DbException.InitializationException -> {
+            is DbException.DbBoltzException -> {
                 buf.putInt(3)
+                FfiConverterTypeBoltzError.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is DbException.InitializationException -> {
+                buf.putInt(4)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
@@ -11252,6 +12300,35 @@ public object FfiConverterOptionalByteArray: FfiConverterRustBuffer<kotlin.ByteA
 
 
 
+public object FfiConverterOptionalTypeBoltzSwap: FfiConverterRustBuffer<BoltzSwap?> {
+    override fun read(buf: ByteBuffer): BoltzSwap? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeBoltzSwap.read(buf)
+    }
+
+    override fun allocationSize(value: BoltzSwap?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeBoltzSwap.allocationSize(value)
+        }
+    }
+
+    override fun write(value: BoltzSwap?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeBoltzSwap.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeClosedChannelDetails: FfiConverterRustBuffer<ClosedChannelDetails?> {
     override fun read(buf: ByteBuffer): ClosedChannelDetails? {
         if (buf.get().toInt() == 0) {
@@ -12566,6 +13643,31 @@ public object FfiConverterSequenceTypeAddressInfo: FfiConverterRustBuffer<List<A
 
 
 
+public object FfiConverterSequenceTypeBoltzSwap: FfiConverterRustBuffer<List<BoltzSwap>> {
+    override fun read(buf: ByteBuffer): List<BoltzSwap> {
+        val len = buf.getInt()
+        return List<BoltzSwap>(len) {
+            FfiConverterTypeBoltzSwap.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<BoltzSwap>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeBoltzSwap.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<BoltzSwap>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeBoltzSwap.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceTypeClosedChannelDetails: FfiConverterRustBuffer<List<ClosedChannelDetails>> {
     override fun read(buf: ByteBuffer): List<ClosedChannelDetails> {
         val len = buf.getInt()
@@ -13498,6 +14600,277 @@ public suspend fun `blocktankWipeAll`() {
         
         // Error FFI converter
         BlocktankExceptionErrorHandler,
+    )
+}
+
+/**
+ * Claim a reverse swap's onchain funds to its claim address, returning the
+ * broadcast claim transaction id. Normally happens automatically via the
+ * updates stream; exposed for manual recovery. The claim key is re-derived from
+ * `mnemonic`. Claims are serialized per swap, so calling this while the updates
+ * stream is auto-claiming the same swap waits for that claim and returns its
+ * txid rather than broadcasting a second transaction.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzClaimReverseSwap`(`swapId`: kotlin.String, `mnemonic`: kotlin.String, `bip39Passphrase`: kotlin.String?, `feeRateSatPerVb`: kotlin.Double?): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_claim_reverse_swap(
+            FfiConverterString.lower(`swapId`),
+            FfiConverterString.lower(`mnemonic`),
+            FfiConverterOptionalString.lower(`bip39Passphrase`),
+            FfiConverterOptionalDouble.lower(`feeRateSatPerVb`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Create a reverse swap (Lightning -> onchain).
+ *
+ * The caller pays the returned hold invoice from its Lightning node;
+ * `claim_address` is the onchain address the received funds are claimed to.
+ * The claim key and preimage are derived deterministically from `mnemonic`
+ * (only the derivation index is persisted, never the secrets) so the claim can
+ * be made automatically once Boltz locks the funds. `bip39_passphrase` must
+ * match the wallet's, or claims will derive the wrong key.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzCreateReverseSwap`(`network`: BoltzNetwork, `electrumUrl`: kotlin.String, `amountSat`: kotlin.ULong, `claimAddress`: kotlin.String, `mnemonic`: kotlin.String, `bip39Passphrase`: kotlin.String?): ReverseSwapResponse {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_create_reverse_swap(
+            FfiConverterTypeBoltzNetwork.lower(`network`),
+            FfiConverterString.lower(`electrumUrl`),
+            FfiConverterULong.lower(`amountSat`),
+            FfiConverterString.lower(`claimAddress`),
+            FfiConverterString.lower(`mnemonic`),
+            FfiConverterOptionalString.lower(`bip39Passphrase`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeReverseSwapResponse.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Create a submarine swap (onchain -> Lightning).
+ *
+ * `invoice` is a BOLT11 invoice the caller's Lightning node generated. The
+ * caller funds the returned lockup address from its onchain wallet. The refund
+ * key is derived deterministically from `mnemonic` (only the derivation index
+ * is persisted, never the key), and the swap is tracked if an updates stream is
+ * running. `bip39_passphrase` must match the wallet's, or refunds will derive
+ * the wrong key.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzCreateSubmarineSwap`(`network`: BoltzNetwork, `electrumUrl`: kotlin.String, `invoice`: kotlin.String, `mnemonic`: kotlin.String, `bip39Passphrase`: kotlin.String?): SubmarineSwapResponse {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_create_submarine_swap(
+            FfiConverterTypeBoltzNetwork.lower(`network`),
+            FfiConverterString.lower(`electrumUrl`),
+            FfiConverterString.lower(`invoice`),
+            FfiConverterString.lower(`mnemonic`),
+            FfiConverterOptionalString.lower(`bip39Passphrase`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeSubmarineSwapResponse.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Fetch fees and limits for reverse swaps (Lightning -> onchain).
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzGetReverseLimits`(`network`: BoltzNetwork): BoltzPairInfo {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_get_reverse_limits(
+            FfiConverterTypeBoltzNetwork.lower(`network`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeBoltzPairInfo.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Fetch fees and limits for submarine swaps (onchain -> Lightning).
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzGetSubmarineLimits`(`network`: BoltzNetwork): BoltzPairInfo {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_get_submarine_limits(
+            FfiConverterTypeBoltzNetwork.lower(`network`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeBoltzPairInfo.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Fetch a single swap by id.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzGetSwap`(`swapId`: kotlin.String): BoltzSwap? {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_get_swap(
+            FfiConverterString.lower(`swapId`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterOptionalTypeBoltzSwap.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * List swaps that have not reached a terminal state (for recovery/resume).
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzListPendingSwaps`(): List<BoltzSwap> {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_list_pending_swaps(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterSequenceTypeBoltzSwap.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * List every persisted swap, newest first.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzListSwaps`(): List<BoltzSwap> {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_list_swaps(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterSequenceTypeBoltzSwap.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Refund a submarine swap's locked funds to `refund_address`, returning the
+ * broadcast refund transaction id. Used when Boltz fails to pay the invoice or
+ * the swap expires. The refund key is re-derived from `mnemonic`. Refunds are
+ * serialized per swap, so two concurrent calls cannot both broadcast: the second
+ * waits for the first and returns its txid.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzRefundSubmarineSwap`(`swapId`: kotlin.String, `refundAddress`: kotlin.String, `mnemonic`: kotlin.String, `bip39Passphrase`: kotlin.String?, `feeRateSatPerVb`: kotlin.Double?): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_refund_submarine_swap(
+            FfiConverterString.lower(`swapId`),
+            FfiConverterString.lower(`refundAddress`),
+            FfiConverterString.lower(`mnemonic`),
+            FfiConverterOptionalString.lower(`bip39Passphrase`),
+            FfiConverterOptionalDouble.lower(`feeRateSatPerVb`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Open a Boltz WebSocket for `network`, subscribe to all pending swaps, and
+ * drive their lifecycle (auto-claiming reverse swaps) until stopped. Replaces
+ * any previously running updates stream (only one network is tracked at a
+ * time). `mnemonic` is held in memory for the lifetime of the stream so
+ * confirmed reverse swaps can be auto-claimed; it is never persisted. Events
+ * are delivered to `listener`.
+ *
+ * `fee_rate_sat_per_vb` is the fee rate used for automatic claim transactions.
+ * Bitkit owns fee estimation and should pass its current recommended rate; when
+ * `None`, a conservative built-in default is used. To auto-claim at an updated
+ * fee rate, call this again (it restarts the stream).
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzStartSwapUpdates`(`network`: BoltzNetwork, `listener`: BoltzEventListener, `mnemonic`: kotlin.String, `bip39Passphrase`: kotlin.String?, `feeRateSatPerVb`: kotlin.Double?) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_start_swap_updates(
+            FfiConverterTypeBoltzNetwork.lower(`network`),
+            FfiConverterTypeBoltzEventListener.lower(`listener`),
+            FfiConverterString.lower(`mnemonic`),
+            FfiConverterOptionalString.lower(`bip39Passphrase`),
+            FfiConverterOptionalDouble.lower(`feeRateSatPerVb`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Stop the running Boltz updates stream, if any.
+ */
+public suspend fun `boltzStopSwapUpdates`() {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_stop_swap_updates(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        UniffiNullRustCallStatusErrorHandler,
     )
 }
 
