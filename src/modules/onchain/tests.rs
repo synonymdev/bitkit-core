@@ -849,6 +849,112 @@ mod tests {
         ));
     }
 
+    #[test]
+    fn test_decode_and_compute_txid_legacy_returns_canonical_txid() {
+        use super::super::implementation::decode_and_compute_txid;
+
+        // Bitcoin block 170 transaction (Satoshi -> Hal Finney), a legacy
+        // (non-segwit) transaction with a well-known txid.
+        let raw_hex = "0100000001c997a5e56e104102fa209c6a852dd90660a20b2d9c352423edce25857fcd3704000000004847304402204e45e16932b8af514961a1d3a1a25fdf3f4f7732e9d624c6c61548ab5fb8cd410220181522ec8eca07de4860a4acdd12909d831cc56cbbac4622082221a8768d1d0901ffffffff0200ca9a3b00000000434104ae1a62fe09c5f51b13905f07f06b99a2f7159b2225f374cd378d71302fa28414e7aab37397f554a7df5f142c21c1b7303b8a0626f1baded5c72a704f7e6cd84cac00286bee0000000043410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3ac00000000";
+        let expected_txid = "f4184fc596403b9d638783cf57adfe4c75c605f6356fbc91338530e9831e9e16";
+
+        let (_bytes, txid) = decode_and_compute_txid(raw_hex).expect("valid legacy tx");
+        assert_eq!(txid.to_string(), expected_txid);
+    }
+
+    #[test]
+    fn test_decode_and_compute_txid_segwit_returns_txid_not_wtxid() {
+        use super::super::implementation::decode_and_compute_txid;
+        use bdk::bitcoin::absolute::LockTime;
+        use bdk::bitcoin::consensus::serialize;
+        use bdk::bitcoin::{OutPoint, Sequence, TxIn, Txid, Witness};
+
+        // Build a transaction carrying witness data so that its txid (serialized
+        // without witness) and wtxid (serialized with witness) diverge.
+        let mut witness = Witness::new();
+        witness.push([0x30u8; 72]); // dummy signature
+        witness.push([0x02u8; 33]); // dummy pubkey
+
+        let prev_txid =
+            Txid::from_str("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b")
+                .unwrap();
+
+        let tx = Transaction {
+            version: 2,
+            lock_time: LockTime::from_consensus(0),
+            input: vec![TxIn {
+                previous_output: OutPoint {
+                    txid: prev_txid,
+                    vout: 0,
+                },
+                script_sig: ScriptBuf::new(),
+                sequence: Sequence::MAX,
+                witness,
+            }],
+            output: vec![TxOut {
+                value: 10_000,
+                script_pubkey: ScriptBuf::new(),
+            }],
+        };
+
+        // A witness-bearing transaction must have distinct txid and wtxid.
+        assert_ne!(tx.txid().to_string(), tx.wtxid().to_string());
+
+        let raw_hex = hex::encode(serialize(&tx));
+        let (_bytes, txid) = decode_and_compute_txid(&raw_hex).expect("valid segwit tx");
+        assert_eq!(txid, tx.txid());
+        assert_ne!(txid.to_string(), tx.wtxid().to_string());
+    }
+
+    #[test]
+    fn test_is_already_known_broadcast_error_accepts_known_responses() {
+        use super::super::implementation::is_already_known_broadcast_error;
+
+        let cases = [
+            "already in block chain",
+            "already in blockchain",
+            "already in mempool",
+            "already-in-block-chain",
+            "already-in-mempool",
+            "txn-already-known",
+            "transaction already exists",
+            // Case-insensitive and embedded in a larger server message.
+            "Transaction already in block chain",
+            "TXN-ALREADY-KNOWN",
+            "Broadcast failed: Electrum server error: {\"code\":-27,\"message\":\"transaction already in block chain\"}",
+            "sendrawtransaction RPC error: transaction already in mempool",
+        ];
+
+        for case in cases {
+            assert!(
+                is_already_known_broadcast_error(case),
+                "expected already-known match for: {case}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_is_already_known_broadcast_error_rejects_unrelated_errors() {
+        use super::super::implementation::is_already_known_broadcast_error;
+
+        let cases = [
+            "bad-txns-inputs-missingorspent",
+            "min relay fee not met",
+            "scriptsig-not-pushonly",
+            "bad-txns-in-belowout",
+            "Failed to connect to Electrum: connection refused",
+            "dust",
+            "",
+        ];
+
+        for case in cases {
+            assert!(
+                !is_already_known_broadcast_error(case),
+                "unexpected already-known match for: {case}"
+            );
+        }
+    }
+
     // ========================================================================
     // Account Info Tests
     // ========================================================================
