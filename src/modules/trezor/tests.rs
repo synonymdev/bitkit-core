@@ -528,6 +528,7 @@ mod tests {
             signatures: vec!["sig1".to_string(), "sig2".to_string()],
             serialized_tx: "rawtx".to_string(),
             txid: None,
+            witnesses: None,
         };
 
         let result: TrezorSignedTx = response.into();

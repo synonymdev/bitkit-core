@@ -258,6 +258,7 @@ impl From<TrezorGetAddressParams> for trezor_connect_rs::GetAddressParams {
             show_on_trezor: p.show_on_trezor,
             script_type: p.script_type.map(|s| s.into()),
             multisig: None,
+            ..Default::default()
         }
     }
 }
@@ -353,6 +354,7 @@ impl From<TrezorSignMessageParams> for trezor_connect_rs::SignMessageParams {
             message: p.message,
             coin: p.coin.map(|c| c.into()),
             no_script_type: false,
+            ..Default::default()
         }
     }
 }
@@ -395,6 +397,7 @@ impl From<TrezorVerifyMessageParams> for trezor_connect_rs::VerifyMessageParams 
             signature: p.signature,
             message: p.message,
             coin: p.coin.map(|c| c.into()),
+            ..Default::default()
         }
     }
 }
@@ -583,12 +586,12 @@ impl From<TrezorSignTxParams> for trezor_connect_rs::SignTxParams {
             lock_time: params.lock_time,
             version: params.version,
             prev_txs: params.prev_txs.into_iter().map(|t| t.into()).collect(),
-            push: None,
             amount_unit: None,
             serialize: None,
             chunkify: None,
             unlock_path: None,
             payment_requests: vec![],
+            ..Default::default()
         }
     }
 }
