@@ -1,11 +1,13 @@
 mod compose;
 mod errors;
+mod extended_pubkey;
 mod implementation;
 mod listener;
 mod types;
 
 pub use compose::compose_transaction;
-pub use errors::{AccountInfoError, AddressError, BroadcastError, SweepError};
+pub use errors::{AccountInfoError, AddressError, BroadcastError, OnchainError, SweepError};
+pub use extended_pubkey::serialized_extended_pubkey;
 pub use implementation::{
     broadcast_raw_tx, build_descriptors, derive_base_path, detect_account_type,
     detect_network_from_key, get_account_info, get_address_info, get_transaction_detail,

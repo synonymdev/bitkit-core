@@ -2,6 +2,13 @@ use thiserror::Error;
 
 #[derive(uniffi::Error, Debug, Error)]
 #[non_exhaustive]
+pub enum OnchainError {
+    #[error("Invalid extended public key: {error_details}")]
+    InvalidExtendedPublicKey { error_details: String },
+}
+
+#[derive(uniffi::Error, Debug, Error)]
+#[non_exhaustive]
 pub enum AddressError {
     #[error("Invalid Bitcoin address format")]
     InvalidAddress,
