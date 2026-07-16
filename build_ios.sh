@@ -33,6 +33,11 @@ echo "Building for iOS targets..."
 cargo build --release --target=aarch64-apple-ios-sim
 cargo build --release --target=aarch64-apple-ios
 
+# Keep release archives below GitHub's file-size limit without removing exported symbols.
+echo "Stripping debug symbols from iOS libraries..."
+xcrun strip -S ./target/aarch64-apple-ios-sim/release/libbitkitcore.a
+xcrun strip -S ./target/aarch64-apple-ios/release/libbitkitcore.a
+
 # Generate Swift bindings
 echo "Generating Swift bindings..."
 # First, ensure any existing generated files are removed

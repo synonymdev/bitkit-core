@@ -1522,6 +1522,8 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1916,6 +1918,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds() != 52496.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_serialized_extended_pubkey() != 12807.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_start_pubky_auth() != 18158.toShort()) {
@@ -2454,6 +2459,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_serialized_extended_pubkey(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_start_pubky_auth(
@@ -3446,6 +3454,11 @@ internal object UniffiLib : Library {
         `indexLimit`: Int,
         `bip39Passphrase`: RustBufferByValue,
     ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_serialized_extended_pubkey(
+        `xpub`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_start_pubky_auth(
         `caps`: RustBufferByValue,
@@ -10041,6 +10054,44 @@ public object FfiConverterTypeNetworkType: FfiConverterRustBuffer<NetworkType> {
 
 
 
+public object OnchainExceptionErrorHandler : UniffiRustCallStatusErrorHandler<OnchainException> {
+    override fun lift(errorBuf: RustBufferByValue): OnchainException = FfiConverterTypeOnchainError.lift(errorBuf)
+}
+
+public object FfiConverterTypeOnchainError : FfiConverterRustBuffer<OnchainException> {
+    override fun read(buf: ByteBuffer): OnchainException {
+        return when (buf.getInt()) {
+            1 -> OnchainException.InvalidExtendedPublicKey(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: OnchainException): ULong {
+        return when (value) {
+            is OnchainException.InvalidExtendedPublicKey -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+        }
+    }
+
+    override fun write(value: OnchainException, buf: ByteBuffer) {
+        when (value) {
+            is OnchainException.InvalidExtendedPublicKey -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
 
 public object FfiConverterTypePassphraseResponse : FfiConverterRustBuffer<PassphraseResponse>{
     override fun read(buf: ByteBuffer): PassphraseResponse {
@@ -15117,6 +15168,16 @@ public suspend fun `scanLegacyRnNativeSegwitRecoveryFunds`(`mnemonicPhrase`: kot
         // Error FFI converter
         SweepExceptionErrorHandler,
     )
+}
+
+@Throws(OnchainException::class)
+public fun `serializedExtendedPubkey`(`xpub`: kotlin.String): kotlin.ByteArray {
+    return FfiConverterByteArray.lift(uniffiRustCallWithError(OnchainExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_serialized_extended_pubkey(
+            FfiConverterString.lower(`xpub`),
+            uniffiRustCallStatus,
+        )
+    })
 }
 
 @Throws(PubkyException::class, kotlin.coroutines.cancellation.CancellationException::class)

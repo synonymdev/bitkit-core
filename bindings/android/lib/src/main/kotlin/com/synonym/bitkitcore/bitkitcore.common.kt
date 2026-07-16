@@ -3600,6 +3600,21 @@ public enum class NetworkType {
 
 
 
+
+public sealed class OnchainException: kotlin.Exception() {
+    
+    public class InvalidExtendedPublicKey(
+        public val `errorDetails`: kotlin.String,
+    ) : OnchainException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+}
+
+
+
+
 @kotlinx.serialization.Serializable
 public sealed class PassphraseResponse {
     
@@ -4326,8 +4341,6 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
-
-
 
 
 
