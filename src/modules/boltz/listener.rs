@@ -24,6 +24,9 @@ pub trait BoltzEventListener: Send + Sync {
 struct UpdatesHandle {
     ws: Arc<BoltzWsApi>,
     network: BoltzNetwork,
+    db: Arc<BoltzDB>,
+    listener: Arc<dyn BoltzEventListener>,
+    config: AutoClaimConfig,
     ws_task: JoinHandle<()>,
     process_task: JoinHandle<()>,
 }
@@ -81,12 +84,22 @@ pub async fn start_swap_updates(
 
     let ws_task = tokio::spawn(ws.clone().run_ws_loop());
 
-    // Subscribe to every non-terminal swap for this network.
+    // Subscribe to every non-terminal swap for this network, then reconcile each
+    // against Boltz's REST status so a status the live stream missed while it was
+    // down (e.g. a `transaction.confirmed` lockup) is caught up and auto-claimed.
+    // Reconcile is spawned per swap so a slow REST call cannot delay startup.
     let pending = db.list_pending_swaps().await?;
     for record in pending.iter().filter(|r| r.network == network) {
         if let Err(e) = ws.subscribe_swap(&record.id).await {
             log::warn!("Failed to subscribe to swap {}: {}", record.id, e);
         }
+        let db = db.clone();
+        let listener = listener.clone();
+        let config = config.clone();
+        let swap_id = record.id.clone();
+        tokio::spawn(async move {
+            reconcile_swap(&db, &listener, &config, network, &swap_id).await;
+        });
     }
 
     let process_task = {
@@ -110,6 +123,9 @@ pub async fn start_swap_updates(
     *guard = Some(UpdatesHandle {
         ws,
         network,
+        db,
+        listener,
+        config,
         ws_task,
         process_task,
     });
@@ -128,15 +144,56 @@ pub async fn stop_swap_updates() {
 }
 
 /// If an updates stream is running for `network`, subscribe it to `swap_id` so
-/// newly created swaps are tracked without restarting the stream.
+/// newly created swaps are tracked without restarting the stream, then reconcile
+/// the swap against Boltz's REST status so a status that predates the
+/// subscription is not missed.
 pub async fn subscribe_if_active(network: BoltzNetwork, swap_id: &str) {
-    let guard = updates_cell().lock().await;
-    if let Some(handle) = guard.as_ref() {
-        if handle.network == network {
-            if let Err(e) = handle.ws.subscribe_swap(swap_id).await {
-                log::warn!("Failed to subscribe to swap {}: {}", swap_id, e);
-            }
+    // Clone the context we need, then release the global lock before any network
+    // round-trip so the lock is not held across REST/WebSocket calls.
+    let ctx = {
+        let guard = updates_cell().lock().await;
+        match guard.as_ref() {
+            Some(handle) if handle.network == network => Some((
+                handle.ws.clone(),
+                handle.db.clone(),
+                handle.listener.clone(),
+                handle.config.clone(),
+            )),
+            _ => None,
         }
+    };
+    let Some((ws, db, listener, config)) = ctx else {
+        return;
+    };
+    if let Err(e) = ws.subscribe_swap(swap_id).await {
+        log::warn!("Failed to subscribe to swap {}: {}", swap_id, e);
+    }
+    reconcile_swap(&db, &listener, &config, network, swap_id).await;
+}
+
+/// Fetch a swap's current status from Boltz over REST and run it through
+/// [`process_status`], catching up any status the live WebSocket did not deliver
+/// (for example a `transaction.confirmed` lockup that fired while the stream was
+/// down). This makes every (re)subscribe self-healing: a confirmed reverse-swap
+/// lockup is auto-claimed even when its live event was never received.
+async fn reconcile_swap(
+    db: &Arc<BoltzDB>,
+    listener: &Arc<dyn BoltzEventListener>,
+    config: &AutoClaimConfig,
+    network: BoltzNetwork,
+    swap_id: &str,
+) {
+    let boltz_client = build_boltz_client(network);
+    match boltz_client.get_swap(swap_id).await {
+        Ok(resp) => {
+            let status = SwapStatus {
+                id: swap_id.to_string(),
+                status: resp.status,
+                ..Default::default()
+            };
+            process_status(db, listener.as_ref(), config, status).await;
+        }
+        Err(e) => log::warn!("Failed to reconcile swap {}: {}", swap_id, e),
     }
 }
 
@@ -220,5 +277,58 @@ async fn auto_claim(
             swap_id: record.id.clone(),
             message: e.to_string(),
         }),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::should_auto_claim;
+    use crate::modules::boltz::models::SwapRecord;
+    use crate::modules::boltz::types::{BoltzNetwork, BoltzSwapType};
+
+    fn record(swap_type: BoltzSwapType, claim_tx_id: Option<String>) -> SwapRecord {
+        SwapRecord {
+            id: "swap-id".to_string(),
+            swap_type,
+            status: "swap.created".to_string(),
+            network: BoltzNetwork::Testnet,
+            electrum_url: "ssl://electrum.example.com:50002".to_string(),
+            swap_index: 0,
+            invoice: Some("lnbc1...".to_string()),
+            lockup_address: Some("bc1qlockup".to_string()),
+            onchain_address: Some("bc1qclaim".to_string()),
+            amount_sat: 100_000,
+            onchain_amount_sat: Some(99_000),
+            timeout_block_height: 800_000,
+            create_response_json: "{}".to_string(),
+            claim_tx_id,
+            refund_tx_id: None,
+            created_at: 1_700_000_000,
+        }
+    }
+
+    #[test]
+    fn auto_claims_a_confirmed_unclaimed_reverse_swap() {
+        let record = record(BoltzSwapType::Reverse, None);
+        assert!(should_auto_claim(&record, "transaction.confirmed"));
+    }
+
+    #[test]
+    fn does_not_auto_claim_before_confirmation() {
+        let record = record(BoltzSwapType::Reverse, None);
+        assert!(!should_auto_claim(&record, "transaction.mempool"));
+        assert!(!should_auto_claim(&record, "swap.created"));
+    }
+
+    #[test]
+    fn does_not_auto_claim_an_already_claimed_swap() {
+        let record = record(BoltzSwapType::Reverse, Some("claim-txid".to_string()));
+        assert!(!should_auto_claim(&record, "transaction.confirmed"));
+    }
+
+    #[test]
+    fn does_not_auto_claim_a_submarine_swap() {
+        let record = record(BoltzSwapType::Submarine, None);
+        assert!(!should_auto_claim(&record, "transaction.confirmed"));
     }
 }
