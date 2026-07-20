@@ -503,7 +503,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap() != 24549:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_boltz_start_swap_updates() != 24371:
+    if lib.uniffi_bitkitcore_checksum_func_boltz_start_swap_updates() != 168:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_boltz_stop_swap_updates() != 63683:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -1285,6 +1285,7 @@ _UniffiLib.uniffi_bitkitcore_fn_func_boltz_start_swap_updates.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
+    ctypes.c_int8,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_boltz_start_swap_updates.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_boltz_stop_swap_updates.argtypes = (
@@ -21168,7 +21169,7 @@ async def boltz_refund_submarine_swap(swap_id: "str",refund_address: "str",mnemo
 _UniffiConverterTypeBoltzError,
 
     )
-async def boltz_start_swap_updates(network: "BoltzNetwork",listener: "BoltzEventListener",mnemonic: "str",bip39_passphrase: "typing.Optional[str]",fee_rate_sat_per_vb: "typing.Optional[float]") -> None:
+async def boltz_start_swap_updates(network: "BoltzNetwork",listener: "BoltzEventListener",mnemonic: "str",bip39_passphrase: "typing.Optional[str]",fee_rate_sat_per_vb: "typing.Optional[float]",accept_zero_conf: "bool") -> None:
 
     """
     Open a Boltz WebSocket for `network`, subscribe to all pending swaps, and
@@ -21182,6 +21183,12 @@ async def boltz_start_swap_updates(network: "BoltzNetwork",listener: "BoltzEvent
     Bitkit owns fee estimation and should pass its current recommended rate; when
     `None`, a conservative built-in default is used. To auto-claim at an updated
     fee rate, call this again (it restarts the stream).
+
+    `accept_zero_conf` claims reverse swaps as soon as Boltz's lockup enters the
+    mempool instead of waiting for its confirmation. That reveals the preimage
+    against an unconfirmed lockup: if the lockup were replaced before
+    confirming, the user would be debited on Lightning without receiving
+    onchain funds. Pass `false` to keep the confirmation-gated default.
     """
 
     _UniffiConverterTypeBoltzNetwork.check_lower(network)
@@ -21194,13 +21201,16 @@ async def boltz_start_swap_updates(network: "BoltzNetwork",listener: "BoltzEvent
     
     _UniffiConverterOptionalDouble.check_lower(fee_rate_sat_per_vb)
     
+    _UniffiConverterBool.check_lower(accept_zero_conf)
+    
     return await _uniffi_rust_call_async(
         _UniffiLib.uniffi_bitkitcore_fn_func_boltz_start_swap_updates(
         _UniffiConverterTypeBoltzNetwork.lower(network),
         _UniffiConverterTypeBoltzEventListener.lower(listener),
         _UniffiConverterString.lower(mnemonic),
         _UniffiConverterOptionalString.lower(bip39_passphrase),
-        _UniffiConverterOptionalDouble.lower(fee_rate_sat_per_vb)),
+        _UniffiConverterOptionalDouble.lower(fee_rate_sat_per_vb),
+        _UniffiConverterBool.lower(accept_zero_conf)),
         _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
         _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
         _UniffiLib.ffi_bitkitcore_rust_future_free_void,

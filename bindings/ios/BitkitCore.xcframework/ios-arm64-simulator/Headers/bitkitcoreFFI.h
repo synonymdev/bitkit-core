@@ -647,7 +647,7 @@ uint64_t uniffi_bitkitcore_fn_func_boltz_refund_submarine_swap(RustBuffer swap_i
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_START_SWAP_UPDATES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_START_SWAP_UPDATES
-uint64_t uniffi_bitkitcore_fn_func_boltz_start_swap_updates(RustBuffer network, void*_Nonnull listener, RustBuffer mnemonic, RustBuffer bip39_passphrase, RustBuffer fee_rate_sat_per_vb
+uint64_t uniffi_bitkitcore_fn_func_boltz_start_swap_updates(RustBuffer network, void*_Nonnull listener, RustBuffer mnemonic, RustBuffer bip39_passphrase, RustBuffer fee_rate_sat_per_vb, int8_t accept_zero_conf
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_STOP_SWAP_UPDATES

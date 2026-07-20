@@ -22330,12 +22330,18 @@ public func boltzRefundSubmarineSwap(swapId: String, refundAddress: String, mnem
  * Bitkit owns fee estimation and should pass its current recommended rate; when
  * `None`, a conservative built-in default is used. To auto-claim at an updated
  * fee rate, call this again (it restarts the stream).
+ *
+ * `accept_zero_conf` claims reverse swaps as soon as Boltz's lockup enters the
+ * mempool instead of waiting for its confirmation. That reveals the preimage
+ * against an unconfirmed lockup: if the lockup were replaced before
+ * confirming, the user would be debited on Lightning without receiving
+ * onchain funds. Pass `false` to keep the confirmation-gated default.
  */
-public func boltzStartSwapUpdates(network: BoltzNetwork, listener: BoltzEventListener, mnemonic: String, bip39Passphrase: String?, feeRateSatPerVb: Double?)async throws   {
+public func boltzStartSwapUpdates(network: BoltzNetwork, listener: BoltzEventListener, mnemonic: String, bip39Passphrase: String?, feeRateSatPerVb: Double?, acceptZeroConf: Bool)async throws   {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_boltz_start_swap_updates(FfiConverterTypeBoltzNetwork_lower(network),FfiConverterTypeBoltzEventListener_lower(listener),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(bip39Passphrase),FfiConverterOptionDouble.lower(feeRateSatPerVb)
+                uniffi_bitkitcore_fn_func_boltz_start_swap_updates(FfiConverterTypeBoltzNetwork_lower(network),FfiConverterTypeBoltzEventListener_lower(listener),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(bip39Passphrase),FfiConverterOptionDouble.lower(feeRateSatPerVb),FfiConverterBool.lower(acceptZeroConf)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_void,
@@ -24255,7 +24261,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap() != 24549) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_boltz_start_swap_updates() != 24371) {
+    if (uniffi_bitkitcore_checksum_func_boltz_start_swap_updates() != 168) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_boltz_stop_swap_updates() != 63683) {
