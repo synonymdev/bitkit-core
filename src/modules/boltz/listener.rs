@@ -29,7 +29,12 @@ struct UpdatesHandle {
     config: AutoClaimConfig,
     ws_task: JoinHandle<()>,
     process_task: JoinHandle<()>,
+    reconcile_task: JoinHandle<()>,
 }
+
+/// How often the running updates stream re-checks every pending swap against
+/// Boltz's REST status, so a missed live event self-heals without a restart.
+const RECONCILE_INTERVAL: std::time::Duration = std::time::Duration::from_secs(60);
 
 /// Configuration the background stream needs to perform automatic
 /// reverse-swap claims. The wallet credentials (used to re-derive swap keys)
@@ -43,6 +48,10 @@ struct AutoClaimConfig {
     /// by the caller (Bitkit owns fee estimation); falls back to
     /// [`crate::modules::boltz::claim::DEFAULT_FEERATE_SAT_PER_VB`] when `None`.
     fee_rate_sat_per_vb: Option<f64>,
+    /// When `true`, reverse swaps are auto-claimed as soon as the lockup enters
+    /// the mempool instead of waiting for its confirmation. See
+    /// [`should_auto_claim`] for the risk trade-off.
+    accept_zero_conf: bool,
 }
 
 static SWAP_UPDATES: OnceCell<TokioMutex<Option<UpdatesHandle>>> = OnceCell::new();
@@ -59,8 +68,10 @@ fn updates_cell() -> &'static TokioMutex<Option<UpdatesHandle>> {
 /// the stream so confirmed reverse swaps can be auto-claimed (their keys are
 /// re-derived on demand). `fee_rate_sat_per_vb` is the fee rate used for those
 /// automatic claims (Bitkit supplies the current rate; `None` falls back to a
-/// conservative default). Must be invoked from within a Tokio runtime context
-/// (it spawns background tasks).
+/// conservative default). `accept_zero_conf` claims reverse swaps as soon as
+/// the lockup hits the mempool instead of waiting for its confirmation (see
+/// [`should_auto_claim`] for the risk trade-off). Must be invoked from within
+/// a Tokio runtime context (it spawns background tasks).
 pub async fn start_swap_updates(
     db: Arc<BoltzDB>,
     network: BoltzNetwork,
@@ -68,12 +79,14 @@ pub async fn start_swap_updates(
     mnemonic: String,
     bip39_passphrase: Option<String>,
     fee_rate_sat_per_vb: Option<f64>,
+    accept_zero_conf: bool,
 ) -> Result<(), BoltzError> {
     stop_swap_updates().await;
     let config = AutoClaimConfig {
         mnemonic,
         bip39_passphrase,
         fee_rate_sat_per_vb,
+        accept_zero_conf,
     };
 
     let boltz_client = build_boltz_client(network);
@@ -84,23 +97,41 @@ pub async fn start_swap_updates(
 
     let ws_task = tokio::spawn(ws.clone().run_ws_loop());
 
-    // Subscribe to every non-terminal swap for this network, then reconcile each
-    // against Boltz's REST status so a status the live stream missed while it was
-    // down (e.g. a `transaction.confirmed` lockup) is caught up and auto-claimed.
-    // Reconcile is spawned per swap so a slow REST call cannot delay startup.
+    // Subscribe to every non-terminal swap for this network. Reconciliation is
+    // handled by the periodic task below, whose immediate first tick catches up
+    // any status the live stream missed while it was down.
     let pending = db.list_pending_swaps().await?;
     for record in pending.iter().filter(|r| r.network == network) {
         if let Err(e) = ws.subscribe_swap(&record.id).await {
             log::warn!("Failed to subscribe to swap {}: {}", record.id, e);
         }
+    }
+
+    // Reconcile every pending swap against Boltz's REST status once per minute
+    // for as long as the stream runs, so a live event that was dropped or lagged
+    // (the process loop skips `RecvError::Lagged`) self-heals without an app
+    // restart. Swaps are reconciled serially to rate-limit the REST calls.
+    let reconcile_task = {
         let db = db.clone();
         let listener = listener.clone();
         let config = config.clone();
-        let swap_id = record.id.clone();
         tokio::spawn(async move {
-            reconcile_swap(&db, &listener, &config, network, &swap_id).await;
-        });
-    }
+            let mut interval = tokio::time::interval(RECONCILE_INTERVAL);
+            loop {
+                interval.tick().await;
+                let pending = match db.list_pending_swaps().await {
+                    Ok(pending) => pending,
+                    Err(e) => {
+                        log::warn!("Failed to list pending swaps for reconcile: {}", e);
+                        continue;
+                    }
+                };
+                for record in pending.iter().filter(|r| r.network == network) {
+                    reconcile_swap(&db, &listener, &config, network, &record.id).await;
+                }
+            }
+        })
+    };
 
     let process_task = {
         let ws = ws.clone();
@@ -128,6 +159,7 @@ pub async fn start_swap_updates(
         config,
         ws_task,
         process_task,
+        reconcile_task,
     });
     Ok(())
 }
@@ -136,6 +168,7 @@ pub async fn start_swap_updates(
 pub async fn stop_swap_updates() {
     let mut guard = updates_cell().lock().await;
     if let Some(handle) = guard.take() {
+        handle.reconcile_task.abort();
         handle.process_task.abort();
         handle.ws_task.abort();
         // Dropping the last `Arc<BoltzWsApi>` triggers its shutdown.
@@ -226,24 +259,27 @@ async fn process_status(
         }
     };
 
-    if should_auto_claim(&record, &raw) {
+    if should_auto_claim(&record, &raw, config.accept_zero_conf) {
         auto_claim(db, listener, config, &record).await;
     }
 }
 
 /// A reverse swap is auto-claimed once Boltz's lockup *confirms*, provided it
-/// hasn't already been claimed.
+/// hasn't already been claimed. When `accept_zero_conf` is set it is claimed
+/// as soon as the lockup enters the mempool.
 ///
 /// Claiming reveals the preimage, which lets Boltz settle the Lightning
 /// invoice. Doing that against an unconfirmed (mempool-only) lockup risks the
-/// preimage leaking before the lockup confirms — if the lockup were then
+/// preimage leaking before the lockup confirms: if the lockup were then
 /// replaced, the user could be debited on Lightning without receiving onchain
-/// funds. We therefore wait for confirmation here; a caller that accepts the
-/// 0-conf risk can still claim early via `boltz_claim_reverse_swap`.
-fn should_auto_claim(record: &SwapRecord, raw_status: &str) -> bool {
+/// funds. Callers opt into that trade-off via `accept_zero_conf`; the
+/// confirmed arm always claims so a swap whose mempool event was missed is
+/// still claimed on confirmation.
+fn should_auto_claim(record: &SwapRecord, raw_status: &str, accept_zero_conf: bool) -> bool {
     record.swap_type == BoltzSwapType::Reverse
         && record.claim_tx_id.is_none()
-        && raw_status == "transaction.confirmed"
+        && (raw_status == "transaction.confirmed"
+            || (accept_zero_conf && raw_status == "transaction.mempool"))
 }
 
 /// Claim through the guarded path, which serializes against a concurrent manual
@@ -310,25 +346,35 @@ mod tests {
     #[test]
     fn auto_claims_a_confirmed_unclaimed_reverse_swap() {
         let record = record(BoltzSwapType::Reverse, None);
-        assert!(should_auto_claim(&record, "transaction.confirmed"));
+        assert!(should_auto_claim(&record, "transaction.confirmed", false));
+        assert!(should_auto_claim(&record, "transaction.confirmed", true));
     }
 
     #[test]
-    fn does_not_auto_claim_before_confirmation() {
+    fn auto_claims_a_mempool_lockup_only_with_zero_conf() {
         let record = record(BoltzSwapType::Reverse, None);
-        assert!(!should_auto_claim(&record, "transaction.mempool"));
-        assert!(!should_auto_claim(&record, "swap.created"));
+        assert!(should_auto_claim(&record, "transaction.mempool", true));
+        assert!(!should_auto_claim(&record, "transaction.mempool", false));
+    }
+
+    #[test]
+    fn does_not_auto_claim_before_lockup() {
+        let record = record(BoltzSwapType::Reverse, None);
+        assert!(!should_auto_claim(&record, "swap.created", false));
+        assert!(!should_auto_claim(&record, "swap.created", true));
     }
 
     #[test]
     fn does_not_auto_claim_an_already_claimed_swap() {
         let record = record(BoltzSwapType::Reverse, Some("claim-txid".to_string()));
-        assert!(!should_auto_claim(&record, "transaction.confirmed"));
+        assert!(!should_auto_claim(&record, "transaction.confirmed", false));
+        assert!(!should_auto_claim(&record, "transaction.mempool", true));
     }
 
     #[test]
     fn does_not_auto_claim_a_submarine_swap() {
         let record = record(BoltzSwapType::Submarine, None);
-        assert!(!should_auto_claim(&record, "transaction.confirmed"));
+        assert!(!should_auto_claim(&record, "transaction.confirmed", false));
+        assert!(!should_auto_claim(&record, "transaction.mempool", true));
     }
 }

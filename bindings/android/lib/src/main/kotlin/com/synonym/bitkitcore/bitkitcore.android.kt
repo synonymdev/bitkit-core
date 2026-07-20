@@ -1685,7 +1685,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap() != 24549.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_boltz_start_swap_updates() != 24371.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_boltz_start_swap_updates() != 168.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_boltz_stop_swap_updates() != 63683.toShort()) {
@@ -3051,6 +3051,7 @@ internal object UniffiLib : Library {
         `mnemonic`: RustBufferByValue,
         `bip39Passphrase`: RustBufferByValue,
         `feeRateSatPerVb`: RustBufferByValue,
+        `acceptZeroConf`: Byte,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_boltz_stop_swap_updates(
@@ -14832,9 +14833,15 @@ public suspend fun `boltzRefundSubmarineSwap`(`swapId`: kotlin.String, `refundAd
  * Bitkit owns fee estimation and should pass its current recommended rate; when
  * `None`, a conservative built-in default is used. To auto-claim at an updated
  * fee rate, call this again (it restarts the stream).
+ *
+ * `accept_zero_conf` claims reverse swaps as soon as Boltz's lockup enters the
+ * mempool instead of waiting for its confirmation. That reveals the preimage
+ * against an unconfirmed lockup: if the lockup were replaced before
+ * confirming, the user would be debited on Lightning without receiving
+ * onchain funds. Pass `false` to keep the confirmation-gated default.
  */
 @Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
-public suspend fun `boltzStartSwapUpdates`(`network`: BoltzNetwork, `listener`: BoltzEventListener, `mnemonic`: kotlin.String, `bip39Passphrase`: kotlin.String?, `feeRateSatPerVb`: kotlin.Double?) {
+public suspend fun `boltzStartSwapUpdates`(`network`: BoltzNetwork, `listener`: BoltzEventListener, `mnemonic`: kotlin.String, `bip39Passphrase`: kotlin.String?, `feeRateSatPerVb`: kotlin.Double?, `acceptZeroConf`: kotlin.Boolean) {
     return uniffiRustCallAsync(
         UniffiLib.uniffi_bitkitcore_fn_func_boltz_start_swap_updates(
             FfiConverterTypeBoltzNetwork.lower(`network`),
@@ -14842,6 +14849,7 @@ public suspend fun `boltzStartSwapUpdates`(`network`: BoltzNetwork, `listener`: 
             FfiConverterString.lower(`mnemonic`),
             FfiConverterOptionalString.lower(`bip39Passphrase`),
             FfiConverterOptionalDouble.lower(`feeRateSatPerVb`),
+            FfiConverterBoolean.lower(`acceptZeroConf`),
         ),
         { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
         { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },

@@ -2952,6 +2952,12 @@ pub async fn boltz_refund_submarine_swap(
 /// Bitkit owns fee estimation and should pass its current recommended rate; when
 /// `None`, a conservative built-in default is used. To auto-claim at an updated
 /// fee rate, call this again (it restarts the stream).
+///
+/// `accept_zero_conf` claims reverse swaps as soon as Boltz's lockup enters the
+/// mempool instead of waiting for its confirmation. That reveals the preimage
+/// against an unconfirmed lockup: if the lockup were replaced before
+/// confirming, the user would be debited on Lightning without receiving
+/// onchain funds. Pass `false` to keep the confirmation-gated default.
 #[uniffi::export]
 pub async fn boltz_start_swap_updates(
     network: BoltzNetwork,
@@ -2959,6 +2965,7 @@ pub async fn boltz_start_swap_updates(
     mnemonic: String,
     bip39_passphrase: Option<String>,
     fee_rate_sat_per_vb: Option<f64>,
+    accept_zero_conf: bool,
 ) -> Result<(), BoltzError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
@@ -2970,6 +2977,7 @@ pub async fn boltz_start_swap_updates(
             mnemonic,
             bip39_passphrase,
             fee_rate_sat_per_vb,
+            accept_zero_conf,
         )
         .await
     })
