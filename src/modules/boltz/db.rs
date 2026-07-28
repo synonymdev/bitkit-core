@@ -2,7 +2,7 @@ use crate::modules::boltz::errors::BoltzError;
 use crate::modules::boltz::models::{
     BoltzDB, SwapRecord, CREATE_META_TABLE, CREATE_SWAPS_TABLE, SCHEMA_VERSION,
 };
-use crate::modules::boltz::types::{BoltzNetwork, BoltzSwapStatus, BoltzSwapType};
+use crate::modules::boltz::types::{BoltzNetwork, BoltzSwapType};
 use rusqlite::{params, Connection, OptionalExtension, Row};
 
 /// Counter key in `swap_meta` for the next deterministic swap index.
@@ -95,10 +95,16 @@ impl BoltzDB {
     }
 
     /// Update the raw status string of a swap.
+    ///
+    /// Once a claim or refund txid has been recorded locally, the locally set
+    /// terminal status is ground truth for what happened onchain; a delayed or
+    /// re-ordered server update (the WebSocket and the reconcile loop both feed
+    /// this) must not regress it, so completed swaps are left untouched.
     pub async fn update_status(&self, swap_id: &str, status: &str) -> Result<(), BoltzError> {
         let conn = self.conn.lock().await;
         conn.execute(
-            "UPDATE swaps SET status = ?1 WHERE id = ?2",
+            "UPDATE swaps SET status = ?1
+             WHERE id = ?2 AND claim_tx_id IS NULL AND refund_tx_id IS NULL",
             params![status, swap_id],
         )?;
         Ok(())
@@ -157,14 +163,17 @@ impl BoltzDB {
         .await
     }
 
-    /// List swaps that have not reached a terminal state, for recovery and for
-    /// resubscribing to status updates after a restart.
+    /// List swaps that are not locally complete, for recovery and for
+    /// resubscribing to status updates after a restart. Completion is judged by
+    /// [`SwapRecord::is_locally_complete`], not server status alone, so a
+    /// reverse swap whose invoice settled but whose claim never broadcast stays
+    /// recoverable.
     pub async fn list_pending_swaps(&self) -> Result<Vec<SwapRecord>, BoltzError> {
         Ok(self
             .list_swaps()
             .await?
             .into_iter()
-            .filter(|r| !BoltzSwapStatus::from_raw(&r.status).is_terminal())
+            .filter(|r| !r.is_locally_complete())
             .collect())
     }
 

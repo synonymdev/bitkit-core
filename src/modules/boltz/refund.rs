@@ -3,6 +3,7 @@ use crate::modules::boltz::client::{build_boltz_client, build_chain_client};
 use crate::modules::boltz::errors::BoltzError;
 use crate::modules::boltz::guard::lock_swap;
 use crate::modules::boltz::models::{BoltzDB, SwapRecord};
+use crate::modules::boltz::validation::{validate_fee_rate, validate_onchain_address};
 use boltz_client::swaps::{SwapScript, SwapTransactionParams, TransactionOptions};
 use boltz_client::util::fees::Fee;
 
@@ -20,6 +21,7 @@ pub async fn refund_submarine_swap_guarded(
     bip39_passphrase: Option<&str>,
     fee_rate_sat_per_vb: Option<f64>,
 ) -> Result<String, BoltzError> {
+    validate_fee_rate(fee_rate_sat_per_vb)?;
     let _guard = lock_swap(swap_id).await;
 
     // Re-read under the lock: a concurrent refund may have completed while we waited.
@@ -32,6 +34,10 @@ pub async fn refund_submarine_swap_guarded(
     if let Some(existing) = record.refund_tx_id {
         return Ok(existing);
     }
+
+    // The refund destination receives the funds directly; reject a malformed
+    // or wrong-network address before any transaction is constructed.
+    let refund_address = validate_onchain_address(&refund_address, record.network)?;
 
     let txid = refund_submarine_swap(
         &record,

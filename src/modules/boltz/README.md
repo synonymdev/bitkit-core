@@ -72,8 +72,9 @@ back to `Unknown { raw }`). Register a `BoltzEventListener` via
 `transaction.confirmed`, this module builds and broadcasts the claim transaction
 (cooperative key-path first, script-path fallback) and emits
 `BoltzSwapEvent.Claimed { txid }`. Claiming on confirmation (not mempool) avoids
-revealing the preimage before the lockup is final; call `boltzClaimReverseSwap`
-manually if you accept the 0-conf risk. The auto-claim fee rate is the
+revealing the preimage before the lockup is final; pass `acceptZeroConf: true`
+to `boltzStartSwapUpdates` to claim on mempool acceptance instead, if you accept
+the 0-conf risk (`false` is the safe default). The auto-claim fee rate is the
 `feeRateSatPerVb` passed to `boltzStartSwapUpdates` — **Bitkit owns fee
 estimation** and should pass its current recommended rate so the claim confirms
 before the swap times out; restart the stream to apply an updated rate.
@@ -94,7 +95,7 @@ boltzListPendingSwaps()                                  -> [BoltzSwap]
 boltzGetSwap(swapId)                                     -> BoltzSwap?
 boltzClaimReverseSwap(swapId, mnemonic, bip39Passphrase?, feeRateSatPerVb?)          -> String (txid)
 boltzRefundSubmarineSwap(swapId, refundAddress, mnemonic, bip39Passphrase?, feeRateSatPerVb?) -> String (txid)
-boltzStartSwapUpdates(network, listener, mnemonic, bip39Passphrase?, feeRateSatPerVb?) // managed WebSocket
+boltzStartSwapUpdates(network, listener, mnemonic, bip39Passphrase?, feeRateSatPerVb?, acceptZeroConf) // managed WebSocket
 boltzStopSwapUpdates()
 ```
 
@@ -141,7 +142,8 @@ try await boltzStartSwapUpdates(
     listener: SwapListener(),
     mnemonic: wallet.mnemonic,
     bip39Passphrase: nil,
-    feeRateSatPerVb: feeService.currentSatPerVb()   // Bitkit-provided fee for auto-claims
+    feeRateSatPerVb: feeService.currentSatPerVb(),  // Bitkit-provided fee for auto-claims
+    acceptZeroConf: false                           // claim only after the lockup confirms
 )
 
 func drainToOnchain(amountSat: UInt64) async throws {
@@ -181,8 +183,9 @@ class SwapListener : BoltzEventListener {
 
 suspend fun drainToOnchain(amountSat: ULong) {
     // mnemonic = wallet seed phrase; pass the wallet's BIP39 passphrase or null.
-    // The last arg is Bitkit's fee rate (sat/vB) for auto-claims.
-    boltzStartSwapUpdates(BoltzNetwork.MAINNET, SwapListener(), wallet.mnemonic, null, feeService.currentSatPerVb())
+    // feeRateSatPerVb is Bitkit's fee rate for auto-claims; acceptZeroConf =
+    // false claims only after the lockup confirms (the safe default).
+    boltzStartSwapUpdates(BoltzNetwork.MAINNET, SwapListener(), wallet.mnemonic, null, feeService.currentSatPerVb(), false)
 
     val claimAddress = lightningService.node.onchainPayment().newAddress()
     val swap = boltzCreateReverseSwap(
@@ -209,7 +212,8 @@ class SwapListener(BoltzEventListener):
     def on_event(self, event):
         print(event)
 
-await boltz_start_swap_updates(BoltzNetwork.MAINNET, SwapListener(), wallet_mnemonic, None, 5.0)
+# accept_zero_conf=False claims only after the lockup confirms (the safe default).
+await boltz_start_swap_updates(BoltzNetwork.MAINNET, SwapListener(), wallet_mnemonic, None, 5.0, False)
 swap = await boltz_create_reverse_swap(
     network=BoltzNetwork.MAINNET,
     electrum_url="ssl://electrum.blockstream.info:50002",
@@ -275,13 +279,18 @@ On startup (after `initDb`), resume tracking and surface anything actionable:
 
 ```kotlin
 // re-subscribes all pending swaps; holds the mnemonic to auto-claim
-boltzStartSwapUpdates(BoltzNetwork.MAINNET, SwapListener(), wallet.mnemonic, null, feeService.currentSatPerVb())
+boltzStartSwapUpdates(BoltzNetwork.MAINNET, SwapListener(), wallet.mnemonic, null, feeService.currentSatPerVb(), false)
 val pending = boltzListPendingSwaps()                       // for UI / manual refunds
 ```
 
-`boltzListPendingSwaps` returns every non-terminal swap; combined with the wallet
-seed (keys are re-derived from each swap's index), an interrupted reverse swap can
-still be claimed and a failed submarine swap refunded. If `boltz.db` itself was
+`boltzListPendingSwaps` returns every swap that is not locally complete. A
+terminal server status alone does not end recovery: a reverse swap whose invoice
+Boltz reports as settled stays pending until its claim txid is recorded locally,
+because the cooperative claim flow discloses the preimage before broadcast and
+the claim transaction may never have reached the chain (the updates stream
+retries such claims automatically). Combined with the wallet seed (keys are
+re-derived from each swap's index), an interrupted reverse swap can still be
+claimed and a failed submarine swap refunded. If `boltz.db` itself was
 lost, recover via Boltz's rescue API using the seed (see *Keys, secrets &
 recovery* above).
 

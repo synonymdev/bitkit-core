@@ -2,6 +2,7 @@ use crate::modules::boltz::client::{build_boltz_client, build_chain_client};
 use crate::modules::boltz::errors::BoltzError;
 use crate::modules::boltz::guard::lock_swap;
 use crate::modules::boltz::models::{BoltzDB, SwapRecord};
+use crate::modules::boltz::validation::validate_fee_rate;
 use boltz_client::swaps::{SwapScript, SwapTransactionParams, TransactionOptions};
 use boltz_client::util::fees::Fee;
 
@@ -40,6 +41,7 @@ pub async fn claim_reverse_swap_guarded(
     bip39_passphrase: Option<&str>,
     fee_rate_sat_per_vb: Option<f64>,
 ) -> Result<ClaimOutcome, BoltzError> {
+    validate_fee_rate(fee_rate_sat_per_vb)?;
     let _guard = lock_swap(swap_id).await;
 
     // Re-read under the lock. The record the caller checked may be stale: a

@@ -10,6 +10,7 @@ mod refund;
 #[cfg(test)]
 mod tests;
 mod types;
+mod validation;
 
 pub use api::{get_reverse_limits, get_submarine_limits};
 pub use claim::{claim_reverse_swap_guarded, ClaimOutcome};

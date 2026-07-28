@@ -133,6 +133,28 @@ impl SwapRecord {
         serde_json::from_str(&self.create_response_json).map_err(BoltzError::from)
     }
 
+    /// Whether the swap is complete from this wallet's perspective, i.e. no
+    /// further local action is possible or required.
+    ///
+    /// A terminal server status alone does not prove that: a reverse swap's
+    /// cooperative claim discloses the preimage to Boltz *before* the claim
+    /// transaction is broadcast, so Boltz can report `invoice.settled` while
+    /// our claim never made it onchain. Such a swap still holds claimable
+    /// funds and must stay recoverable until a claim txid is recorded locally.
+    pub fn is_locally_complete(&self) -> bool {
+        let status = BoltzSwapStatus::from_raw(&self.status);
+        if !status.is_terminal() {
+            return false;
+        }
+        if self.swap_type == BoltzSwapType::Reverse
+            && status == BoltzSwapStatus::InvoiceSettled
+            && self.claim_tx_id.is_none()
+        {
+            return false;
+        }
+        true
+    }
+
     /// Project to the public FFI type.
     pub fn to_boltz_swap(&self) -> BoltzSwap {
         BoltzSwap {

@@ -31,6 +31,14 @@ impl BoltzNetwork {
         Chain::Bitcoin(self.as_bitcoin_chain())
     }
 
+    pub(crate) fn as_bitcoin_network(self) -> bitcoin::Network {
+        match self {
+            BoltzNetwork::Mainnet => bitcoin::Network::Bitcoin,
+            BoltzNetwork::Testnet => bitcoin::Network::Testnet,
+            BoltzNetwork::Regtest => bitcoin::Network::Regtest,
+        }
+    }
+
     pub(crate) fn as_str(self) -> &'static str {
         match self {
             BoltzNetwork::Mainnet => "mainnet",

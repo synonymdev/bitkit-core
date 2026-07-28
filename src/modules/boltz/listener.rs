@@ -3,6 +3,7 @@ use crate::modules::boltz::client::build_boltz_client;
 use crate::modules::boltz::errors::BoltzError;
 use crate::modules::boltz::models::{BoltzDB, SwapRecord};
 use crate::modules::boltz::types::{BoltzNetwork, BoltzSwapEvent, BoltzSwapStatus, BoltzSwapType};
+use crate::modules::boltz::validation::validate_fee_rate;
 use boltz_client::swaps::boltz::{BoltzWsApi, BoltzWsConfig, SwapStatus};
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
@@ -30,6 +31,43 @@ struct UpdatesHandle {
     ws_task: JoinHandle<()>,
     process_task: JoinHandle<()>,
     reconcile_task: JoinHandle<()>,
+}
+
+impl UpdatesHandle {
+    /// Abort the stream's background tasks and release its WebSocket. Dropping
+    /// a [`JoinHandle`] alone does NOT stop the task (it detaches), so a
+    /// superseded stream must be shut down explicitly or its tasks would keep
+    /// running, processing events, forever.
+    fn shutdown(self) {
+        self.reconcile_task.abort();
+        self.process_task.abort();
+        self.ws_task.abort();
+        // Dropping the last `Arc<BoltzWsApi>` triggers its shutdown.
+        drop(self.ws);
+    }
+}
+
+/// Count of live background tasks across all update streams, maintained by the
+/// [`TaskAlive`] markers each task future holds. Lets tests (and debugging)
+/// verify that superseded or stopped streams' tasks are actually torn down.
+static LIVE_STREAM_TASKS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// RAII marker moved into every spawned stream task. Created (and counted)
+/// before the spawn, dropped when the task's future is dropped, whether it ran
+/// to completion or was aborted.
+struct TaskAlive;
+
+impl TaskAlive {
+    fn new() -> TaskAlive {
+        LIVE_STREAM_TASKS.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        TaskAlive
+    }
+}
+
+impl Drop for TaskAlive {
+    fn drop(&mut self) {
+        LIVE_STREAM_TASKS.fetch_sub(1, std::sync::atomic::Ordering::SeqCst);
+    }
 }
 
 /// How often the running updates stream re-checks every pending swap against
@@ -81,7 +119,23 @@ pub async fn start_swap_updates(
     fee_rate_sat_per_vb: Option<f64>,
     accept_zero_conf: bool,
 ) -> Result<(), BoltzError> {
-    stop_swap_updates().await;
+    // An invalid auto-claim fee rate must fail here, before the stream exists,
+    // not later inside a claim attempt.
+    validate_fee_rate(fee_rate_sat_per_vb)?;
+
+    // Hold the stream slot's lock across the entire replacement. Two concurrent
+    // starts would otherwise both tear down the old stream, both spawn tasks,
+    // and then overwrite each other's handle; dropping a handle does not stop
+    // its tasks, so the loser's stream would keep running detached.
+    let mut guard = updates_cell().lock().await;
+    if let Some(handle) = guard.take() {
+        handle.shutdown();
+    }
+
+    // The only fallible step, done before anything is spawned so a failed start
+    // cannot leak a task.
+    let pending = db.list_pending_swaps().await?;
+
     let config = AutoClaimConfig {
         mnemonic,
         bip39_passphrase,
@@ -95,12 +149,18 @@ pub async fn start_swap_updates(
         BoltzWsConfig::default(),
     ));
 
-    let ws_task = tokio::spawn(ws.clone().run_ws_loop());
+    let ws_task = {
+        let alive = TaskAlive::new();
+        let ws = ws.clone();
+        tokio::spawn(async move {
+            let _alive = alive;
+            ws.run_ws_loop().await;
+        })
+    };
 
-    // Subscribe to every non-terminal swap for this network. Reconciliation is
+    // Subscribe to every pending swap for this network. Reconciliation is
     // handled by the periodic task below, whose immediate first tick catches up
     // any status the live stream missed while it was down.
-    let pending = db.list_pending_swaps().await?;
     for record in pending.iter().filter(|r| r.network == network) {
         if let Err(e) = ws.subscribe_swap(&record.id).await {
             log::warn!("Failed to subscribe to swap {}: {}", record.id, e);
@@ -112,10 +172,12 @@ pub async fn start_swap_updates(
     // (the process loop skips `RecvError::Lagged`) self-heals without an app
     // restart. Swaps are reconciled serially to rate-limit the REST calls.
     let reconcile_task = {
+        let alive = TaskAlive::new();
         let db = db.clone();
         let listener = listener.clone();
         let config = config.clone();
         tokio::spawn(async move {
+            let _alive = alive;
             let mut interval = tokio::time::interval(RECONCILE_INTERVAL);
             loop {
                 interval.tick().await;
@@ -134,11 +196,13 @@ pub async fn start_swap_updates(
     };
 
     let process_task = {
+        let alive = TaskAlive::new();
         let ws = ws.clone();
         let db = db.clone();
         let listener = listener.clone();
         let config = config.clone();
         tokio::spawn(async move {
+            let _alive = alive;
             let mut updates = ws.updates();
             loop {
                 match updates.recv().await {
@@ -150,7 +214,6 @@ pub async fn start_swap_updates(
         })
     };
 
-    let mut guard = updates_cell().lock().await;
     *guard = Some(UpdatesHandle {
         ws,
         network,
@@ -168,11 +231,7 @@ pub async fn start_swap_updates(
 pub async fn stop_swap_updates() {
     let mut guard = updates_cell().lock().await;
     if let Some(handle) = guard.take() {
-        handle.reconcile_task.abort();
-        handle.process_task.abort();
-        handle.ws_task.abort();
-        // Dropping the last `Arc<BoltzWsApi>` triggers its shutdown.
-        drop(handle.ws);
+        handle.shutdown();
     }
 }
 
@@ -275,10 +334,17 @@ async fn process_status(
 /// funds. Callers opt into that trade-off via `accept_zero_conf`; the
 /// confirmed arm always claims so a swap whose mempool event was missed is
 /// still claimed on confirmation.
+///
+/// `invoice.settled` with no locally recorded claim txid also claims: the
+/// cooperative flow discloses the preimage before broadcast, so Boltz can
+/// settle the invoice while our claim transaction failed to broadcast. The
+/// preimage is already public at that point, so retrying the claim carries no
+/// added risk and recovers the onchain funds.
 fn should_auto_claim(record: &SwapRecord, raw_status: &str, accept_zero_conf: bool) -> bool {
     record.swap_type == BoltzSwapType::Reverse
         && record.claim_tx_id.is_none()
         && (raw_status == "transaction.confirmed"
+            || raw_status == "invoice.settled"
             || (accept_zero_conf && raw_status == "transaction.mempool"))
 }
 
@@ -369,6 +435,17 @@ mod tests {
         let record = record(BoltzSwapType::Reverse, Some("claim-txid".to_string()));
         assert!(!should_auto_claim(&record, "transaction.confirmed", false));
         assert!(!should_auto_claim(&record, "transaction.mempool", true));
+        assert!(!should_auto_claim(&record, "invoice.settled", false));
+    }
+
+    /// The cooperative claim flow discloses the preimage before broadcast, so a
+    /// settled invoice with no locally recorded claim txid means the claim may
+    /// never have reached the chain; it must be retried.
+    #[test]
+    fn auto_claims_a_settled_swap_without_a_local_claim_txid() {
+        let record = record(BoltzSwapType::Reverse, None);
+        assert!(should_auto_claim(&record, "invoice.settled", false));
+        assert!(should_auto_claim(&record, "invoice.settled", true));
     }
 
     #[test]
@@ -376,5 +453,74 @@ mod tests {
         let record = record(BoltzSwapType::Submarine, None);
         assert!(!should_auto_claim(&record, "transaction.confirmed", false));
         assert!(!should_auto_claim(&record, "transaction.mempool", true));
+        assert!(!should_auto_claim(&record, "invoice.settled", false));
+    }
+
+    struct NoopListener;
+
+    impl super::BoltzEventListener for NoopListener {
+        fn on_event(&self, _event: crate::modules::boltz::types::BoltzSwapEvent) {}
+    }
+
+    /// Wait until the live-task gauge reaches `expected`. Aborted task futures
+    /// are dropped asynchronously by the runtime, so the count converges rather
+    /// than changing at the abort call itself.
+    async fn wait_for_live_tasks(expected: usize) {
+        use std::sync::atomic::Ordering;
+        for _ in 0..200 {
+            if super::LIVE_STREAM_TASKS.load(Ordering::SeqCst) == expected {
+                return;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        panic!(
+            "expected {} live stream tasks, found {}",
+            expected,
+            super::LIVE_STREAM_TASKS.load(Ordering::SeqCst)
+        );
+    }
+
+    /// Concurrent starts must serialize the stream replacement: whichever start
+    /// wins, exactly one stream (three tasks) may remain, every superseded
+    /// stream's tasks must be aborted, and a stop must tear down the survivor.
+    /// This is the only test that touches the global stream slot, so it cannot
+    /// race with other tests.
+    #[tokio::test]
+    async fn concurrent_starts_leave_exactly_one_stream() {
+        use crate::modules::boltz::models::BoltzDB;
+        use std::sync::Arc;
+
+        let dir = tempfile::tempdir().unwrap();
+        let db = Arc::new(
+            BoltzDB::new(dir.path().join("boltz.db").to_str().unwrap())
+                .await
+                .unwrap(),
+        );
+
+        let starts: Vec<_> = (0..4)
+            .map(|_| {
+                let db = db.clone();
+                tokio::spawn(super::start_swap_updates(
+                    db,
+                    BoltzNetwork::Regtest,
+                    Arc::new(NoopListener),
+                    "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about".to_string(),
+                    None,
+                    None,
+                    false,
+                ))
+            })
+            .collect();
+        for start in starts {
+            start.await.unwrap().unwrap();
+        }
+
+        // All but the last-written stream must have been fully aborted.
+        wait_for_live_tasks(3);
+        assert!(super::updates_cell().lock().await.is_some());
+
+        super::stop_swap_updates().await;
+        wait_for_live_tasks(0);
+        assert!(super::updates_cell().lock().await.is_none());
     }
 }

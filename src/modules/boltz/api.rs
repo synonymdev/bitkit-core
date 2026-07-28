@@ -4,6 +4,9 @@ use crate::modules::boltz::models::{derive_swap_keypair, BoltzDB, SwapRecord};
 use crate::modules::boltz::types::{
     BoltzNetwork, BoltzPairInfo, BoltzSwapType, ReverseSwapResponse, SubmarineSwapResponse,
 };
+use crate::modules::boltz::validation::{
+    validate_onchain_address, validate_reverse_response, validate_submarine_response,
+};
 use boltz_client::swaps::boltz::{CreateReverseRequest, CreateSubmarineRequest};
 use boltz_client::util::secrets::Preimage;
 
@@ -94,15 +97,12 @@ impl BoltzDB {
             .map_err(map_api_err("create submarine swap"))?;
 
         // Prove Boltz's response before persisting it or handing the caller a
-        // lockup address to fund: this rebuilds the swap script from our own
-        // refund key and the invoice's preimage hash and checks it hashes to the
-        // address Boltz returned. Without it, a malicious or buggy server could
-        // hand back an address we cannot refund from.
-        response
-            .validate(&invoice, &refund_public_key, network.as_chain())
-            .map_err(|e| BoltzError::SwapError {
-                error_details: format!("Boltz submarine response failed validation: {}", e),
-            })?;
+        // lockup address to fund: the returned address must commit to a script
+        // holding our refund key, and that script's hashlock must match the
+        // invoice's payment hash. Without both, a malicious or buggy server
+        // could hand back an address we cannot refund from, or one it can
+        // claim without ever paying the invoice.
+        validate_submarine_response(&response, &invoice, &refund_public_key, network)?;
 
         let record = SwapRecord {
             id: response.id.clone(),
@@ -156,11 +156,10 @@ impl BoltzDB {
                 error_details: "amount_sat must be greater than 0".to_string(),
             });
         }
-        if claim_address.trim().is_empty() {
-            return Err(BoltzError::InvalidInput {
-                error_details: "claim_address must not be empty".to_string(),
-            });
-        }
+        // The claim address is persisted at creation and cannot be replaced
+        // once the caller has paid the invoice, so a parse or wrong-network
+        // failure must surface now, not at claim time.
+        let claim_address = validate_onchain_address(&claim_address, network)?;
 
         let swap_index = self.reserve_swap_index().await?;
         let keypair =
@@ -189,15 +188,12 @@ impl BoltzDB {
             .map_err(map_api_err("create reverse swap"))?;
 
         // Prove Boltz's response before persisting it or handing the caller an
-        // invoice to pay: this checks the invoice commits to our preimage hash
-        // and that the swap script rebuilt from our own claim key hashes to the
-        // lockup address Boltz returned. Without it, the caller could pay an
-        // invoice for funds it has no key to claim.
-        response
-            .validate(&preimage, &claim_public_key, network.as_chain())
-            .map_err(|e| BoltzError::SwapError {
-                error_details: format!("Boltz reverse response failed validation: {}", e),
-            })?;
+        // invoice to pay: the invoice must commit to our preimage, the lockup
+        // address must commit to a script holding our claim key whose hashlock
+        // matches that preimage, and the invoice amount must be what was
+        // requested. Without those, the caller could pay an invoice for funds
+        // it cannot claim, or pay more than it asked to.
+        validate_reverse_response(&response, &preimage, &claim_public_key, amount_sat, network)?;
 
         let invoice = response.invoice.clone().ok_or(BoltzError::ApiError {
             error_details: "Reverse swap response missing invoice".to_string(),
