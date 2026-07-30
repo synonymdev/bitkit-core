@@ -125,12 +125,24 @@ impl BoltzDB {
         Ok(())
     }
 
-    /// Record the broadcast refund transaction id for a swap and mark it refunded.
-    pub async fn set_refund_tx(&self, swap_id: &str, txid: &str) -> Result<(), BoltzError> {
+    /// Record the broadcast refund transaction id and destination for a swap
+    /// and mark it refunded.
+    ///
+    /// The destination is stored as the swap's `onchain_address`: a submarine
+    /// swap is created without one, and the public field is documented as the
+    /// refund destination, so queries after a refund must return it.
+    pub async fn set_refund_tx(
+        &self,
+        swap_id: &str,
+        txid: &str,
+        refund_address: &str,
+    ) -> Result<(), BoltzError> {
         let conn = self.conn.lock().await;
         conn.execute(
-            "UPDATE swaps SET refund_tx_id = ?1, status = 'transaction.refunded' WHERE id = ?2",
-            params![txid, swap_id],
+            "UPDATE swaps
+             SET refund_tx_id = ?1, status = 'transaction.refunded', onchain_address = ?2
+             WHERE id = ?3",
+            params![txid, refund_address, swap_id],
         )?;
         Ok(())
     }

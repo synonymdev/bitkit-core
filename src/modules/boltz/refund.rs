@@ -41,13 +41,13 @@ pub async fn refund_submarine_swap_guarded(
 
     let txid = refund_submarine_swap(
         &record,
-        refund_address,
+        refund_address.clone(),
         mnemonic,
         bip39_passphrase,
         fee_rate_sat_per_vb,
     )
     .await?;
-    db.set_refund_tx(swap_id, &txid).await?;
+    db.set_refund_tx(swap_id, &txid, &refund_address).await?;
     Ok(txid)
 }
 

@@ -516,11 +516,11 @@ mod tests {
         }
 
         // All but the last-written stream must have been fully aborted.
-        wait_for_live_tasks(3);
+        wait_for_live_tasks(3).await;
         assert!(super::updates_cell().lock().await.is_some());
 
         super::stop_swap_updates().await;
-        wait_for_live_tasks(0);
+        wait_for_live_tasks(0).await;
         assert!(super::updates_cell().lock().await.is_none());
     }
 }

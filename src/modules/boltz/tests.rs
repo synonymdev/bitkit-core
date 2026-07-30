@@ -443,11 +443,15 @@ async fn db_round_trip_and_recovery() {
     assert_eq!(pending.len(), 1);
     assert_eq!(pending[0].id, "sub-1");
 
-    // Recording the refund tx id does the same for the submarine swap.
-    db.set_refund_tx("sub-1", "def456").await.unwrap();
+    // Recording the refund tx id does the same for the submarine swap, and
+    // persists the refund destination as the swap's onchain address.
+    db.set_refund_tx("sub-1", "def456", "bc1qrefund")
+        .await
+        .unwrap();
     let loaded = db.get_swap("sub-1").await.unwrap().unwrap();
     assert_eq!(loaded.status, "transaction.refunded");
     assert_eq!(loaded.refund_tx_id, Some("def456".to_string()));
+    assert_eq!(loaded.onchain_address, Some("bc1qrefund".to_string()));
     assert!(db.list_pending_swaps().await.unwrap().is_empty());
 
     // Terminal swaps are still listed, just no longer pending.
@@ -500,7 +504,9 @@ async fn local_completion_survives_late_server_updates() {
     assert_eq!(loaded.status, "transaction.claimed");
     assert_eq!(loaded.claim_tx_id, Some("claim-txid".to_string()));
 
-    db.set_refund_tx("sub-1", "refund-txid").await.unwrap();
+    db.set_refund_tx("sub-1", "refund-txid", "bc1qrefund")
+        .await
+        .unwrap();
     db.update_status("sub-1", "invoice.failedToPay")
         .await
         .unwrap();
