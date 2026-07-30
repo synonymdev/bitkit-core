@@ -586,6 +586,195 @@ fileprivate struct FfiConverterData: FfiConverterRustBuffer {
 
 
 /**
+ * Callback interface for receiving Boltz swap lifecycle events.
+ *
+ * Implement this in Swift/Kotlin/Python and register it via
+ * `boltz_start_swap_updates` to receive typed notifications as swaps progress.
+ * Reverse swaps are claimed automatically; the [`BoltzSwapEvent::Claimed`]
+ * event reports the resulting transaction id.
+ */
+public protocol BoltzEventListener: AnyObject, Sendable {
+    
+    func onEvent(event: BoltzSwapEvent) 
+    
+}
+/**
+ * Callback interface for receiving Boltz swap lifecycle events.
+ *
+ * Implement this in Swift/Kotlin/Python and register it via
+ * `boltz_start_swap_updates` to receive typed notifications as swaps progress.
+ * Reverse swaps are claimed automatically; the [`BoltzSwapEvent::Claimed`]
+ * event reports the resulting transaction id.
+ */
+open class BoltzEventListenerImpl: BoltzEventListener, @unchecked Sendable {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_bitkitcore_fn_clone_boltzeventlistener(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_bitkitcore_fn_free_boltzeventlistener(pointer, $0) }
+    }
+
+    
+
+    
+open func onEvent(event: BoltzSwapEvent)  {try! rustCall() {
+    uniffi_bitkitcore_fn_method_boltzeventlistener_on_event(self.uniffiClonePointer(),
+        FfiConverterTypeBoltzSwapEvent_lower(event),$0
+    )
+}
+}
+    
+
+}
+
+
+// Put the implementation in a struct so we don't pollute the top-level namespace
+fileprivate struct UniffiCallbackInterfaceBoltzEventListener {
+
+    // Create the VTable using a series of closures.
+    // Swift automatically converts these into C callback functions.
+    //
+    // This creates 1-element array, since this seems to be the only way to construct a const
+    // pointer that we can pass to the Rust code.
+    static let vtable: [UniffiVTableCallbackInterfaceBoltzEventListener] = [UniffiVTableCallbackInterfaceBoltzEventListener(
+        onEvent: { (
+            uniffiHandle: UInt64,
+            event: RustBuffer,
+            uniffiOutReturn: UnsafeMutableRawPointer,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeBoltzEventListener.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return uniffiObj.onEvent(
+                     event: try FfiConverterTypeBoltzSwapEvent_lift(event)
+                )
+            }
+
+            
+            let writeReturn = { () }
+            uniffiTraitInterfaceCall(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn
+            )
+        },
+        uniffiFree: { (uniffiHandle: UInt64) -> () in
+            let result = try? FfiConverterTypeBoltzEventListener.handleMap.remove(handle: uniffiHandle)
+            if result == nil {
+                print("Uniffi callback interface BoltzEventListener: handle missing in uniffiFree")
+            }
+        }
+    )]
+}
+
+private func uniffiCallbackInitBoltzEventListener() {
+    uniffi_bitkitcore_fn_init_callback_vtable_boltzeventlistener(UniffiCallbackInterfaceBoltzEventListener.vtable)
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeBoltzEventListener: FfiConverter {
+    fileprivate static let handleMap = UniffiHandleMap<BoltzEventListener>()
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = BoltzEventListener
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> BoltzEventListener {
+        return BoltzEventListenerImpl(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: BoltzEventListener) -> UnsafeMutableRawPointer {
+        guard let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: handleMap.insert(obj: value))) else {
+            fatalError("Cast to UnsafeMutableRawPointer failed")
+        }
+        return ptr
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> BoltzEventListener {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: BoltzEventListener, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzEventListener_lift(_ pointer: UnsafeMutableRawPointer) throws -> BoltzEventListener {
+    return try FfiConverterTypeBoltzEventListener.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzEventListener_lower(_ value: BoltzEventListener) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeBoltzEventListener.lower(value)
+}
+
+
+
+
+
+
+/**
  * Callback interface for receiving watcher events.
  *
  * Implement this trait in Swift/Kotlin/Python to receive typed notifications
@@ -2361,6 +2550,376 @@ public func FfiConverterTypeAddressInfo_lift(_ buf: RustBuffer) throws -> Addres
 #endif
 public func FfiConverterTypeAddressInfo_lower(_ value: AddressInfo) -> RustBuffer {
     return FfiConverterTypeAddressInfo.lower(value)
+}
+
+
+/**
+ * Fees and limits for a swap pair, used to size a swap and present costs.
+ */
+public struct BoltzPairInfo {
+    /**
+     * Pair hash identifying the current terms (passed back to Boltz if needed).
+     */
+    public var hash: String
+    /**
+     * Exchange rate of the pair.
+     */
+    public var rate: Double
+    /**
+     * Minimum swap amount in satoshis.
+     */
+    public var minimalSat: UInt64
+    /**
+     * Maximum swap amount in satoshis.
+     */
+    public var maximalSat: UInt64
+    /**
+     * Boltz service fee as a percentage of the swap amount.
+     */
+    public var feePercentage: Double
+    /**
+     * Estimated absolute miner fees in satoshis.
+     */
+    public var minerFeesSat: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Pair hash identifying the current terms (passed back to Boltz if needed).
+         */hash: String, 
+        /**
+         * Exchange rate of the pair.
+         */rate: Double, 
+        /**
+         * Minimum swap amount in satoshis.
+         */minimalSat: UInt64, 
+        /**
+         * Maximum swap amount in satoshis.
+         */maximalSat: UInt64, 
+        /**
+         * Boltz service fee as a percentage of the swap amount.
+         */feePercentage: Double, 
+        /**
+         * Estimated absolute miner fees in satoshis.
+         */minerFeesSat: UInt64) {
+        self.hash = hash
+        self.rate = rate
+        self.minimalSat = minimalSat
+        self.maximalSat = maximalSat
+        self.feePercentage = feePercentage
+        self.minerFeesSat = minerFeesSat
+    }
+}
+
+#if compiler(>=6)
+extension BoltzPairInfo: Sendable {}
+#endif
+
+
+extension BoltzPairInfo: Equatable, Hashable {
+    public static func ==(lhs: BoltzPairInfo, rhs: BoltzPairInfo) -> Bool {
+        if lhs.hash != rhs.hash {
+            return false
+        }
+        if lhs.rate != rhs.rate {
+            return false
+        }
+        if lhs.minimalSat != rhs.minimalSat {
+            return false
+        }
+        if lhs.maximalSat != rhs.maximalSat {
+            return false
+        }
+        if lhs.feePercentage != rhs.feePercentage {
+            return false
+        }
+        if lhs.minerFeesSat != rhs.minerFeesSat {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(hash)
+        hasher.combine(rate)
+        hasher.combine(minimalSat)
+        hasher.combine(maximalSat)
+        hasher.combine(feePercentage)
+        hasher.combine(minerFeesSat)
+    }
+}
+
+extension BoltzPairInfo: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeBoltzPairInfo: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> BoltzPairInfo {
+        return
+            try BoltzPairInfo(
+                hash: FfiConverterString.read(from: &buf), 
+                rate: FfiConverterDouble.read(from: &buf), 
+                minimalSat: FfiConverterUInt64.read(from: &buf), 
+                maximalSat: FfiConverterUInt64.read(from: &buf), 
+                feePercentage: FfiConverterDouble.read(from: &buf), 
+                minerFeesSat: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: BoltzPairInfo, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.hash, into: &buf)
+        FfiConverterDouble.write(value.rate, into: &buf)
+        FfiConverterUInt64.write(value.minimalSat, into: &buf)
+        FfiConverterUInt64.write(value.maximalSat, into: &buf)
+        FfiConverterDouble.write(value.feePercentage, into: &buf)
+        FfiConverterUInt64.write(value.minerFeesSat, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzPairInfo_lift(_ buf: RustBuffer) throws -> BoltzPairInfo {
+    return try FfiConverterTypeBoltzPairInfo.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzPairInfo_lower(_ value: BoltzPairInfo) -> RustBuffer {
+    return FfiConverterTypeBoltzPairInfo.lower(value)
+}
+
+
+/**
+ * A persisted swap and its current state, returned by the listing/query APIs.
+ */
+public struct BoltzSwap {
+    public var id: String
+    public var swapType: BoltzSwapType
+    public var status: BoltzSwapStatus
+    public var network: BoltzNetwork
+    /**
+     * Deterministic BIP85 index used to derive this swap's key and preimage
+     * from the wallet seed. The recovery handle: given the seed and this index
+     * (or by scanning indices), the swap's secrets can be reconstructed.
+     */
+    public var swapIndex: UInt64
+    /**
+     * For submarine swaps: the amount to lock onchain. For reverse swaps: the
+     * Lightning invoice amount.
+     */
+    public var amountSat: UInt64
+    /**
+     * For reverse swaps: the onchain amount that will be received.
+     */
+    public var onchainAmountSat: UInt64?
+    /**
+     * Lightning invoice associated with the swap (the hold invoice for reverse
+     * swaps, the invoice Boltz pays for submarine swaps).
+     */
+    public var invoice: String?
+    /**
+     * Onchain lockup address.
+     */
+    public var lockupAddress: String?
+    /**
+     * The address funds are claimed to (reverse) or refunded to (submarine).
+     */
+    public var onchainAddress: String?
+    public var timeoutBlockHeight: UInt64
+    public var createdAt: UInt64
+    /**
+     * Txid of the claim transaction once broadcast (reverse swaps).
+     */
+    public var claimTxId: String?
+    /**
+     * Txid of the refund transaction once broadcast (submarine swaps).
+     */
+    public var refundTxId: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, swapType: BoltzSwapType, status: BoltzSwapStatus, network: BoltzNetwork, 
+        /**
+         * Deterministic BIP85 index used to derive this swap's key and preimage
+         * from the wallet seed. The recovery handle: given the seed and this index
+         * (or by scanning indices), the swap's secrets can be reconstructed.
+         */swapIndex: UInt64, 
+        /**
+         * For submarine swaps: the amount to lock onchain. For reverse swaps: the
+         * Lightning invoice amount.
+         */amountSat: UInt64, 
+        /**
+         * For reverse swaps: the onchain amount that will be received.
+         */onchainAmountSat: UInt64?, 
+        /**
+         * Lightning invoice associated with the swap (the hold invoice for reverse
+         * swaps, the invoice Boltz pays for submarine swaps).
+         */invoice: String?, 
+        /**
+         * Onchain lockup address.
+         */lockupAddress: String?, 
+        /**
+         * The address funds are claimed to (reverse) or refunded to (submarine).
+         */onchainAddress: String?, timeoutBlockHeight: UInt64, createdAt: UInt64, 
+        /**
+         * Txid of the claim transaction once broadcast (reverse swaps).
+         */claimTxId: String?, 
+        /**
+         * Txid of the refund transaction once broadcast (submarine swaps).
+         */refundTxId: String?) {
+        self.id = id
+        self.swapType = swapType
+        self.status = status
+        self.network = network
+        self.swapIndex = swapIndex
+        self.amountSat = amountSat
+        self.onchainAmountSat = onchainAmountSat
+        self.invoice = invoice
+        self.lockupAddress = lockupAddress
+        self.onchainAddress = onchainAddress
+        self.timeoutBlockHeight = timeoutBlockHeight
+        self.createdAt = createdAt
+        self.claimTxId = claimTxId
+        self.refundTxId = refundTxId
+    }
+}
+
+#if compiler(>=6)
+extension BoltzSwap: Sendable {}
+#endif
+
+
+extension BoltzSwap: Equatable, Hashable {
+    public static func ==(lhs: BoltzSwap, rhs: BoltzSwap) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.swapType != rhs.swapType {
+            return false
+        }
+        if lhs.status != rhs.status {
+            return false
+        }
+        if lhs.network != rhs.network {
+            return false
+        }
+        if lhs.swapIndex != rhs.swapIndex {
+            return false
+        }
+        if lhs.amountSat != rhs.amountSat {
+            return false
+        }
+        if lhs.onchainAmountSat != rhs.onchainAmountSat {
+            return false
+        }
+        if lhs.invoice != rhs.invoice {
+            return false
+        }
+        if lhs.lockupAddress != rhs.lockupAddress {
+            return false
+        }
+        if lhs.onchainAddress != rhs.onchainAddress {
+            return false
+        }
+        if lhs.timeoutBlockHeight != rhs.timeoutBlockHeight {
+            return false
+        }
+        if lhs.createdAt != rhs.createdAt {
+            return false
+        }
+        if lhs.claimTxId != rhs.claimTxId {
+            return false
+        }
+        if lhs.refundTxId != rhs.refundTxId {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(swapType)
+        hasher.combine(status)
+        hasher.combine(network)
+        hasher.combine(swapIndex)
+        hasher.combine(amountSat)
+        hasher.combine(onchainAmountSat)
+        hasher.combine(invoice)
+        hasher.combine(lockupAddress)
+        hasher.combine(onchainAddress)
+        hasher.combine(timeoutBlockHeight)
+        hasher.combine(createdAt)
+        hasher.combine(claimTxId)
+        hasher.combine(refundTxId)
+    }
+}
+
+extension BoltzSwap: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeBoltzSwap: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> BoltzSwap {
+        return
+            try BoltzSwap(
+                id: FfiConverterString.read(from: &buf), 
+                swapType: FfiConverterTypeBoltzSwapType.read(from: &buf), 
+                status: FfiConverterTypeBoltzSwapStatus.read(from: &buf), 
+                network: FfiConverterTypeBoltzNetwork.read(from: &buf), 
+                swapIndex: FfiConverterUInt64.read(from: &buf), 
+                amountSat: FfiConverterUInt64.read(from: &buf), 
+                onchainAmountSat: FfiConverterOptionUInt64.read(from: &buf), 
+                invoice: FfiConverterOptionString.read(from: &buf), 
+                lockupAddress: FfiConverterOptionString.read(from: &buf), 
+                onchainAddress: FfiConverterOptionString.read(from: &buf), 
+                timeoutBlockHeight: FfiConverterUInt64.read(from: &buf), 
+                createdAt: FfiConverterUInt64.read(from: &buf), 
+                claimTxId: FfiConverterOptionString.read(from: &buf), 
+                refundTxId: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: BoltzSwap, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterTypeBoltzSwapType.write(value.swapType, into: &buf)
+        FfiConverterTypeBoltzSwapStatus.write(value.status, into: &buf)
+        FfiConverterTypeBoltzNetwork.write(value.network, into: &buf)
+        FfiConverterUInt64.write(value.swapIndex, into: &buf)
+        FfiConverterUInt64.write(value.amountSat, into: &buf)
+        FfiConverterOptionUInt64.write(value.onchainAmountSat, into: &buf)
+        FfiConverterOptionString.write(value.invoice, into: &buf)
+        FfiConverterOptionString.write(value.lockupAddress, into: &buf)
+        FfiConverterOptionString.write(value.onchainAddress, into: &buf)
+        FfiConverterUInt64.write(value.timeoutBlockHeight, into: &buf)
+        FfiConverterUInt64.write(value.createdAt, into: &buf)
+        FfiConverterOptionString.write(value.claimTxId, into: &buf)
+        FfiConverterOptionString.write(value.refundTxId, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzSwap_lift(_ buf: RustBuffer) throws -> BoltzSwap {
+    return try FfiConverterTypeBoltzSwap.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzSwap_lower(_ value: BoltzSwap) -> RustBuffer {
+    return FfiConverterTypeBoltzSwap.lower(value)
 }
 
 
@@ -8838,6 +9397,132 @@ public func FfiConverterTypePubkyProfileLink_lower(_ value: PubkyProfileLink) ->
 
 
 /**
+ * Result of creating a reverse swap (Lightning -> onchain).
+ *
+ * The caller pays `invoice` from its Lightning node; once Boltz locks funds at
+ * `lockup_address`, the module claims them to the provided onchain address.
+ */
+public struct ReverseSwapResponse {
+    public var id: String
+    /**
+     * Hold invoice the caller must pay via Lightning.
+     */
+    public var invoice: String
+    /**
+     * Address Boltz locks the onchain funds to.
+     */
+    public var lockupAddress: String
+    /**
+     * Amount in satoshis that will be received onchain (after Boltz fees).
+     */
+    public var onchainAmountSat: UInt64
+    /**
+     * Onchain timeout height for the swap.
+     */
+    public var timeoutBlockHeight: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, 
+        /**
+         * Hold invoice the caller must pay via Lightning.
+         */invoice: String, 
+        /**
+         * Address Boltz locks the onchain funds to.
+         */lockupAddress: String, 
+        /**
+         * Amount in satoshis that will be received onchain (after Boltz fees).
+         */onchainAmountSat: UInt64, 
+        /**
+         * Onchain timeout height for the swap.
+         */timeoutBlockHeight: UInt64) {
+        self.id = id
+        self.invoice = invoice
+        self.lockupAddress = lockupAddress
+        self.onchainAmountSat = onchainAmountSat
+        self.timeoutBlockHeight = timeoutBlockHeight
+    }
+}
+
+#if compiler(>=6)
+extension ReverseSwapResponse: Sendable {}
+#endif
+
+
+extension ReverseSwapResponse: Equatable, Hashable {
+    public static func ==(lhs: ReverseSwapResponse, rhs: ReverseSwapResponse) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.invoice != rhs.invoice {
+            return false
+        }
+        if lhs.lockupAddress != rhs.lockupAddress {
+            return false
+        }
+        if lhs.onchainAmountSat != rhs.onchainAmountSat {
+            return false
+        }
+        if lhs.timeoutBlockHeight != rhs.timeoutBlockHeight {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(invoice)
+        hasher.combine(lockupAddress)
+        hasher.combine(onchainAmountSat)
+        hasher.combine(timeoutBlockHeight)
+    }
+}
+
+extension ReverseSwapResponse: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeReverseSwapResponse: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ReverseSwapResponse {
+        return
+            try ReverseSwapResponse(
+                id: FfiConverterString.read(from: &buf), 
+                invoice: FfiConverterString.read(from: &buf), 
+                lockupAddress: FfiConverterString.read(from: &buf), 
+                onchainAmountSat: FfiConverterUInt64.read(from: &buf), 
+                timeoutBlockHeight: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ReverseSwapResponse, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.invoice, into: &buf)
+        FfiConverterString.write(value.lockupAddress, into: &buf)
+        FfiConverterUInt64.write(value.onchainAmountSat, into: &buf)
+        FfiConverterUInt64.write(value.timeoutBlockHeight, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeReverseSwapResponse_lift(_ buf: RustBuffer) throws -> ReverseSwapResponse {
+    return try FfiConverterTypeReverseSwapResponse.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeReverseSwapResponse_lower(_ value: ReverseSwapResponse) -> RustBuffer {
+    return FfiConverterTypeReverseSwapResponse.lower(value)
+}
+
+
+/**
  * Result from querying a single Bitcoin address.
  */
 public struct SingleAddressInfoResult {
@@ -8963,6 +9648,146 @@ public func FfiConverterTypeSingleAddressInfoResult_lift(_ buf: RustBuffer) thro
 #endif
 public func FfiConverterTypeSingleAddressInfoResult_lower(_ value: SingleAddressInfoResult) -> RustBuffer {
     return FfiConverterTypeSingleAddressInfoResult.lower(value)
+}
+
+
+/**
+ * Result of creating a submarine swap (onchain -> Lightning).
+ *
+ * The caller funds `address` with `expected_amount_sat` from its onchain
+ * wallet; Boltz then pays the Lightning invoice supplied at creation.
+ */
+public struct SubmarineSwapResponse {
+    public var id: String
+    /**
+     * Onchain lockup address to send funds to.
+     */
+    public var address: String
+    /**
+     * BIP21 URI for the lockup payment.
+     */
+    public var bip21: String
+    /**
+     * Exact amount in satoshis the caller must send to `address`.
+     */
+    public var expectedAmountSat: UInt64
+    /**
+     * Whether Boltz will accept a zero-conf lockup.
+     */
+    public var acceptZeroConf: Bool
+    /**
+     * Onchain timeout height after which a refund is possible.
+     */
+    public var timeoutBlockHeight: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, 
+        /**
+         * Onchain lockup address to send funds to.
+         */address: String, 
+        /**
+         * BIP21 URI for the lockup payment.
+         */bip21: String, 
+        /**
+         * Exact amount in satoshis the caller must send to `address`.
+         */expectedAmountSat: UInt64, 
+        /**
+         * Whether Boltz will accept a zero-conf lockup.
+         */acceptZeroConf: Bool, 
+        /**
+         * Onchain timeout height after which a refund is possible.
+         */timeoutBlockHeight: UInt64) {
+        self.id = id
+        self.address = address
+        self.bip21 = bip21
+        self.expectedAmountSat = expectedAmountSat
+        self.acceptZeroConf = acceptZeroConf
+        self.timeoutBlockHeight = timeoutBlockHeight
+    }
+}
+
+#if compiler(>=6)
+extension SubmarineSwapResponse: Sendable {}
+#endif
+
+
+extension SubmarineSwapResponse: Equatable, Hashable {
+    public static func ==(lhs: SubmarineSwapResponse, rhs: SubmarineSwapResponse) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.bip21 != rhs.bip21 {
+            return false
+        }
+        if lhs.expectedAmountSat != rhs.expectedAmountSat {
+            return false
+        }
+        if lhs.acceptZeroConf != rhs.acceptZeroConf {
+            return false
+        }
+        if lhs.timeoutBlockHeight != rhs.timeoutBlockHeight {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(address)
+        hasher.combine(bip21)
+        hasher.combine(expectedAmountSat)
+        hasher.combine(acceptZeroConf)
+        hasher.combine(timeoutBlockHeight)
+    }
+}
+
+extension SubmarineSwapResponse: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSubmarineSwapResponse: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SubmarineSwapResponse {
+        return
+            try SubmarineSwapResponse(
+                id: FfiConverterString.read(from: &buf), 
+                address: FfiConverterString.read(from: &buf), 
+                bip21: FfiConverterString.read(from: &buf), 
+                expectedAmountSat: FfiConverterUInt64.read(from: &buf), 
+                acceptZeroConf: FfiConverterBool.read(from: &buf), 
+                timeoutBlockHeight: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: SubmarineSwapResponse, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.address, into: &buf)
+        FfiConverterString.write(value.bip21, into: &buf)
+        FfiConverterUInt64.write(value.expectedAmountSat, into: &buf)
+        FfiConverterBool.write(value.acceptZeroConf, into: &buf)
+        FfiConverterUInt64.write(value.timeoutBlockHeight, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSubmarineSwapResponse_lift(_ buf: RustBuffer) throws -> SubmarineSwapResponse {
+    return try FfiConverterTypeSubmarineSwapResponse.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSubmarineSwapResponse_lower(_ value: SubmarineSwapResponse) -> RustBuffer {
+    return FfiConverterTypeSubmarineSwapResponse.lower(value)
 }
 
 
@@ -14668,6 +15493,675 @@ extension BlocktankError: Foundation.LocalizedError {
 
 
 
+/**
+ * Errors surfaced by the Boltz swaps module.
+ */
+public enum BoltzError: Swift.Error {
+
+    
+    
+    case InitializationError(errorDetails: String
+    )
+    case ConnectionError(errorDetails: String
+    )
+    case DatabaseError(errorDetails: String
+    )
+    case ApiError(errorDetails: String
+    )
+    case SwapError(errorDetails: String
+    )
+    case BroadcastError(errorDetails: String
+    )
+    case InvalidInput(errorDetails: String
+    )
+    case SerializationError(errorDetails: String
+    )
+    case NotFound(errorDetails: String
+    )
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeBoltzError: FfiConverterRustBuffer {
+    typealias SwiftType = BoltzError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> BoltzError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .InitializationError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 2: return .ConnectionError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 3: return .DatabaseError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 4: return .ApiError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 5: return .SwapError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 6: return .BroadcastError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 7: return .InvalidInput(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 8: return .SerializationError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 9: return .NotFound(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: BoltzError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .InitializationError(errorDetails):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .ConnectionError(errorDetails):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .DatabaseError(errorDetails):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .ApiError(errorDetails):
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .SwapError(errorDetails):
+            writeInt(&buf, Int32(5))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .BroadcastError(errorDetails):
+            writeInt(&buf, Int32(6))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .InvalidInput(errorDetails):
+            writeInt(&buf, Int32(7))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .SerializationError(errorDetails):
+            writeInt(&buf, Int32(8))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .NotFound(errorDetails):
+            writeInt(&buf, Int32(9))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzError_lift(_ buf: RustBuffer) throws -> BoltzError {
+    return try FfiConverterTypeBoltzError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzError_lower(_ value: BoltzError) -> RustBuffer {
+    return FfiConverterTypeBoltzError.lower(value)
+}
+
+
+extension BoltzError: Equatable, Hashable {}
+
+extension BoltzError: Codable {}
+
+
+
+
+extension BoltzError: Foundation.LocalizedError {
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Bitcoin network selection for Boltz swaps. Maps to the networks Boltz
+ * operates on (mainnet, testnet, regtest).
+ */
+
+public enum BoltzNetwork {
+    
+    case mainnet
+    case testnet
+    case regtest
+}
+
+
+#if compiler(>=6)
+extension BoltzNetwork: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeBoltzNetwork: FfiConverterRustBuffer {
+    typealias SwiftType = BoltzNetwork
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> BoltzNetwork {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .mainnet
+        
+        case 2: return .testnet
+        
+        case 3: return .regtest
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: BoltzNetwork, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .mainnet:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .testnet:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .regtest:
+            writeInt(&buf, Int32(3))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzNetwork_lift(_ buf: RustBuffer) throws -> BoltzNetwork {
+    return try FfiConverterTypeBoltzNetwork.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzNetwork_lower(_ value: BoltzNetwork) -> RustBuffer {
+    return FfiConverterTypeBoltzNetwork.lower(value)
+}
+
+
+extension BoltzNetwork: Equatable, Hashable {}
+
+extension BoltzNetwork: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Events emitted to a registered [`crate::modules::boltz::BoltzEventListener`]
+ * as swaps progress through their lifecycle.
+ */
+
+public enum BoltzSwapEvent {
+    
+    /**
+     * The swap transitioned to a new status.
+     */
+    case statusUpdate(swapId: String, status: BoltzSwapStatus
+    )
+    /**
+     * A reverse swap was claimed onchain. `txid` is the claim transaction.
+     */
+    case claimed(swapId: String, txid: String
+    )
+    /**
+     * A submarine swap was refunded onchain. `txid` is the refund transaction.
+     */
+    case refunded(swapId: String, txid: String
+    )
+    /**
+     * An error occurred while processing the swap (e.g. an auto-claim failed).
+     */
+    case error(swapId: String, message: String
+    )
+}
+
+
+#if compiler(>=6)
+extension BoltzSwapEvent: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeBoltzSwapEvent: FfiConverterRustBuffer {
+    typealias SwiftType = BoltzSwapEvent
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> BoltzSwapEvent {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .statusUpdate(swapId: try FfiConverterString.read(from: &buf), status: try FfiConverterTypeBoltzSwapStatus.read(from: &buf)
+        )
+        
+        case 2: return .claimed(swapId: try FfiConverterString.read(from: &buf), txid: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 3: return .refunded(swapId: try FfiConverterString.read(from: &buf), txid: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 4: return .error(swapId: try FfiConverterString.read(from: &buf), message: try FfiConverterString.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: BoltzSwapEvent, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case let .statusUpdate(swapId,status):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(swapId, into: &buf)
+            FfiConverterTypeBoltzSwapStatus.write(status, into: &buf)
+            
+        
+        case let .claimed(swapId,txid):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(swapId, into: &buf)
+            FfiConverterString.write(txid, into: &buf)
+            
+        
+        case let .refunded(swapId,txid):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(swapId, into: &buf)
+            FfiConverterString.write(txid, into: &buf)
+            
+        
+        case let .error(swapId,message):
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(swapId, into: &buf)
+            FfiConverterString.write(message, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzSwapEvent_lift(_ buf: RustBuffer) throws -> BoltzSwapEvent {
+    return try FfiConverterTypeBoltzSwapEvent.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzSwapEvent_lower(_ value: BoltzSwapEvent) -> RustBuffer {
+    return FfiConverterTypeBoltzSwapEvent.lower(value)
+}
+
+
+extension BoltzSwapEvent: Equatable, Hashable {}
+
+extension BoltzSwapEvent: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * Typed view of the Boltz swap lifecycle. `Unknown` carries the raw status so
+ * new server-side states don't break the bindings.
+ *
+ * See <https://api.docs.boltz.exchange/lifecycle.html>.
+ */
+
+public enum BoltzSwapStatus {
+    
+    /**
+     * `swap.created` — initial state.
+     */
+    case swapCreated
+    /**
+     * `invoice.set` — invoice attached to a submarine swap.
+     */
+    case invoiceSet
+    /**
+     * `transaction.mempool` — a lockup transaction is in the mempool.
+     */
+    case transactionMempool
+    /**
+     * `transaction.confirmed` — a lockup transaction confirmed.
+     */
+    case transactionConfirmed
+    /**
+     * `invoice.pending` — Boltz is paying the submarine swap invoice.
+     */
+    case invoicePending
+    /**
+     * `invoice.paid` — submarine swap invoice paid by Boltz.
+     */
+    case invoicePaid
+    /**
+     * `invoice.settled` — reverse swap invoice settled (preimage revealed).
+     */
+    case invoiceSettled
+    /**
+     * `invoice.failedToPay` — submarine swap invoice could not be paid; refund.
+     */
+    case invoiceFailedToPay
+    /**
+     * `invoice.expired` — reverse swap invoice expired before payment.
+     */
+    case invoiceExpired
+    /**
+     * `transaction.claim.pending` — Boltz ready for a cooperative claim.
+     */
+    case transactionClaimPending
+    /**
+     * `transaction.claimed` — onchain funds claimed.
+     */
+    case transactionClaimed
+    /**
+     * `transaction.refunded` — onchain funds refunded.
+     */
+    case transactionRefunded
+    /**
+     * `transaction.lockupFailed` — wrong amount locked; can refund.
+     */
+    case transactionLockupFailed
+    /**
+     * `transaction.failed` — Boltz failed to lock the agreed funds.
+     */
+    case transactionFailed
+    /**
+     * `swap.expired` — swap expired without completing.
+     */
+    case swapExpired
+    /**
+     * Any status not yet modelled. `raw` holds the verbatim Boltz status.
+     */
+    case unknown(raw: String
+    )
+}
+
+
+#if compiler(>=6)
+extension BoltzSwapStatus: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeBoltzSwapStatus: FfiConverterRustBuffer {
+    typealias SwiftType = BoltzSwapStatus
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> BoltzSwapStatus {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .swapCreated
+        
+        case 2: return .invoiceSet
+        
+        case 3: return .transactionMempool
+        
+        case 4: return .transactionConfirmed
+        
+        case 5: return .invoicePending
+        
+        case 6: return .invoicePaid
+        
+        case 7: return .invoiceSettled
+        
+        case 8: return .invoiceFailedToPay
+        
+        case 9: return .invoiceExpired
+        
+        case 10: return .transactionClaimPending
+        
+        case 11: return .transactionClaimed
+        
+        case 12: return .transactionRefunded
+        
+        case 13: return .transactionLockupFailed
+        
+        case 14: return .transactionFailed
+        
+        case 15: return .swapExpired
+        
+        case 16: return .unknown(raw: try FfiConverterString.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: BoltzSwapStatus, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .swapCreated:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .invoiceSet:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .transactionMempool:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .transactionConfirmed:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .invoicePending:
+            writeInt(&buf, Int32(5))
+        
+        
+        case .invoicePaid:
+            writeInt(&buf, Int32(6))
+        
+        
+        case .invoiceSettled:
+            writeInt(&buf, Int32(7))
+        
+        
+        case .invoiceFailedToPay:
+            writeInt(&buf, Int32(8))
+        
+        
+        case .invoiceExpired:
+            writeInt(&buf, Int32(9))
+        
+        
+        case .transactionClaimPending:
+            writeInt(&buf, Int32(10))
+        
+        
+        case .transactionClaimed:
+            writeInt(&buf, Int32(11))
+        
+        
+        case .transactionRefunded:
+            writeInt(&buf, Int32(12))
+        
+        
+        case .transactionLockupFailed:
+            writeInt(&buf, Int32(13))
+        
+        
+        case .transactionFailed:
+            writeInt(&buf, Int32(14))
+        
+        
+        case .swapExpired:
+            writeInt(&buf, Int32(15))
+        
+        
+        case let .unknown(raw):
+            writeInt(&buf, Int32(16))
+            FfiConverterString.write(raw, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzSwapStatus_lift(_ buf: RustBuffer) throws -> BoltzSwapStatus {
+    return try FfiConverterTypeBoltzSwapStatus.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzSwapStatus_lower(_ value: BoltzSwapStatus) -> RustBuffer {
+    return FfiConverterTypeBoltzSwapStatus.lower(value)
+}
+
+
+extension BoltzSwapStatus: Equatable, Hashable {}
+
+extension BoltzSwapStatus: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+/**
+ * The direction of a Boltz swap.
+ *
+ * - `Submarine`: onchain Bitcoin -> Lightning (the user locks onchain funds,
+ * Boltz pays a Lightning invoice).
+ * - `Reverse`: Lightning -> onchain Bitcoin (the user pays a Boltz hold
+ * invoice, Boltz locks onchain funds the user then claims).
+ */
+
+public enum BoltzSwapType {
+    
+    case submarine
+    case reverse
+}
+
+
+#if compiler(>=6)
+extension BoltzSwapType: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeBoltzSwapType: FfiConverterRustBuffer {
+    typealias SwiftType = BoltzSwapType
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> BoltzSwapType {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .submarine
+        
+        case 2: return .reverse
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: BoltzSwapType, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .submarine:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .reverse:
+            writeInt(&buf, Int32(2))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzSwapType_lift(_ buf: RustBuffer) throws -> BoltzSwapType {
+    return try FfiConverterTypeBoltzSwapType.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeBoltzSwapType_lower(_ value: BoltzSwapType) -> RustBuffer {
+    return FfiConverterTypeBoltzSwapType.lower(value)
+}
+
+
+extension BoltzSwapType: Equatable, Hashable {}
+
+extension BoltzSwapType: Codable {}
+
+
+
+
+
+
+
 public enum BroadcastError: Swift.Error {
 
     
@@ -15782,6 +17276,8 @@ public enum DbError: Swift.Error {
     )
     case DbBlocktankError(errorDetails: BlocktankError
     )
+    case DbBoltzError(errorDetails: BoltzError
+    )
     case InitializationError(errorDetails: String
     )
 }
@@ -15806,7 +17302,10 @@ public struct FfiConverterTypeDbError: FfiConverterRustBuffer {
         case 2: return .DbBlocktankError(
             errorDetails: try FfiConverterTypeBlocktankError.read(from: &buf)
             )
-        case 3: return .InitializationError(
+        case 3: return .DbBoltzError(
+            errorDetails: try FfiConverterTypeBoltzError.read(from: &buf)
+            )
+        case 4: return .InitializationError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
 
@@ -15831,8 +17330,13 @@ public struct FfiConverterTypeDbError: FfiConverterRustBuffer {
             FfiConverterTypeBlocktankError.write(errorDetails, into: &buf)
             
         
-        case let .InitializationError(errorDetails):
+        case let .DbBoltzError(errorDetails):
             writeInt(&buf, Int32(3))
+            FfiConverterTypeBoltzError.write(errorDetails, into: &buf)
+            
+        
+        case let .InitializationError(errorDetails):
+            writeInt(&buf, Int32(4))
             FfiConverterString.write(errorDetails, into: &buf)
             
         }
@@ -18562,6 +20066,30 @@ fileprivate struct FfiConverterOptionData: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeBoltzSwap: FfiConverterRustBuffer {
+    typealias SwiftType = BoltzSwap?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeBoltzSwap.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeBoltzSwap.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypeClosedChannelDetails: FfiConverterRustBuffer {
     typealias SwiftType = ClosedChannelDetails?
 
@@ -19671,6 +21199,31 @@ fileprivate struct FfiConverterSequenceTypeAddressInfo: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeBoltzSwap: FfiConverterRustBuffer {
+    typealias SwiftType = [BoltzSwap]
+
+    public static func write(_ value: [BoltzSwap], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeBoltzSwap.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [BoltzSwap] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [BoltzSwap]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeBoltzSwap.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeClosedChannelDetails: FfiConverterRustBuffer {
     typealias SwiftType = [ClosedChannelDetails]
 
@@ -20587,6 +22140,233 @@ public func blocktankWipeAll()async throws   {
             freeFunc: ffi_bitkitcore_rust_future_free_void,
             liftFunc: { $0 },
             errorHandler: FfiConverterTypeBlocktankError_lift
+        )
+}
+/**
+ * Claim a reverse swap's onchain funds to its claim address, returning the
+ * broadcast claim transaction id. Normally happens automatically via the
+ * updates stream; exposed for manual recovery. The claim key is re-derived from
+ * `mnemonic`. Claims are serialized per swap, so calling this while the updates
+ * stream is auto-claiming the same swap waits for that claim and returns its
+ * txid rather than broadcasting a second transaction.
+ */
+public func boltzClaimReverseSwap(swapId: String, mnemonic: String, bip39Passphrase: String?, feeRateSatPerVb: Double?)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_boltz_claim_reverse_swap(FfiConverterString.lower(swapId),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(bip39Passphrase),FfiConverterOptionDouble.lower(feeRateSatPerVb)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeBoltzError_lift
+        )
+}
+/**
+ * Create a reverse swap (Lightning -> onchain).
+ *
+ * The caller pays the returned hold invoice from its Lightning node;
+ * `claim_address` is the onchain address the received funds are claimed to.
+ * The claim key and preimage are derived deterministically from `mnemonic`
+ * (only the derivation index is persisted, never the secrets) so the claim can
+ * be made automatically once Boltz locks the funds. `bip39_passphrase` must
+ * match the wallet's, or claims will derive the wrong key.
+ */
+public func boltzCreateReverseSwap(network: BoltzNetwork, electrumUrl: String, amountSat: UInt64, claimAddress: String, mnemonic: String, bip39Passphrase: String?)async throws  -> ReverseSwapResponse  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_boltz_create_reverse_swap(FfiConverterTypeBoltzNetwork_lower(network),FfiConverterString.lower(electrumUrl),FfiConverterUInt64.lower(amountSat),FfiConverterString.lower(claimAddress),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(bip39Passphrase)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeReverseSwapResponse_lift,
+            errorHandler: FfiConverterTypeBoltzError_lift
+        )
+}
+/**
+ * Create a submarine swap (onchain -> Lightning).
+ *
+ * `invoice` is a BOLT11 invoice the caller's Lightning node generated. The
+ * caller funds the returned lockup address from its onchain wallet. The refund
+ * key is derived deterministically from `mnemonic` (only the derivation index
+ * is persisted, never the key), and the swap is tracked if an updates stream is
+ * running. `bip39_passphrase` must match the wallet's, or refunds will derive
+ * the wrong key.
+ */
+public func boltzCreateSubmarineSwap(network: BoltzNetwork, electrumUrl: String, invoice: String, mnemonic: String, bip39Passphrase: String?)async throws  -> SubmarineSwapResponse  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_boltz_create_submarine_swap(FfiConverterTypeBoltzNetwork_lower(network),FfiConverterString.lower(electrumUrl),FfiConverterString.lower(invoice),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(bip39Passphrase)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeSubmarineSwapResponse_lift,
+            errorHandler: FfiConverterTypeBoltzError_lift
+        )
+}
+/**
+ * Fetch fees and limits for reverse swaps (Lightning -> onchain).
+ */
+public func boltzGetReverseLimits(network: BoltzNetwork)async throws  -> BoltzPairInfo  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_boltz_get_reverse_limits(FfiConverterTypeBoltzNetwork_lower(network)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeBoltzPairInfo_lift,
+            errorHandler: FfiConverterTypeBoltzError_lift
+        )
+}
+/**
+ * Fetch fees and limits for submarine swaps (onchain -> Lightning).
+ */
+public func boltzGetSubmarineLimits(network: BoltzNetwork)async throws  -> BoltzPairInfo  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_boltz_get_submarine_limits(FfiConverterTypeBoltzNetwork_lower(network)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeBoltzPairInfo_lift,
+            errorHandler: FfiConverterTypeBoltzError_lift
+        )
+}
+/**
+ * Fetch a single swap by id.
+ */
+public func boltzGetSwap(swapId: String)async throws  -> BoltzSwap?  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_boltz_get_swap(FfiConverterString.lower(swapId)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypeBoltzSwap.lift,
+            errorHandler: FfiConverterTypeBoltzError_lift
+        )
+}
+/**
+ * List swaps that have not reached a terminal state (for recovery/resume).
+ */
+public func boltzListPendingSwaps()async throws  -> [BoltzSwap]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_boltz_list_pending_swaps(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeBoltzSwap.lift,
+            errorHandler: FfiConverterTypeBoltzError_lift
+        )
+}
+/**
+ * List every persisted swap, newest first.
+ */
+public func boltzListSwaps()async throws  -> [BoltzSwap]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_boltz_list_swaps(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeBoltzSwap.lift,
+            errorHandler: FfiConverterTypeBoltzError_lift
+        )
+}
+/**
+ * Refund a submarine swap's locked funds to `refund_address`, returning the
+ * broadcast refund transaction id. Used when Boltz fails to pay the invoice or
+ * the swap expires. The refund key is re-derived from `mnemonic`. Refunds are
+ * serialized per swap, so two concurrent calls cannot both broadcast: the second
+ * waits for the first and returns its txid.
+ */
+public func boltzRefundSubmarineSwap(swapId: String, refundAddress: String, mnemonic: String, bip39Passphrase: String?, feeRateSatPerVb: Double?)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_boltz_refund_submarine_swap(FfiConverterString.lower(swapId),FfiConverterString.lower(refundAddress),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(bip39Passphrase),FfiConverterOptionDouble.lower(feeRateSatPerVb)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeBoltzError_lift
+        )
+}
+/**
+ * Open a Boltz WebSocket for `network`, subscribe to all pending swaps, and
+ * drive their lifecycle (auto-claiming reverse swaps) until stopped. Replaces
+ * any previously running updates stream (only one network is tracked at a
+ * time). `mnemonic` is held in memory for the lifetime of the stream so
+ * confirmed reverse swaps can be auto-claimed; it is never persisted. Events
+ * are delivered to `listener`.
+ *
+ * `fee_rate_sat_per_vb` is the fee rate used for automatic claim transactions.
+ * Bitkit owns fee estimation and should pass its current recommended rate; when
+ * `None`, a conservative built-in default is used. To auto-claim at an updated
+ * fee rate, call this again (it restarts the stream).
+ *
+ * `accept_zero_conf` claims reverse swaps as soon as Boltz's lockup enters the
+ * mempool instead of waiting for its confirmation. That reveals the preimage
+ * against an unconfirmed lockup: if the lockup were replaced before
+ * confirming, the user would be debited on Lightning without receiving
+ * onchain funds. Pass `false` to keep the confirmation-gated default.
+ */
+public func boltzStartSwapUpdates(network: BoltzNetwork, listener: BoltzEventListener, mnemonic: String, bip39Passphrase: String?, feeRateSatPerVb: Double?, acceptZeroConf: Bool)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_boltz_start_swap_updates(FfiConverterTypeBoltzNetwork_lower(network),FfiConverterTypeBoltzEventListener_lower(listener),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(bip39Passphrase),FfiConverterOptionDouble.lower(feeRateSatPerVb),FfiConverterBool.lower(acceptZeroConf)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeBoltzError_lift
+        )
+}
+/**
+ * Stop the running Boltz updates stream, if any.
+ */
+public func boltzStopSwapUpdates()async   {
+    return
+        try!  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_boltz_stop_swap_updates(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: nil
+            
         )
 }
 public func broadcastSweepTransaction(psbt: String, mnemonicPhrase: String, network: Network?, bip39Passphrase: String?, electrumUrl: String)async throws  -> SweepResult  {
@@ -22454,6 +24234,39 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_boltz_claim_reverse_swap() != 52516) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_boltz_create_reverse_swap() != 20570) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_boltz_create_submarine_swap() != 27933) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_boltz_get_reverse_limits() != 59203) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_boltz_get_submarine_limits() != 5900) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_boltz_get_swap() != 17473) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_boltz_list_pending_swaps() != 20926) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_boltz_list_swaps() != 16447) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap() != 24549) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_boltz_start_swap_updates() != 168) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_boltz_stop_swap_updates() != 63683) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 43422) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -22910,6 +24723,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_wipe_all_transaction_details() != 65339) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event() != 11294) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_method_eventlistener_on_event() != 35531) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -22953,6 +24769,7 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
 
+    uniffiCallbackInitBoltzEventListener()
     uniffiCallbackInitEventListener()
     uniffiCallbackInitTrezorTransportCallback()
     uniffiCallbackInitTrezorUiCallback()

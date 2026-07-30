@@ -114,6 +114,24 @@ public object NoPointer
 
 
 /**
+ * Callback interface for receiving Boltz swap lifecycle events.
+ *
+ * Implement this in Swift/Kotlin/Python and register it via
+ * `boltz_start_swap_updates` to receive typed notifications as swaps progress.
+ * Reverse swaps are claimed automatically; the [`BoltzSwapEvent::Claimed`]
+ * event reports the resulting transaction id.
+ */
+public interface BoltzEventListener {
+    
+    public fun `onEvent`(`event`: BoltzSwapEvent)
+    
+    public companion object
+}
+
+
+
+
+/**
  * Callback interface for receiving watcher events.
  *
  * Implement this trait in Swift/Kotlin/Python to receive typed notifications
@@ -432,6 +450,94 @@ public data class AddressInfo (
      * Number of transfers (real count in `get_address_info`, 1/0 presence flag in `get_account_info`)
      */
     val `transfers`: kotlin.UInt
+) {
+    public companion object
+}
+
+
+
+/**
+ * Fees and limits for a swap pair, used to size a swap and present costs.
+ */
+@kotlinx.serialization.Serializable
+public data class BoltzPairInfo (
+    /**
+     * Pair hash identifying the current terms (passed back to Boltz if needed).
+     */
+    val `hash`: kotlin.String, 
+    /**
+     * Exchange rate of the pair.
+     */
+    val `rate`: kotlin.Double, 
+    /**
+     * Minimum swap amount in satoshis.
+     */
+    val `minimalSat`: kotlin.ULong, 
+    /**
+     * Maximum swap amount in satoshis.
+     */
+    val `maximalSat`: kotlin.ULong, 
+    /**
+     * Boltz service fee as a percentage of the swap amount.
+     */
+    val `feePercentage`: kotlin.Double, 
+    /**
+     * Estimated absolute miner fees in satoshis.
+     */
+    val `minerFeesSat`: kotlin.ULong
+) {
+    public companion object
+}
+
+
+
+/**
+ * A persisted swap and its current state, returned by the listing/query APIs.
+ */
+@kotlinx.serialization.Serializable
+public data class BoltzSwap (
+    val `id`: kotlin.String, 
+    val `swapType`: BoltzSwapType, 
+    val `status`: BoltzSwapStatus, 
+    val `network`: BoltzNetwork, 
+    /**
+     * Deterministic BIP85 index used to derive this swap's key and preimage
+     * from the wallet seed. The recovery handle: given the seed and this index
+     * (or by scanning indices), the swap's secrets can be reconstructed.
+     */
+    val `swapIndex`: kotlin.ULong, 
+    /**
+     * For submarine swaps: the amount to lock onchain. For reverse swaps: the
+     * Lightning invoice amount.
+     */
+    val `amountSat`: kotlin.ULong, 
+    /**
+     * For reverse swaps: the onchain amount that will be received.
+     */
+    val `onchainAmountSat`: kotlin.ULong?, 
+    /**
+     * Lightning invoice associated with the swap (the hold invoice for reverse
+     * swaps, the invoice Boltz pays for submarine swaps).
+     */
+    val `invoice`: kotlin.String?, 
+    /**
+     * Onchain lockup address.
+     */
+    val `lockupAddress`: kotlin.String?, 
+    /**
+     * The address funds are claimed to (reverse) or refunded to (submarine).
+     */
+    val `onchainAddress`: kotlin.String?, 
+    val `timeoutBlockHeight`: kotlin.ULong, 
+    val `createdAt`: kotlin.ULong, 
+    /**
+     * Txid of the claim transaction once broadcast (reverse swaps).
+     */
+    val `claimTxId`: kotlin.String?, 
+    /**
+     * Txid of the refund transaction once broadcast (submarine swaps).
+     */
+    val `refundTxId`: kotlin.String?
 ) {
     public companion object
 }
@@ -1476,6 +1582,37 @@ public data class PubkyProfileLink (
 
 
 /**
+ * Result of creating a reverse swap (Lightning -> onchain).
+ *
+ * The caller pays `invoice` from its Lightning node; once Boltz locks funds at
+ * `lockup_address`, the module claims them to the provided onchain address.
+ */
+@kotlinx.serialization.Serializable
+public data class ReverseSwapResponse (
+    val `id`: kotlin.String, 
+    /**
+     * Hold invoice the caller must pay via Lightning.
+     */
+    val `invoice`: kotlin.String, 
+    /**
+     * Address Boltz locks the onchain funds to.
+     */
+    val `lockupAddress`: kotlin.String, 
+    /**
+     * Amount in satoshis that will be received onchain (after Boltz fees).
+     */
+    val `onchainAmountSat`: kotlin.ULong, 
+    /**
+     * Onchain timeout height for the swap.
+     */
+    val `timeoutBlockHeight`: kotlin.ULong
+) {
+    public companion object
+}
+
+
+
+/**
  * Result from querying a single Bitcoin address.
  */
 @kotlinx.serialization.Serializable
@@ -1500,6 +1637,41 @@ public data class SingleAddressInfoResult (
      * Current blockchain tip height
      */
     val `blockHeight`: kotlin.UInt
+) {
+    public companion object
+}
+
+
+
+/**
+ * Result of creating a submarine swap (onchain -> Lightning).
+ *
+ * The caller funds `address` with `expected_amount_sat` from its onchain
+ * wallet; Boltz then pays the Lightning invoice supplied at creation.
+ */
+@kotlinx.serialization.Serializable
+public data class SubmarineSwapResponse (
+    val `id`: kotlin.String, 
+    /**
+     * Onchain lockup address to send funds to.
+     */
+    val `address`: kotlin.String, 
+    /**
+     * BIP21 URI for the lockup payment.
+     */
+    val `bip21`: kotlin.String, 
+    /**
+     * Exact amount in satoshis the caller must send to `address`.
+     */
+    val `expectedAmountSat`: kotlin.ULong, 
+    /**
+     * Whether Boltz will accept a zero-conf lockup.
+     */
+    val `acceptZeroConf`: kotlin.Boolean, 
+    /**
+     * Onchain timeout height after which a refund is possible.
+     */
+    val `timeoutBlockHeight`: kotlin.ULong
 ) {
     public companion object
 }
@@ -3068,6 +3240,300 @@ public sealed class BlocktankException: kotlin.Exception() {
 
 
 
+/**
+ * Errors surfaced by the Boltz swaps module.
+ */
+public sealed class BoltzException: kotlin.Exception() {
+    
+    public class InitializationException(
+        public val `errorDetails`: kotlin.String,
+    ) : BoltzException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class ConnectionException(
+        public val `errorDetails`: kotlin.String,
+    ) : BoltzException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class DatabaseException(
+        public val `errorDetails`: kotlin.String,
+    ) : BoltzException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class ApiException(
+        public val `errorDetails`: kotlin.String,
+    ) : BoltzException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class SwapException(
+        public val `errorDetails`: kotlin.String,
+    ) : BoltzException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class BroadcastException(
+        public val `errorDetails`: kotlin.String,
+    ) : BoltzException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class InvalidInput(
+        public val `errorDetails`: kotlin.String,
+    ) : BoltzException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class SerializationException(
+        public val `errorDetails`: kotlin.String,
+    ) : BoltzException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class NotFound(
+        public val `errorDetails`: kotlin.String,
+    ) : BoltzException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+}
+
+
+
+
+/**
+ * Bitcoin network selection for Boltz swaps. Maps to the networks Boltz
+ * operates on (mainnet, testnet, regtest).
+ */
+
+@kotlinx.serialization.Serializable
+public enum class BoltzNetwork {
+    
+    MAINNET,
+    TESTNET,
+    REGTEST;
+    public companion object
+}
+
+
+
+
+
+
+/**
+ * Events emitted to a registered [`crate::modules::boltz::BoltzEventListener`]
+ * as swaps progress through their lifecycle.
+ */
+@kotlinx.serialization.Serializable
+public sealed class BoltzSwapEvent {
+    
+    /**
+     * The swap transitioned to a new status.
+     */@kotlinx.serialization.Serializable
+    public data class StatusUpdate(
+        val `swapId`: kotlin.String,
+        val `status`: BoltzSwapStatus,
+    ) : BoltzSwapEvent() {
+    }
+    
+    /**
+     * A reverse swap was claimed onchain. `txid` is the claim transaction.
+     */@kotlinx.serialization.Serializable
+    public data class Claimed(
+        val `swapId`: kotlin.String,
+        val `txid`: kotlin.String,
+    ) : BoltzSwapEvent() {
+    }
+    
+    /**
+     * A submarine swap was refunded onchain. `txid` is the refund transaction.
+     */@kotlinx.serialization.Serializable
+    public data class Refunded(
+        val `swapId`: kotlin.String,
+        val `txid`: kotlin.String,
+    ) : BoltzSwapEvent() {
+    }
+    
+    /**
+     * An error occurred while processing the swap (e.g. an auto-claim failed).
+     */@kotlinx.serialization.Serializable
+    public data class Error(
+        val `swapId`: kotlin.String,
+        val `message`: kotlin.String,
+    ) : BoltzSwapEvent() {
+    }
+    
+}
+
+
+
+
+
+
+/**
+ * Typed view of the Boltz swap lifecycle. `Unknown` carries the raw status so
+ * new server-side states don't break the bindings.
+ *
+ * See <https://api.docs.boltz.exchange/lifecycle.html>.
+ */
+@kotlinx.serialization.Serializable
+public sealed class BoltzSwapStatus {
+    
+    /**
+     * `swap.created` — initial state.
+     */
+    @kotlinx.serialization.Serializable
+    public data object SwapCreated : BoltzSwapStatus() 
+    
+    
+    /**
+     * `invoice.set` — invoice attached to a submarine swap.
+     */
+    @kotlinx.serialization.Serializable
+    public data object InvoiceSet : BoltzSwapStatus() 
+    
+    
+    /**
+     * `transaction.mempool` — a lockup transaction is in the mempool.
+     */
+    @kotlinx.serialization.Serializable
+    public data object TransactionMempool : BoltzSwapStatus() 
+    
+    
+    /**
+     * `transaction.confirmed` — a lockup transaction confirmed.
+     */
+    @kotlinx.serialization.Serializable
+    public data object TransactionConfirmed : BoltzSwapStatus() 
+    
+    
+    /**
+     * `invoice.pending` — Boltz is paying the submarine swap invoice.
+     */
+    @kotlinx.serialization.Serializable
+    public data object InvoicePending : BoltzSwapStatus() 
+    
+    
+    /**
+     * `invoice.paid` — submarine swap invoice paid by Boltz.
+     */
+    @kotlinx.serialization.Serializable
+    public data object InvoicePaid : BoltzSwapStatus() 
+    
+    
+    /**
+     * `invoice.settled` — reverse swap invoice settled (preimage revealed).
+     */
+    @kotlinx.serialization.Serializable
+    public data object InvoiceSettled : BoltzSwapStatus() 
+    
+    
+    /**
+     * `invoice.failedToPay` — submarine swap invoice could not be paid; refund.
+     */
+    @kotlinx.serialization.Serializable
+    public data object InvoiceFailedToPay : BoltzSwapStatus() 
+    
+    
+    /**
+     * `invoice.expired` — reverse swap invoice expired before payment.
+     */
+    @kotlinx.serialization.Serializable
+    public data object InvoiceExpired : BoltzSwapStatus() 
+    
+    
+    /**
+     * `transaction.claim.pending` — Boltz ready for a cooperative claim.
+     */
+    @kotlinx.serialization.Serializable
+    public data object TransactionClaimPending : BoltzSwapStatus() 
+    
+    
+    /**
+     * `transaction.claimed` — onchain funds claimed.
+     */
+    @kotlinx.serialization.Serializable
+    public data object TransactionClaimed : BoltzSwapStatus() 
+    
+    
+    /**
+     * `transaction.refunded` — onchain funds refunded.
+     */
+    @kotlinx.serialization.Serializable
+    public data object TransactionRefunded : BoltzSwapStatus() 
+    
+    
+    /**
+     * `transaction.lockupFailed` — wrong amount locked; can refund.
+     */
+    @kotlinx.serialization.Serializable
+    public data object TransactionLockupFailed : BoltzSwapStatus() 
+    
+    
+    /**
+     * `transaction.failed` — Boltz failed to lock the agreed funds.
+     */
+    @kotlinx.serialization.Serializable
+    public data object TransactionFailed : BoltzSwapStatus() 
+    
+    
+    /**
+     * `swap.expired` — swap expired without completing.
+     */
+    @kotlinx.serialization.Serializable
+    public data object SwapExpired : BoltzSwapStatus() 
+    
+    
+    /**
+     * Any status not yet modelled. `raw` holds the verbatim Boltz status.
+     */@kotlinx.serialization.Serializable
+    public data class Unknown(
+        val `raw`: kotlin.String,
+    ) : BoltzSwapStatus() {
+    }
+    
+}
+
+
+
+
+
+
+/**
+ * The direction of a Boltz swap.
+ *
+ * - `Submarine`: onchain Bitcoin -> Lightning (the user locks onchain funds,
+ * Boltz pays a Lightning invoice).
+ * - `Reverse`: Lightning -> onchain Bitcoin (the user pays a Boltz hold
+ * invoice, Boltz locks onchain funds the user then claims).
+ */
+
+@kotlinx.serialization.Serializable
+public enum class BoltzSwapType {
+    
+    SUBMARINE,
+    REVERSE;
+    public companion object
+}
+
+
+
+
+
+
+
 public sealed class BroadcastException: kotlin.Exception() {
     
     public class InvalidHex(
@@ -3356,6 +3822,13 @@ public sealed class DbException: kotlin.Exception() {
     
     public class DbBlocktankException(
         public val `errorDetails`: BlocktankException,
+    ) : DbException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class DbBoltzException(
+        public val `errorDetails`: BoltzException,
     ) : DbException() {
         override val message: String
             get() = "errorDetails=${ `errorDetails` }"
@@ -4326,6 +4799,10 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
+
+
 
 
 

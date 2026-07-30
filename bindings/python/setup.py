@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="bitkitcore",
-    version="0.4.4",
+    version="0.5.4",
     packages=find_packages(),
     package_data={
         "bitkitcore": ["*.so", "*.dylib", "*.dll"],

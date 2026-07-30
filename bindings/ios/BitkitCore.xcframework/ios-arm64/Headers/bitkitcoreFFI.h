@@ -251,6 +251,13 @@ typedef void (*UniffiForeignFutureCompleteVoid)(uint64_t, UniffiForeignFutureStr
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER_METHOD0
+typedef void (*UniffiCallbackInterfaceBoltzEventListenerMethod0)(uint64_t, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0
 typedef void (*UniffiCallbackInterfaceEventListenerMethod0)(uint64_t, RustBuffer, RustBuffer, void* _Nonnull, 
@@ -349,6 +356,14 @@ typedef void (*UniffiCallbackInterfaceTrezorUiCallbackMethod1)(uint64_t, int8_t,
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER
+typedef struct UniffiVTableCallbackInterfaceBoltzEventListener {
+    UniffiCallbackInterfaceBoltzEventListenerMethod0 _Nonnull onEvent;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfaceBoltzEventListener;
+
+#endif
 #ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_EVENT_LISTENER
 #define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_EVENT_LISTENER
 typedef struct UniffiVTableCallbackInterfaceEventListener {
@@ -383,6 +398,26 @@ typedef struct UniffiVTableCallbackInterfaceTrezorUiCallback {
     UniffiCallbackInterfaceFree _Nonnull uniffiFree;
 } UniffiVTableCallbackInterfaceTrezorUiCallback;
 
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_BOLTZEVENTLISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_BOLTZEVENTLISTENER
+void*_Nonnull uniffi_bitkitcore_fn_clone_boltzeventlistener(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_BOLTZEVENTLISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_BOLTZEVENTLISTENER
+void uniffi_bitkitcore_fn_free_boltzeventlistener(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_BOLTZEVENTLISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_BOLTZEVENTLISTENER
+void uniffi_bitkitcore_fn_init_callback_vtable_boltzeventlistener(const UniffiVTableCallbackInterfaceBoltzEventListener* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_BOLTZEVENTLISTENER_ON_EVENT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_BOLTZEVENTLISTENER_ON_EVENT
+void uniffi_bitkitcore_fn_method_boltzeventlistener_on_event(void*_Nonnull ptr, RustBuffer event, RustCallStatus *_Nonnull out_status
+);
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_EVENTLISTENER
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_EVENTLISTENER
@@ -560,6 +595,64 @@ uint64_t uniffi_bitkitcore_fn_func_blocktank_remove_all_orders(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_WIPE_ALL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_WIPE_ALL
 uint64_t uniffi_bitkitcore_fn_func_blocktank_wipe_all(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_CLAIM_REVERSE_SWAP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_CLAIM_REVERSE_SWAP
+uint64_t uniffi_bitkitcore_fn_func_boltz_claim_reverse_swap(RustBuffer swap_id, RustBuffer mnemonic, RustBuffer bip39_passphrase, RustBuffer fee_rate_sat_per_vb
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_CREATE_REVERSE_SWAP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_CREATE_REVERSE_SWAP
+uint64_t uniffi_bitkitcore_fn_func_boltz_create_reverse_swap(RustBuffer network, RustBuffer electrum_url, uint64_t amount_sat, RustBuffer claim_address, RustBuffer mnemonic, RustBuffer bip39_passphrase
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_CREATE_SUBMARINE_SWAP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_CREATE_SUBMARINE_SWAP
+uint64_t uniffi_bitkitcore_fn_func_boltz_create_submarine_swap(RustBuffer network, RustBuffer electrum_url, RustBuffer invoice, RustBuffer mnemonic, RustBuffer bip39_passphrase
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_GET_REVERSE_LIMITS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_GET_REVERSE_LIMITS
+uint64_t uniffi_bitkitcore_fn_func_boltz_get_reverse_limits(RustBuffer network
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_GET_SUBMARINE_LIMITS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_GET_SUBMARINE_LIMITS
+uint64_t uniffi_bitkitcore_fn_func_boltz_get_submarine_limits(RustBuffer network
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_GET_SWAP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_GET_SWAP
+uint64_t uniffi_bitkitcore_fn_func_boltz_get_swap(RustBuffer swap_id
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_LIST_PENDING_SWAPS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_LIST_PENDING_SWAPS
+uint64_t uniffi_bitkitcore_fn_func_boltz_list_pending_swaps(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_LIST_SWAPS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_LIST_SWAPS
+uint64_t uniffi_bitkitcore_fn_func_boltz_list_swaps(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_REFUND_SUBMARINE_SWAP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_REFUND_SUBMARINE_SWAP
+uint64_t uniffi_bitkitcore_fn_func_boltz_refund_submarine_swap(RustBuffer swap_id, RustBuffer refund_address, RustBuffer mnemonic, RustBuffer bip39_passphrase, RustBuffer fee_rate_sat_per_vb
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_START_SWAP_UPDATES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_START_SWAP_UPDATES
+uint64_t uniffi_bitkitcore_fn_func_boltz_start_swap_updates(RustBuffer network, void*_Nonnull listener, RustBuffer mnemonic, RustBuffer bip39_passphrase, RustBuffer fee_rate_sat_per_vb, int8_t accept_zero_conf
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_STOP_SWAP_UPDATES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BOLTZ_STOP_SWAP_UPDATES
+uint64_t uniffi_bitkitcore_fn_func_boltz_stop_swap_updates(void
     
 );
 #endif
@@ -1701,6 +1794,72 @@ uint16_t uniffi_bitkitcore_checksum_func_blocktank_wipe_all(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_CLAIM_REVERSE_SWAP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_CLAIM_REVERSE_SWAP
+uint16_t uniffi_bitkitcore_checksum_func_boltz_claim_reverse_swap(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_CREATE_REVERSE_SWAP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_CREATE_REVERSE_SWAP
+uint16_t uniffi_bitkitcore_checksum_func_boltz_create_reverse_swap(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_CREATE_SUBMARINE_SWAP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_CREATE_SUBMARINE_SWAP
+uint16_t uniffi_bitkitcore_checksum_func_boltz_create_submarine_swap(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_GET_REVERSE_LIMITS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_GET_REVERSE_LIMITS
+uint16_t uniffi_bitkitcore_checksum_func_boltz_get_reverse_limits(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_GET_SUBMARINE_LIMITS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_GET_SUBMARINE_LIMITS
+uint16_t uniffi_bitkitcore_checksum_func_boltz_get_submarine_limits(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_GET_SWAP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_GET_SWAP
+uint16_t uniffi_bitkitcore_checksum_func_boltz_get_swap(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_LIST_PENDING_SWAPS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_LIST_PENDING_SWAPS
+uint16_t uniffi_bitkitcore_checksum_func_boltz_list_pending_swaps(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_LIST_SWAPS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_LIST_SWAPS
+uint16_t uniffi_bitkitcore_checksum_func_boltz_list_swaps(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_REFUND_SUBMARINE_SWAP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_REFUND_SUBMARINE_SWAP
+uint16_t uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_START_SWAP_UPDATES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_START_SWAP_UPDATES
+uint16_t uniffi_bitkitcore_checksum_func_boltz_start_swap_updates(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_STOP_SWAP_UPDATES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BOLTZ_STOP_SWAP_UPDATES
+uint16_t uniffi_bitkitcore_checksum_func_boltz_stop_swap_updates(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BROADCAST_SWEEP_TRANSACTION
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BROADCAST_SWEEP_TRANSACTION
 uint16_t uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction(void
@@ -2610,6 +2769,12 @@ uint16_t uniffi_bitkitcore_checksum_func_wipe_all_databases(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_TRANSACTION_DETAILS
 uint16_t uniffi_bitkitcore_checksum_func_wipe_all_transaction_details(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_BOLTZEVENTLISTENER_ON_EVENT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_BOLTZEVENTLISTENER_ON_EVENT
+uint16_t uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event(void
     
 );
 #endif

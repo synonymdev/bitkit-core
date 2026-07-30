@@ -1,6 +1,6 @@
 [package]
 name = "bitkitcore"
-version = "0.4.4"
+version = "0.5.4"
 edition = "2021"
 
 [lib]
@@ -36,6 +36,7 @@ uuid = { version = "1.16.0", features = ["v4"] }
 hex = "0.4.3"
 bip39 = "2.0"
 bdk = { version = "0.30.2", features = ["all-keys"] }
+boltz-client = { version = "0.4.1", default-features = false, features = ["electrum", "ws"] }
 base64 = "0.22"
 log = "0.4"
 pubky = "0.6.0"

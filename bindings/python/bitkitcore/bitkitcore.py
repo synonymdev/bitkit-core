@@ -485,6 +485,28 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_boltz_claim_reverse_swap() != 52516:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_boltz_create_reverse_swap() != 20570:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_boltz_create_submarine_swap() != 27933:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_boltz_get_reverse_limits() != 59203:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_boltz_get_submarine_limits() != 5900:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_boltz_get_swap() != 17473:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_boltz_list_pending_swaps() != 20926:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_boltz_list_swaps() != 16447:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap() != 24549:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_boltz_start_swap_updates() != 168:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_boltz_stop_swap_updates() != 63683:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 43422:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013:
@@ -789,6 +811,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_wipe_all_transaction_details() != 65339:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event() != 11294:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_eventlistener_on_event() != 35531:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices() != 18766:
@@ -923,6 +947,9 @@ class _UniffiForeignFutureStructVoid(ctypes.Structure):
     ]
 _UNIFFI_FOREIGN_FUTURE_COMPLETE_VOID = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiForeignFutureStructVoid,
 )
+_UNIFFI_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
 _UNIFFI_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,_UniffiRustBuffer,ctypes.c_void_p,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -965,6 +992,11 @@ _UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD0 = ctypes.CFUNCTYPE(None,ct
 _UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD1 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,ctypes.c_int8,ctypes.POINTER(_UniffiRustBuffer),
     ctypes.POINTER(_UniffiRustCallStatus),
 )
+class _UniffiVTableCallbackInterfaceBoltzEventListener(ctypes.Structure):
+    _fields_ = [
+        ("on_event", _UNIFFI_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER_METHOD0),
+        ("uniffi_free", _UNIFFI_CALLBACK_INTERFACE_FREE),
+    ]
 class _UniffiVTableCallbackInterfaceEventListener(ctypes.Structure):
     _fields_ = [
         ("on_event", _UNIFFI_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0),
@@ -991,6 +1023,26 @@ class _UniffiVTableCallbackInterfaceTrezorUiCallback(ctypes.Structure):
         ("on_passphrase_request", _UNIFFI_CALLBACK_INTERFACE_TREZOR_UI_CALLBACK_METHOD1),
         ("uniffi_free", _UNIFFI_CALLBACK_INTERFACE_FREE),
     ]
+_UniffiLib.uniffi_bitkitcore_fn_clone_boltzeventlistener.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_clone_boltzeventlistener.restype = ctypes.c_void_p
+_UniffiLib.uniffi_bitkitcore_fn_free_boltzeventlistener.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_free_boltzeventlistener.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_boltzeventlistener.argtypes = (
+    ctypes.POINTER(_UniffiVTableCallbackInterfaceBoltzEventListener),
+)
+_UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_boltzeventlistener.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_method_boltzeventlistener_on_event.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_boltzeventlistener_on_event.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_clone_eventlistener.argtypes = (
     ctypes.c_void_p,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1177,6 +1229,68 @@ _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_remove_all_orders.restype = ctype
 _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_wipe_all.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_blocktank_wipe_all.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_claim_reverse_swap.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_claim_reverse_swap.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_create_reverse_swap.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.c_uint64,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_create_reverse_swap.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_create_submarine_swap.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_create_submarine_swap.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_get_reverse_limits.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_get_reverse_limits.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_get_submarine_limits.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_get_submarine_limits.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_get_swap.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_get_swap.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_list_pending_swaps.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_list_pending_swaps.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_list_swaps.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_list_swaps.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_refund_submarine_swap.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_refund_submarine_swap.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_start_swap_updates.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.c_int8,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_start_swap_updates.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_stop_swap_updates.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_boltz_stop_swap_updates.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_broadcast_sweep_transaction.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -2280,6 +2394,39 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders.restype =
 _UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_blocktank_wipe_all.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_claim_reverse_swap.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_claim_reverse_swap.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_create_reverse_swap.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_create_reverse_swap.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_create_submarine_swap.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_create_submarine_swap.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_get_reverse_limits.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_get_reverse_limits.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_get_submarine_limits.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_get_submarine_limits.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_get_swap.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_get_swap.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_list_pending_swaps.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_list_pending_swaps.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_list_swaps.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_list_swaps.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_start_swap_updates.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_start_swap_updates.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_stop_swap_updates.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_boltz_stop_swap_updates.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction.restype = ctypes.c_uint16
@@ -2736,6 +2883,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_databases.restype = ctypes.c
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_transaction_details.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_wipe_all_transaction_details.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_method_eventlistener_on_event.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_method_eventlistener_on_event.restype = ctypes.c_uint16
@@ -2961,6 +3111,8 @@ class _UniffiConverterBytes(_UniffiConverterRustBuffer):
     def write(value, buf):
         buf.write_i32(len(value))
         buf.write(value)
+
+
 
 
 
@@ -3345,6 +3497,258 @@ class _UniffiConverterTypeAddressInfo(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.address, buf)
         _UniffiConverterString.write(value.path, buf)
         _UniffiConverterUInt32.write(value.transfers, buf)
+
+
+class BoltzPairInfo:
+    """
+    Fees and limits for a swap pair, used to size a swap and present costs.
+    """
+
+    hash: "str"
+    """
+    Pair hash identifying the current terms (passed back to Boltz if needed).
+    """
+
+    rate: "float"
+    """
+    Exchange rate of the pair.
+    """
+
+    minimal_sat: "int"
+    """
+    Minimum swap amount in satoshis.
+    """
+
+    maximal_sat: "int"
+    """
+    Maximum swap amount in satoshis.
+    """
+
+    fee_percentage: "float"
+    """
+    Boltz service fee as a percentage of the swap amount.
+    """
+
+    miner_fees_sat: "int"
+    """
+    Estimated absolute miner fees in satoshis.
+    """
+
+    def __init__(self, *, hash: "str", rate: "float", minimal_sat: "int", maximal_sat: "int", fee_percentage: "float", miner_fees_sat: "int"):
+        self.hash = hash
+        self.rate = rate
+        self.minimal_sat = minimal_sat
+        self.maximal_sat = maximal_sat
+        self.fee_percentage = fee_percentage
+        self.miner_fees_sat = miner_fees_sat
+
+    def __str__(self):
+        return "BoltzPairInfo(hash={}, rate={}, minimal_sat={}, maximal_sat={}, fee_percentage={}, miner_fees_sat={})".format(self.hash, self.rate, self.minimal_sat, self.maximal_sat, self.fee_percentage, self.miner_fees_sat)
+
+    def __eq__(self, other):
+        if self.hash != other.hash:
+            return False
+        if self.rate != other.rate:
+            return False
+        if self.minimal_sat != other.minimal_sat:
+            return False
+        if self.maximal_sat != other.maximal_sat:
+            return False
+        if self.fee_percentage != other.fee_percentage:
+            return False
+        if self.miner_fees_sat != other.miner_fees_sat:
+            return False
+        return True
+
+class _UniffiConverterTypeBoltzPairInfo(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return BoltzPairInfo(
+            hash=_UniffiConverterString.read(buf),
+            rate=_UniffiConverterDouble.read(buf),
+            minimal_sat=_UniffiConverterUInt64.read(buf),
+            maximal_sat=_UniffiConverterUInt64.read(buf),
+            fee_percentage=_UniffiConverterDouble.read(buf),
+            miner_fees_sat=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.hash)
+        _UniffiConverterDouble.check_lower(value.rate)
+        _UniffiConverterUInt64.check_lower(value.minimal_sat)
+        _UniffiConverterUInt64.check_lower(value.maximal_sat)
+        _UniffiConverterDouble.check_lower(value.fee_percentage)
+        _UniffiConverterUInt64.check_lower(value.miner_fees_sat)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.hash, buf)
+        _UniffiConverterDouble.write(value.rate, buf)
+        _UniffiConverterUInt64.write(value.minimal_sat, buf)
+        _UniffiConverterUInt64.write(value.maximal_sat, buf)
+        _UniffiConverterDouble.write(value.fee_percentage, buf)
+        _UniffiConverterUInt64.write(value.miner_fees_sat, buf)
+
+
+class BoltzSwap:
+    """
+    A persisted swap and its current state, returned by the listing/query APIs.
+    """
+
+    id: "str"
+    swap_type: "BoltzSwapType"
+    status: "BoltzSwapStatus"
+    network: "BoltzNetwork"
+    swap_index: "int"
+    """
+    Deterministic BIP85 index used to derive this swap's key and preimage
+    from the wallet seed. The recovery handle: given the seed and this index
+    (or by scanning indices), the swap's secrets can be reconstructed.
+    """
+
+    amount_sat: "int"
+    """
+    For submarine swaps: the amount to lock onchain. For reverse swaps: the
+    Lightning invoice amount.
+    """
+
+    onchain_amount_sat: "typing.Optional[int]"
+    """
+    For reverse swaps: the onchain amount that will be received.
+    """
+
+    invoice: "typing.Optional[str]"
+    """
+    Lightning invoice associated with the swap (the hold invoice for reverse
+    swaps, the invoice Boltz pays for submarine swaps).
+    """
+
+    lockup_address: "typing.Optional[str]"
+    """
+    Onchain lockup address.
+    """
+
+    onchain_address: "typing.Optional[str]"
+    """
+    The address funds are claimed to (reverse) or refunded to (submarine).
+    """
+
+    timeout_block_height: "int"
+    created_at: "int"
+    claim_tx_id: "typing.Optional[str]"
+    """
+    Txid of the claim transaction once broadcast (reverse swaps).
+    """
+
+    refund_tx_id: "typing.Optional[str]"
+    """
+    Txid of the refund transaction once broadcast (submarine swaps).
+    """
+
+    def __init__(self, *, id: "str", swap_type: "BoltzSwapType", status: "BoltzSwapStatus", network: "BoltzNetwork", swap_index: "int", amount_sat: "int", onchain_amount_sat: "typing.Optional[int]", invoice: "typing.Optional[str]", lockup_address: "typing.Optional[str]", onchain_address: "typing.Optional[str]", timeout_block_height: "int", created_at: "int", claim_tx_id: "typing.Optional[str]", refund_tx_id: "typing.Optional[str]"):
+        self.id = id
+        self.swap_type = swap_type
+        self.status = status
+        self.network = network
+        self.swap_index = swap_index
+        self.amount_sat = amount_sat
+        self.onchain_amount_sat = onchain_amount_sat
+        self.invoice = invoice
+        self.lockup_address = lockup_address
+        self.onchain_address = onchain_address
+        self.timeout_block_height = timeout_block_height
+        self.created_at = created_at
+        self.claim_tx_id = claim_tx_id
+        self.refund_tx_id = refund_tx_id
+
+    def __str__(self):
+        return "BoltzSwap(id={}, swap_type={}, status={}, network={}, swap_index={}, amount_sat={}, onchain_amount_sat={}, invoice={}, lockup_address={}, onchain_address={}, timeout_block_height={}, created_at={}, claim_tx_id={}, refund_tx_id={})".format(self.id, self.swap_type, self.status, self.network, self.swap_index, self.amount_sat, self.onchain_amount_sat, self.invoice, self.lockup_address, self.onchain_address, self.timeout_block_height, self.created_at, self.claim_tx_id, self.refund_tx_id)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.swap_type != other.swap_type:
+            return False
+        if self.status != other.status:
+            return False
+        if self.network != other.network:
+            return False
+        if self.swap_index != other.swap_index:
+            return False
+        if self.amount_sat != other.amount_sat:
+            return False
+        if self.onchain_amount_sat != other.onchain_amount_sat:
+            return False
+        if self.invoice != other.invoice:
+            return False
+        if self.lockup_address != other.lockup_address:
+            return False
+        if self.onchain_address != other.onchain_address:
+            return False
+        if self.timeout_block_height != other.timeout_block_height:
+            return False
+        if self.created_at != other.created_at:
+            return False
+        if self.claim_tx_id != other.claim_tx_id:
+            return False
+        if self.refund_tx_id != other.refund_tx_id:
+            return False
+        return True
+
+class _UniffiConverterTypeBoltzSwap(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return BoltzSwap(
+            id=_UniffiConverterString.read(buf),
+            swap_type=_UniffiConverterTypeBoltzSwapType.read(buf),
+            status=_UniffiConverterTypeBoltzSwapStatus.read(buf),
+            network=_UniffiConverterTypeBoltzNetwork.read(buf),
+            swap_index=_UniffiConverterUInt64.read(buf),
+            amount_sat=_UniffiConverterUInt64.read(buf),
+            onchain_amount_sat=_UniffiConverterOptionalUInt64.read(buf),
+            invoice=_UniffiConverterOptionalString.read(buf),
+            lockup_address=_UniffiConverterOptionalString.read(buf),
+            onchain_address=_UniffiConverterOptionalString.read(buf),
+            timeout_block_height=_UniffiConverterUInt64.read(buf),
+            created_at=_UniffiConverterUInt64.read(buf),
+            claim_tx_id=_UniffiConverterOptionalString.read(buf),
+            refund_tx_id=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterTypeBoltzSwapType.check_lower(value.swap_type)
+        _UniffiConverterTypeBoltzSwapStatus.check_lower(value.status)
+        _UniffiConverterTypeBoltzNetwork.check_lower(value.network)
+        _UniffiConverterUInt64.check_lower(value.swap_index)
+        _UniffiConverterUInt64.check_lower(value.amount_sat)
+        _UniffiConverterOptionalUInt64.check_lower(value.onchain_amount_sat)
+        _UniffiConverterOptionalString.check_lower(value.invoice)
+        _UniffiConverterOptionalString.check_lower(value.lockup_address)
+        _UniffiConverterOptionalString.check_lower(value.onchain_address)
+        _UniffiConverterUInt64.check_lower(value.timeout_block_height)
+        _UniffiConverterUInt64.check_lower(value.created_at)
+        _UniffiConverterOptionalString.check_lower(value.claim_tx_id)
+        _UniffiConverterOptionalString.check_lower(value.refund_tx_id)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterTypeBoltzSwapType.write(value.swap_type, buf)
+        _UniffiConverterTypeBoltzSwapStatus.write(value.status, buf)
+        _UniffiConverterTypeBoltzNetwork.write(value.network, buf)
+        _UniffiConverterUInt64.write(value.swap_index, buf)
+        _UniffiConverterUInt64.write(value.amount_sat, buf)
+        _UniffiConverterOptionalUInt64.write(value.onchain_amount_sat, buf)
+        _UniffiConverterOptionalString.write(value.invoice, buf)
+        _UniffiConverterOptionalString.write(value.lockup_address, buf)
+        _UniffiConverterOptionalString.write(value.onchain_address, buf)
+        _UniffiConverterUInt64.write(value.timeout_block_height, buf)
+        _UniffiConverterUInt64.write(value.created_at, buf)
+        _UniffiConverterOptionalString.write(value.claim_tx_id, buf)
+        _UniffiConverterOptionalString.write(value.refund_tx_id, buf)
 
 
 class ChannelLiquidityOptions:
@@ -7451,6 +7855,86 @@ class _UniffiConverterTypePubkyProfileLink(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.url, buf)
 
 
+class ReverseSwapResponse:
+    """
+    Result of creating a reverse swap (Lightning -> onchain).
+
+    The caller pays `invoice` from its Lightning node; once Boltz locks funds at
+    `lockup_address`, the module claims them to the provided onchain address.
+    """
+
+    id: "str"
+    invoice: "str"
+    """
+    Hold invoice the caller must pay via Lightning.
+    """
+
+    lockup_address: "str"
+    """
+    Address Boltz locks the onchain funds to.
+    """
+
+    onchain_amount_sat: "int"
+    """
+    Amount in satoshis that will be received onchain (after Boltz fees).
+    """
+
+    timeout_block_height: "int"
+    """
+    Onchain timeout height for the swap.
+    """
+
+    def __init__(self, *, id: "str", invoice: "str", lockup_address: "str", onchain_amount_sat: "int", timeout_block_height: "int"):
+        self.id = id
+        self.invoice = invoice
+        self.lockup_address = lockup_address
+        self.onchain_amount_sat = onchain_amount_sat
+        self.timeout_block_height = timeout_block_height
+
+    def __str__(self):
+        return "ReverseSwapResponse(id={}, invoice={}, lockup_address={}, onchain_amount_sat={}, timeout_block_height={})".format(self.id, self.invoice, self.lockup_address, self.onchain_amount_sat, self.timeout_block_height)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.invoice != other.invoice:
+            return False
+        if self.lockup_address != other.lockup_address:
+            return False
+        if self.onchain_amount_sat != other.onchain_amount_sat:
+            return False
+        if self.timeout_block_height != other.timeout_block_height:
+            return False
+        return True
+
+class _UniffiConverterTypeReverseSwapResponse(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return ReverseSwapResponse(
+            id=_UniffiConverterString.read(buf),
+            invoice=_UniffiConverterString.read(buf),
+            lockup_address=_UniffiConverterString.read(buf),
+            onchain_amount_sat=_UniffiConverterUInt64.read(buf),
+            timeout_block_height=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterString.check_lower(value.invoice)
+        _UniffiConverterString.check_lower(value.lockup_address)
+        _UniffiConverterUInt64.check_lower(value.onchain_amount_sat)
+        _UniffiConverterUInt64.check_lower(value.timeout_block_height)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterString.write(value.invoice, buf)
+        _UniffiConverterString.write(value.lockup_address, buf)
+        _UniffiConverterUInt64.write(value.onchain_amount_sat, buf)
+        _UniffiConverterUInt64.write(value.timeout_block_height, buf)
+
+
 class SingleAddressInfoResult:
     """
     Result from querying a single Bitcoin address.
@@ -7530,6 +8014,97 @@ class _UniffiConverterTypeSingleAddressInfoResult(_UniffiConverterRustBuffer):
         _UniffiConverterSequenceTypeAccountUtxo.write(value.utxos, buf)
         _UniffiConverterUInt32.write(value.transfers, buf)
         _UniffiConverterUInt32.write(value.block_height, buf)
+
+
+class SubmarineSwapResponse:
+    """
+    Result of creating a submarine swap (onchain -> Lightning).
+
+    The caller funds `address` with `expected_amount_sat` from its onchain
+    wallet; Boltz then pays the Lightning invoice supplied at creation.
+    """
+
+    id: "str"
+    address: "str"
+    """
+    Onchain lockup address to send funds to.
+    """
+
+    bip21: "str"
+    """
+    BIP21 URI for the lockup payment.
+    """
+
+    expected_amount_sat: "int"
+    """
+    Exact amount in satoshis the caller must send to `address`.
+    """
+
+    accept_zero_conf: "bool"
+    """
+    Whether Boltz will accept a zero-conf lockup.
+    """
+
+    timeout_block_height: "int"
+    """
+    Onchain timeout height after which a refund is possible.
+    """
+
+    def __init__(self, *, id: "str", address: "str", bip21: "str", expected_amount_sat: "int", accept_zero_conf: "bool", timeout_block_height: "int"):
+        self.id = id
+        self.address = address
+        self.bip21 = bip21
+        self.expected_amount_sat = expected_amount_sat
+        self.accept_zero_conf = accept_zero_conf
+        self.timeout_block_height = timeout_block_height
+
+    def __str__(self):
+        return "SubmarineSwapResponse(id={}, address={}, bip21={}, expected_amount_sat={}, accept_zero_conf={}, timeout_block_height={})".format(self.id, self.address, self.bip21, self.expected_amount_sat, self.accept_zero_conf, self.timeout_block_height)
+
+    def __eq__(self, other):
+        if self.id != other.id:
+            return False
+        if self.address != other.address:
+            return False
+        if self.bip21 != other.bip21:
+            return False
+        if self.expected_amount_sat != other.expected_amount_sat:
+            return False
+        if self.accept_zero_conf != other.accept_zero_conf:
+            return False
+        if self.timeout_block_height != other.timeout_block_height:
+            return False
+        return True
+
+class _UniffiConverterTypeSubmarineSwapResponse(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return SubmarineSwapResponse(
+            id=_UniffiConverterString.read(buf),
+            address=_UniffiConverterString.read(buf),
+            bip21=_UniffiConverterString.read(buf),
+            expected_amount_sat=_UniffiConverterUInt64.read(buf),
+            accept_zero_conf=_UniffiConverterBool.read(buf),
+            timeout_block_height=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.id)
+        _UniffiConverterString.check_lower(value.address)
+        _UniffiConverterString.check_lower(value.bip21)
+        _UniffiConverterUInt64.check_lower(value.expected_amount_sat)
+        _UniffiConverterBool.check_lower(value.accept_zero_conf)
+        _UniffiConverterUInt64.check_lower(value.timeout_block_height)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.id, buf)
+        _UniffiConverterString.write(value.address, buf)
+        _UniffiConverterString.write(value.bip21, buf)
+        _UniffiConverterUInt64.write(value.expected_amount_sat, buf)
+        _UniffiConverterBool.write(value.accept_zero_conf, buf)
+        _UniffiConverterUInt64.write(value.timeout_block_height, buf)
 
 
 class SupportedHardwareWallet:
@@ -11639,6 +12214,1046 @@ class _UniffiConverterTypeBlocktankError(_UniffiConverterRustBuffer):
             _UniffiConverterString.write(value.error_details, buf)
 
 
+# BoltzError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class BoltzError(Exception):
+    """
+    Errors surfaced by the Boltz swaps module.
+    """
+
+    pass
+
+_UniffiTempBoltzError = BoltzError
+
+class BoltzError:  # type: ignore
+    """
+    Errors surfaced by the Boltz swaps module.
+    """
+
+    class InitializationError(_UniffiTempBoltzError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "BoltzError.InitializationError({})".format(str(self))
+    _UniffiTempBoltzError.InitializationError = InitializationError # type: ignore
+    class ConnectionError(_UniffiTempBoltzError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "BoltzError.ConnectionError({})".format(str(self))
+    _UniffiTempBoltzError.ConnectionError = ConnectionError # type: ignore
+    class DatabaseError(_UniffiTempBoltzError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "BoltzError.DatabaseError({})".format(str(self))
+    _UniffiTempBoltzError.DatabaseError = DatabaseError # type: ignore
+    class ApiError(_UniffiTempBoltzError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "BoltzError.ApiError({})".format(str(self))
+    _UniffiTempBoltzError.ApiError = ApiError # type: ignore
+    class SwapError(_UniffiTempBoltzError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "BoltzError.SwapError({})".format(str(self))
+    _UniffiTempBoltzError.SwapError = SwapError # type: ignore
+    class BroadcastError(_UniffiTempBoltzError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "BoltzError.BroadcastError({})".format(str(self))
+    _UniffiTempBoltzError.BroadcastError = BroadcastError # type: ignore
+    class InvalidInput(_UniffiTempBoltzError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "BoltzError.InvalidInput({})".format(str(self))
+    _UniffiTempBoltzError.InvalidInput = InvalidInput # type: ignore
+    class SerializationError(_UniffiTempBoltzError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "BoltzError.SerializationError({})".format(str(self))
+    _UniffiTempBoltzError.SerializationError = SerializationError # type: ignore
+    class NotFound(_UniffiTempBoltzError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "BoltzError.NotFound({})".format(str(self))
+    _UniffiTempBoltzError.NotFound = NotFound # type: ignore
+
+BoltzError = _UniffiTempBoltzError # type: ignore
+del _UniffiTempBoltzError
+
+
+class _UniffiConverterTypeBoltzError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BoltzError.InitializationError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 2:
+            return BoltzError.ConnectionError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return BoltzError.DatabaseError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 4:
+            return BoltzError.ApiError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 5:
+            return BoltzError.SwapError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 6:
+            return BoltzError.BroadcastError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 7:
+            return BoltzError.InvalidInput(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 8:
+            return BoltzError.SerializationError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 9:
+            return BoltzError.NotFound(
+                _UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, BoltzError.InitializationError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BoltzError.ConnectionError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BoltzError.DatabaseError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BoltzError.ApiError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BoltzError.SwapError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BoltzError.BroadcastError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BoltzError.InvalidInput):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BoltzError.SerializationError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, BoltzError.NotFound):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, BoltzError.InitializationError):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BoltzError.ConnectionError):
+            buf.write_i32(2)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BoltzError.DatabaseError):
+            buf.write_i32(3)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BoltzError.ApiError):
+            buf.write_i32(4)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BoltzError.SwapError):
+            buf.write_i32(5)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BoltzError.BroadcastError):
+            buf.write_i32(6)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BoltzError.InvalidInput):
+            buf.write_i32(7)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BoltzError.SerializationError):
+            buf.write_i32(8)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, BoltzError.NotFound):
+            buf.write_i32(9)
+            _UniffiConverterString.write(value.error_details, buf)
+
+
+
+
+
+class BoltzNetwork(enum.Enum):
+    """
+    Bitcoin network selection for Boltz swaps. Maps to the networks Boltz
+    operates on (mainnet, testnet, regtest).
+    """
+
+    MAINNET = 0
+    
+    TESTNET = 1
+    
+    REGTEST = 2
+    
+
+
+class _UniffiConverterTypeBoltzNetwork(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BoltzNetwork.MAINNET
+        if variant == 2:
+            return BoltzNetwork.TESTNET
+        if variant == 3:
+            return BoltzNetwork.REGTEST
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == BoltzNetwork.MAINNET:
+            return
+        if value == BoltzNetwork.TESTNET:
+            return
+        if value == BoltzNetwork.REGTEST:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == BoltzNetwork.MAINNET:
+            buf.write_i32(1)
+        if value == BoltzNetwork.TESTNET:
+            buf.write_i32(2)
+        if value == BoltzNetwork.REGTEST:
+            buf.write_i32(3)
+
+
+
+
+
+
+
+class BoltzSwapEvent:
+    """
+    Events emitted to a registered [`crate::modules::boltz::BoltzEventListener`]
+    as swaps progress through their lifecycle.
+    """
+
+    def __init__(self):
+        raise RuntimeError("BoltzSwapEvent cannot be instantiated directly")
+
+    # Each enum variant is a nested class of the enum itself.
+    class STATUS_UPDATE:
+        """
+        The swap transitioned to a new status.
+        """
+
+        swap_id: "str"
+        status: "BoltzSwapStatus"
+
+        def __init__(self,swap_id: "str", status: "BoltzSwapStatus"):
+            self.swap_id = swap_id
+            self.status = status
+
+        def __str__(self):
+            return "BoltzSwapEvent.STATUS_UPDATE(swap_id={}, status={})".format(self.swap_id, self.status)
+
+        def __eq__(self, other):
+            if not other.is_STATUS_UPDATE():
+                return False
+            if self.swap_id != other.swap_id:
+                return False
+            if self.status != other.status:
+                return False
+            return True
+    
+    class CLAIMED:
+        """
+        A reverse swap was claimed onchain. `txid` is the claim transaction.
+        """
+
+        swap_id: "str"
+        txid: "str"
+
+        def __init__(self,swap_id: "str", txid: "str"):
+            self.swap_id = swap_id
+            self.txid = txid
+
+        def __str__(self):
+            return "BoltzSwapEvent.CLAIMED(swap_id={}, txid={})".format(self.swap_id, self.txid)
+
+        def __eq__(self, other):
+            if not other.is_CLAIMED():
+                return False
+            if self.swap_id != other.swap_id:
+                return False
+            if self.txid != other.txid:
+                return False
+            return True
+    
+    class REFUNDED:
+        """
+        A submarine swap was refunded onchain. `txid` is the refund transaction.
+        """
+
+        swap_id: "str"
+        txid: "str"
+
+        def __init__(self,swap_id: "str", txid: "str"):
+            self.swap_id = swap_id
+            self.txid = txid
+
+        def __str__(self):
+            return "BoltzSwapEvent.REFUNDED(swap_id={}, txid={})".format(self.swap_id, self.txid)
+
+        def __eq__(self, other):
+            if not other.is_REFUNDED():
+                return False
+            if self.swap_id != other.swap_id:
+                return False
+            if self.txid != other.txid:
+                return False
+            return True
+    
+    class ERROR:
+        """
+        An error occurred while processing the swap (e.g. an auto-claim failed).
+        """
+
+        swap_id: "str"
+        message: "str"
+
+        def __init__(self,swap_id: "str", message: "str"):
+            self.swap_id = swap_id
+            self.message = message
+
+        def __str__(self):
+            return "BoltzSwapEvent.ERROR(swap_id={}, message={})".format(self.swap_id, self.message)
+
+        def __eq__(self, other):
+            if not other.is_ERROR():
+                return False
+            if self.swap_id != other.swap_id:
+                return False
+            if self.message != other.message:
+                return False
+            return True
+    
+    
+
+    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
+    # whether an instance is that variant.
+    def is_STATUS_UPDATE(self) -> bool:
+        return isinstance(self, BoltzSwapEvent.STATUS_UPDATE)
+    def is_status_update(self) -> bool:
+        return isinstance(self, BoltzSwapEvent.STATUS_UPDATE)
+    def is_CLAIMED(self) -> bool:
+        return isinstance(self, BoltzSwapEvent.CLAIMED)
+    def is_claimed(self) -> bool:
+        return isinstance(self, BoltzSwapEvent.CLAIMED)
+    def is_REFUNDED(self) -> bool:
+        return isinstance(self, BoltzSwapEvent.REFUNDED)
+    def is_refunded(self) -> bool:
+        return isinstance(self, BoltzSwapEvent.REFUNDED)
+    def is_ERROR(self) -> bool:
+        return isinstance(self, BoltzSwapEvent.ERROR)
+    def is_error(self) -> bool:
+        return isinstance(self, BoltzSwapEvent.ERROR)
+    
+
+# Now, a little trick - we make each nested variant class be a subclass of the main
+# enum class, so that method calls and instance checks etc will work intuitively.
+# We might be able to do this a little more neatly with a metaclass, but this'll do.
+BoltzSwapEvent.STATUS_UPDATE = type("BoltzSwapEvent.STATUS_UPDATE", (BoltzSwapEvent.STATUS_UPDATE, BoltzSwapEvent,), {})  # type: ignore
+BoltzSwapEvent.CLAIMED = type("BoltzSwapEvent.CLAIMED", (BoltzSwapEvent.CLAIMED, BoltzSwapEvent,), {})  # type: ignore
+BoltzSwapEvent.REFUNDED = type("BoltzSwapEvent.REFUNDED", (BoltzSwapEvent.REFUNDED, BoltzSwapEvent,), {})  # type: ignore
+BoltzSwapEvent.ERROR = type("BoltzSwapEvent.ERROR", (BoltzSwapEvent.ERROR, BoltzSwapEvent,), {})  # type: ignore
+
+
+
+
+class _UniffiConverterTypeBoltzSwapEvent(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BoltzSwapEvent.STATUS_UPDATE(
+                _UniffiConverterString.read(buf),
+                _UniffiConverterTypeBoltzSwapStatus.read(buf),
+            )
+        if variant == 2:
+            return BoltzSwapEvent.CLAIMED(
+                _UniffiConverterString.read(buf),
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return BoltzSwapEvent.REFUNDED(
+                _UniffiConverterString.read(buf),
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 4:
+            return BoltzSwapEvent.ERROR(
+                _UniffiConverterString.read(buf),
+                _UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value.is_STATUS_UPDATE():
+            _UniffiConverterString.check_lower(value.swap_id)
+            _UniffiConverterTypeBoltzSwapStatus.check_lower(value.status)
+            return
+        if value.is_CLAIMED():
+            _UniffiConverterString.check_lower(value.swap_id)
+            _UniffiConverterString.check_lower(value.txid)
+            return
+        if value.is_REFUNDED():
+            _UniffiConverterString.check_lower(value.swap_id)
+            _UniffiConverterString.check_lower(value.txid)
+            return
+        if value.is_ERROR():
+            _UniffiConverterString.check_lower(value.swap_id)
+            _UniffiConverterString.check_lower(value.message)
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value.is_STATUS_UPDATE():
+            buf.write_i32(1)
+            _UniffiConverterString.write(value.swap_id, buf)
+            _UniffiConverterTypeBoltzSwapStatus.write(value.status, buf)
+        if value.is_CLAIMED():
+            buf.write_i32(2)
+            _UniffiConverterString.write(value.swap_id, buf)
+            _UniffiConverterString.write(value.txid, buf)
+        if value.is_REFUNDED():
+            buf.write_i32(3)
+            _UniffiConverterString.write(value.swap_id, buf)
+            _UniffiConverterString.write(value.txid, buf)
+        if value.is_ERROR():
+            buf.write_i32(4)
+            _UniffiConverterString.write(value.swap_id, buf)
+            _UniffiConverterString.write(value.message, buf)
+
+
+
+
+
+
+
+class BoltzSwapStatus:
+    """
+    Typed view of the Boltz swap lifecycle. `Unknown` carries the raw status so
+    new server-side states don't break the bindings.
+
+    See <https://api.docs.boltz.exchange/lifecycle.html>.
+    """
+
+    def __init__(self):
+        raise RuntimeError("BoltzSwapStatus cannot be instantiated directly")
+
+    # Each enum variant is a nested class of the enum itself.
+    class SWAP_CREATED:
+        """
+        `swap.created` — initial state.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.SWAP_CREATED()".format()
+
+        def __eq__(self, other):
+            if not other.is_SWAP_CREATED():
+                return False
+            return True
+    
+    class INVOICE_SET:
+        """
+        `invoice.set` — invoice attached to a submarine swap.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.INVOICE_SET()".format()
+
+        def __eq__(self, other):
+            if not other.is_INVOICE_SET():
+                return False
+            return True
+    
+    class TRANSACTION_MEMPOOL:
+        """
+        `transaction.mempool` — a lockup transaction is in the mempool.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.TRANSACTION_MEMPOOL()".format()
+
+        def __eq__(self, other):
+            if not other.is_TRANSACTION_MEMPOOL():
+                return False
+            return True
+    
+    class TRANSACTION_CONFIRMED:
+        """
+        `transaction.confirmed` — a lockup transaction confirmed.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.TRANSACTION_CONFIRMED()".format()
+
+        def __eq__(self, other):
+            if not other.is_TRANSACTION_CONFIRMED():
+                return False
+            return True
+    
+    class INVOICE_PENDING:
+        """
+        `invoice.pending` — Boltz is paying the submarine swap invoice.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.INVOICE_PENDING()".format()
+
+        def __eq__(self, other):
+            if not other.is_INVOICE_PENDING():
+                return False
+            return True
+    
+    class INVOICE_PAID:
+        """
+        `invoice.paid` — submarine swap invoice paid by Boltz.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.INVOICE_PAID()".format()
+
+        def __eq__(self, other):
+            if not other.is_INVOICE_PAID():
+                return False
+            return True
+    
+    class INVOICE_SETTLED:
+        """
+        `invoice.settled` — reverse swap invoice settled (preimage revealed).
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.INVOICE_SETTLED()".format()
+
+        def __eq__(self, other):
+            if not other.is_INVOICE_SETTLED():
+                return False
+            return True
+    
+    class INVOICE_FAILED_TO_PAY:
+        """
+        `invoice.failedToPay` — submarine swap invoice could not be paid; refund.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.INVOICE_FAILED_TO_PAY()".format()
+
+        def __eq__(self, other):
+            if not other.is_INVOICE_FAILED_TO_PAY():
+                return False
+            return True
+    
+    class INVOICE_EXPIRED:
+        """
+        `invoice.expired` — reverse swap invoice expired before payment.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.INVOICE_EXPIRED()".format()
+
+        def __eq__(self, other):
+            if not other.is_INVOICE_EXPIRED():
+                return False
+            return True
+    
+    class TRANSACTION_CLAIM_PENDING:
+        """
+        `transaction.claim.pending` — Boltz ready for a cooperative claim.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.TRANSACTION_CLAIM_PENDING()".format()
+
+        def __eq__(self, other):
+            if not other.is_TRANSACTION_CLAIM_PENDING():
+                return False
+            return True
+    
+    class TRANSACTION_CLAIMED:
+        """
+        `transaction.claimed` — onchain funds claimed.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.TRANSACTION_CLAIMED()".format()
+
+        def __eq__(self, other):
+            if not other.is_TRANSACTION_CLAIMED():
+                return False
+            return True
+    
+    class TRANSACTION_REFUNDED:
+        """
+        `transaction.refunded` — onchain funds refunded.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.TRANSACTION_REFUNDED()".format()
+
+        def __eq__(self, other):
+            if not other.is_TRANSACTION_REFUNDED():
+                return False
+            return True
+    
+    class TRANSACTION_LOCKUP_FAILED:
+        """
+        `transaction.lockupFailed` — wrong amount locked; can refund.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.TRANSACTION_LOCKUP_FAILED()".format()
+
+        def __eq__(self, other):
+            if not other.is_TRANSACTION_LOCKUP_FAILED():
+                return False
+            return True
+    
+    class TRANSACTION_FAILED:
+        """
+        `transaction.failed` — Boltz failed to lock the agreed funds.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.TRANSACTION_FAILED()".format()
+
+        def __eq__(self, other):
+            if not other.is_TRANSACTION_FAILED():
+                return False
+            return True
+    
+    class SWAP_EXPIRED:
+        """
+        `swap.expired` — swap expired without completing.
+        """
+
+
+        def __init__(self,):
+            pass
+
+        def __str__(self):
+            return "BoltzSwapStatus.SWAP_EXPIRED()".format()
+
+        def __eq__(self, other):
+            if not other.is_SWAP_EXPIRED():
+                return False
+            return True
+    
+    class UNKNOWN:
+        """
+        Any status not yet modelled. `raw` holds the verbatim Boltz status.
+        """
+
+        raw: "str"
+
+        def __init__(self,raw: "str"):
+            self.raw = raw
+
+        def __str__(self):
+            return "BoltzSwapStatus.UNKNOWN(raw={})".format(self.raw)
+
+        def __eq__(self, other):
+            if not other.is_UNKNOWN():
+                return False
+            if self.raw != other.raw:
+                return False
+            return True
+    
+    
+
+    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
+    # whether an instance is that variant.
+    def is_SWAP_CREATED(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.SWAP_CREATED)
+    def is_swap_created(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.SWAP_CREATED)
+    def is_INVOICE_SET(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.INVOICE_SET)
+    def is_invoice_set(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.INVOICE_SET)
+    def is_TRANSACTION_MEMPOOL(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_MEMPOOL)
+    def is_transaction_mempool(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_MEMPOOL)
+    def is_TRANSACTION_CONFIRMED(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_CONFIRMED)
+    def is_transaction_confirmed(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_CONFIRMED)
+    def is_INVOICE_PENDING(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.INVOICE_PENDING)
+    def is_invoice_pending(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.INVOICE_PENDING)
+    def is_INVOICE_PAID(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.INVOICE_PAID)
+    def is_invoice_paid(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.INVOICE_PAID)
+    def is_INVOICE_SETTLED(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.INVOICE_SETTLED)
+    def is_invoice_settled(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.INVOICE_SETTLED)
+    def is_INVOICE_FAILED_TO_PAY(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.INVOICE_FAILED_TO_PAY)
+    def is_invoice_failed_to_pay(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.INVOICE_FAILED_TO_PAY)
+    def is_INVOICE_EXPIRED(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.INVOICE_EXPIRED)
+    def is_invoice_expired(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.INVOICE_EXPIRED)
+    def is_TRANSACTION_CLAIM_PENDING(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_CLAIM_PENDING)
+    def is_transaction_claim_pending(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_CLAIM_PENDING)
+    def is_TRANSACTION_CLAIMED(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_CLAIMED)
+    def is_transaction_claimed(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_CLAIMED)
+    def is_TRANSACTION_REFUNDED(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_REFUNDED)
+    def is_transaction_refunded(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_REFUNDED)
+    def is_TRANSACTION_LOCKUP_FAILED(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_LOCKUP_FAILED)
+    def is_transaction_lockup_failed(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_LOCKUP_FAILED)
+    def is_TRANSACTION_FAILED(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_FAILED)
+    def is_transaction_failed(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.TRANSACTION_FAILED)
+    def is_SWAP_EXPIRED(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.SWAP_EXPIRED)
+    def is_swap_expired(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.SWAP_EXPIRED)
+    def is_UNKNOWN(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.UNKNOWN)
+    def is_unknown(self) -> bool:
+        return isinstance(self, BoltzSwapStatus.UNKNOWN)
+    
+
+# Now, a little trick - we make each nested variant class be a subclass of the main
+# enum class, so that method calls and instance checks etc will work intuitively.
+# We might be able to do this a little more neatly with a metaclass, but this'll do.
+BoltzSwapStatus.SWAP_CREATED = type("BoltzSwapStatus.SWAP_CREATED", (BoltzSwapStatus.SWAP_CREATED, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.INVOICE_SET = type("BoltzSwapStatus.INVOICE_SET", (BoltzSwapStatus.INVOICE_SET, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.TRANSACTION_MEMPOOL = type("BoltzSwapStatus.TRANSACTION_MEMPOOL", (BoltzSwapStatus.TRANSACTION_MEMPOOL, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.TRANSACTION_CONFIRMED = type("BoltzSwapStatus.TRANSACTION_CONFIRMED", (BoltzSwapStatus.TRANSACTION_CONFIRMED, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.INVOICE_PENDING = type("BoltzSwapStatus.INVOICE_PENDING", (BoltzSwapStatus.INVOICE_PENDING, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.INVOICE_PAID = type("BoltzSwapStatus.INVOICE_PAID", (BoltzSwapStatus.INVOICE_PAID, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.INVOICE_SETTLED = type("BoltzSwapStatus.INVOICE_SETTLED", (BoltzSwapStatus.INVOICE_SETTLED, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.INVOICE_FAILED_TO_PAY = type("BoltzSwapStatus.INVOICE_FAILED_TO_PAY", (BoltzSwapStatus.INVOICE_FAILED_TO_PAY, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.INVOICE_EXPIRED = type("BoltzSwapStatus.INVOICE_EXPIRED", (BoltzSwapStatus.INVOICE_EXPIRED, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.TRANSACTION_CLAIM_PENDING = type("BoltzSwapStatus.TRANSACTION_CLAIM_PENDING", (BoltzSwapStatus.TRANSACTION_CLAIM_PENDING, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.TRANSACTION_CLAIMED = type("BoltzSwapStatus.TRANSACTION_CLAIMED", (BoltzSwapStatus.TRANSACTION_CLAIMED, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.TRANSACTION_REFUNDED = type("BoltzSwapStatus.TRANSACTION_REFUNDED", (BoltzSwapStatus.TRANSACTION_REFUNDED, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.TRANSACTION_LOCKUP_FAILED = type("BoltzSwapStatus.TRANSACTION_LOCKUP_FAILED", (BoltzSwapStatus.TRANSACTION_LOCKUP_FAILED, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.TRANSACTION_FAILED = type("BoltzSwapStatus.TRANSACTION_FAILED", (BoltzSwapStatus.TRANSACTION_FAILED, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.SWAP_EXPIRED = type("BoltzSwapStatus.SWAP_EXPIRED", (BoltzSwapStatus.SWAP_EXPIRED, BoltzSwapStatus,), {})  # type: ignore
+BoltzSwapStatus.UNKNOWN = type("BoltzSwapStatus.UNKNOWN", (BoltzSwapStatus.UNKNOWN, BoltzSwapStatus,), {})  # type: ignore
+
+
+
+
+class _UniffiConverterTypeBoltzSwapStatus(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BoltzSwapStatus.SWAP_CREATED(
+            )
+        if variant == 2:
+            return BoltzSwapStatus.INVOICE_SET(
+            )
+        if variant == 3:
+            return BoltzSwapStatus.TRANSACTION_MEMPOOL(
+            )
+        if variant == 4:
+            return BoltzSwapStatus.TRANSACTION_CONFIRMED(
+            )
+        if variant == 5:
+            return BoltzSwapStatus.INVOICE_PENDING(
+            )
+        if variant == 6:
+            return BoltzSwapStatus.INVOICE_PAID(
+            )
+        if variant == 7:
+            return BoltzSwapStatus.INVOICE_SETTLED(
+            )
+        if variant == 8:
+            return BoltzSwapStatus.INVOICE_FAILED_TO_PAY(
+            )
+        if variant == 9:
+            return BoltzSwapStatus.INVOICE_EXPIRED(
+            )
+        if variant == 10:
+            return BoltzSwapStatus.TRANSACTION_CLAIM_PENDING(
+            )
+        if variant == 11:
+            return BoltzSwapStatus.TRANSACTION_CLAIMED(
+            )
+        if variant == 12:
+            return BoltzSwapStatus.TRANSACTION_REFUNDED(
+            )
+        if variant == 13:
+            return BoltzSwapStatus.TRANSACTION_LOCKUP_FAILED(
+            )
+        if variant == 14:
+            return BoltzSwapStatus.TRANSACTION_FAILED(
+            )
+        if variant == 15:
+            return BoltzSwapStatus.SWAP_EXPIRED(
+            )
+        if variant == 16:
+            return BoltzSwapStatus.UNKNOWN(
+                _UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value.is_SWAP_CREATED():
+            return
+        if value.is_INVOICE_SET():
+            return
+        if value.is_TRANSACTION_MEMPOOL():
+            return
+        if value.is_TRANSACTION_CONFIRMED():
+            return
+        if value.is_INVOICE_PENDING():
+            return
+        if value.is_INVOICE_PAID():
+            return
+        if value.is_INVOICE_SETTLED():
+            return
+        if value.is_INVOICE_FAILED_TO_PAY():
+            return
+        if value.is_INVOICE_EXPIRED():
+            return
+        if value.is_TRANSACTION_CLAIM_PENDING():
+            return
+        if value.is_TRANSACTION_CLAIMED():
+            return
+        if value.is_TRANSACTION_REFUNDED():
+            return
+        if value.is_TRANSACTION_LOCKUP_FAILED():
+            return
+        if value.is_TRANSACTION_FAILED():
+            return
+        if value.is_SWAP_EXPIRED():
+            return
+        if value.is_UNKNOWN():
+            _UniffiConverterString.check_lower(value.raw)
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value.is_SWAP_CREATED():
+            buf.write_i32(1)
+        if value.is_INVOICE_SET():
+            buf.write_i32(2)
+        if value.is_TRANSACTION_MEMPOOL():
+            buf.write_i32(3)
+        if value.is_TRANSACTION_CONFIRMED():
+            buf.write_i32(4)
+        if value.is_INVOICE_PENDING():
+            buf.write_i32(5)
+        if value.is_INVOICE_PAID():
+            buf.write_i32(6)
+        if value.is_INVOICE_SETTLED():
+            buf.write_i32(7)
+        if value.is_INVOICE_FAILED_TO_PAY():
+            buf.write_i32(8)
+        if value.is_INVOICE_EXPIRED():
+            buf.write_i32(9)
+        if value.is_TRANSACTION_CLAIM_PENDING():
+            buf.write_i32(10)
+        if value.is_TRANSACTION_CLAIMED():
+            buf.write_i32(11)
+        if value.is_TRANSACTION_REFUNDED():
+            buf.write_i32(12)
+        if value.is_TRANSACTION_LOCKUP_FAILED():
+            buf.write_i32(13)
+        if value.is_TRANSACTION_FAILED():
+            buf.write_i32(14)
+        if value.is_SWAP_EXPIRED():
+            buf.write_i32(15)
+        if value.is_UNKNOWN():
+            buf.write_i32(16)
+            _UniffiConverterString.write(value.raw, buf)
+
+
+
+
+
+
+
+class BoltzSwapType(enum.Enum):
+    """
+    The direction of a Boltz swap.
+
+    - `Submarine`: onchain Bitcoin -> Lightning (the user locks onchain funds,
+    Boltz pays a Lightning invoice).
+    - `Reverse`: Lightning -> onchain Bitcoin (the user pays a Boltz hold
+    invoice, Boltz locks onchain funds the user then claims).
+    """
+
+    SUBMARINE = 0
+    
+    REVERSE = 1
+    
+
+
+class _UniffiConverterTypeBoltzSwapType(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return BoltzSwapType.SUBMARINE
+        if variant == 2:
+            return BoltzSwapType.REVERSE
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == BoltzSwapType.SUBMARINE:
+            return
+        if value == BoltzSwapType.REVERSE:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == BoltzSwapType.SUBMARINE:
+            buf.write_i32(1)
+        if value == BoltzSwapType.REVERSE:
+            buf.write_i32(2)
+
+
+
+
 # BroadcastError
 # We want to define each variant as a nested class that's also a subclass,
 # which is tricky in Python.  To accomplish this we're going to create each
@@ -12594,6 +14209,16 @@ class DbError:  # type: ignore
         def __repr__(self):
             return "DbError.DbBlocktankError({})".format(str(self))
     _UniffiTempDbError.DbBlocktankError = DbBlocktankError # type: ignore
+    class DbBoltzError(_UniffiTempDbError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "DbError.DbBoltzError({})".format(str(self))
+    _UniffiTempDbError.DbBoltzError = DbBoltzError # type: ignore
     class InitializationError(_UniffiTempDbError):
         def __init__(self, error_details):
             super().__init__(", ".join([
@@ -12622,6 +14247,10 @@ class _UniffiConverterTypeDbError(_UniffiConverterRustBuffer):
                 _UniffiConverterTypeBlocktankError.read(buf),
             )
         if variant == 3:
+            return DbError.DbBoltzError(
+                _UniffiConverterTypeBoltzError.read(buf),
+            )
+        if variant == 4:
             return DbError.InitializationError(
                 _UniffiConverterString.read(buf),
             )
@@ -12635,6 +14264,9 @@ class _UniffiConverterTypeDbError(_UniffiConverterRustBuffer):
         if isinstance(value, DbError.DbBlocktankError):
             _UniffiConverterTypeBlocktankError.check_lower(value.error_details)
             return
+        if isinstance(value, DbError.DbBoltzError):
+            _UniffiConverterTypeBoltzError.check_lower(value.error_details)
+            return
         if isinstance(value, DbError.InitializationError):
             _UniffiConverterString.check_lower(value.error_details)
             return
@@ -12647,8 +14279,11 @@ class _UniffiConverterTypeDbError(_UniffiConverterRustBuffer):
         if isinstance(value, DbError.DbBlocktankError):
             buf.write_i32(2)
             _UniffiConverterTypeBlocktankError.write(value.error_details, buf)
-        if isinstance(value, DbError.InitializationError):
+        if isinstance(value, DbError.DbBoltzError):
             buf.write_i32(3)
+            _UniffiConverterTypeBoltzError.write(value.error_details, buf)
+        if isinstance(value, DbError.InitializationError):
+            buf.write_i32(4)
             _UniffiConverterString.write(value.error_details, buf)
 
 
@@ -15651,6 +17286,33 @@ class _UniffiConverterOptionalBytes(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypeBoltzSwap(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeBoltzSwap.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeBoltzSwap.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeBoltzSwap.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypeClosedChannelDetails(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -16883,6 +18545,31 @@ class _UniffiConverterSequenceTypeAddressInfo(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterSequenceTypeBoltzSwap(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeBoltzSwap.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeBoltzSwap.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeBoltzSwap.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypeClosedChannelDetails(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -17640,6 +19327,146 @@ class _UniffiConverterMapStringString(_UniffiConverterRustBuffer):
         return d
 
 # objects.
+class BoltzEventListenerProtocol(typing.Protocol):
+    """
+    Callback interface for receiving Boltz swap lifecycle events.
+
+    Implement this in Swift/Kotlin/Python and register it via
+    `boltz_start_swap_updates` to receive typed notifications as swaps progress.
+    Reverse swaps are claimed automatically; the [`BoltzSwapEvent::Claimed`]
+    event reports the resulting transaction id.
+    """
+
+    def on_event(self, event: "BoltzSwapEvent"):
+        raise NotImplementedError
+# BoltzEventListener is a foreign trait so treated like a callback interface, where the
+# primary use-case is the trait being implemented locally.
+# It is a base-class local implementations might subclass.
+
+
+class BoltzEventListener():
+    """
+    Callback interface for receiving Boltz swap lifecycle events.
+
+    Implement this in Swift/Kotlin/Python and register it via
+    `boltz_start_swap_updates` to receive typed notifications as swaps progress.
+    Reverse swaps are claimed automatically; the [`BoltzSwapEvent::Claimed`]
+    event reports the resulting transaction id.
+    """
+
+    def on_event(self, event: "BoltzSwapEvent"):
+        raise NotImplementedError
+# `BoltzEventListenerImpl` is the implementation for a Rust implemented version.
+class BoltzEventListenerImpl():
+    """
+    Callback interface for receiving Boltz swap lifecycle events.
+
+    Implement this in Swift/Kotlin/Python and register it via
+    `boltz_start_swap_updates` to receive typed notifications as swaps progress.
+    Reverse swaps are claimed automatically; the [`BoltzSwapEvent::Claimed`]
+    event reports the resulting transaction id.
+    """
+
+    _pointer: ctypes.c_void_p
+    
+    def __init__(self, *args, **kwargs):
+        raise ValueError("This class has no default constructor")
+
+    def __del__(self):
+        # In case of partial initialization of instances.
+        pointer = getattr(self, "_pointer", None)
+        if pointer is not None:
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_free_boltzeventlistener, pointer)
+
+    def _uniffi_clone_pointer(self):
+        return _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_clone_boltzeventlistener, self._pointer)
+
+    # Used by alternative constructors or any methods which return this type.
+    @classmethod
+    def _make_instance_(cls, pointer):
+        # Lightly yucky way to bypass the usual __init__ logic
+        # and just create a new instance with the required pointer.
+        inst = cls.__new__(cls)
+        inst._pointer = pointer
+        return inst
+
+
+    def on_event(self, event: "BoltzSwapEvent") -> None:
+        _UniffiConverterTypeBoltzSwapEvent.check_lower(event)
+        
+        _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_boltzeventlistener_on_event,self._uniffi_clone_pointer(),
+        _UniffiConverterTypeBoltzSwapEvent.lower(event))
+
+
+
+
+
+
+# Put all the bits inside a class to keep the top-level namespace clean
+class _UniffiTraitImplBoltzEventListener:
+    # For each method, generate a callback function to pass to Rust
+
+    @_UNIFFI_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER_METHOD0
+    def on_event(
+            uniffi_handle,
+            event,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeBoltzEventListener._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterTypeBoltzSwapEvent.lift(event), )
+            method = uniffi_obj.on_event
+            return method(*args)
+
+        
+        write_return_value = lambda v: None
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_FREE
+    def _uniffi_free(uniffi_handle):
+        _UniffiConverterTypeBoltzEventListener._handle_map.remove(uniffi_handle)
+
+    # Generate the FFI VTable.  This has a field for each callback interface method.
+    _uniffi_vtable = _UniffiVTableCallbackInterfaceBoltzEventListener(
+        on_event,
+        _uniffi_free
+    )
+    # Send Rust a pointer to the VTable.  Note: this means we need to keep the struct alive forever,
+    # or else bad things will happen when Rust tries to access it.
+    _UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_boltzeventlistener(ctypes.byref(_uniffi_vtable))
+
+
+
+class _UniffiConverterTypeBoltzEventListener:
+    _handle_map = _UniffiHandleMap()
+
+    @staticmethod
+    def lift(value: int):
+        return BoltzEventListenerImpl._make_instance_(value)
+
+    @staticmethod
+    def check_lower(value: BoltzEventListener):
+        pass
+
+    @staticmethod
+    def lower(value: BoltzEventListenerProtocol):
+        return _UniffiConverterTypeBoltzEventListener._handle_map.insert(value)
+
+    @classmethod
+    def read(cls, buf: _UniffiRustBuffer):
+        ptr = buf.read_u64()
+        if ptr == 0:
+            raise InternalError("Raw pointer value was null")
+        return cls.lift(ptr)
+
+    @classmethod
+    def write(cls, value: BoltzEventListenerProtocol, buf: _UniffiRustBuffer):
+        buf.write_u64(cls.lower(value))
 class EventListenerProtocol(typing.Protocol):
     """
     Callback interface for receiving watcher events.
@@ -19086,6 +20913,333 @@ async def blocktank_wipe_all() -> None:
         
     # Error FFI converter
 _UniffiConverterTypeBlocktankError,
+
+    )
+async def boltz_claim_reverse_swap(swap_id: "str",mnemonic: "str",bip39_passphrase: "typing.Optional[str]",fee_rate_sat_per_vb: "typing.Optional[float]") -> "str":
+
+    """
+    Claim a reverse swap's onchain funds to its claim address, returning the
+    broadcast claim transaction id. Normally happens automatically via the
+    updates stream; exposed for manual recovery. The claim key is re-derived from
+    `mnemonic`. Claims are serialized per swap, so calling this while the updates
+    stream is auto-claiming the same swap waits for that claim and returns its
+    txid rather than broadcasting a second transaction.
+    """
+
+    _UniffiConverterString.check_lower(swap_id)
+    
+    _UniffiConverterString.check_lower(mnemonic)
+    
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+    
+    _UniffiConverterOptionalDouble.check_lower(fee_rate_sat_per_vb)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_boltz_claim_reverse_swap(
+        _UniffiConverterString.lower(swap_id),
+        _UniffiConverterString.lower(mnemonic),
+        _UniffiConverterOptionalString.lower(bip39_passphrase),
+        _UniffiConverterOptionalDouble.lower(fee_rate_sat_per_vb)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBoltzError,
+
+    )
+async def boltz_create_reverse_swap(network: "BoltzNetwork",electrum_url: "str",amount_sat: "int",claim_address: "str",mnemonic: "str",bip39_passphrase: "typing.Optional[str]") -> "ReverseSwapResponse":
+
+    """
+    Create a reverse swap (Lightning -> onchain).
+
+    The caller pays the returned hold invoice from its Lightning node;
+    `claim_address` is the onchain address the received funds are claimed to.
+    The claim key and preimage are derived deterministically from `mnemonic`
+    (only the derivation index is persisted, never the secrets) so the claim can
+    be made automatically once Boltz locks the funds. `bip39_passphrase` must
+    match the wallet's, or claims will derive the wrong key.
+    """
+
+    _UniffiConverterTypeBoltzNetwork.check_lower(network)
+    
+    _UniffiConverterString.check_lower(electrum_url)
+    
+    _UniffiConverterUInt64.check_lower(amount_sat)
+    
+    _UniffiConverterString.check_lower(claim_address)
+    
+    _UniffiConverterString.check_lower(mnemonic)
+    
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_boltz_create_reverse_swap(
+        _UniffiConverterTypeBoltzNetwork.lower(network),
+        _UniffiConverterString.lower(electrum_url),
+        _UniffiConverterUInt64.lower(amount_sat),
+        _UniffiConverterString.lower(claim_address),
+        _UniffiConverterString.lower(mnemonic),
+        _UniffiConverterOptionalString.lower(bip39_passphrase)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeReverseSwapResponse.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBoltzError,
+
+    )
+async def boltz_create_submarine_swap(network: "BoltzNetwork",electrum_url: "str",invoice: "str",mnemonic: "str",bip39_passphrase: "typing.Optional[str]") -> "SubmarineSwapResponse":
+
+    """
+    Create a submarine swap (onchain -> Lightning).
+
+    `invoice` is a BOLT11 invoice the caller's Lightning node generated. The
+    caller funds the returned lockup address from its onchain wallet. The refund
+    key is derived deterministically from `mnemonic` (only the derivation index
+    is persisted, never the key), and the swap is tracked if an updates stream is
+    running. `bip39_passphrase` must match the wallet's, or refunds will derive
+    the wrong key.
+    """
+
+    _UniffiConverterTypeBoltzNetwork.check_lower(network)
+    
+    _UniffiConverterString.check_lower(electrum_url)
+    
+    _UniffiConverterString.check_lower(invoice)
+    
+    _UniffiConverterString.check_lower(mnemonic)
+    
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_boltz_create_submarine_swap(
+        _UniffiConverterTypeBoltzNetwork.lower(network),
+        _UniffiConverterString.lower(electrum_url),
+        _UniffiConverterString.lower(invoice),
+        _UniffiConverterString.lower(mnemonic),
+        _UniffiConverterOptionalString.lower(bip39_passphrase)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeSubmarineSwapResponse.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBoltzError,
+
+    )
+async def boltz_get_reverse_limits(network: "BoltzNetwork") -> "BoltzPairInfo":
+
+    """
+    Fetch fees and limits for reverse swaps (Lightning -> onchain).
+    """
+
+    _UniffiConverterTypeBoltzNetwork.check_lower(network)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_boltz_get_reverse_limits(
+        _UniffiConverterTypeBoltzNetwork.lower(network)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeBoltzPairInfo.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBoltzError,
+
+    )
+async def boltz_get_submarine_limits(network: "BoltzNetwork") -> "BoltzPairInfo":
+
+    """
+    Fetch fees and limits for submarine swaps (onchain -> Lightning).
+    """
+
+    _UniffiConverterTypeBoltzNetwork.check_lower(network)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_boltz_get_submarine_limits(
+        _UniffiConverterTypeBoltzNetwork.lower(network)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeBoltzPairInfo.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBoltzError,
+
+    )
+async def boltz_get_swap(swap_id: "str") -> "typing.Optional[BoltzSwap]":
+
+    """
+    Fetch a single swap by id.
+    """
+
+    _UniffiConverterString.check_lower(swap_id)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_boltz_get_swap(
+        _UniffiConverterString.lower(swap_id)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterOptionalTypeBoltzSwap.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBoltzError,
+
+    )
+async def boltz_list_pending_swaps() -> "typing.List[BoltzSwap]":
+
+    """
+    List swaps that have not reached a terminal state (for recovery/resume).
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_boltz_list_pending_swaps(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterSequenceTypeBoltzSwap.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBoltzError,
+
+    )
+async def boltz_list_swaps() -> "typing.List[BoltzSwap]":
+
+    """
+    List every persisted swap, newest first.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_boltz_list_swaps(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterSequenceTypeBoltzSwap.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBoltzError,
+
+    )
+async def boltz_refund_submarine_swap(swap_id: "str",refund_address: "str",mnemonic: "str",bip39_passphrase: "typing.Optional[str]",fee_rate_sat_per_vb: "typing.Optional[float]") -> "str":
+
+    """
+    Refund a submarine swap's locked funds to `refund_address`, returning the
+    broadcast refund transaction id. Used when Boltz fails to pay the invoice or
+    the swap expires. The refund key is re-derived from `mnemonic`. Refunds are
+    serialized per swap, so two concurrent calls cannot both broadcast: the second
+    waits for the first and returns its txid.
+    """
+
+    _UniffiConverterString.check_lower(swap_id)
+    
+    _UniffiConverterString.check_lower(refund_address)
+    
+    _UniffiConverterString.check_lower(mnemonic)
+    
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+    
+    _UniffiConverterOptionalDouble.check_lower(fee_rate_sat_per_vb)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_boltz_refund_submarine_swap(
+        _UniffiConverterString.lower(swap_id),
+        _UniffiConverterString.lower(refund_address),
+        _UniffiConverterString.lower(mnemonic),
+        _UniffiConverterOptionalString.lower(bip39_passphrase),
+        _UniffiConverterOptionalDouble.lower(fee_rate_sat_per_vb)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeBoltzError,
+
+    )
+async def boltz_start_swap_updates(network: "BoltzNetwork",listener: "BoltzEventListener",mnemonic: "str",bip39_passphrase: "typing.Optional[str]",fee_rate_sat_per_vb: "typing.Optional[float]",accept_zero_conf: "bool") -> None:
+
+    """
+    Open a Boltz WebSocket for `network`, subscribe to all pending swaps, and
+    drive their lifecycle (auto-claiming reverse swaps) until stopped. Replaces
+    any previously running updates stream (only one network is tracked at a
+    time). `mnemonic` is held in memory for the lifetime of the stream so
+    confirmed reverse swaps can be auto-claimed; it is never persisted. Events
+    are delivered to `listener`.
+
+    `fee_rate_sat_per_vb` is the fee rate used for automatic claim transactions.
+    Bitkit owns fee estimation and should pass its current recommended rate; when
+    `None`, a conservative built-in default is used. To auto-claim at an updated
+    fee rate, call this again (it restarts the stream).
+
+    `accept_zero_conf` claims reverse swaps as soon as Boltz's lockup enters the
+    mempool instead of waiting for its confirmation. That reveals the preimage
+    against an unconfirmed lockup: if the lockup were replaced before
+    confirming, the user would be debited on Lightning without receiving
+    onchain funds. Pass `false` to keep the confirmation-gated default.
+    """
+
+    _UniffiConverterTypeBoltzNetwork.check_lower(network)
+    
+    _UniffiConverterTypeBoltzEventListener.check_lower(listener)
+    
+    _UniffiConverterString.check_lower(mnemonic)
+    
+    _UniffiConverterOptionalString.check_lower(bip39_passphrase)
+    
+    _UniffiConverterOptionalDouble.check_lower(fee_rate_sat_per_vb)
+    
+    _UniffiConverterBool.check_lower(accept_zero_conf)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_boltz_start_swap_updates(
+        _UniffiConverterTypeBoltzNetwork.lower(network),
+        _UniffiConverterTypeBoltzEventListener.lower(listener),
+        _UniffiConverterString.lower(mnemonic),
+        _UniffiConverterOptionalString.lower(bip39_passphrase),
+        _UniffiConverterOptionalDouble.lower(fee_rate_sat_per_vb),
+        _UniffiConverterBool.lower(accept_zero_conf)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeBoltzError,
+
+    )
+async def boltz_stop_swap_updates() -> None:
+
+    """
+    Stop the running Boltz updates stream, if any.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_boltz_stop_swap_updates(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+
+    None,
 
     )
 async def broadcast_sweep_transaction(psbt: "str",mnemonic_phrase: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]",electrum_url: "str") -> "SweepResult":
@@ -21516,6 +23670,11 @@ __all__ = [
     "AddressType",
     "BitcoinNetworkEnum",
     "BlocktankError",
+    "BoltzError",
+    "BoltzNetwork",
+    "BoltzSwapEvent",
+    "BoltzSwapStatus",
+    "BoltzSwapType",
     "BroadcastError",
     "BtBolt11InvoiceState",
     "BtChannelOrderErrorType",
@@ -21557,6 +23716,8 @@ __all__ = [
     "AccountUtxo",
     "ActivityTags",
     "AddressInfo",
+    "BoltzPairInfo",
+    "BoltzSwap",
     "ChannelLiquidityOptions",
     "ChannelLiquidityParams",
     "ClosedChannelDetails",
@@ -21613,7 +23774,9 @@ __all__ = [
     "PubkyAuthDetails",
     "PubkyProfile",
     "PubkyProfileLink",
+    "ReverseSwapResponse",
     "SingleAddressInfoResult",
+    "SubmarineSwapResponse",
     "SupportedHardwareWallet",
     "SweepResult",
     "SweepTransactionPreview",
@@ -21660,6 +23823,17 @@ __all__ = [
     "blocktank_remove_all_cjit_entries",
     "blocktank_remove_all_orders",
     "blocktank_wipe_all",
+    "boltz_claim_reverse_swap",
+    "boltz_create_reverse_swap",
+    "boltz_create_submarine_swap",
+    "boltz_get_reverse_limits",
+    "boltz_get_submarine_limits",
+    "boltz_get_swap",
+    "boltz_list_pending_swaps",
+    "boltz_list_swaps",
+    "boltz_refund_submarine_swap",
+    "boltz_start_swap_updates",
+    "boltz_stop_swap_updates",
     "broadcast_sweep_transaction",
     "calculate_channel_liquidity_options",
     "cancel_pubky_auth",
@@ -21812,6 +23986,7 @@ __all__ = [
     "wipe_all_closed_channels",
     "wipe_all_databases",
     "wipe_all_transaction_details",
+    "BoltzEventListener",
     "EventListener",
     "TrezorTransportCallback",
     "TrezorUiCallback",

@@ -32,6 +32,10 @@ use crate::modules::blocktank::{
     IBt0ConfMinTxFeeWindow, IBtBolt11Invoice, IBtEstimateFeeResponse, IBtEstimateFeeResponse2,
     IBtInfo, IBtOrder, ICJitEntry, IGift,
 };
+use crate::modules::boltz::{
+    self, BoltzDB, BoltzError, BoltzEventListener, BoltzNetwork, BoltzPairInfo, BoltzSwap,
+    ReverseSwapResponse, SubmarineSwapResponse,
+};
 use crate::modules::pubky::{PubkyAuthDetails, PubkyAuthKind, PubkyError, PubkyProfile};
 use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
@@ -61,6 +65,7 @@ use crate::onchain::{
     start_watcher, stop_all_watchers, stop_watcher, EventListener, WatcherParams,
 };
 pub use modules::activity;
+pub use modules::boltz as boltz_swaps;
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::scanner::{DecodingError, LnurlPayData, Scanner};
@@ -79,6 +84,7 @@ pub struct DatabaseConnections {
 
 pub struct AsyncDatabaseConnections {
     blocktank_db: Option<BlocktankDB>,
+    boltz_db: Option<Arc<BoltzDB>>,
 }
 // Two separate global states for sync and async connections
 static DB: OnceCell<StdMutex<DatabaseConnections>> = OnceCell::new();
@@ -454,7 +460,12 @@ pub fn init_db(base_path: String) -> Result<String, DbError> {
     DB.get_or_init(|| StdMutex::new(DatabaseConnections { activity_db: None }));
 
     // Initialize async database state
-    ASYNC_DB.get_or_init(|| TokioMutex::new(AsyncDatabaseConnections { blocktank_db: None }));
+    ASYNC_DB.get_or_init(|| {
+        TokioMutex::new(AsyncDatabaseConnections {
+            blocktank_db: None,
+            boltz_db: None,
+        })
+    });
 
     // Create runtime for async operations
     let rt = ensure_runtime();
@@ -462,6 +473,7 @@ pub fn init_db(base_path: String) -> Result<String, DbError> {
     let activity_db = ActivityDB::new(&format!("{}/activity.db", base_path))?;
     let blocktank_db = rt
         .block_on(async { BlocktankDB::new(&format!("{}/blocktank.db", base_path), None).await })?;
+    let boltz_db = rt.block_on(async { BoltzDB::new(&format!("{}/boltz.db", base_path)).await })?;
 
     // Initialize sync database
     {
@@ -475,6 +487,7 @@ pub fn init_db(base_path: String) -> Result<String, DbError> {
         rt.block_on(async {
             let mut guard = async_db.lock().await;
             guard.blocktank_db = Some(blocktank_db);
+            guard.boltz_db = Some(Arc::new(boltz_db));
         });
     }
 
@@ -2712,4 +2725,271 @@ pub fn onchain_stop_watcher(watcher_id: String) -> Result<(), AccountInfoError> 
 #[uniffi::export]
 pub fn onchain_stop_all_watchers() {
     stop_all_watchers();
+}
+
+// ============================================================================
+// Boltz swaps
+// ============================================================================
+
+/// Clone the shared Boltz database handle. The handle is held only briefly
+/// while cloning, so long-running swap operations don't block other callers.
+async fn get_boltz_db() -> Result<Arc<BoltzDB>, BoltzError> {
+    let cell = ASYNC_DB.get().ok_or(BoltzError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string(),
+    })?;
+    let guard = cell.lock().await;
+    guard.boltz_db.clone().ok_or(BoltzError::ConnectionError {
+        error_details: "Database not initialized. Call init_db first.".to_string(),
+    })
+}
+
+fn boltz_runtime_err(e: tokio::task::JoinError) -> BoltzError {
+    BoltzError::ConnectionError {
+        error_details: format!("Runtime error: {}", e),
+    }
+}
+
+/// Fetch fees and limits for submarine swaps (onchain -> Lightning).
+#[uniffi::export]
+pub async fn boltz_get_submarine_limits(
+    network: BoltzNetwork,
+) -> Result<BoltzPairInfo, BoltzError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { boltz::get_submarine_limits(network).await })
+        .await
+        .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Fetch fees and limits for reverse swaps (Lightning -> onchain).
+#[uniffi::export]
+pub async fn boltz_get_reverse_limits(network: BoltzNetwork) -> Result<BoltzPairInfo, BoltzError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { boltz::get_reverse_limits(network).await })
+        .await
+        .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Create a submarine swap (onchain -> Lightning).
+///
+/// `invoice` is a BOLT11 invoice the caller's Lightning node generated. The
+/// caller funds the returned lockup address from its onchain wallet. The refund
+/// key is derived deterministically from `mnemonic` (only the derivation index
+/// is persisted, never the key), and the swap is tracked if an updates stream is
+/// running. `bip39_passphrase` must match the wallet's, or refunds will derive
+/// the wrong key.
+#[uniffi::export]
+pub async fn boltz_create_submarine_swap(
+    network: BoltzNetwork,
+    electrum_url: String,
+    invoice: String,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+) -> Result<SubmarineSwapResponse, BoltzError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let db = get_boltz_db().await?;
+        let response = db
+            .create_submarine_swap(network, electrum_url, invoice, mnemonic, bip39_passphrase)
+            .await?;
+        boltz::subscribe_if_active(network, &response.id).await;
+        Ok(response)
+    })
+    .await
+    .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Create a reverse swap (Lightning -> onchain).
+///
+/// The caller pays the returned hold invoice from its Lightning node;
+/// `claim_address` is the onchain address the received funds are claimed to.
+/// The claim key and preimage are derived deterministically from `mnemonic`
+/// (only the derivation index is persisted, never the secrets) so the claim can
+/// be made automatically once Boltz locks the funds. `bip39_passphrase` must
+/// match the wallet's, or claims will derive the wrong key.
+#[uniffi::export]
+pub async fn boltz_create_reverse_swap(
+    network: BoltzNetwork,
+    electrum_url: String,
+    amount_sat: u64,
+    claim_address: String,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+) -> Result<ReverseSwapResponse, BoltzError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let db = get_boltz_db().await?;
+        let response = db
+            .create_reverse_swap(
+                network,
+                electrum_url,
+                amount_sat,
+                claim_address,
+                mnemonic,
+                bip39_passphrase,
+            )
+            .await?;
+        boltz::subscribe_if_active(network, &response.id).await;
+        Ok(response)
+    })
+    .await
+    .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// List every persisted swap, newest first.
+#[uniffi::export]
+pub async fn boltz_list_swaps() -> Result<Vec<BoltzSwap>, BoltzError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let db = get_boltz_db().await?;
+        Ok(db
+            .list_swaps()
+            .await?
+            .iter()
+            .map(|r| r.to_boltz_swap())
+            .collect())
+    })
+    .await
+    .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// List swaps that have not reached a terminal state (for recovery/resume).
+#[uniffi::export]
+pub async fn boltz_list_pending_swaps() -> Result<Vec<BoltzSwap>, BoltzError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let db = get_boltz_db().await?;
+        Ok(db
+            .list_pending_swaps()
+            .await?
+            .iter()
+            .map(|r| r.to_boltz_swap())
+            .collect())
+    })
+    .await
+    .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Fetch a single swap by id.
+#[uniffi::export]
+pub async fn boltz_get_swap(swap_id: String) -> Result<Option<BoltzSwap>, BoltzError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let db = get_boltz_db().await?;
+        Ok(db.get_swap(&swap_id).await?.map(|r| r.to_boltz_swap()))
+    })
+    .await
+    .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Claim a reverse swap's onchain funds to its claim address, returning the
+/// broadcast claim transaction id. Normally happens automatically via the
+/// updates stream; exposed for manual recovery. The claim key is re-derived from
+/// `mnemonic`. Claims are serialized per swap, so calling this while the updates
+/// stream is auto-claiming the same swap waits for that claim and returns its
+/// txid rather than broadcasting a second transaction.
+#[uniffi::export]
+pub async fn boltz_claim_reverse_swap(
+    swap_id: String,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+    fee_rate_sat_per_vb: Option<f64>,
+) -> Result<String, BoltzError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let db = get_boltz_db().await?;
+        let outcome = boltz::claim_reverse_swap_guarded(
+            &db,
+            &swap_id,
+            &mnemonic,
+            bip39_passphrase.as_deref(),
+            fee_rate_sat_per_vb,
+        )
+        .await?;
+        Ok(outcome.txid())
+    })
+    .await
+    .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Refund a submarine swap's locked funds to `refund_address`, returning the
+/// broadcast refund transaction id. Used when Boltz fails to pay the invoice or
+/// the swap expires. The refund key is re-derived from `mnemonic`. Refunds are
+/// serialized per swap, so two concurrent calls cannot both broadcast: the second
+/// waits for the first and returns its txid.
+#[uniffi::export]
+pub async fn boltz_refund_submarine_swap(
+    swap_id: String,
+    refund_address: String,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+    fee_rate_sat_per_vb: Option<f64>,
+) -> Result<String, BoltzError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let db = get_boltz_db().await?;
+        boltz::refund_submarine_swap_guarded(
+            &db,
+            &swap_id,
+            refund_address,
+            &mnemonic,
+            bip39_passphrase.as_deref(),
+            fee_rate_sat_per_vb,
+        )
+        .await
+    })
+    .await
+    .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Open a Boltz WebSocket for `network`, subscribe to all pending swaps, and
+/// drive their lifecycle (auto-claiming reverse swaps) until stopped. Replaces
+/// any previously running updates stream (only one network is tracked at a
+/// time). `mnemonic` is held in memory for the lifetime of the stream so
+/// confirmed reverse swaps can be auto-claimed; it is never persisted. Events
+/// are delivered to `listener`.
+///
+/// `fee_rate_sat_per_vb` is the fee rate used for automatic claim transactions.
+/// Bitkit owns fee estimation and should pass its current recommended rate; when
+/// `None`, a conservative built-in default is used. To auto-claim at an updated
+/// fee rate, call this again (it restarts the stream).
+///
+/// `accept_zero_conf` claims reverse swaps as soon as Boltz's lockup enters the
+/// mempool instead of waiting for its confirmation. That reveals the preimage
+/// against an unconfirmed lockup: if the lockup were replaced before
+/// confirming, the user would be debited on Lightning without receiving
+/// onchain funds. Pass `false` to keep the confirmation-gated default.
+#[uniffi::export]
+pub async fn boltz_start_swap_updates(
+    network: BoltzNetwork,
+    listener: Arc<dyn BoltzEventListener>,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+    fee_rate_sat_per_vb: Option<f64>,
+    accept_zero_conf: bool,
+) -> Result<(), BoltzError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        let db = get_boltz_db().await?;
+        boltz::start_swap_updates(
+            db,
+            network,
+            listener,
+            mnemonic,
+            bip39_passphrase,
+            fee_rate_sat_per_vb,
+            accept_zero_conf,
+        )
+        .await
+    })
+    .await
+    .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Stop the running Boltz updates stream, if any.
+#[uniffi::export]
+pub async fn boltz_stop_swap_updates() {
+    let rt = ensure_runtime();
+    let _ = rt
+        .spawn(async move { boltz::stop_swap_updates().await })
+        .await;
 }
