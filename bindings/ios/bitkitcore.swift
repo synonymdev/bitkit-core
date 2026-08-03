@@ -18010,6 +18010,84 @@ extension NetworkType: Codable {}
 
 
 
+
+public enum OnchainError: Swift.Error {
+
+    
+    
+    case InvalidExtendedPublicKey(errorDetails: String
+    )
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeOnchainError: FfiConverterRustBuffer {
+    typealias SwiftType = OnchainError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> OnchainError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .InvalidExtendedPublicKey(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: OnchainError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .InvalidExtendedPublicKey(errorDetails):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeOnchainError_lift(_ buf: RustBuffer) throws -> OnchainError {
+    return try FfiConverterTypeOnchainError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeOnchainError_lower(_ value: OnchainError) -> RustBuffer {
+    return FfiConverterTypeOnchainError.lower(value)
+}
+
+
+extension OnchainError: Equatable, Hashable {}
+
+extension OnchainError: Codable {}
+
+
+
+
+extension OnchainError: Foundation.LocalizedError {
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+
+
+
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
@@ -23586,6 +23664,13 @@ public func scanLegacyRnNativeSegwitRecoveryFunds(mnemonicPhrase: String, networ
             errorHandler: FfiConverterTypeSweepError_lift
         )
 }
+public func serializedExtendedPubkey(xpub: String)throws  -> Data  {
+    return try  FfiConverterData.lift(try rustCallWithError(FfiConverterTypeOnchainError_lift) {
+    uniffi_bitkitcore_fn_func_serialized_extended_pubkey(
+        FfiConverterString.lower(xpub),$0
+    )
+})
+}
 public func startPubkyAuth(caps: String)async throws  -> String  {
     return
         try  await uniffiRustCallAsync(
@@ -24586,6 +24671,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds() != 52496) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_serialized_extended_pubkey() != 12807) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_start_pubky_auth() != 18158) {

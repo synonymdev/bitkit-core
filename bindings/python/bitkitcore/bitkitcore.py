@@ -721,6 +721,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds() != 52496:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_serialized_extended_pubkey() != 12807:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_start_pubky_auth() != 18158:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_test_notification() != 32857:
@@ -1897,6 +1899,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_scan_legacy_rn_native_segwit_recovery_funds
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_scan_legacy_rn_native_segwit_recovery_funds.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_serialized_extended_pubkey.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_serialized_extended_pubkey.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_start_pubky_auth.argtypes = (
     _UniffiRustBuffer,
 )
@@ -2748,6 +2755,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_resolve_pubky_url.restype = ctypes.c_
 _UniffiLib.uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_serialized_extended_pubkey.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_serialized_extended_pubkey.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_start_pubky_auth.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_start_pubky_auth.restype = ctypes.c_uint16
@@ -14907,6 +14917,56 @@ class _UniffiConverterTypeNetworkType(_UniffiConverterRustBuffer):
 
 
 
+# OnchainError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class OnchainError(Exception):
+    pass
+
+_UniffiTempOnchainError = OnchainError
+
+class OnchainError:  # type: ignore
+    class InvalidExtendedPublicKey(_UniffiTempOnchainError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "OnchainError.InvalidExtendedPublicKey({})".format(str(self))
+    _UniffiTempOnchainError.InvalidExtendedPublicKey = InvalidExtendedPublicKey # type: ignore
+
+OnchainError = _UniffiTempOnchainError # type: ignore
+del _UniffiTempOnchainError
+
+
+class _UniffiConverterTypeOnchainError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return OnchainError.InvalidExtendedPublicKey(
+                _UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, OnchainError.InvalidExtendedPublicKey):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, OnchainError.InvalidExtendedPublicKey):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value.error_details, buf)
+
+
 
 
 
@@ -22959,6 +23019,13 @@ async def scan_legacy_rn_native_segwit_recovery_funds(mnemonic_phrase: "str",net
 _UniffiConverterTypeSweepError,
 
     )
+
+def serialized_extended_pubkey(xpub: "str") -> "bytes":
+    _UniffiConverterString.check_lower(xpub)
+    
+    return _UniffiConverterBytes.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeOnchainError,_UniffiLib.uniffi_bitkitcore_fn_func_serialized_extended_pubkey,
+        _UniffiConverterString.lower(xpub)))
+
 async def start_pubky_auth(caps: "str") -> "str":
 
     _UniffiConverterString.check_lower(caps)
@@ -23694,6 +23761,7 @@ __all__ = [
     "ManualRefundStateEnum",
     "Network",
     "NetworkType",
+    "OnchainError",
     "PassphraseResponse",
     "PaymentState",
     "PaymentType",
@@ -23941,6 +24009,7 @@ __all__ = [
     "reset_pre_activity_metadata_tags",
     "resolve_pubky_url",
     "scan_legacy_rn_native_segwit_recovery_funds",
+    "serialized_extended_pubkey",
     "start_pubky_auth",
     "test_notification",
     "transaction_details_from_json",
