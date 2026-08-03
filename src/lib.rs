@@ -56,9 +56,9 @@ use crate::onchain::{
     broadcast_raw_tx, get_account_info, get_address_info, get_transaction_detail,
     get_transaction_history, AccountInfoError, AccountInfoResult, AccountType, AddressError,
     BroadcastError, GetAddressResponse, GetAddressesResponse, LegacyRnCloseRecoveryScanResult,
-    LegacyRnCloseRecoverySweepPreview, Network, SingleAddressInfoResult, SweepError, SweepResult,
-    SweepTransactionPreview, SweepableBalances, TransactionDetail, TransactionHistoryResult,
-    ValidationResult, DEFAULT_GAP_LIMIT,
+    LegacyRnCloseRecoverySweepPreview, Network, OnchainError, SingleAddressInfoResult, SweepError,
+    SweepResult, SweepTransactionPreview, SweepableBalances, TransactionDetail,
+    TransactionHistoryResult, ValidationResult, DEFAULT_GAP_LIMIT,
 };
 use crate::onchain::{compose_transaction, ComposeParams, ComposeResult};
 use crate::onchain::{
@@ -220,6 +220,11 @@ pub async fn lnurl_auth(
 #[uniffi::export]
 pub fn validate_bitcoin_address(address: String) -> Result<ValidationResult, AddressError> {
     onchain::BitcoinAddressValidator::validate_address(&address)
+}
+
+#[uniffi::export]
+pub fn serialized_extended_pubkey(xpub: String) -> Result<Vec<u8>, OnchainError> {
+    onchain::serialized_extended_pubkey(&xpub)
 }
 
 #[uniffi::export]
