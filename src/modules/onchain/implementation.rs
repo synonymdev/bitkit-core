@@ -57,8 +57,6 @@ pub struct BitcoinAddressValidator;
 
 impl BitcoinAddressValidator {
     pub fn validate_address(address: &str) -> Result<ValidationResult, AddressError> {
-        println!("\nValidating address: {}", address);
-
         let unchecked_addr = match parse_address(address) {
             Ok(addr) => addr,
             Err(e) => return Err(e),
@@ -73,8 +71,6 @@ impl BitcoinAddressValidator {
         }
         let address_type = get_address_type(address)?;
 
-        println!("✓ Validation successful!");
-
         Ok(ValidationResult {
             address: address.to_string(),
             network: NetworkType::from(expected_network),
@@ -86,12 +82,9 @@ impl BitcoinAddressValidator {
         let external_word_count = word_count.map(|wc| wc.into());
         let mnemonic = bitcoin_address_generator::generate_mnemonic(external_word_count, None);
         match mnemonic {
-            Ok(mnemonic) => {
-                println!("✓ Generated mnemonic: {}", mnemonic);
-                Ok(mnemonic)
-            }
+            Ok(mnemonic) => Ok(mnemonic),
             Err(e) => {
-                println!("✗ Failed to generate mnemonic: {:?}", e);
+                log::error!("Failed to generate mnemonic: {:?}", e);
                 Err(AddressError::MnemonicGenerationFailed)
             }
         }
@@ -145,7 +138,7 @@ impl BitcoinAddressValidator {
             bip39_passphrase,
         )
         .map_err(|e| {
-            println!("✗ Failed to derive address: {:?}", e);
+            log::error!("Failed to derive address: {:?}", e);
             AddressError::AddressDerivationFailed
         })?;
 
@@ -171,7 +164,7 @@ impl BitcoinAddressValidator {
             count,
         )
         .map_err(|e| {
-            println!("✗ Failed to derive addresses: {:?}", e);
+            log::error!("Failed to derive addresses: {:?}", e);
             AddressError::AddressDerivationFailed
         })?;
 
@@ -191,7 +184,7 @@ impl BitcoinAddressValidator {
             bip39_passphrase,
         )
         .map_err(|e| {
-            println!("✗ Failed to derive private key: {:?}", e);
+            log::error!("Failed to derive private key: {:?}", e);
             AddressError::AddressDerivationFailed
         })?;
 
@@ -2133,21 +2126,12 @@ pub async fn get_address_info(
 }
 
 fn parse_address(address: &str) -> Result<Address<NetworkUnchecked>, AddressError> {
-    Address::from_str(address)
-        .map_err(|e| {
-            println!("✗ Failed to parse address: {:?}", e);
-            AddressError::InvalidAddress
-        })
-        .map(|addr| {
-            println!("✓ Successfully parsed address");
-            addr
-        })
+    Address::from_str(address).map_err(|_| AddressError::InvalidAddress)
 }
 
 fn determine_network(address: &str) -> Result<Network, AddressError> {
     match address {
         s if s.starts_with("1") || s.starts_with("3") || s.starts_with("bc1") => {
-            println!("✓ Determined network: Bitcoin");
             Ok(Network::Bitcoin)
         }
         s if s.starts_with("2")
@@ -2155,17 +2139,10 @@ fn determine_network(address: &str) -> Result<Network, AddressError> {
             || s.starts_with("m")
             || s.starts_with("n") =>
         {
-            println!("✓ Determined network: Testnet");
             Ok(Network::Testnet)
         }
-        s if s.starts_with("bcrt1") => {
-            println!("✓ Determined network: Regtest");
-            Ok(Network::Regtest)
-        }
-        _ => {
-            println!("✗ Could not determine network");
-            Err(AddressError::InvalidNetwork)
-        }
+        s if s.starts_with("bcrt1") => Ok(Network::Regtest),
+        _ => Err(AddressError::InvalidNetwork),
     }
 }
 
@@ -2173,20 +2150,9 @@ fn verify_network(
     unchecked_addr: Address<NetworkUnchecked>,
     expected_network: Network,
 ) -> Result<Address, AddressError> {
-    println!(
-        "Attempting to verify address for network: {:?}",
-        expected_network
-    );
     unchecked_addr
         .require_network(expected_network)
-        .map_err(|e| {
-            println!("✗ Network verification failed: {:?}", e);
-            AddressError::InvalidNetwork
-        })
-        .map(|addr| {
-            println!("✓ Address verified for network");
-            addr
-        })
+        .map_err(|_| AddressError::InvalidNetwork)
 }
 
 fn get_address_type(address: &str) -> Result<AddressType, AddressError> {
@@ -2220,13 +2186,5 @@ fn get_address_type(address: &str) -> Result<AddressType, AddressError> {
         _ => Some(AddressType::Unknown),
     };
 
-    address_type
-        .map(|t| {
-            println!("✓ Determined address type: {:?}", t);
-            t
-        })
-        .ok_or_else(|| {
-            println!("✗ Could not determine address type");
-            AddressError::InvalidAddress
-        })
+    address_type.ok_or(AddressError::InvalidAddress)
 }

@@ -1,3 +1,9 @@
+// This crate ships inside a wallet, so nothing here may write to the process
+// stdio. `println!`/`eprintln!` bypass the `log` facade the platforms route to
+// their own sinks, and anything printed can be captured by a debugger, a
+// redirected stdio stream or a sysdiagnose bundle. Use `log::*` instead.
+#![deny(clippy::print_stdout, clippy::print_stderr, clippy::dbg_macro)]
+
 uniffi::setup_scaffolding!();
 
 // Initialize Android logger so Rust log::info! calls appear in logcat
@@ -2281,7 +2287,7 @@ pub extern "system" fn Java_to_bitkit_services_BluetoothInit_nativeInit(
         }
         Err(e) => {
             // Log the error - this will be visible in logcat
-            eprintln!("Failed to initialize btleplug: {:?}", e);
+            log::error!("Failed to initialize btleplug: {:?}", e);
             jni::sys::JNI_FALSE
         }
     }

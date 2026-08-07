@@ -1,3 +1,5 @@
+#![allow(clippy::print_stdout)]
+
 use crate::modules::boltz::api::{get_reverse_limits, get_submarine_limits};
 use crate::modules::boltz::claim::{claim_reverse_swap_guarded, ClaimOutcome};
 use crate::modules::boltz::errors::BoltzError;
