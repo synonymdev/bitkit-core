@@ -84,17 +84,8 @@ impl BitcoinAddressValidator {
 
     pub fn genenerate_mnemonic(word_count: Option<WordCount>) -> Result<String, AddressError> {
         let external_word_count = word_count.map(|wc| wc.into());
-        let mnemonic = bitcoin_address_generator::generate_mnemonic(external_word_count, None);
-        match mnemonic {
-            Ok(mnemonic) => {
-                println!("✓ Generated mnemonic: {}", mnemonic);
-                Ok(mnemonic)
-            }
-            Err(e) => {
-                println!("✗ Failed to generate mnemonic: {:?}", e);
-                Err(AddressError::MnemonicGenerationFailed)
-            }
-        }
+        bitcoin_address_generator::generate_mnemonic(external_word_count, None)
+            .map_err(|_| AddressError::MnemonicGenerationFailed)
     }
 
     pub fn validate_mnemonic(mnemonic_phrase: &str) -> Result<(), AddressError> {

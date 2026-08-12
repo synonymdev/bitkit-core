@@ -214,6 +214,26 @@ mod tests {
     }
 
     #[test]
+    fn generate_mnemonic_does_not_print_seed_material() {
+        let src = include_str!("implementation.rs");
+        assert!(
+            !src.contains("Generated mnemonic"),
+            "generate_mnemonic must not print the seed phrase"
+        );
+        let start = src
+            .find("pub fn genenerate_mnemonic")
+            .expect("mnemonic generator should exist");
+        let fn_src = src[start..]
+            .split("\n    pub fn ")
+            .next()
+            .expect("mnemonic generator body should be bounded");
+        assert!(
+            !fn_src.contains("println!"),
+            "mnemonic generator must not write to stdout"
+        );
+    }
+
+    #[test]
     fn test_derive_bitcoin_address() {
         // Use the standard test mnemonic
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
