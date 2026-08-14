@@ -4,6 +4,8 @@ const STAGING_SERVER: &str = "https://api.stag.blocktank.to/blocktank/api/v2";
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::print_stdout)]
+
     use super::*;
     use crate::modules::blocktank::liquidity::{
         calculate_channel_liquidity_options, get_default_lsp_balance, ChannelLiquidityParams,

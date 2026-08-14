@@ -32,8 +32,6 @@ impl BlocktankDB {
             .create_order(lsp_balance_sat, channel_expiry_weeks, options)
             .await;
 
-        println!("Raw API response: {:#?}", response);
-
         let order = response.map_err(|e| BlocktankError::DataError {
             error_details: format!("Failed to create order with Blocktank client: {}", e),
         })?;
@@ -204,7 +202,7 @@ impl BlocktankDB {
             match self.refresh_cjit_entry(&entry_id).await {
                 Ok(entry) => refreshed_entries.push(entry),
                 Err(e) => {
-                    println!("Warning: Failed to refresh CJIT entry {}: {}", entry_id, e);
+                    log::warn!("Failed to refresh CJIT entry {}: {}", entry_id, e);
                     continue;
                 }
             }

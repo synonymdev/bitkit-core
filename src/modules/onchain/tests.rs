@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::print_stdout)]
+
     use super::super::implementation::{
         onchain_to_bdk_network, run_account_info_blocking, LegacyRnNativeSegwitRecoverySpendable,
     };
