@@ -1951,7 +1951,7 @@ public func FfiConverterTypeTrezorUiCallback_lower(_ value: TrezorUiCallback) ->
 public protocol UrDecoderProtocol: AnyObject, Sendable {
     
     /**
-     * Accept one camera frame. Invalid or changed streams reset the decoder.
+     * Adds one UR fragment and returns the current decoding status.
      */
     func receive(frame: String) throws  -> UrDecoderStatus
     
@@ -2024,7 +2024,7 @@ public convenience init() {
 
     
     /**
-     * Accept one camera frame. Invalid or changed streams reset the decoder.
+     * Adds one UR fragment and returns the current decoding status.
      */
 open func receive(frame: String)throws  -> UrDecoderStatus  {
     return try  FfiConverterTypeUrDecoderStatus_lift(try rustCallWithError(FfiConverterTypeUrError_lift) {
@@ -25893,7 +25893,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_method_urdecoder_receive() != 41071) {
+    if (uniffi_bitkitcore_checksum_method_urdecoder_receive() != 11477) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_method_urdecoder_reset() != 6027) {

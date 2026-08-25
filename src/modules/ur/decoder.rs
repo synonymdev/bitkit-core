@@ -32,17 +32,13 @@ impl UrDecoder {
         })
     }
 
-    /// Accept one camera frame. Invalid or changed streams reset the decoder.
+    /// Adds one UR fragment and returns the current decoding status.
     pub fn receive(&self, frame: String) -> Result<UrDecoderStatus, UrError> {
         let mut state = self
             .state
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
-        let result = state.receive(&frame);
-        if result.is_err() {
-            *state = DecoderState::default();
-        }
-        result
+        state.receive(&frame)
     }
 
     /// Clear all frames so the decoder can receive another message.
@@ -92,10 +88,6 @@ impl DecoderState {
     }
 
     fn receive_single(&mut self, frame: &str, ur_type: String) -> Result<UrDecoderStatus, UrError> {
-        if self.decoder.ur_type().is_some() {
-            return Err(stream_changed());
-        }
-
         let (kind, cbor) = ::ur::ur::decode(frame).map_err(invalid_ur)?;
         if kind != ::ur::ur::Kind::SinglePart {
             return Err(UrError::InvalidUr {
@@ -104,6 +96,7 @@ impl DecoderState {
         }
 
         let payload = decode_payload(&ur_type, cbor)?;
+        *self = Self::default();
         self.completed = Some(payload.clone());
         Ok(UrDecoderStatus {
             progress: 1.0,
@@ -129,18 +122,28 @@ impl DecoderState {
 
         self.ensure_sequence_capacity(sequence_number, fragment_count)?;
 
-        self.decoder.receive(frame).map_err(invalid_ur)?;
+        match self.decoder.receive(frame) {
+            Ok(()) => {}
+            Err(error) if is_different_stream(&error) => {
+                return self.receive_replacement_multipart(
+                    frame,
+                    ur_type,
+                    sequence_number,
+                    fragment_count,
+                );
+            }
+            Err(error) => return Err(invalid_ur(error)),
+        }
         self.received_sequences.insert(sequence_number);
 
         if self.decoder.complete() {
-            let cbor =
-                self.decoder
-                    .message()
-                    .map_err(invalid_ur)?
-                    .ok_or_else(|| UrError::InvalidUr {
-                        reason: "decoder completed without a message".to_string(),
-                    })?;
-            let payload = decode_payload(&ur_type, cbor)?;
+            let payload = match self.decode_completed_payload(&ur_type) {
+                Ok(payload) => payload,
+                Err(error) => {
+                    *self = Self::default();
+                    return Err(error);
+                }
+            };
             self.completed = Some(payload.clone());
             return Ok(UrDecoderStatus {
                 progress: 1.0,
@@ -154,6 +157,31 @@ impl DecoderState {
             fragment_count,
             payload: None,
         })
+    }
+
+    fn receive_replacement_multipart(
+        &mut self,
+        frame: &str,
+        ur_type: String,
+        sequence_number: u32,
+        fragment_count: u32,
+    ) -> Result<UrDecoderStatus, UrError> {
+        let mut replacement = Self::default();
+        let status =
+            replacement.receive_multipart(frame, ur_type, sequence_number, fragment_count)?;
+        *self = replacement;
+        Ok(status)
+    }
+
+    fn decode_completed_payload(&self, ur_type: &str) -> Result<UrPayload, UrError> {
+        let cbor =
+            self.decoder
+                .message()
+                .map_err(invalid_ur)?
+                .ok_or_else(|| UrError::InvalidUr {
+                    reason: "decoder completed without a message".to_string(),
+                })?;
+        decode_payload(ur_type, cbor)
     }
 
     fn ensure_sequence_capacity(
@@ -300,15 +328,17 @@ fn invalid_ur(error: ::ur::ur::Error) -> UrError {
     }
 }
 
+fn is_different_stream(error: &::ur::ur::Error) -> bool {
+    matches!(
+        error,
+        ::ur::ur::Error::UnexpectedType
+            | ::ur::ur::Error::Fountain(::ur::fountain::Error::InconsistentPart)
+    )
+}
+
 fn invalid_sequence() -> UrError {
     UrError::InvalidUr {
         reason: "invalid multipart sequence".to_string(),
-    }
-}
-
-fn stream_changed() -> UrError {
-    UrError::InvalidUr {
-        reason: "UR stream changed before completion".to_string(),
     }
 }
 
@@ -326,6 +356,22 @@ mod tests {
             output: vec![],
         };
         STANDARD.encode(Psbt::from_unsigned_tx(transaction).unwrap().serialize())
+    }
+
+    fn encode_bytes(data: &[u8], max_fragment_length: usize) -> Vec<String> {
+        let cbor = minicbor::to_vec(ByteVec::from(data.to_vec())).unwrap();
+        let mut encoder = ::ur::Encoder::new(&cbor, max_fragment_length, "bytes").unwrap();
+        (0..encoder.fragment_count())
+            .map(|_| encoder.next_part().unwrap())
+            .collect()
+    }
+
+    fn replace_bytewords_checksum(frame: &str, checksum_source: &str) -> String {
+        const CHECKSUM_LENGTH: usize = 8;
+        let checksum_start = frame.len() - CHECKSUM_LENGTH;
+        let wrong_checksum = &checksum_source[checksum_source.len() - CHECKSUM_LENGTH..];
+        assert_ne!(&frame[checksum_start..], wrong_checksum);
+        format!("{}{wrong_checksum}", &frame[..checksum_start])
     }
 
     #[test]
@@ -354,6 +400,54 @@ mod tests {
         }
 
         assert_eq!(result, Some(UrPayload::CryptoPsbt { psbt: expected }));
+    }
+
+    #[test]
+    fn invalid_frame_preserves_multipart_progress() {
+        let expected = b"animated QR scan";
+        let frames = encode_bytes(expected, 5);
+        let invalid_frame = replace_bytewords_checksum(&frames[1], &frames[0]);
+        let decoder = UrDecoder::new();
+
+        decoder.receive(frames[0].clone()).unwrap();
+        let error = decoder.receive(invalid_frame).unwrap_err();
+        assert!(matches!(
+            error,
+            UrError::InvalidUr { reason } if reason.contains("checksum")
+        ));
+
+        let mut payload = None;
+        for frame in &frames[1..] {
+            payload = decoder.receive(frame.clone()).unwrap().payload;
+        }
+        assert_eq!(
+            payload,
+            Some(UrPayload::Bytes {
+                data: expected.to_vec()
+            })
+        );
+    }
+
+    #[test]
+    fn valid_different_stream_keeps_its_first_fragment() {
+        let original = encode_bytes(&[0x11; 24], 5);
+        let expected = [0x22; 24];
+        let replacement = encode_bytes(&expected, 5);
+        assert_eq!(original.len(), replacement.len());
+        let decoder = UrDecoder::new();
+
+        decoder.receive(original[0].clone()).unwrap();
+
+        let mut payload = None;
+        for frame in replacement {
+            payload = decoder.receive(frame).unwrap().payload;
+        }
+        assert_eq!(
+            payload,
+            Some(UrPayload::Bytes {
+                data: expected.to_vec()
+            })
+        );
     }
 
     #[test]

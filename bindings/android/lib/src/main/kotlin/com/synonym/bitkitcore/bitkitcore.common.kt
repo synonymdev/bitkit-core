@@ -323,7 +323,7 @@ public interface TrezorUiCallback {
 public interface UrDecoderInterface {
     
     /**
-     * Accept one camera frame. Invalid or changed streams reset the decoder.
+     * Adds one UR fragment and returns the current decoding status.
      */
     @Throws(UrException::class)
     public fun `receive`(`frame`: kotlin.String): UrDecoderStatus
@@ -5075,8 +5075,6 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
-
-
 
 
 

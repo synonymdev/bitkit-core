@@ -849,7 +849,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_method_urdecoder_receive() != 41071:
+    if lib.uniffi_bitkitcore_checksum_method_urdecoder_receive() != 11477:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_urdecoder_reset() != 6027:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -21571,7 +21571,7 @@ class UrDecoderProtocol(typing.Protocol):
 
     def receive(self, frame: "str"):
         """
-        Accept one camera frame. Invalid or changed streams reset the decoder.
+        Adds one UR fragment and returns the current decoding status.
         """
 
         raise NotImplementedError
@@ -21612,7 +21612,7 @@ class UrDecoder():
 
     def receive(self, frame: "str") -> "UrDecoderStatus":
         """
-        Accept one camera frame. Invalid or changed streams reset the decoder.
+        Adds one UR fragment and returns the current decoding status.
         """
 
         _UniffiConverterString.check_lower(frame)
@@ -25018,4 +25018,3 @@ __all__ = [
     "TrezorUiCallback",
     "UrDecoder",
 ]
-

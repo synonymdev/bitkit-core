@@ -2220,7 +2220,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_urdecoder_receive() != 41071.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_urdecoder_receive() != 11477.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_method_urdecoder_reset() != 6027.toShort()) {
@@ -5884,7 +5884,7 @@ public open class UrDecoder: Disposable, UrDecoderInterface {
 
     
     /**
-     * Accept one camera frame. Invalid or changed streams reset the decoder.
+     * Adds one UR fragment and returns the current decoding status.
      */
     @Throws(UrException::class)
     public override fun `receive`(`frame`: kotlin.String): UrDecoderStatus {
