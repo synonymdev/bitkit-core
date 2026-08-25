@@ -534,6 +534,32 @@ RustBuffer uniffi_bitkitcore_fn_method_trezoruicallback_on_pin_request(void*_Non
 RustBuffer uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request(void*_Nonnull ptr, int8_t on_device, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_URDECODER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_URDECODER
+void*_Nonnull uniffi_bitkitcore_fn_clone_urdecoder(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_URDECODER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_URDECODER
+void uniffi_bitkitcore_fn_free_urdecoder(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CONSTRUCTOR_URDECODER_NEW
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CONSTRUCTOR_URDECODER_NEW
+void*_Nonnull uniffi_bitkitcore_fn_constructor_urdecoder_new(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_URDECODER_RECEIVE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_URDECODER_RECEIVE
+RustBuffer uniffi_bitkitcore_fn_method_urdecoder_receive(void*_Nonnull ptr, RustBuffer frame, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_URDECODER_RESET
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_URDECODER_RESET
+void uniffi_bitkitcore_fn_method_urdecoder_reset(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITIES_FROM_JSON
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITIES_FROM_JSON
 RustBuffer uniffi_bitkitcore_fn_func_activities_from_json(RustBuffer json, RustCallStatus *_Nonnull out_status
@@ -801,6 +827,11 @@ uint64_t uniffi_bitkitcore_fn_func_fetch_pubky_file_string(RustBuffer uri
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_FETCH_PUBKY_PROFILE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_FETCH_PUBKY_PROFILE
 uint64_t uniffi_bitkitcore_fn_func_fetch_pubky_profile(RustBuffer public_key
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_FINALIZE_PSBT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_FINALIZE_PSBT
+RustBuffer uniffi_bitkitcore_fn_func_finalize_psbt(RustBuffer original_psbt, RustBuffer signed_psbt, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GENERATE_MNEMONIC
@@ -1075,6 +1106,11 @@ uint64_t uniffi_bitkitcore_fn_func_open_channel(RustBuffer order_id, RustBuffer 
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PARSE_PUBKY_AUTH_URL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PARSE_PUBKY_AUTH_URL
 RustBuffer uniffi_bitkitcore_fn_func_parse_pubky_auth_url(RustBuffer auth_url, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PASSPORT_PARSE_ACCOUNT_EXPORT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PASSPORT_PARSE_ACCOUNT_EXPORT
+RustBuffer uniffi_bitkitcore_fn_func_passport_parse_account_export(RustBuffer data, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PRE_ACTIVITY_METADATA_FROM_JSON
@@ -1417,6 +1453,11 @@ void uniffi_bitkitcore_fn_func_upsert_tags(RustBuffer activity_tags, RustCallSta
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UPSERT_TRANSACTION_DETAILS
 void uniffi_bitkitcore_fn_func_upsert_transaction_details(RustBuffer details_list, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UR_ENCODE_CRYPTO_PSBT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UR_ENCODE_CRYPTO_PSBT
+RustBuffer uniffi_bitkitcore_fn_func_ur_encode_crypto_psbt(RustBuffer psbt, uint32_t max_fragment_length, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_BITCOIN_ADDRESS
@@ -2039,6 +2080,12 @@ uint16_t uniffi_bitkitcore_checksum_func_fetch_pubky_profile(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FINALIZE_PSBT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_FINALIZE_PSBT
+uint16_t uniffi_bitkitcore_checksum_func_finalize_psbt(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GENERATE_MNEMONIC
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GENERATE_MNEMONIC
 uint16_t uniffi_bitkitcore_checksum_func_generate_mnemonic(void
@@ -2354,6 +2401,12 @@ uint16_t uniffi_bitkitcore_checksum_func_open_channel(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PARSE_PUBKY_AUTH_URL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PARSE_PUBKY_AUTH_URL
 uint16_t uniffi_bitkitcore_checksum_func_parse_pubky_auth_url(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PASSPORT_PARSE_ACCOUNT_EXPORT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PASSPORT_PARSE_ACCOUNT_EXPORT
+uint16_t uniffi_bitkitcore_checksum_func_passport_parse_account_export(void
     
 );
 #endif
@@ -2753,6 +2806,12 @@ uint16_t uniffi_bitkitcore_checksum_func_upsert_transaction_details(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UR_ENCODE_CRYPTO_PSBT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_UR_ENCODE_CRYPTO_PSBT
+uint16_t uniffi_bitkitcore_checksum_func_ur_encode_crypto_psbt(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 uint16_t uniffi_bitkitcore_checksum_func_validate_bitcoin_address(void
@@ -2870,6 +2929,24 @@ uint16_t uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_PASSPHRASE_REQUEST
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_TREZORUICALLBACK_ON_PASSPHRASE_REQUEST
 uint16_t uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_URDECODER_RECEIVE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_URDECODER_RECEIVE
+uint16_t uniffi_bitkitcore_checksum_method_urdecoder_receive(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_URDECODER_RESET
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_URDECODER_RESET
+uint16_t uniffi_bitkitcore_checksum_method_urdecoder_reset(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_CONSTRUCTOR_URDECODER_NEW
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_CONSTRUCTOR_URDECODER_NEW
+uint16_t uniffi_bitkitcore_checksum_constructor_urdecoder_new(void
     
 );
 #endif

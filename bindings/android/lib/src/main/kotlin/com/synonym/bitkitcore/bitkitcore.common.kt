@@ -318,6 +318,28 @@ public interface TrezorUiCallback {
 
 
 /**
+ * Stateful decoder for single-part and animated multipart UR QR scans.
+ */
+public interface UrDecoderInterface {
+    
+    /**
+     * Accept one camera frame. Invalid or changed streams reset the decoder.
+     */
+    @Throws(UrException::class)
+    public fun `receive`(`frame`: kotlin.String): UrDecoderStatus
+    
+    /**
+     * Clear all frames so the decoder can receive another message.
+     */
+    public fun `reset`()
+    
+    public companion object
+}
+
+
+
+
+/**
  * Grouped address lists for an account.
  */
 @kotlinx.serialization.Serializable
@@ -585,6 +607,25 @@ public data class ClosedChannelDetails (
     val `forwardingFeeBaseMsat`: kotlin.UInt, 
     val `channelName`: kotlin.String, 
     val `channelClosureReason`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+/**
+ * A finalized transaction ready to broadcast.
+ */
+@kotlinx.serialization.Serializable
+public data class CompletedTransaction (
+    /**
+     * Consensus-encoded transaction hex.
+     */
+    val `serializedTx`: kotlin.String, 
+    /**
+     * Canonical transaction id, excluding witness data.
+     */
+    val `txid`: kotlin.String
 ) {
     public companion object
 }
@@ -1499,6 +1540,43 @@ public data class OnchainActivity (
 
 
 
+/**
+ * One single-signature account in Passport's generic JSON export.
+ */
+@kotlinx.serialization.Serializable
+public data class PassportAccount (
+    val `accountType`: AccountType, 
+    /**
+     * Standard xpub/tpub encoding used by Passport's export.
+     */
+    val `xpub`: kotlin.String, 
+    /**
+     * Account-level BIP32 path, such as `m/84'/0'/0'`.
+     */
+    val `derivationPath`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+/**
+ * The single-signature accounts exported by Passport for one account index.
+ */
+@kotlinx.serialization.Serializable
+public data class PassportAccountExport (
+    /**
+     * Root fingerprint used in descriptors and PSBT key origins.
+     */
+    val `masterFingerprint`: kotlin.String, 
+    val `accountIndex`: kotlin.UInt, 
+    val `accounts`: List<PassportAccount>
+) {
+    public companion object
+}
+
+
+
 @kotlinx.serialization.Serializable
 public data class PreActivityMetadata (
     val `walletId`: kotlin.String, 
@@ -1679,32 +1757,27 @@ public data class SubmarineSwapResponse (
 
 
 /**
- * A hardware-wallet model Bitkit supports, with the transports it can connect over.
- *
- * Owned by core so iOS and Android render the same catalog instead of each
- * hardcoding it. Platforms filter by `transports`: Android supports every model,
- * while iOS (Bluetooth-only) shows just the models whose `transports` include
- * `Bluetooth`. `model` is a stable key apps can map to their own bundled image.
+ * A hardware-wallet model Bitkit supports.
  */
 @kotlinx.serialization.Serializable
 public data class SupportedHardwareWallet (
     val `vendor`: HardwareWalletVendor, 
     /**
-     * Human-readable vendor name, e.g. "Trezor".
+     * Human-readable manufacturer name, e.g. "Foundation".
      */
     val `vendorName`: kotlin.String, 
     /**
-     * Model identifier, e.g. "Safe 7".
+     * Stable model identifier that applications can map to bundled assets.
      */
     val `model`: kotlin.String, 
     /**
-     * Full display name, e.g. "Trezor Safe 7".
+     * Full user-facing name.
      */
     val `displayName`: kotlin.String, 
     /**
-     * Transports this model can connect over.
+     * Transports over which the application can interact with this model.
      */
-    val `transports`: List<TrezorTransportType>
+    val `transports`: List<HardwareWalletTransport>
 ) {
     public companion object
 }
@@ -2690,6 +2763,29 @@ public data class TxOutput (
 
 
 
+/**
+ * Current state after accepting a scanned UR frame.
+ */
+@kotlinx.serialization.Serializable
+public data class UrDecoderStatus (
+    /**
+     * Estimated completion from 0.0 through 1.0.
+     */
+    val `progress`: kotlin.Double, 
+    /**
+     * Fountain source-fragment count, or 1 for a single-part UR.
+     */
+    val `fragmentCount`: kotlin.UInt, 
+    /**
+     * Present once the complete message has been decoded.
+     */
+    val `payload`: UrPayload?
+) {
+    public companion object
+}
+
+
+
 @kotlinx.serialization.Serializable
 public data class ValidationResult (
     val `address`: kotlin.String, 
@@ -2777,10 +2873,8 @@ public data class WatcherParams (
      */
     val `watcherId`: kotlin.String, 
     /**
-     * Wallet id that scopes the activities this watcher emits. One watcher
-     * watches one address type, so this stays at the address-type boundary —
-     * the same txid seen under two address types yields two wallet-scoped
-     * activities under different `wallet_id`s, not one merged activity.
+     * Wallet id that scopes the activities this watcher emits. Apps may use
+     * one wallet id for several account watchers and merge their snapshots.
      */
     val `walletId`: kotlin.String, 
     /**
@@ -3931,14 +4025,32 @@ public sealed class DecodingException: kotlin.Exception() {
 
 
 /**
- * A hardware-wallet vendor supported by Bitkit. Trezor only for now; this leaves
- * room to add other vendors without changing the catalog's shape.
+ * How an application exchanges data with a hardware wallet.
+ */
+
+@kotlinx.serialization.Serializable
+public enum class HardwareWalletTransport {
+    
+    USB,
+    BLUETOOTH,
+    QR;
+    public companion object
+}
+
+
+
+
+
+
+/**
+ * A hardware-wallet vendor recognized by Bitkit.
  */
 
 @kotlinx.serialization.Serializable
 public enum class HardwareWalletVendor {
     
-    TREZOR;
+    TREZOR,
+    FOUNDATION;
     public companion object
 }
 
@@ -4152,6 +4264,49 @@ public enum class PaymentType {
 }
 
 
+
+
+
+
+
+public sealed class PsbtCompletionException: kotlin.Exception() {
+    
+    public class InvalidPsbt(
+        public val `reason`: kotlin.String,
+    ) : PsbtCompletionException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class CombineFailed(
+        public val `reason`: kotlin.String,
+    ) : PsbtCompletionException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class FinalizationFailed(
+        public val `reason`: kotlin.String,
+    ) : PsbtCompletionException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class VerificationFailed(
+        public val `reason`: kotlin.String,
+    ) : PsbtCompletionException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class ExtractionFailed(
+        public val `reason`: kotlin.String,
+    ) : PsbtCompletionException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+}
 
 
 
@@ -4692,6 +4847,112 @@ public enum class TxDirection {
 
 
 
+
+public sealed class UrException: kotlin.Exception() {
+    
+    public class InvalidUr(
+        public val `reason`: kotlin.String,
+    ) : UrException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class TooLarge(
+        public val `reason`: kotlin.String,
+    ) : UrException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class InvalidPayload(
+        public val `reason`: kotlin.String,
+    ) : UrException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class InvalidPsbt(
+        public val `reason`: kotlin.String,
+    ) : UrException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+    public class InvalidPassportExport(
+        public val `reason`: kotlin.String,
+    ) : UrException() {
+        override val message: String
+            get() = "reason=${ `reason` }"
+    }
+    
+}
+
+
+
+
+/**
+ * A completely decoded UR payload.
+ */
+@kotlinx.serialization.Serializable
+public sealed class UrPayload {
+    
+    /**
+     * The byte string wrapped by a `bytes` registry item.
+     */@kotlinx.serialization.Serializable
+    public data class Bytes(
+        val `data`: kotlin.ByteArray,
+    ) : UrPayload() {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null || this::class != other::class) return false
+
+            other as Bytes
+            return `data`.contentEquals(other.`data`)
+        }
+        override fun hashCode(): Int {
+            return `data`.contentHashCode()
+        }
+    }
+    
+    /**
+     * A `crypto-psbt` registry item, returned in Bitkit's usual base64 form.
+     */@kotlinx.serialization.Serializable
+    public data class CryptoPsbt(
+        val `psbt`: kotlin.String,
+    ) : UrPayload() {
+    }
+    
+    /**
+     * An uninterpreted UR registry item.
+     */@kotlinx.serialization.Serializable
+    public data class Cbor(
+        val `urType`: kotlin.String,
+        val `cbor`: kotlin.ByteArray,
+    ) : UrPayload() {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null || this::class != other::class) return false
+
+            other as Cbor
+            if (`urType` != other.`urType`) return false
+            if (!`cbor`.contentEquals(other.`cbor`)) return false
+
+            return true
+        }
+        override fun hashCode(): Int {
+            var result = `urType`.hashCode()
+            result = 31 * result + `cbor`.contentHashCode()
+            return result
+        }
+    }
+    
+}
+
+
+
+
+
+
 /**
  * Which wallet a connection should open.
  *
@@ -4814,6 +5075,10 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
+
+
 
 
 

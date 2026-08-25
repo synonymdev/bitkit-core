@@ -42,20 +42,27 @@ use crate::modules::boltz::{
     self, BoltzDB, BoltzError, BoltzEventListener, BoltzNetwork, BoltzPairInfo, BoltzSwap,
     ReverseSwapResponse, SubmarineSwapResponse,
 };
+pub use crate::modules::hardware_wallet::{
+    get_supported_hardware_wallets, HardwareWalletTransport, HardwareWalletVendor,
+    SupportedHardwareWallet,
+};
 use crate::modules::pubky::{PubkyAuthDetails, PubkyAuthKind, PubkyError, PubkyProfile};
 use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
-    get_supported_hardware_wallets, get_transport_callback, trezor_is_ble_available,
-    trezor_set_transport_callback, trezor_set_ui_callback, HardwareWalletVendor, NativeDeviceInfo,
-    PassphraseResponse, SupportedHardwareWallet, TrezorCallMessageResult, TrezorTransportCallback,
-    TrezorTransportErrorCode, TrezorTransportReadResult, TrezorTransportWriteResult,
-    TrezorUiCallback, WalletSelection,
+    get_transport_callback, trezor_is_ble_available, trezor_set_transport_callback,
+    trezor_set_ui_callback, NativeDeviceInfo, PassphraseResponse, TrezorCallMessageResult,
+    TrezorTransportCallback, TrezorTransportErrorCode, TrezorTransportReadResult,
+    TrezorTransportWriteResult, TrezorUiCallback, WalletSelection,
 };
 use crate::modules::trezor::{
     TrezorAddressResponse, TrezorCoinType, TrezorDeviceInfo, TrezorError, TrezorFeatures,
     TrezorGetAddressParams, TrezorGetPublicKeyParams, TrezorManager, TrezorPublicKeyResponse,
     TrezorScriptType, TrezorSignMessageParams, TrezorSignTxParams, TrezorSignedMessageResponse,
     TrezorSignedTx, TrezorVerifyMessageParams,
+};
+pub use crate::modules::ur::{
+    passport_parse_account_export, ur_encode_crypto_psbt, PassportAccount, PassportAccountExport,
+    UrDecoder, UrDecoderStatus, UrError, UrPayload,
 };
 pub use crate::onchain::WordCount;
 use crate::onchain::{

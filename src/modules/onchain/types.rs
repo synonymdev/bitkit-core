@@ -429,6 +429,15 @@ pub enum ComposeResult {
     Error { error: String },
 }
 
+/// A finalized transaction ready to broadcast.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct CompletedTransaction {
+    /// Consensus-encoded transaction hex.
+    pub serialized_tx: String,
+    /// Canonical transaction id, excluding witness data.
+    pub txid: String,
+}
+
 // ============================================================================
 // Transaction history types
 // ============================================================================
