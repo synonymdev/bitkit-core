@@ -85,6 +85,18 @@ pub struct TrezorFeatures {
     pub passphrase_entry_capable: Option<bool>,
 }
 
+impl TrezorFeatures {
+    /// Whether the device is locked: PIN protection is enabled and the device
+    /// reports itself locked.
+    ///
+    /// `unlocked == None` (firmware too old to report lock state) is treated as
+    /// not locked, so callers fall back to the device's own PIN prompt instead
+    /// of blocking an operation that would have worked.
+    pub fn is_locked(&self) -> bool {
+        self.pin_protection == Some(true) && self.unlocked == Some(false)
+    }
+}
+
 /// `Capability_PassphraseEntry` value from the Trezor management proto — the
 /// device is capable of passphrase entry directly on its own screen.
 const CAPABILITY_PASSPHRASE_ENTRY: u32 = 17;

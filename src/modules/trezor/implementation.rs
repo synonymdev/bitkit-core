@@ -931,6 +931,30 @@ impl TrezorManager {
             .map(|f| TrezorFeatures::from(f.clone()))
     }
 
+    /// Check that the connected device is unlocked before starting an operation.
+    ///
+    /// Reads the features cached by `connect()` / `refresh_features()`, so it
+    /// does not touch the device. Returns `TrezorError::DeviceLocked` when the
+    /// device has PIN protection enabled and reports itself locked; callers that
+    /// want a fresh answer should call `refresh_features()` first.
+    ///
+    /// This is deliberately not applied inside `get_address()`, `sign_tx()` and
+    /// friends: a locked device can still unlock mid-operation through the PIN
+    /// callback (Trezor One) or its own screen, and rejecting those calls up
+    /// front would break that flow. Callers that want to ask the user to unlock
+    /// before starting call this first.
+    pub async fn ensure_unlocked(&self) -> Result<(), TrezorError> {
+        let connected_device = self.connected_device.lock().await;
+        let device = connected_device.as_ref().ok_or(TrezorError::NotConnected)?;
+
+        match device.features() {
+            Some(features) if TrezorFeatures::from(features.clone()).is_locked() => {
+                Err(TrezorError::DeviceLocked)
+            }
+            _ => Ok(()),
+        }
+    }
+
     /// Refresh features from the currently connected Trezor device.
     ///
     /// This is an explicit one-shot device interaction. It does not start any

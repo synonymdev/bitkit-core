@@ -225,22 +225,66 @@ mod tests {
     }
 
     #[test]
-    fn test_failure_code_unknown_stays_generic_device_error() {
+    fn test_failure_code_firmware_error_surfaces_as_firmware_error() {
         use trezor_connect_rs::error::DeviceError;
         use trezor_connect_rs::TrezorError as TcError;
 
-        // Unknown code (Failure_FirmwareError = 99) must remain a generic device
-        // error so existing behavior is preserved.
+        // Failure_FirmwareError = 99
         let tc_err = TcError::Device(DeviceError::from_failure(Some(99), "boom".to_string()));
         let err: TrezorError = tc_err.into();
 
         match err {
-            TrezorError::DeviceError { error_details } => {
+            TrezorError::FirmwareError { error_details } => {
                 assert!(error_details.contains("99"));
+                assert!(error_details.contains("boom"));
+            }
+            other => panic!("expected FirmwareError, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_direct_device_error_code_99_surfaces_as_firmware_error() {
+        use trezor_connect_rs::error::DeviceError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        // Same code arriving as a DeviceError rather than through from_failure.
+        let tc_err = TcError::Device(DeviceError::DeviceError {
+            code: 99,
+            message: "firmware error".to_string(),
+        });
+        let err: TrezorError = tc_err.into();
+
+        assert!(matches!(err, TrezorError::FirmwareError { .. }));
+    }
+
+    #[test]
+    fn test_failure_code_unknown_stays_generic_device_error() {
+        use trezor_connect_rs::error::DeviceError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        // Unrelated code (Failure_UnexpectedMessage = 2) must remain a generic
+        // device error so existing behavior is preserved.
+        let tc_err = TcError::Device(DeviceError::from_failure(Some(2), "boom".to_string()));
+        let err: TrezorError = tc_err.into();
+
+        match err {
+            TrezorError::DeviceError { error_details } => {
+                assert!(error_details.contains('2'));
                 assert!(error_details.contains("boom"));
             }
             other => panic!("expected generic DeviceError, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn test_thp_device_locked_surfaces_as_device_locked_not_busy() {
+        use trezor_connect_rs::error::ThpError;
+        use trezor_connect_rs::TrezorError as TcError;
+
+        let err: TrezorError = TcError::Thp(ThpError::DeviceLocked).into();
+
+        assert!(matches!(err, TrezorError::DeviceLocked));
+        assert!(!matches!(err, TrezorError::DeviceBusy));
     }
 
     #[test]
@@ -635,6 +679,42 @@ mod tests {
         assert_eq!(result.unlocked, None);
     }
 
+    #[test]
+    fn test_features_is_locked() {
+        use trezor_connect_rs::device::Features;
+
+        let locked = |pin_protection, unlocked| {
+            TrezorFeatures::from(Features {
+                pin_protection,
+                unlocked,
+                ..Default::default()
+            })
+            .is_locked()
+        };
+
+        // PIN protection on and the device reports itself locked.
+        assert!(locked(Some(true), Some(false)));
+
+        // Unlocked, no PIN protection, or a firmware that does not report lock
+        // state: none of these are a locked device.
+        assert!(!locked(Some(true), Some(true)));
+        assert!(!locked(Some(false), Some(false)));
+        assert!(!locked(Some(true), None));
+        assert!(!locked(None, None));
+    }
+
+    #[tokio::test]
+    async fn test_ensure_unlocked_without_device_is_not_connected() {
+        use crate::modules::trezor::TrezorManager;
+
+        let manager = TrezorManager::new();
+
+        assert!(matches!(
+            manager.ensure_unlocked().await,
+            Err(TrezorError::NotConnected)
+        ));
+    }
+
     // ========================================================================
     // Path Validation Tests
     // ========================================================================
@@ -764,6 +844,14 @@ mod tests {
             err.to_string(),
             "No device connected. Call trezor_connect first."
         );
+
+        let err = TrezorError::DeviceLocked;
+        assert_eq!(err.to_string(), "Device is locked");
+
+        let err = TrezorError::FirmwareError {
+            error_details: "boom".to_string(),
+        };
+        assert_eq!(err.to_string(), "Firmware error: boom");
     }
 
     #[test]
