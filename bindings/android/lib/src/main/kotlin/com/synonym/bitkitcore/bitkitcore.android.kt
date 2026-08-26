@@ -1585,6 +1585,20 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1780,6 +1794,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_fetch_pubky_profile() != 19709.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_finalize_psbt() != 37120.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1855,7 +1872,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 36542.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 61117.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_tags() != 8596.toShort()) {
@@ -1937,6 +1954,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_passport_parse_account_export() != 62096.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json() != 61978.toShort()) {
@@ -2137,6 +2157,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_upsert_transaction_details() != 62351.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_ur_encode_crypto_psbt() != 32954.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -2195,6 +2218,15 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_urdecoder_receive() != 44279.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_urdecoder_reset() != 6027.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_constructor_urdecoder_new() != 23014.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
     }
@@ -2357,6 +2389,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_fetch_pubky_profile(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_finalize_psbt(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_generate_mnemonic(
     ): Short
     @JvmStatic
@@ -2514,6 +2549,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_parse_pubky_auth_url(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_passport_parse_account_export(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json(
@@ -2714,6 +2752,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_upsert_transaction_details(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_ur_encode_crypto_psbt(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_validate_bitcoin_address(
     ): Short
     @JvmStatic
@@ -2772,6 +2813,15 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_urdecoder_receive(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_urdecoder_reset(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_constructor_urdecoder_new(
     ): Short
     @JvmStatic
     external fun ffi_bitkitcore_uniffi_contract_version(
@@ -2945,6 +2995,31 @@ internal object UniffiLib : Library {
         `onDevice`: Byte,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_clone_urdecoder(
+        `ptr`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Pointer?
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_free_urdecoder(
+        `ptr`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_constructor_urdecoder_new(
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Pointer?
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_urdecoder_receive(
+        `ptr`: Pointer?,
+        `frame`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_urdecoder_reset(
+        `ptr`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_activities_from_json(
         `json`: RustBufferByValue,
@@ -3239,6 +3314,12 @@ internal object UniffiLib : Library {
         `publicKey`: RustBufferByValue,
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_finalize_psbt(
+        `originalPsbt`: RustBufferByValue,
+        `signedPsbt`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_generate_mnemonic(
         `wordCount`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
@@ -3523,6 +3604,11 @@ internal object UniffiLib : Library {
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_parse_pubky_auth_url(
         `authUrl`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_passport_parse_account_export(
+        `data`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
@@ -3847,6 +3933,12 @@ internal object UniffiLib : Library {
         `detailsList`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_ur_encode_crypto_psbt(
+        `psbt`: RustBufferByValue,
+        `maxFragmentLength`: Int,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_validate_bitcoin_address(
         `address`: RustBufferByValue,
@@ -5690,6 +5782,178 @@ internal object uniffiCallbackInterfaceTrezorUiCallback {
 
 
 
+/**
+ * Stateful decoder for single-part and animated multipart UR QR scans.
+ */
+public open class UrDecoder: Disposable, UrDecoderInterface {
+
+    public constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiPointerDestroyer(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    public constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiPointerDestroyer(null))
+    }
+    public constructor() : this(
+        uniffiRustCall { uniffiRustCallStatus ->
+            UniffiLib.uniffi_bitkitcore_fn_constructor_urdecoder_new(
+                uniffiRustCallStatus,
+            )
+        }!!
+    )
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed: kotlinx.atomicfu.AtomicBoolean = kotlinx.atomicfu.atomic(false)
+    private val callCounter: kotlinx.atomicfu.AtomicLong = kotlinx.atomicfu.atomic(1L)
+
+    private val lock = kotlinx.atomicfu.locks.ReentrantLock()
+
+    private fun <T> synchronized(block: () -> T): T {
+        lock.lock()
+        try {
+            return block()
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    override fun close() {
+        synchronized { this.destroy() }
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.value
+            if (c == 0L) {
+                throw IllegalStateException("${this::class::simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this::class::simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiPointerDestroyer(private val pointer: Pointer?) : Disposable {
+        override fun destroy() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.uniffi_bitkitcore_fn_free_urdecoder(ptr, status)
+                }
+            }
+        }
+    }
+
+    public fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall { status ->
+            UniffiLib.uniffi_bitkitcore_fn_clone_urdecoder(pointer!!, status)
+        }!!
+    }
+
+    
+    /**
+     * Adds one UR fragment and returns the current decoding status.
+     */
+    @Throws(UrException::class)
+    public override fun `receive`(`frame`: kotlin.String): UrDecoderStatus {
+        return FfiConverterTypeUrDecoderStatus.lift(callWithPointer {
+            uniffiRustCallWithError(UrExceptionErrorHandler) { uniffiRustCallStatus ->
+                UniffiLib.uniffi_bitkitcore_fn_method_urdecoder_receive(
+                    it,
+                    FfiConverterString.lower(`frame`),
+                    uniffiRustCallStatus,
+                )
+            }
+        })
+    }
+
+    /**
+     * Clear all frames so the decoder can receive another message.
+     */
+    public override fun `reset`() {
+        callWithPointer {
+            uniffiRustCall { uniffiRustCallStatus ->
+                UniffiLib.uniffi_bitkitcore_fn_method_urdecoder_reset(
+                    it,
+                    uniffiRustCallStatus,
+                )
+            }
+        }
+    }
+
+
+    
+    
+
+    
+    
+    public companion object
+    
+}
+
+
+
+
+
+public object FfiConverterTypeUrDecoder: FfiConverter<UrDecoder, Pointer> {
+
+    override fun lower(value: UrDecoder): Pointer {
+        return value.uniffiClonePointer()
+    }
+
+    override fun lift(value: Pointer): UrDecoder {
+        return UrDecoder(value)
+    }
+
+    override fun read(buf: ByteBuffer): UrDecoder {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(buf.getLong().toPointer())
+    }
+
+    override fun allocationSize(value: UrDecoder): ULong = 8UL
+
+    override fun write(value: UrDecoder, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(lower(value).toLong())
+    }
+}
+
+
+
 
 public object FfiConverterTypeAccountAddresses: FfiConverterRustBuffer<AccountAddresses> {
     override fun read(buf: ByteBuffer): AccountAddresses {
@@ -6046,6 +6310,28 @@ public object FfiConverterTypeClosedChannelDetails: FfiConverterRustBuffer<Close
         FfiConverterUInt.write(value.`forwardingFeeBaseMsat`, buf)
         FfiConverterString.write(value.`channelName`, buf)
         FfiConverterString.write(value.`channelClosureReason`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeCompletedTransaction: FfiConverterRustBuffer<CompletedTransaction> {
+    override fun read(buf: ByteBuffer): CompletedTransaction {
+        return CompletedTransaction(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: CompletedTransaction): ULong = (
+            FfiConverterString.allocationSize(value.`serializedTx`) +
+            FfiConverterString.allocationSize(value.`txid`)
+    )
+
+    override fun write(value: CompletedTransaction, buf: ByteBuffer) {
+        FfiConverterString.write(value.`serializedTx`, buf)
+        FfiConverterString.write(value.`txid`, buf)
     }
 }
 
@@ -7828,6 +8114,56 @@ public object FfiConverterTypeOnchainActivity: FfiConverterRustBuffer<OnchainAct
 
 
 
+public object FfiConverterTypePassportAccount: FfiConverterRustBuffer<PassportAccount> {
+    override fun read(buf: ByteBuffer): PassportAccount {
+        return PassportAccount(
+            FfiConverterTypeAccountType.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PassportAccount): ULong = (
+            FfiConverterTypeAccountType.allocationSize(value.`accountType`) +
+            FfiConverterString.allocationSize(value.`xpub`) +
+            FfiConverterString.allocationSize(value.`derivationPath`)
+    )
+
+    override fun write(value: PassportAccount, buf: ByteBuffer) {
+        FfiConverterTypeAccountType.write(value.`accountType`, buf)
+        FfiConverterString.write(value.`xpub`, buf)
+        FfiConverterString.write(value.`derivationPath`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypePassportAccountExport: FfiConverterRustBuffer<PassportAccountExport> {
+    override fun read(buf: ByteBuffer): PassportAccountExport {
+        return PassportAccountExport(
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterSequenceTypePassportAccount.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PassportAccountExport): ULong = (
+            FfiConverterString.allocationSize(value.`masterFingerprint`) +
+            FfiConverterUInt.allocationSize(value.`accountIndex`) +
+            FfiConverterSequenceTypePassportAccount.allocationSize(value.`accounts`)
+    )
+
+    override fun write(value: PassportAccountExport, buf: ByteBuffer) {
+        FfiConverterString.write(value.`masterFingerprint`, buf)
+        FfiConverterUInt.write(value.`accountIndex`, buf)
+        FfiConverterSequenceTypePassportAccount.write(value.`accounts`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypePreActivityMetadata: FfiConverterRustBuffer<PreActivityMetadata> {
     override fun read(buf: ByteBuffer): PreActivityMetadata {
         return PreActivityMetadata(
@@ -8083,7 +8419,7 @@ public object FfiConverterTypeSupportedHardwareWallet: FfiConverterRustBuffer<Su
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
-            FfiConverterSequenceTypeTrezorTransportType.read(buf),
+            FfiConverterSequenceTypeHardwareWalletTransport.read(buf),
         )
     }
 
@@ -8092,7 +8428,7 @@ public object FfiConverterTypeSupportedHardwareWallet: FfiConverterRustBuffer<Su
             FfiConverterString.allocationSize(value.`vendorName`) +
             FfiConverterString.allocationSize(value.`model`) +
             FfiConverterString.allocationSize(value.`displayName`) +
-            FfiConverterSequenceTypeTrezorTransportType.allocationSize(value.`transports`)
+            FfiConverterSequenceTypeHardwareWalletTransport.allocationSize(value.`transports`)
     )
 
     override fun write(value: SupportedHardwareWallet, buf: ByteBuffer) {
@@ -8100,7 +8436,7 @@ public object FfiConverterTypeSupportedHardwareWallet: FfiConverterRustBuffer<Su
         FfiConverterString.write(value.`vendorName`, buf)
         FfiConverterString.write(value.`model`, buf)
         FfiConverterString.write(value.`displayName`, buf)
-        FfiConverterSequenceTypeTrezorTransportType.write(value.`transports`, buf)
+        FfiConverterSequenceTypeHardwareWalletTransport.write(value.`transports`, buf)
     }
 }
 
@@ -9033,6 +9369,31 @@ public object FfiConverterTypeTxOutput: FfiConverterRustBuffer<TxOutput> {
         FfiConverterOptionalString.write(value.`scriptpubkeyAddress`, buf)
         FfiConverterLong.write(value.`value`, buf)
         FfiConverterUInt.write(value.`n`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeUrDecoderStatus: FfiConverterRustBuffer<UrDecoderStatus> {
+    override fun read(buf: ByteBuffer): UrDecoderStatus {
+        return UrDecoderStatus(
+            FfiConverterDouble.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterOptionalTypeUrPayload.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: UrDecoderStatus): ULong = (
+            FfiConverterDouble.allocationSize(value.`progress`) +
+            FfiConverterUInt.allocationSize(value.`fragmentCount`) +
+            FfiConverterOptionalTypeUrPayload.allocationSize(value.`payload`)
+    )
+
+    override fun write(value: UrDecoderStatus, buf: ByteBuffer) {
+        FfiConverterDouble.write(value.`progress`, buf)
+        FfiConverterUInt.write(value.`fragmentCount`, buf)
+        FfiConverterOptionalTypeUrPayload.write(value.`payload`, buf)
     }
 }
 
@@ -10914,6 +11275,24 @@ public object FfiConverterTypeDecodingError : FfiConverterRustBuffer<DecodingExc
 
 
 
+public object FfiConverterTypeHardwareWalletTransport: FfiConverterRustBuffer<HardwareWalletTransport> {
+    override fun read(buf: ByteBuffer): HardwareWalletTransport = try {
+        HardwareWalletTransport.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: HardwareWalletTransport): ULong = 4UL
+
+    override fun write(value: HardwareWalletTransport, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
 public object FfiConverterTypeHardwareWalletVendor: FfiConverterRustBuffer<HardwareWalletVendor> {
     override fun read(buf: ByteBuffer): HardwareWalletVendor = try {
         HardwareWalletVendor.entries[buf.getInt() - 1]
@@ -11239,6 +11618,96 @@ public object FfiConverterTypePaymentType: FfiConverterRustBuffer<PaymentType> {
 
     override fun write(value: PaymentType, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+public object PsbtCompletionExceptionErrorHandler : UniffiRustCallStatusErrorHandler<PsbtCompletionException> {
+    override fun lift(errorBuf: RustBufferByValue): PsbtCompletionException = FfiConverterTypePsbtCompletionError.lift(errorBuf)
+}
+
+public object FfiConverterTypePsbtCompletionError : FfiConverterRustBuffer<PsbtCompletionException> {
+    override fun read(buf: ByteBuffer): PsbtCompletionException {
+        return when (buf.getInt()) {
+            1 -> PsbtCompletionException.InvalidPsbt(
+                FfiConverterString.read(buf),
+                )
+            2 -> PsbtCompletionException.CombineFailed(
+                FfiConverterString.read(buf),
+                )
+            3 -> PsbtCompletionException.FinalizationFailed(
+                FfiConverterString.read(buf),
+                )
+            4 -> PsbtCompletionException.VerificationFailed(
+                FfiConverterString.read(buf),
+                )
+            5 -> PsbtCompletionException.ExtractionFailed(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: PsbtCompletionException): ULong {
+        return when (value) {
+            is PsbtCompletionException.InvalidPsbt -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+            is PsbtCompletionException.CombineFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+            is PsbtCompletionException.FinalizationFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+            is PsbtCompletionException.VerificationFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+            is PsbtCompletionException.ExtractionFailed -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+        }
+    }
+
+    override fun write(value: PsbtCompletionException, buf: ByteBuffer) {
+        when (value) {
+            is PsbtCompletionException.InvalidPsbt -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is PsbtCompletionException.CombineFailed -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is PsbtCompletionException.FinalizationFailed -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is PsbtCompletionException.VerificationFailed -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is PsbtCompletionException.ExtractionFailed -> {
+                buf.putInt(5)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
 }
 
@@ -11977,6 +12446,164 @@ public object FfiConverterTypeTxDirection: FfiConverterRustBuffer<TxDirection> {
 
     override fun write(value: TxDirection, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+public object UrExceptionErrorHandler : UniffiRustCallStatusErrorHandler<UrException> {
+    override fun lift(errorBuf: RustBufferByValue): UrException = FfiConverterTypeUrError.lift(errorBuf)
+}
+
+public object FfiConverterTypeUrError : FfiConverterRustBuffer<UrException> {
+    override fun read(buf: ByteBuffer): UrException {
+        return when (buf.getInt()) {
+            1 -> UrException.InvalidUr(
+                FfiConverterString.read(buf),
+                )
+            2 -> UrException.TooLarge(
+                FfiConverterString.read(buf),
+                )
+            3 -> UrException.InvalidPayload(
+                FfiConverterString.read(buf),
+                )
+            4 -> UrException.InvalidPsbt(
+                FfiConverterString.read(buf),
+                )
+            5 -> UrException.InvalidPassportExport(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: UrException): ULong {
+        return when (value) {
+            is UrException.InvalidUr -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+            is UrException.TooLarge -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+            is UrException.InvalidPayload -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+            is UrException.InvalidPsbt -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+            is UrException.InvalidPassportExport -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`reason`)
+            )
+        }
+    }
+
+    override fun write(value: UrException, buf: ByteBuffer) {
+        when (value) {
+            is UrException.InvalidUr -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is UrException.TooLarge -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is UrException.InvalidPayload -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is UrException.InvalidPsbt -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+            is UrException.InvalidPassportExport -> {
+                buf.putInt(5)
+                FfiConverterString.write(value.`reason`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeUrPayload : FfiConverterRustBuffer<UrPayload>{
+    override fun read(buf: ByteBuffer): UrPayload {
+        return when(buf.getInt()) {
+            1 -> UrPayload.Bytes(
+                FfiConverterByteArray.read(buf),
+                )
+            2 -> UrPayload.CryptoPsbt(
+                FfiConverterString.read(buf),
+                )
+            3 -> UrPayload.Cbor(
+                FfiConverterString.read(buf),
+                FfiConverterByteArray.read(buf),
+                )
+            else -> throw RuntimeException("invalid enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: UrPayload): ULong = when(value) {
+        is UrPayload.Bytes -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterByteArray.allocationSize(value.`data`)
+            )
+        }
+        is UrPayload.CryptoPsbt -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`psbt`)
+            )
+        }
+        is UrPayload.Cbor -> {
+            // Add the size for the Int that specifies the variant plus the size needed for all fields
+            (
+                4UL
+                + FfiConverterString.allocationSize(value.`urType`)
+                + FfiConverterByteArray.allocationSize(value.`cbor`)
+            )
+        }
+    }
+
+    override fun write(value: UrPayload, buf: ByteBuffer) {
+        when(value) {
+            is UrPayload.Bytes -> {
+                buf.putInt(1)
+                FfiConverterByteArray.write(value.`data`, buf)
+                Unit
+            }
+            is UrPayload.CryptoPsbt -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`psbt`, buf)
+                Unit
+            }
+            is UrPayload.Cbor -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`urType`, buf)
+                FfiConverterByteArray.write(value.`cbor`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
     }
 }
 
@@ -13425,6 +14052,35 @@ public object FfiConverterOptionalTypeTrezorTransportErrorCode: FfiConverterRust
 
 
 
+public object FfiConverterOptionalTypeUrPayload: FfiConverterRustBuffer<UrPayload?> {
+    override fun read(buf: ByteBuffer): UrPayload? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeUrPayload.read(buf)
+    }
+
+    override fun allocationSize(value: UrPayload?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeUrPayload.allocationSize(value)
+        }
+    }
+
+    override fun write(value: UrPayload?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeUrPayload.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeWordCount: FfiConverterRustBuffer<WordCount?> {
     override fun read(buf: ByteBuffer): WordCount? {
         if (buf.get().toInt() == 0) {
@@ -13995,6 +14651,31 @@ public object FfiConverterSequenceTypeOnchainActivity: FfiConverterRustBuffer<Li
 
 
 
+public object FfiConverterSequenceTypePassportAccount: FfiConverterRustBuffer<List<PassportAccount>> {
+    override fun read(buf: ByteBuffer): List<PassportAccount> {
+        val len = buf.getInt()
+        return List<PassportAccount>(len) {
+            FfiConverterTypePassportAccount.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<PassportAccount>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypePassportAccount.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<PassportAccount>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypePassportAccount.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceTypePreActivityMetadata: FfiConverterRustBuffer<List<PreActivityMetadata>> {
     override fun read(buf: ByteBuffer): List<PreActivityMetadata> {
         val len = buf.getInt()
@@ -14420,24 +15101,24 @@ public object FfiConverterSequenceTypeComposeResult: FfiConverterRustBuffer<List
 
 
 
-public object FfiConverterSequenceTypeTrezorTransportType: FfiConverterRustBuffer<List<TrezorTransportType>> {
-    override fun read(buf: ByteBuffer): List<TrezorTransportType> {
+public object FfiConverterSequenceTypeHardwareWalletTransport: FfiConverterRustBuffer<List<HardwareWalletTransport>> {
+    override fun read(buf: ByteBuffer): List<HardwareWalletTransport> {
         val len = buf.getInt()
-        return List<TrezorTransportType>(len) {
-            FfiConverterTypeTrezorTransportType.read(buf)
+        return List<HardwareWalletTransport>(len) {
+            FfiConverterTypeHardwareWalletTransport.read(buf)
         }
     }
 
-    override fun allocationSize(value: List<TrezorTransportType>): ULong {
+    override fun allocationSize(value: List<HardwareWalletTransport>): ULong {
         val sizeForLength = 4UL
-        val sizeForItems = value.sumOf { FfiConverterTypeTrezorTransportType.allocationSize(it) }
+        val sizeForItems = value.sumOf { FfiConverterTypeHardwareWalletTransport.allocationSize(it) }
         return sizeForLength + sizeForItems
     }
 
-    override fun write(value: List<TrezorTransportType>, buf: ByteBuffer) {
+    override fun write(value: List<HardwareWalletTransport>, buf: ByteBuffer) {
         buf.putInt(value.size)
         value.iterator().forEach {
-            FfiConverterTypeTrezorTransportType.write(it, buf)
+            FfiConverterTypeHardwareWalletTransport.write(it, buf)
         }
     }
 }
@@ -15369,6 +16050,20 @@ public suspend fun `fetchPubkyProfile`(`publicKey`: kotlin.String): PubkyProfile
     )
 }
 
+/**
+ * Combine and finalize a signed PSBT, then extract its broadcastable transaction.
+ */
+@Throws(PsbtCompletionException::class)
+public fun `finalizePsbt`(`originalPsbt`: kotlin.String, `signedPsbt`: kotlin.String): CompletedTransaction {
+    return FfiConverterTypeCompletedTransaction.lift(uniffiRustCallWithError(PsbtCompletionExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_finalize_psbt(
+            FfiConverterString.lower(`originalPsbt`),
+            FfiConverterString.lower(`signedPsbt`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
 @Throws(AddressException::class)
 public fun `generateMnemonic`(`wordCount`: WordCount?): kotlin.String {
     return FfiConverterString.lift(uniffiRustCallWithError(AddressExceptionErrorHandler) { uniffiRustCallStatus ->
@@ -15691,10 +16386,7 @@ public fun `getPreActivityMetadata`(`walletId`: kotlin.String, `searchKey`: kotl
 }
 
 /**
- * The catalog of hardware wallets Bitkit supports.
- *
- * Trezor's full lineup; only the Safe 7 currently offers Bluetooth, so it is the
- * only model iOS surfaces (apps filter on `transports`).
+ * The hardware-wallet models supported by Bitkit and their available transports.
  */
 public fun `getSupportedHardwareWallets`(): List<SupportedHardwareWallet> {
     return FfiConverterSequenceTypeSupportedHardwareWallet.lift(uniffiRustCall { uniffiRustCallStatus ->
@@ -16123,6 +16815,22 @@ public fun `parsePubkyAuthUrl`(`authUrl`: kotlin.String): PubkyAuthDetails {
     return FfiConverterTypePubkyAuthDetails.lift(uniffiRustCallWithError(PubkyExceptionErrorHandler) { uniffiRustCallStatus ->
         UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url(
             FfiConverterString.lower(`authUrl`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Parse Passport's generic JSON account export from a decoded `ur:bytes` payload.
+ *
+ * Parses BIP44, BIP49, BIP84, and BIP86 single-signature accounts. BIP48
+ * multisig entries are ignored.
+ */
+@Throws(UrException::class)
+public fun `passportParseAccountExport`(`data`: kotlin.ByteArray): PassportAccountExport {
+    return FfiConverterTypePassportAccountExport.lift(uniffiRustCallWithError(UrExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_passport_parse_account_export(
+            FfiConverterByteArray.lower(`data`),
             uniffiRustCallStatus,
         )
     })
@@ -17241,6 +17949,23 @@ public fun `upsertTransactionDetails`(`detailsList`: List<TransactionDetails>) {
             uniffiRustCallStatus,
         )
     }
+}
+
+/**
+ * Encode a base64 PSBT as one cycle of `crypto-psbt` UR frames.
+ *
+ * The returned cycle contains every original fountain fragment once. Apps can
+ * loop it while rendering an animated QR.
+ */
+@Throws(UrException::class)
+public fun `urEncodeCryptoPsbt`(`psbt`: kotlin.String, `maxFragmentLength`: kotlin.UInt): List<kotlin.String> {
+    return FfiConverterSequenceString.lift(uniffiRustCallWithError(UrExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_ur_encode_crypto_psbt(
+            FfiConverterString.lower(`psbt`),
+            FfiConverterUInt.lower(`maxFragmentLength`),
+            uniffiRustCallStatus,
+        )
+    })
 }
 
 @Throws(AddressException::class)

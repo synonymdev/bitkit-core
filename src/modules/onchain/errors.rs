@@ -48,6 +48,21 @@ pub enum BroadcastError {
     TaskError { error_details: String },
 }
 
+#[derive(uniffi::Error, Debug, Error)]
+#[non_exhaustive]
+pub enum PsbtCompletionError {
+    #[error("Invalid PSBT: {reason}")]
+    InvalidPsbt { reason: String },
+    #[error("Could not combine signed PSBT: {reason}")]
+    CombineFailed { reason: String },
+    #[error("Could not finalize signed PSBT: {reason}")]
+    FinalizationFailed { reason: String },
+    #[error("Signed PSBT verification failed: {reason}")]
+    VerificationFailed { reason: String },
+    #[error("Could not extract signed transaction: {reason}")]
+    ExtractionFailed { reason: String },
+}
+
 /// Errors specific to account info operations (BDK/Electrum-based).
 #[derive(uniffi::Error, Debug, Error)]
 #[non_exhaustive]

@@ -565,6 +565,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_fetch_pubky_profile() != 19709:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_finalize_psbt() != 37120:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activities() != 9879:
@@ -615,7 +617,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 36542:
+    if lib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 61117:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_tags() != 8596:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -670,6 +672,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_open_channel() != 21402:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_passport_parse_account_export() != 62096:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json() != 61978:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -803,6 +807,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_upsert_transaction_details() != 62351:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_ur_encode_crypto_psbt() != 32954:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005:
@@ -842,6 +848,12 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 50474:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_urdecoder_receive() != 44279:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_urdecoder_reset() != 6027:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_constructor_urdecoder_new() != 23014:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
 
 # A ctypes library to expose the extern-C FFI definitions.
@@ -1174,6 +1186,31 @@ _UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request.ar
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_method_trezoruicallback_on_passphrase_request.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_clone_urdecoder.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_clone_urdecoder.restype = ctypes.c_void_p
+_UniffiLib.uniffi_bitkitcore_fn_free_urdecoder.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_free_urdecoder.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_constructor_urdecoder_new.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_constructor_urdecoder_new.restype = ctypes.c_void_p
+_UniffiLib.uniffi_bitkitcore_fn_method_urdecoder_receive.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_urdecoder_receive.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_urdecoder_reset.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_urdecoder_reset.restype = None
 _UniffiLib.uniffi_bitkitcore_fn_func_activities_from_json.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1467,6 +1504,12 @@ _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_profile.argtypes = (
     _UniffiRustBuffer,
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_fetch_pubky_profile.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_finalize_psbt.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_finalize_psbt.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_generate_mnemonic.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1754,6 +1797,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_passport_parse_account_export.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_passport_parse_account_export.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_pre_activity_metadata_from_json.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -2076,6 +2124,12 @@ _UniffiLib.uniffi_bitkitcore_fn_func_upsert_transaction_details.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_upsert_transaction_details.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_func_ur_encode_crypto_psbt.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.c_uint32,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_ur_encode_crypto_psbt.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_validate_bitcoin_address.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -2521,6 +2575,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_file_string.restype = cty
 _UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_profile.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_fetch_pubky_profile.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_finalize_psbt.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_finalize_psbt.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_generate_mnemonic.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_generate_mnemonic.restype = ctypes.c_uint16
@@ -2680,6 +2737,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_open_channel.restype = ctypes.c_uint1
 _UniffiLib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_parse_pubky_auth_url.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_passport_parse_account_export.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_passport_parse_account_export.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json.restype = ctypes.c_uint16
@@ -2878,6 +2938,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_tags.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_transaction_details.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_upsert_transaction_details.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_ur_encode_crypto_psbt.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_ur_encode_crypto_psbt.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_validate_bitcoin_address.restype = ctypes.c_uint16
@@ -2938,6 +3001,15 @@ _UniffiLib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request.res
 _UniffiLib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_urdecoder_receive.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_urdecoder_receive.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_urdecoder_reset.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_urdecoder_reset.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_constructor_urdecoder_new.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_constructor_urdecoder_new.restype = ctypes.c_uint16
 _UniffiLib.ffi_bitkitcore_uniffi_contract_version.argtypes = (
 )
 _UniffiLib.ffi_bitkitcore_uniffi_contract_version.restype = ctypes.c_uint32
@@ -3121,6 +3193,8 @@ class _UniffiConverterBytes(_UniffiConverterRustBuffer):
     def write(value, buf):
         buf.write_i32(len(value))
         buf.write(value)
+
+
 
 
 
@@ -3986,6 +4060,54 @@ class _UniffiConverterTypeClosedChannelDetails(_UniffiConverterRustBuffer):
         _UniffiConverterUInt32.write(value.forwarding_fee_base_msat, buf)
         _UniffiConverterString.write(value.channel_name, buf)
         _UniffiConverterString.write(value.channel_closure_reason, buf)
+
+
+class CompletedTransaction:
+    """
+    A finalized transaction ready to broadcast.
+    """
+
+    serialized_tx: "str"
+    """
+    Consensus-encoded transaction hex.
+    """
+
+    txid: "str"
+    """
+    Canonical transaction id, excluding witness data.
+    """
+
+    def __init__(self, *, serialized_tx: "str", txid: "str"):
+        self.serialized_tx = serialized_tx
+        self.txid = txid
+
+    def __str__(self):
+        return "CompletedTransaction(serialized_tx={}, txid={})".format(self.serialized_tx, self.txid)
+
+    def __eq__(self, other):
+        if self.serialized_tx != other.serialized_tx:
+            return False
+        if self.txid != other.txid:
+            return False
+        return True
+
+class _UniffiConverterTypeCompletedTransaction(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return CompletedTransaction(
+            serialized_tx=_UniffiConverterString.read(buf),
+            txid=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.serialized_tx)
+        _UniffiConverterString.check_lower(value.txid)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.serialized_tx, buf)
+        _UniffiConverterString.write(value.txid, buf)
 
 
 class ComposeAccount:
@@ -7563,6 +7685,112 @@ class _UniffiConverterTypeOnchainActivity(_UniffiConverterRustBuffer):
         _UniffiConverterOptionalUInt64.write(value.seen_at, buf)
 
 
+class PassportAccount:
+    """
+    One single-signature account in Passport's generic JSON export.
+    """
+
+    account_type: "AccountType"
+    xpub: "str"
+    """
+    Standard xpub/tpub encoding used by Passport's export.
+    """
+
+    derivation_path: "str"
+    """
+    Account-level BIP32 path, such as `m/84'/0'/0'`.
+    """
+
+    def __init__(self, *, account_type: "AccountType", xpub: "str", derivation_path: "str"):
+        self.account_type = account_type
+        self.xpub = xpub
+        self.derivation_path = derivation_path
+
+    def __str__(self):
+        return "PassportAccount(account_type={}, xpub={}, derivation_path={})".format(self.account_type, self.xpub, self.derivation_path)
+
+    def __eq__(self, other):
+        if self.account_type != other.account_type:
+            return False
+        if self.xpub != other.xpub:
+            return False
+        if self.derivation_path != other.derivation_path:
+            return False
+        return True
+
+class _UniffiConverterTypePassportAccount(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return PassportAccount(
+            account_type=_UniffiConverterTypeAccountType.read(buf),
+            xpub=_UniffiConverterString.read(buf),
+            derivation_path=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterTypeAccountType.check_lower(value.account_type)
+        _UniffiConverterString.check_lower(value.xpub)
+        _UniffiConverterString.check_lower(value.derivation_path)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterTypeAccountType.write(value.account_type, buf)
+        _UniffiConverterString.write(value.xpub, buf)
+        _UniffiConverterString.write(value.derivation_path, buf)
+
+
+class PassportAccountExport:
+    """
+    The single-signature accounts exported by Passport for one account index.
+    """
+
+    master_fingerprint: "str"
+    """
+    Root fingerprint used in descriptors and PSBT key origins.
+    """
+
+    account_index: "int"
+    accounts: "typing.List[PassportAccount]"
+    def __init__(self, *, master_fingerprint: "str", account_index: "int", accounts: "typing.List[PassportAccount]"):
+        self.master_fingerprint = master_fingerprint
+        self.account_index = account_index
+        self.accounts = accounts
+
+    def __str__(self):
+        return "PassportAccountExport(master_fingerprint={}, account_index={}, accounts={})".format(self.master_fingerprint, self.account_index, self.accounts)
+
+    def __eq__(self, other):
+        if self.master_fingerprint != other.master_fingerprint:
+            return False
+        if self.account_index != other.account_index:
+            return False
+        if self.accounts != other.accounts:
+            return False
+        return True
+
+class _UniffiConverterTypePassportAccountExport(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return PassportAccountExport(
+            master_fingerprint=_UniffiConverterString.read(buf),
+            account_index=_UniffiConverterUInt32.read(buf),
+            accounts=_UniffiConverterSequenceTypePassportAccount.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.master_fingerprint)
+        _UniffiConverterUInt32.check_lower(value.account_index)
+        _UniffiConverterSequenceTypePassportAccount.check_lower(value.accounts)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.master_fingerprint, buf)
+        _UniffiConverterUInt32.write(value.account_index, buf)
+        _UniffiConverterSequenceTypePassportAccount.write(value.accounts, buf)
+
+
 class PreActivityMetadata:
     wallet_id: "str"
     payment_id: "str"
@@ -8119,36 +8347,31 @@ class _UniffiConverterTypeSubmarineSwapResponse(_UniffiConverterRustBuffer):
 
 class SupportedHardwareWallet:
     """
-    A hardware-wallet model Bitkit supports, with the transports it can connect over.
-
-    Owned by core so iOS and Android render the same catalog instead of each
-    hardcoding it. Platforms filter by `transports`: Android supports every model,
-    while iOS (Bluetooth-only) shows just the models whose `transports` include
-    `Bluetooth`. `model` is a stable key apps can map to their own bundled image.
+    A hardware-wallet model Bitkit supports.
     """
 
     vendor: "HardwareWalletVendor"
     vendor_name: "str"
     """
-    Human-readable vendor name, e.g. "Trezor".
+    Human-readable manufacturer name, e.g. "Foundation".
     """
 
     model: "str"
     """
-    Model identifier, e.g. "Safe 7".
+    Stable model identifier that applications can map to bundled assets.
     """
 
     display_name: "str"
     """
-    Full display name, e.g. "Trezor Safe 7".
+    Full user-facing name.
     """
 
-    transports: "typing.List[TrezorTransportType]"
+    transports: "typing.List[HardwareWalletTransport]"
     """
-    Transports this model can connect over.
+    Transports over which the application can interact with this model.
     """
 
-    def __init__(self, *, vendor: "HardwareWalletVendor", vendor_name: "str", model: "str", display_name: "str", transports: "typing.List[TrezorTransportType]"):
+    def __init__(self, *, vendor: "HardwareWalletVendor", vendor_name: "str", model: "str", display_name: "str", transports: "typing.List[HardwareWalletTransport]"):
         self.vendor = vendor
         self.vendor_name = vendor_name
         self.model = model
@@ -8179,7 +8402,7 @@ class _UniffiConverterTypeSupportedHardwareWallet(_UniffiConverterRustBuffer):
             vendor_name=_UniffiConverterString.read(buf),
             model=_UniffiConverterString.read(buf),
             display_name=_UniffiConverterString.read(buf),
-            transports=_UniffiConverterSequenceTypeTrezorTransportType.read(buf),
+            transports=_UniffiConverterSequenceTypeHardwareWalletTransport.read(buf),
         )
 
     @staticmethod
@@ -8188,7 +8411,7 @@ class _UniffiConverterTypeSupportedHardwareWallet(_UniffiConverterRustBuffer):
         _UniffiConverterString.check_lower(value.vendor_name)
         _UniffiConverterString.check_lower(value.model)
         _UniffiConverterString.check_lower(value.display_name)
-        _UniffiConverterSequenceTypeTrezorTransportType.check_lower(value.transports)
+        _UniffiConverterSequenceTypeHardwareWalletTransport.check_lower(value.transports)
 
     @staticmethod
     def write(value, buf):
@@ -8196,7 +8419,7 @@ class _UniffiConverterTypeSupportedHardwareWallet(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.vendor_name, buf)
         _UniffiConverterString.write(value.model, buf)
         _UniffiConverterString.write(value.display_name, buf)
-        _UniffiConverterSequenceTypeTrezorTransportType.write(value.transports, buf)
+        _UniffiConverterSequenceTypeHardwareWalletTransport.write(value.transports, buf)
 
 
 class SweepResult:
@@ -10661,6 +10884,65 @@ class _UniffiConverterTypeTxOutput(_UniffiConverterRustBuffer):
         _UniffiConverterUInt32.write(value.n, buf)
 
 
+class UrDecoderStatus:
+    """
+    Current state after accepting a scanned UR frame.
+    """
+
+    progress: "float"
+    """
+    Estimated completion from 0.0 through 1.0.
+    """
+
+    fragment_count: "int"
+    """
+    Fountain source-fragment count, or 1 for a single-part UR.
+    """
+
+    payload: "typing.Optional[UrPayload]"
+    """
+    Present once the complete message has been decoded.
+    """
+
+    def __init__(self, *, progress: "float", fragment_count: "int", payload: "typing.Optional[UrPayload]"):
+        self.progress = progress
+        self.fragment_count = fragment_count
+        self.payload = payload
+
+    def __str__(self):
+        return "UrDecoderStatus(progress={}, fragment_count={}, payload={})".format(self.progress, self.fragment_count, self.payload)
+
+    def __eq__(self, other):
+        if self.progress != other.progress:
+            return False
+        if self.fragment_count != other.fragment_count:
+            return False
+        if self.payload != other.payload:
+            return False
+        return True
+
+class _UniffiConverterTypeUrDecoderStatus(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return UrDecoderStatus(
+            progress=_UniffiConverterDouble.read(buf),
+            fragment_count=_UniffiConverterUInt32.read(buf),
+            payload=_UniffiConverterOptionalTypeUrPayload.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterDouble.check_lower(value.progress)
+        _UniffiConverterUInt32.check_lower(value.fragment_count)
+        _UniffiConverterOptionalTypeUrPayload.check_lower(value.payload)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterDouble.write(value.progress, buf)
+        _UniffiConverterUInt32.write(value.fragment_count, buf)
+        _UniffiConverterOptionalTypeUrPayload.write(value.payload, buf)
+
+
 class ValidationResult:
     address: "str"
     network: "NetworkType"
@@ -10889,10 +11171,8 @@ class WatcherParams:
 
     wallet_id: "str"
     """
-    Wallet id that scopes the activities this watcher emits. One watcher
-    watches one address type, so this stays at the address-type boundary —
-    the same txid seen under two address types yields two wallet-scoped
-    activities under different `wallet_id`s, not one merged activity.
+    Wallet id that scopes the activities this watcher emits. Apps may use
+    one wallet id for several account watchers and merge their snapshots.
     """
 
     extended_key: "str"
@@ -14520,13 +14800,64 @@ class _UniffiConverterTypeDecodingError(_UniffiConverterRustBuffer):
 
 
 
+class HardwareWalletTransport(enum.Enum):
+    """
+    How an application exchanges data with a hardware wallet.
+    """
+
+    USB = 0
+    
+    BLUETOOTH = 1
+    
+    QR = 2
+    
+
+
+class _UniffiConverterTypeHardwareWalletTransport(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return HardwareWalletTransport.USB
+        if variant == 2:
+            return HardwareWalletTransport.BLUETOOTH
+        if variant == 3:
+            return HardwareWalletTransport.QR
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == HardwareWalletTransport.USB:
+            return
+        if value == HardwareWalletTransport.BLUETOOTH:
+            return
+        if value == HardwareWalletTransport.QR:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == HardwareWalletTransport.USB:
+            buf.write_i32(1)
+        if value == HardwareWalletTransport.BLUETOOTH:
+            buf.write_i32(2)
+        if value == HardwareWalletTransport.QR:
+            buf.write_i32(3)
+
+
+
+
+
+
+
 class HardwareWalletVendor(enum.Enum):
     """
-    A hardware-wallet vendor supported by Bitkit. Trezor only for now; this leaves
-    room to add other vendors without changing the catalog's shape.
+    A hardware-wallet vendor recognized by Bitkit.
     """
 
     TREZOR = 0
+    
+    FOUNDATION = 1
     
 
 
@@ -14536,11 +14867,15 @@ class _UniffiConverterTypeHardwareWalletVendor(_UniffiConverterRustBuffer):
         variant = buf.read_i32()
         if variant == 1:
             return HardwareWalletVendor.TREZOR
+        if variant == 2:
+            return HardwareWalletVendor.FOUNDATION
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
     def check_lower(value):
         if value == HardwareWalletVendor.TREZOR:
+            return
+        if value == HardwareWalletVendor.FOUNDATION:
             return
         raise ValueError(value)
 
@@ -14548,6 +14883,8 @@ class _UniffiConverterTypeHardwareWalletVendor(_UniffiConverterRustBuffer):
     def write(value, buf):
         if value == HardwareWalletVendor.TREZOR:
             buf.write_i32(1)
+        if value == HardwareWalletVendor.FOUNDATION:
+            buf.write_i32(2)
 
 
 
@@ -15208,6 +15545,136 @@ class _UniffiConverterTypePaymentType(_UniffiConverterRustBuffer):
             buf.write_i32(2)
 
 
+
+
+# PsbtCompletionError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class PsbtCompletionError(Exception):
+    pass
+
+_UniffiTempPsbtCompletionError = PsbtCompletionError
+
+class PsbtCompletionError:  # type: ignore
+    class InvalidPsbt(_UniffiTempPsbtCompletionError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "PsbtCompletionError.InvalidPsbt({})".format(str(self))
+    _UniffiTempPsbtCompletionError.InvalidPsbt = InvalidPsbt # type: ignore
+    class CombineFailed(_UniffiTempPsbtCompletionError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "PsbtCompletionError.CombineFailed({})".format(str(self))
+    _UniffiTempPsbtCompletionError.CombineFailed = CombineFailed # type: ignore
+    class FinalizationFailed(_UniffiTempPsbtCompletionError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "PsbtCompletionError.FinalizationFailed({})".format(str(self))
+    _UniffiTempPsbtCompletionError.FinalizationFailed = FinalizationFailed # type: ignore
+    class VerificationFailed(_UniffiTempPsbtCompletionError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "PsbtCompletionError.VerificationFailed({})".format(str(self))
+    _UniffiTempPsbtCompletionError.VerificationFailed = VerificationFailed # type: ignore
+    class ExtractionFailed(_UniffiTempPsbtCompletionError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "PsbtCompletionError.ExtractionFailed({})".format(str(self))
+    _UniffiTempPsbtCompletionError.ExtractionFailed = ExtractionFailed # type: ignore
+
+PsbtCompletionError = _UniffiTempPsbtCompletionError # type: ignore
+del _UniffiTempPsbtCompletionError
+
+
+class _UniffiConverterTypePsbtCompletionError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return PsbtCompletionError.InvalidPsbt(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 2:
+            return PsbtCompletionError.CombineFailed(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return PsbtCompletionError.FinalizationFailed(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 4:
+            return PsbtCompletionError.VerificationFailed(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 5:
+            return PsbtCompletionError.ExtractionFailed(
+                _UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, PsbtCompletionError.InvalidPsbt):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+        if isinstance(value, PsbtCompletionError.CombineFailed):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+        if isinstance(value, PsbtCompletionError.FinalizationFailed):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+        if isinstance(value, PsbtCompletionError.VerificationFailed):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+        if isinstance(value, PsbtCompletionError.ExtractionFailed):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, PsbtCompletionError.InvalidPsbt):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, PsbtCompletionError.CombineFailed):
+            buf.write_i32(2)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, PsbtCompletionError.FinalizationFailed):
+            buf.write_i32(3)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, PsbtCompletionError.VerificationFailed):
+            buf.write_i32(4)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, PsbtCompletionError.ExtractionFailed):
+            buf.write_i32(5)
+            _UniffiConverterString.write(value.reason, buf)
 
 
 
@@ -16714,6 +17181,289 @@ class _UniffiConverterTypeTxDirection(_UniffiConverterRustBuffer):
             buf.write_i32(2)
         if value == TxDirection.SELF_TRANSFER:
             buf.write_i32(3)
+
+
+
+
+# UrError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class UrError(Exception):
+    pass
+
+_UniffiTempUrError = UrError
+
+class UrError:  # type: ignore
+    class InvalidUr(_UniffiTempUrError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "UrError.InvalidUr({})".format(str(self))
+    _UniffiTempUrError.InvalidUr = InvalidUr # type: ignore
+    class TooLarge(_UniffiTempUrError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "UrError.TooLarge({})".format(str(self))
+    _UniffiTempUrError.TooLarge = TooLarge # type: ignore
+    class InvalidPayload(_UniffiTempUrError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "UrError.InvalidPayload({})".format(str(self))
+    _UniffiTempUrError.InvalidPayload = InvalidPayload # type: ignore
+    class InvalidPsbt(_UniffiTempUrError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "UrError.InvalidPsbt({})".format(str(self))
+    _UniffiTempUrError.InvalidPsbt = InvalidPsbt # type: ignore
+    class InvalidPassportExport(_UniffiTempUrError):
+        def __init__(self, reason):
+            super().__init__(", ".join([
+                "reason={!r}".format(reason),
+            ]))
+            self.reason = reason
+
+        def __repr__(self):
+            return "UrError.InvalidPassportExport({})".format(str(self))
+    _UniffiTempUrError.InvalidPassportExport = InvalidPassportExport # type: ignore
+
+UrError = _UniffiTempUrError # type: ignore
+del _UniffiTempUrError
+
+
+class _UniffiConverterTypeUrError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return UrError.InvalidUr(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 2:
+            return UrError.TooLarge(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return UrError.InvalidPayload(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 4:
+            return UrError.InvalidPsbt(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 5:
+            return UrError.InvalidPassportExport(
+                _UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, UrError.InvalidUr):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+        if isinstance(value, UrError.TooLarge):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+        if isinstance(value, UrError.InvalidPayload):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+        if isinstance(value, UrError.InvalidPsbt):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+        if isinstance(value, UrError.InvalidPassportExport):
+            _UniffiConverterString.check_lower(value.reason)
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, UrError.InvalidUr):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, UrError.TooLarge):
+            buf.write_i32(2)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, UrError.InvalidPayload):
+            buf.write_i32(3)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, UrError.InvalidPsbt):
+            buf.write_i32(4)
+            _UniffiConverterString.write(value.reason, buf)
+        if isinstance(value, UrError.InvalidPassportExport):
+            buf.write_i32(5)
+            _UniffiConverterString.write(value.reason, buf)
+
+
+
+
+
+class UrPayload:
+    """
+    A completely decoded UR payload.
+    """
+
+    def __init__(self):
+        raise RuntimeError("UrPayload cannot be instantiated directly")
+
+    # Each enum variant is a nested class of the enum itself.
+    class BYTES:
+        """
+        The byte string wrapped by a `bytes` registry item.
+        """
+
+        data: "bytes"
+
+        def __init__(self,data: "bytes"):
+            self.data = data
+
+        def __str__(self):
+            return "UrPayload.BYTES(data={})".format(self.data)
+
+        def __eq__(self, other):
+            if not other.is_BYTES():
+                return False
+            if self.data != other.data:
+                return False
+            return True
+    
+    class CRYPTO_PSBT:
+        """
+        A `crypto-psbt` registry item, returned in Bitkit's usual base64 form.
+        """
+
+        psbt: "str"
+
+        def __init__(self,psbt: "str"):
+            self.psbt = psbt
+
+        def __str__(self):
+            return "UrPayload.CRYPTO_PSBT(psbt={})".format(self.psbt)
+
+        def __eq__(self, other):
+            if not other.is_CRYPTO_PSBT():
+                return False
+            if self.psbt != other.psbt:
+                return False
+            return True
+    
+    class CBOR:
+        """
+        An uninterpreted UR registry item.
+        """
+
+        ur_type: "str"
+        cbor: "bytes"
+
+        def __init__(self,ur_type: "str", cbor: "bytes"):
+            self.ur_type = ur_type
+            self.cbor = cbor
+
+        def __str__(self):
+            return "UrPayload.CBOR(ur_type={}, cbor={})".format(self.ur_type, self.cbor)
+
+        def __eq__(self, other):
+            if not other.is_CBOR():
+                return False
+            if self.ur_type != other.ur_type:
+                return False
+            if self.cbor != other.cbor:
+                return False
+            return True
+    
+    
+
+    # For each variant, we have `is_NAME` and `is_name` methods for easily checking
+    # whether an instance is that variant.
+    def is_BYTES(self) -> bool:
+        return isinstance(self, UrPayload.BYTES)
+    def is_bytes(self) -> bool:
+        return isinstance(self, UrPayload.BYTES)
+    def is_CRYPTO_PSBT(self) -> bool:
+        return isinstance(self, UrPayload.CRYPTO_PSBT)
+    def is_crypto_psbt(self) -> bool:
+        return isinstance(self, UrPayload.CRYPTO_PSBT)
+    def is_CBOR(self) -> bool:
+        return isinstance(self, UrPayload.CBOR)
+    def is_cbor(self) -> bool:
+        return isinstance(self, UrPayload.CBOR)
+    
+
+# Now, a little trick - we make each nested variant class be a subclass of the main
+# enum class, so that method calls and instance checks etc will work intuitively.
+# We might be able to do this a little more neatly with a metaclass, but this'll do.
+UrPayload.BYTES = type("UrPayload.BYTES", (UrPayload.BYTES, UrPayload,), {})  # type: ignore
+UrPayload.CRYPTO_PSBT = type("UrPayload.CRYPTO_PSBT", (UrPayload.CRYPTO_PSBT, UrPayload,), {})  # type: ignore
+UrPayload.CBOR = type("UrPayload.CBOR", (UrPayload.CBOR, UrPayload,), {})  # type: ignore
+
+
+
+
+class _UniffiConverterTypeUrPayload(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return UrPayload.BYTES(
+                _UniffiConverterBytes.read(buf),
+            )
+        if variant == 2:
+            return UrPayload.CRYPTO_PSBT(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return UrPayload.CBOR(
+                _UniffiConverterString.read(buf),
+                _UniffiConverterBytes.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value.is_BYTES():
+            _UniffiConverterBytes.check_lower(value.data)
+            return
+        if value.is_CRYPTO_PSBT():
+            _UniffiConverterString.check_lower(value.psbt)
+            return
+        if value.is_CBOR():
+            _UniffiConverterString.check_lower(value.ur_type)
+            _UniffiConverterBytes.check_lower(value.cbor)
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value.is_BYTES():
+            buf.write_i32(1)
+            _UniffiConverterBytes.write(value.data, buf)
+        if value.is_CRYPTO_PSBT():
+            buf.write_i32(2)
+            _UniffiConverterString.write(value.psbt, buf)
+        if value.is_CBOR():
+            buf.write_i32(3)
+            _UniffiConverterString.write(value.ur_type, buf)
+            _UniffiConverterBytes.write(value.cbor, buf)
 
 
 
@@ -18345,6 +19095,33 @@ class _UniffiConverterOptionalTypeTrezorTransportErrorCode(_UniffiConverterRustB
 
 
 
+class _UniffiConverterOptionalTypeUrPayload(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeUrPayload.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeUrPayload.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeUrPayload.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypeWordCount(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -18905,6 +19682,31 @@ class _UniffiConverterSequenceTypeOnchainActivity(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterSequenceTypePassportAccount(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypePassportAccount.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypePassportAccount.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypePassportAccount.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypePreActivityMetadata(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -19330,18 +20132,18 @@ class _UniffiConverterSequenceTypeComposeResult(_UniffiConverterRustBuffer):
 
 
 
-class _UniffiConverterSequenceTypeTrezorTransportType(_UniffiConverterRustBuffer):
+class _UniffiConverterSequenceTypeHardwareWalletTransport(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
         for item in value:
-            _UniffiConverterTypeTrezorTransportType.check_lower(item)
+            _UniffiConverterTypeHardwareWalletTransport.check_lower(item)
 
     @classmethod
     def write(cls, value, buf):
         items = len(value)
         buf.write_i32(items)
         for item in value:
-            _UniffiConverterTypeTrezorTransportType.write(item, buf)
+            _UniffiConverterTypeHardwareWalletTransport.write(item, buf)
 
     @classmethod
     def read(cls, buf):
@@ -19350,7 +20152,7 @@ class _UniffiConverterSequenceTypeTrezorTransportType(_UniffiConverterRustBuffer
             raise InternalError("Unexpected negative sequence length")
 
         return [
-            _UniffiConverterTypeTrezorTransportType.read(buf) for i in range(count)
+            _UniffiConverterTypeHardwareWalletTransport.read(buf) for i in range(count)
         ]
 
 
@@ -20762,6 +21564,108 @@ class _UniffiConverterTypeTrezorUiCallback:
     @classmethod
     def write(cls, value: TrezorUiCallbackProtocol, buf: _UniffiRustBuffer):
         buf.write_u64(cls.lower(value))
+class UrDecoderProtocol(typing.Protocol):
+    """
+    Stateful decoder for single-part and animated multipart UR QR scans.
+    """
+
+    def receive(self, frame: "str"):
+        """
+        Adds one UR fragment and returns the current decoding status.
+        """
+
+        raise NotImplementedError
+    def reset(self, ):
+        """
+        Clear all frames so the decoder can receive another message.
+        """
+
+        raise NotImplementedError
+# UrDecoder is a Rust-only trait - it's a wrapper around a Rust implementation.
+class UrDecoder():
+    """
+    Stateful decoder for single-part and animated multipart UR QR scans.
+    """
+
+    _pointer: ctypes.c_void_p
+    def __init__(self, ):
+        self._pointer = _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_constructor_urdecoder_new,)
+
+    def __del__(self):
+        # In case of partial initialization of instances.
+        pointer = getattr(self, "_pointer", None)
+        if pointer is not None:
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_free_urdecoder, pointer)
+
+    def _uniffi_clone_pointer(self):
+        return _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_clone_urdecoder, self._pointer)
+
+    # Used by alternative constructors or any methods which return this type.
+    @classmethod
+    def _make_instance_(cls, pointer):
+        # Lightly yucky way to bypass the usual __init__ logic
+        # and just create a new instance with the required pointer.
+        inst = cls.__new__(cls)
+        inst._pointer = pointer
+        return inst
+
+
+    def receive(self, frame: "str") -> "UrDecoderStatus":
+        """
+        Adds one UR fragment and returns the current decoding status.
+        """
+
+        _UniffiConverterString.check_lower(frame)
+        
+        return _UniffiConverterTypeUrDecoderStatus.lift(
+            _uniffi_rust_call_with_error(_UniffiConverterTypeUrError,_UniffiLib.uniffi_bitkitcore_fn_method_urdecoder_receive,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(frame))
+        )
+
+
+
+
+
+    def reset(self, ) -> None:
+        """
+        Clear all frames so the decoder can receive another message.
+        """
+
+        _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_urdecoder_reset,self._uniffi_clone_pointer(),)
+
+
+
+
+
+
+
+class _UniffiConverterTypeUrDecoder:
+
+    @staticmethod
+    def lift(value: int):
+        return UrDecoder._make_instance_(value)
+
+    @staticmethod
+    def check_lower(value: UrDecoder):
+        if not isinstance(value, UrDecoder):
+            raise TypeError("Expected UrDecoder instance, {} found".format(type(value).__name__))
+
+    @staticmethod
+    def lower(value: UrDecoderProtocol):
+        if not isinstance(value, UrDecoder):
+            raise TypeError("Expected UrDecoder instance, {} found".format(type(value).__name__))
+        return value._uniffi_clone_pointer()
+
+    @classmethod
+    def read(cls, buf: _UniffiRustBuffer):
+        ptr = buf.read_u64()
+        if ptr == 0:
+            raise InternalError("Raw pointer value was null")
+        return cls.lift(ptr)
+
+    @classmethod
+    def write(cls, value: UrDecoderProtocol, buf: _UniffiRustBuffer):
+        buf.write_u64(cls.lower(value))
 
 # Async support# RustFuturePoll values
 _UNIFFI_RUST_FUTURE_POLL_READY = 0
@@ -21779,6 +22683,20 @@ _UniffiConverterTypePubkyError,
 
     )
 
+def finalize_psbt(original_psbt: "str",signed_psbt: "str") -> "CompletedTransaction":
+    """
+    Combine and finalize a signed PSBT, then extract its broadcastable transaction.
+    """
+
+    _UniffiConverterString.check_lower(original_psbt)
+    
+    _UniffiConverterString.check_lower(signed_psbt)
+    
+    return _UniffiConverterTypeCompletedTransaction.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePsbtCompletionError,_UniffiLib.uniffi_bitkitcore_fn_func_finalize_psbt,
+        _UniffiConverterString.lower(original_psbt),
+        _UniffiConverterString.lower(signed_psbt)))
+
+
 def generate_mnemonic(word_count: "typing.Optional[WordCount]") -> "str":
     _UniffiConverterOptionalTypeWordCount.check_lower(word_count)
     
@@ -22089,10 +23007,7 @@ def get_pre_activity_metadata(wallet_id: "str",search_key: "str",search_by_addre
 
 def get_supported_hardware_wallets() -> "typing.List[SupportedHardwareWallet]":
     """
-    The catalog of hardware wallets Bitkit supports.
-
-    Trezor's full lineup; only the Safe 7 currently offers Bluetooth, so it is the
-    only model iOS surfaces (apps filter on `transports`).
+    The hardware-wallet models supported by Bitkit and their available transports.
     """
 
     return _UniffiConverterSequenceTypeSupportedHardwareWallet.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_get_supported_hardware_wallets,))
@@ -22541,6 +23456,20 @@ def parse_pubky_auth_url(auth_url: "str") -> "PubkyAuthDetails":
     
     return _UniffiConverterTypePubkyAuthDetails.lift(_uniffi_rust_call_with_error(_UniffiConverterTypePubkyError,_UniffiLib.uniffi_bitkitcore_fn_func_parse_pubky_auth_url,
         _UniffiConverterString.lower(auth_url)))
+
+
+def passport_parse_account_export(data: "bytes") -> "PassportAccountExport":
+    """
+    Parse Passport's generic JSON account export from a decoded `ur:bytes` payload.
+
+    Parses BIP44, BIP49, BIP84, and BIP86 single-signature accounts. BIP48
+    multisig entries are ignored.
+    """
+
+    _UniffiConverterBytes.check_lower(data)
+    
+    return _UniffiConverterTypePassportAccountExport.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeUrError,_UniffiLib.uniffi_bitkitcore_fn_func_passport_parse_account_export,
+        _UniffiConverterBytes.lower(data)))
 
 
 def pre_activity_metadata_from_json(json: "str") -> "typing.List[PreActivityMetadata]":
@@ -23689,6 +24618,23 @@ def upsert_transaction_details(details_list: "typing.List[TransactionDetails]") 
         _UniffiConverterSequenceTypeTransactionDetails.lower(details_list))
 
 
+def ur_encode_crypto_psbt(psbt: "str",max_fragment_length: "int") -> "typing.List[str]":
+    """
+    Encode a base64 PSBT as one cycle of `crypto-psbt` UR frames.
+
+    The returned cycle contains every original fountain fragment once. Apps can
+    loop it while rendering an animated QR.
+    """
+
+    _UniffiConverterString.check_lower(psbt)
+    
+    _UniffiConverterUInt32.check_lower(max_fragment_length)
+    
+    return _UniffiConverterSequenceString.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeUrError,_UniffiLib.uniffi_bitkitcore_fn_func_ur_encode_crypto_psbt,
+        _UniffiConverterString.lower(psbt),
+        _UniffiConverterUInt32.lower(max_fragment_length)))
+
+
 def validate_bitcoin_address(address: "str") -> "ValidationResult":
     _UniffiConverterString.check_lower(address)
     
@@ -23756,6 +24702,7 @@ __all__ = [
     "ComposeResult",
     "DbError",
     "DecodingError",
+    "HardwareWalletTransport",
     "HardwareWalletVendor",
     "LnurlError",
     "ManualRefundStateEnum",
@@ -23765,6 +24712,7 @@ __all__ = [
     "PassphraseResponse",
     "PaymentState",
     "PaymentType",
+    "PsbtCompletionError",
     "PubkyAuthKind",
     "PubkyError",
     "Scanner",
@@ -23776,6 +24724,8 @@ __all__ = [
     "TrezorTransportErrorCode",
     "TrezorTransportType",
     "TxDirection",
+    "UrError",
+    "UrPayload",
     "WalletSelection",
     "WatcherEvent",
     "WordCount",
@@ -23789,6 +24739,7 @@ __all__ = [
     "ChannelLiquidityOptions",
     "ChannelLiquidityParams",
     "ClosedChannelDetails",
+    "CompletedTransaction",
     "ComposeAccount",
     "ComposeParams",
     "CreateCjitOptions",
@@ -23837,6 +24788,8 @@ __all__ = [
     "NativeDeviceInfo",
     "OnChainInvoice",
     "OnchainActivity",
+    "PassportAccount",
+    "PassportAccountExport",
     "PreActivityMetadata",
     "PubkyAuth",
     "PubkyAuthDetails",
@@ -23875,6 +24828,7 @@ __all__ = [
     "TxDetailOutput",
     "TxInput",
     "TxOutput",
+    "UrDecoderStatus",
     "ValidationResult",
     "WalletBalance",
     "WalletParams",
@@ -23931,6 +24885,7 @@ __all__ = [
     "fetch_pubky_file",
     "fetch_pubky_file_string",
     "fetch_pubky_profile",
+    "finalize_psbt",
     "generate_mnemonic",
     "get_activities",
     "get_activities_by_tag",
@@ -23984,6 +24939,7 @@ __all__ = [
     "onchain_stop_watcher",
     "open_channel",
     "parse_pubky_auth_url",
+    "passport_parse_account_export",
     "pre_activity_metadata_from_json",
     "pre_activity_metadata_to_json",
     "prepare_legacy_rn_native_segwit_recovery_sweep",
@@ -24050,6 +25006,7 @@ __all__ = [
     "upsert_pre_activity_metadata",
     "upsert_tags",
     "upsert_transaction_details",
+    "ur_encode_crypto_psbt",
     "validate_bitcoin_address",
     "validate_mnemonic",
     "wipe_all_closed_channels",
@@ -24059,5 +25016,5 @@ __all__ = [
     "EventListener",
     "TrezorTransportCallback",
     "TrezorUiCallback",
+    "UrDecoder",
 ]
-

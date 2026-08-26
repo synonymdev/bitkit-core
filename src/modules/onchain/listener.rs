@@ -48,10 +48,8 @@ pub trait EventListener: Send + Sync {
 pub struct WatcherParams {
     /// Caller-supplied identifier for this watcher.
     pub watcher_id: String,
-    /// Wallet id that scopes the activities this watcher emits. One watcher
-    /// watches one address type, so this stays at the address-type boundary —
-    /// the same txid seen under two address types yields two wallet-scoped
-    /// activities under different `wallet_id`s, not one merged activity.
+    /// Wallet id that scopes the activities this watcher emits. Apps may use
+    /// one wallet id for several account watchers and merge their snapshots.
     pub wallet_id: String,
     /// Extended public key (xpub/ypub/zpub/tpub/upub/vpub).
     pub extended_key: String,

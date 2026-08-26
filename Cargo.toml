@@ -1,6 +1,6 @@
 [package]
 name = "bitkitcore"
-version = "0.5.6"
+version = "0.5.8"
 edition = "2021"
 
 [lib]
@@ -14,6 +14,7 @@ serde_json = "1.0.114"
 serde = { version = "^1.0.209", features = ["derive"] }
 tokio = { version = "1.40.0", features = ["rt", "rt-multi-thread", "macros"] }
 bitcoin = "0.32.4"
+miniscript = "12.3.7"
 chrono = "0.4"
 lightning-invoice = { version = "0.32.0", features = ["std"] }
 thiserror = "2.0.11"
@@ -38,6 +39,8 @@ bip39 = "2.0"
 bdk = { version = "0.30.2", features = ["all-keys"] }
 boltz-client = { version = "0.4.1", default-features = false, features = ["electrum", "ws"] }
 base64 = "0.22"
+minicbor = { version = "2", features = ["alloc"] }
+ur = "0.5.2"
 log = "0.4"
 pubky = "0.6.0"
 pubky-app-specs = "0.4"
