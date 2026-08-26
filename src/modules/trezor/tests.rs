@@ -970,6 +970,60 @@ mod tests {
         }
 
         #[test]
+        fn test_labeled_pair_like_secret_is_redacted() {
+            for (message, expected) in [
+                ("credential=SGVsbG8gV29ybGQ=", "credential=<redacted>"),
+                (
+                    "host_static_key=c2VjcmV0a2V5bWF0ZXJpYWwxMjM0NTY3ODkw=",
+                    "host_static_key=<redacted>",
+                ),
+                ("session_id=trezor:abcd1234", "session_id=<redacted>"),
+                ("token=user:hunter2", "token=<redacted>"),
+            ] {
+                assert_eq!(sanitized(message), expected);
+            }
+        }
+
+        #[test]
+        fn test_nested_secret_under_innocuous_label_is_redacted() {
+            for (message, expected) in [
+                (
+                    r#"context={"token":"hunter2"}"#,
+                    r#"context={"token":"<redacted>"}"#,
+                ),
+                (
+                    "request=[passphrase=hunter2]",
+                    "request=[passphrase=<redacted>]",
+                ),
+                ("detail=\"pin=1234\"", "detail=\"pin=<redacted>\""),
+                ("state=token:hunter2", "state=token:<redacted>"),
+            ] {
+                assert_eq!(sanitized(message), expected);
+            }
+        }
+
+        #[test]
+        fn test_two_word_label_is_redacted() {
+            let output = sanitized(&format!("seed phrase: {}", TEST_MNEMONIC));
+            assert_eq!(output, "seed phrase: <redacted>");
+
+            let output = sanitized("wallet passphrase: correct horse battery");
+            assert_eq!(output, "wallet passphrase: <redacted>");
+        }
+
+        #[test]
+        fn test_spaced_separator_after_multiword_value_is_redacted() {
+            let output = sanitized("passphrase=hunter2 pin = 1234");
+            assert_eq!(output, "passphrase=<redacted> pin = <redacted>");
+        }
+
+        #[test]
+        fn test_escaped_quote_does_not_end_a_quoted_secret() {
+            let output = sanitized(r#"passphrase="hunter\"tail""#);
+            assert_eq!(output, r#"passphrase="<redacted>""#);
+        }
+
+        #[test]
         fn test_labeled_psbt_is_redacted() {
             let output = sanitized(&format!("signing psbt={}", TEST_PSBT));
             assert_eq!(output, "signing psbt=<redacted>");
@@ -1130,6 +1184,14 @@ mod tests {
                 format!("recovery: {} (12 words)", TEST_MNEMONIC),
                 "passphrase=hunter2 pin=1234 mnemonic=[a, b, c]".to_string(),
                 "session_token=4815162342".to_string(),
+                "passphrase=hunter2 pin = 1234".to_string(),
+                r#"passphrase="hunter2\"1234""#.to_string(),
+                format!(
+                    r#"context={{"passphrase":"hunter2","seed":"{}"}}"#,
+                    TEST_MNEMONIC
+                ),
+                format!("seed phrase: {}", TEST_MNEMONIC),
+                format!("recovery seed = {} pin = 1234", TEST_MNEMONIC),
             ];
 
             for fixture in fixtures {

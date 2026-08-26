@@ -98,7 +98,7 @@ fn redact_labeled_values(text: &str) -> String {
         "?
         \s*[:=]\s*
         (?P<value>
-              "[^"]*"                       # quoted string
+              "(?:[^"\\]|\\.)*"             # quoted string, escapes included
             | \[[^\]]*\]                    # array
             | \{[^}]*\}                     # object
                                             # count with a spaced-out unit
@@ -119,16 +119,27 @@ fn redact_labeled_values(text: &str) -> String {
         let key = &caps["key"];
         let value = &caps["value"];
         let separator = &whole.as_str()[key.len()..whole.len() - value.len()];
+        // `seed phrase: …` is one label written as two words, and the pattern
+        // above can only capture the last of them.
+        let label = format!("{}{}", preceding_words(text, whole.start()), key);
 
         out.push_str(&text[cursor..whole.start()]);
         cursor = whole.end();
 
-        if !is_always_sensitive_key(key) {
-            if !is_sensitive_key(key) || is_harmless_value(key, value) {
+        if !is_always_sensitive_key(&label) {
+            if !is_sensitive_key(&label) {
+                // The label is innocuous, but the value can still nest a pair
+                // that is not — `context={"token": "hunter2"}`.
+                out.push_str(key);
+                out.push_str(separator);
+                out.push_str(&redact_nested_values(value));
+                continue;
+            }
+            if is_harmless_value(&label, value) {
                 out.push_str(whole.as_str());
                 continue;
             }
-            if is_labeled_pair(value) {
+            if is_sensitive_labeled_pair(value) {
                 // `credential: host_key=32bytes` — the captured "value" is itself
                 // a labeled pair, so descend into it instead of blanking the lot.
                 out.push_str(key);
@@ -146,6 +157,37 @@ fn redact_labeled_values(text: &str) -> String {
 
     out.push_str(&text[cursor..]);
     out
+}
+
+/// The one or two plain words written immediately before a label.
+///
+/// Anything but a bare word — punctuation, a digit, a redacted value — ends the
+/// run, so this only ever picks up words that read as part of the label itself.
+fn preceding_words(text: &str, start: usize) -> &str {
+    static PRECEDING_WORDS: Lazy<Regex> = lazy_regex!(r"(?:[A-Za-z_][A-Za-z0-9_.\-]*[\t ]+){1,2}$");
+    PRECEDING_WORDS
+        .find(&text[..start])
+        .map_or("", |words| words.as_str())
+}
+
+/// Redact inside the value of a label that is not itself sensitive.
+///
+/// Structured values are descended into, because the parser above sees the
+/// stream as flat text and would otherwise forward a nested `{"token": …}`
+/// whole. Recursion terminates because every descent drops at least the
+/// delimiters or the leading `key=`.
+fn redact_nested_values(value: &str) -> String {
+    static LABELED_PAIR: Lazy<Regex> = lazy_regex!(r#"^[A-Za-z_][A-Za-z0-9_.\-]*"?\s*[:=]\s*\S"#);
+
+    let (open, close) = match value.as_bytes().first() {
+        Some(b'"') => ('"', '"'),
+        Some(b'[') => ('[', ']'),
+        Some(b'{') => ('{', '}'),
+        _ if LABELED_PAIR.is_match(value) => return redact_labeled_values(value),
+        _ => return value.to_string(),
+    };
+    let inner = &value[1..value.len() - 1];
+    format!("{}{}{}", open, redact_labeled_values(inner), close)
 }
 
 /// End of a redacted value, extended past the words the capture left behind.
@@ -166,7 +208,10 @@ fn end_of_multiword_value(text: &str, value: &str, end: usize) -> usize {
     let mut end = end;
     while let Some(word) = TRAILING_WORD.find(&text[end..]) {
         let next = end + word.end();
-        if matches!(text.as_bytes().get(next), Some(b':' | b'=')) {
+        // `passphrase=hunter2 pin = 1234` — the separator may be spaced out, and
+        // absorbing `pin` would leave its value behind unredacted.
+        let rest = text[next..].trim_start_matches([' ', '\t']);
+        if rest.starts_with([':', '=']) {
             break; // that word labels a value of its own
         }
         end = next;
@@ -226,10 +271,13 @@ fn matches_fragment(key: &str, fragments: &[&str]) -> bool {
         .any(|fragment| normalized.contains(fragment))
 }
 
-/// Whether a captured value is itself a `key=value` pair.
-fn is_labeled_pair(value: &str) -> bool {
-    static LABELED_PAIR: Lazy<Regex> = lazy_regex!(r#"^[A-Za-z_][A-Za-z0-9_.\-]*"?\s*[:=]"#);
-    LABELED_PAIR.is_match(value)
+/// Whether a captured value starts with a sensitive `key=value` pair.
+fn is_sensitive_labeled_pair(value: &str) -> bool {
+    static LABELED_PAIR: Lazy<Regex> =
+        lazy_regex!(r#"^(?P<key>[A-Za-z_][A-Za-z0-9_.\-]*)"?\s*[:=]\s*\S"#);
+    LABELED_PAIR
+        .captures(value)
+        .is_some_and(|captures| is_sensitive_key(&captures["key"]))
 }
 
 /// Whether a value is safe to forward even under a sensitive label.
