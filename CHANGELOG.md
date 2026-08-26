@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The Android AAR now ships targeted R8 consumer keep rules for the UniFFI/JNA FFI surface, so consuming apps can enable R8 full mode without extra keep rules for this library.
 - Add a generic hardware-wallet catalog with Foundation Passport support, multipart UR QR encoding and decoding, Passport single-signature account export parsing, and signed PSBT finalization across the UniFFI bindings.
 - Swap status updates now reconcile against Boltz's REST status whenever a swap is (re)subscribed, both on `boltz_start_swap_updates` and when `boltz_create_reverse_swap` adds a swap to a running stream. A confirmed reverse-swap lockup is therefore caught up and auto-claimed even when its live WebSocket event was missed (for example because the updates stream was down while the lockup confirmed), instead of the swap silently stalling until a manual claim. No FFI signature change.
 - `onchain_broadcast_raw_tx` now returns the transaction's canonical txid, computed locally in Rust, and treats Electrum "already known / already in mempool / already in block chain" responses as success (returning that same txid). This lets native apps complete Blocktank funding bookkeeping when they retry a broadcast after an ambiguous network failure, without relying on a signer-provided txid. Genuine connectivity failures and unrelated broadcast rejections remain typed `BroadcastError`s, and there is no FFI signature change.

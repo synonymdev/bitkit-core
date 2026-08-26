@@ -25018,3 +25018,4 @@ __all__ = [
     "TrezorUiCallback",
     "UrDecoder",
 ]
+

@@ -1,4 +1,6 @@
 target/
+__pycache__/
+*.pyc
 bindings/android/native-debug-symbols.zip
 # The xcframework's static libraries exceed GitHub's 100 MB file limit. They are
 # already shipped, compressed, inside BitkitCore.xcframework.zip, which is what
