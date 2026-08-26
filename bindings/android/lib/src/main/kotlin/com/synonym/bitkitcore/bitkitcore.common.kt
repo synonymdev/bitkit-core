@@ -4734,6 +4734,30 @@ public sealed class TrezorException: kotlin.Exception() {
             get() = "errorDetails=${ `errorDetails` }"
     }
     
+    /**
+     * The device reported a firmware-level fault (protocol failure code 99,
+     * `Failure_FirmwareError`). The session is unusable; the caller should ask
+     * the user to reconnect the hardware rather than retry in place.
+     */
+    public class FirmwareException(
+        public val `errorDetails`: kotlin.String,
+    ) : TrezorException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    /**
+     * The device has PIN protection enabled and is currently locked, so the
+     * user must unlock it before anything else can proceed. Distinct from
+     * [`TrezorError::DeviceBusy`], which means transport/session contention
+     * and is worth a backoff-and-retry.
+     */
+    public class DeviceLocked(
+    ) : TrezorException() {
+        override val message: String
+            get() = ""
+    }
+    
 }
 
 
