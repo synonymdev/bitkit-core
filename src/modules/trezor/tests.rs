@@ -938,4 +938,175 @@ mod tests {
         let _ = adapter.on_passphrase_request(true);
         assert_eq!(*mock.last_passphrase_on_device.lock().unwrap(), Some(true));
     }
+
+    // ========================================================================
+    // Debug Log Sanitizer Tests
+    // ========================================================================
+
+    mod log_sanitizer {
+        use crate::modules::trezor::log_sanitizer::sanitize_debug_log;
+
+        /// Secrets that must never survive a round trip through the sanitizer.
+        /// Deliberately literal — the regression test below greps for them.
+        const TEST_CREDENTIAL: &str =
+            "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
+        const TEST_XPUB: &str = "xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL";
+        const TEST_PSBT: &str = "cHNidP8BAHUCAAAAASaBcTce3/KF6Tet7qSze3gADAVmy7OtZGQXE8pCFxv2AAAAAAD+////AtPf9QUAAAAAGXapFQ==";
+        const TEST_FRAME_HEX: &str =
+            "042000ff0a20d3f1e5c7b9a84206ff1e2d3c4b5a69788796a5b4c3d2e1f00112233445566778899";
+
+        fn sanitized(message: &str) -> String {
+            let (_, message) = sanitize_debug_log("THP", message);
+            message
+        }
+
+        #[test]
+        fn test_labeled_credential_is_redacted() {
+            let output = sanitized(&format!("Loaded credential={}", TEST_CREDENTIAL));
+            assert_eq!(output, "Loaded credential=<redacted>");
+        }
+
+        #[test]
+        fn test_labeled_psbt_is_redacted() {
+            let output = sanitized(&format!("signing psbt={}", TEST_PSBT));
+            assert_eq!(output, "signing psbt=<redacted>");
+        }
+
+        #[test]
+        fn test_unexpected_secret_label_is_redacted() {
+            // The point of matching on key fragments: labels nobody enumerated
+            // up front, like `thp_credential` or `master_key`, are still caught.
+            let output = sanitized(&format!(
+                "thp_credential={} master_key={}",
+                TEST_CREDENTIAL, TEST_XPUB
+            ));
+            assert_eq!(output, "thp_credential=<redacted> master_key=<redacted>");
+        }
+
+        #[test]
+        fn test_json_string_and_array_values_are_redacted() {
+            let output = sanitized(&format!(
+                r#"{{"host_static_key": "{}", "credential": [1, 2, 3]}}"#,
+                TEST_CREDENTIAL
+            ));
+            assert_eq!(
+                output,
+                r#"{"host_static_key": "<redacted>", "credential": [<redacted>]}"#
+            );
+        }
+
+        #[test]
+        fn test_bare_xpub_is_redacted() {
+            let output = sanitized(&format!("account descriptor {} at m/84'/0'/0'", TEST_XPUB));
+            assert_eq!(output, "account descriptor <redacted> at m/84'/0'/0'");
+        }
+
+        #[test]
+        fn test_bare_frame_hex_is_redacted() {
+            let output = sanitized(&format!("wrote frame {}", TEST_FRAME_HEX));
+            assert_eq!(output, "wrote frame <redacted>");
+        }
+
+        #[test]
+        fn test_bare_psbt_is_redacted() {
+            let output = sanitized(&format!("tx {}", TEST_PSBT));
+            assert_eq!(output, "tx <redacted>");
+        }
+
+        #[test]
+        fn test_connection_state_passes_through() {
+            let message = "trezor_state=1 (0=needs pairing, 1=paired, 2=autoconnect)";
+            assert_eq!(sanitized(message), message);
+        }
+
+        #[test]
+        fn test_error_codes_pass_through() {
+            let message = "Attempt 2 FAILED: THP Error: DecryptionFailed (error_code: 17)";
+            assert_eq!(sanitized(message), message);
+        }
+
+        #[test]
+        fn test_byte_lengths_and_booleans_pass_through() {
+            // Sensitive labels carrying only a count or a flag are the
+            // diagnostics worth keeping, so they must survive redaction.
+            let message = "Completion payload: 48 bytes (credential_sent=true)";
+            assert_eq!(sanitized(message), message);
+
+            let message = "try_to_unlock=false, has_credentials=true";
+            assert_eq!(sanitized(message), message);
+
+            let message = "Parsed credential: host_key=32bytes, credential=139bytes";
+            assert_eq!(sanitized(message), message);
+        }
+
+        #[test]
+        fn test_short_hex_metadata_passes_through() {
+            let message = "Channel allocated: a1b2";
+            assert_eq!(sanitized(message), message);
+        }
+
+        #[test]
+        fn test_tag_passes_through() {
+            let (tag, _) = sanitize_debug_log("HANDSHAKE", "Creating THP session...");
+            assert_eq!(tag, "HANDSHAKE");
+        }
+
+        #[test]
+        fn test_long_message_is_truncated() {
+            let output = sanitized(&"chunk ".repeat(200));
+            assert!(output.ends_with("…<truncated>"));
+            assert!(output.chars().count() < 530);
+        }
+
+        #[test]
+        fn test_multibyte_message_truncation_does_not_panic() {
+            let output = sanitized(&"é".repeat(1000));
+            assert!(output.ends_with("…<truncated>"));
+        }
+
+        #[test]
+        fn test_no_fixture_secret_survives_sanitization() {
+            let fixtures = [
+                format!("credential={}", TEST_CREDENTIAL),
+                format!(
+                    "Stored credential {} for ble:AA:BB:CC:DD:EE:FF",
+                    TEST_CREDENTIAL
+                ),
+                format!(r#"{{"credential":"{}"}}"#, TEST_CREDENTIAL),
+                format!("thp_credential={}", TEST_CREDENTIAL),
+                format!("xpub={}", TEST_XPUB),
+                format!("derived {} for account 0", TEST_XPUB),
+                format!("psbt={}", TEST_PSBT),
+                format!("Signing {}", TEST_PSBT),
+                format!("frame={}", TEST_FRAME_HEX),
+                format!("<< {}", TEST_FRAME_HEX),
+                "passphrase=hunter2 pin=1234 mnemonic=[a, b, c]".to_string(),
+            ];
+
+            for fixture in fixtures {
+                for (tag, message) in [
+                    sanitize_debug_log("THP", &fixture),
+                    sanitize_debug_log(&fixture, "THP"),
+                ] {
+                    let output = format!("{} {}", tag, message);
+                    for secret in [
+                        TEST_CREDENTIAL,
+                        TEST_XPUB,
+                        TEST_PSBT,
+                        TEST_FRAME_HEX,
+                        "hunter2",
+                        "1234",
+                    ] {
+                        assert!(
+                            !output.contains(secret),
+                            "leaked {:?} from fixture {:?}: {:?}",
+                            secret,
+                            fixture,
+                            output
+                        );
+                    }
+                }
+            }
+        }
+    }
 }

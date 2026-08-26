@@ -175,6 +175,12 @@ pub trait TrezorTransportCallback: Send + Sync {
     /// debug UI (e.g., TrezorDebugLog on Android) so they are visible
     /// alongside the Kotlin-level logs.
     ///
+    /// Both arguments are redacted by bitkit-core before this is called:
+    /// credentials, keys, PSBTs, raw frame hex and anything else that looks
+    /// like key material are replaced with `<redacted>`, and each string is
+    /// length-capped. Consumers do not need their own scrubbing pass. See
+    /// `log_sanitizer` for the exact policy.
+    ///
     /// # Arguments
     /// * `tag` - Short tag identifying the subsystem (e.g., "HANDSHAKE", "THP")
     /// * `message` - Human-readable debug message

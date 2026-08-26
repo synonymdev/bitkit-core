@@ -7,6 +7,11 @@ pub mod account_info;
 mod callbacks;
 mod errors;
 mod implementation;
+/// Only the callback transport forwards debug output to a consumer, and that
+/// transport is mobile-only. Compiled under `test` as well so the redaction
+/// rules can be exercised on the host.
+#[cfg(any(target_os = "android", target_os = "ios", test))]
+pub(crate) mod log_sanitizer;
 #[cfg(test)]
 mod tests;
 mod types;
