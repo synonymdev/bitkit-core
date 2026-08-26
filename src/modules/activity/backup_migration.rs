@@ -341,11 +341,23 @@ mod tests {
         let migrated = migrate_backup_activities_json(backup).unwrap();
         let value: Value = serde_json::from_str(&migrated).unwrap();
 
-        assert_eq!(wallet_id_at(&value, "/0/v1/walletId"), Some(DEFAULT_WALLET_ID));
-        assert_eq!(wallet_id_at(&value, "/1/v1/walletId"), Some(DEFAULT_WALLET_ID));
+        assert_eq!(
+            wallet_id_at(&value, "/0/v1/walletId"),
+            Some(DEFAULT_WALLET_ID)
+        );
+        assert_eq!(
+            wallet_id_at(&value, "/1/v1/walletId"),
+            Some(DEFAULT_WALLET_ID)
+        );
         // Non-wallet fields are preserved untouched.
-        assert_eq!(value.pointer("/0/v1/txId").and_then(Value::as_str), Some("tx_1"));
-        assert_eq!(value.pointer("/1/v1/invoice").and_then(Value::as_str), Some("lnbc1"));
+        assert_eq!(
+            value.pointer("/0/v1/txId").and_then(Value::as_str),
+            Some("tx_1")
+        );
+        assert_eq!(
+            value.pointer("/1/v1/invoice").and_then(Value::as_str),
+            Some("lnbc1")
+        );
     }
 
     #[test]
@@ -439,7 +451,10 @@ mod tests {
         let migrated = migrate_backup_activities_json(backup).unwrap();
         let value: Value = serde_json::from_str(&migrated).unwrap();
 
-        assert_eq!(wallet_id_at(&value, "/0/v1/walletId"), Some("trezor:abcd1234"));
+        assert_eq!(
+            wallet_id_at(&value, "/0/v1/walletId"),
+            Some("trezor:abcd1234")
+        );
     }
 
     #[test]
@@ -579,10 +594,9 @@ mod tests {
 
     #[test]
     fn tags_metadata_details_from_canonical_default_wallet_id() {
-        let tags = activity_tags_from_json(
-            json!([{ "activity_id": "a1", "tags": ["food"] }]).to_string(),
-        )
-        .unwrap();
+        let tags =
+            activity_tags_from_json(json!([{ "activity_id": "a1", "tags": ["food"] }]).to_string())
+                .unwrap();
         assert_eq!(tags[0].wallet_id, DEFAULT_WALLET_ID);
         assert_eq!(tags[0].activity_id, "a1");
 
