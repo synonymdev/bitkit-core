@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Android consumer keep rules now keep JNA's JNI-reflected core (`com.sun.jna.*`), classes that extend those types (including `com.sun.jna.ptr` ByReference types), the `Structure.FieldOrder` annotation type, and annotated UniFFI struct classes through R8 full mode.
+- Keep JNA's JNI-reflected core (`com.sun.jna.*`), classes that extend those types (including `com.sun.jna.ptr` ByReference types), the `Structure.FieldOrder` annotation type, and annotated UniFFI struct classes through R8 full mode.
 
 ## 0.5.10 - 2026-08-27
 
@@ -10,18 +10,15 @@
 
 ## 0.5.9 - 2026-08-26
 
-- The Android AAR now ships targeted R8 consumer keep rules for the UniFFI/JNA FFI surface, so consuming apps can enable R8 full mode without extra keep rules for this library.
+- Ship targeted R8 consumer keep rules for the UniFFI/JNA FFI surface, so consuming apps can enable R8 full mode without extra keep rules for this library.
 
 ## 0.5.8 - 2026-08-26
 
-- UR decoder scan progress is preserved across invalid frames.
+- Preserve UR decoder scan progress across invalid frames.
 
 ## 0.5.7 - 2026-08-24
 
-- Add Foundation Passport support to the hardware-wallet catalog.
-- Encode and decode multipart UR QR frames.
-- Parse Passport single-signature account exports.
-- Finalize signed PSBTs across the UniFFI bindings.
+- Add a generic hardware-wallet catalog with Foundation Passport support, multipart UR QR encoding and decoding, Passport single-signature account export parsing, and signed PSBT finalization across the UniFFI bindings.
 
 ## 0.5.6 - 2026-08-14
 
@@ -43,7 +40,7 @@
 ## 0.5.2 - 2026-07-20
 
 - Swap status updates now reconcile against Boltz's REST status whenever a swap is (re)subscribed, both on `boltz_start_swap_updates` and when `boltz_create_reverse_swap` adds a swap to a running stream. A confirmed reverse-swap lockup is therefore caught up and auto-claimed even when its live WebSocket event was missed (for example because the updates stream was down while the lockup confirmed), instead of the swap silently stalling until a manual claim. No FFI signature change.
-- Instant-claim and periodic reconcile for Boltz reverse swaps.
+- Add instant-claim and periodic reconcile for Boltz reverse swaps.
 
 ## 0.5.1 - 2026-07-15
 
