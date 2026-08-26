@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `upsert_tags` no longer discards a whole batch when one record cannot be written. Records with an empty activity ID, an empty wallet ID, an empty tag, or a missing parent activity are now skipped and reported, and everything else in the batch is persisted. The function returns `UpsertTagsResult { inserted, skipped }` instead of nothing, where each `SkippedTag` carries the wallet ID, activity ID, the offending tag (if any) and the reason. Only batch-level failures (transaction, statement or commit errors) still return an `ActivityError`. FFI signature change: callers that ignored the previous empty return keep working, and restore flows can now log which tags were dropped instead of losing the entire category.
+
 - The Android AAR now ships targeted R8 consumer keep rules for the UniFFI/JNA FFI surface, so consuming apps can enable R8 full mode without extra keep rules for this library.
 - Add a generic hardware-wallet catalog with Foundation Passport support, multipart UR QR encoding and decoding, Passport single-signature account export parsing, and signed PSBT finalization across the UniFFI bindings.
 - Swap status updates now reconcile against Boltz's REST status whenever a swap is (re)subscribed, both on `boltz_start_swap_updates` and when `boltz_create_reverse_swap` adds a swap to a running stream. A confirmed reverse-swap lockup is therefore caught up and auto-claimed even when its live WebSocket event was missed (for example because the updates stream was down while the lockup confirmed), instead of the swap silently stalling until a manual claim. No FFI signature change.

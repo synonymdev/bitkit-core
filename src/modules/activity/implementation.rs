@@ -1,7 +1,7 @@
 use crate::activity::{
     Activity, ActivityError, ActivityFilter, ActivityTags, ClosedChannelDetails, LightningActivity,
-    OnchainActivity, PaymentState, PaymentType, PreActivityMetadata, SortDirection,
-    TransactionDetails, TxInput, TxOutput,
+    OnchainActivity, PaymentState, PaymentType, PreActivityMetadata, SkippedTag, SortDirection,
+    TransactionDetails, TxInput, TxOutput, UpsertTagsResult,
 };
 use rusqlite::{Connection, OptionalExtension};
 use serde_json;
@@ -2202,10 +2202,21 @@ impl ActivityDB {
         Ok(result)
     }
 
-    /// Bulk upsert tags for multiple activities
-    pub fn upsert_tags(&mut self, activity_tags: &[ActivityTags]) -> Result<(), ActivityError> {
+    /// Bulk upsert tags for multiple activities.
+    ///
+    /// Records that cannot be written (empty activity ID, empty wallet ID, empty tag, or a
+    /// tag whose parent activity is missing) are skipped and reported in the result instead
+    /// of failing the batch, so one unusable record cannot discard the rest. Only failures
+    /// affecting the batch as a whole (transaction, statement or commit failures) return an
+    /// error.
+    pub fn upsert_tags(
+        &mut self,
+        activity_tags: &[ActivityTags],
+    ) -> Result<UpsertTagsResult, ActivityError> {
+        let mut result = UpsertTagsResult::default();
+
         if activity_tags.is_empty() {
-            return Ok(());
+            return Ok(result);
         }
 
         let tx = self
@@ -2226,25 +2237,44 @@ impl ActivityDB {
                 })?;
 
             for activity_tag in activity_tags {
-                if activity_tag.activity_id.is_empty() {
-                    return Err(ActivityError::DataError {
-                        error_details: "Activity ID cannot be empty".to_string(),
+                let mut skip_record = |tag: Option<&String>, reason: String| {
+                    result.skipped.push(SkippedTag {
+                        wallet_id: activity_tag.wallet_id.clone(),
+                        activity_id: activity_tag.activity_id.clone(),
+                        tag: tag.cloned(),
+                        reason,
                     });
+                };
+
+                if activity_tag.activity_id.is_empty() {
+                    skip_record(None, "Activity ID cannot be empty".to_string());
+                    continue;
                 }
-                let wallet_id = Self::normalize_wallet_id(&activity_tag.wallet_id)?;
+
+                let wallet_id = match Self::normalize_wallet_id(&activity_tag.wallet_id) {
+                    Ok(wallet_id) => wallet_id,
+                    Err(e) => {
+                        skip_record(None, e.to_string());
+                        continue;
+                    }
+                };
 
                 for tag in &activity_tag.tags {
                     if tag.is_empty() {
-                        continue; // Skip empty tags
+                        skip_record(Some(tag), "Tag cannot be empty".to_string());
+                        continue;
                     }
-                    stmt.execute(rusqlite::params![
+
+                    // A failing statement rolls back only itself, so the rest of the batch
+                    // still commits.
+                    match stmt.execute(rusqlite::params![
                         &wallet_id,
                         &activity_tag.activity_id,
                         tag
-                    ])
-                    .map_err(|e| ActivityError::DataError {
-                        error_details: format!("Failed to insert tag: {}", e),
-                    })?;
+                    ]) {
+                        Ok(_) => result.inserted += 1,
+                        Err(e) => skip_record(Some(tag), format!("Failed to insert tag: {}", e)),
+                    }
                 }
             }
         }
@@ -2253,7 +2283,7 @@ impl ActivityDB {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
-        Ok(())
+        Ok(result)
     }
 
     /// Add pre-activity metadata for an onchain address or lightning invoice.

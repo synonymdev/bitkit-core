@@ -3118,10 +3118,14 @@ mod tests {
             activity_id: activity.id.clone(),
             tags: vec!["payment".to_string(), "coffee".to_string()],
         }];
-        assert!(db.upsert_tags(&activity_tags).is_ok());
+        let result = db.upsert_tags(&activity_tags).unwrap();
+        assert_eq!(result.inserted, 2);
+        assert!(result.skipped.is_empty());
 
         // Second upsert with same tags (should be idempotent)
-        assert!(db.upsert_tags(&activity_tags).is_ok());
+        let result = db.upsert_tags(&activity_tags).unwrap();
+        assert_eq!(result.inserted, 2);
+        assert!(result.skipped.is_empty());
 
         // Verify tags are still there and not duplicated
         let tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
@@ -3178,7 +3182,11 @@ mod tests {
             activity_id: activity.id.clone(),
             tags: vec!["payment".to_string(), "".to_string(), "coffee".to_string()],
         }];
-        assert!(db.upsert_tags(&activity_tags).is_ok());
+        let result = db.upsert_tags(&activity_tags).unwrap();
+        assert_eq!(result.inserted, 2);
+        assert_eq!(result.skipped.len(), 1);
+        assert_eq!(result.skipped[0].tag, Some("".to_string()));
+        assert_eq!(result.skipped[0].reason, "Tag cannot be empty");
 
         // Verify only non-empty tags were added
         let tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
@@ -3398,7 +3406,9 @@ mod tests {
         let (mut db, db_path) = setup();
 
         // Test with empty vector
-        assert!(db.upsert_tags(&[]).is_ok());
+        let result = db.upsert_tags(&[]).unwrap();
+        assert_eq!(result.inserted, 0);
+        assert!(result.skipped.is_empty());
 
         cleanup(&db_path);
     }
@@ -3414,7 +3424,101 @@ mod tests {
             tags: vec!["payment".to_string()],
         }];
 
-        assert!(db.upsert_tags(&activity_tags).is_err());
+        let result = db.upsert_tags(&activity_tags).unwrap();
+        assert_eq!(result.inserted, 0);
+        assert_eq!(result.skipped.len(), 1);
+        assert_eq!(result.skipped[0].activity_id, "");
+        assert_eq!(result.skipped[0].tag, None);
+        assert_eq!(result.skipped[0].reason, "Activity ID cannot be empty");
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_upsert_tags_keeps_valid_records_when_one_is_unusable() {
+        let (mut db, db_path) = setup();
+
+        let activity = create_test_onchain_activity();
+        let mut other_activity = create_test_onchain_activity();
+        other_activity.id = "test_onchain_2".to_string();
+        other_activity.tx_id = "test_onchain_2_txid".to_string();
+
+        db.insert_onchain_activity(&activity).unwrap();
+        db.insert_onchain_activity(&other_activity).unwrap();
+
+        // A batch where the second record has no parent activity, the third has an empty
+        // activity ID and the fourth has an empty wallet ID.
+        let activity_tags = vec![
+            ActivityTags {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
+                activity_id: activity.id.clone(),
+                tags: vec!["payment".to_string(), "coffee".to_string()],
+            },
+            ActivityTags {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
+                activity_id: "missing_activity".to_string(),
+                tags: vec!["orphan".to_string()],
+            },
+            ActivityTags {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
+                activity_id: "".to_string(),
+                tags: vec!["nameless".to_string()],
+            },
+            ActivityTags {
+                wallet_id: "   ".to_string(),
+                activity_id: activity.id.clone(),
+                tags: vec!["walletless".to_string()],
+            },
+            ActivityTags {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
+                activity_id: other_activity.id.clone(),
+                tags: vec!["food".to_string()],
+            },
+        ];
+
+        let result = db.upsert_tags(&activity_tags).unwrap();
+
+        // The valid records on both sides of the bad ones are persisted.
+        assert_eq!(result.inserted, 3);
+        let mut tags = db.get_tags(DEFAULT_WALLET_ID, &activity.id).unwrap();
+        tags.sort();
+        assert_eq!(tags, vec!["coffee".to_string(), "payment".to_string()]);
+        assert_eq!(
+            db.get_tags(DEFAULT_WALLET_ID, &other_activity.id).unwrap(),
+            vec!["food".to_string()]
+        );
+
+        // And the caller can tell which records were skipped and why.
+        assert_eq!(result.skipped.len(), 3);
+
+        let orphan = &result.skipped[0];
+        assert_eq!(orphan.activity_id, "missing_activity");
+        assert_eq!(orphan.tag, Some("orphan".to_string()));
+        assert!(
+            orphan.reason.contains("FOREIGN KEY constraint failed"),
+            "unexpected reason: {}",
+            orphan.reason
+        );
+
+        let nameless = &result.skipped[1];
+        assert_eq!(nameless.activity_id, "");
+        assert_eq!(nameless.tag, None);
+        assert_eq!(nameless.reason, "Activity ID cannot be empty");
+
+        let walletless = &result.skipped[2];
+        assert_eq!(walletless.wallet_id, "   ");
+        assert_eq!(walletless.tag, None);
+        assert!(
+            walletless.reason.contains("Wallet ID cannot be empty"),
+            "unexpected reason: {}",
+            walletless.reason
+        );
+
+        assert!(db
+            .get_all_unique_tags()
+            .unwrap()
+            .iter()
+            .all(|tag| tag != "orphan" && tag != "nameless" && tag != "walletless"));
 
         cleanup(&db_path);
     }

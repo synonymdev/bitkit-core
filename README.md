@@ -180,6 +180,10 @@
     ```rust
     fn get_all_unique_tags() -> Result<Vec<String>, ActivityError>
     ```
+  - [upsert_tags](src/modules/activity/README.md#usage-examples): Bulk insert tags, skipping and reporting records that cannot be written
+    ```rust
+    fn upsert_tags(activity_tags: Vec<ActivityTags>) -> Result<UpsertTagsResult, ActivityError>
+    ```
   - [get_activities_by_tag](src/modules/activity/README.md#usage-examples): Get activities with a specific tag and optional wallet scope
     ```rust
     fn get_activities_by_tag(
