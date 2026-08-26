@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Android consumer keep rules now keep JNA's JNI-reflected core (`com.sun.jna.*`), the `Structure.FieldOrder` annotation type, and annotated UniFFI struct classes through R8 full mode.
+- Android consumer keep rules now keep JNA's JNI-reflected core (`com.sun.jna.*`), classes that extend those types (including `com.sun.jna.ptr` ByReference types), the `Structure.FieldOrder` annotation type, and annotated UniFFI struct classes through R8 full mode.
 
 ## 0.5.10 - 2026-08-27
 
