@@ -72,6 +72,12 @@ fn remove_tags(wallet_id: String, activity_id: String, tags: Vec<String>) -> Res
 fn get_tags(wallet_id: String, activity_id: String) -> Result<Vec<String>, ActivityError>
 fn get_all_unique_tags() -> Result<Vec<String>, ActivityError>
 
+// Bulk insert tags for multiple activities. Records that cannot be written (empty activity ID,
+// empty wallet ID, empty tag, or a tag whose parent activity is missing) are skipped and
+// reported in `UpsertTagsResult.skipped` instead of failing the batch.
+fn upsert_tags(activity_tags: Vec<ActivityTags>) -> Result<UpsertTagsResult, ActivityError>
+fn get_all_activities_tags() -> Result<Vec<ActivityTags>, ActivityError>
+
 // Pre-activity metadata
 fn add_pre_activity_metadata(pre_activity_metadata: PreActivityMetadata) -> Result<(), ActivityError>
 fn add_pre_activity_metadata_tags(wallet_id: String, payment_id: String, tags: Vec<String>) -> Result<(), ActivityError>

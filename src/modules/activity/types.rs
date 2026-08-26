@@ -222,6 +222,27 @@ pub struct ActivityTags {
     pub tags: Vec<String>,
 }
 
+/// A tag record that a bulk upsert could not write.
+#[derive(Debug, Clone, uniffi::Record, Serialize, Deserialize)]
+pub struct SkippedTag {
+    pub wallet_id: String,
+    pub activity_id: String,
+    /// The individual tag that failed, or `None` when the whole record was
+    /// rejected before any of its tags were attempted.
+    pub tag: Option<String>,
+    /// Why the record was skipped.
+    pub reason: String,
+}
+
+/// Outcome of a bulk tag upsert.
+#[derive(Debug, Clone, Default, uniffi::Record, Serialize, Deserialize)]
+pub struct UpsertTagsResult {
+    /// Number of tags persisted, including tags that were already present.
+    pub inserted: u32,
+    /// Records that could not be written, with the reason for each.
+    pub skipped: Vec<SkippedTag>,
+}
+
 #[derive(Debug, Clone, uniffi::Record, Serialize, Deserialize)]
 pub struct PreActivityMetadata {
     #[serde(default = "default_wallet_id")]

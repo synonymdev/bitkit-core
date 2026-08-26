@@ -30,7 +30,7 @@ use crate::activity::{
     derive_wallet_id as derive_wallet_id_inner, Activity, ActivityDB, ActivityError,
     ActivityFilter, ActivityTags, ClosedChannelDetails, DbError, LightningActivity,
     OnchainActivity, PaymentType, PreActivityMetadata, SortDirection, TransactionDetails,
-    DEFAULT_WALLET_ID,
+    UpsertTagsResult, DEFAULT_WALLET_ID,
 };
 use crate::modules::blocktank::{
     BlocktankDB, BlocktankError, BtOrderState2, CJitStateEnum, ChannelLiquidityOptions,
@@ -753,7 +753,7 @@ pub fn get_all_activities_tags() -> Result<Vec<ActivityTags>, ActivityError> {
 }
 
 #[uniffi::export]
-pub fn upsert_tags(activity_tags: Vec<ActivityTags>) -> Result<(), ActivityError> {
+pub fn upsert_tags(activity_tags: Vec<ActivityTags>) -> Result<UpsertTagsResult, ActivityError> {
     let mut guard = get_activity_db()?;
     let db = guard
         .activity_db
