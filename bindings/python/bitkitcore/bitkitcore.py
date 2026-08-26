@@ -849,7 +849,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_bitkitcore_checksum_method_urdecoder_receive() != 11477:
+    if lib.uniffi_bitkitcore_checksum_method_urdecoder_receive() != 44279:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_urdecoder_reset() != 6027:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")

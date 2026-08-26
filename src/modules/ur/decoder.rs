@@ -1,4 +1,4 @@
-use super::{UrDecoderStatus, UrError, UrPayload, MAX_FRAGMENT_COUNT};
+use super::{UrDecoderStatus, UrError, UrPayload, MAX_FRAGMENT_COUNT, MAX_FRAME_LENGTH};
 use base64::{engine::general_purpose::STANDARD, Engine};
 use bitcoin::psbt::Psbt;
 use minicbor::bytes::ByteVec;
@@ -7,7 +7,6 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-const MAX_FRAME_LENGTH: usize = 4_096;
 const MAX_UNIQUE_FRAMES_PER_FRAGMENT: usize = 4;
 
 #[derive(Default)]

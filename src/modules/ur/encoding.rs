@@ -1,4 +1,4 @@
-use super::{UrError, MAX_FRAGMENT_COUNT};
+use super::{UrError, MAX_FRAGMENT_COUNT, MAX_FRAME_LENGTH};
 use base64::{engine::general_purpose::STANDARD, Engine};
 use bitcoin::psbt::Psbt;
 use minicbor::bytes::ByteVec;
@@ -59,13 +59,30 @@ fn encode_registry_item(
     if cbor.len() <= max_fragment_length {
         let part =
             ::ur::ur::try_encode(cbor, &::ur::ur::Type::Custom(ur_type)).map_err(invalid_ur)?;
-        return Ok(vec![part]);
+        return Ok(vec![validate_encoded_frame(part)?]);
     }
 
     let mut encoder = ::ur::Encoder::new(cbor, max_fragment_length, ur_type).map_err(invalid_ur)?;
     (0..fragment_count)
-        .map(|_| encoder.next_part().map_err(invalid_ur))
+        .map(|_| {
+            encoder
+                .next_part()
+                .map_err(invalid_ur)
+                .and_then(validate_encoded_frame)
+        })
         .collect()
+}
+
+fn validate_encoded_frame(frame: String) -> Result<String, UrError> {
+    if frame.len() > MAX_FRAME_LENGTH {
+        return Err(UrError::TooLarge {
+            reason: format!(
+                "encoded frame has {} characters; maximum is {MAX_FRAME_LENGTH}",
+                frame.len()
+            ),
+        });
+    }
+    Ok(frame)
 }
 
 fn invalid_ur(error: ::ur::ur::Error) -> UrError {
@@ -116,6 +133,22 @@ mod tests {
     #[test]
     fn rejects_excessive_fragment_count_before_encoding() {
         let error = encode_registry_item("bytes", &vec![0; MAX_FRAGMENT_COUNT + 1], 1).unwrap_err();
+        assert!(matches!(error, UrError::TooLarge { .. }));
+    }
+
+    #[test]
+    fn rejects_oversized_single_part_frame() {
+        let error = encode_registry_item("bytes", &vec![0; MAX_FRAME_LENGTH], MAX_FRAME_LENGTH)
+            .unwrap_err();
+
+        assert!(matches!(error, UrError::TooLarge { .. }));
+    }
+
+    #[test]
+    fn rejects_oversized_multipart_frame() {
+        let error = encode_registry_item("bytes", &vec![0; MAX_FRAME_LENGTH], MAX_FRAME_LENGTH / 2)
+            .unwrap_err();
+
         assert!(matches!(error, UrError::TooLarge { .. }));
     }
 }

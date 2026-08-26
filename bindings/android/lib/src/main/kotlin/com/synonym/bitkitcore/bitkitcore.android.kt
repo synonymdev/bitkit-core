@@ -2220,7 +2220,7 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_urdecoder_receive() != 11477.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_urdecoder_receive() != 44279.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_method_urdecoder_reset() != 6027.toShort()) {

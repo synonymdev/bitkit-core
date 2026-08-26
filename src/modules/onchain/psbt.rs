@@ -14,6 +14,7 @@ pub fn finalize_psbt(
 ) -> Result<CompletedTransaction, PsbtCompletionError> {
     let mut combined = parse_psbt(&original_psbt, "original")?;
     let signed = parse_psbt(&signed_psbt, "signed")?;
+    validate_signed_input_metadata(&combined, &signed)?;
     let secp = Secp256k1::verification_only();
     combined
         .combine(signed)
@@ -45,6 +46,76 @@ pub fn finalize_psbt(
         serialized_tx: serialize_hex(&transaction),
         txid: transaction.compute_txid().to_string(),
     })
+}
+
+fn validate_signed_input_metadata(
+    original: &Psbt,
+    signed: &Psbt,
+) -> Result<(), PsbtCompletionError> {
+    if original.unsigned_tx != signed.unsigned_tx {
+        return Err(PsbtCompletionError::CombineFailed {
+            reason: "signed PSBT contains a different unsigned transaction".to_string(),
+        });
+    }
+
+    for index in 0..original.inputs.len() {
+        let original_output = previous_output(original, index, "original")?;
+        let signed_output = previous_output(signed, index, "signed")?;
+        if let (Some(original_output), Some(signed_output)) = (original_output, signed_output) {
+            if original_output != signed_output {
+                return Err(PsbtCompletionError::CombineFailed {
+                    reason: format!(
+                        "signed PSBT input {index} previous output does not match the original"
+                    ),
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
+fn previous_output<'a>(
+    psbt: &'a Psbt,
+    index: usize,
+    label: &str,
+) -> Result<Option<&'a bitcoin::TxOut>, PsbtCompletionError> {
+    let input = &psbt.inputs[index];
+    let transaction_input = &psbt.unsigned_tx.input[index];
+    let non_witness_output = match &input.non_witness_utxo {
+        Some(transaction) => {
+            if transaction.compute_txid() != transaction_input.previous_output.txid {
+                return Err(PsbtCompletionError::CombineFailed {
+                    reason: format!(
+                        "{label} PSBT input {index} non-witness UTXO has the wrong transaction ID"
+                    ),
+                });
+            }
+            let output = transaction
+                .output
+                .get(transaction_input.previous_output.vout as usize)
+                .ok_or_else(|| PsbtCompletionError::CombineFailed {
+                    reason: format!(
+                        "{label} PSBT input {index} non-witness UTXO has no referenced output"
+                    ),
+                })?;
+            Some(output)
+        }
+        None => None,
+    };
+
+    if let (Some(witness_output), Some(non_witness_output)) =
+        (&input.witness_utxo, non_witness_output)
+    {
+        if witness_output != non_witness_output {
+            return Err(PsbtCompletionError::CombineFailed {
+                reason: format!(
+                    "{label} PSBT input {index} contains conflicting previous-output metadata"
+                ),
+            });
+        }
+    }
+
+    Ok(input.witness_utxo.as_ref().or(non_witness_output))
 }
 
 fn parse_psbt(encoded: &str, label: &str) -> Result<Psbt, PsbtCompletionError> {
@@ -123,6 +194,15 @@ mod tests {
         ));
     }
 
+    #[test]
+    fn rejects_signer_previous_output_that_differs_from_original() {
+        let (original, signed) = legacy_psbts_with_substituted_previous_output();
+
+        let error = finalize_psbt(original, signed).unwrap_err();
+
+        assert!(matches!(error, PsbtCompletionError::CombineFailed { .. }));
+    }
+
     fn native_segwit_psbts() -> (String, String) {
         let secp = Secp256k1::new();
         let secret_key = SecretKey::from_slice(&[1; 32]).unwrap();
@@ -163,6 +243,64 @@ mod tests {
             secp.sign_ecdsa(&Message::from_digest(sighash.to_byte_array()), &secret_key);
         signed.inputs[0].partial_sigs.insert(
             public_key,
+            ecdsa::Signature {
+                signature,
+                sighash_type,
+            },
+        );
+
+        (encode_psbt(&original), encode_psbt(&signed))
+    }
+
+    fn legacy_psbts_with_substituted_previous_output() -> (String, String) {
+        let secp = Secp256k1::new();
+        let original_key =
+            bitcoin::PublicKey::new(SecretKey::from_slice(&[1; 32]).unwrap().public_key(&secp));
+        let signer_secret_key = SecretKey::from_slice(&[2; 32]).unwrap();
+        let signer_key = bitcoin::PublicKey::new(signer_secret_key.public_key(&secp));
+        let original_script = Address::p2pkh(original_key, Network::Regtest).script_pubkey();
+        let substituted_output = TxOut {
+            value: Amount::from_sat(50_000),
+            script_pubkey: Address::p2pkh(signer_key, Network::Regtest).script_pubkey(),
+        };
+        let previous_transaction = Transaction {
+            version: Version::TWO,
+            lock_time: LockTime::ZERO,
+            input: vec![TxIn::default()],
+            output: vec![TxOut {
+                value: Amount::from_sat(50_000),
+                script_pubkey: original_script.clone(),
+            }],
+        };
+        let transaction = Transaction {
+            version: Version::TWO,
+            lock_time: LockTime::ZERO,
+            input: vec![TxIn {
+                previous_output: OutPoint::new(previous_transaction.compute_txid(), 0),
+                sequence: Sequence::ENABLE_RBF_NO_LOCKTIME,
+                ..Default::default()
+            }],
+            output: vec![TxOut {
+                value: Amount::from_sat(49_000),
+                script_pubkey: original_script,
+            }],
+        };
+        let mut signed = Psbt::from_unsigned_tx(transaction).unwrap();
+        signed.inputs[0].non_witness_utxo = Some(previous_transaction);
+        let original = signed.clone();
+        signed.inputs[0].non_witness_utxo = None;
+        signed.inputs[0].witness_utxo = Some(substituted_output.clone());
+
+        let sighash_type = EcdsaSighashType::All;
+        let sighash = SighashCache::new(&signed.unsigned_tx)
+            .legacy_signature_hash(0, &substituted_output.script_pubkey, sighash_type.to_u32())
+            .unwrap();
+        let signature = secp.sign_ecdsa(
+            &Message::from_digest(sighash.to_byte_array()),
+            &signer_secret_key,
+        );
+        signed.inputs[0].partial_sigs.insert(
+            signer_key,
             ecdsa::Signature {
                 signature,
                 sighash_type,

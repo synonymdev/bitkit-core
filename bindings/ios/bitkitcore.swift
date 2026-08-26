@@ -25893,7 +25893,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_method_urdecoder_receive() != 11477) {
+    if (uniffi_bitkitcore_checksum_method_urdecoder_receive() != 44279) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_method_urdecoder_reset() != 6027) {
