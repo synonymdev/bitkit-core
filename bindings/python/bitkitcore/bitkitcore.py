@@ -743,6 +743,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_disconnect() != 48780:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_trezor_ensure_unlocked() != 3967:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_get_address() != 12910:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_trezor_get_connected_device() != 48383:
@@ -1990,6 +1992,9 @@ _UniffiLib.uniffi_bitkitcore_fn_func_trezor_connect.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_disconnect.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_disconnect.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_ensure_unlocked.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_trezor_ensure_unlocked.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_trezor_get_address.argtypes = (
     _UniffiRustBuffer,
 )
@@ -2842,6 +2847,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_connect.restype = ctypes.c_uin
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_disconnect.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_disconnect.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_ensure_unlocked.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_trezor_ensure_unlocked.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_address.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_trezor_get_address.restype = ctypes.c_uint16
@@ -16748,6 +16756,36 @@ class TrezorError:  # type: ignore
         def __repr__(self):
             return "TrezorError.IoError({})".format(str(self))
     _UniffiTempTrezorError.IoError = IoError # type: ignore
+    class FirmwareError(_UniffiTempTrezorError):
+        """
+        The device reported a firmware-level fault (protocol failure code 99,
+        `Failure_FirmwareError`). The session is unusable; the caller should ask
+        the user to reconnect the hardware rather than retry in place.
+        """
+
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "TrezorError.FirmwareError({})".format(str(self))
+    _UniffiTempTrezorError.FirmwareError = FirmwareError # type: ignore
+    class DeviceLocked(_UniffiTempTrezorError):
+        """
+        The device has PIN protection enabled and is currently locked, so the
+        user must unlock it before anything else can proceed. Distinct from
+        [`TrezorError::DeviceBusy`], which means transport/session contention
+        and is worth a backoff-and-retry.
+        """
+
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "TrezorError.DeviceLocked({})".format(str(self))
+    _UniffiTempTrezorError.DeviceLocked = DeviceLocked # type: ignore
 
 TrezorError = _UniffiTempTrezorError # type: ignore
 del _UniffiTempTrezorError
@@ -16828,6 +16866,13 @@ class _UniffiConverterTypeTrezorError(_UniffiConverterRustBuffer):
             return TrezorError.IoError(
                 _UniffiConverterString.read(buf),
             )
+        if variant == 22:
+            return TrezorError.FirmwareError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 23:
+            return TrezorError.DeviceLocked(
+            )
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
@@ -16882,6 +16927,11 @@ class _UniffiConverterTypeTrezorError(_UniffiConverterRustBuffer):
         if isinstance(value, TrezorError.IoError):
             _UniffiConverterString.check_lower(value.error_details)
             return
+        if isinstance(value, TrezorError.FirmwareError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, TrezorError.DeviceLocked):
+            return
 
     @staticmethod
     def write(value, buf):
@@ -16935,6 +16985,11 @@ class _UniffiConverterTypeTrezorError(_UniffiConverterRustBuffer):
         if isinstance(value, TrezorError.IoError):
             buf.write_i32(21)
             _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, TrezorError.FirmwareError):
+            buf.write_i32(22)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, TrezorError.DeviceLocked):
+            buf.write_i32(23)
 
 
 
@@ -24108,6 +24163,31 @@ async def trezor_disconnect() -> None:
 _UniffiConverterTypeTrezorError,
 
     )
+async def trezor_ensure_unlocked() -> None:
+
+    """
+    Check that the connected Trezor is unlocked before starting an operation.
+
+    Returns `DeviceLocked` when the device has PIN protection enabled and its
+    cached features report it locked, `NotConnected` when no device is connected,
+    and `Ok` otherwise. Uses the features cached by `trezor_connect()` /
+    `trezor_refresh_features()` and never touches the device, so callers wanting
+    a fresh answer should refresh first.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_trezor_ensure_unlocked(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeTrezorError,
+
+    )
 async def trezor_get_address(params: "TrezorGetAddressParams") -> "TrezorAddressResponse":
 
     """
@@ -24974,6 +25054,7 @@ __all__ = [
     "trezor_clear_credentials",
     "trezor_connect",
     "trezor_disconnect",
+    "trezor_ensure_unlocked",
     "trezor_get_address",
     "trezor_get_connected_device",
     "trezor_get_device_fingerprint",

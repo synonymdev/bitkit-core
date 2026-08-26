@@ -1599,6 +1599,8 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -2059,6 +2061,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_disconnect() != 48780.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_trezor_ensure_unlocked() != 3967.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_trezor_get_address() != 12910.toShort()) {
@@ -2654,6 +2659,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_disconnect(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_trezor_ensure_unlocked(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_get_address(
@@ -3798,6 +3806,9 @@ internal object UniffiLib : Library {
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_disconnect(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_trezor_ensure_unlocked(
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_trezor_get_address(
@@ -12178,6 +12189,10 @@ public object FfiConverterTypeTrezorError : FfiConverterRustBuffer<TrezorExcepti
             21 -> TrezorException.IoException(
                 FfiConverterString.read(buf),
                 )
+            22 -> TrezorException.FirmwareException(
+                FfiConverterString.read(buf),
+                )
+            23 -> TrezorException.DeviceLocked()
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
     }
@@ -12276,6 +12291,15 @@ public object FfiConverterTypeTrezorError : FfiConverterRustBuffer<TrezorExcepti
                 4UL
                 + FfiConverterString.allocationSize(value.`errorDetails`)
             )
+            is TrezorException.FirmwareException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is TrezorException.DeviceLocked -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
         }
     }
 
@@ -12371,6 +12395,15 @@ public object FfiConverterTypeTrezorError : FfiConverterRustBuffer<TrezorExcepti
             is TrezorException.IoException -> {
                 buf.putInt(21)
                 FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is TrezorException.FirmwareException -> {
+                buf.putInt(22)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is TrezorException.DeviceLocked -> {
+                buf.putInt(23)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
@@ -17405,6 +17438,32 @@ public suspend fun `trezorConnect`(`deviceId`: kotlin.String, `selection`: Walle
 public suspend fun `trezorDisconnect`() {
     return uniffiRustCallAsync(
         UniffiLib.uniffi_bitkitcore_fn_func_trezor_disconnect(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        TrezorExceptionErrorHandler,
+    )
+}
+
+/**
+ * Check that the connected Trezor is unlocked before starting an operation.
+ *
+ * Returns `DeviceLocked` when the device has PIN protection enabled and its
+ * cached features report it locked, `NotConnected` when no device is connected,
+ * and `Ok` otherwise. Uses the features cached by `trezor_connect()` /
+ * `trezor_refresh_features()` and never touches the device, so callers wanting
+ * a fresh answer should refresh first.
+ */
+@Throws(TrezorException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `trezorEnsureUnlocked`() {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_trezor_ensure_unlocked(
         ),
         { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
         { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },

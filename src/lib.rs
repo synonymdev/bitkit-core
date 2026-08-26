@@ -2470,6 +2470,25 @@ pub async fn trezor_refresh_features() -> Result<TrezorFeatures, TrezorError> {
         })
 }
 
+/// Check that the connected Trezor is unlocked before starting an operation.
+///
+/// Returns `DeviceLocked` when the device has PIN protection enabled and its
+/// cached features report it locked, `NotConnected` when no device is connected,
+/// and `Ok` otherwise. Uses the features cached by `trezor_connect()` /
+/// `trezor_refresh_features()` and never touches the device, so callers wanting
+/// a fresh answer should refresh first.
+#[uniffi::export]
+pub async fn trezor_ensure_unlocked() -> Result<(), TrezorError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_trezor_manager().ensure_unlocked().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(TrezorError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
 /// Sign a message with the connected Trezor device.
 #[uniffi::export]
 pub async fn trezor_sign_message(

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `TrezorError::FirmwareError` and `TrezorError::DeviceLocked` to the FFI error enum. Trezor protocol failure code 99 (`Failure_FirmwareError`) now maps to `FirmwareError` instead of a generic `DeviceError`, and a device that reports itself locked during the THP handshake maps to `DeviceLocked` instead of `DeviceBusy`, which now means transport/session contention only. `error_details` strings are unchanged, so existing message heuristics keep working until apps switch to the typed variants. Also adds `trezor_ensure_unlocked()`, which applies the `pin_protection && !unlocked` rule to the cached features and returns `DeviceLocked`, so apps no longer reimplement that rule or synthesize `DeviceBusy` for a locked device.
+
 - The Android AAR now ships targeted R8 consumer keep rules for the UniFFI/JNA FFI surface, so consuming apps can enable R8 full mode without extra keep rules for this library.
 - Add a generic hardware-wallet catalog with Foundation Passport support, multipart UR QR encoding and decoding, Passport single-signature account export parsing, and signed PSBT finalization across the UniFFI bindings.
 - Swap status updates now reconcile against Boltz's REST status whenever a swap is (re)subscribed, both on `boltz_start_swap_updates` and when `boltz_create_reverse_swap` adds a swap to a running stream. A confirmed reverse-swap lockup is therefore caught up and auto-claimed even when its live WebSocket event was missed (for example because the updates stream was down while the lockup confirmed), instead of the swap silently stalling until a manual claim. No FFI signature change.

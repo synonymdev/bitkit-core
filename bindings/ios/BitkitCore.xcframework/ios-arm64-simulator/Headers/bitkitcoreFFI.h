@@ -1286,6 +1286,12 @@ uint64_t uniffi_bitkitcore_fn_func_trezor_disconnect(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_ENSURE_UNLOCKED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_ENSURE_UNLOCKED
+uint64_t uniffi_bitkitcore_fn_func_trezor_ensure_unlocked(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_TREZOR_GET_ADDRESS
 uint64_t uniffi_bitkitcore_fn_func_trezor_get_address(RustBuffer params
@@ -2611,6 +2617,12 @@ uint16_t uniffi_bitkitcore_checksum_func_trezor_connect(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_DISCONNECT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_DISCONNECT
 uint16_t uniffi_bitkitcore_checksum_func_trezor_disconnect(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_ENSURE_UNLOCKED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_TREZOR_ENSURE_UNLOCKED
+uint16_t uniffi_bitkitcore_checksum_func_trezor_ensure_unlocked(void
     
 );
 #endif

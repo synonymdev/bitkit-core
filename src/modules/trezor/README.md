@@ -99,6 +99,7 @@ pub async fn trezor_scan() -> Result<Vec<TrezorDeviceInfo>, TrezorError>;
 pub async fn trezor_connect(device_id: String) -> Result<TrezorFeatures, TrezorError>;
 pub async fn trezor_get_features() -> Option<TrezorFeatures>;
 pub async fn trezor_refresh_features() -> Result<TrezorFeatures, TrezorError>;
+pub async fn trezor_ensure_unlocked() -> Result<(), TrezorError>;
 pub async fn trezor_get_address(params: TrezorGetAddressParams) -> Result<TrezorAddressResponse, TrezorError>;
 pub async fn trezor_sign_message(params: TrezorSignMessageParams) -> Result<TrezorSignedMessageResponse, TrezorError>;
 pub async fn trezor_verify_message(params: TrezorVerifyMessageParams) -> Result<bool, TrezorError>;
@@ -107,10 +108,25 @@ pub async fn trezor_disconnect() -> Result<(), TrezorError>;
 
 `trezor_get_features()` returns the cached connect-time features without
 touching the device. `trezor_refresh_features()` is an explicit one-shot device
-request that refreshes the cache; it does not start polling. Mobile callers can
-derive a locked state with `features.pin_protection == Some(true)` and
-`features.unlocked == Some(false)`, then show "Unlock your Trezor" and back off
-instead of repeatedly reconnecting.
+request that refreshes the cache; it does not start polling.
+
+`trezor_ensure_unlocked()` applies the locked-device rule
+(`pin_protection == Some(true) && unlocked == Some(false)`) to those cached
+features and returns `TrezorError::DeviceLocked`, so callers show "Unlock your
+Trezor" without re-deriving the rule themselves. It is a pre-flight check, not a
+gate inside `trezor_get_address()` / `trezor_sign_tx()` and friends: a locked
+device can still be unlocked mid-operation through the PIN callback (Trezor One)
+or on its own screen, so those calls are left to proceed.
+
+`TrezorError::DeviceLocked` is distinct from `DeviceBusy`. Locked means the user
+must unlock the device; busy means transport/session contention and is worth a
+backoff-and-retry. A device that reports itself locked during the THP handshake
+also surfaces as `DeviceLocked`.
+
+`TrezorError::FirmwareError` carries Trezor protocol failure code 99
+(`Failure_FirmwareError`), so apps do not have to match error message text to
+tell a firmware fault from a generic device error. Its `error_details` keeps the
+original diagnostic string.
 
 ## Connection Flow
 

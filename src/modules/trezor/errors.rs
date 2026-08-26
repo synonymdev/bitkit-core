@@ -91,7 +91,23 @@ pub enum TrezorError {
     /// IO error
     #[error("IO error: {error_details}")]
     IoError { error_details: String },
+
+    /// The device reported a firmware-level fault (protocol failure code 99,
+    /// `Failure_FirmwareError`). The session is unusable; the caller should ask
+    /// the user to reconnect the hardware rather than retry in place.
+    #[error("Firmware error: {error_details}")]
+    FirmwareError { error_details: String },
+
+    /// The device has PIN protection enabled and is currently locked, so the
+    /// user must unlock it before anything else can proceed. Distinct from
+    /// [`TrezorError::DeviceBusy`], which means transport/session contention
+    /// and is worth a backoff-and-retry.
+    #[error("Device is locked")]
+    DeviceLocked,
 }
+
+/// `FailureType.Failure_FirmwareError` from Trezor's `messages-common.proto`.
+const FAILURE_CODE_FIRMWARE_ERROR: i32 = 99;
 
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
 pub(crate) fn encode_callback_transport_error(
@@ -229,12 +245,25 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
                 TcDeviceError::NotSupported(msg) => TrezorError::DeviceError {
                     error_details: format!("Feature not supported: {}", msg),
                 },
-                TcDeviceError::Failure { code, message } => TrezorError::DeviceError {
-                    error_details: format!("Device failure (code {:?}): {}", code, message),
-                },
-                TcDeviceError::DeviceError { code, message } => TrezorError::DeviceError {
-                    error_details: format!("Device error (code {}): {}", code, message),
-                },
+                // Both failure shapes keep their existing `error_details` text;
+                // only the variant changes for firmware faults, so consumers get
+                // a typed signal without losing the diagnostic string.
+                TcDeviceError::Failure { code, message } => {
+                    let error_details = format!("Device failure (code {:?}): {}", code, message);
+                    if code == Some(FAILURE_CODE_FIRMWARE_ERROR) {
+                        TrezorError::FirmwareError { error_details }
+                    } else {
+                        TrezorError::DeviceError { error_details }
+                    }
+                }
+                TcDeviceError::DeviceError { code, message } => {
+                    let error_details = format!("Device error (code {}): {}", code, message);
+                    if code == FAILURE_CODE_FIRMWARE_ERROR {
+                        TrezorError::FirmwareError { error_details }
+                    } else {
+                        TrezorError::DeviceError { error_details }
+                    }
+                }
                 TcDeviceError::ButtonRequest(msg) => TrezorError::DeviceError {
                     error_details: format!("Button request: {}", msg),
                 },
@@ -269,9 +298,9 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
                 ThpError::HandshakeFailed(msg) => TrezorError::ConnectionError {
                     error_details: format!("THP handshake failed: {}", msg),
                 },
-                // The device is locked; the caller should back off and prompt the
-                // user to unlock rather than retrying the connection in a loop.
-                ThpError::DeviceLocked => TrezorError::DeviceBusy,
+                // The device is locked; the caller should prompt the user to
+                // unlock rather than retrying the connection in a loop.
+                ThpError::DeviceLocked => TrezorError::DeviceLocked,
                 ThpError::EncryptionError(msg) => TrezorError::ProtocolError {
                     error_details: format!("THP encryption error: {}", msg),
                 },
@@ -356,10 +385,11 @@ mod tests {
     use trezor_connect_rs::TrezorError as TE;
 
     #[test]
-    fn thp_device_locked_maps_to_device_busy() {
-        // A locked device must surface as the typed DeviceBusy signal so callers
-        // back off / prompt the user to unlock, not a generic ConnectionError.
+    fn thp_device_locked_maps_to_device_locked() {
+        // A locked device must surface as its own typed signal so callers can
+        // prompt the user to unlock, rather than as DeviceBusy (back off and
+        // retry) or a generic ConnectionError.
         let mapped: TrezorError = TE::Thp(ThpError::DeviceLocked).into();
-        assert!(matches!(mapped, TrezorError::DeviceBusy));
+        assert!(matches!(mapped, TrezorError::DeviceLocked));
     }
 }

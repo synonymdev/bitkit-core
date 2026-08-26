@@ -19813,6 +19813,20 @@ public enum TrezorError: Swift.Error {
      */
     case IoError(errorDetails: String
     )
+    /**
+     * The device reported a firmware-level fault (protocol failure code 99,
+     * `Failure_FirmwareError`). The session is unusable; the caller should ask
+     * the user to reconnect the hardware rather than retry in place.
+     */
+    case FirmwareError(errorDetails: String
+    )
+    /**
+     * The device has PIN protection enabled and is currently locked, so the
+     * user must unlock it before anything else can proceed. Distinct from
+     * [`TrezorError::DeviceBusy`], which means transport/session contention
+     * and is worth a backoff-and-retry.
+     */
+    case DeviceLocked
 }
 
 
@@ -19866,6 +19880,10 @@ public struct FfiConverterTypeTrezorError: FfiConverterRustBuffer {
         case 21: return .IoError(
             errorDetails: try FfiConverterString.read(from: &buf)
             )
+        case 22: return .FirmwareError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 23: return .DeviceLocked
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -19969,6 +19987,15 @@ public struct FfiConverterTypeTrezorError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(21))
             FfiConverterString.write(errorDetails, into: &buf)
             
+        
+        case let .FirmwareError(errorDetails):
+            writeInt(&buf, Int32(22))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case .DeviceLocked:
+            writeInt(&buf, Int32(23))
+        
         }
     }
 }
@@ -24807,6 +24834,29 @@ public func trezorDisconnect()async throws   {
         )
 }
 /**
+ * Check that the connected Trezor is unlocked before starting an operation.
+ *
+ * Returns `DeviceLocked` when the device has PIN protection enabled and its
+ * cached features report it locked, `NotConnected` when no device is connected,
+ * and `Ok` otherwise. Uses the features cached by `trezor_connect()` /
+ * `trezor_refresh_features()` and never touches the device, so callers wanting
+ * a fresh answer should refresh first.
+ */
+public func trezorEnsureUnlocked()async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_trezor_ensure_unlocked(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeTrezorError_lift
+        )
+}
+/**
  * Get a Bitcoin address from the connected Trezor device.
  */
 public func trezorGetAddress(params: TrezorGetAddressParams)async throws  -> TrezorAddressResponse  {
@@ -25732,6 +25782,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_disconnect() != 48780) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_trezor_ensure_unlocked() != 3967) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_get_address() != 12910) {
