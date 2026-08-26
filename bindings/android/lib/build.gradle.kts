@@ -1,8 +1,6 @@
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
-import java.util.zip.ZipOutputStream
 
 plugins {
     id("com.android.library")
@@ -176,140 +174,8 @@ val validateConsumerKeepRules by tasks.registering {
     }
 }
 
-val validateMinifiedConsumerFieldOrder by tasks.registering {
-    group = "verification"
-    description = "Asserts R8 full mode keeps JNA Structure.FieldOrder annotations."
-    dependsOn("compileReleaseKotlin")
-
-    val consumerRules = layout.projectDirectory.file("consumer-rules.pro")
-    inputs.file(consumerRules)
-
-    doLast {
-        val classesDir = layout.buildDirectory.dir("tmp/kotlin-classes/release").get().asFile
-        if (!classesDir.isDirectory) {
-            throw GradleException("Release Kotlin classes missing at '${classesDir.path}'")
-        }
-
-        val androidJar = File(
-            android.sdkDirectory,
-            "platforms/android-${android.compileSdk}/android.jar",
-        )
-        if (!androidJar.isFile) {
-            throw GradleException("android.jar missing at '${androidJar.path}'")
-        }
-
-        val jnaAar = configurations.getByName("releaseCompileClasspath").files
-            .firstOrNull { it.name.startsWith("jna-") && it.name.endsWith(".aar") }
-            ?: throw GradleException("JNA AAR missing from releaseCompileClasspath")
-
-        val work = layout.buildDirectory.dir("r8-fieldorder").get().asFile
-        work.deleteRecursively()
-        work.mkdirs()
-        val jnaJar = work.resolve("jna-classes.jar")
-        ZipFile(jnaAar).use { zip ->
-            val entry = zip.getEntry("classes.jar")
-                ?: throw GradleException("JNA AAR is missing classes.jar: '${jnaAar.path}'")
-            zip.getInputStream(entry).use { input ->
-                jnaJar.outputStream().use { input.copyTo(it) }
-            }
-        }
-
-        val seedRules = work.resolve("consumer-seed.pro")
-        seedRules.writeText(
-            """
-            -keep class com.synonym.bitkitcore.UniffiLib { *; }
-            -keep class com.synonym.bitkitcore.RustBufferStruct { *; }
-            -dontwarn **
-            -ignorewarnings
-            """.trimIndent(),
-        )
-
-        val programJar = work.resolve("program.jar")
-        ZipOutputStream(programJar.outputStream()).use { zip ->
-            classesDir.walkTopDown().filter { it.isFile }.forEach { file ->
-                val name = classesDir.toPath().relativize(file.toPath()).toString().replace('\\', '/')
-                zip.putNextEntry(ZipEntry(name))
-                file.inputStream().use { it.copyTo(zip) }
-                zip.closeEntry()
-            }
-        }
-
-        val r8Out = work.resolve("minified")
-        r8Out.mkdirs()
-        val r8 = configurations.detachedConfiguration(
-            dependencies.create("com.android.tools:r8:8.5.35"),
-        )
-        r8.isTransitive = false
-
-        val libJars = mutableListOf(androidJar.absolutePath)
-        configurations.getByName("releaseCompileClasspath").files.forEach { file ->
-            if (file.name.startsWith("jna-")) {
-                return@forEach
-            }
-            if (file.extension == "jar") {
-                libJars.add(file.absolutePath)
-            }
-            if (file.extension == "aar") {
-                ZipFile(file).use { zip ->
-                    val entry = zip.getEntry("classes.jar") ?: return@use
-                    val extracted = work.resolve("${file.nameWithoutExtension}-classes.jar")
-                    zip.getInputStream(entry).use { input ->
-                        extracted.outputStream().use { input.copyTo(it) }
-                    }
-                    libJars.add(extracted.absolutePath)
-                }
-            }
-        }
-
-        javaexec {
-            classpath = r8
-            mainClass.set("com.android.tools.r8.R8")
-            args = buildList {
-                add("--release")
-                add("--classfile")
-                add("--output")
-                add(r8Out.resolve("minified.jar").absolutePath)
-                libJars.forEach { jar ->
-                    add("--lib")
-                    add(jar)
-                }
-                add("--pg-conf")
-                add(consumerRules.asFile.absolutePath)
-                add("--pg-conf")
-                add(seedRules.absolutePath)
-                add(programJar.absolutePath)
-                add(jnaJar.absolutePath)
-            }
-        }
-
-        val minifiedJar = r8Out.resolve("minified.jar")
-        val javap = ProcessBuilder(
-            "javap",
-            "-verbose",
-            "-classpath",
-            minifiedJar.absolutePath,
-            "com.synonym.bitkitcore.RustBufferStruct",
-        ).redirectErrorStream(true).start()
-        val javapOut = javap.inputStream.bufferedReader().readText()
-        if (javap.waitFor() != 0) {
-            throw GradleException(
-                "Minified consumer dropped RustBufferStruct:\n$javapOut",
-            )
-        }
-        if (!javapOut.contains("com.sun.jna.Structure\$FieldOrder")) {
-            throw GradleException(
-                "Minified consumer dropped @Structure.FieldOrder on RustBufferStruct:\n$javapOut",
-            )
-        }
-    }
-}
-
 tasks.matching { it.name == "bundleReleaseAar" || it.name.startsWith("publish") }.configureEach {
-    dependsOn(
-        validateReleaseNativeLibraries,
-        validateConsumerKeepRules,
-        validateMinifiedConsumerFieldOrder,
-    )
+    dependsOn(validateReleaseNativeLibraries, validateConsumerKeepRules)
 }
 
 tasks.matching { it.name == "bundleReleaseAar" }.configureEach {

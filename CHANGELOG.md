@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Xpub watcher transaction events now include the synchronized wallet's next unused external receive address and full derivation path, allowing clients to render receive state without starting a second account scan.
-- Android consumer keep rules now keep the JNA `Structure.FieldOrder` annotation type and annotated UniFFI struct classes through R8 full mode.
+- Android consumer keep rules now keep JNA's JNI-reflected core (`com.sun.jna.*`), the `Structure.FieldOrder` annotation type, and annotated UniFFI struct classes through R8 full mode.
 - The Android AAR now ships targeted R8 consumer keep rules for the UniFFI/JNA FFI surface, so consuming apps can enable R8 full mode without extra keep rules for this library.
 - Add a generic hardware-wallet catalog with Foundation Passport support, multipart UR QR encoding and decoding, Passport single-signature account export parsing, and signed PSBT finalization across the UniFFI bindings.
 - Swap status updates now reconcile against Boltz's REST status whenever a swap is (re)subscribed, both on `boltz_start_swap_updates` and when `boltz_create_reverse_swap` adds a swap to a running stream. A confirmed reverse-swap lockup is therefore caught up and auto-claimed even when its live WebSocket event was missed (for example because the updates stream was down while the lockup confirmed), instead of the swap silently stalling until a manual claim. No FFI signature change.

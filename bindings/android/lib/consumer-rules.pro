@@ -30,6 +30,10 @@
     <init>(...);
 }
 
+# libjnidispatch looks up Native/Structure/CallbackReference members by JNI name.
+# See https://github.com/java-native-access/jna/blob/master/www/FrequentlyAskedQuestions.md#jna-on-android
+-keep class com.sun.jna.* { *; }
+
 # JNA's AAR references desktop AWT types that are absent on Android.
 -dontwarn java.awt.Component
 -dontwarn java.awt.GraphicsEnvironment
