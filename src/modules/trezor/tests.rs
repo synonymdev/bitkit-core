@@ -954,6 +954,9 @@ mod tests {
         const TEST_PSBT: &str = "cHNidP8BAHUCAAAAASaBcTce3/KF6Tet7qSze3gADAVmy7OtZGQXE8pCFxv2AAAAAAD+////AtPf9QUAAAAAGXapFQ==";
         const TEST_FRAME_HEX: &str =
             "042000ff0a20d3f1e5c7b9a84206ff1e2d3c4b5a69788796a5b4c3d2e1f00112233445566778899";
+        const TEST_FRAME_GROUPS: &str = "04, 20, 00, ff, 0a, 20, d3, f1, e5, c7, b9, a8";
+        const TEST_MNEMONIC: &str =
+            "abandon ability able about above absent absorb abstract absurd abuse access accident";
 
         fn sanitized(message: &str) -> String {
             let (_, message) = sanitize_debug_log("THP", message);
@@ -1005,6 +1008,47 @@ mod tests {
         fn test_bare_frame_hex_is_redacted() {
             let output = sanitized(&format!("wrote frame {}", TEST_FRAME_HEX));
             assert_eq!(output, "wrote frame <redacted>");
+        }
+
+        #[test]
+        fn test_grouped_frame_bytes_are_redacted() {
+            // Debug formatters split a frame into byte groups, which the
+            // contiguous-hex pass alone does not recognise.
+            let output = sanitized(
+                "wrote frame [04, 20, 00, ff, 0a, 20, d3, f1, e5, c7, b9, a8, 42, 06, ff, 1e]",
+            );
+            assert_eq!(output, "wrote frame [<redacted>]");
+
+            let output = sanitized("<< 04 20 00 ff 0a 20 d3 f1 e5 c7 b9 a8");
+            assert_eq!(output, "<< <redacted>");
+
+            let output = sanitized("read [4, 32, 0, 255, 10, 32, 211, 241, 229, 199]");
+            assert_eq!(output, "read [<redacted>]");
+        }
+
+        #[test]
+        fn test_multiword_secret_is_redacted_in_full() {
+            let output =
+                sanitized("mnemonic=abandon ability able about above absent absorb abstract abuse");
+            assert_eq!(output, "mnemonic=<redacted>");
+
+            // Neighbouring diagnostics still survive.
+            let output = sanitized("passphrase=correct horse battery staple, state=paired");
+            assert_eq!(output, "passphrase=<redacted>, state=paired");
+
+            let output = sanitized("passphrase=correct horse battery device=trezor");
+            assert_eq!(output, "passphrase=<redacted> device=trezor");
+        }
+
+        #[test]
+        fn test_bare_numeric_secret_is_redacted() {
+            // A number is only a count when it carries a unit or the label
+            // names a length — `token=1234567890` is neither.
+            let output = sanitized("token=1234567890 session_id=4815162342");
+            assert_eq!(output, "token=<redacted> session_id=<redacted>");
+
+            let output = sanitized("credential_count=3, key_len=32");
+            assert_eq!(output, "credential_count=3, key_len=32");
         }
 
         #[test]
@@ -1080,7 +1124,12 @@ mod tests {
                 format!("Signing {}", TEST_PSBT),
                 format!("frame={}", TEST_FRAME_HEX),
                 format!("<< {}", TEST_FRAME_HEX),
+                format!("frame=[{}]", TEST_FRAME_GROUPS),
+                format!("<< {}", TEST_FRAME_GROUPS),
+                format!("mnemonic={}", TEST_MNEMONIC),
+                format!("recovery: {} (12 words)", TEST_MNEMONIC),
                 "passphrase=hunter2 pin=1234 mnemonic=[a, b, c]".to_string(),
+                "session_token=4815162342".to_string(),
             ];
 
             for fixture in fixtures {
@@ -1096,6 +1145,11 @@ mod tests {
                         TEST_FRAME_HEX,
                         "hunter2",
                         "1234",
+                        "4815162342",
+                        // Tails, so a redaction that only covers the first
+                        // word or the first byte group still fails the test.
+                        "ability",
+                        "d3, f1",
                     ] {
                         assert!(
                             !output.contains(secret),

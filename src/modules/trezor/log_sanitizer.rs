@@ -15,7 +15,7 @@
 //! through untouched.
 
 use lazy_regex::{lazy_regex, Lazy};
-use regex::{Captures, Regex};
+use regex::Regex;
 
 /// Placeholder substituted for any redacted value.
 const REDACTED: &str = "<redacted>";
@@ -41,9 +41,16 @@ const ALWAYS_SENSITIVE_KEY_FRAGMENTS: &[&str] = &[
     "password",
     "pin",
     "privkey",
+    "recovery",
     "secret",
     "seed",
 ];
+
+/// Key fragments that make a bare integer provably a count or a size.
+///
+/// Without one of these, an integer under a sensitive label is just as likely
+/// to be a numeric token or code as it is to be a length.
+const COUNT_KEY_FRAGMENTS: &[&str] = &["count", "index", "len", "num", "offset", "size"];
 
 /// Key fragments whose value is forwarded only when it is provably harmless
 /// (see [`is_harmless_value`]) — these labels are usually attached to sizes
@@ -94,35 +101,82 @@ fn redact_labeled_values(text: &str) -> String {
               "[^"]*"                       # quoted string
             | \[[^\]]*\]                    # array
             | \{[^}]*\}                     # object
+                                            # count with a spaced-out unit
+            | -?[0-9]+\s*(?i:bytes|byte|bits|bit|chars|char|kb|mb|ms|b|s)\b
             | [^\s,;)\]}"]+                 # bare token
         )"#
     );
 
-    LABELED_VALUE
-        .replace_all(text, |caps: &Captures| {
-            let whole = &caps[0];
-            let key = &caps["key"];
-            let value = &caps["value"];
-            let separator = &whole[key.len()..whole.len() - value.len()];
+    let mut out = String::with_capacity(text.len());
+    let mut cursor = 0;
 
-            if is_always_sensitive_key(key) {
-                return format!("{}{}{}", key, separator, placeholder_for(value));
+    for caps in LABELED_VALUE.captures_iter(text) {
+        let whole = caps.get(0).expect("group 0 always matches");
+        if whole.start() < cursor {
+            // Swallowed by the multi-word redaction of an earlier pair.
+            continue;
+        }
+        let key = &caps["key"];
+        let value = &caps["value"];
+        let separator = &whole.as_str()[key.len()..whole.len() - value.len()];
+
+        out.push_str(&text[cursor..whole.start()]);
+        cursor = whole.end();
+
+        if !is_always_sensitive_key(key) {
+            if !is_sensitive_key(key) || is_harmless_value(key, value) {
+                out.push_str(whole.as_str());
+                continue;
             }
-            if !is_sensitive_key(key) || is_harmless_value(value) {
-                return whole.to_string();
-            }
-            // `credential: host_key=32bytes` — the captured "value" is itself a
-            // labeled pair, so descend into it instead of blanking the lot.
             if is_labeled_pair(value) {
-                return format!("{}{}{}", key, separator, redact_labeled_values(value));
+                // `credential: host_key=32bytes` — the captured "value" is itself
+                // a labeled pair, so descend into it instead of blanking the lot.
+                out.push_str(key);
+                out.push_str(separator);
+                out.push_str(&redact_labeled_values(value));
+                continue;
             }
-            format!("{}{}{}", key, separator, placeholder_for(value))
-        })
-        .into_owned()
+        }
+
+        out.push_str(key);
+        out.push_str(separator);
+        out.push_str(&placeholder_for(value));
+        cursor = end_of_multiword_value(text, value, cursor);
+    }
+
+    out.push_str(&text[cursor..]);
+    out
+}
+
+/// End of a redacted value, extended past the words the capture left behind.
+///
+/// An unquoted secret can be several words long — `mnemonic=abandon ability
+/// able …` — and the value pattern stops at the first space, so everything
+/// after it would otherwise be forwarded verbatim. Trailing words are absorbed
+/// up to the next structural delimiter or `key=value` pair, which keeps
+/// unrelated diagnostics on the same line intact.
+fn end_of_multiword_value(text: &str, value: &str, end: usize) -> usize {
+    static TRAILING_WORD: Lazy<Regex> = lazy_regex!(r#"^[\t ]+[^\s,;:=(){}\[\]"]+"#);
+
+    // Quoted, bracketed and braced values are already delimited.
+    if matches!(value.as_bytes().first(), Some(b'"' | b'[' | b'{')) {
+        return end;
+    }
+
+    let mut end = end;
+    while let Some(word) = TRAILING_WORD.find(&text[end..]) {
+        let next = end + word.end();
+        if matches!(text.as_bytes().get(next), Some(b':' | b'=')) {
+            break; // that word labels a value of its own
+        }
+        end = next;
+    }
+    end
 }
 
 /// Redact secrets that carry no label at all: extended keys, base64 PSBTs,
-/// long base64 blobs and long hex runs (serialized transactions, raw frames).
+/// long base64 blobs, and raw frames however they were formatted — one hex run
+/// or byte groups a debug formatter split apart.
 fn redact_bare_secrets(text: &str) -> String {
     // A base64-encoded PSBT always starts with the `psbt\xff` magic.
     static PSBT: Lazy<Regex> = lazy_regex!(r"\bcHNidP[A-Za-z0-9+/]+=*");
@@ -131,12 +185,20 @@ fn redact_bare_secrets(text: &str) -> String {
         lazy_regex!(r"\b[xyztuvXYZTUV](?:pub|prv)[1-9A-HJ-NP-Za-km-z]{40,}");
     // 16 bytes or more of contiguous hex: frame payloads, txids, serialized txs.
     static LONG_HEX: Lazy<Regex> = lazy_regex!(r"\b[0-9a-fA-F]{32,}\b");
+    // The same payloads once a debug formatter has split them into groups:
+    // `04, 20, 00, ff, …`, `04 20 00 ff …`, `04:20:00:ff:…`.
+    static GROUPED_HEX: Lazy<Regex> =
+        lazy_regex!(r"(?i)\b[0-9a-f]{2}(?:[\s,:_-]+[0-9a-f]{2}){7,}\b");
+    // `[4, 32, 0, 255, …]` — Rust's `Debug` for a slice of bytes.
+    static BYTE_ARRAY: Lazy<Regex> = lazy_regex!(r"\[\s*[0-9]{1,3}(?:\s*,\s*[0-9]{1,3}){7,}\s*\]");
     // Any other long unbroken base64 run — serialized credentials and the like.
     static LONG_BASE64: Lazy<Regex> = lazy_regex!(r"[A-Za-z0-9+/]{64,}=*");
 
     let text = PSBT.replace_all(text, REDACTED);
     let text = EXTENDED_KEY.replace_all(&text, REDACTED);
     let text = LONG_HEX.replace_all(&text, REDACTED);
+    let text = GROUPED_HEX.replace_all(&text, REDACTED);
+    let text = BYTE_ARRAY.replace_all(&text, format!("[{}]", REDACTED));
     LONG_BASE64.replace_all(&text, REDACTED).into_owned()
 }
 
@@ -174,14 +236,23 @@ fn is_labeled_pair(value: &str) -> bool {
 ///
 /// Only counts, sizes, booleans and absence qualify — these are the
 /// diagnostics worth keeping (`has_credentials=true`, `payload: 48 bytes`).
-fn is_harmless_value(value: &str) -> bool {
-    static COUNT_OR_SIZE: Lazy<Regex> =
-        lazy_regex!(r"(?i)^-?[0-9]+\s*(b|kb|mb|bit|bits|byte|bytes|char|chars|ms|s)?$");
+///
+/// A number is only a count when it says so: either it carries a unit, or the
+/// label names a length. A bare integer under any other sensitive label is
+/// just as likely to be a numeric token or a code, so it is redacted.
+fn is_harmless_value(key: &str, value: &str) -> bool {
+    static SIZE: Lazy<Regex> =
+        lazy_regex!(r"(?i)^-?[0-9]+\s*(b|kb|mb|bit|bits|byte|bytes|char|chars|ms|s)$");
+    static BARE_NUMBER: Lazy<Regex> = lazy_regex!(r"^-?[0-9]+$");
 
-    matches!(
+    if matches!(
         value.to_ascii_lowercase().as_str(),
         "true" | "false" | "none" | "null" | "nil" | "n/a" | "unknown" | r#""""# | "[]" | "{}"
-    ) || COUNT_OR_SIZE.is_match(value)
+    ) {
+        return true;
+    }
+    SIZE.is_match(value)
+        || (BARE_NUMBER.is_match(value) && matches_fragment(key, COUNT_KEY_FRAGMENTS))
 }
 
 /// Build a placeholder that preserves the shape of the value it replaces, so
