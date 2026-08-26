@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Keep JNA's JNI-reflected core (`com.sun.jna.*`), classes that extend those types (including `com.sun.jna.ptr` ByReference types), the `Structure.FieldOrder` annotation type, and annotated UniFFI struct classes through R8 full mode.
+- Keep JNA types UniFFI needs so the Android library loads under R8.
 
 ## 0.5.10 - 2026-08-27
 
