@@ -31,10 +31,9 @@
 }
 
 # libjnidispatch looks up Native/Structure/CallbackReference members by JNI name.
-# JNA also reflectively constructs subclasses such as com.sun.jna.ptr.IntByReference
-# while registering UniffiLib callback vtables.
+# `**` includes subpackages such as com.sun.jna.ptr (IntByReference, ByteByReference).
 # See https://github.com/java-native-access/jna/blob/master/www/FrequentlyAskedQuestions.md#jna-on-android
--keep class com.sun.jna.* { *; }
+-keep class com.sun.jna.** { *; }
 -keep class * extends com.sun.jna.* { *; }
 -keepclassmembers class * extends com.sun.jna.* { public *; }
 
