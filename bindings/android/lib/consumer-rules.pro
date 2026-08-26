@@ -31,9 +31,9 @@
 }
 
 # libjnidispatch looks up Native/Structure/CallbackReference members by JNI name.
-# `**` includes subpackages such as com.sun.jna.ptr (IntByReference, ByteByReference).
+# Subclasses such as com.sun.jna.ptr.IntByReference are kept by the extends rules.
 # See https://github.com/java-native-access/jna/blob/master/www/FrequentlyAskedQuestions.md#jna-on-android
--keep class com.sun.jna.** { *; }
+-keep class com.sun.jna.* { *; }
 -keep class * extends com.sun.jna.* { *; }
 -keepclassmembers class * extends com.sun.jna.* { public *; }
 
