@@ -176,6 +176,20 @@ const INDEX_STATEMENTS: &[&str] = &[
     "CREATE INDEX IF NOT EXISTS idx_transaction_details_txid ON transaction_details(tx_id)"
 ];
 
+/// Unique indexes created by pre-wallet-scoped releases. They make an activity
+/// id globally unique, which contradicts the `PRIMARY KEY (wallet_id, id)` the
+/// activity tables now use: the same on-chain id (the txid) has to be storable
+/// once per wallet scope, e.g. when a transaction is visible to both the Bitkit
+/// wallet and a watched hardware wallet.
+///
+/// The statements that created them are long gone from this crate, but
+/// `CREATE ... IF NOT EXISTS` never removed them from databases that already
+/// had them, so they are dropped unconditionally on every init.
+const LEGACY_INDEX_DROP_STATEMENTS: &[&str] = &[
+    "DROP INDEX IF EXISTS idx_onchain_id",
+    "DROP INDEX IF EXISTS idx_lightning_id",
+];
+
 const TRIGGER_STATEMENTS: &[&str] = &[
     // Update timestamp trigger
     "CREATE TRIGGER IF NOT EXISTS activities_update_trigger
@@ -323,6 +337,15 @@ impl ActivityDB {
         self.migrate_activity_tables_to_wallet_primary_keys()?;
         self.migrate_transaction_details_table()?;
         self.migrate_pre_activity_metadata_table()?;
+
+        // Drop indexes older releases created that the current schema forbids
+        for statement in LEGACY_INDEX_DROP_STATEMENTS {
+            if let Err(e) = self.conn.execute(statement, []) {
+                return Err(ActivityError::InitializationError {
+                    error_details: format!("Error dropping legacy index: {}", e),
+                });
+            }
+        }
 
         // Create indexes
         for statement in INDEX_STATEMENTS {

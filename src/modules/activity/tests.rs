@@ -36,6 +36,43 @@ mod tests {
         columns.into_iter().map(|(_, column)| column).collect()
     }
 
+    /// Names of the unique indexes on `table` that are not the implicit
+    /// primary-key one, i.e. every unique constraint the schema does not declare.
+    fn extra_unique_index_names(db: &ActivityDB, table: &str) -> Vec<String> {
+        let mut stmt = db
+            .conn
+            .prepare(&format!("PRAGMA index_list({})", table))
+            .unwrap();
+        let indexes = stmt
+            .query_map([], |row| {
+                Ok((
+                    row.get::<_, String>(1)?,
+                    row.get::<_, i64>(2)?,
+                    row.get::<_, String>(3)?,
+                ))
+            })
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+
+        indexes
+            .into_iter()
+            .filter(|(_, unique, origin)| *unique == 1 && origin != "pk")
+            .map(|(name, _, _)| name)
+            .collect()
+    }
+
+    fn create_legacy_activity_id_indexes(db_path: &str) {
+        let conn = rusqlite::Connection::open(db_path).unwrap();
+        conn.execute_batch(
+            "
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_onchain_id ON onchain_activity(id);
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_lightning_id ON lightning_activity(id);
+            ",
+        )
+        .unwrap();
+    }
+
     fn create_test_onchain_activity() -> OnchainActivity {
         OnchainActivity {
             wallet_id: DEFAULT_WALLET_ID.to_string(),
@@ -280,6 +317,156 @@ mod tests {
             db.get_tags("hardware-wallet-1", "legacy_activity").unwrap(),
             vec!["legacy_tag".to_string()]
         );
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_init_drops_legacy_activity_id_unique_indexes() {
+        let (db, db_path) = setup();
+        drop(db);
+        create_legacy_activity_id_indexes(&db_path);
+
+        let mut db = ActivityDB::new(&db_path).unwrap();
+
+        assert!(extra_unique_index_names(&db, "onchain_activity").is_empty());
+        assert!(extra_unique_index_names(&db, "lightning_activity").is_empty());
+
+        // The hardware wallet snapshot shape: one transaction seen by two
+        // wallet scopes, written in a single transaction.
+        let shared_txid = "84e3cf34";
+        let mut main = create_test_onchain_activity();
+        main.id = shared_txid.to_string();
+        main.tx_id = shared_txid.to_string();
+        main.value = 10_000;
+
+        let mut hardware = create_test_onchain_activity();
+        hardware.wallet_id = "trezor:84e3cf34".to_string();
+        hardware.id = shared_txid.to_string();
+        hardware.tx_id = shared_txid.to_string();
+        hardware.value = 20_000;
+
+        db.upsert_onchain_activities(&[main.clone(), hardware.clone()])
+            .unwrap();
+
+        for expected in [&main, &hardware] {
+            let activity = db
+                .get_activity_by_id(&expected.wallet_id, shared_txid)
+                .unwrap()
+                .unwrap();
+            match activity {
+                Activity::Onchain(activity) => {
+                    assert_eq!(activity.wallet_id, expected.wallet_id);
+                    assert_eq!(activity.value, expected.value);
+                }
+                Activity::Lightning(_) => panic!("Expected onchain activity"),
+            }
+        }
+
+        let mut main_lightning = create_test_lightning_activity();
+        main_lightning.id = "shared_payment_hash".to_string();
+        let mut scoped_lightning = main_lightning.clone();
+        scoped_lightning.wallet_id = "trezor:84e3cf34".to_string();
+
+        db.insert_lightning_activity(&main_lightning).unwrap();
+        db.insert_lightning_activity(&scoped_lightning).unwrap();
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_legacy_schema_migration_drops_activity_id_unique_indexes() {
+        let db_path = format!("test_db_{}.sqlite", random::<u64>());
+        {
+            let conn = rusqlite::Connection::open(&db_path).unwrap();
+            conn.execute_batch(
+                "
+                CREATE TABLE activities (
+                    id TEXT PRIMARY KEY,
+                    activity_type TEXT NOT NULL CHECK (activity_type IN ('onchain', 'lightning')),
+                    tx_type TEXT NOT NULL CHECK (tx_type IN ('sent', 'received')),
+                    timestamp INTEGER NOT NULL CHECK (timestamp > 0),
+                    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+                    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+                );
+                CREATE TABLE onchain_activity (
+                    id TEXT PRIMARY KEY,
+                    tx_id TEXT NOT NULL,
+                    address TEXT NOT NULL CHECK (length(address) > 0),
+                    confirmed BOOLEAN NOT NULL,
+                    value INTEGER NOT NULL CHECK (value >= 0),
+                    fee INTEGER NOT NULL CHECK (fee >= 0),
+                    fee_rate INTEGER NOT NULL CHECK (fee_rate >= 0),
+                    is_boosted BOOLEAN NOT NULL,
+                    boost_tx_ids TEXT NOT NULL,
+                    is_transfer BOOLEAN NOT NULL,
+                    does_exist BOOLEAN NOT NULL,
+                    confirm_timestamp INTEGER,
+                    channel_id TEXT,
+                    transfer_tx_id TEXT
+                );
+                CREATE TABLE lightning_activity (
+                    id TEXT PRIMARY KEY,
+                    invoice TEXT NOT NULL CHECK (length(invoice) > 0),
+                    value INTEGER NOT NULL CHECK (value >= 0),
+                    status TEXT NOT NULL CHECK (status IN ('pending', 'succeeded', 'failed')),
+                    fee INTEGER,
+                    message TEXT NOT NULL,
+                    preimage TEXT
+                );
+                CREATE TABLE activity_tags (
+                    activity_id TEXT NOT NULL,
+                    tag TEXT NOT NULL,
+                    PRIMARY KEY (activity_id, tag)
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_onchain_id ON onchain_activity(id);
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_lightning_id ON lightning_activity(id);
+                ",
+            )
+            .unwrap();
+        }
+
+        let mut db = ActivityDB::new(&db_path).unwrap();
+
+        assert!(extra_unique_index_names(&db, "onchain_activity").is_empty());
+        assert!(extra_unique_index_names(&db, "lightning_activity").is_empty());
+
+        let mut main = create_test_onchain_activity();
+        main.id = "shared_txid".to_string();
+        main.tx_id = "shared_txid".to_string();
+
+        let mut hardware = main.clone();
+        hardware.wallet_id = "trezor:84e3cf34".to_string();
+        hardware.value = 20_000;
+
+        db.upsert_onchain_activities(&[main.clone(), hardware.clone()])
+            .unwrap();
+
+        for expected in [&main, &hardware] {
+            let activity = db
+                .get_activity_by_id(&expected.wallet_id, "shared_txid")
+                .unwrap()
+                .unwrap();
+            assert_eq!(activity.get_wallet_id(), expected.wallet_id);
+        }
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_activity_tables_have_no_extra_unique_indexes() {
+        let (db, db_path) = setup();
+
+        // Only the composite primary keys may constrain uniqueness; anything
+        // else would scope an activity id more narrowly than (wallet_id, id).
+        for table in ["activities", "onchain_activity", "lightning_activity"] {
+            assert_eq!(
+                extra_unique_index_names(&db, table),
+                Vec::<String>::new(),
+                "unexpected unique index on {}",
+                table
+            );
+        }
 
         cleanup(&db_path);
     }
