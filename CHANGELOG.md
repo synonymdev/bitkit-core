@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `get_activities_tags(wallet_id: Option<String>)` and `get_pre_activity_metadata_list(wallet_id: Option<String>)`, wallet-scoped reads of the two tag-backup tables where `None` returns every scope. Apps backing up a single wallet scope (for example a `trezor:{hash}` hardware wallet) can now name that scope in the call instead of fetching every scope and filtering client-side, so which records leave the device is visible in the FFI call. The unscoped `get_all_activities_tags()` and `get_all_pre_activity_metadata()` are unchanged and now delegate to the scoped versions.
+
 - The Android AAR now ships targeted R8 consumer keep rules for the UniFFI/JNA FFI surface, so consuming apps can enable R8 full mode without extra keep rules for this library.
 - Add a generic hardware-wallet catalog with Foundation Passport support, multipart UR QR encoding and decoding, Passport single-signature account export parsing, and signed PSBT finalization across the UniFFI bindings.
 - Swap status updates now reconcile against Boltz's REST status whenever a swap is (re)subscribed, both on `boltz_start_swap_updates` and when `boltz_create_reverse_swap` adds a swap to a running stream. A confirmed reverse-swap lockup is therefore caught up and auto-claimed even when its live WebSocket event was missed (for example because the updates stream was down while the lockup confirmed), instead of the swap silently stalling until a manual claim. No FFI signature change.

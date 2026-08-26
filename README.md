@@ -180,6 +180,10 @@
     ```rust
     fn get_all_unique_tags() -> Result<Vec<String>, ActivityError>
     ```
+  - [get_activities_tags](src/modules/activity/README.md#usage-examples): Get activity tags for one wallet scope, or every scope when `wallet_id` is `None`
+    ```rust
+    fn get_activities_tags(wallet_id: Option<String>) -> Result<Vec<ActivityTags>, ActivityError>
+    ```
   - [get_activities_by_tag](src/modules/activity/README.md#usage-examples): Get activities with a specific tag and optional wallet scope
     ```rust
     fn get_activities_by_tag(
@@ -204,6 +208,10 @@
         search_key: String,
         search_by_address: bool
     ) -> Result<Option<PreActivityMetadata>, ActivityError>
+    ```
+  - [get_pre_activity_metadata_list](src/modules/activity/README.md#usage-examples): Get pending metadata for one wallet scope, or every scope when `wallet_id` is `None`
+    ```rust
+    fn get_pre_activity_metadata_list(wallet_id: Option<String>) -> Result<Vec<PreActivityMetadata>, ActivityError>
     ```
   - [add_pre_activity_metadata_tags](src/modules/activity/README.md#usage-examples): Add tags to pending metadata
     ```rust

@@ -752,6 +752,19 @@ pub fn get_all_activities_tags() -> Result<Vec<ActivityTags>, ActivityError> {
     db.get_all_activities_tags()
 }
 
+/// Activity tags for a single wallet scope, or every scope when `wallet_id` is `None`.
+#[uniffi::export]
+pub fn get_activities_tags(wallet_id: Option<String>) -> Result<Vec<ActivityTags>, ActivityError> {
+    let guard = get_activity_db()?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
+    db.get_activities_tags(wallet_id.as_deref())
+}
+
 #[uniffi::export]
 pub fn upsert_tags(activity_tags: Vec<ActivityTags>) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
@@ -880,6 +893,21 @@ pub fn get_all_pre_activity_metadata() -> Result<Vec<PreActivityMetadata>, Activ
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
     db.get_all_pre_activity_metadata()
+}
+
+/// Pre-activity metadata for a single wallet scope, or every scope when `wallet_id` is `None`.
+#[uniffi::export]
+pub fn get_pre_activity_metadata_list(
+    wallet_id: Option<String>,
+) -> Result<Vec<PreActivityMetadata>, ActivityError> {
+    let guard = get_activity_db()?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
+    db.get_pre_activity_metadata_list(wallet_id.as_deref())
 }
 
 #[uniffi::export]
