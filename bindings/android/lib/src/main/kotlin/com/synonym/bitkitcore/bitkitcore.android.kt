@@ -12678,6 +12678,7 @@ public object FfiConverterTypeWatcherEvent : FfiConverterRustBuffer<WatcherEvent
                 FfiConverterUInt.read(buf),
                 FfiConverterUInt.read(buf),
                 FfiConverterTypeAccountType.read(buf),
+                FfiConverterTypeAddressInfo.read(buf),
                 )
             2 -> WatcherEvent.Error(
                 FfiConverterString.read(buf),
@@ -12701,6 +12702,7 @@ public object FfiConverterTypeWatcherEvent : FfiConverterRustBuffer<WatcherEvent
                 + FfiConverterUInt.allocationSize(value.`txCount`)
                 + FfiConverterUInt.allocationSize(value.`blockHeight`)
                 + FfiConverterTypeAccountType.allocationSize(value.`accountType`)
+                + FfiConverterTypeAddressInfo.allocationSize(value.`nextUnusedExternalAddress`)
             )
         }
         is WatcherEvent.Error -> {
@@ -12735,6 +12737,7 @@ public object FfiConverterTypeWatcherEvent : FfiConverterRustBuffer<WatcherEvent
                 FfiConverterUInt.write(value.`txCount`, buf)
                 FfiConverterUInt.write(value.`blockHeight`, buf)
                 FfiConverterTypeAccountType.write(value.`accountType`, buf)
+                FfiConverterTypeAddressInfo.write(value.`nextUnusedExternalAddress`, buf)
                 Unit
             }
             is WatcherEvent.Error -> {

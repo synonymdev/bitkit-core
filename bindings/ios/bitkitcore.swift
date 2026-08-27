@@ -20704,8 +20704,10 @@ public enum WatcherEvent {
      * wallet's perspective, and DB-valid timestamps, so the app can store them
      * directly through the normal Core activity APIs (e.g. `upsert_activity` /
      * `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
+     * `next_unused_external_address` is the synchronized wallet's current
+     * external receive address.
      */
-    case transactionsChanged(activities: [Activity], transactionDetails: [TransactionDetails], balance: WalletBalance, txCount: UInt32, blockHeight: UInt32, accountType: AccountType
+    case transactionsChanged(activities: [Activity], transactionDetails: [TransactionDetails], balance: WalletBalance, txCount: UInt32, blockHeight: UInt32, accountType: AccountType, nextUnusedExternalAddress: AddressInfo
     )
     /**
      * An error occurred in the watcher loop.
@@ -20738,7 +20740,7 @@ public struct FfiConverterTypeWatcherEvent: FfiConverterRustBuffer {
         let variant: Int32 = try readInt(&buf)
         switch variant {
         
-        case 1: return .transactionsChanged(activities: try FfiConverterSequenceTypeActivity.read(from: &buf), transactionDetails: try FfiConverterSequenceTypeTransactionDetails.read(from: &buf), balance: try FfiConverterTypeWalletBalance.read(from: &buf), txCount: try FfiConverterUInt32.read(from: &buf), blockHeight: try FfiConverterUInt32.read(from: &buf), accountType: try FfiConverterTypeAccountType.read(from: &buf)
+        case 1: return .transactionsChanged(activities: try FfiConverterSequenceTypeActivity.read(from: &buf), transactionDetails: try FfiConverterSequenceTypeTransactionDetails.read(from: &buf), balance: try FfiConverterTypeWalletBalance.read(from: &buf), txCount: try FfiConverterUInt32.read(from: &buf), blockHeight: try FfiConverterUInt32.read(from: &buf), accountType: try FfiConverterTypeAccountType.read(from: &buf), nextUnusedExternalAddress: try FfiConverterTypeAddressInfo.read(from: &buf)
         )
         
         case 2: return .error(message: try FfiConverterString.read(from: &buf)
@@ -20757,7 +20759,7 @@ public struct FfiConverterTypeWatcherEvent: FfiConverterRustBuffer {
         switch value {
         
         
-        case let .transactionsChanged(activities,transactionDetails,balance,txCount,blockHeight,accountType):
+        case let .transactionsChanged(activities,transactionDetails,balance,txCount,blockHeight,accountType,nextUnusedExternalAddress):
             writeInt(&buf, Int32(1))
             FfiConverterSequenceTypeActivity.write(activities, into: &buf)
             FfiConverterSequenceTypeTransactionDetails.write(transactionDetails, into: &buf)
@@ -20765,6 +20767,7 @@ public struct FfiConverterTypeWatcherEvent: FfiConverterRustBuffer {
             FfiConverterUInt32.write(txCount, into: &buf)
             FfiConverterUInt32.write(blockHeight, into: &buf)
             FfiConverterTypeAccountType.write(accountType, into: &buf)
+            FfiConverterTypeAddressInfo.write(nextUnusedExternalAddress, into: &buf)
             
         
         case let .error(message):
