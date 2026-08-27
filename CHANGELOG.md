@@ -6,15 +6,17 @@
 
 ## 0.5.10 - 2026-08-27
 
-- Xpub watcher transaction events now include the synchronized wallet's next unused external receive address and full derivation path, allowing clients to render receive state without starting a second account scan.
+- Watch-only watcher events now include the synchronized next unused external address and full derivation path.
 
 ## 0.5.9 - 2026-08-26
 
-- Ship targeted R8 consumer keep rules for the UniFFI/JNA FFI surface, so consuming apps can enable R8 full mode without extra keep rules for this library.
+- Ship the initial Android R8 consumer keep rules for the UniFFI/JNA FFI surface.
 
 ## 0.5.8 - 2026-08-26
 
 - Preserve UR decoder scan progress across invalid frames.
+- Reject signed PSBT previous-output metadata that differs from the original transaction.
+- Enforce encoded UR frame-size bounds.
 
 ## 0.5.7 - 2026-08-24
 
