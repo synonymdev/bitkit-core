@@ -554,6 +554,8 @@ pub enum WatcherEvent {
     /// wallet's perspective, and DB-valid timestamps, so the app can store them
     /// directly through the normal Core activity APIs (e.g. `upsert_activity` /
     /// `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
+    /// `next_unused_external_address` is the synchronized wallet's current
+    /// external receive address.
     TransactionsChanged {
         activities: Vec<Activity>,
         transaction_details: Vec<TransactionDetails>,
@@ -561,6 +563,7 @@ pub enum WatcherEvent {
         tx_count: u32,
         block_height: u32,
         account_type: AccountType,
+        next_unused_external_address: AddressInfo,
     },
     /// An error occurred in the watcher loop.
     Error { message: String },
