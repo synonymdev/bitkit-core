@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.5.11 - 2026-08-27
+
 - Add keep consumer rules for JNA types UniFFI needs under R8.
 
 ## 0.5.10 - 2026-08-27
