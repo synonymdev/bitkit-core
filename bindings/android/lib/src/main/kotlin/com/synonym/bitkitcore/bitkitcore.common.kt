@@ -5008,6 +5008,8 @@ public sealed class WatcherEvent {
      * wallet's perspective, and DB-valid timestamps, so the app can store them
      * directly through the normal Core activity APIs (e.g. `upsert_activity` /
      * `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
+     * `next_unused_external_address` is the synchronized wallet's current
+     * external receive address.
      */@kotlinx.serialization.Serializable
     public data class TransactionsChanged(
         val `activities`: List<Activity>,
@@ -5016,6 +5018,7 @@ public sealed class WatcherEvent {
         val `txCount`: kotlin.UInt,
         val `blockHeight`: kotlin.UInt,
         val `accountType`: AccountType,
+        val `nextUnusedExternalAddress`: AddressInfo,
     ) : WatcherEvent() {
     }
     

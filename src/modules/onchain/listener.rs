@@ -18,7 +18,8 @@ use super::implementation::{
     watch_only_activity_from_detail,
 };
 use super::types::{
-    AccountType, Network as OnchainNetwork, WalletBalance, WatcherEvent, DEFAULT_GAP_LIMIT,
+    AccountType, AddressInfo, Network as OnchainNetwork, WalletBalance, WatcherEvent,
+    DEFAULT_GAP_LIMIT,
 };
 use bdk::bitcoin::Network as BdkNetwork;
 
@@ -343,6 +344,7 @@ fn build_tx_changed_event(
     account_type: AccountType,
     wallet_id: &str,
     wallet_network: BdkNetwork,
+    base_path: &str,
 ) -> WatcherEvent {
     let bdk_balance = match wallet.get_balance() {
         Ok(b) => b,
@@ -382,6 +384,14 @@ fn build_tx_changed_event(
     }
 
     let tx_count = u32::try_from(activities.len()).unwrap_or(u32::MAX);
+    let next_unused_external_address = match next_unused_external_address(wallet, base_path) {
+        Ok(address) => address,
+        Err(error) => {
+            return WatcherEvent::Error {
+                message: error.to_string(),
+            };
+        }
+    };
 
     WatcherEvent::TransactionsChanged {
         activities,
@@ -390,7 +400,25 @@ fn build_tx_changed_event(
         tx_count,
         block_height: tip_height,
         account_type,
+        next_unused_external_address,
     }
+}
+
+fn next_unused_external_address(
+    wallet: &Wallet<MemoryDatabase>,
+    base_path: &str,
+) -> Result<AddressInfo, AccountInfoError> {
+    let address = wallet
+        .get_address(BdkAddressIndex::LastUnused)
+        .map_err(|error| AccountInfoError::WalletError {
+            error_details: format!("Failed to get last unused external address: {}", error),
+        })?;
+
+    Ok(AddressInfo {
+        address: address.address.to_string(),
+        path: format!("{}/0/{}", base_path, address.index),
+        transfers: 0,
+    })
 }
 
 /// Subscribe to all scripts in a single batched RPC.
@@ -579,6 +607,7 @@ fn watcher_init_and_loop(
     let sync_stop_gap = (gap as usize).max(DEFAULT_GAP_LIMIT as usize);
     let account_type = setup.account_type;
     let wallet_network = setup.network;
+    let base_path = setup.base_path.clone();
     let wallet_id = params.wallet_id.clone();
     let watcher_id = params.watcher_id.clone();
 
@@ -677,6 +706,7 @@ fn watcher_init_and_loop(
             account_type,
             &wallet_id,
             wallet_network,
+            &base_path,
         ),
     );
 
@@ -873,6 +903,7 @@ fn watcher_init_and_loop(
                     account_type,
                     &wallet_id,
                     wallet_network,
+                    &base_path,
                 ),
             );
         }
@@ -890,3 +921,6 @@ fn watcher_init_and_loop(
         }
     }
 }
+
+#[cfg(test)]
+mod tests;
