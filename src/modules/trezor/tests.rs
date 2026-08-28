@@ -939,15 +939,10 @@ mod tests {
         assert_eq!(*mock.last_passphrase_on_device.lock().unwrap(), Some(true));
     }
 
-    // ========================================================================
-    // Debug Log Sanitizer Tests
-    // ========================================================================
-
     mod log_sanitizer {
         use crate::modules::trezor::log_sanitizer::sanitize_debug_log;
 
-        /// Secrets that must never survive a round trip through the sanitizer.
-        /// Deliberately literal — the regression test below greps for them.
+        /// Literal fixtures, so the regression test below can grep for them.
         const TEST_CREDENTIAL: &str =
             "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
         const TEST_XPUB: &str = "xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL";
@@ -1024,6 +1019,20 @@ mod tests {
         }
 
         #[test]
+        fn test_unclosed_quote_does_not_defeat_redaction() {
+            // An unclosed quote used to match no value at all, forwarding the
+            // whole pair verbatim.
+            assert_eq!(sanitized(r#"passphrase="hunter2"#), "passphrase=<redacted>");
+            assert_eq!(
+                sanitized(&format!(r#"{{"credential": "{}"#, TEST_CREDENTIAL)),
+                r#"{"credential": <redacted>"#
+            );
+            // An innocuous value must not lose its last character to a closing
+            // delimiter that was never there.
+            assert_eq!(sanitized(r#"state="paired"#), r#"state="paired"#);
+        }
+
+        #[test]
         fn test_labeled_psbt_is_redacted() {
             let output = sanitized(&format!("signing psbt={}", TEST_PSBT));
             assert_eq!(output, "signing psbt=<redacted>");
@@ -1031,8 +1040,7 @@ mod tests {
 
         #[test]
         fn test_unexpected_secret_label_is_redacted() {
-            // The point of matching on key fragments: labels nobody enumerated
-            // up front, like `thp_credential` or `master_key`, are still caught.
+            // Matching on key fragments catches labels nobody enumerated.
             let output = sanitized(&format!(
                 "thp_credential={} master_key={}",
                 TEST_CREDENTIAL, TEST_XPUB
@@ -1096,8 +1104,6 @@ mod tests {
 
         #[test]
         fn test_bare_numeric_secret_is_redacted() {
-            // A number is only a count when it carries a unit or the label
-            // names a length — `token=1234567890` is neither.
             let output = sanitized("token=1234567890 session_id=4815162342");
             assert_eq!(output, "token=<redacted> session_id=<redacted>");
 
@@ -1125,8 +1131,8 @@ mod tests {
 
         #[test]
         fn test_byte_lengths_and_booleans_pass_through() {
-            // Sensitive labels carrying only a count or a flag are the
-            // diagnostics worth keeping, so they must survive redaction.
+            // Counts and flags under a sensitive label are the diagnostics
+            // worth keeping, so they must survive redaction.
             let message = "Completion payload: 48 bytes (credential_sent=true)";
             assert_eq!(sanitized(message), message);
 
@@ -1152,14 +1158,26 @@ mod tests {
         #[test]
         fn test_long_message_is_truncated() {
             let output = sanitized(&"chunk ".repeat(200));
-            assert!(output.ends_with("…<truncated>"));
+            assert!(output.ends_with("\u{2026}<truncated>"));
             assert!(output.chars().count() < 530);
         }
 
         #[test]
         fn test_multibyte_message_truncation_does_not_panic() {
-            let output = sanitized(&"é".repeat(1000));
-            assert!(output.ends_with("…<truncated>"));
+            let output = sanitized(&"\u{e9}".repeat(1000));
+            assert!(output.ends_with("\u{2026}<truncated>"));
+        }
+
+        #[test]
+        fn test_deeply_chained_pairs_do_not_exhaust_the_stack() {
+            // Redaction descends into nested values, so an unbounded input
+            // used to recurse once per link and abort the process. Run on a
+            // thread with a small stack to catch a regression on mobile.
+            let worker = std::thread::Builder::new()
+                .stack_size(256 * 1024)
+                .spawn(|| sanitized(&("a=".repeat(20_000) + "1")))
+                .expect("spawn");
+            assert!(worker.join().expect("no stack overflow").len() < 600);
         }
 
         #[test]
@@ -1186,6 +1204,7 @@ mod tests {
                 "session_token=4815162342".to_string(),
                 "passphrase=hunter2 pin = 1234".to_string(),
                 r#"passphrase="hunter2\"1234""#.to_string(),
+                r#"passphrase="hunter2"#.to_string(),
                 format!(
                     r#"context={{"passphrase":"hunter2","seed":"{}"}}"#,
                     TEST_MNEMONIC
@@ -1208,8 +1227,8 @@ mod tests {
                         "hunter2",
                         "1234",
                         "4815162342",
-                        // Tails, so a redaction that only covers the first
-                        // word or the first byte group still fails the test.
+                        // Tails, so a redaction covering only the first word or
+                        // byte group still fails the test.
                         "ability",
                         "d3, f1",
                     ] {

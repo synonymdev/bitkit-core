@@ -307,12 +307,8 @@ impl TransportCallback for CallbackAdapter {
         self.callback.load_thp_credential(device_id.to_string())
     }
 
-    /// Forward transport diagnostics to the native debug UI.
-    ///
-    /// The upstream stream is not trusted to be secret-free — its contents
-    /// belong to trezor-connect-rs and change with every bump — so everything
-    /// is redacted here, at the last point bitkit-core controls, rather than
-    /// by the consumer after the fact.
+    /// Redacts here, the last point bitkit-core controls, because the upstream
+    /// stream is not trusted to be secret-free.
     fn log_debug(&self, tag: &str, message: &str) {
         let (tag, message) = super::log_sanitizer::sanitize_debug_log(tag, message);
         self.callback.log_debug(tag, message);
