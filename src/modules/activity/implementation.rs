@@ -2149,21 +2149,42 @@ impl ActivityDB {
         Ok(tags)
     }
 
-    /// Get all activity tags for backup
+    /// Get all activity tags for backup, across every wallet scope
     pub fn get_all_activities_tags(&self) -> Result<Vec<ActivityTags>, ActivityError> {
+        self.get_activities_tags(None)
+    }
+
+    /// Get activity tags for backup, scoped to `wallet_id` when it is `Some`
+    /// and covering every wallet scope when it is `None`.
+    pub fn get_activities_tags(
+        &self,
+        wallet_id: Option<&str>,
+    ) -> Result<Vec<ActivityTags>, ActivityError> {
+        let wallet_id = wallet_id.map(Self::normalize_wallet_id).transpose()?;
+        let wallet_filter = if wallet_id.is_some() {
+            " WHERE wallet_id = ?1"
+        } else {
+            ""
+        };
+        let sql = format!(
+            "SELECT wallet_id, activity_id, tag
+             FROM activity_tags{}
+             ORDER BY wallet_id, activity_id, tag",
+            wallet_filter
+        );
+
         let mut stmt = self
             .conn
-            .prepare(
-                "SELECT wallet_id, activity_id, tag
-                 FROM activity_tags
-                 ORDER BY wallet_id, activity_id, tag",
-            )
+            .prepare(&sql)
             .map_err(|e| ActivityError::RetrievalError {
                 error_details: format!("Failed to prepare statement: {}", e),
             })?;
 
+        let params: Vec<&String> = wallet_id.iter().collect();
         let rows: Vec<(String, String, String)> = stmt
-            .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
+            .query_map(rusqlite::params_from_iter(params), |row| {
+                Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+            })
             .map_err(|e| ActivityError::RetrievalError {
                 error_details: format!("Failed to execute query: {}", e),
             })?
@@ -2653,15 +2674,37 @@ impl ActivityDB {
         }
     }
 
-    /// Get all pre-activity metadata for backup
-    #[allow(clippy::type_complexity)]
+    /// Get all pre-activity metadata for backup, across every wallet scope
     pub fn get_all_pre_activity_metadata(&self) -> Result<Vec<PreActivityMetadata>, ActivityError> {
-        let mut stmt = self.conn.prepare(
-            "SELECT wallet_id, payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at FROM pre_activity_metadata ORDER BY wallet_id, payment_id"
-        ).map_err(|e| ActivityError::RetrievalError {
-            error_details: format!("Failed to prepare statement: {}", e),
-        })?;
+        self.get_pre_activity_metadata_list(None)
+    }
 
+    /// Get pre-activity metadata for backup, scoped to `wallet_id` when it is
+    /// `Some` and covering every wallet scope when it is `None`.
+    #[allow(clippy::type_complexity)]
+    pub fn get_pre_activity_metadata_list(
+        &self,
+        wallet_id: Option<&str>,
+    ) -> Result<Vec<PreActivityMetadata>, ActivityError> {
+        let wallet_id = wallet_id.map(Self::normalize_wallet_id).transpose()?;
+        let wallet_filter = if wallet_id.is_some() {
+            " WHERE wallet_id = ?1"
+        } else {
+            ""
+        };
+        let sql = format!(
+            "SELECT wallet_id, payment_id, tags, payment_hash, tx_id, address, is_receive, fee_rate, is_transfer, channel_id, created_at FROM pre_activity_metadata{} ORDER BY wallet_id, payment_id",
+            wallet_filter
+        );
+
+        let mut stmt = self
+            .conn
+            .prepare(&sql)
+            .map_err(|e| ActivityError::RetrievalError {
+                error_details: format!("Failed to prepare statement: {}", e),
+            })?;
+
+        let params: Vec<&String> = wallet_id.iter().collect();
         let rows: Vec<(
             String,
             String,
@@ -2675,7 +2718,7 @@ impl ActivityDB {
             Option<String>,
             i64,
         )> = stmt
-            .query_map([], |row| {
+            .query_map(rusqlite::params_from_iter(params), |row| {
                 Ok((
                     row.get(0)?,
                     row.get(1)?,

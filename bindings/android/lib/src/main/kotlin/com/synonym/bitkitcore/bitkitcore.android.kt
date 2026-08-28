@@ -1599,6 +1599,10 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1806,6 +1810,9 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 16182.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_get_activities_tags() != 33500.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_get_activity_by_id() != 28490.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -1870,6 +1877,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738.toShort()) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata_list() != 37473.toShort()) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 61117.toShort()) {
@@ -2401,6 +2411,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_get_activities_by_tag(
     ): Short
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_activities_tags(
+    ): Short
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_activity_by_id(
     ): Short
     @JvmStatic
@@ -2465,6 +2478,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_pre_activity_metadata(
+    ): Short
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_get_pre_activity_metadata_list(
     ): Short
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets(
@@ -3346,6 +3362,11 @@ internal object UniffiLib : Library {
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_activities_tags(
+        `walletId`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_get_activity_by_id(
         `walletId`: RustBufferByValue,
         `activityId`: RustBufferByValue,
@@ -3450,6 +3471,11 @@ internal object UniffiLib : Library {
         `walletId`: RustBufferByValue,
         `searchKey`: RustBufferByValue,
         `searchByAddress`: Byte,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_get_pre_activity_metadata_list(
+        `walletId`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): RustBufferByValue
     @JvmStatic
@@ -16108,6 +16134,19 @@ public fun `getActivitiesByTag`(`walletId`: kotlin.String?, `tag`: kotlin.String
     })
 }
 
+/**
+ * Activity tags for a single wallet scope, or every scope when `wallet_id` is `None`.
+ */
+@Throws(ActivityException::class)
+public fun `getActivitiesTags`(`walletId`: kotlin.String?): List<ActivityTags> {
+    return FfiConverterSequenceTypeActivityTags.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_get_activities_tags(
+            FfiConverterOptionalString.lower(`walletId`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
 @Throws(ActivityException::class)
 public fun `getActivityById`(`walletId`: kotlin.String, `activityId`: kotlin.String): Activity? {
     return FfiConverterOptionalTypeActivity.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
@@ -16383,6 +16422,19 @@ public fun `getPreActivityMetadata`(`walletId`: kotlin.String, `searchKey`: kotl
             FfiConverterString.lower(`walletId`),
             FfiConverterString.lower(`searchKey`),
             FfiConverterBoolean.lower(`searchByAddress`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Pre-activity metadata for a single wallet scope, or every scope when `wallet_id` is `None`.
+ */
+@Throws(ActivityException::class)
+public fun `getPreActivityMetadataList`(`walletId`: kotlin.String?): List<PreActivityMetadata> {
+    return FfiConverterSequenceTypePreActivityMetadata.lift(uniffiRustCallWithError(ActivityExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata_list(
+            FfiConverterOptionalString.lower(`walletId`),
             uniffiRustCallStatus,
         )
     })

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `get_activities_tags(wallet_id: Option<String>)` and `get_pre_activity_metadata_list(wallet_id: Option<String>)`, wallet-scoped reads of the two tag-backup tables where `None` returns every scope. Apps backing up a single wallet scope (for example a `trezor:{hash}` hardware wallet) can now name that scope in the call instead of fetching every scope and filtering client-side, so which records leave the device is visible in the FFI call. The unscoped `get_all_activities_tags()` and `get_all_pre_activity_metadata()` are unchanged and now delegate to the scoped versions.
+
 ## 0.5.11 - 2026-08-27
 
 - Add keep consumer rules for JNA types UniFFI needs under R8.

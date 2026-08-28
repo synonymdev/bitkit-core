@@ -752,6 +752,19 @@ pub fn get_all_activities_tags() -> Result<Vec<ActivityTags>, ActivityError> {
     db.get_all_activities_tags()
 }
 
+/// Activity tags for a single wallet scope, or every scope when `wallet_id` is `None`.
+#[uniffi::export]
+pub fn get_activities_tags(wallet_id: Option<String>) -> Result<Vec<ActivityTags>, ActivityError> {
+    let guard = get_activity_db()?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
+    db.get_activities_tags(wallet_id.as_deref())
+}
+
 #[uniffi::export]
 pub fn upsert_tags(activity_tags: Vec<ActivityTags>) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;
@@ -880,6 +893,21 @@ pub fn get_all_pre_activity_metadata() -> Result<Vec<PreActivityMetadata>, Activ
             error_details: "Database not initialized. Call init_db first.".to_string(),
         })?;
     db.get_all_pre_activity_metadata()
+}
+
+/// Pre-activity metadata for a single wallet scope, or every scope when `wallet_id` is `None`.
+#[uniffi::export]
+pub fn get_pre_activity_metadata_list(
+    wallet_id: Option<String>,
+) -> Result<Vec<PreActivityMetadata>, ActivityError> {
+    let guard = get_activity_db()?;
+    let db = guard
+        .activity_db
+        .as_ref()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
+    db.get_pre_activity_metadata_list(wallet_id.as_deref())
 }
 
 #[uniffi::export]
@@ -3010,4 +3038,142 @@ pub async fn boltz_stop_swap_updates() {
     let _ = rt
         .spawn(async move { boltz::stop_swap_updates().await })
         .await;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Drives the exported entry points through the global database, so a
+    /// wrapper that dropped `wallet_id` or fell back to an unscoped getter
+    /// would fail here even while the `ActivityDB` tests pass.
+    #[test]
+    fn test_exported_scoped_getters_preserve_wallet_id() {
+        let base_path =
+            std::env::temp_dir().join(format!("bitkitcore_lib_test_{}", rand::random::<u64>()));
+        std::fs::create_dir_all(&base_path).unwrap();
+        init_db(base_path.to_string_lossy().into_owned()).unwrap();
+
+        let hardware_wallet_id = format!("trezor:{}", "c".repeat(64));
+
+        let mut activity = OnchainActivity {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
+            id: "main_activity".to_string(),
+            tx_type: PaymentType::Sent,
+            tx_id: "main_txid".to_string(),
+            value: 50000,
+            fee: 500,
+            fee_rate: 1,
+            address: "bc1q...".to_string(),
+            confirmed: true,
+            timestamp: 1234567890,
+            is_boosted: false,
+            boost_tx_ids: vec![],
+            is_transfer: false,
+            does_exist: true,
+            confirm_timestamp: Some(1234568890),
+            channel_id: None,
+            transfer_tx_id: None,
+            contact: None,
+            created_at: None,
+            updated_at: None,
+            seen_at: None,
+        };
+        insert_activity(Activity::Onchain(activity.clone())).unwrap();
+        activity.wallet_id = hardware_wallet_id.clone();
+        activity.id = "hardware_activity".to_string();
+        activity.tx_id = "hardware_txid".to_string();
+        insert_activity(Activity::Onchain(activity)).unwrap();
+
+        upsert_tags(vec![
+            ActivityTags {
+                wallet_id: DEFAULT_WALLET_ID.to_string(),
+                activity_id: "main_activity".to_string(),
+                tags: vec!["main".to_string()],
+            },
+            ActivityTags {
+                wallet_id: hardware_wallet_id.clone(),
+                activity_id: "hardware_activity".to_string(),
+                tags: vec!["hardware".to_string()],
+            },
+        ])
+        .unwrap();
+
+        let default_tags = get_activities_tags(Some(DEFAULT_WALLET_ID.to_string())).unwrap();
+        assert_eq!(default_tags.len(), 1);
+        assert_eq!(default_tags[0].wallet_id, DEFAULT_WALLET_ID);
+        assert_eq!(default_tags[0].tags, vec!["main".to_string()]);
+
+        let hardware_tags = get_activities_tags(Some(hardware_wallet_id.clone())).unwrap();
+        assert_eq!(hardware_tags.len(), 1);
+        assert_eq!(hardware_tags[0].wallet_id, hardware_wallet_id);
+        assert_eq!(hardware_tags[0].tags, vec!["hardware".to_string()]);
+
+        let tag_scopes = |tags: &[ActivityTags]| {
+            tags.iter()
+                .map(|entry| (entry.wallet_id.clone(), entry.activity_id.clone()))
+                .collect::<Vec<_>>()
+        };
+        let all_tags = get_activities_tags(None).unwrap();
+        assert_eq!(all_tags.len(), 2);
+        assert_eq!(
+            tag_scopes(&all_tags),
+            tag_scopes(&get_all_activities_tags().unwrap())
+        );
+
+        let mut hardware_metadata = PreActivityMetadata {
+            wallet_id: DEFAULT_WALLET_ID.to_string(),
+            payment_id: "bc1qmain".to_string(),
+            tags: vec!["main".to_string()],
+            payment_hash: None,
+            tx_id: None,
+            address: None,
+            is_receive: false,
+            fee_rate: 0,
+            is_transfer: false,
+            channel_id: None,
+            created_at: 0,
+        };
+        add_pre_activity_metadata(hardware_metadata.clone()).unwrap();
+        hardware_metadata.wallet_id = hardware_wallet_id.clone();
+        hardware_metadata.payment_id = "bc1qhardware".to_string();
+        hardware_metadata.tags = vec!["hardware".to_string()];
+        add_pre_activity_metadata(hardware_metadata).unwrap();
+
+        let default_metadata =
+            get_pre_activity_metadata_list(Some(DEFAULT_WALLET_ID.to_string())).unwrap();
+        assert_eq!(default_metadata.len(), 1);
+        assert_eq!(default_metadata[0].wallet_id, DEFAULT_WALLET_ID);
+        assert_eq!(default_metadata[0].payment_id, "bc1qmain");
+
+        let hardware_metadata =
+            get_pre_activity_metadata_list(Some(hardware_wallet_id.clone())).unwrap();
+        assert_eq!(hardware_metadata.len(), 1);
+        assert_eq!(hardware_metadata[0].wallet_id, hardware_wallet_id);
+        assert_eq!(hardware_metadata[0].payment_id, "bc1qhardware");
+
+        let metadata_scopes = |metadata: &[PreActivityMetadata]| {
+            metadata
+                .iter()
+                .map(|entry| (entry.wallet_id.clone(), entry.payment_id.clone()))
+                .collect::<Vec<_>>()
+        };
+        let all_metadata = get_pre_activity_metadata_list(None).unwrap();
+        assert_eq!(all_metadata.len(), 2);
+        assert_eq!(
+            metadata_scopes(&all_metadata),
+            metadata_scopes(&get_all_pre_activity_metadata().unwrap())
+        );
+
+        assert!(get_activities_tags(Some("ledger:unknown".to_string()))
+            .unwrap()
+            .is_empty());
+        assert!(
+            get_pre_activity_metadata_list(Some("ledger:unknown".to_string()))
+                .unwrap()
+                .is_empty()
+        );
+
+        std::fs::remove_dir_all(&base_path).ok();
+    }
 }

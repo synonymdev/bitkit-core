@@ -71,6 +71,9 @@ fn add_tags(wallet_id: String, activity_id: String, tags: Vec<String>) -> Result
 fn remove_tags(wallet_id: String, activity_id: String, tags: Vec<String>) -> Result<(), ActivityError>
 fn get_tags(wallet_id: String, activity_id: String) -> Result<Vec<String>, ActivityError>
 fn get_all_unique_tags() -> Result<Vec<String>, ActivityError>
+fn get_all_activities_tags() -> Result<Vec<ActivityTags>, ActivityError>
+// Wallet-scoped tag read; `None` returns every wallet scope
+fn get_activities_tags(wallet_id: Option<String>) -> Result<Vec<ActivityTags>, ActivityError>
 
 // Pre-activity metadata
 fn add_pre_activity_metadata(pre_activity_metadata: PreActivityMetadata) -> Result<(), ActivityError>
@@ -85,6 +88,8 @@ fn get_pre_activity_metadata(
   search_by_address: bool
 ) -> Result<Option<PreActivityMetadata>, ActivityError>
 fn get_all_pre_activity_metadata() -> Result<Vec<PreActivityMetadata>, ActivityError>
+// Wallet-scoped metadata read; `None` returns every wallet scope
+fn get_pre_activity_metadata_list(wallet_id: Option<String>) -> Result<Vec<PreActivityMetadata>, ActivityError>
 
 // Transaction details
 fn upsert_transaction_details(details_list: Vec<TransactionDetails>) -> Result<(), ActivityError>

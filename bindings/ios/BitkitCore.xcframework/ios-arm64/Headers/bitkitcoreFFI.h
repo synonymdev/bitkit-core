@@ -849,6 +849,11 @@ RustBuffer uniffi_bitkitcore_fn_func_get_activities(RustBuffer wallet_id, RustBu
 RustBuffer uniffi_bitkitcore_fn_func_get_activities_by_tag(RustBuffer wallet_id, RustBuffer tag, RustBuffer limit, RustBuffer sort_direction, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES_TAGS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITIES_TAGS
+RustBuffer uniffi_bitkitcore_fn_func_get_activities_tags(RustBuffer wallet_id, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITY_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_ACTIVITY_BY_ID
 RustBuffer uniffi_bitkitcore_fn_func_get_activity_by_id(RustBuffer wallet_id, RustBuffer activity_id, RustCallStatus *_Nonnull out_status
@@ -964,6 +969,11 @@ uint64_t uniffi_bitkitcore_fn_func_get_payment(RustBuffer payment_id
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PRE_ACTIVITY_METADATA
 RustBuffer uniffi_bitkitcore_fn_func_get_pre_activity_metadata(RustBuffer wallet_id, RustBuffer search_key, int8_t search_by_address, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PRE_ACTIVITY_METADATA_LIST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_PRE_ACTIVITY_METADATA_LIST
+RustBuffer uniffi_bitkitcore_fn_func_get_pre_activity_metadata_list(RustBuffer wallet_id, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_GET_SUPPORTED_HARDWARE_WALLETS
@@ -2104,6 +2114,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_activities_by_tag(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ACTIVITIES_TAGS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ACTIVITIES_TAGS
+uint16_t uniffi_bitkitcore_checksum_func_get_activities_tags(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ACTIVITY_BY_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_ACTIVITY_BY_ID
 uint16_t uniffi_bitkitcore_checksum_func_get_activity_by_id(void
@@ -2233,6 +2249,12 @@ uint16_t uniffi_bitkitcore_checksum_func_get_payment(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA
 uint16_t uniffi_bitkitcore_checksum_func_get_pre_activity_metadata(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA_LIST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_GET_PRE_ACTIVITY_METADATA_LIST
+uint16_t uniffi_bitkitcore_checksum_func_get_pre_activity_metadata_list(void
     
 );
 #endif

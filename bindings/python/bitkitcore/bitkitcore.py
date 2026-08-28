@@ -573,6 +573,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 16182:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_activities_tags() != 33500:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 28490:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activity_by_tx_id() != 28432:
@@ -616,6 +618,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_get_payment() != 29170:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata_list() != 37473:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 61117:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -1536,6 +1540,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_tags.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_tags.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1643,6 +1652,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata_list.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata_list.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_supported_hardware_wallets.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -2587,6 +2601,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities.restype = ctypes.c_uin
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_by_tag.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_by_tag.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_tags.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_tags.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.restype = ctypes.c_uint16
@@ -2653,6 +2670,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_payment.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata_list.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata_list.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets.restype = ctypes.c_uint16
@@ -22760,6 +22780,17 @@ def get_activities_by_tag(wallet_id: "typing.Optional[str]",tag: "str",limit: "t
         _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)))
 
 
+def get_activities_tags(wallet_id: "typing.Optional[str]") -> "typing.List[ActivityTags]":
+    """
+    Activity tags for a single wallet scope, or every scope when `wallet_id` is `None`.
+    """
+
+    _UniffiConverterOptionalString.check_lower(wallet_id)
+    
+    return _UniffiConverterSequenceTypeActivityTags.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_tags,
+        _UniffiConverterOptionalString.lower(wallet_id)))
+
+
 def get_activity_by_id(wallet_id: "str",activity_id: "str") -> "typing.Optional[Activity]":
     _UniffiConverterString.check_lower(wallet_id)
     
@@ -23012,6 +23043,17 @@ def get_pre_activity_metadata(wallet_id: "str",search_key: "str",search_by_addre
         _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(search_key),
         _UniffiConverterBool.lower(search_by_address)))
+
+
+def get_pre_activity_metadata_list(wallet_id: "typing.Optional[str]") -> "typing.List[PreActivityMetadata]":
+    """
+    Pre-activity metadata for a single wallet scope, or every scope when `wallet_id` is `None`.
+    """
+
+    _UniffiConverterOptionalString.check_lower(wallet_id)
+    
+    return _UniffiConverterSequenceTypePreActivityMetadata.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata_list,
+        _UniffiConverterOptionalString.lower(wallet_id)))
 
 
 def get_supported_hardware_wallets() -> "typing.List[SupportedHardwareWallet]":
@@ -24898,6 +24940,7 @@ __all__ = [
     "generate_mnemonic",
     "get_activities",
     "get_activities_by_tag",
+    "get_activities_tags",
     "get_activity_by_id",
     "get_activity_by_tx_id",
     "get_all_activities_tags",
@@ -24920,6 +24963,7 @@ __all__ = [
     "get_orders",
     "get_payment",
     "get_pre_activity_metadata",
+    "get_pre_activity_metadata_list",
     "get_supported_hardware_wallets",
     "get_tags",
     "get_transaction_details",

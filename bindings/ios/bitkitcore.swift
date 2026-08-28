@@ -23818,6 +23818,16 @@ public func getActivitiesByTag(walletId: String?, tag: String, limit: UInt32?, s
     )
 })
 }
+/**
+ * Activity tags for a single wallet scope, or every scope when `wallet_id` is `None`.
+ */
+public func getActivitiesTags(walletId: String?)throws  -> [ActivityTags]  {
+    return try  FfiConverterSequenceTypeActivityTags.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_get_activities_tags(
+        FfiConverterOptionString.lower(walletId),$0
+    )
+})
+}
 public func getActivityById(walletId: String, activityId: String)throws  -> Activity?  {
     return try  FfiConverterOptionTypeActivity.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_get_activity_by_id(
@@ -24027,6 +24037,16 @@ public func getPreActivityMetadata(walletId: String, searchKey: String, searchBy
         FfiConverterString.lower(walletId),
         FfiConverterString.lower(searchKey),
         FfiConverterBool.lower(searchByAddress),$0
+    )
+})
+}
+/**
+ * Pre-activity metadata for a single wallet scope, or every scope when `wallet_id` is `None`.
+ */
+public func getPreActivityMetadataList(walletId: String?)throws  -> [PreActivityMetadata]  {
+    return try  FfiConverterSequenceTypePreActivityMetadata.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_get_pre_activity_metadata_list(
+        FfiConverterOptionString.lower(walletId),$0
     )
 })
 }
@@ -25482,6 +25502,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 16182) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_get_activities_tags() != 33500) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_get_activity_by_id() != 28490) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -25546,6 +25569,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata_list() != 37473) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 61117) {
