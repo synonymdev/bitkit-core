@@ -17649,6 +17649,8 @@ class WatcherEvent:
         wallet's perspective, and DB-valid timestamps, so the app can store them
         directly through the normal Core activity APIs (e.g. `upsert_activity` /
         `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
+        `next_unused_external_address` is the synchronized wallet's current
+        external receive address.
         """
 
         activities: "typing.List[Activity]"
@@ -17657,17 +17659,19 @@ class WatcherEvent:
         tx_count: "int"
         block_height: "int"
         account_type: "AccountType"
+        next_unused_external_address: "AddressInfo"
 
-        def __init__(self,activities: "typing.List[Activity]", transaction_details: "typing.List[TransactionDetails]", balance: "WalletBalance", tx_count: "int", block_height: "int", account_type: "AccountType"):
+        def __init__(self,activities: "typing.List[Activity]", transaction_details: "typing.List[TransactionDetails]", balance: "WalletBalance", tx_count: "int", block_height: "int", account_type: "AccountType", next_unused_external_address: "AddressInfo"):
             self.activities = activities
             self.transaction_details = transaction_details
             self.balance = balance
             self.tx_count = tx_count
             self.block_height = block_height
             self.account_type = account_type
+            self.next_unused_external_address = next_unused_external_address
 
         def __str__(self):
-            return "WatcherEvent.TRANSACTIONS_CHANGED(activities={}, transaction_details={}, balance={}, tx_count={}, block_height={}, account_type={})".format(self.activities, self.transaction_details, self.balance, self.tx_count, self.block_height, self.account_type)
+            return "WatcherEvent.TRANSACTIONS_CHANGED(activities={}, transaction_details={}, balance={}, tx_count={}, block_height={}, account_type={}, next_unused_external_address={})".format(self.activities, self.transaction_details, self.balance, self.tx_count, self.block_height, self.account_type, self.next_unused_external_address)
 
         def __eq__(self, other):
             if not other.is_TRANSACTIONS_CHANGED():
@@ -17683,6 +17687,8 @@ class WatcherEvent:
             if self.block_height != other.block_height:
                 return False
             if self.account_type != other.account_type:
+                return False
+            if self.next_unused_external_address != other.next_unused_external_address:
                 return False
             return True
     
@@ -17788,6 +17794,7 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
                 _UniffiConverterUInt32.read(buf),
                 _UniffiConverterUInt32.read(buf),
                 _UniffiConverterTypeAccountType.read(buf),
+                _UniffiConverterTypeAddressInfo.read(buf),
             )
         if variant == 2:
             return WatcherEvent.ERROR(
@@ -17811,6 +17818,7 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
             _UniffiConverterUInt32.check_lower(value.tx_count)
             _UniffiConverterUInt32.check_lower(value.block_height)
             _UniffiConverterTypeAccountType.check_lower(value.account_type)
+            _UniffiConverterTypeAddressInfo.check_lower(value.next_unused_external_address)
             return
         if value.is_ERROR():
             _UniffiConverterString.check_lower(value.message)
@@ -17832,6 +17840,7 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
             _UniffiConverterUInt32.write(value.tx_count, buf)
             _UniffiConverterUInt32.write(value.block_height, buf)
             _UniffiConverterTypeAccountType.write(value.account_type, buf)
+            _UniffiConverterTypeAddressInfo.write(value.next_unused_external_address, buf)
         if value.is_ERROR():
             buf.write_i32(2)
             _UniffiConverterString.write(value.message, buf)
