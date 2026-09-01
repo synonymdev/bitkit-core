@@ -91,5 +91,3 @@ cd ./bindings/android
 ```
 
 Run `./build_android.sh` before any direct Gradle publish so `jniLibs` is regenerated as stripped release libraries with separate `native-debug-symbols.zip` metadata and 16 KB page-size alignment.
-
-The build also verifies widened UniFFI unsigned return carriers and writes `release-manifest.json`. The manifest records the exact Bitkit Core and Gobley revisions plus SHA-256 hashes for the release AAR, debug-symbol archive, and every supported ABI library. Both metadata files are attached to the Maven publication and GitHub release.

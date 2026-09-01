@@ -66,17 +66,6 @@ jobs:
         fi
         echo "version=${VERSION#v}" >> "$GITHUB_OUTPUT"
 
-    - name: Verify release version
-      shell: bash
-      env:
-        PUBLISH_VERSION: ${{ steps.version.outputs.version }}
-      run: |
-        CARGO_VERSION=$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -n 1)
-        if [[ "$PUBLISH_VERSION" != "$CARGO_VERSION" ]]; then
-          echo "Publish version $PUBLISH_VERSION does not match Cargo version $CARGO_VERSION" >&2
-          exit 1
-        fi
-
     - name: Generate Android bindings
       run: ./build_android.sh
 
@@ -90,21 +79,11 @@ jobs:
         name: bitkit-core-native-debug-symbols-${{ steps.version.outputs.version }}
         path: bindings/android/native-debug-symbols.zip
 
-    - name: Upload Android release manifest artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: bitkit-core-android-release-manifest-${{ steps.version.outputs.version }}
-        path: bindings/android/release-manifest.json
-
-    - name: Upload Android release metadata
+    - name: Upload native debug symbols to release
       if: github.event_name == 'release'
       env:
         GH_TOKEN: ${{ github.token }}
-      run: >-
-        gh release upload "${{ github.event.release.tag_name }}"
-        bindings/android/native-debug-symbols.zip
-        bindings/android/release-manifest.json
-        --clobber
+      run: gh release upload "${{ github.event.release.tag_name }}" bindings/android/native-debug-symbols.zip --clobber
 
     # same credentials env vars used in the publishing section of build.gradle.kts
     - name: Publish to GitHub Packages
