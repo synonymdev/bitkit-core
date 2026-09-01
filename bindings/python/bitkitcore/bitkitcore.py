@@ -573,6 +573,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 16182:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_activities_tags() != 33500:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activity_by_id() != 28490:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_activity_by_tx_id() != 28432:
@@ -616,6 +618,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_bitkitcore_checksum_func_get_payment() != 29170:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata_list() != 37473:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 61117:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -1536,6 +1540,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activities_by_tag.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_tags.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_tags.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_activity_by_id.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -1643,6 +1652,11 @@ _UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata_list.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata_list.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_bitkitcore_fn_func_get_supported_hardware_wallets.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -2587,6 +2601,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities.restype = ctypes.c_uin
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_by_tag.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_by_tag.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_tags.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_activities_tags.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_activity_by_id.restype = ctypes.c_uint16
@@ -2653,6 +2670,9 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_get_payment.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata_list.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_get_pre_activity_metadata_list.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets.restype = ctypes.c_uint16
@@ -17629,6 +17649,8 @@ class WatcherEvent:
         wallet's perspective, and DB-valid timestamps, so the app can store them
         directly through the normal Core activity APIs (e.g. `upsert_activity` /
         `upsert_transaction_details`). The two vecs are parallel by `tx_id`.
+        `next_unused_external_address` is the synchronized wallet's current
+        external receive address.
         """
 
         activities: "typing.List[Activity]"
@@ -17637,17 +17659,19 @@ class WatcherEvent:
         tx_count: "int"
         block_height: "int"
         account_type: "AccountType"
+        next_unused_external_address: "AddressInfo"
 
-        def __init__(self,activities: "typing.List[Activity]", transaction_details: "typing.List[TransactionDetails]", balance: "WalletBalance", tx_count: "int", block_height: "int", account_type: "AccountType"):
+        def __init__(self,activities: "typing.List[Activity]", transaction_details: "typing.List[TransactionDetails]", balance: "WalletBalance", tx_count: "int", block_height: "int", account_type: "AccountType", next_unused_external_address: "AddressInfo"):
             self.activities = activities
             self.transaction_details = transaction_details
             self.balance = balance
             self.tx_count = tx_count
             self.block_height = block_height
             self.account_type = account_type
+            self.next_unused_external_address = next_unused_external_address
 
         def __str__(self):
-            return "WatcherEvent.TRANSACTIONS_CHANGED(activities={}, transaction_details={}, balance={}, tx_count={}, block_height={}, account_type={})".format(self.activities, self.transaction_details, self.balance, self.tx_count, self.block_height, self.account_type)
+            return "WatcherEvent.TRANSACTIONS_CHANGED(activities={}, transaction_details={}, balance={}, tx_count={}, block_height={}, account_type={}, next_unused_external_address={})".format(self.activities, self.transaction_details, self.balance, self.tx_count, self.block_height, self.account_type, self.next_unused_external_address)
 
         def __eq__(self, other):
             if not other.is_TRANSACTIONS_CHANGED():
@@ -17663,6 +17687,8 @@ class WatcherEvent:
             if self.block_height != other.block_height:
                 return False
             if self.account_type != other.account_type:
+                return False
+            if self.next_unused_external_address != other.next_unused_external_address:
                 return False
             return True
     
@@ -17768,6 +17794,7 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
                 _UniffiConverterUInt32.read(buf),
                 _UniffiConverterUInt32.read(buf),
                 _UniffiConverterTypeAccountType.read(buf),
+                _UniffiConverterTypeAddressInfo.read(buf),
             )
         if variant == 2:
             return WatcherEvent.ERROR(
@@ -17791,6 +17818,7 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
             _UniffiConverterUInt32.check_lower(value.tx_count)
             _UniffiConverterUInt32.check_lower(value.block_height)
             _UniffiConverterTypeAccountType.check_lower(value.account_type)
+            _UniffiConverterTypeAddressInfo.check_lower(value.next_unused_external_address)
             return
         if value.is_ERROR():
             _UniffiConverterString.check_lower(value.message)
@@ -17812,6 +17840,7 @@ class _UniffiConverterTypeWatcherEvent(_UniffiConverterRustBuffer):
             _UniffiConverterUInt32.write(value.tx_count, buf)
             _UniffiConverterUInt32.write(value.block_height, buf)
             _UniffiConverterTypeAccountType.write(value.account_type, buf)
+            _UniffiConverterTypeAddressInfo.write(value.next_unused_external_address, buf)
         if value.is_ERROR():
             buf.write_i32(2)
             _UniffiConverterString.write(value.message, buf)
@@ -22751,6 +22780,17 @@ def get_activities_by_tag(wallet_id: "typing.Optional[str]",tag: "str",limit: "t
         _UniffiConverterOptionalTypeSortDirection.lower(sort_direction)))
 
 
+def get_activities_tags(wallet_id: "typing.Optional[str]") -> "typing.List[ActivityTags]":
+    """
+    Activity tags for a single wallet scope, or every scope when `wallet_id` is `None`.
+    """
+
+    _UniffiConverterOptionalString.check_lower(wallet_id)
+    
+    return _UniffiConverterSequenceTypeActivityTags.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_activities_tags,
+        _UniffiConverterOptionalString.lower(wallet_id)))
+
+
 def get_activity_by_id(wallet_id: "str",activity_id: "str") -> "typing.Optional[Activity]":
     _UniffiConverterString.check_lower(wallet_id)
     
@@ -23003,6 +23043,17 @@ def get_pre_activity_metadata(wallet_id: "str",search_key: "str",search_by_addre
         _UniffiConverterString.lower(wallet_id),
         _UniffiConverterString.lower(search_key),
         _UniffiConverterBool.lower(search_by_address)))
+
+
+def get_pre_activity_metadata_list(wallet_id: "typing.Optional[str]") -> "typing.List[PreActivityMetadata]":
+    """
+    Pre-activity metadata for a single wallet scope, or every scope when `wallet_id` is `None`.
+    """
+
+    _UniffiConverterOptionalString.check_lower(wallet_id)
+    
+    return _UniffiConverterSequenceTypePreActivityMetadata.lift(_uniffi_rust_call_with_error(_UniffiConverterTypeActivityError,_UniffiLib.uniffi_bitkitcore_fn_func_get_pre_activity_metadata_list,
+        _UniffiConverterOptionalString.lower(wallet_id)))
 
 
 def get_supported_hardware_wallets() -> "typing.List[SupportedHardwareWallet]":
@@ -24889,6 +24940,7 @@ __all__ = [
     "generate_mnemonic",
     "get_activities",
     "get_activities_by_tag",
+    "get_activities_tags",
     "get_activity_by_id",
     "get_activity_by_tx_id",
     "get_all_activities_tags",
@@ -24911,6 +24963,7 @@ __all__ = [
     "get_orders",
     "get_payment",
     "get_pre_activity_metadata",
+    "get_pre_activity_metadata_list",
     "get_supported_hardware_wallets",
     "get_tags",
     "get_transaction_details",

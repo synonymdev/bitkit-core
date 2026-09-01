@@ -3545,6 +3545,71 @@ mod tests {
     }
 
     #[test]
+    fn test_get_activities_tags_wallet_scoped() {
+        let (mut db, db_path) = setup();
+        let hardware_wallet_id = format!("trezor:{}", "a".repeat(64));
+
+        let mut main = create_test_onchain_activity();
+        main.id = "main_activity".to_string();
+        main.tx_id = "main_scoped_tags_txid".to_string();
+
+        let mut hardware = create_test_onchain_activity();
+        hardware.wallet_id = hardware_wallet_id.clone();
+        hardware.id = "hardware_activity".to_string();
+        hardware.tx_id = "hardware_scoped_tags_txid".to_string();
+
+        db.insert_onchain_activity(&main).unwrap();
+        db.insert_onchain_activity(&hardware).unwrap();
+
+        db.add_tags(DEFAULT_WALLET_ID, &main.id, &["main".to_string()])
+            .unwrap();
+        db.add_tags(&hardware_wallet_id, &hardware.id, &["hardware".to_string()])
+            .unwrap();
+
+        let default_scope = db.get_activities_tags(Some(DEFAULT_WALLET_ID)).unwrap();
+        assert_eq!(default_scope.len(), 1);
+        assert_eq!(default_scope[0].wallet_id, DEFAULT_WALLET_ID);
+        assert_eq!(default_scope[0].activity_id, main.id);
+        assert_eq!(default_scope[0].tags, vec!["main".to_string()]);
+
+        let hardware_scope = db.get_activities_tags(Some(&hardware_wallet_id)).unwrap();
+        assert_eq!(hardware_scope.len(), 1);
+        assert_eq!(hardware_scope[0].wallet_id, hardware_wallet_id);
+        assert_eq!(hardware_scope[0].activity_id, hardware.id);
+        assert_eq!(hardware_scope[0].tags, vec!["hardware".to_string()]);
+
+        // None means every scope, matching the legacy unscoped getter.
+        let scope_ids = |tags: &[ActivityTags]| {
+            tags.iter()
+                .map(|entry| (entry.wallet_id.clone(), entry.activity_id.clone()))
+                .collect::<Vec<_>>()
+        };
+        let all_scopes = db.get_activities_tags(None).unwrap();
+        assert_eq!(all_scopes.len(), 2);
+        assert_eq!(
+            scope_ids(&all_scopes),
+            scope_ids(&db.get_all_activities_tags().unwrap())
+        );
+
+        // An unknown scope leaks nothing.
+        assert!(db
+            .get_activities_tags(Some("ledger:unknown"))
+            .unwrap()
+            .is_empty());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_activities_tags_rejects_blank_wallet_id() {
+        let (db, db_path) = setup();
+
+        assert!(db.get_activities_tags(Some("   ")).is_err());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
     fn test_get_all_activities_tags_empty() {
         let (db, db_path) = setup();
 
@@ -5583,6 +5648,74 @@ mod tests {
         assert_eq!(invoice_tags.tags.len(), 2);
         assert!(invoice_tags.tags.contains(&"tag4".to_string()));
         assert!(invoice_tags.tags.contains(&"tag5".to_string()));
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_pre_activity_metadata_list_wallet_scoped() {
+        let (mut db, db_path) = setup();
+        let hardware_wallet_id = format!("trezor:{}", "b".repeat(64));
+
+        db.add_pre_activity_metadata(&create_test_pre_activity_metadata(
+            "bc1qmain".to_string(),
+            ActivityType::Onchain,
+            vec!["main".to_string()],
+        ))
+        .unwrap();
+
+        let mut hardware = create_test_pre_activity_metadata(
+            "bc1qhardware".to_string(),
+            ActivityType::Onchain,
+            vec!["hardware".to_string()],
+        );
+        hardware.wallet_id = hardware_wallet_id.clone();
+        db.add_pre_activity_metadata(&hardware).unwrap();
+
+        let default_scope = db
+            .get_pre_activity_metadata_list(Some(DEFAULT_WALLET_ID))
+            .unwrap();
+        assert_eq!(default_scope.len(), 1);
+        assert_eq!(default_scope[0].wallet_id, DEFAULT_WALLET_ID);
+        assert_eq!(default_scope[0].payment_id, "bc1qmain");
+        assert_eq!(default_scope[0].tags, vec!["main".to_string()]);
+
+        let hardware_scope = db
+            .get_pre_activity_metadata_list(Some(&hardware_wallet_id))
+            .unwrap();
+        assert_eq!(hardware_scope.len(), 1);
+        assert_eq!(hardware_scope[0].wallet_id, hardware_wallet_id);
+        assert_eq!(hardware_scope[0].payment_id, "bc1qhardware");
+        assert_eq!(hardware_scope[0].tags, vec!["hardware".to_string()]);
+
+        // None means every scope, matching the legacy unscoped getter.
+        let scope_ids = |metadata: &[PreActivityMetadata]| {
+            metadata
+                .iter()
+                .map(|entry| (entry.wallet_id.clone(), entry.payment_id.clone()))
+                .collect::<Vec<_>>()
+        };
+        let all_scopes = db.get_pre_activity_metadata_list(None).unwrap();
+        assert_eq!(all_scopes.len(), 2);
+        assert_eq!(
+            scope_ids(&all_scopes),
+            scope_ids(&db.get_all_pre_activity_metadata().unwrap())
+        );
+
+        // An unknown scope leaks nothing.
+        assert!(db
+            .get_pre_activity_metadata_list(Some("ledger:unknown"))
+            .unwrap()
+            .is_empty());
+
+        cleanup(&db_path);
+    }
+
+    #[test]
+    fn test_get_pre_activity_metadata_list_rejects_blank_wallet_id() {
+        let (db, db_path) = setup();
+
+        assert!(db.get_pre_activity_metadata_list(Some("   ")).is_err());
 
         cleanup(&db_path);
     }
