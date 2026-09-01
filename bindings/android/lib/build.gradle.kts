@@ -174,8 +174,51 @@ val validateConsumerKeepRules by tasks.registering {
     }
 }
 
+val validateReleaseManifest by tasks.registering {
+    group = "verification"
+    description = "Validates Android release provenance and artifact hashes are present."
+
+    val releaseManifest = rootProject.layout.projectDirectory.file("release-manifest.json")
+    inputs.file(releaseManifest)
+
+    doLast {
+        val file = releaseManifest.asFile
+        if (!file.isFile || file.readText().isBlank()) {
+            throw GradleException("Android release manifest missing at '${file.path}'")
+        }
+
+        val text = file.readText()
+        val requiredKeys = listOf(
+            "sourceRevision",
+            "gobleyRevision",
+            "androidAar",
+            "nativeDebugSymbols",
+            "armeabi-v7a",
+            "arm64-v8a",
+            "x86",
+            "x86_64",
+        )
+        val missingKeys = requiredKeys.filterNot { "\"$it\"" in text }
+        if (missingKeys.isNotEmpty()) {
+            throw GradleException("Android release manifest is missing keys: $missingKeys")
+        }
+
+        val hashes = Regex("\"sha256\"\\s*:\\s*\"[0-9a-f]{64}\"").findAll(text).count()
+        val nativeHashes = Regex("\"(?:armeabi-v7a|arm64-v8a|x86|x86_64)\"\\s*:\\s*\"[0-9a-f]{64}\"")
+            .findAll(text)
+            .count()
+        if (hashes != 2 || nativeHashes != androidNativeAbis.size) {
+            throw GradleException("Android release manifest does not contain every required SHA-256 hash")
+        }
+    }
+}
+
 tasks.matching { it.name == "bundleReleaseAar" || it.name.startsWith("publish") }.configureEach {
     dependsOn(validateReleaseNativeLibraries, validateConsumerKeepRules)
+}
+
+tasks.matching { it.name.startsWith("publish") }.configureEach {
+    dependsOn(validateReleaseManifest)
 }
 
 tasks.matching { it.name == "bundleReleaseAar" }.configureEach {
@@ -219,6 +262,10 @@ afterEvaluate {
                 artifact(rootProject.layout.projectDirectory.file("native-debug-symbols.zip")) {
                     classifier = "native-debug-symbols"
                     extension = "zip"
+                }
+                artifact(rootProject.layout.projectDirectory.file("release-manifest.json")) {
+                    classifier = "release-manifest"
+                    extension = "json"
                 }
                 pom {
                     name.set(mavenArtifactId)

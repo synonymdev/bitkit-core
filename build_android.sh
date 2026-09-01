@@ -34,9 +34,18 @@ set -e  # Exit immediately if a command exits with a non-zero status.
 
 echo "Starting Android build process..."
 
-# Install gobley-uniffi-bindgen from fork with patched version
-echo "Installing gobley-uniffi-bindgen fork..."
-cargo install --git https://github.com/ovitrif/gobley.git gobley-uniffi-bindgen --force
+# Install the reviewed Gobley revision that widens direct unsigned JVM returns.
+GOBLEY_REPOSITORY="https://github.com/ovitrif/gobley.git"
+GOBLEY_REVISION="6ef7aea8974a90ab9fb50774b0dbd1a787f093aa"
+echo "Installing gobley-uniffi-bindgen at $GOBLEY_REVISION..."
+cargo install --git "$GOBLEY_REPOSITORY" --rev "$GOBLEY_REVISION" gobley-uniffi-bindgen --force
+
+SOURCE_REVISION=$(git rev-parse HEAD)
+if [ -z "$(git status --porcelain --untracked-files=normal)" ]; then
+    SOURCE_DIRTY=false
+else
+    SOURCE_DIRTY=true
+fi
 
 #TODO: Remove this section when example/main.rs builds successfully
 # Store example/main.rs content in memory and remove the file
@@ -70,6 +79,7 @@ ANDROID_LIB_DIR="./bindings/android"
 BASE_DIR="$ANDROID_LIB_DIR/lib/src/main/kotlin/com/synonym/bitkitcore"
 JNILIBS_DIR="$ANDROID_LIB_DIR/lib/src/main/jniLibs"
 NATIVE_DEBUG_SYMBOLS_ZIP="$ANDROID_LIB_DIR/native-debug-symbols.zip"
+ANDROID_RELEASE_MANIFEST="$ANDROID_LIB_DIR/release-manifest.json"
 
 # Create output directories
 mkdir -p "$BASE_DIR"
@@ -261,6 +271,139 @@ validate_android_aar_symbols() {
     rm -rf "$tmp_dir"
 }
 
+verify_android_bindings() {
+    bindings_file="$BASE_DIR/bitkitcore.android.kt"
+
+    python3 - "$bindings_file" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+bindings_path = Path(sys.argv[1])
+bindings = bindings_path.read_text()
+signatures = dict(
+    re.findall(
+        r"external fun\s+(\w+)\s*\([^)]*\)\s*:\s*([A-Za-z0-9_.]+)",
+        bindings,
+        re.DOTALL,
+    )
+)
+
+checksum_returns = {
+    name: return_type
+    for name, return_type in signatures.items()
+    if "_checksum_" in name
+}
+if not checksum_returns:
+    raise SystemExit("Error: no generated UniFFI checksum externs found")
+
+unsigned_direct_returns = dict(checksum_returns)
+for suffix in ("rust_future_complete_u8", "rust_future_complete_u16"):
+    matches = {
+        name: return_type
+        for name, return_type in signatures.items()
+        if name.endswith(suffix)
+    }
+    if len(matches) != 1:
+        raise SystemExit(f"Error: expected one generated {suffix} extern, found {len(matches)}")
+    unsigned_direct_returns.update(matches)
+
+narrowed = {
+    name: return_type
+    for name, return_type in unsigned_direct_returns.items()
+    if return_type != "Int"
+}
+if narrowed:
+    details = ", ".join(f"{name}: {return_type}" for name, return_type in sorted(narrowed.items()))
+    raise SystemExit(f"Error: unsigned direct returns must use Int carriers: {details}")
+
+comparison_pattern = re.compile(
+    r"if\s*\(\s*(\w+_checksum_\w+)\(\)\s*!=\s*(\d+)(\.to(?:Byte|Short)\(\))?\s*\)"
+)
+comparisons = comparison_pattern.findall(bindings)
+comparison_names = {name for name, _, _ in comparisons}
+if comparison_names != set(checksum_returns):
+    missing = sorted(set(checksum_returns) - comparison_names)
+    extra = sorted(comparison_names - set(checksum_returns))
+    raise SystemExit(f"Error: checksum comparisons do not match externs; missing={missing}, extra={extra}")
+
+narrowed_literals = sorted(name for name, _, conversion in comparisons if conversion)
+if narrowed_literals:
+    raise SystemExit(
+        "Error: checksum literals must remain positive Int values: " + ", ".join(narrowed_literals)
+    )
+
+if max(int(value) for _, value, _ in comparisons) <= 32767:
+    raise SystemExit("Error: checksum guard requires a generated value above 32767")
+
+for converter in ("UByte", "UShort"):
+    if f"object FfiConverter{converter}" not in bindings:
+        continue
+    if not re.search(
+        rf"object FfiConverter{converter}.*?fun lift\(value: Int\): {converter}",
+        bindings,
+        re.DOTALL,
+    ):
+        raise SystemExit(f"Error: FfiConverter{converter} does not lift the Int return carrier")
+
+print(
+    f"Verified {len(checksum_returns)} checksum externs and unsigned future helpers use Int carriers"
+)
+PY
+}
+
+sha256_file() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | awk '{ print $1 }'
+        return
+    fi
+
+    if command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$1" | awk '{ print $1 }'
+        return
+    fi
+
+    echo "Error: sha256sum or shasum is required to create the Android release manifest" >&2
+    exit 1
+}
+
+create_android_release_manifest() {
+    aar=$(find "$ANDROID_LIB_DIR" -path '*/build/outputs/aar/*release.aar' -print | head -n 1)
+    if [ -z "$aar" ]; then
+        echo "Error: Android release AAR missing under $ANDROID_LIB_DIR"
+        exit 1
+    fi
+
+    cat > "$ANDROID_RELEASE_MANIFEST" <<EOF
+{
+  "version": "$CARGO_VERSION",
+  "sourceRevision": "$SOURCE_REVISION",
+  "sourceDirty": $SOURCE_DIRTY,
+  "gobleyRepository": "$GOBLEY_REPOSITORY",
+  "gobleyRevision": "$GOBLEY_REVISION",
+  "artifacts": {
+    "androidAar": {
+      "path": "${aar#./}",
+      "sha256": "$(sha256_file "$aar")"
+    },
+    "nativeDebugSymbols": {
+      "path": "${NATIVE_DEBUG_SYMBOLS_ZIP#./}",
+      "sha256": "$(sha256_file "$NATIVE_DEBUG_SYMBOLS_ZIP")"
+    },
+    "nativeLibraries": {
+      "armeabi-v7a": "$(sha256_file "$JNILIBS_DIR/armeabi-v7a/libbitkitcore.so")",
+      "arm64-v8a": "$(sha256_file "$JNILIBS_DIR/arm64-v8a/libbitkitcore.so")",
+      "x86": "$(sha256_file "$JNILIBS_DIR/x86/libbitkitcore.so")",
+      "x86_64": "$(sha256_file "$JNILIBS_DIR/x86_64/libbitkitcore.so")"
+    }
+  }
+}
+EOF
+
+    echo "Android release manifest:"
+    cat "$ANDROID_RELEASE_MANIFEST"
+}
+
 host_library_path() {
     case "$(uname -s)" in
         Darwin)
@@ -363,6 +506,8 @@ if [ ! -f "$BASE_DIR/bitkitcore.android.kt" ] || [ ! -f "$BASE_DIR/bitkitcore.co
     exit 1
 fi
 
+verify_android_bindings
+
 echo "Generated Kotlin bindings:"
 ls -la "$BASE_DIR"
 
@@ -372,9 +517,13 @@ CARGO_VERSION=$(grep '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/' |
 sed -i.bak "s/^version=.*/version=$CARGO_VERSION/" "$ANDROID_LIB_DIR/gradle.properties"
 rm -f "$ANDROID_LIB_DIR/gradle.properties.bak"
 
-# Verify android library publish
-echo "Testing android library publish to Maven Local..."
-"$ANDROID_LIB_DIR"/gradlew --project-dir "$ANDROID_LIB_DIR" clean publishToMavenLocal
+# Verify the Android release package, then record and publish its provenance.
+echo "Building Android release AAR..."
+"$ANDROID_LIB_DIR"/gradlew --project-dir "$ANDROID_LIB_DIR" clean bundleReleaseAar
 validate_android_aar_symbols
+create_android_release_manifest
+
+echo "Testing android library publish to Maven Local..."
+"$ANDROID_LIB_DIR"/gradlew --project-dir "$ANDROID_LIB_DIR" publishToMavenLocal
 
 echo "Android build process completed successfully!"
