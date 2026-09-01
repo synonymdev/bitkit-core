@@ -196,7 +196,7 @@ val validateReleaseManifest by tasks.registering {
             "armeabi-v7a",
             "arm64-v8a",
             "x86",
-            "x86_64",
+            "x86_64"
         )
         val missingKeys = requiredKeys.filterNot { "\"$it\"" in text }
         if (missingKeys.isNotEmpty()) {
