@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add `get_activities_tags(wallet_id: Option<String>)` and `get_pre_activity_metadata_list(wallet_id: Option<String>)`, wallet-scoped reads of the two tag-backup tables where `None` returns every scope. Apps backing up a single wallet scope (for example a `trezor:{hash}` hardware wallet) can now name that scope in the call instead of fetching every scope and filtering client-side, so which records leave the device is visible in the FFI call. The unscoped `get_all_activities_tags()` and `get_all_pre_activity_metadata()` are unchanged and now delegate to the scoped versions.
+- Drop the legacy `idx_onchain_id` and `idx_lightning_id` unique indexes on activity init. Older releases created them when an activity id was globally unique, which contradicts the `PRIMARY KEY (wallet_id, id)` the activity tables now use and blocked storing the same on-chain id once per wallet scope, for example a transaction visible to both the Bitkit wallet and a watched hardware wallet. `CREATE ... IF NOT EXISTS` never removed them from databases that already had them, so they are dropped unconditionally.
 
 ## 0.5.11 - 2026-08-27
 
