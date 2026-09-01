@@ -1,6 +1,6 @@
 {
   "version": "0.5.14",
-  "sourceRevision": "2c8a2590c0a0a4cdc022918e03493762ab870010",
+  "sourceRevision": "51b83e87c058e0e53c909f12520ce900f64d1c05",
   "sourceDirty": false,
   "gobleyRepository": "https://github.com/ovitrif/gobley.git",
   "gobleyRevision": "6ef7aea8974a90ab9fb50774b0dbd1a787f093aa",
@@ -11,7 +11,7 @@
     },
     "nativeDebugSymbols": {
       "path": "bindings/android/native-debug-symbols.zip",
-      "sha256": "118c58fd42389d2f097dccd2c4c494e390e81acff308472eb5009c8d5f5efdc6"
+      "sha256": "96fcc36de299bc3fc7b40a20c165cea83a0ac3440fc8276a54ca8459473e571c"
     },
     "nativeLibraries": {
       "armeabi-v7a": "d40aaed95b06c02cb3d4f8e9a13c7e754278a09ba9ffdf0ebd51b1b1d2344008",
