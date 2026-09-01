@@ -117,8 +117,16 @@ fun String.parseElfAlignment(): Long {
 }
 
 fun File.sha256(): String {
-    val digest = MessageDigest.getInstance("SHA-256").digest(readBytes())
-    return digest.joinToString("") { byte ->
+    val digest = MessageDigest.getInstance("SHA-256")
+    inputStream().buffered().use { input ->
+        val buffer = ByteArray(8192)
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            digest.update(buffer, 0, count)
+        }
+    }
+    return digest.digest().joinToString("") { byte ->
         (byte.toInt() and 0xff).toString(16).padStart(2, '0')
     }
 }
