@@ -1642,601 +1642,601 @@ internal object IntegrityCheckingUniffiLib : Library {
         }
     }
     private fun uniffiCheckApiChecksums() {
-        if (uniffi_bitkitcore_checksum_func_activities_from_json() != 13556.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_activities_from_json() != 13556) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_activities_to_json() != 63832.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_activities_to_json() != 63832) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_activity_tags_from_json() != 21773.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_activity_tags_from_json() != 21773) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_activity_tags_to_json() != 43518.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_activity_tags_to_json() != 43518) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_activity_wipe_all() != 19332.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_activity_wipe_all() != 19332) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata() != 17211.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata() != 17211) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags() != 5813.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags() != 5813) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_add_tags() != 61276.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_add_tags() != 61276) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_approve_pubky_auth() != 22222.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_approve_pubky_auth() != 22222) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries() != 40127.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries() != 40127) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders() != 38913.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders() != 38913) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_blocktank_wipe_all() != 41797) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_boltz_claim_reverse_swap() != 52516.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_boltz_claim_reverse_swap() != 52516) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_boltz_create_reverse_swap() != 20570.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_boltz_create_reverse_swap() != 20570) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_boltz_create_submarine_swap() != 27933.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_boltz_create_submarine_swap() != 27933) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_boltz_get_reverse_limits() != 59203.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_boltz_get_reverse_limits() != 59203) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_boltz_get_submarine_limits() != 5900.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_boltz_get_submarine_limits() != 5900) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_boltz_get_swap() != 17473.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_boltz_get_swap() != 17473) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_boltz_list_pending_swaps() != 20926.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_boltz_list_pending_swaps() != 20926) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_boltz_list_swaps() != 16447.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_boltz_list_swaps() != 16447) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap() != 24549.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap() != 24549) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_boltz_start_swap_updates() != 168.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_boltz_start_swap_updates() != 168) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_boltz_stop_swap_updates() != 63683.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_boltz_stop_swap_updates() != 63683) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 43422.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction() != 43422) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options() != 51013) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_cancel_pubky_auth() != 61962.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_cancel_pubky_auth() != 61962) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_check_sweepable_balances() != 64201.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_check_sweepable_balances() != 64201) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_closed_channels_from_json() != 4471.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_closed_channels_from_json() != 4471) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_closed_channels_to_json() != 54955.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_closed_channels_to_json() != 54955) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_complete_pubky_auth() != 48191.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_complete_pubky_auth() != 48191) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_create_channel_request_url() != 9305) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_create_cjit_entry() != 51504.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_create_cjit_entry() != 51504) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_create_order() != 33461.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_create_order() != 33461) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_create_withdraw_callback_url() != 39350.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_create_withdraw_callback_url() != 39350) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_decode() != 28437.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_decode() != 28437) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_delete_activities_by_wallet_id() != 15848.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_delete_activities_by_wallet_id() != 15848) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 13256.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_delete_activity_by_id() != 13256) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 63740.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata() != 63740) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_delete_transaction_details() != 43443.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_delete_transaction_details() != 43443) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_derive_bitcoin_address() != 35090.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_derive_bitcoin_address() != 35090) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses() != 34371.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses() != 34371) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_derive_onchain_descriptor() != 49652.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_derive_onchain_descriptor() != 49652) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_derive_private_key() != 25155.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_derive_private_key() != 25155) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_derive_pubky_secret_key() != 36989.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_derive_pubky_secret_key() != 36989) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_derive_wallet_id() != 30111.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_derive_wallet_id() != 30111) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_entropy_to_mnemonic() != 26123) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_estimate_order_fee() != 9548.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_estimate_order_fee() != 9548) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_estimate_order_fee_full() != 13361) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_fetch_pubky_contacts() != 18744.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_fetch_pubky_contacts() != 18744) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_fetch_pubky_file() != 24890.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_fetch_pubky_file() != 24890) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_fetch_pubky_file_string() != 47799.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_fetch_pubky_file_string() != 47799) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_fetch_pubky_profile() != 19709.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_fetch_pubky_profile() != 19709) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_finalize_psbt() != 37120.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_finalize_psbt() != 37120) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_generate_mnemonic() != 19292) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_activities() != 9879.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_activities() != 9879) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 16182.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_activities_by_tag() != 16182) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_activities_tags() != 33500.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_activities_tags() != 33500) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_activity_by_id() != 28490.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_activity_by_id() != 28490) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_activity_by_tx_id() != 28432.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_activity_by_tx_id() != 28432) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_all_activities_tags() != 29245.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_all_activities_tags() != 29245) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_all_closed_channels() != 16828.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_all_closed_channels() != 16828) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata() != 25130.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata() != 25130) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_all_transaction_details() != 36056.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_all_transaction_details() != 36056) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_all_unique_tags() != 25431) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_bip39_suggestions() != 20658.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_bip39_suggestions() != 20658) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_bip39_wordlist() != 30814.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_bip39_wordlist() != 30814) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_cjit_entries() != 29342.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_cjit_entries() != 29342) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_closed_channel_by_id() != 19736) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_default_gap_limit() != 24024.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_default_gap_limit() != 24024) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_default_lsp_balance() != 35903.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_default_lsp_balance() != 35903) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_default_wallet_id() != 19552.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_default_wallet_id() != 19552) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_gift() != 386.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_gift() != 386) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_info() != 43607.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_info() != 43607) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice() != 5475) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data() != 50807.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data() != 50807) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee() != 6427.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee() != 6427) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_orders() != 47460.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_orders() != 47460) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_payment() != 29170.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_payment() != 29170) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata() != 24738) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata_list() != 37473.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_pre_activity_metadata_list() != 37473) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 61117.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets() != 61117) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_tags() != 8596.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_tags() != 8596) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_get_transaction_details() != 4810.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_get_transaction_details() != 4810) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_gift_order() != 22040.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_gift_order() != 22040) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_gift_pay() != 22142.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_gift_pay() != 22142) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_init_db() != 9643.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_init_db() != 9643) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_insert_activity() != 1510.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_insert_activity() != 1510) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_is_address_used() != 64038.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_is_address_used() != 64038) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 36622.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 36622) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_migrate_backup_activities_json() != 6425.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_migrate_backup_activities_json() != 6425) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_migrate_backup_activity_tags_json() != 10809.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_migrate_backup_activity_tags_json() != 10809) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_migrate_backup_pre_activity_metadata_json() != 51315.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_migrate_backup_pre_activity_metadata_json() != 51315) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_migrate_backup_transaction_details_json() != 30436.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_migrate_backup_transaction_details_json() != 30436) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_mnemonic_to_entropy() != 36669.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_mnemonic_to_entropy() != 36669) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_mnemonic_to_seed() != 40039.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_mnemonic_to_seed() != 40039) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx() != 45163.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx() != 45163) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_onchain_compose_transaction() != 20767.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_onchain_compose_transaction() != 20767) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 30087.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_onchain_get_account_info() != 30087) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_onchain_get_address_info() != 4749.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_onchain_get_address_info() != 4749) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_onchain_get_transaction_detail() != 24151.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_onchain_get_transaction_detail() != 24151) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_onchain_get_transaction_history() != 4452.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_onchain_get_transaction_history() != 4452) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_onchain_start_watcher() != 58125.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_onchain_start_watcher() != 58125) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_onchain_stop_all_watchers() != 28485.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_onchain_stop_all_watchers() != 28485) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_onchain_stop_watcher() != 2426.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_onchain_stop_watcher() != 2426) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_open_channel() != 21402.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_open_channel() != 21402) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_parse_pubky_auth_url() != 56972) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_passport_parse_account_export() != 62096.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_passport_parse_account_export() != 62096) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json() != 61978.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json() != 61978) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_pre_activity_metadata_to_json() != 3340.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_pre_activity_metadata_to_json() != 3340) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep() != 42719.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep() != 42719) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret() != 47481.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret() != 47481) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_pubky_put_with_secret_key() != 36562.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_pubky_put_with_secret_key() != 36562) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_pubky_session_delete() != 39070.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_pubky_session_delete() != 39070) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_pubky_session_list() != 7225.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_pubky_session_list() != 7225) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_pubky_session_put() != 25203.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_pubky_session_put() != 25203) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_pubky_sign_in() != 26706.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_pubky_sign_in() != 26706) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_pubky_sign_up() != 61692.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_pubky_sign_up() != 61692) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries() != 5324.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries() != 5324) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_refresh_active_orders() != 50661.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_refresh_active_orders() != 50661) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_register_device() != 14576.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_register_device() != 14576) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_regtest_close_channel() != 48652.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_regtest_close_channel() != 48652) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_regtest_deposit() != 30356.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_regtest_deposit() != 30356) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_regtest_get_payment() != 56623.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_regtest_get_payment() != 56623) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_regtest_mine() != 58685.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_regtest_mine() != 58685) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_regtest_pay() != 48342.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_regtest_pay() != 48342) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 37046.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags() != 37046) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_remove_tags() != 53863.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_remove_tags() != 53863) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 49760.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags() != 49760) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_resolve_pubky_url() != 43253.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_resolve_pubky_url() != 43253) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds() != 52496.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds() != 52496) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_serialized_extended_pubkey() != 12807.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_serialized_extended_pubkey() != 12807) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_start_pubky_auth() != 18158.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_start_pubky_auth() != 18158) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_test_notification() != 32857.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_test_notification() != 32857) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_transaction_details_from_json() != 54361.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_transaction_details_from_json() != 54361) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_transaction_details_to_json() != 51037.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_transaction_details_to_json() != 51037) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type() != 16116.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type() != 16116) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_clear_credentials() != 41940.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_clear_credentials() != 41940) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_connect() != 49232.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_connect() != 49232) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_disconnect() != 48780.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_disconnect() != 48780) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_get_address() != 12910.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_get_address() != 12910) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_get_connected_device() != 48383.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_get_connected_device() != 48383) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_get_device_fingerprint() != 20344.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_get_device_fingerprint() != 20344) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_get_features() != 13970.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_get_features() != 13970) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_get_public_key() != 13743.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_get_public_key() != 13743) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_initialize() != 16053.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_initialize() != 16053) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_is_ble_available() != 12897.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_is_ble_available() != 12897) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_is_connected() != 42092.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_is_connected() != 42092) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_is_initialized() != 59329.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_is_initialized() != 59329) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_list_devices() != 32859.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_list_devices() != 32859) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_refresh_features() != 6918.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_refresh_features() != 6918) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_scan() != 54763.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_scan() != 54763) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_set_transport_callback() != 30209.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_set_transport_callback() != 30209) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_set_ui_callback() != 52321.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_set_ui_callback() != 52321) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_sign_message() != 2925.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_sign_message() != 2925) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_sign_tx() != 42467.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_sign_tx() != 42467) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt() != 18852.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt() != 18852) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_trezor_verify_message() != 50739.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_trezor_verify_message() != 50739) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_update_activity() != 42510.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_update_activity() != 42510) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_update_blocktank_url() != 52161.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_update_blocktank_url() != 52161) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_upsert_activities() != 58470.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_upsert_activities() != 58470) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_upsert_activity() != 32175.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_upsert_activity() != 32175) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_upsert_cjit_entries() != 57141.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_upsert_cjit_entries() != 57141) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_upsert_closed_channel() != 18711.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_upsert_closed_channel() != 18711) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_upsert_closed_channels() != 2086.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_upsert_closed_channels() != 2086) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_upsert_info() != 7349.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_upsert_info() != 7349) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_upsert_lightning_activities() != 8564.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_upsert_lightning_activities() != 8564) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_upsert_onchain_activities() != 15461.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_upsert_onchain_activities() != 15461) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_upsert_orders() != 45856.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_upsert_orders() != 45856) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_upsert_pre_activity_metadata() != 12307.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_upsert_pre_activity_metadata() != 12307) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_upsert_tags() != 47513.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_upsert_tags() != 47513) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_upsert_transaction_details() != 62351.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_upsert_transaction_details() != 62351) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_ur_encode_crypto_psbt() != 32954.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_ur_encode_crypto_psbt() != 32954) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_validate_mnemonic() != 31005) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_wipe_all_closed_channels() != 41511.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_wipe_all_closed_channels() != 41511) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_wipe_all_databases() != 54605) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_func_wipe_all_transaction_details() != 65339.toShort()) {
+        if (uniffi_bitkitcore_checksum_func_wipe_all_transaction_details() != 65339) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event() != 11294.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event() != 11294) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_eventlistener_on_event() != 35531.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_eventlistener_on_event() != 35531) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices() != 18766.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices() != 18766) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_open_device() != 44156.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_open_device() != 44156) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_close_device() != 47933.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_close_device() != 47933) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_read_chunk() != 7645.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_read_chunk() != 7645) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_write_chunk() != 55967.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_write_chunk() != 55967) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_get_chunk_size() != 4994.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_get_chunk_size() != 4994) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_call_message() != 19414.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_call_message() != 19414) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_get_pairing_code() != 43475.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_get_pairing_code() != 43475) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_save_thp_credential() != 16694.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_save_thp_credential() != 16694) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_load_thp_credential() != 48790.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_load_thp_credential() != 48790) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_log_debug() != 44848.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezortransportcallback_log_debug() != 44848) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 50474.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 50474) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_urdecoder_receive() != 44279.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_urdecoder_receive() != 44279) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_method_urdecoder_reset() != 6027.toShort()) {
+        if (uniffi_bitkitcore_checksum_method_urdecoder_reset() != 6027) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
-        if (uniffi_bitkitcore_checksum_constructor_urdecoder_new() != 23014.toShort()) {
+        if (uniffi_bitkitcore_checksum_constructor_urdecoder_new() != 23014) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
     }
@@ -2244,601 +2244,601 @@ internal object IntegrityCheckingUniffiLib : Library {
     // Integrity check functions only
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_activities_from_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_activities_to_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_activity_tags_from_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_activity_tags_to_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_activity_wipe_all(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_add_pre_activity_metadata(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_add_pre_activity_metadata_tags(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_add_tags(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_approve_pubky_auth(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_blocktank_remove_all_orders(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_blocktank_wipe_all(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_claim_reverse_swap(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_create_reverse_swap(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_create_submarine_swap(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_get_reverse_limits(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_get_submarine_limits(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_get_swap(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_list_pending_swaps(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_list_swaps(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_start_swap_updates(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_stop_swap_updates(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_broadcast_sweep_transaction(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_calculate_channel_liquidity_options(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_cancel_pubky_auth(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_check_sweepable_balances(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_closed_channels_from_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_closed_channels_to_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_complete_pubky_auth(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_create_channel_request_url(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_create_cjit_entry(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_create_order(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_create_withdraw_callback_url(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_decode(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_delete_activities_by_wallet_id(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_delete_activity_by_id(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_delete_pre_activity_metadata(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_delete_transaction_details(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_derive_bitcoin_address(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_derive_bitcoin_addresses(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_derive_onchain_descriptor(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_derive_private_key(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_derive_pubky_secret_key(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_derive_wallet_id(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_entropy_to_mnemonic(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_estimate_order_fee(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_estimate_order_fee_full(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_fetch_pubky_contacts(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_fetch_pubky_file(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_fetch_pubky_file_string(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_fetch_pubky_profile(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_finalize_psbt(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_generate_mnemonic(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_activities(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_activities_by_tag(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_activities_tags(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_activity_by_id(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_activity_by_tx_id(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_all_activities_tags(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_all_closed_channels(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_all_pre_activity_metadata(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_all_transaction_details(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_all_unique_tags(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_bip39_suggestions(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_bip39_wordlist(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_cjit_entries(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_closed_channel_by_id(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_default_gap_limit(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_default_lsp_balance(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_default_wallet_id(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_gift(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_info(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_lnurl_invoice(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_lnurl_invoice_for_pay_data(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_min_zero_conf_tx_fee(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_orders(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_payment(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_pre_activity_metadata(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_pre_activity_metadata_list(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_supported_hardware_wallets(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_tags(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_get_transaction_details(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_gift_order(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_gift_pay(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_init_db(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_insert_activity(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_is_address_used(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_is_valid_bip39_word(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_lnurl_auth(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_mark_activity_as_seen(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_migrate_backup_activities_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_migrate_backup_activity_tags_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_migrate_backup_pre_activity_metadata_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_migrate_backup_transaction_details_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_mnemonic_to_entropy(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_mnemonic_to_seed(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_onchain_broadcast_raw_tx(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_onchain_compose_transaction(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_onchain_get_account_info(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_onchain_get_address_info(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_onchain_get_transaction_detail(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_onchain_get_transaction_history(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_onchain_start_watcher(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_onchain_stop_all_watchers(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_onchain_stop_watcher(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_open_channel(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_parse_pubky_auth_url(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_passport_parse_account_export(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_pre_activity_metadata_from_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_pre_activity_metadata_to_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_prepare_legacy_rn_native_segwit_recovery_sweep(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_prepare_sweep_transaction(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_pubky_put_with_secret_key(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_pubky_session_delete(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_pubky_session_list(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_pubky_session_put(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_pubky_sign_in(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_pubky_sign_up(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_refresh_active_orders(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_register_device(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_regtest_close_channel(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_regtest_deposit(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_regtest_get_payment(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_regtest_mine(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_regtest_pay(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_remove_pre_activity_metadata_tags(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_remove_tags(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_reset_pre_activity_metadata_tags(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_resolve_pubky_url(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_scan_legacy_rn_native_segwit_recovery_funds(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_serialized_extended_pubkey(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_start_pubky_auth(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_test_notification(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_transaction_details_from_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_transaction_details_to_json(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_account_type_to_script_type(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_clear_credentials(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_connect(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_disconnect(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_get_address(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_get_connected_device(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_get_device_fingerprint(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_get_features(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_get_public_key(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_initialize(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_is_ble_available(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_is_connected(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_is_initialized(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_list_devices(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_refresh_features(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_scan(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_set_transport_callback(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_set_ui_callback(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_sign_message(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_sign_tx(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_sign_tx_from_psbt(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_trezor_verify_message(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_update_activity(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_update_blocktank_url(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_activities(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_activity(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_cjit_entries(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_closed_channel(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_closed_channels(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_info(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_lightning_activities(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_onchain_activities(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_orders(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_pre_activity_metadata(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_tags(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_upsert_transaction_details(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_ur_encode_crypto_psbt(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_validate_bitcoin_address(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_validate_mnemonic(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_wipe_all_closed_channels(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_wipe_all_databases(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_wipe_all_transaction_details(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_eventlistener_on_event(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezortransportcallback_open_device(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezortransportcallback_close_device(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezortransportcallback_read_chunk(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezortransportcallback_write_chunk(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezortransportcallback_get_chunk_size(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezortransportcallback_call_message(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezortransportcallback_get_pairing_code(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezortransportcallback_save_thp_credential(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezortransportcallback_load_thp_credential(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezortransportcallback_log_debug(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_urdecoder_receive(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_urdecoder_reset(
-    ): Short
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_constructor_urdecoder_new(
-    ): Short
+    ): Int
     @JvmStatic
     external fun ffi_bitkitcore_uniffi_contract_version(
     ): Int
@@ -4025,7 +4025,7 @@ internal object UniffiLib : Library {
     external fun ffi_bitkitcore_rust_future_complete_u8(
         `handle`: Long,
         uniffiCallStatus: UniffiRustCallStatus,
-    ): Byte
+    ): Int
     @JvmStatic
     external fun ffi_bitkitcore_rust_future_poll_i8(
         `handle`: Long,
@@ -4063,7 +4063,7 @@ internal object UniffiLib : Library {
     external fun ffi_bitkitcore_rust_future_complete_u16(
         `handle`: Long,
         uniffiCallStatus: UniffiRustCallStatus,
-    ): Short
+    ): Int
     @JvmStatic
     external fun ffi_bitkitcore_rust_future_poll_i16(
         `handle`: Long,
@@ -4356,6 +4356,10 @@ private fun UniffiCleaner.Companion.create(): UniffiCleaner {
 
 public object FfiConverterUShort: FfiConverter<UShort, Short> {
     override fun lift(value: Short): UShort {
+        return value.toUShort()
+    }
+
+    public fun lift(value: Int): UShort {
         return value.toUShort()
     }
 

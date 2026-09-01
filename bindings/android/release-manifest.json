@@ -1,0 +1,23 @@
+{
+  "version": "0.5.14",
+  "sourceRevision": "2c8a2590c0a0a4cdc022918e03493762ab870010",
+  "sourceDirty": false,
+  "gobleyRepository": "https://github.com/ovitrif/gobley.git",
+  "gobleyRevision": "6ef7aea8974a90ab9fb50774b0dbd1a787f093aa",
+  "artifacts": {
+    "androidAar": {
+      "path": "bindings/android/lib/build/outputs/aar/lib-release.aar",
+      "sha256": "a2b5b0d110443c02ee8bbcd2fe42208369ed4530fb61a7a19359262e089df04c"
+    },
+    "nativeDebugSymbols": {
+      "path": "bindings/android/native-debug-symbols.zip",
+      "sha256": "118c58fd42389d2f097dccd2c4c494e390e81acff308472eb5009c8d5f5efdc6"
+    },
+    "nativeLibraries": {
+      "armeabi-v7a": "d40aaed95b06c02cb3d4f8e9a13c7e754278a09ba9ffdf0ebd51b1b1d2344008",
+      "arm64-v8a": "c6ae77126c0db0f28dadd761ccdbc31fc7107dd170d443a3e3cd3b4d7642b2d5",
+      "x86": "0a82a4e76a7121ecb93efc480cb0ea96b50ecdb2909c2cb6847b151c3739d2d9",
+      "x86_64": "4493c36b124d0c6ebb0c9927a63e73d97f2bb61569a3d815c234077966871f47"
+    }
+  }
+}
