@@ -10,9 +10,9 @@ Rust FFI library (`bitkitcore`) providing Bitcoin & Lightning functionality with
 
 ```bash
 cargo build                                    # Rust library
-./build.sh <ios|android|python|all>            # Platform bindings
-./build.sh -r --patch <target>                 # Bump version + build (--minor, --major)
 ```
+
+Android bindings are built and published by `.github/workflows/gradle-publish.yml`.
 
 ## Test
 
@@ -39,10 +39,10 @@ Android bindings use ktlint via Gradle plugin (`org.jlleitschuh.gradle.ktlint`),
 
 ## Key Constraints
 
-- **Version sync**: Version must match across `Cargo.toml`, `Package.swift`, and `bindings/android/gradle.properties`. Use `build.sh -r` to bump all three.
+- **Version sync**: Version must match across `Cargo.toml`, `Package.swift`, and `bindings/android/gradle.properties`. Update all three together.
 - **UniFFI**: Public types exposed to bindings are declared in `src/lib.rs`. Follow existing UniFFI patterns when adding new types.
 - **Platform-specific deps**: Trezor uses Bluetooth-only on iOS, USB+Bluetooth on other platforms (see `Cargo.toml` target-specific dependencies).
-- **Android build**: `build_android.sh` temporarily modifies `Cargo.toml` crate-type and removes `example/main.rs` during build — don't run concurrent builds.
+- **Android bindings**: Keep `bindings/android/lib/src/main/jniLibs/` untracked. GitHub Actions generates the JNI libraries before publishing the Android package.
 
 ## Conventions
 
