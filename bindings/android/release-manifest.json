@@ -1,9 +1,9 @@
 {
   "version": "0.5.14",
-  "sourceRevision": "51b83e87c058e0e53c909f12520ce900f64d1c05",
+  "sourceRevision": "93803fef77bad6209753d6026d48974563786d87",
   "sourceDirty": false,
   "gobleyRepository": "https://github.com/ovitrif/gobley.git",
-  "gobleyRevision": "6ef7aea8974a90ab9fb50774b0dbd1a787f093aa",
+  "gobleyRevision": "9bf3be0cfc39c1cc7a3853cc9f0a0dee79eb0f75",
   "artifacts": {
     "androidAar": {
       "path": "bindings/android/lib/build/outputs/aar/lib-release.aar",
