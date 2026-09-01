@@ -66,6 +66,17 @@ jobs:
         fi
         echo "version=${VERSION#v}" >> "$GITHUB_OUTPUT"
 
+    - name: Verify release version
+      shell: bash
+      env:
+        PUBLISH_VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        CARGO_VERSION=$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -n 1)
+        if [[ "$PUBLISH_VERSION" != "$CARGO_VERSION" ]]; then
+          echo "Publish version $PUBLISH_VERSION does not match Cargo version $CARGO_VERSION" >&2
+          exit 1
+        fi
+
     - name: Generate Android bindings
       run: ./build_android.sh
 

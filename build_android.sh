@@ -35,10 +35,15 @@ set -e  # Exit immediately if a command exits with a non-zero status.
 echo "Starting Android build process..."
 
 # Install the reviewed Gobley revision that widens direct unsigned JVM returns.
-GOBLEY_REPOSITORY="https://github.com/ovitrif/gobley.git"
-GOBLEY_REVISION="6ef7aea8974a90ab9fb50774b0dbd1a787f093aa"
+ANDROID_GRADLE_PROPERTIES="./bindings/android/gradle.properties"
+GOBLEY_REPOSITORY=$(sed -n 's/^gobleyRepository=//p' "$ANDROID_GRADLE_PROPERTIES")
+GOBLEY_REVISION=$(sed -n 's/^gobleyRevision=//p' "$ANDROID_GRADLE_PROPERTIES")
+if [ -z "$GOBLEY_REPOSITORY" ] || ! printf '%s' "$GOBLEY_REVISION" | grep -Eq '^[0-9a-f]{40}$'; then
+    echo "Error: valid gobleyRepository and gobleyRevision properties are required"
+    exit 1
+fi
 echo "Installing gobley-uniffi-bindgen at $GOBLEY_REVISION..."
-cargo install --git "$GOBLEY_REPOSITORY" --rev "$GOBLEY_REVISION" gobley-uniffi-bindgen --force
+cargo install --git "$GOBLEY_REPOSITORY" --rev "$GOBLEY_REVISION" gobley-uniffi-bindgen --locked --force
 
 SOURCE_REVISION=$(git rev-parse HEAD)
 if [ -z "$(git status --porcelain --untracked-files=normal)" ]; then
