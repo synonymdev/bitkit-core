@@ -104,7 +104,7 @@ case "$BUILD_TARGET" in
     ./build_python.sh
     ;;
   "all")
-    ./build_android.sh && ./build_ios.sh && ./build_python.sh
+    ./build_ios.sh && ./build_android.sh && ./build_python.sh
     ;;
   *)
     echo "Usage: $0 [-r|--release] [--major|-M|--minor|-m|--patch|-p] {ios|android|python|all}"
