@@ -199,8 +199,19 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_invalid_lightning_invoice() {
+    fn test_invalid_lightning_invoice_sync() {
         let invoice = "lnbc1invalid".to_string();
+        assert!(matches!(
+            Scanner::decode_onchain(&invoice),
+            Err(DecodingError::InvalidFormat)
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_duplicate_bip21_params_fails() {
+        let invoice =
+            "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?amount=0.000035&amount=0.00005"
+                .to_string();
         assert!(matches!(
             Scanner::decode(invoice).await,
             Err(DecodingError::InvalidFormat)

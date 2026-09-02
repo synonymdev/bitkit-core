@@ -317,18 +317,17 @@ impl Scanner {
 
         let address = parts[0].to_string();
 
-        let params = if parts.len() > 1 {
-            parts[1]
-                .split('&')
-                .filter_map(|param| {
-                    param
-                        .split_once('=')
-                        .map(|(k, v)| (k.to_string(), v.to_string()))
-                })
-                .collect::<HashMap<String, String>>()
-        } else {
-            HashMap::new()
-        };
+        let mut params = HashMap::new();
+        if parts.len() > 1 {
+            for param in parts[1].split('&') {
+                if let Some((k, v)) = param.split_once('=') {
+                    if params.contains_key(k) {
+                        return Err(DecodingError::InvalidFormat);
+                    }
+                    params.insert(k.to_string(), v.to_string());
+                }
+            }
+        }
 
         let amount_satoshis = params
             .get("amount")
