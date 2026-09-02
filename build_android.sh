@@ -34,9 +34,9 @@ set -e  # Exit immediately if a command exits with a non-zero status.
 
 echo "Starting Android build process..."
 
-# Install gobley-uniffi-bindgen from fork with patched version
+# Install the pinned Gobley binding generator.
 echo "Installing gobley-uniffi-bindgen fork..."
-cargo install --git https://github.com/ovitrif/gobley.git gobley-uniffi-bindgen --force
+cargo install --git https://github.com/ovitrif/gobley.git --rev 9bf3be0cfc39c1cc7a3853cc9f0a0dee79eb0f75 gobley-uniffi-bindgen --locked --force
 
 #TODO: Remove this section when example/main.rs builds successfully
 # Store example/main.rs content in memory and remove the file

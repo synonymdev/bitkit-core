@@ -90,4 +90,4 @@ cd ./bindings/android
 ./gradlew publish -Pversion=0.1.0
 ```
 
-Run `./build_android.sh` before any direct Gradle publish so `jniLibs` is regenerated as stripped release libraries with separate `native-debug-symbols.zip` metadata and 16 KB page-size alignment.
+Run `./build_android.sh` before `./gradlew build` or any direct Gradle publish. `jniLibs` is untracked, and `validateReleaseNativeLibraries` runs for `bundleReleaseAar` as well as `publish*`, so a fresh clone also needs those stripped, 16 KB-aligned release libraries and `native-debug-symbols.zip`.
