@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 0.5.14 - 2026-09-01
+## 0.5.14 - 2026-09-02
 
 - Prevent Android ARM32 startup crashes by generating `Int` carriers for direct unsigned 8-bit and 16-bit UniFFI returns while preserving Kotlin unsigned APIs.
 
