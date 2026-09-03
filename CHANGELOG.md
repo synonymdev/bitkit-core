@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add Blockstream Jade hardware wallet support: device discovery, connect, PIN unlock via the blind pinserver, extended public key and account export, on-device address verification, message signing, and PSBT signing, over Bluetooth on every platform and USB CDC serial on desktop and Python. Signed PSBTs feed the existing `finalize_psbt` path.
+- Add Blockstream Jade hardware wallet support: device discovery, connect, PIN unlock via the blind pinserver, extended public key and account export, on-device address verification, message signing, and PSBT signing, over Bluetooth on every platform and USB CDC serial on desktop and Python. Signed PSBTs feed the existing `finalize_psbt` path. The protocol lives in the `jade-client-rs` crate; this repo carries the UniFFI adapter.
 - Add `HardwareWalletVendor.Blockstream` and catalog entries for Jade and Jade Plus. Note that adding an enum case makes exhaustive Kotlin `when` and Swift `switch` statements over `HardwareWalletVendor` non-exhaustive, which is source breaking for consumers.
 
 ## 0.5.14 - 2026-09-02

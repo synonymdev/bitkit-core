@@ -1,33 +1,21 @@
-//! The transport contract the native application implements.
+//! The transport contract the native application implements, and the bridge
+//! from it to the protocol crate's transport trait.
 //!
 //! Rust owns the Jade protocol; the application owns the bytes. On iOS that
 //! means CoreBluetooth against the Nordic UART Service, and on Android the
-//! Bluetooth API plus, optionally, the USB Host API for CDC serial. Desktop and
-//! Python builds can skip this entirely and use the Rust serial transport.
+//! Bluetooth API plus, optionally, the USB Host API for CDC serial.
 //!
-//! Methods are synchronous. UniFFI can express async foreign callbacks, but the
-//! trezor module established the synchronous shape here and the transport layer
-//! runs every one of these on the blocking pool, so there is nothing to gain by
-//! diverging.
+//! Methods are synchronous because that is the shape the trezor module already
+//! established here. Every one of them is invoked on the blocking pool, so a
+//! slow implementation costs a blocking thread rather than a runtime worker.
 
 use std::sync::{Arc, RwLock};
+use std::time::Duration;
+
+use async_trait::async_trait;
+use jade_client_rs::{JadeError, JadeTransport, JadeTransportErrorCode, MAX_CHUNK_BYTES};
 
 use super::types::JadeTransportKind;
-
-/// A failure the native layer can report in a way Rust can act on.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
-pub enum JadeTransportErrorCode {
-    /// Another operation holds the device.
-    DeviceBusy,
-    /// The device is not currently open.
-    NotConnected,
-    /// The link dropped.
-    Disconnected,
-    /// The operation exceeded its deadline.
-    Timeout,
-    /// The OS refused access, typically a missing Bluetooth or USB permission.
-    PermissionDenied,
-}
 
 /// A device the native layer discovered.
 #[derive(Debug, Clone, uniffi::Record)]
@@ -78,12 +66,12 @@ pub struct JadeTransportReadResult {
 /// 1. **Write with response.** Write-without-response silently drops chunks on
 ///    the ESP32 GATT stack.
 /// 2. **Do not pause between chunks.** Firmware discards a partially received
-///    message after two seconds of silence (three on Jade v1) and answers with
+///    message after two seconds of silence, three on Jade v1, and answers with
 ///    an unattributed error. A 30 KB PSBT is roughly 60 writes, so any UI thread
 ///    stall in the middle of a send breaks the operation.
 /// 3. **`read_chunk` must return promptly.** Honour `timeout_ms`, which this
 ///    crate keeps short. The long per-operation deadline is enforced in Rust so
-///    the user can cancel; blocking here for minutes would defeat that.
+///    the user can cancel.
 #[uniffi::export(with_foreign)]
 pub trait JadeTransportCallback: Send + Sync {
     /// Discover devices, blocking up to `timeout_ms`.
@@ -105,8 +93,8 @@ pub trait JadeTransportCallback: Send + Sync {
 
     /// Maximum bytes per write.
     ///
-    /// For Bluetooth this is `min(negotiated_mtu - 3, 509)`. Rust clamps the
-    /// answer into a usable range, so an unnegotiated `0` is not fatal.
+    /// For Bluetooth this is `min(negotiated_mtu - 3, 509)`. The value is
+    /// clamped into a usable range, so an unnegotiated `0` is not fatal.
     fn get_chunk_size(&self, path: String) -> u32;
 }
 
@@ -122,7 +110,6 @@ static TRANSPORT_CALLBACK: RwLock<Option<Arc<dyn JadeTransportCallback>>> = RwLo
 ///
 /// Returns `true` when this replaced a previously registered callback, which
 /// lets the application tell a fresh registration from a re-registration.
-/// Any live connection is invalidated by the caller before this takes effect.
 #[uniffi::export]
 pub fn jade_set_transport_callback(callback: Arc<dyn JadeTransportCallback>) -> bool {
     #[cfg(target_os = "android")]
@@ -145,4 +132,99 @@ pub(crate) fn transport_callback() -> Option<Arc<dyn JadeTransportCallback>> {
         .read()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
         .clone()
+}
+
+fn to_error(code: Option<JadeTransportErrorCode>, message: String) -> JadeError {
+    match code {
+        Some(code) => JadeError::from(code),
+        None => JadeError::TransportError {
+            error_details: message,
+        },
+    }
+}
+
+/// Bridges the foreign callback onto the protocol crate's transport trait.
+///
+/// The error code travels as a typed value the whole way, so nothing has to be
+/// encoded into an error string and parsed back out. The trezor adapter in this
+/// repo does exactly that, because its upstream crate offers no typed channel.
+pub(crate) struct CallbackTransport {
+    callback: Arc<dyn JadeTransportCallback>,
+    path: String,
+    chunk_size: usize,
+}
+
+impl CallbackTransport {
+    pub(crate) fn new(callback: Arc<dyn JadeTransportCallback>, path: String) -> Self {
+        // Clamp whatever the native layer reports. A zero would make the write
+        // loop fail to advance, and anything above the Bluetooth cap would be
+        // rejected by the link layer.
+        let reported = callback.get_chunk_size(path.clone());
+        let chunk_size = reported.clamp(1, MAX_CHUNK_BYTES) as usize;
+        Self {
+            callback,
+            path,
+            chunk_size,
+        }
+    }
+}
+
+#[async_trait]
+impl JadeTransport for CallbackTransport {
+    async fn write_all(&self, data: Vec<u8>) -> Result<(), JadeError> {
+        let callback = Arc::clone(&self.callback);
+        let path = self.path.clone();
+        let chunk_size = self.chunk_size;
+
+        // Foreign callbacks are synchronous and can block. Running them on a
+        // worker thread would park it for the duration; the blocking pool is
+        // sized for exactly this.
+        tokio::task::spawn_blocking(move || {
+            for chunk in data.chunks(chunk_size) {
+                let result = callback.write_chunk(path.clone(), chunk.to_vec());
+                if !result.success {
+                    return Err(to_error(result.error_code, result.error));
+                }
+            }
+            Ok(())
+        })
+        .await
+        .map_err(|error| JadeError::IoError {
+            error_details: format!("write task failed: {error}"),
+        })?
+    }
+
+    async fn read_some(&self, timeout: Duration) -> Result<Vec<u8>, JadeError> {
+        let callback = Arc::clone(&self.callback);
+        let path = self.path.clone();
+        let timeout_ms = timeout.as_millis().min(u128::from(u32::MAX)) as u32;
+
+        tokio::task::spawn_blocking(move || {
+            let result = callback.read_chunk(path, timeout_ms);
+            if !result.success {
+                return Err(to_error(result.error_code, result.error));
+            }
+            Ok(result.data)
+        })
+        .await
+        .map_err(|error| JadeError::IoError {
+            error_details: format!("read task failed: {error}"),
+        })?
+    }
+
+    async fn close(&self) -> Result<(), JadeError> {
+        let callback = Arc::clone(&self.callback);
+        let path = self.path.clone();
+        tokio::task::spawn_blocking(move || {
+            let result = callback.close_device(path);
+            if !result.success {
+                return Err(to_error(result.error_code, result.error));
+            }
+            Ok(())
+        })
+        .await
+        .map_err(|error| JadeError::IoError {
+            error_details: format!("close task failed: {error}"),
+        })?
+    }
 }
