@@ -601,8 +601,8 @@ dependencies = [
  "boltz-client",
  "btleplug",
  "chrono",
- "ciborium",
  "hex",
+ "jade-client-rs",
  "jni",
  "lazy-regex",
  "lightning-invoice 0.32.0",
@@ -623,10 +623,8 @@ dependencies = [
  "rust-blocktank-client",
  "rust_decimal",
  "serde",
- "serde_bytes",
  "serde_json",
  "serial_test",
- "serialport",
  "tempfile",
  "test-case",
  "thiserror 2.0.18",
@@ -2545,6 +2543,29 @@ name = "itoa"
 version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92ecc6618181def0457392ccd0ee51198e065e016d1d527a7ac1b6dc7c1f09d2"
+
+[[package]]
+name = "jade-client-rs"
+version = "0.1.0"
+source = "git+https://github.com/coreyphillips/jade-client-rs?rev=ea260cb#ea260cb62594bc7d11b74211dbb55b179ecf365a"
+dependencies = [
+ "async-trait",
+ "base64 0.22.1",
+ "bitcoin 0.32.8",
+ "ciborium",
+ "log",
+ "minicbor",
+ "rand 0.8.5",
+ "reqwest",
+ "serde",
+ "serde_bytes",
+ "serde_json",
+ "serialport",
+ "thiserror 2.0.18",
+ "tokio",
+ "url",
+ "zeroize",
+]
 
 [[package]]
 name = "jiff"

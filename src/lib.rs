@@ -49,10 +49,9 @@ pub use crate::modules::hardware_wallet::{
 use crate::modules::jade::JadeManager;
 pub use crate::modules::jade::{
     jade_set_transport_callback, JadeAccount, JadeAccountExport, JadeAddressVariant,
-    JadeDeviceInfo, JadeError, JadeGetXpubParams, JadeNativeDevice, JadeNetwork, JadePingStatus,
-    JadeSignMessageParams, JadeSignPsbtParams, JadeSignedMessage, JadeState, JadeTransportCallback,
-    JadeTransportErrorCode, JadeTransportKind, JadeTransportReadResult, JadeTransportResult,
-    JadeVerifyAddressParams, JadeVersionInfo, JadeXpubResponse,
+    JadeDeviceInfo, JadeError, JadeNativeDevice, JadeNetwork, JadePingStatus, JadeSignedMessage,
+    JadeState, JadeTransportCallback, JadeTransportErrorCode, JadeTransportKind,
+    JadeTransportReadResult, JadeTransportResult, JadeVersionInfo, JadeXpubResponse,
 };
 use crate::modules::pubky::{PubkyAuthDetails, PubkyAuthKind, PubkyError, PubkyProfile};
 use crate::modules::trezor::account_type_to_script_type;
@@ -2649,9 +2648,12 @@ pub async fn jade_list_devices() -> Vec<JadeDeviceInfo> {
 /// `Ready` means the device is already usable, and `Uninit` means the user must
 /// create or restore a wallet on the device itself.
 #[uniffi::export]
-pub async fn jade_connect(device_id: String) -> Result<JadeVersionInfo, JadeError> {
+pub async fn jade_connect(
+    transport: JadeTransportKind,
+    path: String,
+) -> Result<JadeVersionInfo, JadeError> {
     let rt = ensure_runtime();
-    rt.spawn(async move { get_jade_manager().connect(&device_id).await })
+    rt.spawn(async move { get_jade_manager().connect(transport, &path).await })
         .await
         .unwrap_or_else(|e| {
             Err(JadeError::IoError {
@@ -2782,9 +2784,12 @@ pub async fn jade_logout() -> Result<(), JadeError> {
 
 /// Fetch an extended public key, echoed back with the path and fingerprint.
 #[uniffi::export]
-pub async fn jade_get_xpub(params: JadeGetXpubParams) -> Result<JadeXpubResponse, JadeError> {
+pub async fn jade_get_xpub(
+    network: JadeNetwork,
+    derivation_path: String,
+) -> Result<JadeXpubResponse, JadeError> {
     let rt = ensure_runtime();
-    rt.spawn(async move { get_jade_manager().get_xpub(params).await })
+    rt.spawn(async move { get_jade_manager().get_xpub(network, derivation_path).await })
         .await
         .unwrap_or_else(|e| {
             Err(JadeError::IoError {
@@ -2840,31 +2845,45 @@ pub async fn jade_get_account_export(
 /// rather than a way to fetch an address. Returns `AddressMismatch` when the
 /// device disagrees with `expected_address`.
 #[uniffi::export]
-pub async fn jade_verify_address(params: JadeVerifyAddressParams) -> Result<(), JadeError> {
+pub async fn jade_verify_address(
+    network: JadeNetwork,
+    variant: JadeAddressVariant,
+    derivation_path: String,
+    expected_address: String,
+) -> Result<(), JadeError> {
     let rt = ensure_runtime();
-    rt.spawn(async move { get_jade_manager().verify_address(params).await })
-        .await
-        .unwrap_or_else(|e| {
-            Err(JadeError::IoError {
-                error_details: format!("Runtime error: {}", e),
-            })
+    rt.spawn(async move {
+        get_jade_manager()
+            .verify_address(network, variant, derivation_path, expected_address)
+            .await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(JadeError::IoError {
+            error_details: format!("Runtime error: {}", e),
         })
+    })
 }
 
 /// Sign a message, returning the signature with the address that verifies it.
 #[uniffi::export]
 pub async fn jade_sign_message(
-    params: JadeSignMessageParams,
     network: JadeNetwork,
+    derivation_path: String,
+    message: String,
 ) -> Result<JadeSignedMessage, JadeError> {
     let rt = ensure_runtime();
-    rt.spawn(async move { get_jade_manager().sign_message(params, network).await })
-        .await
-        .unwrap_or_else(|e| {
-            Err(JadeError::IoError {
-                error_details: format!("Runtime error: {}", e),
-            })
+    rt.spawn(async move {
+        get_jade_manager()
+            .sign_message(network, derivation_path, message)
+            .await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(JadeError::IoError {
+            error_details: format!("Runtime error: {}", e),
         })
+    })
 }
 
 /// Sign a PSBT, returning the signed PSBT base64 encoded.
@@ -2873,9 +2892,9 @@ pub async fn jade_sign_message(
 /// result to `finalize_psbt` with the original PSBT, then broadcast with
 /// `onchain_broadcast_raw_tx`.
 #[uniffi::export]
-pub async fn jade_sign_psbt(params: JadeSignPsbtParams) -> Result<String, JadeError> {
+pub async fn jade_sign_psbt(network: JadeNetwork, psbt: String) -> Result<String, JadeError> {
     let rt = ensure_runtime();
-    rt.spawn(async move { get_jade_manager().sign_psbt(params).await })
+    rt.spawn(async move { get_jade_manager().sign_psbt(network, psbt).await })
         .await
         .unwrap_or_else(|e| {
             Err(JadeError::IoError {
@@ -2887,7 +2906,7 @@ pub async fn jade_sign_psbt(params: JadeSignPsbtParams) -> Result<String, JadeEr
 /// Map a generic account type onto Jade's descriptor variant.
 #[uniffi::export]
 pub fn jade_account_type_to_variant(account_type: AccountType) -> JadeAddressVariant {
-    JadeAddressVariant::from(account_type)
+    crate::modules::jade::account_type_to_variant(account_type)
 }
 
 // ============================================================================
