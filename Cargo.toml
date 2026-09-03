@@ -12,7 +12,7 @@ path = "src/lib.rs"
 uniffi = { version = "0.29.4", features = [ "cli", "bindgen" ] }
 serde_json = "1.0.114"
 serde = { version = "^1.0.209", features = ["derive"] }
-tokio = { version = "1.40.0", features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { version = "1.40.0", features = ["rt", "rt-multi-thread", "macros", "time", "sync"] }
 bitcoin = "0.32.4"
 miniscript = "12.3.7"
 chrono = "0.4"
@@ -40,6 +40,11 @@ bdk = { version = "0.30.2", features = ["all-keys"] }
 boltz-client = { version = "0.4.1", default-features = false, features = ["electrum", "ws"] }
 base64 = "0.22"
 minicbor = { version = "2", features = ["alloc"] }
+# Jade speaks CBOR with string-keyed, dynamically shaped maps. ciborium is serde-backed;
+# minicbor is index-keyed and is used here only for incremental frame detection.
+ciborium = "0.2"
+# Encodes Vec<u8> fields as CBOR byte strings rather than arrays of integers, which Jade requires.
+serde_bytes = "0.11"
 ur = "0.5.2"
 log = "0.4"
 pubky = "0.6.0"
@@ -61,6 +66,11 @@ trezor-connect-rs = { version = "0.4.0", default-features = false, features = ["
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.19"
 android_logger = "0.14"
+
+# Jade USB CDC serial, desktop and Python only.
+# default-features = false drops the libudev C dependency that CI does not install.
+[target.'cfg(not(any(target_os = "ios", target_os = "android")))'.dependencies]
+serialport = { version = "4.10", default-features = false }
 
 [dev-dependencies]
 tokio = { version = "1.40.0", features = ["full"] }

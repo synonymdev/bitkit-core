@@ -46,6 +46,14 @@ pub use crate::modules::hardware_wallet::{
     get_supported_hardware_wallets, HardwareWalletTransport, HardwareWalletVendor,
     SupportedHardwareWallet,
 };
+use crate::modules::jade::JadeManager;
+pub use crate::modules::jade::{
+    jade_set_transport_callback, JadeAccount, JadeAccountExport, JadeAddressVariant,
+    JadeDeviceInfo, JadeError, JadeGetXpubParams, JadeNativeDevice, JadeNetwork, JadePingStatus,
+    JadeSignMessageParams, JadeSignPsbtParams, JadeSignedMessage, JadeState, JadeTransportCallback,
+    JadeTransportErrorCode, JadeTransportKind, JadeTransportReadResult, JadeTransportResult,
+    JadeVerifyAddressParams, JadeVersionInfo, JadeXpubResponse,
+};
 use crate::modules::pubky::{PubkyAuthDetails, PubkyAuthKind, PubkyError, PubkyProfile};
 use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
@@ -104,6 +112,7 @@ static DB: OnceCell<StdMutex<DatabaseConnections>> = OnceCell::new();
 static ASYNC_DB: OnceCell<TokioMutex<AsyncDatabaseConnections>> = OnceCell::new();
 static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 static TREZOR_MANAGER: OnceCell<TrezorManager> = OnceCell::new();
+static JADE_MANAGER: OnceCell<JadeManager> = OnceCell::new();
 
 fn ensure_runtime() -> &'static Runtime {
     RUNTIME.get_or_init(|| Runtime::new().expect("Failed to create Tokio runtime"))
@@ -2599,7 +2608,291 @@ pub async fn trezor_clear_credentials(device_id: String) -> Result<(), TrezorErr
 }
 
 // ============================================================================
+// Jade Hardware Wallet Functions
+// ============================================================================
+
+fn get_jade_manager() -> &'static JadeManager {
+    JADE_MANAGER.get_or_init(JadeManager::new)
+}
+
+/// Discover Jade devices.
+///
+/// Bluetooth discovery is performed by the registered transport callback; on
+/// desktop and Python builds, attached USB serial units are enumerated too.
+/// Returns `DeviceBusy` while a connection is open, because starting a
+/// Bluetooth scan during an active link drops it on Android.
+#[uniffi::export]
+pub async fn jade_scan(timeout_ms: u32) -> Result<Vec<JadeDeviceInfo>, JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().scan(timeout_ms).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(JadeError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// The devices found by the last scan, without starting a new one.
+#[uniffi::export]
+pub async fn jade_list_devices() -> Vec<JadeDeviceInfo> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().list_devices().await })
+        .await
+        .unwrap_or_default()
+}
+
+/// Open a device and read its firmware and state summary.
+///
+/// Any previously open connection is closed first. The returned `jade_state`
+/// tells the application what to do next: `Locked` means call `jade_unlock`,
+/// `Ready` means the device is already usable, and `Uninit` means the user must
+/// create or restore a wallet on the device itself.
+#[uniffi::export]
+pub async fn jade_connect(device_id: String) -> Result<JadeVersionInfo, JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().connect(&device_id).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(JadeError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// Close the device and clear session state.
+///
+/// Safe to call while an operation is waiting on a confirmation: the pending
+/// request returns `UserCancelled` promptly rather than running out its deadline.
+#[uniffi::export]
+pub async fn jade_disconnect() -> Result<(), JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().disconnect().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(JadeError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// Abort the operation in flight.
+///
+/// Jade has no cancel message, so this closes the link. The application should
+/// reconnect afterwards. This is what backs a cancel button on a signing screen.
+#[uniffi::export]
+pub async fn jade_cancel() -> Result<(), JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().cancel().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(JadeError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// Tell the library that the native layer saw the device disconnect.
+///
+/// Without this, an idle Bluetooth drop is invisible until the next request.
+#[uniffi::export]
+pub async fn jade_notify_disconnected(path: String) {
+    let rt = ensure_runtime();
+    let _ = rt
+        .spawn(async move { get_jade_manager().notify_disconnected(&path).await })
+        .await;
+}
+
+#[uniffi::export]
+pub fn jade_is_connected() -> bool {
+    get_jade_manager().is_connected()
+}
+
+#[uniffi::export]
+pub async fn jade_get_connected_device() -> Option<JadeDeviceInfo> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().connected_device().await })
+        .await
+        .unwrap_or(None)
+}
+
+/// The version summary read at connect, without touching the device.
+#[uniffi::export]
+pub async fn jade_get_version_info() -> Option<JadeVersionInfo> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().version_info().await })
+        .await
+        .unwrap_or(None)
+}
+
+/// Re-read the version summary from the device.
+#[uniffi::export]
+pub async fn jade_refresh_version_info() -> Result<JadeVersionInfo, JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().refresh_version_info().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(JadeError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// Check whether the device is idle, busy, or waiting on the user.
+#[uniffi::export]
+pub async fn jade_ping() -> Result<JadePingStatus, JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().ping().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(JadeError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// Unlock the device for a network.
+///
+/// Runs the blind pinserver exchange when the device asks for it, which needs
+/// network access. The PIN is entered on the device and never reaches the host.
+#[uniffi::export]
+pub async fn jade_unlock(network: JadeNetwork) -> Result<(), JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().unlock(network).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(JadeError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// Lock the device and zero its in-memory key material.
+#[uniffi::export]
+pub async fn jade_logout() -> Result<(), JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().logout().await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(JadeError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// Fetch an extended public key, echoed back with the path and fingerprint.
+#[uniffi::export]
+pub async fn jade_get_xpub(params: JadeGetXpubParams) -> Result<JadeXpubResponse, JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().get_xpub(params).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(JadeError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// The device's master fingerprint, eight lowercase hex characters.
+///
+/// This must be supplied as `WalletParams.fingerprint` when composing, or the
+/// resulting PSBT carries no BIP32 key origins and the device signs nothing.
+#[uniffi::export]
+pub async fn jade_get_master_fingerprint(network: JadeNetwork) -> Result<String, JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().master_fingerprint(network).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(JadeError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// Fetch the account keys an import needs in one call.
+///
+/// Shaped like `passport_parse_account_export` so applications have a single
+/// import path across signers. Each key is fetched under one held connection,
+/// which matters over Bluetooth where every round trip is slow.
+#[uniffi::export]
+pub async fn jade_get_account_export(
+    network: JadeNetwork,
+    account_index: u32,
+    account_types: Vec<AccountType>,
+) -> Result<JadeAccountExport, JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        get_jade_manager()
+            .account_export(network, account_index, account_types)
+            .await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(JadeError::IoError {
+            error_details: format!("Runtime error: {}", e),
+        })
+    })
+}
+
+/// Display an address on the device and check it against the expected one.
+///
+/// This always prompts on the device screen, so it is a verification step
+/// rather than a way to fetch an address. Returns `AddressMismatch` when the
+/// device disagrees with `expected_address`.
+#[uniffi::export]
+pub async fn jade_verify_address(params: JadeVerifyAddressParams) -> Result<(), JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().verify_address(params).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(JadeError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// Sign a message, returning the signature with the address that verifies it.
+#[uniffi::export]
+pub async fn jade_sign_message(
+    params: JadeSignMessageParams,
+    network: JadeNetwork,
+) -> Result<JadeSignedMessage, JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().sign_message(params, network).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(JadeError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// Sign a PSBT, returning the signed PSBT base64 encoded.
+///
+/// The reply is checked against what was sent before it is returned. Feed the
+/// result to `finalize_psbt` with the original PSBT, then broadcast with
+/// `onchain_broadcast_raw_tx`.
+#[uniffi::export]
+pub async fn jade_sign_psbt(params: JadeSignPsbtParams) -> Result<String, JadeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { get_jade_manager().sign_psbt(params).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(JadeError::IoError {
+                error_details: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// Map a generic account type onto Jade's descriptor variant.
+#[uniffi::export]
+pub fn jade_account_type_to_variant(account_type: AccountType) -> JadeAddressVariant {
+    JadeAddressVariant::from(account_type)
+}
+
+// ============================================================================
 // Account info FFI exports
+
 // ============================================================================
 
 /// Query account information for an extended public key via Electrum.
