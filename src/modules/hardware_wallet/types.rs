@@ -3,6 +3,7 @@
 pub enum HardwareWalletVendor {
     Trezor,
     Foundation,
+    Blockstream,
 }
 
 /// How an application exchanges data with a hardware wallet.

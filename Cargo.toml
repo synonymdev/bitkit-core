@@ -12,7 +12,7 @@ path = "src/lib.rs"
 uniffi = { version = "0.29.4", features = [ "cli", "bindgen" ] }
 serde_json = "1.0.114"
 serde = { version = "^1.0.209", features = ["derive"] }
-tokio = { version = "1.40.0", features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { version = "1.40.0", features = ["rt", "rt-multi-thread", "macros", "time", "sync"] }
 bitcoin = "0.32.4"
 miniscript = "12.3.7"
 chrono = "0.4"
@@ -61,6 +61,16 @@ trezor-connect-rs = { version = "0.4.0", default-features = false, features = ["
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.19"
 android_logger = "0.14"
+
+# Jade hardware wallet protocol. Bluetooth is driven by the native application
+# through JadeTransportCallback, so the crate's own serial transport is only
+# wanted where a Rust side serial port makes sense.
+[target.'cfg(any(target_os = "ios", target_os = "android"))'.dependencies]
+jade-client-rs = { git = "https://github.com/coreyphillips/jade-client-rs", rev = "d55fafb", default-features = false, features = ["reqwest-pinserver"] }
+
+# Desktop and Python additionally get the crate's serial transport.
+[target.'cfg(not(any(target_os = "ios", target_os = "android")))'.dependencies]
+jade-client-rs = { git = "https://github.com/coreyphillips/jade-client-rs", rev = "d55fafb", features = ["reqwest-pinserver", "serial"] }
 
 [dev-dependencies]
 tokio = { version = "1.40.0", features = ["full"] }
