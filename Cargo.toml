@@ -66,11 +66,11 @@ android_logger = "0.14"
 # through JadeTransportCallback, so the crate's own serial transport is only
 # wanted where a Rust side serial port makes sense.
 [target.'cfg(any(target_os = "ios", target_os = "android"))'.dependencies]
-jade-client-rs = { git = "https://github.com/coreyphillips/jade-client-rs", rev = "ea260cb", default-features = false, features = ["reqwest-pinserver"] }
+jade-client-rs = { git = "https://github.com/coreyphillips/jade-client-rs", rev = "d55fafb", default-features = false, features = ["reqwest-pinserver"] }
 
 # Desktop and Python additionally get the crate's serial transport.
 [target.'cfg(not(any(target_os = "ios", target_os = "android")))'.dependencies]
-jade-client-rs = { git = "https://github.com/coreyphillips/jade-client-rs", rev = "ea260cb", features = ["reqwest-pinserver", "serial"] }
+jade-client-rs = { git = "https://github.com/coreyphillips/jade-client-rs", rev = "d55fafb", features = ["reqwest-pinserver", "serial"] }
 
 [dev-dependencies]
 tokio = { version = "1.40.0", features = ["full"] }
