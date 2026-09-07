@@ -904,6 +904,24 @@ internal interface UniffiCallbackInterfaceBoltzEventListenerMethod0: com.sun.jna
 internal interface UniffiCallbackInterfaceEventListenerMethod0: com.sun.jna.Callback {
     public fun callback(`uniffiHandle`: Long,`watcherId`: RustBufferByValue,`event`: RustBufferByValue,`uniffiOutReturn`: Pointer,uniffiCallStatus: UniffiRustCallStatus,)
 }
+internal interface UniffiCallbackInterfaceJadeTransportCallbackMethod0: com.sun.jna.Callback {
+    public fun callback(`uniffiHandle`: Long,`timeoutMs`: Int,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceJadeTransportCallbackMethod1: com.sun.jna.Callback {
+    public fun callback(`uniffiHandle`: Long,`path`: RustBufferByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceJadeTransportCallbackMethod2: com.sun.jna.Callback {
+    public fun callback(`uniffiHandle`: Long,`path`: RustBufferByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceJadeTransportCallbackMethod3: com.sun.jna.Callback {
+    public fun callback(`uniffiHandle`: Long,`path`: RustBufferByValue,`data`: RustBufferByValue,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceJadeTransportCallbackMethod4: com.sun.jna.Callback {
+    public fun callback(`uniffiHandle`: Long,`path`: RustBufferByValue,`timeoutMs`: Int,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
+}
+internal interface UniffiCallbackInterfaceJadeTransportCallbackMethod5: com.sun.jna.Callback {
+    public fun callback(`uniffiHandle`: Long,`path`: RustBufferByValue,`uniffiOutReturn`: IntByReference,uniffiCallStatus: UniffiRustCallStatus,)
+}
 internal interface UniffiCallbackInterfaceTrezorTransportCallbackMethod0: com.sun.jna.Callback {
     public fun callback(`uniffiHandle`: Long,`uniffiOutReturn`: RustBuffer,uniffiCallStatus: UniffiRustCallStatus,)
 }
@@ -1005,6 +1023,67 @@ internal fun UniffiVTableCallbackInterfaceEventListener.uniffiSetValue(other: Un
 }
 
 internal typealias UniffiVTableCallbackInterfaceEventListenerUniffiByValue = UniffiVTableCallbackInterfaceEventListenerStruct.UniffiByValue
+@Structure.FieldOrder("scanDevices", "openDevice", "closeDevice", "writeChunk", "readChunk", "getChunkSize", "uniffiFree")
+internal open class UniffiVTableCallbackInterfaceJadeTransportCallbackStruct(
+    @JvmField public var `scanDevices`: UniffiCallbackInterfaceJadeTransportCallbackMethod0?,
+    @JvmField public var `openDevice`: UniffiCallbackInterfaceJadeTransportCallbackMethod1?,
+    @JvmField public var `closeDevice`: UniffiCallbackInterfaceJadeTransportCallbackMethod2?,
+    @JvmField public var `writeChunk`: UniffiCallbackInterfaceJadeTransportCallbackMethod3?,
+    @JvmField public var `readChunk`: UniffiCallbackInterfaceJadeTransportCallbackMethod4?,
+    @JvmField public var `getChunkSize`: UniffiCallbackInterfaceJadeTransportCallbackMethod5?,
+    @JvmField public var `uniffiFree`: UniffiCallbackInterfaceFree?,
+) : com.sun.jna.Structure() {
+    internal constructor(): this(
+        
+        `scanDevices` = null,
+        
+        `openDevice` = null,
+        
+        `closeDevice` = null,
+        
+        `writeChunk` = null,
+        
+        `readChunk` = null,
+        
+        `getChunkSize` = null,
+        
+        `uniffiFree` = null,
+        
+    )
+
+    internal class UniffiByValue(
+        `scanDevices`: UniffiCallbackInterfaceJadeTransportCallbackMethod0?,
+        `openDevice`: UniffiCallbackInterfaceJadeTransportCallbackMethod1?,
+        `closeDevice`: UniffiCallbackInterfaceJadeTransportCallbackMethod2?,
+        `writeChunk`: UniffiCallbackInterfaceJadeTransportCallbackMethod3?,
+        `readChunk`: UniffiCallbackInterfaceJadeTransportCallbackMethod4?,
+        `getChunkSize`: UniffiCallbackInterfaceJadeTransportCallbackMethod5?,
+        `uniffiFree`: UniffiCallbackInterfaceFree?,
+    ): UniffiVTableCallbackInterfaceJadeTransportCallback(`scanDevices`,`openDevice`,`closeDevice`,`writeChunk`,`readChunk`,`getChunkSize`,`uniffiFree`,), Structure.ByValue
+}
+
+internal typealias UniffiVTableCallbackInterfaceJadeTransportCallback = UniffiVTableCallbackInterfaceJadeTransportCallbackStruct
+
+internal fun UniffiVTableCallbackInterfaceJadeTransportCallback.uniffiSetValue(other: UniffiVTableCallbackInterfaceJadeTransportCallback) {
+    `scanDevices` = other.`scanDevices`
+    `openDevice` = other.`openDevice`
+    `closeDevice` = other.`closeDevice`
+    `writeChunk` = other.`writeChunk`
+    `readChunk` = other.`readChunk`
+    `getChunkSize` = other.`getChunkSize`
+    `uniffiFree` = other.`uniffiFree`
+}
+internal fun UniffiVTableCallbackInterfaceJadeTransportCallback.uniffiSetValue(other: UniffiVTableCallbackInterfaceJadeTransportCallbackUniffiByValue) {
+    `scanDevices` = other.`scanDevices`
+    `openDevice` = other.`openDevice`
+    `closeDevice` = other.`closeDevice`
+    `writeChunk` = other.`writeChunk`
+    `readChunk` = other.`readChunk`
+    `getChunkSize` = other.`getChunkSize`
+    `uniffiFree` = other.`uniffiFree`
+}
+
+internal typealias UniffiVTableCallbackInterfaceJadeTransportCallbackUniffiByValue = UniffiVTableCallbackInterfaceJadeTransportCallbackStruct.UniffiByValue
 @Structure.FieldOrder("enumerateDevices", "openDevice", "closeDevice", "readChunk", "writeChunk", "getChunkSize", "callMessage", "getPairingCode", "saveThpCredential", "loadThpCredential", "logDebug", "uniffiFree")
 internal open class UniffiVTableCallbackInterfaceTrezorTransportCallbackStruct(
     @JvmField public var `enumerateDevices`: UniffiCallbackInterfaceTrezorTransportCallbackMethod0?,
@@ -1133,6 +1212,63 @@ internal fun UniffiVTableCallbackInterfaceTrezorUiCallback.uniffiSetValue(other:
 }
 
 internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = UniffiVTableCallbackInterfaceTrezorUiCallbackStruct.UniffiByValue
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1909,6 +2045,69 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_jade_account_type_to_variant() != 35222) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_cancel() != 64344) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_connect() != 62038) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_disconnect() != 22575) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_get_account_export() != 39143) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_get_connected_device() != 31749) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_get_master_fingerprint() != 29630) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_get_version_info() != 28653) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_get_xpub() != 51180) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_is_connected() != 16304) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_list_devices() != 31161) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_logout() != 2301) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_notify_disconnected() != 24935) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_ping() != 45620) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_refresh_version_info() != 52539) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_scan() != 445) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_set_transport_callback() != 61572) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_sign_message() != 257) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_sign_psbt() != 20865) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_unlock() != 35535) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_jade_verify_address() != 54249) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
@@ -2189,6 +2388,24 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_method_eventlistener_on_event() != 35531) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_jadetransportcallback_scan_devices() != 38147) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_jadetransportcallback_open_device() != 21299) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_jadetransportcallback_close_device() != 16955) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_jadetransportcallback_write_chunk() != 12779) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_jadetransportcallback_read_chunk() != 21790) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_method_jadetransportcallback_get_chunk_size() != 29973) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices() != 18766) {
@@ -2510,6 +2727,69 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_is_valid_bip39_word(
     ): Int
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_account_type_to_variant(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_cancel(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_connect(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_disconnect(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_get_account_export(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_get_connected_device(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_get_master_fingerprint(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_get_version_info(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_get_xpub(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_is_connected(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_list_devices(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_logout(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_notify_disconnected(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_ping(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_refresh_version_info(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_scan(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_set_transport_callback(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_sign_message(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_sign_psbt(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_unlock(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_jade_verify_address(
+    ): Int
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_lnurl_auth(
     ): Int
     @JvmStatic
@@ -2792,6 +3072,24 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_method_eventlistener_on_event(
     ): Int
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_jadetransportcallback_scan_devices(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_jadetransportcallback_open_device(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_jadetransportcallback_close_device(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_jadetransportcallback_write_chunk(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_jadetransportcallback_read_chunk(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_method_jadetransportcallback_get_chunk_size(
+    ): Int
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices(
     ): Int
     @JvmStatic
@@ -2855,6 +3153,7 @@ internal object UniffiLib : Library {
         // we already did that with `IntegrityCheckingUniffiLib` above.
         uniffiCallbackInterfaceBoltzEventListener.register(this)
         uniffiCallbackInterfaceEventListener.register(this)
+        uniffiCallbackInterfaceJadeTransportCallback.register(this)
         uniffiCallbackInterfaceTrezorTransportCallback.register(this)
         uniffiCallbackInterfaceTrezorUiCallback.register(this)
     }
@@ -2903,6 +3202,58 @@ internal object UniffiLib : Library {
         `event`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_clone_jadetransportcallback(
+        `ptr`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Pointer?
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_free_jadetransportcallback(
+        `ptr`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_init_callback_vtable_jadetransportcallback(
+        `vtable`: UniffiVTableCallbackInterfaceJadeTransportCallback,
+    ): Unit
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_jadetransportcallback_scan_devices(
+        `ptr`: Pointer?,
+        `timeoutMs`: Int,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_jadetransportcallback_open_device(
+        `ptr`: Pointer?,
+        `path`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_jadetransportcallback_close_device(
+        `ptr`: Pointer?,
+        `path`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_jadetransportcallback_write_chunk(
+        `ptr`: Pointer?,
+        `path`: RustBufferByValue,
+        `data`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_jadetransportcallback_read_chunk(
+        `ptr`: Pointer?,
+        `path`: RustBufferByValue,
+        `timeoutMs`: Int,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_method_jadetransportcallback_get_chunk_size(
+        `ptr`: Pointer?,
+        `path`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_fn_clone_trezortransportcallback(
         `ptr`: Pointer?,
@@ -3523,6 +3874,94 @@ internal object UniffiLib : Library {
         `word`: RustBufferByValue,
         uniffiCallStatus: UniffiRustCallStatus,
     ): Byte
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_account_type_to_variant(
+        `accountType`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_cancel(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_connect(
+        `transport`: RustBufferByValue,
+        `path`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_disconnect(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_get_account_export(
+        `network`: RustBufferByValue,
+        `accountIndex`: Int,
+        `accountTypes`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_get_connected_device(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_get_master_fingerprint(
+        `network`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_get_version_info(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_get_xpub(
+        `network`: RustBufferByValue,
+        `derivationPath`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_is_connected(
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Byte
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_list_devices(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_logout(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_notify_disconnected(
+        `path`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_ping(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_refresh_version_info(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_scan(
+        `timeoutMs`: Int,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_set_transport_callback(
+        `callback`: Pointer?,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): Byte
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_sign_message(
+        `network`: RustBufferByValue,
+        `derivationPath`: RustBufferByValue,
+        `message`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_sign_psbt(
+        `network`: RustBufferByValue,
+        `psbt`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_unlock(
+        `network`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_jade_verify_address(
+        `network`: RustBufferByValue,
+        `variant`: RustBufferByValue,
+        `derivationPath`: RustBufferByValue,
+        `expectedAddress`: RustBufferByValue,
+    ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_lnurl_auth(
         `domain`: RustBufferByValue,
@@ -4959,6 +5398,403 @@ internal object uniffiCallbackInterfaceEventListener {
 
     internal fun register(lib: UniffiLib) {
         lib.uniffi_bitkitcore_fn_init_callback_vtable_eventlistener(vtable)
+    }
+}
+
+
+
+/**
+ * Native transport for Jade.
+ *
+ * # Bluetooth contract
+ *
+ * Jade advertises the Nordic UART Service:
+ *
+ * - service `6e400001-b5a3-f393-e0a9-e50e24dcca9e`
+ * - write   `6e400002-b5a3-f393-e0a9-e50e24dcca9e` (host to Jade)
+ * - notify  `6e400003-b5a3-f393-e0a9-e50e24dcca9e` (Jade to host)
+ *
+ * Devices advertise as "Jade" or "Jade <serial>".
+ *
+ * Three requirements that are easy to miss and break signing on real hardware:
+ *
+ * 1. **Write with response.** Write-without-response silently drops chunks on
+ * the ESP32 GATT stack.
+ * 2. **Do not pause between chunks.** Firmware discards a partially received
+ * message after two seconds of silence, three on Jade v1, and answers with
+ * an unattributed error. A 30 KB PSBT is roughly 60 writes, so any UI thread
+ * stall in the middle of a send breaks the operation.
+ * 3. **`read_chunk` must return promptly.** Honour `timeout_ms`, which this
+ * crate keeps short. The long per-operation deadline is enforced in Rust so
+ * the user can cancel.
+ */
+public open class JadeTransportCallbackImpl: Disposable, JadeTransportCallback {
+
+    public constructor(pointer: Pointer) {
+        this.pointer = pointer
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiPointerDestroyer(pointer))
+    }
+
+    /**
+     * This constructor can be used to instantiate a fake object. Only used for tests. Any
+     * attempt to actually use an object constructed this way will fail as there is no
+     * connected Rust object.
+     */
+    public constructor(noPointer: NoPointer) {
+        this.pointer = null
+        this.cleanable = UniffiLib.CLEANER.register(this, UniffiPointerDestroyer(null))
+    }
+
+    protected val pointer: Pointer?
+    protected val cleanable: UniffiCleaner.Cleanable
+
+    private val wasDestroyed: kotlinx.atomicfu.AtomicBoolean = kotlinx.atomicfu.atomic(false)
+    private val callCounter: kotlinx.atomicfu.AtomicLong = kotlinx.atomicfu.atomic(1L)
+
+    private val lock = kotlinx.atomicfu.locks.ReentrantLock()
+
+    private fun <T> synchronized(block: () -> T): T {
+        lock.lock()
+        try {
+            return block()
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    override fun destroy() {
+        // Only allow a single call to this method.
+        // TODO: maybe we should log a warning if called more than once?
+        if (this.wasDestroyed.compareAndSet(false, true)) {
+            // This decrement always matches the initial count of 1 given at creation time.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    override fun close() {
+        synchronized { this.destroy() }
+    }
+
+    internal inline fun <R> callWithPointer(block: (ptr: Pointer) -> R): R {
+        // Check and increment the call counter, to keep the object alive.
+        // This needs a compare-and-set retry loop in case of concurrent updates.
+        do {
+            val c = this.callCounter.value
+            if (c == 0L) {
+                throw IllegalStateException("${this::class::simpleName} object has already been destroyed")
+            }
+            if (c == Long.MAX_VALUE) {
+                throw IllegalStateException("${this::class::simpleName} call counter would overflow")
+            }
+        } while (! this.callCounter.compareAndSet(c, c + 1L))
+        // Now we can safely do the method call without the pointer being freed concurrently.
+        try {
+            return block(this.uniffiClonePointer())
+        } finally {
+            // This decrement always matches the increment we performed above.
+            if (this.callCounter.decrementAndGet() == 0L) {
+                cleanable.clean()
+            }
+        }
+    }
+
+    // Use a static inner class instead of a closure so as not to accidentally
+    // capture `this` as part of the cleanable's action.
+    private class UniffiPointerDestroyer(private val pointer: Pointer?) : Disposable {
+        override fun destroy() {
+            pointer?.let { ptr ->
+                uniffiRustCall { status ->
+                    UniffiLib.uniffi_bitkitcore_fn_free_jadetransportcallback(ptr, status)
+                }
+            }
+        }
+    }
+
+    public fun uniffiClonePointer(): Pointer {
+        return uniffiRustCall { status ->
+            UniffiLib.uniffi_bitkitcore_fn_clone_jadetransportcallback(pointer!!, status)
+        }!!
+    }
+
+    
+    /**
+     * Discover devices, blocking up to `timeout_ms`.
+     */
+    public override fun `scanDevices`(`timeoutMs`: kotlin.UInt): List<JadeNativeDevice> {
+        return FfiConverterSequenceTypeJadeNativeDevice.lift(callWithPointer {
+            uniffiRustCall { uniffiRustCallStatus ->
+                UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_scan_devices(
+                    it,
+                    FfiConverterUInt.lower(`timeoutMs`),
+                    uniffiRustCallStatus,
+                )
+            }
+        })
+    }
+
+    /**
+     * Open a connection and enable notifications.
+     */
+    public override fun `openDevice`(`path`: kotlin.String): JadeTransportResult {
+        return FfiConverterTypeJadeTransportResult.lift(callWithPointer {
+            uniffiRustCall { uniffiRustCallStatus ->
+                UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_open_device(
+                    it,
+                    FfiConverterString.lower(`path`),
+                    uniffiRustCallStatus,
+                )
+            }
+        })
+    }
+
+    /**
+     * Close the connection and release the device.
+     */
+    public override fun `closeDevice`(`path`: kotlin.String): JadeTransportResult {
+        return FfiConverterTypeJadeTransportResult.lift(callWithPointer {
+            uniffiRustCall { uniffiRustCallStatus ->
+                UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_close_device(
+                    it,
+                    FfiConverterString.lower(`path`),
+                    uniffiRustCallStatus,
+                )
+            }
+        })
+    }
+
+    /**
+     * Write one chunk, no larger than `get_chunk_size`.
+     */
+    public override fun `writeChunk`(`path`: kotlin.String, `data`: kotlin.ByteArray): JadeTransportResult {
+        return FfiConverterTypeJadeTransportResult.lift(callWithPointer {
+            uniffiRustCall { uniffiRustCallStatus ->
+                UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_write_chunk(
+                    it,
+                    FfiConverterString.lower(`path`),
+                    FfiConverterByteArray.lower(`data`),
+                    uniffiRustCallStatus,
+                )
+            }
+        })
+    }
+
+    /**
+     * Read whatever has arrived, waiting at most `timeout_ms`.
+     *
+     * Returning success with an empty vector is normal and means "nothing yet".
+     */
+    public override fun `readChunk`(`path`: kotlin.String, `timeoutMs`: kotlin.UInt): JadeTransportReadResult {
+        return FfiConverterTypeJadeTransportReadResult.lift(callWithPointer {
+            uniffiRustCall { uniffiRustCallStatus ->
+                UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_read_chunk(
+                    it,
+                    FfiConverterString.lower(`path`),
+                    FfiConverterUInt.lower(`timeoutMs`),
+                    uniffiRustCallStatus,
+                )
+            }
+        })
+    }
+
+    /**
+     * Maximum bytes per write.
+     *
+     * For Bluetooth this is `min(negotiated_mtu - 3, 509)`. The value is
+     * clamped into a usable range, so an unnegotiated `0` is not fatal.
+     */
+    public override fun `getChunkSize`(`path`: kotlin.String): kotlin.UInt {
+        return FfiConverterUInt.lift(callWithPointer {
+            uniffiRustCall { uniffiRustCallStatus ->
+                UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_get_chunk_size(
+                    it,
+                    FfiConverterString.lower(`path`),
+                    uniffiRustCallStatus,
+                )
+            }
+        })
+    }
+
+
+    
+    
+
+    
+    
+    public companion object
+    
+}
+
+
+
+
+
+public object FfiConverterTypeJadeTransportCallback: FfiConverter<JadeTransportCallback, Pointer> {
+    internal val handleMap = UniffiHandleMap<JadeTransportCallback>()
+
+    override fun lower(value: JadeTransportCallback): Pointer {
+        return handleMap.insert(value).toPointer()
+    }
+
+    override fun lift(value: Pointer): JadeTransportCallback {
+        return JadeTransportCallbackImpl(value)
+    }
+
+    override fun read(buf: ByteBuffer): JadeTransportCallback {
+        // The Rust code always writes pointers as 8 bytes, and will
+        // fail to compile if they don't fit.
+        return lift(buf.getLong().toPointer())
+    }
+
+    override fun allocationSize(value: JadeTransportCallback): ULong = 8UL
+
+    override fun write(value: JadeTransportCallback, buf: ByteBuffer) {
+        // The Rust code always expects pointers written as 8 bytes,
+        // and will fail to compile if they don't fit.
+        buf.putLong(lower(value).toLong())
+    }
+}
+
+
+// Put the implementation in an object so we don't pollute the top-level namespace
+internal object uniffiCallbackInterfaceJadeTransportCallback {
+    internal object `scanDevices`: UniffiCallbackInterfaceJadeTransportCallbackMethod0 {
+        override fun callback (
+            `uniffiHandle`: Long,
+            `timeoutMs`: Int,
+            `uniffiOutReturn`: RustBuffer,
+            uniffiCallStatus: UniffiRustCallStatus,
+        ) {
+            val uniffiObj = FfiConverterTypeJadeTransportCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`scanDevices`(
+                    FfiConverterUInt.lift(`timeoutMs`),
+                )
+            }
+            val writeReturn = { uniffiResultValue: List<JadeNativeDevice> ->
+                uniffiOutReturn.setValue(FfiConverterSequenceTypeJadeNativeDevice.lower(uniffiResultValue))
+            }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `openDevice`: UniffiCallbackInterfaceJadeTransportCallbackMethod1 {
+        override fun callback (
+            `uniffiHandle`: Long,
+            `path`: RustBufferByValue,
+            `uniffiOutReturn`: RustBuffer,
+            uniffiCallStatus: UniffiRustCallStatus,
+        ) {
+            val uniffiObj = FfiConverterTypeJadeTransportCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`openDevice`(
+                    FfiConverterString.lift(`path`),
+                )
+            }
+            val writeReturn = { uniffiResultValue: JadeTransportResult ->
+                uniffiOutReturn.setValue(FfiConverterTypeJadeTransportResult.lower(uniffiResultValue))
+            }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `closeDevice`: UniffiCallbackInterfaceJadeTransportCallbackMethod2 {
+        override fun callback (
+            `uniffiHandle`: Long,
+            `path`: RustBufferByValue,
+            `uniffiOutReturn`: RustBuffer,
+            uniffiCallStatus: UniffiRustCallStatus,
+        ) {
+            val uniffiObj = FfiConverterTypeJadeTransportCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`closeDevice`(
+                    FfiConverterString.lift(`path`),
+                )
+            }
+            val writeReturn = { uniffiResultValue: JadeTransportResult ->
+                uniffiOutReturn.setValue(FfiConverterTypeJadeTransportResult.lower(uniffiResultValue))
+            }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `writeChunk`: UniffiCallbackInterfaceJadeTransportCallbackMethod3 {
+        override fun callback (
+            `uniffiHandle`: Long,
+            `path`: RustBufferByValue,
+            `data`: RustBufferByValue,
+            `uniffiOutReturn`: RustBuffer,
+            uniffiCallStatus: UniffiRustCallStatus,
+        ) {
+            val uniffiObj = FfiConverterTypeJadeTransportCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`writeChunk`(
+                    FfiConverterString.lift(`path`),
+                    FfiConverterByteArray.lift(`data`),
+                )
+            }
+            val writeReturn = { uniffiResultValue: JadeTransportResult ->
+                uniffiOutReturn.setValue(FfiConverterTypeJadeTransportResult.lower(uniffiResultValue))
+            }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `readChunk`: UniffiCallbackInterfaceJadeTransportCallbackMethod4 {
+        override fun callback (
+            `uniffiHandle`: Long,
+            `path`: RustBufferByValue,
+            `timeoutMs`: Int,
+            `uniffiOutReturn`: RustBuffer,
+            uniffiCallStatus: UniffiRustCallStatus,
+        ) {
+            val uniffiObj = FfiConverterTypeJadeTransportCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`readChunk`(
+                    FfiConverterString.lift(`path`),
+                    FfiConverterUInt.lift(`timeoutMs`),
+                )
+            }
+            val writeReturn = { uniffiResultValue: JadeTransportReadResult ->
+                uniffiOutReturn.setValue(FfiConverterTypeJadeTransportReadResult.lower(uniffiResultValue))
+            }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object `getChunkSize`: UniffiCallbackInterfaceJadeTransportCallbackMethod5 {
+        override fun callback (
+            `uniffiHandle`: Long,
+            `path`: RustBufferByValue,
+            `uniffiOutReturn`: IntByReference,
+            uniffiCallStatus: UniffiRustCallStatus,
+        ) {
+            val uniffiObj = FfiConverterTypeJadeTransportCallback.handleMap.get(uniffiHandle)
+            val makeCall = { ->
+                uniffiObj.`getChunkSize`(
+                    FfiConverterString.lift(`path`),
+                )
+            }
+            val writeReturn = { uniffiResultValue: kotlin.UInt ->
+                uniffiOutReturn.setValue(FfiConverterUInt.lower(uniffiResultValue))
+            }
+            uniffiTraitInterfaceCall(uniffiCallStatus, makeCall, writeReturn)
+        }
+    }
+    internal object uniffiFree: UniffiCallbackInterfaceFree {
+        override fun callback(handle: Long) {
+            FfiConverterTypeJadeTransportCallback.handleMap.remove(handle)
+        }
+    }
+
+    internal val vtable = UniffiVTableCallbackInterfaceJadeTransportCallback(
+        `scanDevices`,
+        `openDevice`,
+        `closeDevice`,
+        `writeChunk`,
+        `readChunk`,
+        `getChunkSize`,
+        uniffiFree,
+    )
+
+    internal fun register(lib: UniffiLib) {
+        lib.uniffi_bitkitcore_fn_init_callback_vtable_jadetransportcallback(vtable)
     }
 }
 
@@ -7676,6 +8512,267 @@ public object FfiConverterTypeIManualRefund: FfiConverterRustBuffer<IManualRefun
         FfiConverterOptionalString.write(value.`votedByName`, buf)
         FfiConverterOptionalString.write(value.`reason`, buf)
         FfiConverterString.write(value.`targetType`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeJadeAccount: FfiConverterRustBuffer<JadeAccount> {
+    override fun read(buf: ByteBuffer): JadeAccount {
+        return JadeAccount(
+            FfiConverterTypeJadeAddressVariant.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: JadeAccount): ULong = (
+            FfiConverterTypeJadeAddressVariant.allocationSize(value.`variant`) +
+            FfiConverterString.allocationSize(value.`xpub`) +
+            FfiConverterString.allocationSize(value.`derivationPath`)
+    )
+
+    override fun write(value: JadeAccount, buf: ByteBuffer) {
+        FfiConverterTypeJadeAddressVariant.write(value.`variant`, buf)
+        FfiConverterString.write(value.`xpub`, buf)
+        FfiConverterString.write(value.`derivationPath`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeJadeAccountExport: FfiConverterRustBuffer<JadeAccountExport> {
+    override fun read(buf: ByteBuffer): JadeAccountExport {
+        return JadeAccountExport(
+            FfiConverterString.read(buf),
+            FfiConverterUInt.read(buf),
+            FfiConverterSequenceTypeJadeAccount.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: JadeAccountExport): ULong = (
+            FfiConverterString.allocationSize(value.`masterFingerprint`) +
+            FfiConverterUInt.allocationSize(value.`accountIndex`) +
+            FfiConverterSequenceTypeJadeAccount.allocationSize(value.`accounts`)
+    )
+
+    override fun write(value: JadeAccountExport, buf: ByteBuffer) {
+        FfiConverterString.write(value.`masterFingerprint`, buf)
+        FfiConverterUInt.write(value.`accountIndex`, buf)
+        FfiConverterSequenceTypeJadeAccount.write(value.`accounts`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeJadeDeviceInfo: FfiConverterRustBuffer<JadeDeviceInfo> {
+    override fun read(buf: ByteBuffer): JadeDeviceInfo {
+        return JadeDeviceInfo(
+            FfiConverterString.read(buf),
+            FfiConverterTypeJadeTransportKind.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: JadeDeviceInfo): ULong = (
+            FfiConverterString.allocationSize(value.`path`) +
+            FfiConverterTypeJadeTransportKind.allocationSize(value.`transport`) +
+            FfiConverterOptionalString.allocationSize(value.`name`) +
+            FfiConverterOptionalString.allocationSize(value.`serialNumber`)
+    )
+
+    override fun write(value: JadeDeviceInfo, buf: ByteBuffer) {
+        FfiConverterString.write(value.`path`, buf)
+        FfiConverterTypeJadeTransportKind.write(value.`transport`, buf)
+        FfiConverterOptionalString.write(value.`name`, buf)
+        FfiConverterOptionalString.write(value.`serialNumber`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeJadeNativeDevice: FfiConverterRustBuffer<JadeNativeDevice> {
+    override fun read(buf: ByteBuffer): JadeNativeDevice {
+        return JadeNativeDevice(
+            FfiConverterString.read(buf),
+            FfiConverterTypeJadeTransportKind.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: JadeNativeDevice): ULong = (
+            FfiConverterString.allocationSize(value.`path`) +
+            FfiConverterTypeJadeTransportKind.allocationSize(value.`transport`) +
+            FfiConverterOptionalString.allocationSize(value.`name`) +
+            FfiConverterOptionalString.allocationSize(value.`serialNumber`)
+    )
+
+    override fun write(value: JadeNativeDevice, buf: ByteBuffer) {
+        FfiConverterString.write(value.`path`, buf)
+        FfiConverterTypeJadeTransportKind.write(value.`transport`, buf)
+        FfiConverterOptionalString.write(value.`name`, buf)
+        FfiConverterOptionalString.write(value.`serialNumber`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeJadeSignedMessage: FfiConverterRustBuffer<JadeSignedMessage> {
+    override fun read(buf: ByteBuffer): JadeSignedMessage {
+        return JadeSignedMessage(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: JadeSignedMessage): ULong = (
+            FfiConverterString.allocationSize(value.`signature`) +
+            FfiConverterString.allocationSize(value.`address`) +
+            FfiConverterString.allocationSize(value.`derivationPath`)
+    )
+
+    override fun write(value: JadeSignedMessage, buf: ByteBuffer) {
+        FfiConverterString.write(value.`signature`, buf)
+        FfiConverterString.write(value.`address`, buf)
+        FfiConverterString.write(value.`derivationPath`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeJadeTransportReadResult: FfiConverterRustBuffer<JadeTransportReadResult> {
+    override fun read(buf: ByteBuffer): JadeTransportReadResult {
+        return JadeTransportReadResult(
+            FfiConverterBoolean.read(buf),
+            FfiConverterByteArray.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalTypeJadeTransportErrorCode.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: JadeTransportReadResult): ULong = (
+            FfiConverterBoolean.allocationSize(value.`success`) +
+            FfiConverterByteArray.allocationSize(value.`data`) +
+            FfiConverterString.allocationSize(value.`error`) +
+            FfiConverterOptionalTypeJadeTransportErrorCode.allocationSize(value.`errorCode`)
+    )
+
+    override fun write(value: JadeTransportReadResult, buf: ByteBuffer) {
+        FfiConverterBoolean.write(value.`success`, buf)
+        FfiConverterByteArray.write(value.`data`, buf)
+        FfiConverterString.write(value.`error`, buf)
+        FfiConverterOptionalTypeJadeTransportErrorCode.write(value.`errorCode`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeJadeTransportResult: FfiConverterRustBuffer<JadeTransportResult> {
+    override fun read(buf: ByteBuffer): JadeTransportResult {
+        return JadeTransportResult(
+            FfiConverterBoolean.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterOptionalTypeJadeTransportErrorCode.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: JadeTransportResult): ULong = (
+            FfiConverterBoolean.allocationSize(value.`success`) +
+            FfiConverterString.allocationSize(value.`error`) +
+            FfiConverterOptionalTypeJadeTransportErrorCode.allocationSize(value.`errorCode`)
+    )
+
+    override fun write(value: JadeTransportResult, buf: ByteBuffer) {
+        FfiConverterBoolean.write(value.`success`, buf)
+        FfiConverterString.write(value.`error`, buf)
+        FfiConverterOptionalTypeJadeTransportErrorCode.write(value.`errorCode`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeJadeVersionInfo: FfiConverterRustBuffer<JadeVersionInfo> {
+    override fun read(buf: ByteBuffer): JadeVersionInfo {
+        return JadeVersionInfo(
+            FfiConverterString.read(buf),
+            FfiConverterTypeJadeState.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalBoolean.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+            FfiConverterOptionalUInt.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: JadeVersionInfo): ULong = (
+            FfiConverterString.allocationSize(value.`jadeVersion`) +
+            FfiConverterTypeJadeState.allocationSize(value.`jadeState`) +
+            FfiConverterOptionalString.allocationSize(value.`jadeNetworks`) +
+            FfiConverterOptionalBoolean.allocationSize(value.`jadeHasPin`) +
+            FfiConverterOptionalString.allocationSize(value.`boardType`) +
+            FfiConverterOptionalString.allocationSize(value.`jadeConfig`) +
+            FfiConverterOptionalString.allocationSize(value.`jadeFeatures`) +
+            FfiConverterOptionalString.allocationSize(value.`idfVersion`) +
+            FfiConverterOptionalString.allocationSize(value.`chipFeatures`) +
+            FfiConverterOptionalString.allocationSize(value.`efuseMac`) +
+            FfiConverterOptionalUInt.allocationSize(value.`batteryStatus`) +
+            FfiConverterOptionalUInt.allocationSize(value.`jadeOtaMaxChunk`)
+    )
+
+    override fun write(value: JadeVersionInfo, buf: ByteBuffer) {
+        FfiConverterString.write(value.`jadeVersion`, buf)
+        FfiConverterTypeJadeState.write(value.`jadeState`, buf)
+        FfiConverterOptionalString.write(value.`jadeNetworks`, buf)
+        FfiConverterOptionalBoolean.write(value.`jadeHasPin`, buf)
+        FfiConverterOptionalString.write(value.`boardType`, buf)
+        FfiConverterOptionalString.write(value.`jadeConfig`, buf)
+        FfiConverterOptionalString.write(value.`jadeFeatures`, buf)
+        FfiConverterOptionalString.write(value.`idfVersion`, buf)
+        FfiConverterOptionalString.write(value.`chipFeatures`, buf)
+        FfiConverterOptionalString.write(value.`efuseMac`, buf)
+        FfiConverterOptionalUInt.write(value.`batteryStatus`, buf)
+        FfiConverterOptionalUInt.write(value.`jadeOtaMaxChunk`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypeJadeXpubResponse: FfiConverterRustBuffer<JadeXpubResponse> {
+    override fun read(buf: ByteBuffer): JadeXpubResponse {
+        return JadeXpubResponse(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: JadeXpubResponse): ULong = (
+            FfiConverterString.allocationSize(value.`xpub`) +
+            FfiConverterString.allocationSize(value.`derivationPath`) +
+            FfiConverterString.allocationSize(value.`masterFingerprint`)
+    )
+
+    override fun write(value: JadeXpubResponse, buf: ByteBuffer) {
+        FfiConverterString.write(value.`xpub`, buf)
+        FfiConverterString.write(value.`derivationPath`, buf)
+        FfiConverterString.write(value.`masterFingerprint`, buf)
     }
 }
 
@@ -11340,6 +12437,419 @@ public object FfiConverterTypeHardwareWalletVendor: FfiConverterRustBuffer<Hardw
 
 
 
+
+public object FfiConverterTypeJadeAddressVariant: FfiConverterRustBuffer<JadeAddressVariant> {
+    override fun read(buf: ByteBuffer): JadeAddressVariant = try {
+        JadeAddressVariant.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: JadeAddressVariant): ULong = 4UL
+
+    override fun write(value: JadeAddressVariant, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+public object JadeExceptionErrorHandler : UniffiRustCallStatusErrorHandler<JadeException> {
+    override fun lift(errorBuf: RustBufferByValue): JadeException = FfiConverterTypeJadeError.lift(errorBuf)
+}
+
+public object FfiConverterTypeJadeError : FfiConverterRustBuffer<JadeException> {
+    override fun read(buf: ByteBuffer): JadeException {
+        return when (buf.getInt()) {
+            1 -> JadeException.TransportException(
+                FfiConverterString.read(buf),
+                )
+            2 -> JadeException.DeviceNotFound()
+            3 -> JadeException.DeviceDisconnected()
+            4 -> JadeException.DeviceBusy()
+            5 -> JadeException.NotConnected()
+            6 -> JadeException.NotInitialized()
+            7 -> JadeException.ConnectionException(
+                FfiConverterString.read(buf),
+                )
+            8 -> JadeException.ProtocolException(
+                FfiConverterString.read(buf),
+                )
+            9 -> JadeException.Timeout()
+            10 -> JadeException.UserCancelled()
+            11 -> JadeException.DeviceLocked()
+            12 -> JadeException.DeviceUninitialized()
+            13 -> JadeException.InvalidPin()
+            14 -> JadeException.NetworkMismatch(
+                FfiConverterString.read(buf),
+                )
+            15 -> JadeException.UnsupportedFirmware(
+                FfiConverterString.read(buf),
+                FfiConverterString.read(buf),
+                )
+            16 -> JadeException.InvalidPath(
+                FfiConverterString.read(buf),
+                )
+            17 -> JadeException.InvalidPsbt(
+                FfiConverterString.read(buf),
+                )
+            18 -> JadeException.PsbtTooLarge(
+                FfiConverterULong.read(buf),
+                FfiConverterULong.read(buf),
+                )
+            19 -> JadeException.FingerprintMismatch(
+                FfiConverterString.read(buf),
+                FfiConverterString.read(buf),
+                )
+            20 -> JadeException.NothingSigned()
+            21 -> JadeException.AddressMismatch(
+                FfiConverterString.read(buf),
+                FfiConverterString.read(buf),
+                )
+            22 -> JadeException.PinServerException(
+                FfiConverterString.read(buf),
+                )
+            23 -> JadeException.DeviceException(
+                FfiConverterString.read(buf),
+                )
+            24 -> JadeException.IoException(
+                FfiConverterString.read(buf),
+                )
+            else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
+        }
+    }
+
+    override fun allocationSize(value: JadeException): ULong {
+        return when (value) {
+            is JadeException.TransportException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is JadeException.DeviceNotFound -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is JadeException.DeviceDisconnected -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is JadeException.DeviceBusy -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is JadeException.NotConnected -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is JadeException.NotInitialized -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is JadeException.ConnectionException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is JadeException.ProtocolException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is JadeException.Timeout -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is JadeException.UserCancelled -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is JadeException.DeviceLocked -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is JadeException.DeviceUninitialized -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is JadeException.InvalidPin -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is JadeException.NetworkMismatch -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is JadeException.UnsupportedFirmware -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`installed`)
+                + FfiConverterString.allocationSize(value.`required`)
+            )
+            is JadeException.InvalidPath -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is JadeException.InvalidPsbt -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is JadeException.PsbtTooLarge -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterULong.allocationSize(value.`size`)
+                + FfiConverterULong.allocationSize(value.`max`)
+            )
+            is JadeException.FingerprintMismatch -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`device`)
+                + FfiConverterString.allocationSize(value.`psbt`)
+            )
+            is JadeException.NothingSigned -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+            )
+            is JadeException.AddressMismatch -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`expected`)
+                + FfiConverterString.allocationSize(value.`returned`)
+            )
+            is JadeException.PinServerException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is JadeException.DeviceException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is JadeException.IoException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+        }
+    }
+
+    override fun write(value: JadeException, buf: ByteBuffer) {
+        when (value) {
+            is JadeException.TransportException -> {
+                buf.putInt(1)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is JadeException.DeviceNotFound -> {
+                buf.putInt(2)
+                Unit
+            }
+            is JadeException.DeviceDisconnected -> {
+                buf.putInt(3)
+                Unit
+            }
+            is JadeException.DeviceBusy -> {
+                buf.putInt(4)
+                Unit
+            }
+            is JadeException.NotConnected -> {
+                buf.putInt(5)
+                Unit
+            }
+            is JadeException.NotInitialized -> {
+                buf.putInt(6)
+                Unit
+            }
+            is JadeException.ConnectionException -> {
+                buf.putInt(7)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is JadeException.ProtocolException -> {
+                buf.putInt(8)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is JadeException.Timeout -> {
+                buf.putInt(9)
+                Unit
+            }
+            is JadeException.UserCancelled -> {
+                buf.putInt(10)
+                Unit
+            }
+            is JadeException.DeviceLocked -> {
+                buf.putInt(11)
+                Unit
+            }
+            is JadeException.DeviceUninitialized -> {
+                buf.putInt(12)
+                Unit
+            }
+            is JadeException.InvalidPin -> {
+                buf.putInt(13)
+                Unit
+            }
+            is JadeException.NetworkMismatch -> {
+                buf.putInt(14)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is JadeException.UnsupportedFirmware -> {
+                buf.putInt(15)
+                FfiConverterString.write(value.`installed`, buf)
+                FfiConverterString.write(value.`required`, buf)
+                Unit
+            }
+            is JadeException.InvalidPath -> {
+                buf.putInt(16)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is JadeException.InvalidPsbt -> {
+                buf.putInt(17)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is JadeException.PsbtTooLarge -> {
+                buf.putInt(18)
+                FfiConverterULong.write(value.`size`, buf)
+                FfiConverterULong.write(value.`max`, buf)
+                Unit
+            }
+            is JadeException.FingerprintMismatch -> {
+                buf.putInt(19)
+                FfiConverterString.write(value.`device`, buf)
+                FfiConverterString.write(value.`psbt`, buf)
+                Unit
+            }
+            is JadeException.NothingSigned -> {
+                buf.putInt(20)
+                Unit
+            }
+            is JadeException.AddressMismatch -> {
+                buf.putInt(21)
+                FfiConverterString.write(value.`expected`, buf)
+                FfiConverterString.write(value.`returned`, buf)
+                Unit
+            }
+            is JadeException.PinServerException -> {
+                buf.putInt(22)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is JadeException.DeviceException -> {
+                buf.putInt(23)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is JadeException.IoException -> {
+                buf.putInt(24)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+        }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeJadeNetwork: FfiConverterRustBuffer<JadeNetwork> {
+    override fun read(buf: ByteBuffer): JadeNetwork = try {
+        JadeNetwork.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: JadeNetwork): ULong = 4UL
+
+    override fun write(value: JadeNetwork, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeJadePingStatus: FfiConverterRustBuffer<JadePingStatus> {
+    override fun read(buf: ByteBuffer): JadePingStatus = try {
+        JadePingStatus.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: JadePingStatus): ULong = 4UL
+
+    override fun write(value: JadePingStatus, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeJadeState: FfiConverterRustBuffer<JadeState> {
+    override fun read(buf: ByteBuffer): JadeState = try {
+        JadeState.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: JadeState): ULong = 4UL
+
+    override fun write(value: JadeState, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeJadeTransportErrorCode: FfiConverterRustBuffer<JadeTransportErrorCode> {
+    override fun read(buf: ByteBuffer): JadeTransportErrorCode = try {
+        JadeTransportErrorCode.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: JadeTransportErrorCode): ULong = 4UL
+
+    override fun write(value: JadeTransportErrorCode, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+public object FfiConverterTypeJadeTransportKind: FfiConverterRustBuffer<JadeTransportKind> {
+    override fun read(buf: ByteBuffer): JadeTransportKind = try {
+        JadeTransportKind.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: JadeTransportKind): ULong = 4UL
+
+    override fun write(value: JadeTransportKind, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
 public object LnurlExceptionErrorHandler : UniffiRustCallStatusErrorHandler<LnurlException> {
     override fun lift(errorBuf: RustBufferByValue): LnurlException = FfiConverterTypeLnurlError.lift(errorBuf)
 }
@@ -13534,6 +15044,64 @@ public object FfiConverterOptionalTypeILspNode: FfiConverterRustBuffer<ILspNode?
 
 
 
+public object FfiConverterOptionalTypeJadeDeviceInfo: FfiConverterRustBuffer<JadeDeviceInfo?> {
+    override fun read(buf: ByteBuffer): JadeDeviceInfo? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeJadeDeviceInfo.read(buf)
+    }
+
+    override fun allocationSize(value: JadeDeviceInfo?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeJadeDeviceInfo.allocationSize(value)
+        }
+    }
+
+    override fun write(value: JadeDeviceInfo?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeJadeDeviceInfo.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeJadeVersionInfo: FfiConverterRustBuffer<JadeVersionInfo?> {
+    override fun read(buf: ByteBuffer): JadeVersionInfo? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeJadeVersionInfo.read(buf)
+    }
+
+    override fun allocationSize(value: JadeVersionInfo?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeJadeVersionInfo.allocationSize(value)
+        }
+    }
+
+    override fun write(value: JadeVersionInfo?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeJadeVersionInfo.write(value, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterOptionalTypeOnchainActivity: FfiConverterRustBuffer<OnchainActivity?> {
     override fun read(buf: ByteBuffer): OnchainActivity? {
         if (buf.get().toInt() == 0) {
@@ -13904,6 +15472,35 @@ public object FfiConverterOptionalTypeCoinSelection: FfiConverterRustBuffer<Coin
         } else {
             buf.put(1)
             FfiConverterTypeCoinSelection.write(value, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterOptionalTypeJadeTransportErrorCode: FfiConverterRustBuffer<JadeTransportErrorCode?> {
+    override fun read(buf: ByteBuffer): JadeTransportErrorCode? {
+        if (buf.get().toInt() == 0) {
+            return null
+        }
+        return FfiConverterTypeJadeTransportErrorCode.read(buf)
+    }
+
+    override fun allocationSize(value: JadeTransportErrorCode?): ULong {
+        if (value == null) {
+            return 1UL
+        } else {
+            return 1UL + FfiConverterTypeJadeTransportErrorCode.allocationSize(value)
+        }
+    }
+
+    override fun write(value: JadeTransportErrorCode?, buf: ByteBuffer) {
+        if (value == null) {
+            buf.put(0)
+        } else {
+            buf.put(1)
+            FfiConverterTypeJadeTransportErrorCode.write(value, buf)
         }
     }
 }
@@ -14609,6 +16206,81 @@ public object FfiConverterSequenceTypeIManualRefund: FfiConverterRustBuffer<List
 
 
 
+public object FfiConverterSequenceTypeJadeAccount: FfiConverterRustBuffer<List<JadeAccount>> {
+    override fun read(buf: ByteBuffer): List<JadeAccount> {
+        val len = buf.getInt()
+        return List<JadeAccount>(len) {
+            FfiConverterTypeJadeAccount.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<JadeAccount>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeJadeAccount.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<JadeAccount>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeJadeAccount.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeJadeDeviceInfo: FfiConverterRustBuffer<List<JadeDeviceInfo>> {
+    override fun read(buf: ByteBuffer): List<JadeDeviceInfo> {
+        val len = buf.getInt()
+        return List<JadeDeviceInfo>(len) {
+            FfiConverterTypeJadeDeviceInfo.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<JadeDeviceInfo>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeJadeDeviceInfo.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<JadeDeviceInfo>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeJadeDeviceInfo.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeJadeNativeDevice: FfiConverterRustBuffer<List<JadeNativeDevice>> {
+    override fun read(buf: ByteBuffer): List<JadeNativeDevice> {
+        val len = buf.getInt()
+        return List<JadeNativeDevice>(len) {
+            FfiConverterTypeJadeNativeDevice.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<JadeNativeDevice>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeJadeNativeDevice.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<JadeNativeDevice>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeJadeNativeDevice.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceTypeLightningActivity: FfiConverterRustBuffer<List<LightningActivity>> {
     override fun read(buf: ByteBuffer): List<LightningActivity> {
         val len = buf.getInt()
@@ -15052,6 +16724,31 @@ public object FfiConverterSequenceTypeTxOutput: FfiConverterRustBuffer<List<TxOu
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeTxOutput.write(it, buf)
+        }
+    }
+}
+
+
+
+
+public object FfiConverterSequenceTypeAccountType: FfiConverterRustBuffer<List<AccountType>> {
+    override fun read(buf: ByteBuffer): List<AccountType> {
+        val len = buf.getInt()
+        return List<AccountType>(len) {
+            FfiConverterTypeAccountType.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<AccountType>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypeAccountType.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<AccountType>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeAccountType.write(it, buf)
         }
     }
 }
@@ -16549,6 +18246,440 @@ public fun `isValidBip39Word`(`word`: kotlin.String): kotlin.Boolean {
             uniffiRustCallStatus,
         )
     })
+}
+
+/**
+ * Map a generic account type onto Jade's descriptor variant.
+ */
+public fun `jadeAccountTypeToVariant`(`accountType`: AccountType): JadeAddressVariant {
+    return FfiConverterTypeJadeAddressVariant.lift(uniffiRustCall { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_account_type_to_variant(
+            FfiConverterTypeAccountType.lower(`accountType`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Abort the operation in flight.
+ *
+ * Jade has no cancel message, so this closes the link. The application should
+ * reconnect afterwards. This is what backs a cancel button on a signing screen.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadeCancel`() {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_cancel(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
+}
+
+/**
+ * Open a device and read its firmware and state summary.
+ *
+ * The path normally comes from the last `jade_scan`, but a known Bluetooth
+ * address or serial path can be passed directly to reconnect without a scan.
+ * Any previously open connection is closed first. The returned `jade_state`
+ * tells the application what to do next: `Locked` means call `jade_unlock`,
+ * `Ready` means the device is already usable, and `Uninit` means the user must
+ * create or restore a wallet on the device itself.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadeConnect`(`transport`: JadeTransportKind, `path`: kotlin.String): JadeVersionInfo {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_connect(
+            FfiConverterTypeJadeTransportKind.lower(`transport`),
+            FfiConverterString.lower(`path`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeJadeVersionInfo.lift(it) },
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
+}
+
+/**
+ * Close the device and clear session state.
+ *
+ * Safe to call while an operation is waiting on a confirmation: the pending
+ * request returns `UserCancelled` promptly rather than running out its deadline.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadeDisconnect`() {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_disconnect(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
+}
+
+/**
+ * Fetch the account keys an import needs in one call.
+ *
+ * Shaped like `passport_parse_account_export` so applications have a single
+ * import path across signers. Each key is fetched under one held connection,
+ * which matters over Bluetooth where every round trip is slow.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadeGetAccountExport`(`network`: JadeNetwork, `accountIndex`: kotlin.UInt, `accountTypes`: List<AccountType>): JadeAccountExport {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_get_account_export(
+            FfiConverterTypeJadeNetwork.lower(`network`),
+            FfiConverterUInt.lower(`accountIndex`),
+            FfiConverterSequenceTypeAccountType.lower(`accountTypes`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeJadeAccountExport.lift(it) },
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
+}
+
+public suspend fun `jadeGetConnectedDevice`(): JadeDeviceInfo? {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_get_connected_device(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterOptionalTypeJadeDeviceInfo.lift(it) },
+        // Error FFI converter
+        UniffiNullRustCallStatusErrorHandler,
+    )
+}
+
+/**
+ * The device's master fingerprint, eight lowercase hex characters.
+ *
+ * This must be supplied as `WalletParams.fingerprint` when composing, or the
+ * resulting PSBT carries no BIP32 key origins and the device signs nothing.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadeGetMasterFingerprint`(`network`: JadeNetwork): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_get_master_fingerprint(
+            FfiConverterTypeJadeNetwork.lower(`network`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
+}
+
+/**
+ * The version summary read at connect, without touching the device.
+ */
+public suspend fun `jadeGetVersionInfo`(): JadeVersionInfo? {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_get_version_info(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterOptionalTypeJadeVersionInfo.lift(it) },
+        // Error FFI converter
+        UniffiNullRustCallStatusErrorHandler,
+    )
+}
+
+/**
+ * Fetch an extended public key, echoed back with the path and fingerprint.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadeGetXpub`(`network`: JadeNetwork, `derivationPath`: kotlin.String): JadeXpubResponse {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_get_xpub(
+            FfiConverterTypeJadeNetwork.lower(`network`),
+            FfiConverterString.lower(`derivationPath`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeJadeXpubResponse.lift(it) },
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
+}
+
+public fun `jadeIsConnected`(): kotlin.Boolean {
+    return FfiConverterBoolean.lift(uniffiRustCall { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_is_connected(
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * The devices found by the last scan, without starting a new one.
+ */
+public suspend fun `jadeListDevices`(): List<JadeDeviceInfo> {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_list_devices(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterSequenceTypeJadeDeviceInfo.lift(it) },
+        // Error FFI converter
+        UniffiNullRustCallStatusErrorHandler,
+    )
+}
+
+/**
+ * Lock the device and zero its in-memory key material.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadeLogout`() {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_logout(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
+}
+
+/**
+ * Tell the library that the native layer saw the device disconnect.
+ *
+ * Without this, an idle Bluetooth drop is invisible until the next request.
+ */
+public suspend fun `jadeNotifyDisconnected`(`path`: kotlin.String) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_notify_disconnected(
+            FfiConverterString.lower(`path`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        UniffiNullRustCallStatusErrorHandler,
+    )
+}
+
+/**
+ * Check whether the device is idle, busy, or waiting on the user.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadePing`(): JadePingStatus {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_ping(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeJadePingStatus.lift(it) },
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
+}
+
+/**
+ * Re-read the version summary from the device.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadeRefreshVersionInfo`(): JadeVersionInfo {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_refresh_version_info(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeJadeVersionInfo.lift(it) },
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
+}
+
+/**
+ * Discover Jade devices.
+ *
+ * Bluetooth discovery is performed by the registered transport callback; on
+ * desktop and Python builds, attached USB serial units are enumerated too.
+ * Returns `DeviceBusy` while a connection is open, because starting a
+ * Bluetooth scan during an active link drops it on Android.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadeScan`(`timeoutMs`: kotlin.UInt): List<JadeDeviceInfo> {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_scan(
+            FfiConverterUInt.lower(`timeoutMs`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterSequenceTypeJadeDeviceInfo.lift(it) },
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
+}
+
+/**
+ * Register the native transport.
+ *
+ * Returns `true` when this replaced a previously registered callback, which
+ * lets the application tell a fresh registration from a re-registration.
+ */
+public fun `jadeSetTransportCallback`(`callback`: JadeTransportCallback): kotlin.Boolean {
+    return FfiConverterBoolean.lift(uniffiRustCall { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_set_transport_callback(
+            FfiConverterTypeJadeTransportCallback.lower(`callback`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Sign a message, returning the signature with the address that verifies it.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadeSignMessage`(`network`: JadeNetwork, `derivationPath`: kotlin.String, `message`: kotlin.String): JadeSignedMessage {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_sign_message(
+            FfiConverterTypeJadeNetwork.lower(`network`),
+            FfiConverterString.lower(`derivationPath`),
+            FfiConverterString.lower(`message`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeJadeSignedMessage.lift(it) },
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
+}
+
+/**
+ * Sign a PSBT, returning the signed PSBT base64 encoded.
+ *
+ * The reply is checked against what was sent before it is returned. Feed the
+ * result to `finalize_psbt` with the original PSBT, then broadcast with
+ * `onchain_broadcast_raw_tx`.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadeSignPsbt`(`network`: JadeNetwork, `psbt`: kotlin.String): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_sign_psbt(
+            FfiConverterTypeJadeNetwork.lower(`network`),
+            FfiConverterString.lower(`psbt`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
+}
+
+/**
+ * Unlock the device for a network.
+ *
+ * Runs the blind pinserver exchange when the device asks for it, which needs
+ * network access. The PIN is entered on the device and never reaches the host.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadeUnlock`(`network`: JadeNetwork) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_unlock(
+            FfiConverterTypeJadeNetwork.lower(`network`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
+}
+
+/**
+ * Display an address on the device and check it against the expected one.
+ *
+ * This always prompts on the device screen, so it is a verification step
+ * rather than a way to fetch an address. Returns `AddressMismatch` when the
+ * device disagrees with `expected_address`.
+ */
+@Throws(JadeException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `jadeVerifyAddress`(`network`: JadeNetwork, `variant`: JadeAddressVariant, `derivationPath`: kotlin.String, `expectedAddress`: kotlin.String) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_jade_verify_address(
+            FfiConverterTypeJadeNetwork.lower(`network`),
+            FfiConverterTypeJadeAddressVariant.lower(`variant`),
+            FfiConverterString.lower(`derivationPath`),
+            FfiConverterString.lower(`expectedAddress`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        JadeExceptionErrorHandler,
+    )
 }
 
 @Throws(LnurlException::class, kotlin.coroutines.cancellation.CancellationException::class)

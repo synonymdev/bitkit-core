@@ -2643,6 +2643,8 @@ pub async fn jade_list_devices() -> Vec<JadeDeviceInfo> {
 
 /// Open a device and read its firmware and state summary.
 ///
+/// The path normally comes from the last `jade_scan`, but a known Bluetooth
+/// address or serial path can be passed directly to reconnect without a scan.
 /// Any previously open connection is closed first. The returned `jade_state`
 /// tells the application what to do next: `Locked` means call `jade_unlock`,
 /// `Ready` means the device is already usable, and `Uninit` means the user must

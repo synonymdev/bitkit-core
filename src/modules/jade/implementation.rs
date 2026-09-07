@@ -111,6 +111,12 @@ impl JadeManager {
     // ------------------------------------------------------------------
 
     /// Open a device and read its version summary.
+    ///
+    /// A path the last scan did not report is accepted as well: a Bluetooth
+    /// address stays valid across scans, and a device that just stopped
+    /// advertising, or was reconnected before the next scan, would otherwise be
+    /// unreachable until a scan happens to see it again. The native transport
+    /// reports an unreachable path when it opens it.
     pub async fn connect(
         &self,
         transport_kind: JadeTransportKind,
@@ -124,7 +130,12 @@ impl JadeManager {
                     candidate.info.transport == transport_kind && candidate.info.path == path
                 })
                 .map(|candidate| candidate.info.clone())
-                .ok_or(JadeError::DeviceNotFound)?
+                .unwrap_or_else(|| JadeDeviceInfo {
+                    path: path.to_string(),
+                    transport: transport_kind,
+                    name: None,
+                    serial_number: None,
+                })
         };
 
         // Close anything already open first. Overwriting the session would
