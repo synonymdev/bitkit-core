@@ -639,6 +639,48 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_account_type_to_variant() != 35222:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_cancel() != 64344:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_connect() != 62038:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_disconnect() != 22575:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_get_account_export() != 39143:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_get_connected_device() != 31749:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_get_master_fingerprint() != 29630:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_get_version_info() != 28653:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_get_xpub() != 51180:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_is_connected() != 16304:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_list_devices() != 31161:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_logout() != 2301:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_notify_disconnected() != 24935:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_ping() != 45620:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_refresh_version_info() != 52539:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_scan() != 445:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_set_transport_callback() != 61572:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_sign_message() != 257:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_sign_psbt() != 20865:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_unlock() != 35535:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_func_jade_verify_address() != 54249:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_func_mark_activity_as_seen() != 36622:
@@ -827,6 +869,18 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_eventlistener_on_event() != 35531:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_jadetransportcallback_scan_devices() != 38147:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_jadetransportcallback_open_device() != 21299:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_jadetransportcallback_close_device() != 16955:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_jadetransportcallback_write_chunk() != 12779:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_jadetransportcallback_read_chunk() != 21790:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_bitkitcore_checksum_method_jadetransportcallback_get_chunk_size() != 29973:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices() != 18766:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_bitkitcore_checksum_method_trezortransportcallback_open_device() != 44156:
@@ -971,6 +1025,24 @@ _UNIFFI_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER_METHOD0 = ctypes.CFUNCTYPE(None,
 _UNIFFI_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,_UniffiRustBuffer,ctypes.c_void_p,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
+_UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,ctypes.c_uint32,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD1 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD2 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD3 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,_UniffiRustBuffer,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD4 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.c_uint32,ctypes.POINTER(_UniffiRustBuffer),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD5 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,_UniffiRustBuffer,ctypes.POINTER(ctypes.c_uint32),
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
 _UNIFFI_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0 = ctypes.CFUNCTYPE(None,ctypes.c_uint64,ctypes.POINTER(_UniffiRustBuffer),
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -1018,6 +1090,16 @@ class _UniffiVTableCallbackInterfaceBoltzEventListener(ctypes.Structure):
 class _UniffiVTableCallbackInterfaceEventListener(ctypes.Structure):
     _fields_ = [
         ("on_event", _UNIFFI_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0),
+        ("uniffi_free", _UNIFFI_CALLBACK_INTERFACE_FREE),
+    ]
+class _UniffiVTableCallbackInterfaceJadeTransportCallback(ctypes.Structure):
+    _fields_ = [
+        ("scan_devices", _UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD0),
+        ("open_device", _UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD1),
+        ("close_device", _UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD2),
+        ("write_chunk", _UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD3),
+        ("read_chunk", _UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD4),
+        ("get_chunk_size", _UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD5),
         ("uniffi_free", _UNIFFI_CALLBACK_INTERFACE_FREE),
     ]
 class _UniffiVTableCallbackInterfaceTrezorTransportCallback(ctypes.Structure):
@@ -1082,6 +1164,58 @@ _UniffiLib.uniffi_bitkitcore_fn_method_eventlistener_on_event.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_method_eventlistener_on_event.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_clone_jadetransportcallback.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_clone_jadetransportcallback.restype = ctypes.c_void_p
+_UniffiLib.uniffi_bitkitcore_fn_free_jadetransportcallback.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_free_jadetransportcallback.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_jadetransportcallback.argtypes = (
+    ctypes.POINTER(_UniffiVTableCallbackInterfaceJadeTransportCallback),
+)
+_UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_jadetransportcallback.restype = None
+_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_scan_devices.argtypes = (
+    ctypes.c_void_p,
+    ctypes.c_uint32,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_scan_devices.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_open_device.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_open_device.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_close_device.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_close_device.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_write_chunk.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_write_chunk.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_read_chunk.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.c_uint32,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_read_chunk.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_get_chunk_size.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_get_chunk_size.restype = ctypes.c_uint32
 _UniffiLib.uniffi_bitkitcore_fn_clone_trezortransportcallback.argtypes = (
     ctypes.c_void_p,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1702,6 +1836,94 @@ _UniffiLib.uniffi_bitkitcore_fn_func_is_valid_bip39_word.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_bitkitcore_fn_func_is_valid_bip39_word.restype = ctypes.c_int8
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_account_type_to_variant.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_account_type_to_variant.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_cancel.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_cancel.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_connect.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_connect.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_disconnect.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_disconnect.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_get_account_export.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.c_uint32,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_get_account_export.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_get_connected_device.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_get_connected_device.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_get_master_fingerprint.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_get_master_fingerprint.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_get_version_info.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_get_version_info.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_get_xpub.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_get_xpub.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_is_connected.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_is_connected.restype = ctypes.c_int8
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_list_devices.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_list_devices.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_logout.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_logout.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_notify_disconnected.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_notify_disconnected.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_ping.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_ping.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_refresh_version_info.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_refresh_version_info.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_scan.argtypes = (
+    ctypes.c_uint32,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_scan.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_set_transport_callback.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_set_transport_callback.restype = ctypes.c_int8
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_sign_message.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_sign_message.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_sign_psbt.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_sign_psbt.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_unlock.argtypes = (
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_unlock.restype = ctypes.c_uint64
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_verify_address.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+)
+_UniffiLib.uniffi_bitkitcore_fn_func_jade_verify_address.restype = ctypes.c_uint64
 _UniffiLib.uniffi_bitkitcore_fn_func_lnurl_auth.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -2700,6 +2922,69 @@ _UniffiLib.uniffi_bitkitcore_checksum_func_is_address_used.restype = ctypes.c_ui
 _UniffiLib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_is_valid_bip39_word.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_account_type_to_variant.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_account_type_to_variant.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_cancel.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_cancel.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_connect.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_connect.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_disconnect.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_disconnect.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_get_account_export.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_get_account_export.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_get_connected_device.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_get_connected_device.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_get_master_fingerprint.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_get_master_fingerprint.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_get_version_info.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_get_version_info.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_get_xpub.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_get_xpub.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_is_connected.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_is_connected.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_list_devices.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_list_devices.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_logout.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_logout.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_notify_disconnected.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_notify_disconnected.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_ping.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_ping.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_refresh_version_info.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_refresh_version_info.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_scan.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_scan.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_set_transport_callback.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_set_transport_callback.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_sign_message.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_sign_message.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_sign_psbt.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_sign_psbt.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_unlock.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_unlock.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_verify_address.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_func_jade_verify_address.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_func_lnurl_auth.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_func_lnurl_auth.restype = ctypes.c_uint16
@@ -2982,6 +3267,24 @@ _UniffiLib.uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event.restype
 _UniffiLib.uniffi_bitkitcore_checksum_method_eventlistener_on_event.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_method_eventlistener_on_event.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_jadetransportcallback_scan_devices.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_jadetransportcallback_scan_devices.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_jadetransportcallback_open_device.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_jadetransportcallback_open_device.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_jadetransportcallback_close_device.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_jadetransportcallback_close_device.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_jadetransportcallback_write_chunk.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_jadetransportcallback_write_chunk.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_jadetransportcallback_read_chunk.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_jadetransportcallback_read_chunk.restype = ctypes.c_uint16
+_UniffiLib.uniffi_bitkitcore_checksum_method_jadetransportcallback_get_chunk_size.argtypes = (
+)
+_UniffiLib.uniffi_bitkitcore_checksum_method_jadetransportcallback_get_chunk_size.restype = ctypes.c_uint16
 _UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices.argtypes = (
 )
 _UniffiLib.uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices.restype = ctypes.c_uint16
@@ -3213,6 +3516,8 @@ class _UniffiConverterBytes(_UniffiConverterRustBuffer):
     def write(value, buf):
         buf.write_i32(len(value))
         buf.write(value)
+
+
 
 
 
@@ -6745,6 +7050,510 @@ class _UniffiConverterTypeIcJitEntry(_UniffiConverterRustBuffer):
         _UniffiConverterString.write(value.expires_at, buf)
         _UniffiConverterString.write(value.updated_at, buf)
         _UniffiConverterString.write(value.created_at, buf)
+
+
+class JadeAccount:
+    variant: "JadeAddressVariant"
+    xpub: "str"
+    derivation_path: "str"
+    def __init__(self, *, variant: "JadeAddressVariant", xpub: "str", derivation_path: "str"):
+        self.variant = variant
+        self.xpub = xpub
+        self.derivation_path = derivation_path
+
+    def __str__(self):
+        return "JadeAccount(variant={}, xpub={}, derivation_path={})".format(self.variant, self.xpub, self.derivation_path)
+
+    def __eq__(self, other):
+        if self.variant != other.variant:
+            return False
+        if self.xpub != other.xpub:
+            return False
+        if self.derivation_path != other.derivation_path:
+            return False
+        return True
+
+class _UniffiConverterTypeJadeAccount(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return JadeAccount(
+            variant=_UniffiConverterTypeJadeAddressVariant.read(buf),
+            xpub=_UniffiConverterString.read(buf),
+            derivation_path=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterTypeJadeAddressVariant.check_lower(value.variant)
+        _UniffiConverterString.check_lower(value.xpub)
+        _UniffiConverterString.check_lower(value.derivation_path)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterTypeJadeAddressVariant.write(value.variant, buf)
+        _UniffiConverterString.write(value.xpub, buf)
+        _UniffiConverterString.write(value.derivation_path, buf)
+
+
+class JadeAccountExport:
+    master_fingerprint: "str"
+    account_index: "int"
+    accounts: "typing.List[JadeAccount]"
+    def __init__(self, *, master_fingerprint: "str", account_index: "int", accounts: "typing.List[JadeAccount]"):
+        self.master_fingerprint = master_fingerprint
+        self.account_index = account_index
+        self.accounts = accounts
+
+    def __str__(self):
+        return "JadeAccountExport(master_fingerprint={}, account_index={}, accounts={})".format(self.master_fingerprint, self.account_index, self.accounts)
+
+    def __eq__(self, other):
+        if self.master_fingerprint != other.master_fingerprint:
+            return False
+        if self.account_index != other.account_index:
+            return False
+        if self.accounts != other.accounts:
+            return False
+        return True
+
+class _UniffiConverterTypeJadeAccountExport(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return JadeAccountExport(
+            master_fingerprint=_UniffiConverterString.read(buf),
+            account_index=_UniffiConverterUInt32.read(buf),
+            accounts=_UniffiConverterSequenceTypeJadeAccount.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.master_fingerprint)
+        _UniffiConverterUInt32.check_lower(value.account_index)
+        _UniffiConverterSequenceTypeJadeAccount.check_lower(value.accounts)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.master_fingerprint, buf)
+        _UniffiConverterUInt32.write(value.account_index, buf)
+        _UniffiConverterSequenceTypeJadeAccount.write(value.accounts, buf)
+
+
+class JadeDeviceInfo:
+    path: "str"
+    transport: "JadeTransportKind"
+    name: "typing.Optional[str]"
+    serial_number: "typing.Optional[str]"
+    def __init__(self, *, path: "str", transport: "JadeTransportKind", name: "typing.Optional[str]", serial_number: "typing.Optional[str]"):
+        self.path = path
+        self.transport = transport
+        self.name = name
+        self.serial_number = serial_number
+
+    def __str__(self):
+        return "JadeDeviceInfo(path={}, transport={}, name={}, serial_number={})".format(self.path, self.transport, self.name, self.serial_number)
+
+    def __eq__(self, other):
+        if self.path != other.path:
+            return False
+        if self.transport != other.transport:
+            return False
+        if self.name != other.name:
+            return False
+        if self.serial_number != other.serial_number:
+            return False
+        return True
+
+class _UniffiConverterTypeJadeDeviceInfo(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return JadeDeviceInfo(
+            path=_UniffiConverterString.read(buf),
+            transport=_UniffiConverterTypeJadeTransportKind.read(buf),
+            name=_UniffiConverterOptionalString.read(buf),
+            serial_number=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.path)
+        _UniffiConverterTypeJadeTransportKind.check_lower(value.transport)
+        _UniffiConverterOptionalString.check_lower(value.name)
+        _UniffiConverterOptionalString.check_lower(value.serial_number)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.path, buf)
+        _UniffiConverterTypeJadeTransportKind.write(value.transport, buf)
+        _UniffiConverterOptionalString.write(value.name, buf)
+        _UniffiConverterOptionalString.write(value.serial_number, buf)
+
+
+class JadeNativeDevice:
+    """
+    A device the native layer discovered.
+    """
+
+    path: "str"
+    """
+    Transport specific address: a BLE identifier or a serial device path.
+    """
+
+    transport: "JadeTransportKind"
+    name: "typing.Optional[str]"
+    """
+    Advertised or descriptor name, for example "Jade C0FFEE".
+    """
+
+    serial_number: "typing.Optional[str]"
+    def __init__(self, *, path: "str", transport: "JadeTransportKind", name: "typing.Optional[str]", serial_number: "typing.Optional[str]"):
+        self.path = path
+        self.transport = transport
+        self.name = name
+        self.serial_number = serial_number
+
+    def __str__(self):
+        return "JadeNativeDevice(path={}, transport={}, name={}, serial_number={})".format(self.path, self.transport, self.name, self.serial_number)
+
+    def __eq__(self, other):
+        if self.path != other.path:
+            return False
+        if self.transport != other.transport:
+            return False
+        if self.name != other.name:
+            return False
+        if self.serial_number != other.serial_number:
+            return False
+        return True
+
+class _UniffiConverterTypeJadeNativeDevice(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return JadeNativeDevice(
+            path=_UniffiConverterString.read(buf),
+            transport=_UniffiConverterTypeJadeTransportKind.read(buf),
+            name=_UniffiConverterOptionalString.read(buf),
+            serial_number=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.path)
+        _UniffiConverterTypeJadeTransportKind.check_lower(value.transport)
+        _UniffiConverterOptionalString.check_lower(value.name)
+        _UniffiConverterOptionalString.check_lower(value.serial_number)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.path, buf)
+        _UniffiConverterTypeJadeTransportKind.write(value.transport, buf)
+        _UniffiConverterOptionalString.write(value.name, buf)
+        _UniffiConverterOptionalString.write(value.serial_number, buf)
+
+
+class JadeSignedMessage:
+    signature: "str"
+    address: "str"
+    derivation_path: "str"
+    def __init__(self, *, signature: "str", address: "str", derivation_path: "str"):
+        self.signature = signature
+        self.address = address
+        self.derivation_path = derivation_path
+
+    def __str__(self):
+        return "JadeSignedMessage(signature={}, address={}, derivation_path={})".format(self.signature, self.address, self.derivation_path)
+
+    def __eq__(self, other):
+        if self.signature != other.signature:
+            return False
+        if self.address != other.address:
+            return False
+        if self.derivation_path != other.derivation_path:
+            return False
+        return True
+
+class _UniffiConverterTypeJadeSignedMessage(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return JadeSignedMessage(
+            signature=_UniffiConverterString.read(buf),
+            address=_UniffiConverterString.read(buf),
+            derivation_path=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.signature)
+        _UniffiConverterString.check_lower(value.address)
+        _UniffiConverterString.check_lower(value.derivation_path)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.signature, buf)
+        _UniffiConverterString.write(value.address, buf)
+        _UniffiConverterString.write(value.derivation_path, buf)
+
+
+class JadeTransportReadResult:
+    """
+    Outcome of a read.
+    """
+
+    success: "bool"
+    data: "bytes"
+    """
+    Bytes read. Success with an empty vector means nothing has arrived yet,
+    which is the normal case while the user is deciding on the device.
+    """
+
+    error: "str"
+    """
+    Empty on success.
+    """
+
+    error_code: "typing.Optional[JadeTransportErrorCode]"
+    def __init__(self, *, success: "bool", data: "bytes", error: "str", error_code: "typing.Optional[JadeTransportErrorCode]"):
+        self.success = success
+        self.data = data
+        self.error = error
+        self.error_code = error_code
+
+    def __str__(self):
+        return "JadeTransportReadResult(success={}, data={}, error={}, error_code={})".format(self.success, self.data, self.error, self.error_code)
+
+    def __eq__(self, other):
+        if self.success != other.success:
+            return False
+        if self.data != other.data:
+            return False
+        if self.error != other.error:
+            return False
+        if self.error_code != other.error_code:
+            return False
+        return True
+
+class _UniffiConverterTypeJadeTransportReadResult(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return JadeTransportReadResult(
+            success=_UniffiConverterBool.read(buf),
+            data=_UniffiConverterBytes.read(buf),
+            error=_UniffiConverterString.read(buf),
+            error_code=_UniffiConverterOptionalTypeJadeTransportErrorCode.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterBool.check_lower(value.success)
+        _UniffiConverterBytes.check_lower(value.data)
+        _UniffiConverterString.check_lower(value.error)
+        _UniffiConverterOptionalTypeJadeTransportErrorCode.check_lower(value.error_code)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterBool.write(value.success, buf)
+        _UniffiConverterBytes.write(value.data, buf)
+        _UniffiConverterString.write(value.error, buf)
+        _UniffiConverterOptionalTypeJadeTransportErrorCode.write(value.error_code, buf)
+
+
+class JadeTransportResult:
+    """
+    Outcome of an operation that returns no data.
+    """
+
+    success: "bool"
+    error: "str"
+    """
+    Empty on success.
+    """
+
+    error_code: "typing.Optional[JadeTransportErrorCode]"
+    def __init__(self, *, success: "bool", error: "str", error_code: "typing.Optional[JadeTransportErrorCode]"):
+        self.success = success
+        self.error = error
+        self.error_code = error_code
+
+    def __str__(self):
+        return "JadeTransportResult(success={}, error={}, error_code={})".format(self.success, self.error, self.error_code)
+
+    def __eq__(self, other):
+        if self.success != other.success:
+            return False
+        if self.error != other.error:
+            return False
+        if self.error_code != other.error_code:
+            return False
+        return True
+
+class _UniffiConverterTypeJadeTransportResult(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return JadeTransportResult(
+            success=_UniffiConverterBool.read(buf),
+            error=_UniffiConverterString.read(buf),
+            error_code=_UniffiConverterOptionalTypeJadeTransportErrorCode.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterBool.check_lower(value.success)
+        _UniffiConverterString.check_lower(value.error)
+        _UniffiConverterOptionalTypeJadeTransportErrorCode.check_lower(value.error_code)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterBool.write(value.success, buf)
+        _UniffiConverterString.write(value.error, buf)
+        _UniffiConverterOptionalTypeJadeTransportErrorCode.write(value.error_code, buf)
+
+
+class JadeVersionInfo:
+    jade_version: "str"
+    jade_state: "JadeState"
+    jade_networks: "typing.Optional[str]"
+    jade_has_pin: "typing.Optional[bool]"
+    board_type: "typing.Optional[str]"
+    jade_config: "typing.Optional[str]"
+    jade_features: "typing.Optional[str]"
+    idf_version: "typing.Optional[str]"
+    chip_features: "typing.Optional[str]"
+    efuse_mac: "typing.Optional[str]"
+    battery_status: "typing.Optional[int]"
+    jade_ota_max_chunk: "typing.Optional[int]"
+    def __init__(self, *, jade_version: "str", jade_state: "JadeState", jade_networks: "typing.Optional[str]", jade_has_pin: "typing.Optional[bool]", board_type: "typing.Optional[str]", jade_config: "typing.Optional[str]", jade_features: "typing.Optional[str]", idf_version: "typing.Optional[str]", chip_features: "typing.Optional[str]", efuse_mac: "typing.Optional[str]", battery_status: "typing.Optional[int]", jade_ota_max_chunk: "typing.Optional[int]"):
+        self.jade_version = jade_version
+        self.jade_state = jade_state
+        self.jade_networks = jade_networks
+        self.jade_has_pin = jade_has_pin
+        self.board_type = board_type
+        self.jade_config = jade_config
+        self.jade_features = jade_features
+        self.idf_version = idf_version
+        self.chip_features = chip_features
+        self.efuse_mac = efuse_mac
+        self.battery_status = battery_status
+        self.jade_ota_max_chunk = jade_ota_max_chunk
+
+    def __str__(self):
+        return "JadeVersionInfo(jade_version={}, jade_state={}, jade_networks={}, jade_has_pin={}, board_type={}, jade_config={}, jade_features={}, idf_version={}, chip_features={}, efuse_mac={}, battery_status={}, jade_ota_max_chunk={})".format(self.jade_version, self.jade_state, self.jade_networks, self.jade_has_pin, self.board_type, self.jade_config, self.jade_features, self.idf_version, self.chip_features, self.efuse_mac, self.battery_status, self.jade_ota_max_chunk)
+
+    def __eq__(self, other):
+        if self.jade_version != other.jade_version:
+            return False
+        if self.jade_state != other.jade_state:
+            return False
+        if self.jade_networks != other.jade_networks:
+            return False
+        if self.jade_has_pin != other.jade_has_pin:
+            return False
+        if self.board_type != other.board_type:
+            return False
+        if self.jade_config != other.jade_config:
+            return False
+        if self.jade_features != other.jade_features:
+            return False
+        if self.idf_version != other.idf_version:
+            return False
+        if self.chip_features != other.chip_features:
+            return False
+        if self.efuse_mac != other.efuse_mac:
+            return False
+        if self.battery_status != other.battery_status:
+            return False
+        if self.jade_ota_max_chunk != other.jade_ota_max_chunk:
+            return False
+        return True
+
+class _UniffiConverterTypeJadeVersionInfo(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return JadeVersionInfo(
+            jade_version=_UniffiConverterString.read(buf),
+            jade_state=_UniffiConverterTypeJadeState.read(buf),
+            jade_networks=_UniffiConverterOptionalString.read(buf),
+            jade_has_pin=_UniffiConverterOptionalBool.read(buf),
+            board_type=_UniffiConverterOptionalString.read(buf),
+            jade_config=_UniffiConverterOptionalString.read(buf),
+            jade_features=_UniffiConverterOptionalString.read(buf),
+            idf_version=_UniffiConverterOptionalString.read(buf),
+            chip_features=_UniffiConverterOptionalString.read(buf),
+            efuse_mac=_UniffiConverterOptionalString.read(buf),
+            battery_status=_UniffiConverterOptionalUInt32.read(buf),
+            jade_ota_max_chunk=_UniffiConverterOptionalUInt32.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.jade_version)
+        _UniffiConverterTypeJadeState.check_lower(value.jade_state)
+        _UniffiConverterOptionalString.check_lower(value.jade_networks)
+        _UniffiConverterOptionalBool.check_lower(value.jade_has_pin)
+        _UniffiConverterOptionalString.check_lower(value.board_type)
+        _UniffiConverterOptionalString.check_lower(value.jade_config)
+        _UniffiConverterOptionalString.check_lower(value.jade_features)
+        _UniffiConverterOptionalString.check_lower(value.idf_version)
+        _UniffiConverterOptionalString.check_lower(value.chip_features)
+        _UniffiConverterOptionalString.check_lower(value.efuse_mac)
+        _UniffiConverterOptionalUInt32.check_lower(value.battery_status)
+        _UniffiConverterOptionalUInt32.check_lower(value.jade_ota_max_chunk)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.jade_version, buf)
+        _UniffiConverterTypeJadeState.write(value.jade_state, buf)
+        _UniffiConverterOptionalString.write(value.jade_networks, buf)
+        _UniffiConverterOptionalBool.write(value.jade_has_pin, buf)
+        _UniffiConverterOptionalString.write(value.board_type, buf)
+        _UniffiConverterOptionalString.write(value.jade_config, buf)
+        _UniffiConverterOptionalString.write(value.jade_features, buf)
+        _UniffiConverterOptionalString.write(value.idf_version, buf)
+        _UniffiConverterOptionalString.write(value.chip_features, buf)
+        _UniffiConverterOptionalString.write(value.efuse_mac, buf)
+        _UniffiConverterOptionalUInt32.write(value.battery_status, buf)
+        _UniffiConverterOptionalUInt32.write(value.jade_ota_max_chunk, buf)
+
+
+class JadeXpubResponse:
+    xpub: "str"
+    derivation_path: "str"
+    master_fingerprint: "str"
+    def __init__(self, *, xpub: "str", derivation_path: "str", master_fingerprint: "str"):
+        self.xpub = xpub
+        self.derivation_path = derivation_path
+        self.master_fingerprint = master_fingerprint
+
+    def __str__(self):
+        return "JadeXpubResponse(xpub={}, derivation_path={}, master_fingerprint={})".format(self.xpub, self.derivation_path, self.master_fingerprint)
+
+    def __eq__(self, other):
+        if self.xpub != other.xpub:
+            return False
+        if self.derivation_path != other.derivation_path:
+            return False
+        if self.master_fingerprint != other.master_fingerprint:
+            return False
+        return True
+
+class _UniffiConverterTypeJadeXpubResponse(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return JadeXpubResponse(
+            xpub=_UniffiConverterString.read(buf),
+            derivation_path=_UniffiConverterString.read(buf),
+            master_fingerprint=_UniffiConverterString.read(buf),
+        )
+
+    @staticmethod
+    def check_lower(value):
+        _UniffiConverterString.check_lower(value.xpub)
+        _UniffiConverterString.check_lower(value.derivation_path)
+        _UniffiConverterString.check_lower(value.master_fingerprint)
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.xpub, buf)
+        _UniffiConverterString.write(value.derivation_path, buf)
+        _UniffiConverterString.write(value.master_fingerprint, buf)
 
 
 class LegacyRnCloseRecoveryScanResult:
@@ -14879,6 +15688,8 @@ class HardwareWalletVendor(enum.Enum):
     
     FOUNDATION = 1
     
+    BLOCKSTREAM = 2
+    
 
 
 class _UniffiConverterTypeHardwareWalletVendor(_UniffiConverterRustBuffer):
@@ -14889,6 +15700,8 @@ class _UniffiConverterTypeHardwareWalletVendor(_UniffiConverterRustBuffer):
             return HardwareWalletVendor.TREZOR
         if variant == 2:
             return HardwareWalletVendor.FOUNDATION
+        if variant == 3:
+            return HardwareWalletVendor.BLOCKSTREAM
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
@@ -14897,6 +15710,8 @@ class _UniffiConverterTypeHardwareWalletVendor(_UniffiConverterRustBuffer):
             return
         if value == HardwareWalletVendor.FOUNDATION:
             return
+        if value == HardwareWalletVendor.BLOCKSTREAM:
+            return
         raise ValueError(value)
 
     @staticmethod
@@ -14904,6 +15719,788 @@ class _UniffiConverterTypeHardwareWalletVendor(_UniffiConverterRustBuffer):
         if value == HardwareWalletVendor.TREZOR:
             buf.write_i32(1)
         if value == HardwareWalletVendor.FOUNDATION:
+            buf.write_i32(2)
+        if value == HardwareWalletVendor.BLOCKSTREAM:
+            buf.write_i32(3)
+
+
+
+
+
+
+
+class JadeAddressVariant(enum.Enum):
+    PKH = 0
+    
+    WPKH = 1
+    
+    SH_WPKH = 2
+    
+    TR = 3
+    
+
+
+class _UniffiConverterTypeJadeAddressVariant(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return JadeAddressVariant.PKH
+        if variant == 2:
+            return JadeAddressVariant.WPKH
+        if variant == 3:
+            return JadeAddressVariant.SH_WPKH
+        if variant == 4:
+            return JadeAddressVariant.TR
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == JadeAddressVariant.PKH:
+            return
+        if value == JadeAddressVariant.WPKH:
+            return
+        if value == JadeAddressVariant.SH_WPKH:
+            return
+        if value == JadeAddressVariant.TR:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == JadeAddressVariant.PKH:
+            buf.write_i32(1)
+        if value == JadeAddressVariant.WPKH:
+            buf.write_i32(2)
+        if value == JadeAddressVariant.SH_WPKH:
+            buf.write_i32(3)
+        if value == JadeAddressVariant.TR:
+            buf.write_i32(4)
+
+
+
+
+# JadeError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class JadeError(Exception):
+    pass
+
+_UniffiTempJadeError = JadeError
+
+class JadeError:  # type: ignore
+    class TransportError(_UniffiTempJadeError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "JadeError.TransportError({})".format(str(self))
+    _UniffiTempJadeError.TransportError = TransportError # type: ignore
+    class DeviceNotFound(_UniffiTempJadeError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "JadeError.DeviceNotFound({})".format(str(self))
+    _UniffiTempJadeError.DeviceNotFound = DeviceNotFound # type: ignore
+    class DeviceDisconnected(_UniffiTempJadeError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "JadeError.DeviceDisconnected({})".format(str(self))
+    _UniffiTempJadeError.DeviceDisconnected = DeviceDisconnected # type: ignore
+    class DeviceBusy(_UniffiTempJadeError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "JadeError.DeviceBusy({})".format(str(self))
+    _UniffiTempJadeError.DeviceBusy = DeviceBusy # type: ignore
+    class NotConnected(_UniffiTempJadeError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "JadeError.NotConnected({})".format(str(self))
+    _UniffiTempJadeError.NotConnected = NotConnected # type: ignore
+    class NotInitialized(_UniffiTempJadeError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "JadeError.NotInitialized({})".format(str(self))
+    _UniffiTempJadeError.NotInitialized = NotInitialized # type: ignore
+    class ConnectionError(_UniffiTempJadeError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "JadeError.ConnectionError({})".format(str(self))
+    _UniffiTempJadeError.ConnectionError = ConnectionError # type: ignore
+    class ProtocolError(_UniffiTempJadeError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "JadeError.ProtocolError({})".format(str(self))
+    _UniffiTempJadeError.ProtocolError = ProtocolError # type: ignore
+    class Timeout(_UniffiTempJadeError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "JadeError.Timeout({})".format(str(self))
+    _UniffiTempJadeError.Timeout = Timeout # type: ignore
+    class UserCancelled(_UniffiTempJadeError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "JadeError.UserCancelled({})".format(str(self))
+    _UniffiTempJadeError.UserCancelled = UserCancelled # type: ignore
+    class DeviceLocked(_UniffiTempJadeError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "JadeError.DeviceLocked({})".format(str(self))
+    _UniffiTempJadeError.DeviceLocked = DeviceLocked # type: ignore
+    class DeviceUninitialized(_UniffiTempJadeError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "JadeError.DeviceUninitialized({})".format(str(self))
+    _UniffiTempJadeError.DeviceUninitialized = DeviceUninitialized # type: ignore
+    class InvalidPin(_UniffiTempJadeError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "JadeError.InvalidPin({})".format(str(self))
+    _UniffiTempJadeError.InvalidPin = InvalidPin # type: ignore
+    class NetworkMismatch(_UniffiTempJadeError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "JadeError.NetworkMismatch({})".format(str(self))
+    _UniffiTempJadeError.NetworkMismatch = NetworkMismatch # type: ignore
+    class UnsupportedFirmware(_UniffiTempJadeError):
+        def __init__(self, installed, required):
+            super().__init__(", ".join([
+                "installed={!r}".format(installed),
+                "required={!r}".format(required),
+            ]))
+            self.installed = installed
+            self.required = required
+
+        def __repr__(self):
+            return "JadeError.UnsupportedFirmware({})".format(str(self))
+    _UniffiTempJadeError.UnsupportedFirmware = UnsupportedFirmware # type: ignore
+    class InvalidPath(_UniffiTempJadeError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "JadeError.InvalidPath({})".format(str(self))
+    _UniffiTempJadeError.InvalidPath = InvalidPath # type: ignore
+    class InvalidPsbt(_UniffiTempJadeError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "JadeError.InvalidPsbt({})".format(str(self))
+    _UniffiTempJadeError.InvalidPsbt = InvalidPsbt # type: ignore
+    class PsbtTooLarge(_UniffiTempJadeError):
+        def __init__(self, size, max):
+            super().__init__(", ".join([
+                "size={!r}".format(size),
+                "max={!r}".format(max),
+            ]))
+            self.size = size
+            self.max = max
+
+        def __repr__(self):
+            return "JadeError.PsbtTooLarge({})".format(str(self))
+    _UniffiTempJadeError.PsbtTooLarge = PsbtTooLarge # type: ignore
+    class FingerprintMismatch(_UniffiTempJadeError):
+        def __init__(self, device, psbt):
+            super().__init__(", ".join([
+                "device={!r}".format(device),
+                "psbt={!r}".format(psbt),
+            ]))
+            self.device = device
+            self.psbt = psbt
+
+        def __repr__(self):
+            return "JadeError.FingerprintMismatch({})".format(str(self))
+    _UniffiTempJadeError.FingerprintMismatch = FingerprintMismatch # type: ignore
+    class NothingSigned(_UniffiTempJadeError):
+        def __init__(self):
+            pass
+
+        def __repr__(self):
+            return "JadeError.NothingSigned({})".format(str(self))
+    _UniffiTempJadeError.NothingSigned = NothingSigned # type: ignore
+    class AddressMismatch(_UniffiTempJadeError):
+        def __init__(self, expected, returned):
+            super().__init__(", ".join([
+                "expected={!r}".format(expected),
+                "returned={!r}".format(returned),
+            ]))
+            self.expected = expected
+            self.returned = returned
+
+        def __repr__(self):
+            return "JadeError.AddressMismatch({})".format(str(self))
+    _UniffiTempJadeError.AddressMismatch = AddressMismatch # type: ignore
+    class PinServerError(_UniffiTempJadeError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "JadeError.PinServerError({})".format(str(self))
+    _UniffiTempJadeError.PinServerError = PinServerError # type: ignore
+    class DeviceError(_UniffiTempJadeError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "JadeError.DeviceError({})".format(str(self))
+    _UniffiTempJadeError.DeviceError = DeviceError # type: ignore
+    class IoError(_UniffiTempJadeError):
+        def __init__(self, error_details):
+            super().__init__(", ".join([
+                "error_details={!r}".format(error_details),
+            ]))
+            self.error_details = error_details
+
+        def __repr__(self):
+            return "JadeError.IoError({})".format(str(self))
+    _UniffiTempJadeError.IoError = IoError # type: ignore
+
+JadeError = _UniffiTempJadeError # type: ignore
+del _UniffiTempJadeError
+
+
+class _UniffiConverterTypeJadeError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return JadeError.TransportError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 2:
+            return JadeError.DeviceNotFound(
+            )
+        if variant == 3:
+            return JadeError.DeviceDisconnected(
+            )
+        if variant == 4:
+            return JadeError.DeviceBusy(
+            )
+        if variant == 5:
+            return JadeError.NotConnected(
+            )
+        if variant == 6:
+            return JadeError.NotInitialized(
+            )
+        if variant == 7:
+            return JadeError.ConnectionError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 8:
+            return JadeError.ProtocolError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 9:
+            return JadeError.Timeout(
+            )
+        if variant == 10:
+            return JadeError.UserCancelled(
+            )
+        if variant == 11:
+            return JadeError.DeviceLocked(
+            )
+        if variant == 12:
+            return JadeError.DeviceUninitialized(
+            )
+        if variant == 13:
+            return JadeError.InvalidPin(
+            )
+        if variant == 14:
+            return JadeError.NetworkMismatch(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 15:
+            return JadeError.UnsupportedFirmware(
+                _UniffiConverterString.read(buf),
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 16:
+            return JadeError.InvalidPath(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 17:
+            return JadeError.InvalidPsbt(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 18:
+            return JadeError.PsbtTooLarge(
+                _UniffiConverterUInt64.read(buf),
+                _UniffiConverterUInt64.read(buf),
+            )
+        if variant == 19:
+            return JadeError.FingerprintMismatch(
+                _UniffiConverterString.read(buf),
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 20:
+            return JadeError.NothingSigned(
+            )
+        if variant == 21:
+            return JadeError.AddressMismatch(
+                _UniffiConverterString.read(buf),
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 22:
+            return JadeError.PinServerError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 23:
+            return JadeError.DeviceError(
+                _UniffiConverterString.read(buf),
+            )
+        if variant == 24:
+            return JadeError.IoError(
+                _UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if isinstance(value, JadeError.TransportError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, JadeError.DeviceNotFound):
+            return
+        if isinstance(value, JadeError.DeviceDisconnected):
+            return
+        if isinstance(value, JadeError.DeviceBusy):
+            return
+        if isinstance(value, JadeError.NotConnected):
+            return
+        if isinstance(value, JadeError.NotInitialized):
+            return
+        if isinstance(value, JadeError.ConnectionError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, JadeError.ProtocolError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, JadeError.Timeout):
+            return
+        if isinstance(value, JadeError.UserCancelled):
+            return
+        if isinstance(value, JadeError.DeviceLocked):
+            return
+        if isinstance(value, JadeError.DeviceUninitialized):
+            return
+        if isinstance(value, JadeError.InvalidPin):
+            return
+        if isinstance(value, JadeError.NetworkMismatch):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, JadeError.UnsupportedFirmware):
+            _UniffiConverterString.check_lower(value.installed)
+            _UniffiConverterString.check_lower(value.required)
+            return
+        if isinstance(value, JadeError.InvalidPath):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, JadeError.InvalidPsbt):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, JadeError.PsbtTooLarge):
+            _UniffiConverterUInt64.check_lower(value.size)
+            _UniffiConverterUInt64.check_lower(value.max)
+            return
+        if isinstance(value, JadeError.FingerprintMismatch):
+            _UniffiConverterString.check_lower(value.device)
+            _UniffiConverterString.check_lower(value.psbt)
+            return
+        if isinstance(value, JadeError.NothingSigned):
+            return
+        if isinstance(value, JadeError.AddressMismatch):
+            _UniffiConverterString.check_lower(value.expected)
+            _UniffiConverterString.check_lower(value.returned)
+            return
+        if isinstance(value, JadeError.PinServerError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, JadeError.DeviceError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+        if isinstance(value, JadeError.IoError):
+            _UniffiConverterString.check_lower(value.error_details)
+            return
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, JadeError.TransportError):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, JadeError.DeviceNotFound):
+            buf.write_i32(2)
+        if isinstance(value, JadeError.DeviceDisconnected):
+            buf.write_i32(3)
+        if isinstance(value, JadeError.DeviceBusy):
+            buf.write_i32(4)
+        if isinstance(value, JadeError.NotConnected):
+            buf.write_i32(5)
+        if isinstance(value, JadeError.NotInitialized):
+            buf.write_i32(6)
+        if isinstance(value, JadeError.ConnectionError):
+            buf.write_i32(7)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, JadeError.ProtocolError):
+            buf.write_i32(8)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, JadeError.Timeout):
+            buf.write_i32(9)
+        if isinstance(value, JadeError.UserCancelled):
+            buf.write_i32(10)
+        if isinstance(value, JadeError.DeviceLocked):
+            buf.write_i32(11)
+        if isinstance(value, JadeError.DeviceUninitialized):
+            buf.write_i32(12)
+        if isinstance(value, JadeError.InvalidPin):
+            buf.write_i32(13)
+        if isinstance(value, JadeError.NetworkMismatch):
+            buf.write_i32(14)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, JadeError.UnsupportedFirmware):
+            buf.write_i32(15)
+            _UniffiConverterString.write(value.installed, buf)
+            _UniffiConverterString.write(value.required, buf)
+        if isinstance(value, JadeError.InvalidPath):
+            buf.write_i32(16)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, JadeError.InvalidPsbt):
+            buf.write_i32(17)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, JadeError.PsbtTooLarge):
+            buf.write_i32(18)
+            _UniffiConverterUInt64.write(value.size, buf)
+            _UniffiConverterUInt64.write(value.max, buf)
+        if isinstance(value, JadeError.FingerprintMismatch):
+            buf.write_i32(19)
+            _UniffiConverterString.write(value.device, buf)
+            _UniffiConverterString.write(value.psbt, buf)
+        if isinstance(value, JadeError.NothingSigned):
+            buf.write_i32(20)
+        if isinstance(value, JadeError.AddressMismatch):
+            buf.write_i32(21)
+            _UniffiConverterString.write(value.expected, buf)
+            _UniffiConverterString.write(value.returned, buf)
+        if isinstance(value, JadeError.PinServerError):
+            buf.write_i32(22)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, JadeError.DeviceError):
+            buf.write_i32(23)
+            _UniffiConverterString.write(value.error_details, buf)
+        if isinstance(value, JadeError.IoError):
+            buf.write_i32(24)
+            _UniffiConverterString.write(value.error_details, buf)
+
+
+
+
+
+class JadeNetwork(enum.Enum):
+    MAINNET = 0
+    
+    TESTNET = 1
+    
+    REGTEST = 2
+    
+
+
+class _UniffiConverterTypeJadeNetwork(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return JadeNetwork.MAINNET
+        if variant == 2:
+            return JadeNetwork.TESTNET
+        if variant == 3:
+            return JadeNetwork.REGTEST
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == JadeNetwork.MAINNET:
+            return
+        if value == JadeNetwork.TESTNET:
+            return
+        if value == JadeNetwork.REGTEST:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == JadeNetwork.MAINNET:
+            buf.write_i32(1)
+        if value == JadeNetwork.TESTNET:
+            buf.write_i32(2)
+        if value == JadeNetwork.REGTEST:
+            buf.write_i32(3)
+
+
+
+
+
+
+
+class JadePingStatus(enum.Enum):
+    IDLE = 0
+    
+    BUSY = 1
+    
+    AWAITING_USER_INPUT = 2
+    
+
+
+class _UniffiConverterTypeJadePingStatus(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return JadePingStatus.IDLE
+        if variant == 2:
+            return JadePingStatus.BUSY
+        if variant == 3:
+            return JadePingStatus.AWAITING_USER_INPUT
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == JadePingStatus.IDLE:
+            return
+        if value == JadePingStatus.BUSY:
+            return
+        if value == JadePingStatus.AWAITING_USER_INPUT:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == JadePingStatus.IDLE:
+            buf.write_i32(1)
+        if value == JadePingStatus.BUSY:
+            buf.write_i32(2)
+        if value == JadePingStatus.AWAITING_USER_INPUT:
+            buf.write_i32(3)
+
+
+
+
+
+
+
+class JadeState(enum.Enum):
+    UNINIT = 0
+    
+    UNSAVED = 1
+    
+    LOCKED = 2
+    
+    READY = 3
+    
+    TEMP = 4
+    
+    UNKNOWN = 5
+    
+
+
+class _UniffiConverterTypeJadeState(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return JadeState.UNINIT
+        if variant == 2:
+            return JadeState.UNSAVED
+        if variant == 3:
+            return JadeState.LOCKED
+        if variant == 4:
+            return JadeState.READY
+        if variant == 5:
+            return JadeState.TEMP
+        if variant == 6:
+            return JadeState.UNKNOWN
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == JadeState.UNINIT:
+            return
+        if value == JadeState.UNSAVED:
+            return
+        if value == JadeState.LOCKED:
+            return
+        if value == JadeState.READY:
+            return
+        if value == JadeState.TEMP:
+            return
+        if value == JadeState.UNKNOWN:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == JadeState.UNINIT:
+            buf.write_i32(1)
+        if value == JadeState.UNSAVED:
+            buf.write_i32(2)
+        if value == JadeState.LOCKED:
+            buf.write_i32(3)
+        if value == JadeState.READY:
+            buf.write_i32(4)
+        if value == JadeState.TEMP:
+            buf.write_i32(5)
+        if value == JadeState.UNKNOWN:
+            buf.write_i32(6)
+
+
+
+
+
+
+
+class JadeTransportErrorCode(enum.Enum):
+    DEVICE_BUSY = 0
+    
+    NOT_CONNECTED = 1
+    
+    DISCONNECTED = 2
+    
+    TIMEOUT = 3
+    
+    PERMISSION_DENIED = 4
+    
+
+
+class _UniffiConverterTypeJadeTransportErrorCode(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return JadeTransportErrorCode.DEVICE_BUSY
+        if variant == 2:
+            return JadeTransportErrorCode.NOT_CONNECTED
+        if variant == 3:
+            return JadeTransportErrorCode.DISCONNECTED
+        if variant == 4:
+            return JadeTransportErrorCode.TIMEOUT
+        if variant == 5:
+            return JadeTransportErrorCode.PERMISSION_DENIED
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == JadeTransportErrorCode.DEVICE_BUSY:
+            return
+        if value == JadeTransportErrorCode.NOT_CONNECTED:
+            return
+        if value == JadeTransportErrorCode.DISCONNECTED:
+            return
+        if value == JadeTransportErrorCode.TIMEOUT:
+            return
+        if value == JadeTransportErrorCode.PERMISSION_DENIED:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == JadeTransportErrorCode.DEVICE_BUSY:
+            buf.write_i32(1)
+        if value == JadeTransportErrorCode.NOT_CONNECTED:
+            buf.write_i32(2)
+        if value == JadeTransportErrorCode.DISCONNECTED:
+            buf.write_i32(3)
+        if value == JadeTransportErrorCode.TIMEOUT:
+            buf.write_i32(4)
+        if value == JadeTransportErrorCode.PERMISSION_DENIED:
+            buf.write_i32(5)
+
+
+
+
+
+
+
+class JadeTransportKind(enum.Enum):
+    BLUETOOTH = 0
+    
+    SERIAL = 1
+    
+
+
+class _UniffiConverterTypeJadeTransportKind(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return JadeTransportKind.BLUETOOTH
+        if variant == 2:
+            return JadeTransportKind.SERIAL
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def check_lower(value):
+        if value == JadeTransportKind.BLUETOOTH:
+            return
+        if value == JadeTransportKind.SERIAL:
+            return
+        raise ValueError(value)
+
+    @staticmethod
+    def write(value, buf):
+        if value == JadeTransportKind.BLUETOOTH:
+            buf.write_i32(1)
+        if value == JadeTransportKind.SERIAL:
             buf.write_i32(2)
 
 
@@ -18611,6 +20208,60 @@ class _UniffiConverterOptionalTypeILspNode(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterOptionalTypeJadeDeviceInfo(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeJadeDeviceInfo.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeJadeDeviceInfo.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeJadeDeviceInfo.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeJadeVersionInfo(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeJadeVersionInfo.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeJadeVersionInfo.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeJadeVersionInfo.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalTypeOnchainActivity(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -18957,6 +20608,33 @@ class _UniffiConverterOptionalTypeCoinSelection(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterTypeCoinSelection.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeJadeTransportErrorCode(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            _UniffiConverterTypeJadeTransportErrorCode.check_lower(value)
+
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeJadeTransportErrorCode.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeJadeTransportErrorCode.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -19636,6 +21314,81 @@ class _UniffiConverterSequenceTypeIcJitEntry(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterSequenceTypeJadeAccount(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeJadeAccount.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeJadeAccount.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeJadeAccount.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeJadeDeviceInfo(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeJadeDeviceInfo.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeJadeDeviceInfo.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeJadeDeviceInfo.read(buf) for i in range(count)
+        ]
+
+
+
+class _UniffiConverterSequenceTypeJadeNativeDevice(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeJadeNativeDevice.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeJadeNativeDevice.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeJadeNativeDevice.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypeLightningActivity(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -20086,6 +21839,31 @@ class _UniffiConverterSequenceTypeTxOutput(_UniffiConverterRustBuffer):
 
 
 
+class _UniffiConverterSequenceTypeAccountType(_UniffiConverterRustBuffer):
+    @classmethod
+    def check_lower(cls, value):
+        for item in value:
+            _UniffiConverterTypeAccountType.check_lower(item)
+
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeAccountType.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeAccountType.read(buf) for i in range(count)
+        ]
+
+
+
 class _UniffiConverterSequenceTypeActivity(_UniffiConverterRustBuffer):
     @classmethod
     def check_lower(cls, value):
@@ -20516,6 +22294,489 @@ class _UniffiConverterTypeEventListener:
 
     @classmethod
     def write(cls, value: EventListenerProtocol, buf: _UniffiRustBuffer):
+        buf.write_u64(cls.lower(value))
+class JadeTransportCallbackProtocol(typing.Protocol):
+    """
+    Native transport for Jade.
+
+    # Bluetooth contract
+
+    Jade advertises the Nordic UART Service:
+
+    - service `6e400001-b5a3-f393-e0a9-e50e24dcca9e`
+    - write   `6e400002-b5a3-f393-e0a9-e50e24dcca9e` (host to Jade)
+    - notify  `6e400003-b5a3-f393-e0a9-e50e24dcca9e` (Jade to host)
+
+    Devices advertise as "Jade" or "Jade <serial>".
+
+    Three requirements that are easy to miss and break signing on real hardware:
+
+    1. **Write with response.** Write-without-response silently drops chunks on
+    the ESP32 GATT stack.
+    2. **Do not pause between chunks.** Firmware discards a partially received
+    message after two seconds of silence, three on Jade v1, and answers with
+    an unattributed error. A 30 KB PSBT is roughly 60 writes, so any UI thread
+    stall in the middle of a send breaks the operation.
+    3. **`read_chunk` must return promptly.** Honour `timeout_ms`, which this
+    crate keeps short. The long per-operation deadline is enforced in Rust so
+    the user can cancel.
+    """
+
+    def scan_devices(self, timeout_ms: "int"):
+        """
+        Discover devices, blocking up to `timeout_ms`.
+        """
+
+        raise NotImplementedError
+    def open_device(self, path: "str"):
+        """
+        Open a connection and enable notifications.
+        """
+
+        raise NotImplementedError
+    def close_device(self, path: "str"):
+        """
+        Close the connection and release the device.
+        """
+
+        raise NotImplementedError
+    def write_chunk(self, path: "str",data: "bytes"):
+        """
+        Write one chunk, no larger than `get_chunk_size`.
+        """
+
+        raise NotImplementedError
+    def read_chunk(self, path: "str",timeout_ms: "int"):
+        """
+        Read whatever has arrived, waiting at most `timeout_ms`.
+
+        Returning success with an empty vector is normal and means "nothing yet".
+        """
+
+        raise NotImplementedError
+    def get_chunk_size(self, path: "str"):
+        """
+        Maximum bytes per write.
+
+        For Bluetooth this is `min(negotiated_mtu - 3, 509)`. The value is
+        clamped into a usable range, so an unnegotiated `0` is not fatal.
+        """
+
+        raise NotImplementedError
+# JadeTransportCallback is a foreign trait so treated like a callback interface, where the
+# primary use-case is the trait being implemented locally.
+# It is a base-class local implementations might subclass.
+
+
+class JadeTransportCallback():
+    """
+    Native transport for Jade.
+
+    # Bluetooth contract
+
+    Jade advertises the Nordic UART Service:
+
+    - service `6e400001-b5a3-f393-e0a9-e50e24dcca9e`
+    - write   `6e400002-b5a3-f393-e0a9-e50e24dcca9e` (host to Jade)
+    - notify  `6e400003-b5a3-f393-e0a9-e50e24dcca9e` (Jade to host)
+
+    Devices advertise as "Jade" or "Jade <serial>".
+
+    Three requirements that are easy to miss and break signing on real hardware:
+
+    1. **Write with response.** Write-without-response silently drops chunks on
+    the ESP32 GATT stack.
+    2. **Do not pause between chunks.** Firmware discards a partially received
+    message after two seconds of silence, three on Jade v1, and answers with
+    an unattributed error. A 30 KB PSBT is roughly 60 writes, so any UI thread
+    stall in the middle of a send breaks the operation.
+    3. **`read_chunk` must return promptly.** Honour `timeout_ms`, which this
+    crate keeps short. The long per-operation deadline is enforced in Rust so
+    the user can cancel.
+    """
+
+    def scan_devices(self, timeout_ms: "int"):
+        """
+        Discover devices, blocking up to `timeout_ms`.
+        """
+
+        raise NotImplementedError
+    def open_device(self, path: "str"):
+        """
+        Open a connection and enable notifications.
+        """
+
+        raise NotImplementedError
+    def close_device(self, path: "str"):
+        """
+        Close the connection and release the device.
+        """
+
+        raise NotImplementedError
+    def write_chunk(self, path: "str",data: "bytes"):
+        """
+        Write one chunk, no larger than `get_chunk_size`.
+        """
+
+        raise NotImplementedError
+    def read_chunk(self, path: "str",timeout_ms: "int"):
+        """
+        Read whatever has arrived, waiting at most `timeout_ms`.
+
+        Returning success with an empty vector is normal and means "nothing yet".
+        """
+
+        raise NotImplementedError
+    def get_chunk_size(self, path: "str"):
+        """
+        Maximum bytes per write.
+
+        For Bluetooth this is `min(negotiated_mtu - 3, 509)`. The value is
+        clamped into a usable range, so an unnegotiated `0` is not fatal.
+        """
+
+        raise NotImplementedError
+# `JadeTransportCallbackImpl` is the implementation for a Rust implemented version.
+class JadeTransportCallbackImpl():
+    """
+    Native transport for Jade.
+
+    # Bluetooth contract
+
+    Jade advertises the Nordic UART Service:
+
+    - service `6e400001-b5a3-f393-e0a9-e50e24dcca9e`
+    - write   `6e400002-b5a3-f393-e0a9-e50e24dcca9e` (host to Jade)
+    - notify  `6e400003-b5a3-f393-e0a9-e50e24dcca9e` (Jade to host)
+
+    Devices advertise as "Jade" or "Jade <serial>".
+
+    Three requirements that are easy to miss and break signing on real hardware:
+
+    1. **Write with response.** Write-without-response silently drops chunks on
+    the ESP32 GATT stack.
+    2. **Do not pause between chunks.** Firmware discards a partially received
+    message after two seconds of silence, three on Jade v1, and answers with
+    an unattributed error. A 30 KB PSBT is roughly 60 writes, so any UI thread
+    stall in the middle of a send breaks the operation.
+    3. **`read_chunk` must return promptly.** Honour `timeout_ms`, which this
+    crate keeps short. The long per-operation deadline is enforced in Rust so
+    the user can cancel.
+    """
+
+    _pointer: ctypes.c_void_p
+    
+    def __init__(self, *args, **kwargs):
+        raise ValueError("This class has no default constructor")
+
+    def __del__(self):
+        # In case of partial initialization of instances.
+        pointer = getattr(self, "_pointer", None)
+        if pointer is not None:
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_free_jadetransportcallback, pointer)
+
+    def _uniffi_clone_pointer(self):
+        return _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_clone_jadetransportcallback, self._pointer)
+
+    # Used by alternative constructors or any methods which return this type.
+    @classmethod
+    def _make_instance_(cls, pointer):
+        # Lightly yucky way to bypass the usual __init__ logic
+        # and just create a new instance with the required pointer.
+        inst = cls.__new__(cls)
+        inst._pointer = pointer
+        return inst
+
+
+    def scan_devices(self, timeout_ms: "int") -> "typing.List[JadeNativeDevice]":
+        """
+        Discover devices, blocking up to `timeout_ms`.
+        """
+
+        _UniffiConverterUInt32.check_lower(timeout_ms)
+        
+        return _UniffiConverterSequenceTypeJadeNativeDevice.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_scan_devices,self._uniffi_clone_pointer(),
+        _UniffiConverterUInt32.lower(timeout_ms))
+        )
+
+
+
+
+
+    def open_device(self, path: "str") -> "JadeTransportResult":
+        """
+        Open a connection and enable notifications.
+        """
+
+        _UniffiConverterString.check_lower(path)
+        
+        return _UniffiConverterTypeJadeTransportResult.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_open_device,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(path))
+        )
+
+
+
+
+
+    def close_device(self, path: "str") -> "JadeTransportResult":
+        """
+        Close the connection and release the device.
+        """
+
+        _UniffiConverterString.check_lower(path)
+        
+        return _UniffiConverterTypeJadeTransportResult.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_close_device,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(path))
+        )
+
+
+
+
+
+    def write_chunk(self, path: "str",data: "bytes") -> "JadeTransportResult":
+        """
+        Write one chunk, no larger than `get_chunk_size`.
+        """
+
+        _UniffiConverterString.check_lower(path)
+        
+        _UniffiConverterBytes.check_lower(data)
+        
+        return _UniffiConverterTypeJadeTransportResult.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_write_chunk,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(path),
+        _UniffiConverterBytes.lower(data))
+        )
+
+
+
+
+
+    def read_chunk(self, path: "str",timeout_ms: "int") -> "JadeTransportReadResult":
+        """
+        Read whatever has arrived, waiting at most `timeout_ms`.
+
+        Returning success with an empty vector is normal and means "nothing yet".
+        """
+
+        _UniffiConverterString.check_lower(path)
+        
+        _UniffiConverterUInt32.check_lower(timeout_ms)
+        
+        return _UniffiConverterTypeJadeTransportReadResult.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_read_chunk,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(path),
+        _UniffiConverterUInt32.lower(timeout_ms))
+        )
+
+
+
+
+
+    def get_chunk_size(self, path: "str") -> "int":
+        """
+        Maximum bytes per write.
+
+        For Bluetooth this is `min(negotiated_mtu - 3, 509)`. The value is
+        clamped into a usable range, so an unnegotiated `0` is not fatal.
+        """
+
+        _UniffiConverterString.check_lower(path)
+        
+        return _UniffiConverterUInt32.lift(
+            _uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_method_jadetransportcallback_get_chunk_size,self._uniffi_clone_pointer(),
+        _UniffiConverterString.lower(path))
+        )
+
+
+
+
+
+# Put all the bits inside a class to keep the top-level namespace clean
+class _UniffiTraitImplJadeTransportCallback:
+    # For each method, generate a callback function to pass to Rust
+
+    @_UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD0
+    def scan_devices(
+            uniffi_handle,
+            timeout_ms,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeJadeTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterUInt32.lift(timeout_ms), )
+            method = uniffi_obj.scan_devices
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterSequenceTypeJadeNativeDevice.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD1
+    def open_device(
+            uniffi_handle,
+            path,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeJadeTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(path), )
+            method = uniffi_obj.open_device
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterTypeJadeTransportResult.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD2
+    def close_device(
+            uniffi_handle,
+            path,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeJadeTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(path), )
+            method = uniffi_obj.close_device
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterTypeJadeTransportResult.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD3
+    def write_chunk(
+            uniffi_handle,
+            path,
+            data,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeJadeTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(path), _UniffiConverterBytes.lift(data), )
+            method = uniffi_obj.write_chunk
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterTypeJadeTransportResult.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD4
+    def read_chunk(
+            uniffi_handle,
+            path,
+            timeout_ms,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeJadeTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(path), _UniffiConverterUInt32.lift(timeout_ms), )
+            method = uniffi_obj.read_chunk
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterTypeJadeTransportReadResult.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD5
+    def get_chunk_size(
+            uniffi_handle,
+            path,
+            uniffi_out_return,
+            uniffi_call_status_ptr,
+        ):
+        uniffi_obj = _UniffiConverterTypeJadeTransportCallback._handle_map.get(uniffi_handle)
+        def make_call():
+            args = (_UniffiConverterString.lift(path), )
+            method = uniffi_obj.get_chunk_size
+            return method(*args)
+
+        
+        def write_return_value(v):
+            uniffi_out_return[0] = _UniffiConverterUInt32.lower(v)
+        _uniffi_trait_interface_call(
+                uniffi_call_status_ptr.contents,
+                make_call,
+                write_return_value,
+        )
+
+    @_UNIFFI_CALLBACK_INTERFACE_FREE
+    def _uniffi_free(uniffi_handle):
+        _UniffiConverterTypeJadeTransportCallback._handle_map.remove(uniffi_handle)
+
+    # Generate the FFI VTable.  This has a field for each callback interface method.
+    _uniffi_vtable = _UniffiVTableCallbackInterfaceJadeTransportCallback(
+        scan_devices,
+        open_device,
+        close_device,
+        write_chunk,
+        read_chunk,
+        get_chunk_size,
+        _uniffi_free
+    )
+    # Send Rust a pointer to the VTable.  Note: this means we need to keep the struct alive forever,
+    # or else bad things will happen when Rust tries to access it.
+    _UniffiLib.uniffi_bitkitcore_fn_init_callback_vtable_jadetransportcallback(ctypes.byref(_uniffi_vtable))
+
+
+
+class _UniffiConverterTypeJadeTransportCallback:
+    _handle_map = _UniffiHandleMap()
+
+    @staticmethod
+    def lift(value: int):
+        return JadeTransportCallbackImpl._make_instance_(value)
+
+    @staticmethod
+    def check_lower(value: JadeTransportCallback):
+        pass
+
+    @staticmethod
+    def lower(value: JadeTransportCallbackProtocol):
+        return _UniffiConverterTypeJadeTransportCallback._handle_map.insert(value)
+
+    @classmethod
+    def read(cls, buf: _UniffiRustBuffer):
+        ptr = buf.read_u64()
+        if ptr == 0:
+            raise InternalError("Raw pointer value was null")
+        return cls.lift(ptr)
+
+    @classmethod
+    def write(cls, value: JadeTransportCallbackProtocol, buf: _UniffiRustBuffer):
         buf.write_u64(cls.lower(value))
 class TrezorTransportCallbackProtocol(typing.Protocol):
     """
@@ -23148,6 +25409,463 @@ def is_valid_bip39_word(word: "str") -> "bool":
     return _UniffiConverterBool.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_is_valid_bip39_word,
         _UniffiConverterString.lower(word)))
 
+
+def jade_account_type_to_variant(account_type: "AccountType") -> "JadeAddressVariant":
+    """
+    Map a generic account type onto Jade's descriptor variant.
+    """
+
+    _UniffiConverterTypeAccountType.check_lower(account_type)
+    
+    return _UniffiConverterTypeJadeAddressVariant.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_jade_account_type_to_variant,
+        _UniffiConverterTypeAccountType.lower(account_type)))
+
+async def jade_cancel() -> None:
+
+    """
+    Abort the operation in flight.
+
+    Jade has no cancel message, so this closes the link. The application should
+    reconnect afterwards. This is what backs a cancel button on a signing screen.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_cancel(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
+async def jade_connect(transport: "JadeTransportKind",path: "str") -> "JadeVersionInfo":
+
+    """
+    Open a device and read its firmware and state summary.
+
+    The path normally comes from the last `jade_scan`, but a known Bluetooth
+    address or serial path can be passed directly to reconnect without a scan.
+    Any previously open connection is closed first. The returned `jade_state`
+    tells the application what to do next: `Locked` means call `jade_unlock`,
+    `Ready` means the device is already usable, and `Uninit` means the user must
+    create or restore a wallet on the device itself.
+    """
+
+    _UniffiConverterTypeJadeTransportKind.check_lower(transport)
+    
+    _UniffiConverterString.check_lower(path)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_connect(
+        _UniffiConverterTypeJadeTransportKind.lower(transport),
+        _UniffiConverterString.lower(path)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeJadeVersionInfo.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
+async def jade_disconnect() -> None:
+
+    """
+    Close the device and clear session state.
+
+    Safe to call while an operation is waiting on a confirmation: the pending
+    request returns `UserCancelled` promptly rather than running out its deadline.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_disconnect(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
+async def jade_get_account_export(network: "JadeNetwork",account_index: "int",account_types: "typing.List[AccountType]") -> "JadeAccountExport":
+
+    """
+    Fetch the account keys an import needs in one call.
+
+    Shaped like `passport_parse_account_export` so applications have a single
+    import path across signers. Each key is fetched under one held connection,
+    which matters over Bluetooth where every round trip is slow.
+    """
+
+    _UniffiConverterTypeJadeNetwork.check_lower(network)
+    
+    _UniffiConverterUInt32.check_lower(account_index)
+    
+    _UniffiConverterSequenceTypeAccountType.check_lower(account_types)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_get_account_export(
+        _UniffiConverterTypeJadeNetwork.lower(network),
+        _UniffiConverterUInt32.lower(account_index),
+        _UniffiConverterSequenceTypeAccountType.lower(account_types)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeJadeAccountExport.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
+async def jade_get_connected_device() -> "typing.Optional[JadeDeviceInfo]":
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_get_connected_device(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterOptionalTypeJadeDeviceInfo.lift,
+        
+    # Error FFI converter
+
+    None,
+
+    )
+async def jade_get_master_fingerprint(network: "JadeNetwork") -> "str":
+
+    """
+    The device's master fingerprint, eight lowercase hex characters.
+
+    This must be supplied as `WalletParams.fingerprint` when composing, or the
+    resulting PSBT carries no BIP32 key origins and the device signs nothing.
+    """
+
+    _UniffiConverterTypeJadeNetwork.check_lower(network)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_get_master_fingerprint(
+        _UniffiConverterTypeJadeNetwork.lower(network)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
+async def jade_get_version_info() -> "typing.Optional[JadeVersionInfo]":
+
+    """
+    The version summary read at connect, without touching the device.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_get_version_info(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterOptionalTypeJadeVersionInfo.lift,
+        
+    # Error FFI converter
+
+    None,
+
+    )
+async def jade_get_xpub(network: "JadeNetwork",derivation_path: "str") -> "JadeXpubResponse":
+
+    """
+    Fetch an extended public key, echoed back with the path and fingerprint.
+    """
+
+    _UniffiConverterTypeJadeNetwork.check_lower(network)
+    
+    _UniffiConverterString.check_lower(derivation_path)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_get_xpub(
+        _UniffiConverterTypeJadeNetwork.lower(network),
+        _UniffiConverterString.lower(derivation_path)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeJadeXpubResponse.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
+
+def jade_is_connected() -> "bool":
+    return _UniffiConverterBool.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_jade_is_connected,))
+
+async def jade_list_devices() -> "typing.List[JadeDeviceInfo]":
+
+    """
+    The devices found by the last scan, without starting a new one.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_list_devices(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterSequenceTypeJadeDeviceInfo.lift,
+        
+    # Error FFI converter
+
+    None,
+
+    )
+async def jade_logout() -> None:
+
+    """
+    Lock the device and zero its in-memory key material.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_logout(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
+async def jade_notify_disconnected(path: "str") -> None:
+
+    """
+    Tell the library that the native layer saw the device disconnect.
+
+    Without this, an idle Bluetooth drop is invisible until the next request.
+    """
+
+    _UniffiConverterString.check_lower(path)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_notify_disconnected(
+        _UniffiConverterString.lower(path)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+
+    None,
+
+    )
+async def jade_ping() -> "JadePingStatus":
+
+    """
+    Check whether the device is idle, busy, or waiting on the user.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_ping(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeJadePingStatus.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
+async def jade_refresh_version_info() -> "JadeVersionInfo":
+
+    """
+    Re-read the version summary from the device.
+    """
+
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_refresh_version_info(),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeJadeVersionInfo.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
+async def jade_scan(timeout_ms: "int") -> "typing.List[JadeDeviceInfo]":
+
+    """
+    Discover Jade devices.
+
+    Bluetooth discovery is performed by the registered transport callback; on
+    desktop and Python builds, attached USB serial units are enumerated too.
+    Returns `DeviceBusy` while a connection is open, because starting a
+    Bluetooth scan during an active link drops it on Android.
+    """
+
+    _UniffiConverterUInt32.check_lower(timeout_ms)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_scan(
+        _UniffiConverterUInt32.lower(timeout_ms)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterSequenceTypeJadeDeviceInfo.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
+
+def jade_set_transport_callback(callback: "JadeTransportCallback") -> "bool":
+    """
+    Register the native transport.
+
+    Returns `true` when this replaced a previously registered callback, which
+    lets the application tell a fresh registration from a re-registration.
+    """
+
+    _UniffiConverterTypeJadeTransportCallback.check_lower(callback)
+    
+    return _UniffiConverterBool.lift(_uniffi_rust_call(_UniffiLib.uniffi_bitkitcore_fn_func_jade_set_transport_callback,
+        _UniffiConverterTypeJadeTransportCallback.lower(callback)))
+
+async def jade_sign_message(network: "JadeNetwork",derivation_path: "str",message: "str") -> "JadeSignedMessage":
+
+    """
+    Sign a message, returning the signature with the address that verifies it.
+    """
+
+    _UniffiConverterTypeJadeNetwork.check_lower(network)
+    
+    _UniffiConverterString.check_lower(derivation_path)
+    
+    _UniffiConverterString.check_lower(message)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_sign_message(
+        _UniffiConverterTypeJadeNetwork.lower(network),
+        _UniffiConverterString.lower(derivation_path),
+        _UniffiConverterString.lower(message)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterTypeJadeSignedMessage.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
+async def jade_sign_psbt(network: "JadeNetwork",psbt: "str") -> "str":
+
+    """
+    Sign a PSBT, returning the signed PSBT base64 encoded.
+
+    The reply is checked against what was sent before it is returned. Feed the
+    result to `finalize_psbt` with the original PSBT, then broadcast with
+    `onchain_broadcast_raw_tx`.
+    """
+
+    _UniffiConverterTypeJadeNetwork.check_lower(network)
+    
+    _UniffiConverterString.check_lower(psbt)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_sign_psbt(
+        _UniffiConverterTypeJadeNetwork.lower(network),
+        _UniffiConverterString.lower(psbt)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer,
+        # lift function
+        _UniffiConverterString.lift,
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
+async def jade_unlock(network: "JadeNetwork") -> None:
+
+    """
+    Unlock the device for a network.
+
+    Runs the blind pinserver exchange when the device asks for it, which needs
+    network access. The PIN is entered on the device and never reaches the host.
+    """
+
+    _UniffiConverterTypeJadeNetwork.check_lower(network)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_unlock(
+        _UniffiConverterTypeJadeNetwork.lower(network)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
+async def jade_verify_address(network: "JadeNetwork",variant: "JadeAddressVariant",derivation_path: "str",expected_address: "str") -> None:
+
+    """
+    Display an address on the device and check it against the expected one.
+
+    This always prompts on the device screen, so it is a verification step
+    rather than a way to fetch an address. Returns `AddressMismatch` when the
+    device disagrees with `expected_address`.
+    """
+
+    _UniffiConverterTypeJadeNetwork.check_lower(network)
+    
+    _UniffiConverterTypeJadeAddressVariant.check_lower(variant)
+    
+    _UniffiConverterString.check_lower(derivation_path)
+    
+    _UniffiConverterString.check_lower(expected_address)
+    
+    return await _uniffi_rust_call_async(
+        _UniffiLib.uniffi_bitkitcore_fn_func_jade_verify_address(
+        _UniffiConverterTypeJadeNetwork.lower(network),
+        _UniffiConverterTypeJadeAddressVariant.lower(variant),
+        _UniffiConverterString.lower(derivation_path),
+        _UniffiConverterString.lower(expected_address)),
+        _UniffiLib.ffi_bitkitcore_rust_future_poll_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_complete_void,
+        _UniffiLib.ffi_bitkitcore_rust_future_free_void,
+        # lift function
+        lambda val: None,
+        
+        
+    # Error FFI converter
+_UniffiConverterTypeJadeError,
+
+    )
 async def lnurl_auth(domain: "str",k1: "str",callback: "str",bip32_mnemonic: "str",network: "typing.Optional[Network]",bip39_passphrase: "typing.Optional[str]") -> "str":
 
     _UniffiConverterString.check_lower(domain)
@@ -24755,6 +27473,13 @@ __all__ = [
     "DecodingError",
     "HardwareWalletTransport",
     "HardwareWalletVendor",
+    "JadeAddressVariant",
+    "JadeError",
+    "JadeNetwork",
+    "JadePingStatus",
+    "JadeState",
+    "JadeTransportErrorCode",
+    "JadeTransportKind",
     "LnurlError",
     "ManualRefundStateEnum",
     "Network",
@@ -24827,6 +27552,15 @@ __all__ = [
     "ILspNode",
     "IManualRefund",
     "IcJitEntry",
+    "JadeAccount",
+    "JadeAccountExport",
+    "JadeDeviceInfo",
+    "JadeNativeDevice",
+    "JadeSignedMessage",
+    "JadeTransportReadResult",
+    "JadeTransportResult",
+    "JadeVersionInfo",
+    "JadeXpubResponse",
     "LegacyRnCloseRecoveryScanResult",
     "LegacyRnCloseRecoverySweepPreview",
     "LightningActivity",
@@ -24973,6 +27707,27 @@ __all__ = [
     "insert_activity",
     "is_address_used",
     "is_valid_bip39_word",
+    "jade_account_type_to_variant",
+    "jade_cancel",
+    "jade_connect",
+    "jade_disconnect",
+    "jade_get_account_export",
+    "jade_get_connected_device",
+    "jade_get_master_fingerprint",
+    "jade_get_version_info",
+    "jade_get_xpub",
+    "jade_is_connected",
+    "jade_list_devices",
+    "jade_logout",
+    "jade_notify_disconnected",
+    "jade_ping",
+    "jade_refresh_version_info",
+    "jade_scan",
+    "jade_set_transport_callback",
+    "jade_sign_message",
+    "jade_sign_psbt",
+    "jade_unlock",
+    "jade_verify_address",
     "lnurl_auth",
     "mark_activity_as_seen",
     "migrate_backup_activities_json",
@@ -25067,6 +27822,7 @@ __all__ = [
     "wipe_all_transaction_details",
     "BoltzEventListener",
     "EventListener",
+    "JadeTransportCallback",
     "TrezorTransportCallback",
     "TrezorUiCallback",
     "UrDecoder",
