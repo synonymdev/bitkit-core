@@ -1660,6 +1660,53 @@ public data class PubkyProfileLink (
 
 
 /**
+ * Public native terms. Amount limits refer to the provider lockup, before the claim fee.
+ */
+@kotlinx.serialization.Serializable
+public data class PubkySendTerms (
+    val `pairHash`: kotlin.String,
+    val `minimumLockupSat`: kotlin.ULong,
+    val `maximumLockupSat`: kotlin.ULong,
+    val `baseFeeSat`: kotlin.ULong,
+    val `feePpm`: kotlin.ULong,
+    val `lockupFeeSat`: kotlin.ULong,
+    val `claimFeeSat`: kotlin.ULong
+) {
+    public companion object
+}
+
+
+
+/**
+ * Configuration for the embedded Pubky swap bridge. Secrets remain in memory.
+ */
+@kotlinx.serialization.Serializable
+public data class PubkySwapConfig (
+    val `network`: BoltzNetwork,
+    /**
+     * Provider public key, in plain z32 or with a `pubky` prefix.
+     */
+    val `provider`: kotlin.String,
+    val `electrumUrl`: kotlin.String,
+    /**
+     * Absolute directory in the application's private wallet storage.
+     */
+    val `dataDir`: kotlin.String,
+    /**
+     * Maximum total swap fee, in basis points.
+     */
+    val `maxFeeBps`: kotlin.UShort,
+    /**
+     * Maximum total amount admitted for one swap, in satoshis.
+     */
+    val `maxAmountSat`: kotlin.ULong
+) {
+    public companion object
+}
+
+
+
+/**
  * Result of creating a reverse swap (Lightning -> onchain).
  *
  * The caller pays `invoice` from its Lightning node; once Boltz locks funds at

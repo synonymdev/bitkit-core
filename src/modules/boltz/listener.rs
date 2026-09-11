@@ -28,7 +28,7 @@ struct UpdatesHandle {
     db: Arc<BoltzDB>,
     listener: Arc<dyn BoltzEventListener>,
     config: AutoClaimConfig,
-    ws_task: JoinHandle<()>,
+    ws_task: Option<JoinHandle<()>>,
     process_task: JoinHandle<()>,
     reconcile_task: JoinHandle<()>,
 }
@@ -41,7 +41,9 @@ impl UpdatesHandle {
     fn shutdown(self) {
         self.reconcile_task.abort();
         self.process_task.abort();
-        self.ws_task.abort();
+        if let Some(task) = self.ws_task {
+            task.abort();
+        }
         // Dropping the last `Arc<BoltzWsApi>` triggers its shutdown.
         drop(self.ws);
     }
@@ -149,19 +151,24 @@ pub async fn start_swap_updates(
         BoltzWsConfig::default(),
     ));
 
-    let ws_task = {
+    let ws_task = if needs_legacy_updates(&pending, network) {
         let alive = TaskAlive::new();
         let ws = ws.clone();
-        tokio::spawn(async move {
+        Some(tokio::spawn(async move {
             let _alive = alive;
             ws.run_ws_loop().await;
-        })
+        }))
+    } else {
+        None
     };
 
     // Subscribe to every pending swap for this network. Reconciliation is
     // handled by the periodic task below, whose immediate first tick catches up
     // any status the live stream missed while it was down.
-    for record in pending.iter().filter(|r| r.network == network) {
+    for record in pending
+        .iter()
+        .filter(|r| r.network == network && r.backend_binding.is_none())
+    {
         if let Err(e) = ws.subscribe_swap(&record.id).await {
             log::warn!("Failed to subscribe to swap {}: {}", record.id, e);
         }
@@ -178,9 +185,24 @@ pub async fn start_swap_updates(
         let config = config.clone();
         tokio::spawn(async move {
             let _alive = alive;
-            let mut interval = tokio::time::interval(RECONCILE_INTERVAL);
+            let mut interval = tokio::time::interval(std::time::Duration::from_secs(5));
+            let mut last_legacy = tokio::time::Instant::now() - RECONCILE_INTERVAL;
             loop {
                 interval.tick().await;
+                let legacy_due = last_legacy.elapsed() >= RECONCILE_INTERVAL;
+                if legacy_due {
+                    last_legacy = tokio::time::Instant::now();
+                    if let Err(error) = db
+                        .recover_creation_intents(
+                            network,
+                            &config.mnemonic,
+                            config.bip39_passphrase.as_deref(),
+                        )
+                        .await
+                    {
+                        log::warn!("Failed to recover pending Pubky creations: {}", error);
+                    }
+                }
                 let pending = match db.list_pending_swaps().await {
                     Ok(pending) => pending,
                     Err(e) => {
@@ -189,7 +211,9 @@ pub async fn start_swap_updates(
                     }
                 };
                 for record in pending.iter().filter(|r| r.network == network) {
-                    reconcile_swap(&db, &listener, &config, network, &record.id).await;
+                    if record.backend_binding.is_some() || legacy_due {
+                        reconcile_swap(&db, &listener, &config, network, &record.id).await;
+                    }
                 }
             }
         })
@@ -206,7 +230,13 @@ pub async fn start_swap_updates(
             let mut updates = ws.updates();
             loop {
                 match updates.recv().await {
-                    Ok(status) => process_status(&db, listener.as_ref(), &config, status).await,
+                    Ok(status) => {
+                        // A Boltz event cannot advance a Pubky swap even if its id collides.
+                        if matches!(db.get_swap(&status.id).await, Ok(Some(record)) if record.backend_binding.is_none() && record.network == network)
+                        {
+                            process_status(&db, listener.as_ref(), &config, status).await;
+                        }
+                    }
                     Err(RecvError::Lagged(_)) => continue,
                     Err(RecvError::Closed) => break,
                 }
@@ -225,6 +255,12 @@ pub async fn start_swap_updates(
         reconcile_task,
     });
     Ok(())
+}
+
+fn needs_legacy_updates(records: &[SwapRecord], network: BoltzNetwork) -> bool {
+    records
+        .iter()
+        .any(|record| record.network == network && record.backend_binding.is_none())
 }
 
 /// Stop the running updates stream, if any, and tear down its tasks.
@@ -257,8 +293,10 @@ pub async fn subscribe_if_active(network: BoltzNetwork, swap_id: &str) {
     let Some((ws, db, listener, config)) = ctx else {
         return;
     };
-    if let Err(e) = ws.subscribe_swap(swap_id).await {
-        log::warn!("Failed to subscribe to swap {}: {}", swap_id, e);
+    if matches!(db.get_swap(swap_id).await, Ok(Some(record)) if record.backend_binding.is_none()) {
+        if let Err(e) = ws.subscribe_swap(swap_id).await {
+            log::warn!("Failed to subscribe to swap {}: {}", swap_id, e);
+        }
     }
     reconcile_swap(&db, &listener, &config, network, swap_id).await;
 }
@@ -275,17 +313,63 @@ async fn reconcile_swap(
     network: BoltzNetwork,
     swap_id: &str,
 ) {
-    let boltz_client = build_boltz_client(network);
-    match boltz_client.get_swap(swap_id).await {
-        Ok(resp) => {
-            let status = SwapStatus {
-                id: swap_id.to_string(),
-                status: resp.status,
-                ..Default::default()
-            };
-            process_status(db, listener.as_ref(), config, status).await;
+    let record = match db.get_swap(swap_id).await {
+        Ok(Some(record)) if record.network == network => record,
+        _ => return,
+    };
+    if record.backend_binding.is_some() {
+        let _guard = super::guard::lock_swap(swap_id).await;
+        match super::claim::recover_broadcast(db, &record).await {
+            Ok(Some(txid)) => {
+                if record.swap_type == BoltzSwapType::Reverse {
+                    listener.on_event(BoltzSwapEvent::Claimed {
+                        swap_id: record.id,
+                        txid,
+                    });
+                } else {
+                    listener.on_event(BoltzSwapEvent::Refunded {
+                        swap_id: record.id,
+                        txid,
+                    });
+                }
+                return;
+            }
+            Ok(None) => {}
+            Err(error) => log::warn!("Failed to recover swap broadcast: {}", error),
         }
-        Err(e) => log::warn!("Failed to reconcile swap {}: {}", swap_id, e),
+    }
+    let result = if record.backend_binding.is_some() {
+        async {
+            let bridge = record.pubky_bridge().await?;
+            let id = uuid::Uuid::parse_str(swap_id).map_err(|e| BoltzError::InvalidInput {
+                error_details: e.to_string(),
+            })?;
+            let update = bridge.refresh(id).await.map_err(super::api::bridge_error)?;
+            Ok::<_, BoltzError>(update.status)
+        }
+        .await
+    } else {
+        build_boltz_client(network)
+            .get_swap(swap_id)
+            .await
+            .map(|r| r.status)
+            .map_err(BoltzError::from)
+    };
+    match result {
+        Ok(raw) => {
+            process_status(
+                db,
+                listener.as_ref(),
+                config,
+                SwapStatus {
+                    id: swap_id.to_string(),
+                    status: raw,
+                    ..Default::default()
+                },
+            )
+            .await
+        }
+        Err(error) => log::warn!("Failed to reconcile swap {}: {}", swap_id, error),
     }
 }
 
@@ -297,17 +381,14 @@ async fn process_status(
     config: &AutoClaimConfig,
     status: SwapStatus,
 ) {
+    let operation = db.recovery_gate.read().await;
     let swap_id = status.id.clone();
     let raw = status.status.clone();
 
     if let Err(e) = db.update_status(&swap_id, &raw).await {
         log::warn!("Failed to persist status for swap {}: {}", swap_id, e);
+        return;
     }
-
-    listener.on_event(BoltzSwapEvent::StatusUpdate {
-        swap_id: swap_id.clone(),
-        status: BoltzSwapStatus::from_raw(&raw),
-    });
 
     let record = match db.get_swap(&swap_id).await {
         Ok(Some(record)) => record,
@@ -318,6 +399,14 @@ async fn process_status(
         }
     };
 
+    // A queued remote update cannot regress a locally completed spend.
+    let raw = record.status.clone();
+    listener.on_event(BoltzSwapEvent::StatusUpdate {
+        swap_id: swap_id.clone(),
+        status: BoltzSwapStatus::from_raw(&raw),
+    });
+
+    drop(operation);
     if should_auto_claim(&record, &raw, config.accept_zero_conf) {
         auto_claim(db, listener, config, &record).await;
     }
@@ -345,7 +434,9 @@ fn should_auto_claim(record: &SwapRecord, raw_status: &str, accept_zero_conf: bo
         && record.claim_tx_id.is_none()
         && (raw_status == "transaction.confirmed"
             || raw_status == "invoice.settled"
-            || (accept_zero_conf && raw_status == "transaction.mempool"))
+            || (record.backend_binding.is_none()
+                && accept_zero_conf
+                && raw_status == "transaction.mempool"))
 }
 
 /// Claim through the guarded path, which serializes against a concurrent manual
@@ -391,6 +482,7 @@ mod tests {
     fn record(swap_type: BoltzSwapType, claim_tx_id: Option<String>) -> SwapRecord {
         SwapRecord {
             id: "swap-id".to_string(),
+            backend_binding: None,
             swap_type,
             status: "swap.created".to_string(),
             network: BoltzNetwork::Testnet,
@@ -400,6 +492,7 @@ mod tests {
             lockup_address: Some("bc1qlockup".to_string()),
             onchain_address: Some("bc1qclaim".to_string()),
             amount_sat: 100_000,
+            recipient_amount_sat: None,
             onchain_amount_sat: Some(99_000),
             timeout_block_height: 800_000,
             create_response_json: "{}".to_string(),
@@ -456,6 +549,26 @@ mod tests {
         assert!(!should_auto_claim(&record, "invoice.settled", false));
     }
 
+    #[test]
+    fn legacy_websocket_is_needed_only_for_legacy_swaps_on_the_selected_network() {
+        let mut native = record(BoltzSwapType::Reverse, None);
+        native.backend_binding = Some("pubky-binding".into());
+        assert!(!super::needs_legacy_updates(&[], BoltzNetwork::Testnet));
+        assert!(!super::needs_legacy_updates(
+            &[native.clone()],
+            BoltzNetwork::Testnet
+        ));
+        let legacy = record(BoltzSwapType::Reverse, None);
+        assert!(!super::needs_legacy_updates(
+            &[legacy.clone()],
+            BoltzNetwork::Regtest
+        ));
+        assert!(super::needs_legacy_updates(
+            &[native, legacy],
+            BoltzNetwork::Testnet
+        ));
+    }
+
     struct NoopListener;
 
     impl super::BoltzEventListener for NoopListener {
@@ -481,7 +594,7 @@ mod tests {
     }
 
     /// Concurrent starts must serialize the stream replacement: whichever start
-    /// wins, exactly one stream (three tasks) may remain, every superseded
+    /// wins, exactly one native-only stream (two tasks) may remain, every superseded
     /// stream's tasks must be aborted, and a stop must tear down the survivor.
     /// This is the only test that touches the global stream slot, so it cannot
     /// race with other tests.
@@ -516,7 +629,7 @@ mod tests {
         }
 
         // All but the last-written stream must have been fully aborted.
-        wait_for_live_tasks(3).await;
+        wait_for_live_tasks(2).await;
         assert!(super::updates_cell().lock().await.is_some());
 
         super::stop_swap_updates().await;

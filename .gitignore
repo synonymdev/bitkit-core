@@ -15,3 +15,5 @@ bindings/ios/BitkitCore.xcframework/**/libbitkitcore.a
 .claude/worktrees
 *.local.*
 !*.local.template*
+
+bindings/android/lib/libs/rustls-platform-verifier.jar

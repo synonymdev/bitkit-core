@@ -29,6 +29,7 @@ const TEST_MNEMONIC: &str =
 fn sample_record(id: &str, swap_type: BoltzSwapType) -> SwapRecord {
     SwapRecord {
         id: id.to_string(),
+        backend_binding: None,
         swap_type,
         status: "swap.created".to_string(),
         network: BoltzNetwork::Testnet,
@@ -38,6 +39,7 @@ fn sample_record(id: &str, swap_type: BoltzSwapType) -> SwapRecord {
         lockup_address: Some("bc1qexample".to_string()),
         onchain_address: Some("bc1qclaim".to_string()),
         amount_sat: 100_000,
+        recipient_amount_sat: None,
         onchain_amount_sat: Some(99_000),
         timeout_block_height: 800_000,
         create_response_json: "{}".to_string(),
@@ -53,7 +55,7 @@ const FIXTURE_LOCKTIME: u32 = 800_000;
 /// Build a signed BOLT11 testnet invoice with the given payment hash and
 /// amount. The signing key is arbitrary; the validators under test only read
 /// the payment hash and amount.
-fn build_test_invoice(payment_hash: sha256::Hash, amount_msat: u64) -> String {
+pub(super) fn build_test_invoice(payment_hash: sha256::Hash, amount_msat: u64) -> String {
     let secp = bitcoin::secp256k1::Secp256k1::new();
     let key = bitcoin::secp256k1::SecretKey::from_slice(&[41; 32]).unwrap();
     InvoiceBuilder::new(Currency::BitcoinTestnet)
@@ -177,7 +179,7 @@ fn reverse_response_fixture(
 }
 
 /// A submarine-swap creation response whose script hashlock is `hashlock`.
-fn submarine_response_fixture(
+pub(super) fn submarine_response_fixture(
     hashlock: hash160::Hash,
     our_pubkey: &bitcoin::PublicKey,
     boltz_pubkey: &bitcoin::PublicKey,
@@ -201,7 +203,7 @@ fn submarine_response_fixture(
 }
 
 /// Our claim keypair/preimage plus a distinct "Boltz" pubkey for fixtures.
-fn fixture_keys() -> (bitcoin::PublicKey, Preimage, bitcoin::PublicKey) {
+pub(super) fn fixture_keys() -> (bitcoin::PublicKey, Preimage, bitcoin::PublicKey) {
     let keypair = derive_swap_keypair(TEST_MNEMONIC, None, BoltzNetwork::Testnet, 0).unwrap();
     let our_pubkey = bitcoin::PublicKey::new(keypair.public_key());
     let preimage = Preimage::from_swap_key(&keypair);
@@ -724,4 +726,60 @@ async fn get_missing_swap_returns_none() {
     let path = dir.path().join("boltz.db");
     let db = BoltzDB::new(path.to_str().unwrap()).await.unwrap();
     assert!(db.get_swap("nope").await.unwrap().is_none());
+}
+
+#[tokio::test]
+async fn external_recipient_survives_database_reopen_and_fixes_claim_fee() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("recipient.sqlite");
+    let mut record = sample_record("external-send", BoltzSwapType::Reverse);
+    record.backend_binding = Some("pubky-test".into());
+    record.recipient_amount_sat = Some(98_100);
+    let db = BoltzDB::new(path.to_str().unwrap()).await.unwrap();
+    db.insert_swap(&record).await.unwrap();
+    drop(db);
+    let db = BoltzDB::new(path.to_str().unwrap()).await.unwrap();
+    let recovered = db.get_swap("external-send").await.unwrap().unwrap();
+    assert_eq!(recovered.recipient_amount_sat, Some(98_100));
+    assert!(matches!(
+        super::send::claim_fee(&recovered, Some(100.0)).unwrap(),
+        boltz_client::util::fees::Fee::Absolute(900)
+    ));
+    record.recipient_amount_sat = Some(99_001);
+    assert!(super::send::claim_fee(&record, None).is_err());
+}
+
+#[test]
+fn external_claim_rejects_underpayment_and_wrong_destination() {
+    use bitcoin::{Amount, Transaction, TxOut};
+    let mut record = sample_record("external-send", BoltzSwapType::Reverse);
+    record.backend_binding = Some("pubky-test".into());
+    record.recipient_amount_sat = Some(98_100);
+    let secp = bitcoin::secp256k1::Secp256k1::new();
+    let key = bitcoin::secp256k1::Keypair::from_secret_key(
+        &secp,
+        &bitcoin::secp256k1::SecretKey::from_slice(&[31; 32]).unwrap(),
+    );
+    let address = bitcoin::Address::p2tr(
+        &secp,
+        key.x_only_public_key().0,
+        None,
+        bitcoin::Network::Testnet,
+    );
+    record.onchain_address = Some(address.to_string());
+    let mut tx = Transaction {
+        version: bitcoin::transaction::Version::TWO,
+        lock_time: LockTime::ZERO,
+        input: vec![],
+        output: vec![TxOut {
+            value: Amount::from_sat(98_100),
+            script_pubkey: address.script_pubkey(),
+        }],
+    };
+    assert!(super::send::validate_claim_output(&record, &tx).is_ok());
+    tx.output[0].value = Amount::from_sat(98_099);
+    assert!(super::send::validate_claim_output(&record, &tx).is_err());
+    tx.output[0].value = Amount::from_sat(98_100);
+    tx.output[0].script_pubkey = bitcoin::ScriptBuf::new();
+    assert!(super::send::validate_claim_output(&record, &tx).is_err());
 }

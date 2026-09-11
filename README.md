@@ -34,6 +34,13 @@
   - Query single address balance and UTXOs via Electrum
   - Compose and sign transactions
 
+## Pubky swap integration
+
+This branch embeds `pubky-swap-boltz` behind the existing Boltz FFI. See the
+[swap setup and recovery guide](src/modules/boltz/README.md) for identity setup,
+provider requirements and local Android builds. Run `./build_local_android.sh`
+to publish the distinct local artifact used by the Android integration branch.
+
 ## Available Modules: Methods
 - Scanner
   - [decode](src/modules/scanner/README.md#usage-examples): Decodes input strings from various sources (QR codes, clipboard, etc.).

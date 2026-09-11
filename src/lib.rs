@@ -40,7 +40,7 @@ use crate::modules::blocktank::{
 };
 use crate::modules::boltz::{
     self, BoltzDB, BoltzError, BoltzEventListener, BoltzNetwork, BoltzPairInfo, BoltzSwap,
-    ReverseSwapResponse, SubmarineSwapResponse,
+    PubkySendTerms, PubkySwapConfig, ReverseSwapResponse, SubmarineSwapResponse,
 };
 pub use crate::modules::hardware_wallet::{
     get_supported_hardware_wallets, HardwareWalletTransport, HardwareWalletVendor,
@@ -2296,6 +2296,51 @@ fn get_trezor_manager() -> &'static TrezorManager {
 // Trezor / Bluetooth Functions
 // ============================================================================
 
+/// Give the embedded swap transport a process-lifetime Android application context
+/// so rendezvous resolves peers using the device's configured DNS servers.
+#[cfg(target_os = "android")]
+#[no_mangle]
+pub extern "system" fn Java_to_bitkit_services_PubkySwapInit_nativeInit(
+    env: jni::JNIEnv,
+    _class: jni::objects::JClass,
+    context: jni::objects::JObject,
+) -> jni::sys::jboolean {
+    static CONTEXT: OnceCell<jni::objects::GlobalRef> = OnceCell::new();
+    let initialized = CONTEXT.get_or_try_init(|| -> Result<_, jni::errors::Error> {
+        if context.into_inner().is_null() {
+            return Err(jni::errors::Error::NullPtr("application context"));
+        }
+        let vm = env.get_java_vm()?;
+        let global = env.new_global_ref(context)?;
+        // Both raw pointers belong to this live JNI call. The verifier promotes
+        // the context and class loader to its own global references.
+        unsafe {
+            pubky_swap_boltz::initialize_android_verifier(
+                env.get_native_interface().cast(),
+                context.into_inner().cast(),
+            )
+            .map_err(|_| jni::errors::Error::NullPtr("Pubky TLS verifier initialization"))?;
+        }
+        // The static global reference and Android Java VM remain valid until
+        // process exit, as required by iroh's JNI context contract.
+        unsafe {
+            pubky_swap_boltz::install_android_jni_context(
+                vm.get_java_vm_pointer().cast(),
+                global.as_obj().into_inner().cast(),
+            );
+        }
+        Ok(global)
+    });
+    match initialized {
+        Ok(_) => jni::sys::JNI_TRUE,
+        Err(_) => {
+            let _ = env.exception_clear();
+            log::error!("Failed to initialize Android context for Pubky swaps");
+            jni::sys::JNI_FALSE
+        }
+    }
+}
+
 /// JNI function to initialize btleplug on Android.
 /// This is called from Java via BluetoothInit.nativeInit().
 ///
@@ -2795,6 +2840,110 @@ fn boltz_runtime_err(e: tokio::task::JoinError) -> BoltzError {
     }
 }
 
+// Dropping the foreign async call must cancel its runtime task, otherwise a
+// canceled sign-in could reinstall the identity after the app has signed out.
+struct AbortSwapConfiguration(tokio::task::AbortHandle);
+
+impl Drop for AbortSwapConfiguration {
+    fn drop(&mut self) {
+        self.0.abort();
+    }
+}
+
+/// Configure the embedded Pubky bridge for new swaps. The identity must already
+/// be registered; the secret is used only for encrypted messaging and rendezvous.
+#[uniffi::export]
+pub async fn boltz_configure_pubky(
+    config: PubkySwapConfig,
+    secret_key_hex: String,
+) -> Result<(), BoltzError> {
+    let task =
+        ensure_runtime().spawn(async move { boltz::configure_pubky(config, secret_key_hex).await });
+    let _abort_on_cancel = AbortSwapConfiguration(task.abort_handle());
+    task.await.unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Read the saved grant account hint for selecting local recovery state.
+/// This does not authorize network requests or verify that the grant is still valid.
+#[uniffi::export]
+pub fn boltz_pubky_session_account(session_secret: String) -> Result<String, BoltzError> {
+    boltz::pubky_session_account(session_secret)
+}
+
+/// Return the wallet-derived communication identity for a scoped Pubky account.
+#[uniffi::export]
+pub fn boltz_pubky_session_identity(
+    wallet_secret_hex: String,
+    public_key: String,
+    provider: String,
+    application_scope: String,
+) -> Result<String, BoltzError> {
+    boltz::pubky_session_identity(wallet_secret_hex, public_key, provider, application_scope)
+}
+
+/// Configure swaps with a scoped Pubky session approved through an external signer.
+/// Session credentials stay local and are never delivered to the swap provider.
+#[uniffi::export]
+pub async fn boltz_configure_pubky_session(
+    config: PubkySwapConfig,
+    session_secret: String,
+    public_key: String,
+    application_scope: String,
+    wallet_secret_hex: String,
+) -> Result<(), BoltzError> {
+    let task = ensure_runtime().spawn(async move {
+        boltz::configure_pubky_session(
+            config,
+            session_secret,
+            public_key,
+            application_scope,
+            wallet_secret_hex,
+        )
+        .await
+    });
+    let _abort_on_cancel = AbortSwapConfiguration(task.abort_handle());
+    task.await
+        .unwrap_or_else(|error| Err(boltz_runtime_err(error)))
+}
+
+/// Release the configured Pubky identity. Legacy swap updates remain active;
+/// call boltz_stop_swap_updates separately when stopping the wallet.
+#[uniffi::export]
+pub async fn boltz_disconnect_pubky() {
+    let task = ensure_runtime().spawn(async { boltz::disconnect_pubky().await });
+    let _abort_on_cancel = AbortSwapConfiguration(task.abort_handle());
+    let _ = task.await;
+}
+
+/// Export a versioned local recovery snapshot. The caller must protect the returned
+/// metadata and chooses whether to include it in an encrypted backup destination.
+#[uniffi::export]
+pub async fn boltz_export_backup(pubky_data_root: String) -> Result<String, BoltzError> {
+    ensure_runtime()
+        .spawn(async move {
+            let db = get_boltz_db().await?;
+            boltz::export_backup(&db, pubky_data_root).await
+        })
+        .await
+        .unwrap_or_else(|error| Err(boltz_runtime_err(error)))
+}
+
+/// Merge a local recovery snapshot without replacing newer records or lowering
+/// derivation counters. Stop updates and disconnect Pubky before calling this.
+#[uniffi::export]
+pub async fn boltz_restore_backup(
+    snapshot_json: String,
+    pubky_data_root: String,
+) -> Result<(), BoltzError> {
+    ensure_runtime()
+        .spawn(async move {
+            let db = get_boltz_db().await?;
+            boltz::restore_backup(&db, snapshot_json, pubky_data_root).await
+        })
+        .await
+        .unwrap_or_else(|error| Err(boltz_runtime_err(error)))
+}
+
 /// Fetch fees and limits for submarine swaps (onchain -> Lightning).
 #[uniffi::export]
 pub async fn boltz_get_submarine_limits(
@@ -2879,6 +3028,54 @@ pub async fn boltz_create_reverse_swap(
     })
     .await
     .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Read the native fee schedule for paying an external Bitcoin address from Lightning.
+#[uniffi::export]
+pub async fn pubky_get_send_terms(network: BoltzNetwork) -> Result<PubkySendTerms, BoltzError> {
+    ensure_runtime()
+        .spawn(async move { boltz::get_send_terms(network).await })
+        .await
+        .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Create an externally addressed swap with a durable recipient amount and reviewed invoice budget.
+#[uniffi::export]
+pub async fn pubky_create_send_swap(
+    network: BoltzNetwork,
+    electrum_url: String,
+    invoice_sat: u64,
+    recipient_sat: u64,
+    claim_address: String,
+    pair_hash: String,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+) -> Result<ReverseSwapResponse, BoltzError> {
+    ensure_runtime()
+        .spawn(async move {
+            if recipient_sat == 0 || recipient_sat >= invoice_sat || pair_hash.is_empty() {
+                return Err(BoltzError::InvalidInput {
+                    error_details: "Invalid recipient swap budget".into(),
+                });
+            }
+            let response = get_boltz_db()
+                .await?
+                .create_reverse_swap_with_recipient(
+                    network,
+                    electrum_url,
+                    invoice_sat,
+                    claim_address,
+                    mnemonic,
+                    bip39_passphrase,
+                    Some(recipient_sat),
+                    pair_hash,
+                )
+                .await?;
+            boltz::subscribe_if_active(network, &response.id).await;
+            Ok(response)
+        })
+        .await
+        .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
 }
 
 /// List every persisted swap, newest first.

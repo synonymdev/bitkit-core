@@ -1,317 +1,88 @@
-# Boltz Module
+# Pubky swaps through the Boltz interface
 
-This module integrates [Boltz](https://boltz.exchange) submarine and reverse
-swaps so funds can move between onchain Bitcoin and Lightning channels:
+New submarine and reverse swaps use [`pubky-swap-boltz`](https://github.com/coreyphillips/pubky-swap-boltz) as an embedded Rust library. Existing `boltz*` FFI names and result types remain available to Android. The library talks to a configured Pubky provider through encrypted messages and authenticated rendezvous. It does not open a localhost HTTP server.
 
-- **Submarine swap** (onchain → Lightning): you lock onchain BTC, Boltz pays a
-  Lightning invoice your node generated. Use this to **add** Lightning balance
-  from onchain funds.
-- **Reverse swap** (Lightning → onchain): you pay a Boltz hold invoice over
-  Lightning, Boltz locks onchain BTC, and this module claims it to your onchain
-  address. Use this to **drain** Lightning balance to onchain.
+The pinned `boltz-client` 0.4.1 dependency remains responsible for wallet key derivation, Taproot script validation and unilateral signing. New swaps do not use Boltz's REST service, WebSocket service, cooperative signatures or recovery service. Records created by older builds keep their original Boltz route for status, claims and refunds.
 
-The dangerous cryptography (MuSig2 Taproot cooperative signing, swap scripts,
-claim/refund transaction construction) is handled by the
-[`boltz-client`](https://crates.io/crates/boltz-client) crate. This module adds
-persistence, lifecycle tracking, automatic claiming, and the FFI surface.
+## Configuration
 
-## Responsibility split with the app
+Call `initDb` as before, then configure the bridge before requesting limits or creating a swap:
 
-bitkit-core does **not** own the Lightning node. The app (via LDK Node) and
-bitkit-core cooperate:
-
-| Step | Owner |
-|------|-------|
-| Generate the BOLT11 invoice (submarine) | **App** — `node.bolt11Payment().receive(...)` |
-| Pay the hold invoice (reverse) | **App** — `node.bolt11Payment().send(...)` |
-| Provide an onchain claim address (reverse) | **App** — `node.onchainPayment().newAddress()` |
-| Send the onchain lockup (submarine) | **App** — `node.onchainPayment().sendToAddress(...)` |
-| Call Boltz, derive keys & preimage, track status | **bitkit-core** |
-| Build, sign and broadcast claim/refund transactions | **bitkit-core** |
-
-The app passes its **wallet mnemonic** (and BIP39 passphrase, if any) to the
-create/claim/refund/start-updates calls.
-
-## Keys, secrets & recovery
-
-Swap keys are **derived deterministically from the wallet seed**, never randomly
-generated and never stored. Each swap uses a unique index under Boltz's BIP85
-scheme (`m/26589'/0'/0'/{index}`); for reverse swaps the preimage is
-`sha256(swapKey)`. `boltz.db` persists only that **index** (plus status and
-metadata) — it holds **no key material**, so a leaked database cannot move funds.
-
-This makes swaps recoverable two independent ways:
-
-1. **Same device / restored `boltz.db`** — the index is on disk; combine it with
-   the in-memory seed to re-derive keys. Use `boltzListPendingSwaps` after
-   `boltzStartSwapUpdates` on startup.
-2. **Seed only (`boltz.db` lost)** — because keys derive from the seed, an
-   in-flight swap can still be recovered: the same BIP85 swap mnemonic can be
-   registered with Boltz's rescue API
-   (`https://boltz.exchange/rescue/external?mode=rescue-key`) to re-enumerate
-   swaps and re-derive their keys by scanning indices.
-
-> **The BIP39 passphrase must match the wallet's.** Keys derived under the wrong
-> passphrase (or a typo'd mnemonic) will not control the locked funds. Pass the
-> exact same `mnemonic`/`bip39Passphrase` used by the wallet to every Boltz call.
-
-Secrets exist in process memory only while a swap is being created, claimed or
-refunded; the background updates stream additionally holds the mnemonic in memory
-for its lifetime (dropped on `boltzStopSwapUpdates`) so it can auto-claim. As
-elsewhere in the app, `boltz.db` relies on the platform's app-sandbox/filesystem
-encryption at rest.
-
-## Lifecycle
-
-Status strings mirror the [Boltz lifecycle](https://api.docs.boltz.exchange/lifecycle.html)
-and are surfaced as the typed `BoltzSwapStatus` enum (unknown future states fall
-back to `Unknown { raw }`). Register a `BoltzEventListener` via
-`boltzStartSwapUpdates` to receive `BoltzSwapEvent`s over a managed WebSocket.
-
-**Reverse swaps are claimed automatically**: once Boltz's lockup reaches
-`transaction.confirmed`, this module builds and broadcasts the claim transaction
-(cooperative key-path first, script-path fallback) and emits
-`BoltzSwapEvent.Claimed { txid }`. Claiming on confirmation (not mempool) avoids
-revealing the preimage before the lockup is final; pass `acceptZeroConf: true`
-to `boltzStartSwapUpdates` to claim on mempool acceptance instead, if you accept
-the 0-conf risk (`false` is the safe default). The auto-claim fee rate is the
-`feeRateSatPerVb` passed to `boltzStartSwapUpdates` — **Bitkit owns fee
-estimation** and should pass its current recommended rate so the claim confirms
-before the swap times out; restart the stream to apply an updated rate.
-
-**Submarine refunds are manual** (the module needs a destination address): on
-`invoice.failedToPay` / `transaction.lockupFailed` / `swap.expired`, call
-`boltzRefundSubmarineSwap` with an onchain address.
-
-## FFI surface
-
+```kotlin
+boltzConfigurePubky(
+    config = PubkySwapConfig(
+        network = BoltzNetwork.MAINNET,
+        provider = "q9x5sfjbpajdebk45b9jashgb86iem7rnwpmu16px3ens63xzwro",
+        electrumUrl = "ssl://bitkit.to:9999",
+        dataDir = "<private wallet directory>/pubky-swaps/<identity>",
+        maxFeeBps = 1000u,
+        maxAmountSat = 1000000u,
+    ),
+    secretKeyHex = registeredPubkySecret,
+)
 ```
-boltzGetSubmarineLimits(network)                         -> BoltzPairInfo
-boltzGetReverseLimits(network)                           -> BoltzPairInfo
-boltzCreateSubmarineSwap(network, electrumUrl, invoice, mnemonic, bip39Passphrase?)         -> SubmarineSwapResponse
-boltzCreateReverseSwap(network, electrumUrl, amountSat, claimAddress, mnemonic, bip39Passphrase?) -> ReverseSwapResponse
-boltzListSwaps()                                         -> [BoltzSwap]
-boltzListPendingSwaps()                                  -> [BoltzSwap]
-boltzGetSwap(swapId)                                     -> BoltzSwap?
-boltzClaimReverseSwap(swapId, mnemonic, bip39Passphrase?, feeRateSatPerVb?)          -> String (txid)
-boltzRefundSubmarineSwap(swapId, refundAddress, mnemonic, bip39Passphrase?, feeRateSatPerVb?) -> String (txid)
-boltzStartSwapUpdates(network, listener, mnemonic, bip39Passphrase?, feeRateSatPerVb?, acceptZeroConf) // managed WebSocket
+
+The example directory placeholder must be replaced with an absolute application-private path. The secret is the existing registered Pubky Ed25519 secret from the platform keychain, not a Bitcoin private key or the wallet mnemonic. The plain provider key and its `pubky`-prefixed form identify the same provider. A Ring session without a locally managed secret cannot sign encrypted swap messages.
+
+Android calls `PubkySwapInit.nativeInit(applicationContext)` before configuration. This installs the device DNS and certificate-verifier context. The local build script bundles the certificate verifier's Java helper and consumer keep rules in the AAR.
+
+The provider must run the upstream Taproot and status support, advertise `boltz-taproot-v1` and `swap-status-v1`, and accept authenticated iroh rendezvous. Configuration does not deploy or upgrade the provider. A mainnet provider cannot be used on testnet or regtest.
+
+## Existing application flow
+
+The app still creates the submarine Lightning invoice and funds the returned lockup address. For a reverse swap it supplies a destination address and pays the returned hold invoice. Bitkit keeps the claim/refund private keys and reverse preimage. Only public keys and the payment hash enter the bridge.
+
+```text
+boltzGetSubmarineLimits(network)
+boltzGetReverseLimits(network)
+boltzCreateSubmarineSwap(network, electrumUrl, invoice, mnemonic, bip39Passphrase)
+boltzCreateReverseSwap(network, electrumUrl, amountSat, claimAddress, mnemonic, bip39Passphrase)
+boltzListSwaps()
+boltzListPendingSwaps()
+boltzGetSwap(swapId)
+boltzClaimReverseSwap(swapId, mnemonic, bip39Passphrase, feeRateSatPerVb)
+boltzRefundSubmarineSwap(swapId, refundAddress, mnemonic, bip39Passphrase, feeRateSatPerVb)
+boltzStartSwapUpdates(network, listener, mnemonic, bip39Passphrase, feeRateSatPerVb, acceptZeroConf)
 boltzStopSwapUpdates()
+boltzDisconnectPubky()
 ```
 
-`network` is `BoltzNetwork.{Mainnet, Testnet, Regtest}`. `electrumUrl` accepts
-`ssl://host:port`, `tcp://host:port`, or a bare `host:port` (treated as TLS) and
-is stored per-swap for later claim/refund broadcasting. `mnemonic` is the wallet
-mnemonic; pass the same `bip39Passphrase` the wallet uses (omit/`null` if none).
+Pubky swaps are polled and produce the existing typed lifecycle events. Legacy records retain their Boltz WebSocket and REST reconciliation. `boltzDisconnectPubky` releases the messaging identity without stopping legacy recovery. Stop updates separately when the wallet stops or is wiped. Reconfigure after changing identity, provider, network or Electrum settings. Each identity needs its own state directory; recovering an older Pubky swap requires its original identity and provider.
 
-`boltzClaimReverseSwap` and `boltzRefundSubmarineSwap` are **idempotent**: if the
-swap already has a recorded claim/refund tx, the existing txid is returned
-without re-broadcasting.
+Pubky reverse claims require a confirmed, independently observed unspent lockup and at least 18 blocks before refund. `acceptZeroConf` does not override this requirement. Pubky claims use the Taproot script path without transmitting the preimage to a cooperative signing endpoint. Submarine refunds use the timeout script path. The application supplies transaction fee estimates.
 
-**Only one updates stream runs at a time.** `boltzStartSwapUpdates` stops any
-previous stream, so a single network is tracked at once; call it again to switch
-networks.
+## Persistence and recovery
 
-## Usage Examples
+`boltz.db` preserves the existing BIP85 derivation index and adds the provider binding. Existing rows migrate as legacy Boltz records. Creation intents store the reserved index, exact public request, destination and idempotency identifier before negotiation. Restart recovery repeats the original request and checks the original wallet keys before completing the record.
 
-### Reverse swap — Lightning → onchain
+The bridge separately persists quotes, accepted contracts and protocol identifiers in its private SQLite directory. Preserve both databases and the wallet seed/passphrase. A transaction-id journal lets recovery recognize a broadcast that occurred before the local completion record was saved. It contains no private key, reverse preimage or transaction witness.
 
-#### iOS (Swift)
-```swift
-import BitkitCore
+A Pubky homeserver outage must not prevent spending an already accepted on-chain contract. Messaging signs in lazily; chain inspection and unilateral recovery use the persisted contract. Electrum access is still required. An interrupted quote that the provider never accepted may expire and require a new invoice or payment hash.
 
-// 1. Register a listener once (auto-claims reverse swaps).
-final class SwapListener: BoltzEventListener {
-    func onEvent(event: BoltzSwapEvent) {
-        switch event {
-        case .statusUpdate(let swapId, let status):
-            print("swap \(swapId): \(status)")
-        case .claimed(let swapId, let txid):
-            print("reverse swap \(swapId) claimed in \(txid)")
-        case .refunded(let swapId, let txid):
-            print("swap \(swapId) refunded in \(txid)")
-        case .error(let swapId, let message):
-            print("swap \(swapId) error: \(message)")
-        }
-    }
-}
-// `mnemonic` is the wallet's seed phrase; pass the wallet's BIP39 passphrase too
-// (or nil). It's held in memory for the stream's lifetime to auto-claim.
-try await boltzStartSwapUpdates(
-    network: .mainnet,
-    listener: SwapListener(),
-    mnemonic: wallet.mnemonic,
-    bip39Passphrase: nil,
-    feeRateSatPerVb: feeService.currentSatPerVb(),  // Bitkit-provided fee for auto-claims
-    acceptZeroConf: false                           // claim only after the lockup confirms
-)
+The wallet mnemonic and BIP39 passphrase must match the original wallet. Pubky swaps are not recoverable through Boltz's rescue website. Seed-only discovery of lost Pubky contract metadata is not implemented. Sign-out preserves recovery state. Coordinated swap-state cleanup during wallet wipe is not implemented. The Android wallet-wipe flow retains both `boltz.db` and the wrapper identity directories so their recovery records remain together. Preserve a successful logical recovery snapshot before wiping a wallet.
 
-func drainToOnchain(amountSat: UInt64) async throws {
-    // 2. A fresh onchain address from the LDK node receives the funds.
-    let claimAddress = try lightningService.node.onchainPayment().newAddress()
+## Local recovery snapshots
 
-    // 3. Create the swap and pay its hold invoice over Lightning.
-    let swap = try await boltzCreateReverseSwap(
-        network: .mainnet,
-        electrumUrl: "ssl://electrum.blockstream.info:50002",
-        amountSat: amountSat,
-        claimAddress: claimAddress,
-        mnemonic: wallet.mnemonic,
-        bip39Passphrase: nil
-    )
-    _ = try lightningService.node.bolt11Payment().send(invoice: swap.invoice, sendingParameters: nil)
+`boltzExportBackup(pubkyDataRoot)` returns a versioned JSON snapshot of all wallet swap records, pending creation intents, the reserved BIP32 key counter, every pending spend transaction ID, and each identity's wrapper contracts and retry bindings. Supply the identity parent directory, such as `<private wallet directory>/pubky-swaps`. The API reads logical records from SQLite, including disconnected prior identities, and never copies a live database file. It exports no private keys, reverse preimages or transaction witnesses. The metadata still contains invoices and swap history, so keep the returned value in encrypted storage together with the wallet's existing recovery material.
 
-    // 4. Once Boltz locks & confirms onchain, the module auto-claims and the
-    //    listener reports `.claimed`. Nothing else to do.
-}
+`boltzRestoreBackup(snapshotJson, pubkyDataRoot)` validates the complete snapshot before merging it. Stop swap updates and disconnect Pubky first. Restore rejects an active swap operation promptly. It preserves newer local progress, retains the highest reserved key counter and refuses conflicting contracts or retry bindings. The merged key counter is reserved first, then wrapper contracts are restored before the Core records that reference them. If a filesystem write fails partway through, the API returns an error and the same snapshot can be retried safely. A durable incomplete-restore marker blocks export and new key reservations until the same snapshot is successfully retried against the same directory, including after restart. This prevents replacing a good backup with partially imported data. Reserved indexes remain consumed after failure so a later new swap cannot reuse a key from a partially restored contract.
+
+Export briefly prevents new swap mutations while capturing Core records and the corresponding wrapper snapshots. It returns an error promptly if a swap operation is already active, without waiting for an offline provider request. Retry after swap creation or spending completes. Export fails if an identity database is corrupt, locked by another process, missing required recovery records or stored behind a symbolic link. Callers must keep their last successful backup when export fails. Limits are 16 MiB of JSON, 100 identities, 10,000 Core records/intents and 10,000 wrapper records across identities. Directory names must be canonical identity keys; snapshot input cannot select arbitrary filesystem paths.
+
+These functions operate locally and do not select or upload to a backup destination. Automatic integration with the Android VSS backup is not included. The wallet seed and BIP39 passphrase remain necessary to reconstruct signing keys. Restoring prior Pubky identities also requires their original registered secrets from the platform's identity recovery flow.
+
+## Local Android build
+
+Use Rust 1.95 or later, the installed Android NDK, JDK 17 or 21, cargo-ndk and the repository's Gobley binding generator:
+
+```sh
+export ANDROID_NDK_HOME="<Android SDK>/ndk/<version>"
+export JAVA_HOME="<JDK directory>"
+./build_local_android.sh
 ```
 
-#### Android (Kotlin)
-```kotlin
-import com.synonym.bitkitcore.*
+The script builds all four Android ABIs, regenerates Kotlin bindings, archives native symbols, strips packaged libraries and publishes `com.synonym:bitkit-core-android:0.5.14-pubky-swap-boltz-local` to Maven Local. The Android integration branch resolves that exact local artifact. It does not publish a public release or change the source version.
 
-class SwapListener : BoltzEventListener {
-    override fun onEvent(event: BoltzSwapEvent) {
-        when (event) {
-            is BoltzSwapEvent.StatusUpdate -> println("swap ${event.swapId}: ${event.status}")
-            is BoltzSwapEvent.Claimed -> println("reverse swap ${event.swapId} claimed in ${event.txid}")
-            is BoltzSwapEvent.Refunded -> println("swap ${event.swapId} refunded in ${event.txid}")
-            is BoltzSwapEvent.Error -> println("swap ${event.swapId} error: ${event.message}")
-        }
-    }
-}
+The local artifact uses the Android TLS helper already bundled by Bitkit's pinned Paykit dependency, avoiding duplicate classes. Standard Core builds bundle the helper by default. For a local consumer without Paykit, set `LOCAL_BUNDLE_PUBKY_TLS_HELPER=true` when running the script. The helper must match the `rustls-platform-verifier-android` version in `Cargo.lock`.
 
-suspend fun drainToOnchain(amountSat: ULong) {
-    // mnemonic = wallet seed phrase; pass the wallet's BIP39 passphrase or null.
-    // feeRateSatPerVb is Bitkit's fee rate for auto-claims; acceptZeroConf =
-    // false claims only after the lockup confirms (the safe default).
-    boltzStartSwapUpdates(BoltzNetwork.MAINNET, SwapListener(), wallet.mnemonic, null, feeService.currentSatPerVb(), false)
-
-    val claimAddress = lightningService.node.onchainPayment().newAddress()
-    val swap = boltzCreateReverseSwap(
-        network = BoltzNetwork.MAINNET,
-        electrumUrl = "ssl://electrum.blockstream.info:50002",
-        amountSat = amountSat,
-        claimAddress = claimAddress,
-        mnemonic = wallet.mnemonic,
-        bip39Passphrase = null,
-    )
-    lightningService.node.bolt11Payment().send(swap.invoice, null)
-    // Auto-claimed on confirmation; listener emits Claimed.
-}
-```
-
-#### Python
-```python
-from bitkitcore import (
-    boltz_create_reverse_swap, boltz_start_swap_updates,
-    BoltzNetwork, BoltzEventListener,
-)
-
-class SwapListener(BoltzEventListener):
-    def on_event(self, event):
-        print(event)
-
-# accept_zero_conf=False claims only after the lockup confirms (the safe default).
-await boltz_start_swap_updates(BoltzNetwork.MAINNET, SwapListener(), wallet_mnemonic, None, 5.0, False)
-swap = await boltz_create_reverse_swap(
-    network=BoltzNetwork.MAINNET,
-    electrum_url="ssl://electrum.blockstream.info:50002",
-    amount_sat=50_000,
-    claim_address=claim_address,   # from your onchain wallet
-    mnemonic=wallet_mnemonic,
-    bip39_passphrase=None,
-)
-# Pay swap.invoice over Lightning; the module claims onchain automatically.
-```
-
-### Submarine swap — onchain → Lightning
-
-#### iOS (Swift)
-```swift
-func topUpLightning(amountSat: UInt64) async throws {
-    // 1. Your LDK node issues the invoice Boltz will pay.
-    let invoice = try lightningService.node.bolt11Payment()
-        .receive(amountMsat: amountSat * 1000, description: "Boltz top-up", expirySecs: 3600)
-
-    // 2. Create the swap; Boltz returns the lockup address & exact amount.
-    let swap = try await boltzCreateSubmarineSwap(
-        network: .mainnet,
-        electrumUrl: "ssl://electrum.blockstream.info:50002",
-        invoice: invoice,
-        mnemonic: wallet.mnemonic,
-        bip39Passphrase: nil
-    )
-
-    // 3. Fund the lockup from your onchain wallet.
-    _ = try lightningService.node.onchainPayment()
-        .sendToAddress(address: swap.address, amountSats: swap.expectedAmountSat)
-
-    // 4. Boltz pays the invoice on confirmation (.invoicePaid → .transactionClaimed).
-    //    If it fails, refund onchain (key re-derived from the mnemonic):
-    //    try await boltzRefundSubmarineSwap(
-    //        swapId: swap.id, refundAddress: addr,
-    //        mnemonic: wallet.mnemonic, bip39Passphrase: nil, feeRateSatPerVb: nil)
-}
-```
-
-#### Android (Kotlin)
-```kotlin
-suspend fun topUpLightning(amountSat: ULong) {
-    val invoice = lightningService.node.bolt11Payment()
-        .receive(amountSat * 1000u, "Boltz top-up", 3600u)
-
-    val swap = boltzCreateSubmarineSwap(
-        network = BoltzNetwork.MAINNET,
-        electrumUrl = "ssl://electrum.blockstream.info:50002",
-        invoice = invoice,
-        mnemonic = wallet.mnemonic,
-        bip39Passphrase = null,
-    )
-    lightningService.node.onchainPayment().sendToAddress(swap.address, swap.expectedAmountSat)
-    // On failure: boltzRefundSubmarineSwap(swap.id, refundAddress, wallet.mnemonic, null, null)
-}
-```
-
-## Recovery after restart
-
-On startup (after `initDb`), resume tracking and surface anything actionable:
-
-```kotlin
-// re-subscribes all pending swaps; holds the mnemonic to auto-claim
-boltzStartSwapUpdates(BoltzNetwork.MAINNET, SwapListener(), wallet.mnemonic, null, feeService.currentSatPerVb(), false)
-val pending = boltzListPendingSwaps()                       // for UI / manual refunds
-```
-
-`boltzListPendingSwaps` returns every swap that is not locally complete. A
-terminal server status alone does not end recovery: a reverse swap whose invoice
-Boltz reports as settled stays pending until its claim txid is recorded locally,
-because the cooperative claim flow discloses the preimage before broadcast and
-the claim transaction may never have reached the chain (the updates stream
-retries such claims automatically). Combined with the wallet seed (keys are
-re-derived from each swap's index), an interrupted reverse swap can still be
-claimed and a failed submarine swap refunded. If `boltz.db` itself was
-lost, recover via Boltz's rescue API using the seed (see *Keys, secrets &
-recovery* above).
-
-## Testing
-
-```bash
-cargo test modules::boltz                                   # unit tests (offline)
-cargo test modules::boltz -- --ignored --nocapture          # live E2E (testnet)
-BOLTZ_LIVE_NETWORK=mainnet cargo test modules::boltz -- --ignored --nocapture
-```
-
-The offline tests cover status mapping, DB round-trip/recovery, monotonic index
-reservation, and deterministic key/preimage derivation (same seed+index →
-same key; distinct indices/passphrases → distinct keys). The **claim/refund
-broadcast paths are not yet covered by an automated test** — they require a
-regtest Boltz + Electrum stack; the live test exercises swap creation and
-cryptographically validates the locally-derived redeem script and invoice
-against Boltz's response, but does not broadcast. A regtest end-to-end test that
-actually claims and refunds is the recommended follow-up.
-
-The live test creates a real reverse swap and asserts the locally-derived redeem
-script and invoice match Boltz's response (the guarantee that a later claim is
-valid). The swap is never paid and simply expires — no funds move. It skips
-gracefully if the Boltz endpoint is temporarily unavailable.
+Validate the core with `cargo test modules::boltz --lib` and `cargo clippy --lib`. The integration fixtures exercise the real bridge with the pinned Rust SDK, including response validation, unilateral signatures, restart intents, backend migration and recovery journals. Live mainnet swaps require separate operational validation against the upgraded provider.

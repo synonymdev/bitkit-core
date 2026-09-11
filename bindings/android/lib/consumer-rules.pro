@@ -42,3 +42,6 @@
 -dontwarn java.awt.GraphicsEnvironment
 -dontwarn java.awt.HeadlessException
 -dontwarn java.awt.Window
+
+# Pubky rendezvous uses the Android certificate verifier through JNI.
+-keep class org.rustls.platformverifier.** { *; }

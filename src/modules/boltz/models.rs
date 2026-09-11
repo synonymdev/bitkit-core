@@ -6,6 +6,8 @@ use boltz_client::Keypair;
 use rusqlite::Connection;
 use tokio::sync::Mutex;
 
+pub(crate) const SWAP_INDEX_LIMIT: u64 = 1 << 31;
+
 /// SQLite-backed store for Boltz swaps.
 ///
 /// Wraps a single connection behind an async mutex (mirroring the blocktank
@@ -16,6 +18,7 @@ use tokio::sync::Mutex;
 /// only the index needed to reconstruct it given the seed.
 pub struct BoltzDB {
     pub(crate) conn: Mutex<Connection>,
+    pub(crate) recovery_gate: tokio::sync::RwLock<()>,
 }
 
 /// Re-derive a swap's secp256k1 keypair from the wallet mnemonic.
@@ -59,7 +62,8 @@ pub const CREATE_SWAPS_TABLE: &str = "CREATE TABLE IF NOT EXISTS swaps (
     create_response_json TEXT NOT NULL,
     claim_tx_id TEXT,
     refund_tx_id TEXT,
-    created_at INTEGER NOT NULL
+    created_at INTEGER NOT NULL,
+    backend_binding TEXT
 )";
 
 /// Single-row counter table backing monotonic [`BoltzDB::reserve_swap_index`]
@@ -73,14 +77,17 @@ pub const CREATE_META_TABLE: &str = "CREATE TABLE IF NOT EXISTS swap_meta (
 
 /// Current `boltz.db` schema version, written to `PRAGMA user_version` so future
 /// changes have a migration anchor.
-pub const SCHEMA_VERSION: i64 = 1;
+pub const SCHEMA_VERSION: i64 = 5;
 
 /// Internal, fully-detailed representation of a persisted swap, including
 /// secrets. This is never exposed across the FFI boundary — use
 /// [`SwapRecord::to_boltz_swap`] to produce the public [`BoltzSwap`].
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SwapRecord {
     pub id: String,
+    /// None identifies a pre-integration swap that still belongs to Boltz.
+    pub backend_binding: Option<String>,
     pub swap_type: BoltzSwapType,
     /// Raw Boltz status string (mapped to [`BoltzSwapStatus`] on the way out).
     pub status: String,
@@ -95,6 +102,9 @@ pub struct SwapRecord {
     pub onchain_address: Option<String>,
     pub amount_sat: u64,
     pub onchain_amount_sat: Option<u64>,
+    /// Minimum payment to an external recipient, preserved across recovery.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recipient_amount_sat: Option<u64>,
     pub timeout_block_height: u64,
     /// Serialized `CreateSubmarineResponse` or `CreateReverseResponse`, used to
     /// reconstruct the swap script for claims/refunds.
@@ -143,6 +153,13 @@ impl SwapRecord {
     /// funds and must stay recoverable until a claim txid is recorded locally.
     pub fn is_locally_complete(&self) -> bool {
         let status = BoltzSwapStatus::from_raw(&self.status);
+        if self.backend_binding.is_some()
+            && self.swap_type == BoltzSwapType::Submarine
+            && self.refund_tx_id.is_none()
+            && status == BoltzSwapStatus::SwapExpired
+        {
+            return false;
+        }
         if !status.is_terminal() {
             return false;
         }
@@ -172,6 +189,69 @@ impl SwapRecord {
             created_at: self.created_at,
             claim_tx_id: self.claim_tx_id.clone(),
             refund_tx_id: self.refund_tx_id.clone(),
+        }
+    }
+}
+
+/// Public negotiation inputs persisted before contacting the provider. Keys and
+/// preimages remain derived from the wallet; interrupted requests reuse this
+/// exact derivation index, destination, request and idempotency token.
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CreationIntent {
+    pub id: String,
+    pub request_key: String,
+    pub wallet_fingerprint: String,
+    pub backend_binding: String,
+    pub network: BoltzNetwork,
+    pub electrum_url: String,
+    pub swap_index: u64,
+    pub claim_address: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recipient_amount_sat: Option<u64>,
+    pub created_at: u64,
+    pub request: pubky_swap_boltz::model::CreateRequest,
+}
+
+impl SwapRecord {
+    pub(crate) async fn pubky_bridge(
+        &self,
+    ) -> Result<std::sync::Arc<pubky_swap_boltz::Bridge>, BoltzError> {
+        let binding = self
+            .backend_binding
+            .as_deref()
+            .ok_or_else(|| BoltzError::InvalidInput {
+                error_details: "This swap belongs to the original Boltz provider".into(),
+            })?;
+        super::pubky::bridge_for_binding(self.network, binding).await
+    }
+}
+
+impl CreationIntent {
+    /// Changing the chain server does not create a new negotiation or new keys.
+    pub(crate) fn same_operation(&self, other: &Self) -> bool {
+        use pubky_swap_boltz::model::CreateRequest;
+        if self.backend_binding != other.backend_binding
+            || self.wallet_fingerprint != other.wallet_fingerprint
+            || self.network != other.network
+            || self.claim_address != other.claim_address
+            || self.recipient_amount_sat != other.recipient_amount_sat
+            || (self.recipient_amount_sat.is_some()
+                && self.request.pair_hash() != other.request.pair_hash())
+        {
+            return false;
+        }
+        match (&self.request, &other.request) {
+            (CreateRequest::Submarine(a), CreateRequest::Submarine(b)) => {
+                a.from == b.from && a.to == b.to && a.invoice == b.invoice
+            }
+            (CreateRequest::Reverse(a), CreateRequest::Reverse(b)) => {
+                a.from == b.from
+                    && a.to == b.to
+                    && a.invoice_amount == b.invoice_amount
+                    && a.onchain_amount == b.onchain_amount
+            }
+            _ => false,
         }
     }
 }

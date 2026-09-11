@@ -21,6 +21,7 @@ pub async fn refund_submarine_swap_guarded(
     bip39_passphrase: Option<&str>,
     fee_rate_sat_per_vb: Option<f64>,
 ) -> Result<String, BoltzError> {
+    let _operation = db.recovery_gate.read().await;
     validate_fee_rate(fee_rate_sat_per_vb)?;
     let _guard = lock_swap(swap_id).await;
 
@@ -31,6 +32,11 @@ pub async fn refund_submarine_swap_guarded(
         .ok_or_else(|| BoltzError::NotFound {
             error_details: format!("Swap {} not found", swap_id),
         })?;
+    if record.swap_type != super::types::BoltzSwapType::Submarine {
+        return Err(BoltzError::InvalidInput {
+            error_details: "Swap direction does not support this refund".into(),
+        });
+    }
     if let Some(existing) = record.refund_tx_id {
         return Ok(existing);
     }
@@ -39,7 +45,11 @@ pub async fn refund_submarine_swap_guarded(
     // or wrong-network address before any transaction is constructed.
     let refund_address = validate_onchain_address(&refund_address, record.network)?;
 
+    if let Some(txid) = super::claim::recover_broadcast(db, &record).await? {
+        return Ok(txid);
+    }
     let txid = refund_submarine_swap(
+        db,
         &record,
         refund_address.clone(),
         mnemonic,
@@ -59,6 +69,7 @@ pub async fn refund_submarine_swap_guarded(
 /// script-path refund, which becomes spendable after the swap's onchain
 /// timeout. Returns the broadcast refund transaction id.
 pub async fn refund_submarine_swap(
+    db: &BoltzDB,
     record: &SwapRecord,
     refund_address: String,
     mnemonic: &str,
@@ -68,6 +79,26 @@ pub async fn refund_submarine_swap(
     let submarine_resp = record.submarine_response()?;
     let keypair = record.keypair(mnemonic, bip39_passphrase)?;
     let our_pubkey = bitcoin::PublicKey::new(keypair.public_key());
+
+    if record.backend_binding.is_some() {
+        let invoice = record
+            .invoice
+            .as_deref()
+            .ok_or_else(|| BoltzError::SwapError {
+                error_details: "Missing submarine invoice".into(),
+            })?;
+        super::validation::validate_submarine_response(
+            &submarine_resp,
+            invoice,
+            &our_pubkey,
+            record.network,
+        )?;
+        let transaction =
+            super::claim::pubky_spend_transaction(record, &keypair, &refund_address, true).await?;
+        let fee = Fee::Relative(fee_rate_sat_per_vb.unwrap_or(DEFAULT_FEERATE_SAT_PER_VB));
+        let signed = transaction.sign_refund(&keypair, fee, None).await?;
+        return super::claim::broadcast_journaled(db, record, signed, Some(&refund_address)).await;
+    }
 
     let chain = record.network.as_chain();
     let swap_script = SwapScript::submarine_from_swap_resp(chain, &submarine_resp, our_pubkey)?;

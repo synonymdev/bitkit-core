@@ -1603,6 +1603,24 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1681,10 +1699,22 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_boltz_claim_reverse_swap() != 52516) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_boltz_configure_pubky() != 36419) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_configure_pubky_session() != 29337) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_boltz_create_reverse_swap() != 20570) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_boltz_create_submarine_swap() != 27933) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_disconnect_pubky() != 9232) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_export_backup() != 16196) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_boltz_get_reverse_limits() != 59203) {
@@ -1702,7 +1732,16 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_boltz_list_swaps() != 16447) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_boltz_pubky_session_account() != 59186) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_pubky_session_identity() != 24924) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap() != 24549) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_restore_backup() != 61009) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_boltz_start_swap_updates() != 168) {
@@ -1979,6 +2018,12 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_prepare_sweep_transaction() != 18273) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_pubky_create_send_swap() != 37770) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_pubky_get_send_terms() != 1633) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret() != 47481) {
@@ -2282,10 +2327,22 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_boltz_claim_reverse_swap(
     ): Int
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_configure_pubky(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_configure_pubky_session(
+    ): Int
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_create_reverse_swap(
     ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_create_submarine_swap(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_disconnect_pubky(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_export_backup(
     ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_get_reverse_limits(
@@ -2303,7 +2360,16 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_boltz_list_swaps(
     ): Int
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_pubky_session_account(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_pubky_session_identity(
+    ): Int
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_refund_submarine_swap(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_restore_backup(
     ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_start_swap_updates(
@@ -2580,6 +2646,12 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_prepare_sweep_transaction(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_pubky_create_send_swap(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_pubky_get_send_terms(
     ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_pubky_public_key_from_secret(
@@ -3101,6 +3173,19 @@ internal object UniffiLib : Library {
         `feeRateSatPerVb`: RustBufferByValue,
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_configure_pubky(
+        `config`: RustBufferByValue,
+        `secretKeyHex`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_configure_pubky_session(
+        `config`: RustBufferByValue,
+        `sessionSecret`: RustBufferByValue,
+        `publicKey`: RustBufferByValue,
+        `applicationScope`: RustBufferByValue,
+        `walletSecretHex`: RustBufferByValue,
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_boltz_create_reverse_swap(
         `network`: RustBufferByValue,
         `electrumUrl`: RustBufferByValue,
@@ -3116,6 +3201,13 @@ internal object UniffiLib : Library {
         `invoice`: RustBufferByValue,
         `mnemonic`: RustBufferByValue,
         `bip39Passphrase`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_disconnect_pubky(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_export_backup(
+        `pubkyDataRoot`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_boltz_get_reverse_limits(
@@ -3136,12 +3228,30 @@ internal object UniffiLib : Library {
     external fun uniffi_bitkitcore_fn_func_boltz_list_swaps(
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_pubky_session_account(
+        `sessionSecret`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_pubky_session_identity(
+        `walletSecretHex`: RustBufferByValue,
+        `publicKey`: RustBufferByValue,
+        `provider`: RustBufferByValue,
+        `applicationScope`: RustBufferByValue,
+        uniffiCallStatus: UniffiRustCallStatus,
+    ): RustBufferByValue
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_boltz_refund_submarine_swap(
         `swapId`: RustBufferByValue,
         `refundAddress`: RustBufferByValue,
         `mnemonic`: RustBufferByValue,
         `bip39Passphrase`: RustBufferByValue,
         `feeRateSatPerVb`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_restore_backup(
+        `snapshotJson`: RustBufferByValue,
+        `pubkyDataRoot`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_boltz_start_swap_updates(
@@ -3665,6 +3775,21 @@ internal object UniffiLib : Library {
         `electrumUrl`: RustBufferByValue,
         `destinationAddress`: RustBufferByValue,
         `feeRateSatsPerVbyte`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_pubky_create_send_swap(
+        `network`: RustBufferByValue,
+        `electrumUrl`: RustBufferByValue,
+        `invoiceSat`: Long,
+        `recipientSat`: Long,
+        `claimAddress`: RustBufferByValue,
+        `pairHash`: RustBufferByValue,
+        `mnemonic`: RustBufferByValue,
+        `bip39Passphrase`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_pubky_get_send_terms(
+        `network`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_pubky_public_key_from_secret(
@@ -8340,6 +8465,77 @@ public object FfiConverterTypePubkyProfileLink: FfiConverterRustBuffer<PubkyProf
     override fun write(value: PubkyProfileLink, buf: ByteBuffer) {
         FfiConverterString.write(value.`title`, buf)
         FfiConverterString.write(value.`url`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypePubkySendTerms: FfiConverterRustBuffer<PubkySendTerms> {
+    override fun read(buf: ByteBuffer): PubkySendTerms {
+        return PubkySendTerms(
+            FfiConverterString.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PubkySendTerms): ULong = (
+            FfiConverterString.allocationSize(value.`pairHash`) +
+            FfiConverterULong.allocationSize(value.`minimumLockupSat`) +
+            FfiConverterULong.allocationSize(value.`maximumLockupSat`) +
+            FfiConverterULong.allocationSize(value.`baseFeeSat`) +
+            FfiConverterULong.allocationSize(value.`feePpm`) +
+            FfiConverterULong.allocationSize(value.`lockupFeeSat`) +
+            FfiConverterULong.allocationSize(value.`claimFeeSat`)
+    )
+
+    override fun write(value: PubkySendTerms, buf: ByteBuffer) {
+        FfiConverterString.write(value.`pairHash`, buf)
+        FfiConverterULong.write(value.`minimumLockupSat`, buf)
+        FfiConverterULong.write(value.`maximumLockupSat`, buf)
+        FfiConverterULong.write(value.`baseFeeSat`, buf)
+        FfiConverterULong.write(value.`feePpm`, buf)
+        FfiConverterULong.write(value.`lockupFeeSat`, buf)
+        FfiConverterULong.write(value.`claimFeeSat`, buf)
+    }
+}
+
+
+
+
+public object FfiConverterTypePubkySwapConfig: FfiConverterRustBuffer<PubkySwapConfig> {
+    override fun read(buf: ByteBuffer): PubkySwapConfig {
+        return PubkySwapConfig(
+            FfiConverterTypeBoltzNetwork.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterUShort.read(buf),
+            FfiConverterULong.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PubkySwapConfig): ULong = (
+            FfiConverterTypeBoltzNetwork.allocationSize(value.`network`) +
+            FfiConverterString.allocationSize(value.`provider`) +
+            FfiConverterString.allocationSize(value.`electrumUrl`) +
+            FfiConverterString.allocationSize(value.`dataDir`) +
+            FfiConverterUShort.allocationSize(value.`maxFeeBps`) +
+            FfiConverterULong.allocationSize(value.`maxAmountSat`)
+    )
+
+    override fun write(value: PubkySwapConfig, buf: ByteBuffer) {
+        FfiConverterTypeBoltzNetwork.write(value.`network`, buf)
+        FfiConverterString.write(value.`provider`, buf)
+        FfiConverterString.write(value.`electrumUrl`, buf)
+        FfiConverterString.write(value.`dataDir`, buf)
+        FfiConverterUShort.write(value.`maxFeeBps`, buf)
+        FfiConverterULong.write(value.`maxAmountSat`, buf)
     }
 }
 
@@ -15398,6 +15594,55 @@ public suspend fun `boltzClaimReverseSwap`(`swapId`: kotlin.String, `mnemonic`: 
 }
 
 /**
+ * Configure the embedded Pubky bridge for new swaps. The identity must already
+ * be registered; the secret is used only for encrypted messaging and rendezvous.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzConfigurePubky`(`config`: PubkySwapConfig, `secretKeyHex`: kotlin.String) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_configure_pubky(
+            FfiConverterTypePubkySwapConfig.lower(`config`),
+            FfiConverterString.lower(`secretKeyHex`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Configure swaps with a scoped Pubky session approved through an external signer.
+ * Session credentials stay local and are never delivered to the swap provider.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzConfigurePubkySession`(`config`: PubkySwapConfig, `sessionSecret`: kotlin.String, `publicKey`: kotlin.String, `applicationScope`: kotlin.String, `walletSecretHex`: kotlin.String) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_configure_pubky_session(
+            FfiConverterTypePubkySwapConfig.lower(`config`),
+            FfiConverterString.lower(`sessionSecret`),
+            FfiConverterString.lower(`publicKey`),
+            FfiConverterString.lower(`applicationScope`),
+            FfiConverterString.lower(`walletSecretHex`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
  * Create a reverse swap (Lightning -> onchain).
  *
  * The caller pays the returned hold invoice from its Lightning node;
@@ -15455,6 +15700,47 @@ public suspend fun `boltzCreateSubmarineSwap`(`network`: BoltzNetwork, `electrum
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
         // lift function
         { FfiConverterTypeSubmarineSwapResponse.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Release the configured Pubky identity. Legacy swap updates remain active;
+ * call boltz_stop_swap_updates separately when stopping the wallet.
+ */
+public suspend fun `boltzDisconnectPubky`() {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_disconnect_pubky(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+
+        // Error FFI converter
+        UniffiNullRustCallStatusErrorHandler,
+    )
+}
+
+/**
+ * Export a versioned local recovery snapshot. The caller must protect the returned
+ * metadata and chooses whether to include it in an encrypted backup destination.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzExportBackup`(`pubkyDataRoot`: kotlin.String): kotlin.String {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_export_backup(
+            FfiConverterString.lower(`pubkyDataRoot`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterString.lift(it) },
         // Error FFI converter
         BoltzExceptionErrorHandler,
     )
@@ -15559,6 +15845,36 @@ public suspend fun `boltzListSwaps`(): List<BoltzSwap> {
 }
 
 /**
+ * Read the saved grant account hint for selecting local recovery state.
+ * This does not authorize network requests or verify that the grant is still valid.
+ */
+@Throws(BoltzException::class)
+public fun `boltzPubkySessionAccount`(`sessionSecret`: kotlin.String): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(BoltzExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_pubky_session_account(
+            FfiConverterString.lower(`sessionSecret`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
+ * Return the wallet-derived communication identity for a scoped Pubky account.
+ */
+@Throws(BoltzException::class)
+public fun `boltzPubkySessionIdentity`(`walletSecretHex`: kotlin.String, `publicKey`: kotlin.String, `provider`: kotlin.String, `applicationScope`: kotlin.String): kotlin.String {
+    return FfiConverterString.lift(uniffiRustCallWithError(BoltzExceptionErrorHandler) { uniffiRustCallStatus ->
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_pubky_session_identity(
+            FfiConverterString.lower(`walletSecretHex`),
+            FfiConverterString.lower(`publicKey`),
+            FfiConverterString.lower(`provider`),
+            FfiConverterString.lower(`applicationScope`),
+            uniffiRustCallStatus,
+        )
+    })
+}
+
+/**
  * Refund a submarine swap's locked funds to `refund_address`, returning the
  * broadcast refund transaction id. Used when Boltz fails to pay the invoice or
  * the swap expires. The refund key is re-derived from `mnemonic`. Refunds are
@@ -15581,6 +15897,29 @@ public suspend fun `boltzRefundSubmarineSwap`(`swapId`: kotlin.String, `refundAd
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
         // lift function
         { FfiConverterString.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Merge a local recovery snapshot without replacing newer records or lowering
+ * derivation counters. Stop updates and disconnect Pubky before calling this.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzRestoreBackup`(`snapshotJson`: kotlin.String, `pubkyDataRoot`: kotlin.String) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_restore_backup(
+            FfiConverterString.lower(`snapshotJson`),
+            FfiConverterString.lower(`pubkyDataRoot`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+
         // Error FFI converter
         BoltzExceptionErrorHandler,
     )
@@ -16964,6 +17303,53 @@ public suspend fun `prepareSweepTransaction`(`mnemonicPhrase`: kotlin.String, `n
         { FfiConverterTypeSweepTransactionPreview.lift(it) },
         // Error FFI converter
         SweepExceptionErrorHandler,
+    )
+}
+
+/**
+ * Create an externally addressed swap with a durable recipient amount and reviewed invoice budget.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `pubkyCreateSendSwap`(`network`: BoltzNetwork, `electrumUrl`: kotlin.String, `invoiceSat`: kotlin.ULong, `recipientSat`: kotlin.ULong, `claimAddress`: kotlin.String, `pairHash`: kotlin.String, `mnemonic`: kotlin.String, `bip39Passphrase`: kotlin.String?): ReverseSwapResponse {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_pubky_create_send_swap(
+            FfiConverterTypeBoltzNetwork.lower(`network`),
+            FfiConverterString.lower(`electrumUrl`),
+            FfiConverterULong.lower(`invoiceSat`),
+            FfiConverterULong.lower(`recipientSat`),
+            FfiConverterString.lower(`claimAddress`),
+            FfiConverterString.lower(`pairHash`),
+            FfiConverterString.lower(`mnemonic`),
+            FfiConverterOptionalString.lower(`bip39Passphrase`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypeReverseSwapResponse.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Read the native fee schedule for paying an external Bitcoin address from Lightning.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `pubkyGetSendTerms`(`network`: BoltzNetwork): PubkySendTerms {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_pubky_get_send_terms(
+            FfiConverterTypeBoltzNetwork.lower(`network`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterTypePubkySendTerms.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
     )
 }
 

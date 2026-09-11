@@ -326,6 +326,8 @@ create_native_debug_symbols_archive
 strip_android_libraries
 validate_stripped_android_symbols
 
+python3 "$ANDROID_LIB_DIR/prepare_tls_helper.py"
+
 # Generate Kotlin bindings
 echo "Generating Kotlin bindings..."
 LIBRARY_PATH=$(host_library_path)

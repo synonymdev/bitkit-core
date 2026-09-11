@@ -51,7 +51,16 @@ android {
     }
 }
 
+val bundlePubkyTlsHelper = providers.gradleProperty("bundlePubkyTlsHelper")
+    .map { it.toBooleanStrict() }
+    .orElse(true)
+
 dependencies {
+    if (bundlePubkyTlsHelper.get()) {
+        implementation(files("libs/rustls-platform-verifier.jar"))
+    } else {
+        compileOnly(files("libs/rustls-platform-verifier.jar"))
+    }
     implementation("net.java.dev.jna:jna:5.17.0@aar")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
@@ -128,6 +137,20 @@ val validateReleaseNativeLibraries by tasks.registering {
                 throw GradleException("Android native library missing at '${lib.path}'")
             }
 
+            val (symbolsExit, symbols) = runReadelf(readelf, "--dyn-syms", "--wide", lib.absolutePath)
+            val requiredSymbols = listOf(
+                "Java_to_bitkit_services_PubkySwapInit_nativeInit",
+                "uniffi_bitkitcore_fn_func_boltz_configure_pubky",
+                "uniffi_bitkitcore_fn_func_boltz_disconnect_pubky",
+                "uniffi_bitkitcore_fn_func_boltz_export_backup",
+                "uniffi_bitkitcore_fn_func_boltz_restore_backup",
+                "uniffi_bitkitcore_fn_func_pubky_get_send_terms",
+                "uniffi_bitkitcore_fn_func_pubky_create_send_swap",
+            )
+            if (symbolsExit != 0 || requiredSymbols.any { !symbols.contains(it) }) {
+                throw GradleException("Android native library is missing Pubky swap bindings: '${lib.path}'")
+            }
+
             val (sectionsExit, sections) = runReadelf(readelf, "-S", lib.absolutePath)
             if (sectionsExit != 0) {
                 throw GradleException("Unable to inspect Android native library sections: '${lib.path}'")
@@ -172,6 +195,25 @@ val validateConsumerKeepRules by tasks.registering {
             throw GradleException("Android consumer keep rules missing at '${file.path}'")
         }
     }
+}
+
+val validatePubkyTlsHelper by tasks.registering {
+    group = "verification"
+    doLast {
+        val helper = layout.projectDirectory.file("libs/rustls-platform-verifier.jar").asFile
+        if (!helper.isFile) {
+            throw GradleException("Pubky TLS helper missing. Run build_local_android.sh before packaging.")
+        }
+        ZipFile(helper).use { jar ->
+            if (jar.getEntry("org/rustls/platformverifier/CertificateVerifier.class") == null) {
+                throw GradleException("Pubky TLS helper does not contain its certificate verifier.")
+            }
+        }
+    }
+}
+
+tasks.matching { it.name == "preBuild" }.configureEach {
+    dependsOn(validatePubkyTlsHelper)
 }
 
 tasks.matching { it.name == "bundleReleaseAar" || it.name.startsWith("publish") }.configureEach {

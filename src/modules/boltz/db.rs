@@ -1,6 +1,6 @@
 use crate::modules::boltz::errors::BoltzError;
 use crate::modules::boltz::models::{
-    BoltzDB, SwapRecord, CREATE_META_TABLE, CREATE_SWAPS_TABLE, SCHEMA_VERSION,
+    BoltzDB, CreationIntent, SwapRecord, CREATE_META_TABLE, CREATE_SWAPS_TABLE, SCHEMA_VERSION,
 };
 use crate::modules::boltz::types::{BoltzNetwork, BoltzSwapType};
 use rusqlite::{params, Connection, OptionalExtension, Row};
@@ -16,13 +16,21 @@ impl BoltzDB {
         })?;
         let db = BoltzDB {
             conn: tokio::sync::Mutex::new(conn),
+            recovery_gate: tokio::sync::RwLock::new(()),
         };
         db.initialize().await?;
         Ok(db)
     }
 
     async fn initialize(&self) -> Result<(), BoltzError> {
-        let conn = self.conn.lock().await;
+        let mut locked = self.conn.lock().await;
+        let version: i64 = locked.pragma_query_value(None, "user_version", |r| r.get(0))?;
+        if version > SCHEMA_VERSION {
+            return Err(BoltzError::InitializationError {
+                error_details: "Unsupported future swap database version".into(),
+            });
+        }
+        let conn = locked.transaction()?;
         conn.execute(CREATE_SWAPS_TABLE, [])
             .map_err(|e| BoltzError::InitializationError {
                 error_details: format!("Failed to create swaps table: {}", e),
@@ -31,10 +39,48 @@ impl BoltzDB {
             .map_err(|e| BoltzError::InitializationError {
                 error_details: format!("Failed to create swap_meta table: {}", e),
             })?;
+        conn.execute("CREATE TABLE IF NOT EXISTS swap_recovery_import (id INTEGER PRIMARY KEY CHECK(id=1), fingerprint TEXT NOT NULL, target_root TEXT NOT NULL)", [])?;
+        let has_binding = {
+            let mut statement = conn.prepare("PRAGMA table_info(swaps)")?;
+            let columns = statement.query_map([], |row| row.get::<_, String>(1))?;
+            columns
+                .collect::<rusqlite::Result<Vec<_>>>()?
+                .iter()
+                .any(|c| c == "backend_binding")
+        };
+        if !has_binding {
+            conn.execute("ALTER TABLE swaps ADD COLUMN backend_binding TEXT", [])?;
+        }
+        let has_recipient = conn
+            .prepare("PRAGMA table_info(swaps)")?
+            .query_map([], |row| row.get::<_, String>(1))?
+            .collect::<rusqlite::Result<Vec<_>>>()?
+            .iter()
+            .any(|column| column == "recipient_amount_sat");
+        if !has_recipient {
+            conn.execute(
+                "ALTER TABLE swaps ADD COLUMN recipient_amount_sat INTEGER",
+                [],
+            )?;
+        }
+        let migrate_journal = version < 3 && conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='pending_spends')", [], |row| row.get::<_, bool>(0),
+        )?;
+        if migrate_journal {
+            conn.execute("ALTER TABLE pending_spends RENAME TO pending_spends_v2", [])?;
+        }
+        conn.execute("CREATE TABLE IF NOT EXISTS pending_spends (swap_id TEXT NOT NULL, txid TEXT NOT NULL, refund_address TEXT, PRIMARY KEY(swap_id,txid))", [])?;
+        if migrate_journal {
+            conn.execute("INSERT INTO pending_spends SELECT swap_id,txid,refund_address FROM pending_spends_v2", [])?;
+            conn.execute("DROP TABLE pending_spends_v2", [])?;
+        }
+        conn.execute("CREATE TABLE IF NOT EXISTS creation_intents (request_key TEXT PRIMARY KEY, id TEXT UNIQUE NOT NULL, intent_json TEXT NOT NULL)", [])?;
+        conn.execute("INSERT OR IGNORE INTO swap_meta(key,value) SELECT ?1,COALESCE(MAX(swap_index)+1,0) FROM swaps", params![NEXT_SWAP_INDEX_KEY])?;
         conn.pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|e| BoltzError::InitializationError {
                 error_details: format!("Failed to set schema version: {}", e),
             })?;
+        conn.commit()?;
         Ok(())
     }
 
@@ -43,7 +89,18 @@ impl BoltzDB {
     /// interleave with another reservation. Indices are monotonic and never
     /// reused, so each swap derives a unique key even if a creation later fails.
     pub async fn reserve_swap_index(&self) -> Result<u64, BoltzError> {
-        let conn = self.conn.lock().await;
+        let mut locked = self.conn.lock().await;
+        let conn = locked.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+        if conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM swap_recovery_import)",
+            [],
+            |row| row.get::<_, bool>(0),
+        )? {
+            return Err(BoltzError::DatabaseError {
+                error_details: "Retry the interrupted local recovery import before creating a swap"
+                    .into(),
+            });
+        }
         let current: Option<i64> = conn
             .query_row(
                 "SELECT value FROM swap_meta WHERE key = ?1",
@@ -52,46 +109,25 @@ impl BoltzDB {
             )
             .optional()?;
         let index = current.unwrap_or(0);
+        let next = index
+            .checked_add(1)
+            .filter(|_| index >= 0 && (index as u64) < super::models::SWAP_INDEX_LIMIT)
+            .ok_or_else(|| BoltzError::DatabaseError {
+                error_details: "Swap derivation index is invalid or exhausted".into(),
+            })?;
         conn.execute(
             "INSERT INTO swap_meta (key, value) VALUES (?1, ?2)
              ON CONFLICT(key) DO UPDATE SET value = ?2",
-            params![NEXT_SWAP_INDEX_KEY, index + 1],
+            params![NEXT_SWAP_INDEX_KEY, next],
         )?;
+        conn.commit()?;
         Ok(index as u64)
     }
 
     /// Insert a newly-created swap.
     pub async fn insert_swap(&self, record: &SwapRecord) -> Result<(), BoltzError> {
         let conn = self.conn.lock().await;
-        conn.execute(
-            "INSERT INTO swaps (
-                id, swap_type, status, network, electrum_url, swap_index,
-                invoice, lockup_address, onchain_address, amount_sat, onchain_amount_sat,
-                timeout_block_height, create_response_json, claim_tx_id, refund_tx_id, created_at
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)",
-            params![
-                record.id,
-                record.swap_type.as_str(),
-                record.status,
-                record.network.as_str(),
-                record.electrum_url,
-                record.swap_index as i64,
-                record.invoice,
-                record.lockup_address,
-                record.onchain_address,
-                record.amount_sat as i64,
-                record.onchain_amount_sat.map(|v| v as i64),
-                record.timeout_block_height as i64,
-                record.create_response_json,
-                record.claim_tx_id,
-                record.refund_tx_id,
-                record.created_at as i64,
-            ],
-        )
-        .map_err(|e| BoltzError::DatabaseError {
-            error_details: format!("Failed to insert swap: {}", e),
-        })?;
-        Ok(())
+        insert_record(&conn, record)
     }
 
     /// Update the raw status string of a swap.
@@ -117,11 +153,17 @@ impl BoltzDB {
     /// pre-claim status. Setting the terminal `transaction.claimed` status here keeps
     /// the persisted state truthful and drops the swap from the pending set.
     pub async fn set_claim_tx(&self, swap_id: &str, txid: &str) -> Result<(), BoltzError> {
-        let conn = self.conn.lock().await;
+        let mut locked = self.conn.lock().await;
+        let conn = locked.transaction()?;
         conn.execute(
             "UPDATE swaps SET claim_tx_id = ?1, status = 'transaction.claimed' WHERE id = ?2",
             params![txid, swap_id],
         )?;
+        conn.execute(
+            "DELETE FROM pending_spends WHERE swap_id=?1",
+            params![swap_id],
+        )?;
+        conn.commit()?;
         Ok(())
     }
 
@@ -137,13 +179,19 @@ impl BoltzDB {
         txid: &str,
         refund_address: &str,
     ) -> Result<(), BoltzError> {
-        let conn = self.conn.lock().await;
+        let mut locked = self.conn.lock().await;
+        let conn = locked.transaction()?;
         conn.execute(
             "UPDATE swaps
              SET refund_tx_id = ?1, status = 'transaction.refunded', onchain_address = ?2
              WHERE id = ?3",
             params![txid, refund_address, swap_id],
         )?;
+        conn.execute(
+            "DELETE FROM pending_spends WHERE swap_id=?1",
+            params![swap_id],
+        )?;
+        conn.commit()?;
         Ok(())
     }
 
@@ -155,7 +203,7 @@ impl BoltzDB {
                 "SELECT id, swap_type, status, network, electrum_url, swap_index,
                         invoice, lockup_address, onchain_address, amount_sat, onchain_amount_sat,
                         timeout_block_height, create_response_json, claim_tx_id, refund_tx_id,
-                        created_at
+                        created_at, backend_binding, recipient_amount_sat
                  FROM swaps WHERE id = ?1",
                 params![swap_id],
                 row_to_record,
@@ -169,7 +217,7 @@ impl BoltzDB {
         self.query_swaps(
             "SELECT id, swap_type, status, network, electrum_url, swap_index,
                 invoice, lockup_address, onchain_address, amount_sat, onchain_amount_sat,
-                timeout_block_height, create_response_json, claim_tx_id, refund_tx_id, created_at
+                timeout_block_height, create_response_json, claim_tx_id, refund_tx_id, created_at, backend_binding, recipient_amount_sat
              FROM swaps ORDER BY created_at DESC",
         )
         .await
@@ -181,11 +229,17 @@ impl BoltzDB {
     /// reverse swap whose invoice settled but whose claim never broadcast stays
     /// recoverable.
     pub async fn list_pending_swaps(&self) -> Result<Vec<SwapRecord>, BoltzError> {
+        let journaled: std::collections::HashSet<String> = {
+            let conn = self.conn.lock().await;
+            let mut statement = conn.prepare("SELECT swap_id FROM pending_spends")?;
+            let rows = statement.query_map([], |row| row.get::<_, String>(0))?;
+            rows.collect::<rusqlite::Result<_>>()?
+        };
         Ok(self
             .list_swaps()
             .await?
             .into_iter()
-            .filter(|r| !r.is_locally_complete())
+            .filter(|r| !r.is_locally_complete() || journaled.contains(&r.id))
             .collect())
     }
 
@@ -199,13 +253,114 @@ impl BoltzDB {
         }
         Ok(records)
     }
+
+    /// The transaction id commits to the public spend without storing its witness.
+    pub(crate) async fn journal_spend(
+        &self,
+        swap_id: &str,
+        txid: &str,
+        refund_address: Option<&str>,
+    ) -> Result<(), BoltzError> {
+        self.conn.lock().await.execute(
+            "INSERT INTO pending_spends(swap_id,txid,refund_address) VALUES (?1,?2,?3) ON CONFLICT(swap_id,txid) DO NOTHING",
+            params![swap_id, txid, refund_address])?;
+        Ok(())
+    }
+
+    pub(crate) async fn pending_spends(
+        &self,
+        swap_id: &str,
+    ) -> Result<Vec<(String, Option<String>)>, BoltzError> {
+        let conn = self.conn.lock().await;
+        let mut statement = conn.prepare(
+            "SELECT txid,refund_address FROM pending_spends WHERE swap_id=?1 ORDER BY rowid",
+        )?;
+        let rows = statement.query_map(params![swap_id], |row| Ok((row.get(0)?, row.get(1)?)))?;
+        Ok(rows.collect::<rusqlite::Result<_>>()?)
+    }
+
+    pub(crate) async fn save_intent(
+        &self,
+        intent: &CreationIntent,
+    ) -> Result<CreationIntent, BoltzError> {
+        let mut locked = self.conn.lock().await;
+        let conn = locked.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+        {
+            let mut statement =
+                conn.prepare("SELECT intent_json FROM creation_intents ORDER BY rowid")?;
+            let rows = statement.query_map([], |row| row.get::<_, String>(0))?;
+            for row in rows {
+                let previous: CreationIntent = serde_json::from_str(&row?)?;
+                if previous.same_operation(intent) {
+                    return Ok(previous);
+                }
+            }
+        }
+        conn.execute(
+            "INSERT OR IGNORE INTO creation_intents(request_key,id,intent_json) VALUES (?1,?2,?3)",
+            params![
+                intent.request_key,
+                intent.id,
+                serde_json::to_string(intent)?
+            ],
+        )?;
+        let json: String = conn.query_row(
+            "SELECT intent_json FROM creation_intents WHERE request_key=?1",
+            params![intent.request_key],
+            |r| r.get(0),
+        )?;
+        let persisted = serde_json::from_str(&json)?;
+        conn.commit()?;
+        Ok(persisted)
+    }
+
+    pub(crate) async fn creation_intents(&self) -> Result<Vec<CreationIntent>, BoltzError> {
+        let conn = self.conn.lock().await;
+        let mut statement =
+            conn.prepare("SELECT intent_json FROM creation_intents ORDER BY rowid")?;
+        let rows = statement.query_map([], |r| r.get::<_, String>(0))?;
+        rows.map(|row| Ok(serde_json::from_str(&row?)?)).collect()
+    }
+
+    pub(crate) async fn complete_intent(
+        &self,
+        intent: &CreationIntent,
+        record: &SwapRecord,
+    ) -> Result<(), BoltzError> {
+        let mut conn = self.conn.lock().await;
+        let transaction = conn.transaction()?;
+        let existing: Option<(String, Option<String>)> = transaction
+            .query_row(
+                "SELECT create_response_json, backend_binding FROM swaps WHERE id=?1",
+                params![record.id],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .optional()?;
+        match existing {
+            Some((response, binding))
+                if response == record.create_response_json && binding == record.backend_binding => {
+            }
+            Some(_) => {
+                return Err(BoltzError::DatabaseError {
+                    error_details: "Swap identifier conflicts with an existing record".into(),
+                })
+            }
+            None => insert_record(&transaction, record)?,
+        }
+        transaction.execute(
+            "DELETE FROM creation_intents WHERE id=?1",
+            params![intent.id],
+        )?;
+        transaction.commit()?;
+        Ok(())
+    }
 }
 
 /// Map a SQLite row to a [`SwapRecord`]. The outer `rusqlite::Result` covers
 /// column-access failures; the inner `Result<SwapRecord, BoltzError>` covers
 /// decoding of persisted enum strings (`swap_type`, `network`). No secrets are
 /// stored, so there is no key material to decode here.
-fn row_to_record(row: &Row) -> rusqlite::Result<Result<SwapRecord, BoltzError>> {
+pub(super) fn row_to_record(row: &Row) -> rusqlite::Result<Result<SwapRecord, BoltzError>> {
     let swap_type_str: String = row.get(1)?;
     let network_str: String = row.get(3)?;
     let amount_sat: i64 = row.get(9)?;
@@ -233,6 +388,8 @@ fn row_to_record(row: &Row) -> rusqlite::Result<Result<SwapRecord, BoltzError>> 
 
     Ok(Ok(SwapRecord {
         id: row.get(0)?,
+        backend_binding: row.get(16)?,
+        recipient_amount_sat: row.get(17)?,
         swap_type,
         status: row.get(2)?,
         network,
@@ -249,4 +406,38 @@ fn row_to_record(row: &Row) -> rusqlite::Result<Result<SwapRecord, BoltzError>> 
         refund_tx_id: row.get(14)?,
         created_at: created_at as u64,
     }))
+}
+
+pub(super) fn insert_record(conn: &Connection, record: &SwapRecord) -> Result<(), BoltzError> {
+    conn.execute(
+            "INSERT INTO swaps (
+                id, swap_type, status, network, electrum_url, swap_index,
+                invoice, lockup_address, onchain_address, amount_sat, onchain_amount_sat,
+                timeout_block_height, create_response_json, claim_tx_id, refund_tx_id, created_at, backend_binding, recipient_amount_sat
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
+            params![
+                record.id,
+                record.swap_type.as_str(),
+                record.status,
+                record.network.as_str(),
+                record.electrum_url,
+                record.swap_index as i64,
+                record.invoice,
+                record.lockup_address,
+                record.onchain_address,
+                record.amount_sat as i64,
+                record.onchain_amount_sat.map(|v| v as i64),
+                record.timeout_block_height as i64,
+                record.create_response_json,
+                record.claim_tx_id,
+                record.refund_tx_id,
+                record.created_at as i64,
+                record.backend_binding,
+                record.recipient_amount_sat,
+            ],
+        )
+        .map_err(|e| BoltzError::DatabaseError {
+            error_details: format!("Failed to insert swap: {}", e),
+        })?;
+    Ok(())
 }
