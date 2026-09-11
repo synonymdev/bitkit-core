@@ -1,0 +1,124 @@
+name: iOS Bindgen
+
+on:
+  pull_request:
+    paths:
+      - '.cargo/**'
+      - '.github/workflows/ios-bindgen.yml'
+      - '**/Cargo.lock'
+      - '**/Cargo.toml'
+      - '**/Package.swift'
+      - '**/bindings/ios/**'
+      - '**/build*.sh'
+      - '**/build.rs'
+      - '**/*.rs'
+      - '**/*.udl'
+      - '**/uniffi*.toml'
+      - 'rust-toolchain*'
+      - 'vendor/**'
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - '.cargo/**'
+      - '.github/workflows/ios-bindgen.yml'
+      - '**/Cargo.lock'
+      - '**/Cargo.toml'
+      - '**/Package.swift'
+      - '**/bindings/ios/**'
+      - '**/build*.sh'
+      - '**/build.rs'
+      - '**/*.rs'
+      - '**/*.udl'
+      - '**/uniffi*.toml'
+      - 'rust-toolchain*'
+      - 'vendor/**'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch, tag, or SHA to build"
+        required: false
+        default: ""
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ios-bindgen:
+    name: iOS Bindgen
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-targets: false
+
+      - name: Install native build dependencies
+        run: brew install protobuf
+
+      - name: Generate iOS bindings and artifacts
+        run: ./build_ios.sh
+
+      - name: Verify iOS outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            bindings/ios/bitkitcore.swift
+            bindings/ios/bitkitcoreFFI.h
+            bindings/ios/module.modulemap
+            dist/ios/BitkitCore.xcframework
+            dist/ios/BitkitCore.xcframework.zip
+          )
+
+          for path in "${required[@]}"; do
+            if [ ! -e "$path" ]; then
+              echo "::error::Missing generated iOS output: $path"
+              exit 1
+            fi
+          done
+
+          test -s dist/ios/BitkitCore.xcframework.zip
+          swift package compute-checksum dist/ios/BitkitCore.xcframework.zip
+
+      - name: Check committed iOS interface files
+        shell: bash
+        run: |
+          set -euo pipefail
+          generated_sources=(
+            bindings/ios/bitkitcore.swift
+            bindings/ios/bitkitcoreFFI.h
+            bindings/ios/module.modulemap
+          )
+
+          if ! git diff --quiet -- "${generated_sources[@]}"; then
+            echo "::error::Committed iOS interface files are stale. Run './build_ios.sh', restore Package.swift unless preparing a release, and commit the updated interface files."
+            git diff --name-only -- "${generated_sources[@]}"
+            exit 1
+          fi
+
+      - name: Upload iOS generated artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bitkit-core-ios-bindgen
+          path: |
+            bindings/ios/bitkitcore.swift
+            bindings/ios/bitkitcoreFFI.h
+            bindings/ios/module.modulemap
+            dist/ios/BitkitCore.xcframework.zip
+          if-no-files-found: error
