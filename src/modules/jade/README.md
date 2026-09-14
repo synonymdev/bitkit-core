@@ -59,6 +59,12 @@ cancelled Swift or Kotlin task does not cancel the Rust future by itself.
 `jade_cancel` and `jade_disconnect` therefore close the transport through a
 `CancelHandle` without taking the session lock.
 
+A separate lifecycle lock serializes scans, connection setup, and teardown.
+Disconnect and cancellation invalidate queued connection attempts and interrupt an
+active handshake. Native callbacks that have already started must finish before
+another connection can reuse the path. If cancellation arrives during a native
+open, teardown waits for that callback to return and closes its result.
+
 ## Transport bridge
 
 `JadeTransportCallback` is the `#[uniffi::export(with_foreign)]` trait the
@@ -116,3 +122,12 @@ cargo test modules::jade          # adapter only
 
 Protocol level tests live in the crate and run with `cargo test` there, against
 a scripted mock device and a fake pinserver.
+
+## Before device testing and release
+
+The checked-in iOS and Python binaries are intentionally awaiting a rebuild after
+review feedback is addressed. They currently contain an older Jade client than
+the source dependency pin. Before testing the final changes on live devices,
+rebuild the platform artifacts from the final source revision, update the
+XCFramework checksum in `Package.swift`, and verify the regenerated bindings and
+native libraries together. The version remains 0.5.15 during this preparation.

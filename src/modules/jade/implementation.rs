@@ -17,7 +17,7 @@ use std::sync::Arc;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use bitcoin::psbt::Psbt;
 use jade_client_rs::{CancelHandle, Jade, JadeTransport};
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::{watch, Mutex, RwLock};
 
 use super::callbacks::{transport_callback, CallbackTransport};
 use super::types::*;
@@ -31,6 +31,10 @@ struct CachedDevice {
 
 pub struct JadeManager {
     device_list: Mutex<Vec<CachedDevice>>,
+    /// Serializes discovery, connection setup, and teardown.
+    lifecycle: Mutex<()>,
+    /// Invalidates active and queued connection attempts before teardown waits.
+    connection_changes: watch::Sender<()>,
     /// Held for exactly one operation.
     session: Mutex<Option<Jade>>,
     /// Cloned out by the abort path, which must not wait on `session`.
@@ -50,6 +54,8 @@ impl JadeManager {
     pub fn new() -> Self {
         Self {
             device_list: Mutex::new(Vec::new()),
+            lifecycle: Mutex::new(()),
+            connection_changes: watch::channel(()).0,
             session: Mutex::new(None),
             cancel: RwLock::new(None),
             connected: AtomicBool::new(false),
@@ -63,6 +69,10 @@ impl JadeManager {
 
     /// Discover devices on every transport this build supports.
     pub async fn scan(&self, timeout_ms: u32) -> Result<Vec<JadeDeviceInfo>, JadeError> {
+        let _lifecycle = self
+            .lifecycle
+            .try_lock()
+            .map_err(|_| JadeError::DeviceBusy)?;
         // Starting a Bluetooth scan while a GATT link is up reliably drops it on
         // Android, so refuse rather than silently breaking the open session.
         if self.connected.load(Ordering::SeqCst) {
@@ -122,6 +132,11 @@ impl JadeManager {
         transport_kind: JadeTransportKind,
         path: &str,
     ) -> Result<JadeVersionInfo, JadeError> {
+        let mut changes = self.connection_changes.subscribe();
+        let _lifecycle = self.lifecycle.lock().await;
+        if changes.has_changed().unwrap_or(true) {
+            return Err(JadeError::UserCancelled);
+        }
         let device = {
             let devices = self.device_list.lock().await;
             devices
@@ -140,10 +155,32 @@ impl JadeManager {
 
         // Close anything already open first. Overwriting the session would
         // strand the native handle with no path left to close it.
-        self.disconnect().await?;
+        self.disconnect_session().await?;
+        if changes.has_changed().unwrap_or(true) {
+            return Err(JadeError::UserCancelled);
+        }
 
+        // A native open callback cannot be interrupted by dropping its future.
+        // Keep ownership until it returns, then close it if teardown was requested.
         let transport = self.build_transport(transport_kind, path).await?;
-        let session = Jade::connect(transport).await?;
+        if changes.has_changed().unwrap_or(true) {
+            transport.close().await?;
+            return Err(JadeError::UserCancelled);
+        }
+        let connecting = Jade::connect(Arc::clone(&transport));
+        tokio::pin!(connecting);
+        let session = tokio::select! {
+            biased;
+            _ = changes.changed() => {
+                let closed = transport.close().await;
+                // Native callbacks already running on the blocking pool must finish
+                // before a replacement can reuse the same device path.
+                let _ = connecting.await;
+                closed?;
+                return Err(JadeError::UserCancelled);
+            }
+            result = &mut connecting => result?,
+        };
         let version = session.version_info().clone();
 
         *self.cancel.write().await = Some(session.cancel_handle());
@@ -192,6 +229,12 @@ impl JadeManager {
     /// the transport without taking the session lock, so a blocked request
     /// returns promptly instead of running out its deadline.
     pub async fn disconnect(&self) -> Result<(), JadeError> {
+        self.connection_changes.send_replace(());
+        let _lifecycle = self.lifecycle.lock().await;
+        self.disconnect_session().await
+    }
+
+    async fn disconnect_session(&self) -> Result<(), JadeError> {
         self.connected.store(false, Ordering::SeqCst);
 
         if let Some(cancel) = self.cancel.write().await.take() {
@@ -209,6 +252,8 @@ impl JadeManager {
     /// Jade has no cancel message, so closing the link is the only way to stop a
     /// pending confirmation. The application is expected to reconnect.
     pub async fn cancel(&self) -> Result<(), JadeError> {
+        self.connection_changes.send_replace(());
+        let _lifecycle = self.lifecycle.lock().await;
         let handle = self.cancel.read().await.clone();
         if let Some(handle) = handle {
             handle.cancel().await?;
@@ -218,6 +263,7 @@ impl JadeManager {
 
     /// Record a disconnect the native layer noticed while nothing was in flight.
     pub async fn notify_disconnected(&self, path: &str) {
+        let _lifecycle = self.lifecycle.lock().await;
         let matches = self
             .connected_device
             .read()
@@ -227,7 +273,8 @@ impl JadeManager {
             .unwrap_or(false);
         if matches {
             log::debug!("[jade] native layer reported a disconnect");
-            let _ = self.disconnect().await;
+            self.connection_changes.send_replace(());
+            let _ = self.disconnect_session().await;
         }
     }
 

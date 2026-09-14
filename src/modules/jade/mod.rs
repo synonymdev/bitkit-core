@@ -13,6 +13,8 @@
 mod callbacks;
 mod implementation;
 #[cfg(test)]
+mod lifecycle_tests;
+#[cfg(test)]
 mod tests;
 mod types;
 
