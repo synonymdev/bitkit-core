@@ -42,6 +42,7 @@ pub struct JadeManager {
     /// Cheap status reads that never touch a lock held across device I/O.
     connected: AtomicBool,
     connected_device: RwLock<Option<JadeDeviceInfo>>,
+    version_info: RwLock<Option<JadeVersionInfo>>,
 }
 
 impl Default for JadeManager {
@@ -60,6 +61,7 @@ impl JadeManager {
             cancel: RwLock::new(None),
             connected: AtomicBool::new(false),
             connected_device: RwLock::new(None),
+            version_info: RwLock::new(None),
         }
     }
 
@@ -81,7 +83,14 @@ impl JadeManager {
 
         let mut discovered: Vec<JadeDeviceInfo> = Vec::new();
 
-        if let Some(callback) = transport_callback() {
+        // Mobile builds discover only through the native transport, so a missing
+        // registration is a wiring error rather than an empty scan.
+        #[cfg(any(target_os = "ios", target_os = "android"))]
+        let callback = Some(transport_callback().ok_or(JadeError::NotInitialized)?);
+        #[cfg(not(any(target_os = "ios", target_os = "android")))]
+        let callback = transport_callback();
+
+        if let Some(callback) = callback {
             let found = tokio::task::spawn_blocking(move || callback.scan_devices(timeout_ms))
                 .await
                 .map_err(|error| JadeError::IoError {
@@ -185,6 +194,7 @@ impl JadeManager {
 
         *self.cancel.write().await = Some(session.cancel_handle());
         *self.connected_device.write().await = Some(device);
+        *self.version_info.write().await = Some(version.clone());
         *self.session.lock().await = Some(session);
         self.connected.store(true, Ordering::SeqCst);
 
@@ -243,6 +253,7 @@ impl JadeManager {
             }
         }
         *self.connected_device.write().await = None;
+        *self.version_info.write().await = None;
         *self.session.lock().await = None;
         Ok(())
     }
@@ -262,6 +273,10 @@ impl JadeManager {
     }
 
     /// Record a disconnect the native layer noticed while nothing was in flight.
+    ///
+    /// No connection attempt can be running while this holds `lifecycle`, so
+    /// unlike `disconnect` it does not invalidate queued attempts: a reconnect
+    /// issued alongside the notification should proceed, not fail as cancelled.
     pub async fn notify_disconnected(&self, path: &str) {
         let _lifecycle = self.lifecycle.lock().await;
         let matches = self
@@ -273,7 +288,6 @@ impl JadeManager {
             .unwrap_or(false);
         if matches {
             log::debug!("[jade] native layer reported a disconnect");
-            self.connection_changes.send_replace(());
             let _ = self.disconnect_session().await;
         }
     }
@@ -287,19 +301,20 @@ impl JadeManager {
     }
 
     /// The version summary read at connect, or refreshed since.
+    ///
+    /// Served from a copy so it never waits behind a device confirmation that
+    /// holds `session`.
     pub async fn version_info(&self) -> Option<JadeVersionInfo> {
-        self.session
-            .lock()
-            .await
-            .as_ref()
-            .map(|session| session.version_info().clone())
+        self.version_info.read().await.clone()
     }
 
     /// Re-read the version summary from the device.
     pub async fn refresh_version_info(&self) -> Result<JadeVersionInfo, JadeError> {
         let mut guard = self.session.lock().await;
         let session = guard.as_mut().ok_or(JadeError::NotConnected)?;
-        session.refresh_version_info().await.cloned()
+        let version = session.refresh_version_info().await?.clone();
+        *self.version_info.write().await = Some(version.clone());
+        Ok(version)
     }
 
     // ------------------------------------------------------------------

@@ -2699,6 +2699,8 @@ pub async fn jade_cancel() -> Result<(), JadeError> {
 /// Tell the library that the native layer saw the device disconnect.
 ///
 /// Without this, an idle Bluetooth drop is invisible until the next request.
+/// Await it before reconnecting the same path: a notification that is still
+/// pending when a reconnect to that path completes closes the new connection.
 #[uniffi::export]
 pub async fn jade_notify_disconnected(path: String) {
     let rt = ensure_runtime();
@@ -2720,7 +2722,9 @@ pub async fn jade_get_connected_device() -> Option<JadeDeviceInfo> {
         .unwrap_or(None)
 }
 
-/// The version summary read at connect, without touching the device.
+/// The version summary read at connect or by the last refresh.
+///
+/// Neither touches the device nor waits for an operation in flight.
 #[uniffi::export]
 pub async fn jade_get_version_info() -> Option<JadeVersionInfo> {
     let rt = ensure_runtime();

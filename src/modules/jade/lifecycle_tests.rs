@@ -6,8 +6,8 @@ use std::time::Duration;
 use tokio::sync::Semaphore;
 
 use super::{
-    jade_set_transport_callback, JadeError, JadeManager, JadeNativeDevice, JadeTransportCallback,
-    JadeTransportKind, JadeTransportReadResult, JadeTransportResult,
+    jade_set_transport_callback, JadeError, JadeManager, JadeNativeDevice, JadeNetwork,
+    JadeTransportCallback, JadeTransportKind, JadeTransportReadResult, JadeTransportResult,
 };
 
 #[derive(Default)]
@@ -25,6 +25,7 @@ struct Callback {
     hold_close: Mutex<bool>,
     close_gate: Condvar,
     fail_read: AtomicBool,
+    reads_after_close: AtomicBool,
     only_first_close: AtomicBool,
     close_count: AtomicUsize,
     closes: Semaphore,
@@ -42,6 +43,7 @@ impl Callback {
             hold_close: Mutex::new(false),
             close_gate: Condvar::new(),
             fail_read: AtomicBool::new(false),
+            reads_after_close: AtomicBool::new(false),
             only_first_close: AtomicBool::new(false),
             close_count: AtomicUsize::new(0),
             closes: Semaphore::new(0),
@@ -154,8 +156,9 @@ impl JadeTransportCallback for Callback {
     }
 
     fn read_chunk(&self, path: String, _timeout_ms: u32) -> JadeTransportReadResult {
-        if self.fail_read.load(Ordering::SeqCst) || !self.state.lock().unwrap().open.contains(&path)
-        {
+        let released = !self.reads_after_close.load(Ordering::SeqCst)
+            && !self.state.lock().unwrap().open.contains(&path);
+        if self.fail_read.load(Ordering::SeqCst) || released {
             return JadeTransportReadResult {
                 success: false,
                 data: Vec::new(),
@@ -408,4 +411,80 @@ async fn cancellation_waits_for_failed_handshake_cleanup_before_reconnecting() {
     assert_eq!(callback.open_paths(), HashSet::from(["jade".to_string()]));
     manager.disconnect().await.unwrap();
     assert!(callback.open_paths().is_empty());
+}
+
+#[tokio::test]
+#[serial_test::serial(jade_callback)]
+async fn disconnect_does_not_wait_for_a_native_layer_that_keeps_reading_after_close() {
+    let callback = Callback::new();
+    callback.reads_after_close.store(true, Ordering::SeqCst);
+    let manager = Arc::new(JadeManager::new());
+    let connection = connect(&manager, "jade");
+    wait_for(&callback.writes).await;
+
+    tokio::time::timeout(Duration::from_secs(1), manager.disconnect())
+        .await
+        .unwrap()
+        .unwrap();
+
+    assert!(matches!(
+        connection.await.unwrap(),
+        Err(JadeError::UserCancelled)
+    ));
+    assert!(callback.open_paths().is_empty());
+}
+
+#[tokio::test]
+#[serial_test::serial(jade_callback)]
+async fn native_disconnect_clears_only_the_connected_path() {
+    let callback = Callback::new();
+    callback.release_replies();
+    let manager = Arc::new(JadeManager::new());
+    connect(&manager, "jade").await.unwrap().unwrap();
+
+    manager.notify_disconnected("other").await;
+    assert!(manager.is_connected());
+    assert!(manager.version_info().await.is_some());
+
+    manager.notify_disconnected("jade").await;
+    assert!(!manager.is_connected());
+    assert!(manager.connected_device().await.is_none());
+    assert!(manager.version_info().await.is_none());
+    assert!(callback.open_paths().is_empty());
+}
+
+#[tokio::test]
+#[serial_test::serial(jade_callback)]
+async fn version_info_does_not_wait_for_an_operation_in_flight() {
+    let callback = Callback::new();
+    callback.release_replies();
+    let manager = Arc::new(JadeManager::new());
+    connect(&manager, "jade").await.unwrap().unwrap();
+    callback.hold_replies.store(true, Ordering::SeqCst);
+    callback.writes.forget_permits(usize::MAX);
+    let ping = {
+        let manager = Arc::clone(&manager);
+        tokio::spawn(async move { manager.ping().await })
+    };
+    wait_for(&callback.writes).await;
+
+    let version = tokio::time::timeout(Duration::from_millis(200), manager.version_info())
+        .await
+        .unwrap()
+        .unwrap();
+
+    assert_eq!(version.jade_version, "1.0.41");
+    manager.disconnect().await.unwrap();
+    assert!(ping.await.unwrap().is_err());
+}
+
+#[tokio::test]
+async fn malformed_base64_psbt_is_rejected_before_reaching_the_device() {
+    let manager = JadeManager::new();
+
+    let result = manager
+        .sign_psbt(JadeNetwork::Regtest, "not a psbt!".to_string())
+        .await;
+
+    assert!(matches!(result, Err(JadeError::InvalidPsbt { .. })));
 }

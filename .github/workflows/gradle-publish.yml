@@ -84,7 +84,16 @@ jobs:
     - name: Upload native debug symbols to release
       env:
         GH_TOKEN: ${{ github.token }}
-      run: gh release upload "${{ github.event.release.tag_name || inputs.version }}" bindings/android/native-debug-symbols.zip --clobber
+        TAG: ${{ github.event.release.tag_name || inputs.version }}
+      shell: bash
+      run: |
+        # A manual publish may target a version with no GitHub release; skip the
+        # upload then so the package still reaches GitHub Packages.
+        if gh release view "$TAG" >/dev/null 2>&1; then
+          gh release upload "$TAG" bindings/android/native-debug-symbols.zip --clobber
+        else
+          echo "No release for $TAG; skipping the native debug symbols upload"
+        fi
 
     # same credentials env vars used in the publishing section of build.gradle.kts
     - name: Publish to GitHub Packages

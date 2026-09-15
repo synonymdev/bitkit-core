@@ -122,12 +122,3 @@ cargo test modules::jade          # adapter only
 
 Protocol level tests live in the crate and run with `cargo test` there, against
 a scripted mock device and a fake pinserver.
-
-## Before device testing and release
-
-The checked-in iOS and Python binaries are intentionally awaiting a rebuild after
-review feedback is addressed. They currently contain an older Jade client than
-the source dependency pin. Before testing the final changes on live devices,
-rebuild the platform artifacts from the final source revision, update the
-XCFramework checksum in `Package.swift`, and verify the regenerated bindings and
-native libraries together. The version remains 0.5.15 during this preparation.

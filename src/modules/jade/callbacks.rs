@@ -9,6 +9,7 @@
 //! established here. Every one of them is invoked on the blocking pool, so a
 //! slow implementation costs a blocking thread rather than a runtime worker.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
@@ -72,6 +73,10 @@ pub struct JadeTransportReadResult {
 /// 3. **`read_chunk` must return promptly.** Honour `timeout_ms`, which this
 ///    crate keeps short. The long per-operation deadline is enforced in Rust so
 ///    the user can cancel.
+///
+/// Once `close_device` has been called for a path, this crate stops reading
+/// from and writing to it, so a transport that keeps reporting empty reads
+/// after closing does not hold a disconnect open until the handshake deadline.
 #[uniffi::export(with_foreign)]
 pub trait JadeTransportCallback: Send + Sync {
     /// Discover devices, blocking up to `timeout_ms`.
@@ -152,6 +157,9 @@ pub(crate) struct CallbackTransport {
     callback: Arc<dyn JadeTransportCallback>,
     path: String,
     chunk_size: usize,
+    /// Set by `close`, so reads and writes fail at once instead of waiting on a
+    /// native layer that may keep answering for a released path.
+    closed: Arc<AtomicBool>,
 }
 
 impl CallbackTransport {
@@ -165,22 +173,35 @@ impl CallbackTransport {
             callback,
             path,
             chunk_size,
+            closed: Arc::new(AtomicBool::new(false)),
         }
+    }
+
+    fn ensure_open(&self) -> Result<(), JadeError> {
+        if self.closed.load(Ordering::SeqCst) {
+            return Err(JadeError::from(JadeTransportErrorCode::Disconnected));
+        }
+        Ok(())
     }
 }
 
 #[async_trait]
 impl JadeTransport for CallbackTransport {
     async fn write_all(&self, data: Vec<u8>) -> Result<(), JadeError> {
+        self.ensure_open()?;
         let callback = Arc::clone(&self.callback);
         let path = self.path.clone();
         let chunk_size = self.chunk_size;
+        let closed = Arc::clone(&self.closed);
 
         // Foreign callbacks are synchronous and can block. Running them on a
         // worker thread would park it for the duration; the blocking pool is
         // sized for exactly this.
         tokio::task::spawn_blocking(move || {
             for chunk in data.chunks(chunk_size) {
+                if closed.load(Ordering::SeqCst) {
+                    return Err(JadeError::from(JadeTransportErrorCode::Disconnected));
+                }
                 let result = callback.write_chunk(path.clone(), chunk.to_vec());
                 if !result.success {
                     return Err(to_error(result.error_code, result.error));
@@ -195,6 +216,7 @@ impl JadeTransport for CallbackTransport {
     }
 
     async fn read_some(&self, timeout: Duration) -> Result<Vec<u8>, JadeError> {
+        self.ensure_open()?;
         let callback = Arc::clone(&self.callback);
         let path = self.path.clone();
         let timeout_ms = timeout.as_millis().min(u128::from(u32::MAX)) as u32;
@@ -213,6 +235,7 @@ impl JadeTransport for CallbackTransport {
     }
 
     async fn close(&self) -> Result<(), JadeError> {
+        self.closed.store(true, Ordering::SeqCst);
         let callback = Arc::clone(&self.callback);
         let path = self.path.clone();
         tokio::task::spawn_blocking(move || {
