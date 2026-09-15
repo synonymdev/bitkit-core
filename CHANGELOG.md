@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.16 - 2026-09-14
+
+- Serialize Jade discovery, connection setup, and teardown. A disconnect now cancels connection attempts that are in progress or queued, and a transport opened by a cancelled attempt is closed instead of leaked. A scan started while another lifecycle operation is running returns `DeviceBusy`.
+- Bump `jade-client-rs` to `d52ccd9`, now sourced from `synonymdev/jade-client-rs`. The client closes transports after handshake or post-connect failures, bounds fragment and pinserver responses under absolute deadlines, rejects PSBTs without key origins, and releases serial descriptors on close.
+
 ## 0.5.15 - 2026-09-07
 
 - Add Blockstream Jade hardware wallet support: device discovery, connect, PIN unlock via the blind pinserver, extended public key and account export, on-device address verification, message signing, and PSBT signing, over Bluetooth on every platform and USB CDC serial on desktop and Python. Signed PSBTs feed the existing `finalize_psbt` path. The protocol lives in the `jade-client-rs` crate; this repo carries the UniFFI adapter.
