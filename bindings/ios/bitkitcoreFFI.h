@@ -265,6 +265,48 @@ typedef void (*UniffiCallbackInterfaceEventListenerMethod0)(uint64_t, RustBuffer
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD0
+typedef void (*UniffiCallbackInterfaceJadeTransportCallbackMethod0)(uint64_t, uint32_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD1
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD1
+typedef void (*UniffiCallbackInterfaceJadeTransportCallbackMethod1)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD2
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD2
+typedef void (*UniffiCallbackInterfaceJadeTransportCallbackMethod2)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD3
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD3
+typedef void (*UniffiCallbackInterfaceJadeTransportCallbackMethod3)(uint64_t, RustBuffer, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD4
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD4
+typedef void (*UniffiCallbackInterfaceJadeTransportCallbackMethod4)(uint64_t, RustBuffer, uint32_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD5
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD5
+typedef void (*UniffiCallbackInterfaceJadeTransportCallbackMethod5)(uint64_t, RustBuffer, uint32_t* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0
 typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod0)(uint64_t, RustBuffer* _Nonnull, 
@@ -372,6 +414,19 @@ typedef struct UniffiVTableCallbackInterfaceEventListener {
 } UniffiVTableCallbackInterfaceEventListener;
 
 #endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK
+typedef struct UniffiVTableCallbackInterfaceJadeTransportCallback {
+    UniffiCallbackInterfaceJadeTransportCallbackMethod0 _Nonnull scanDevices;
+    UniffiCallbackInterfaceJadeTransportCallbackMethod1 _Nonnull openDevice;
+    UniffiCallbackInterfaceJadeTransportCallbackMethod2 _Nonnull closeDevice;
+    UniffiCallbackInterfaceJadeTransportCallbackMethod3 _Nonnull writeChunk;
+    UniffiCallbackInterfaceJadeTransportCallbackMethod4 _Nonnull readChunk;
+    UniffiCallbackInterfaceJadeTransportCallbackMethod5 _Nonnull getChunkSize;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfaceJadeTransportCallback;
+
+#endif
 #ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK
 #define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK
 typedef struct UniffiVTableCallbackInterfaceTrezorTransportCallback {
@@ -437,6 +492,51 @@ void uniffi_bitkitcore_fn_init_callback_vtable_eventlistener(const UniffiVTableC
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_EVENTLISTENER_ON_EVENT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_EVENTLISTENER_ON_EVENT
 void uniffi_bitkitcore_fn_method_eventlistener_on_event(void*_Nonnull ptr, RustBuffer watcher_id, RustBuffer event, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_JADETRANSPORTCALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_JADETRANSPORTCALLBACK
+void*_Nonnull uniffi_bitkitcore_fn_clone_jadetransportcallback(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_JADETRANSPORTCALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_JADETRANSPORTCALLBACK
+void uniffi_bitkitcore_fn_free_jadetransportcallback(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_JADETRANSPORTCALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_JADETRANSPORTCALLBACK
+void uniffi_bitkitcore_fn_init_callback_vtable_jadetransportcallback(const UniffiVTableCallbackInterfaceJadeTransportCallback* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_SCAN_DEVICES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_SCAN_DEVICES
+RustBuffer uniffi_bitkitcore_fn_method_jadetransportcallback_scan_devices(void*_Nonnull ptr, uint32_t timeout_ms, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_OPEN_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_OPEN_DEVICE
+RustBuffer uniffi_bitkitcore_fn_method_jadetransportcallback_open_device(void*_Nonnull ptr, RustBuffer path, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_CLOSE_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_CLOSE_DEVICE
+RustBuffer uniffi_bitkitcore_fn_method_jadetransportcallback_close_device(void*_Nonnull ptr, RustBuffer path, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_WRITE_CHUNK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_WRITE_CHUNK
+RustBuffer uniffi_bitkitcore_fn_method_jadetransportcallback_write_chunk(void*_Nonnull ptr, RustBuffer path, RustBuffer data, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_READ_CHUNK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_READ_CHUNK
+RustBuffer uniffi_bitkitcore_fn_method_jadetransportcallback_read_chunk(void*_Nonnull ptr, RustBuffer path, uint32_t timeout_ms, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_GET_CHUNK_SIZE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_GET_CHUNK_SIZE
+uint32_t uniffi_bitkitcore_fn_method_jadetransportcallback_get_chunk_size(void*_Nonnull ptr, RustBuffer path, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_TREZORTRANSPORTCALLBACK
@@ -1020,6 +1120,120 @@ int8_t uniffi_bitkitcore_fn_func_is_address_used(RustBuffer address, RustCallSta
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_IS_VALID_BIP39_WORD
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_IS_VALID_BIP39_WORD
 int8_t uniffi_bitkitcore_fn_func_is_valid_bip39_word(RustBuffer word, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_ACCOUNT_TYPE_TO_VARIANT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_ACCOUNT_TYPE_TO_VARIANT
+RustBuffer uniffi_bitkitcore_fn_func_jade_account_type_to_variant(RustBuffer account_type, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_CANCEL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_CANCEL
+uint64_t uniffi_bitkitcore_fn_func_jade_cancel(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_CONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_CONNECT
+uint64_t uniffi_bitkitcore_fn_func_jade_connect(RustBuffer transport, RustBuffer path
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_DISCONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_DISCONNECT
+uint64_t uniffi_bitkitcore_fn_func_jade_disconnect(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_ACCOUNT_EXPORT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_ACCOUNT_EXPORT
+uint64_t uniffi_bitkitcore_fn_func_jade_get_account_export(RustBuffer network, uint32_t account_index, RustBuffer account_types
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_CONNECTED_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_CONNECTED_DEVICE
+uint64_t uniffi_bitkitcore_fn_func_jade_get_connected_device(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_MASTER_FINGERPRINT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_MASTER_FINGERPRINT
+uint64_t uniffi_bitkitcore_fn_func_jade_get_master_fingerprint(RustBuffer network
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_VERSION_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_VERSION_INFO
+uint64_t uniffi_bitkitcore_fn_func_jade_get_version_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_XPUB
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_XPUB
+uint64_t uniffi_bitkitcore_fn_func_jade_get_xpub(RustBuffer network, RustBuffer derivation_path
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_IS_CONNECTED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_IS_CONNECTED
+int8_t uniffi_bitkitcore_fn_func_jade_is_connected(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_LIST_DEVICES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_LIST_DEVICES
+uint64_t uniffi_bitkitcore_fn_func_jade_list_devices(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_LOGOUT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_LOGOUT
+uint64_t uniffi_bitkitcore_fn_func_jade_logout(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_NOTIFY_DISCONNECTED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_NOTIFY_DISCONNECTED
+uint64_t uniffi_bitkitcore_fn_func_jade_notify_disconnected(RustBuffer path
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_PING
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_PING
+uint64_t uniffi_bitkitcore_fn_func_jade_ping(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_REFRESH_VERSION_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_REFRESH_VERSION_INFO
+uint64_t uniffi_bitkitcore_fn_func_jade_refresh_version_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SCAN
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SCAN
+uint64_t uniffi_bitkitcore_fn_func_jade_scan(uint32_t timeout_ms
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SET_TRANSPORT_CALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SET_TRANSPORT_CALLBACK
+int8_t uniffi_bitkitcore_fn_func_jade_set_transport_callback(void*_Nonnull callback, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SIGN_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SIGN_MESSAGE
+uint64_t uniffi_bitkitcore_fn_func_jade_sign_message(RustBuffer network, RustBuffer derivation_path, RustBuffer message
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SIGN_PSBT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SIGN_PSBT
+uint64_t uniffi_bitkitcore_fn_func_jade_sign_psbt(RustBuffer network, RustBuffer psbt
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_UNLOCK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_UNLOCK
+uint64_t uniffi_bitkitcore_fn_func_jade_unlock(RustBuffer network
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_VERIFY_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_VERIFY_ADDRESS
+uint64_t uniffi_bitkitcore_fn_func_jade_verify_address(RustBuffer network, RustBuffer variant, RustBuffer derivation_path, RustBuffer expected_address
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_LNURL_AUTH
@@ -2312,6 +2526,132 @@ uint16_t uniffi_bitkitcore_checksum_func_is_valid_bip39_word(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_ACCOUNT_TYPE_TO_VARIANT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_ACCOUNT_TYPE_TO_VARIANT
+uint16_t uniffi_bitkitcore_checksum_func_jade_account_type_to_variant(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_CANCEL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_CANCEL
+uint16_t uniffi_bitkitcore_checksum_func_jade_cancel(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_CONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_CONNECT
+uint16_t uniffi_bitkitcore_checksum_func_jade_connect(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_DISCONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_DISCONNECT
+uint16_t uniffi_bitkitcore_checksum_func_jade_disconnect(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_ACCOUNT_EXPORT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_ACCOUNT_EXPORT
+uint16_t uniffi_bitkitcore_checksum_func_jade_get_account_export(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_CONNECTED_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_CONNECTED_DEVICE
+uint16_t uniffi_bitkitcore_checksum_func_jade_get_connected_device(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_MASTER_FINGERPRINT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_MASTER_FINGERPRINT
+uint16_t uniffi_bitkitcore_checksum_func_jade_get_master_fingerprint(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_VERSION_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_VERSION_INFO
+uint16_t uniffi_bitkitcore_checksum_func_jade_get_version_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_XPUB
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_XPUB
+uint16_t uniffi_bitkitcore_checksum_func_jade_get_xpub(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_IS_CONNECTED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_IS_CONNECTED
+uint16_t uniffi_bitkitcore_checksum_func_jade_is_connected(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_LIST_DEVICES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_LIST_DEVICES
+uint16_t uniffi_bitkitcore_checksum_func_jade_list_devices(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_LOGOUT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_LOGOUT
+uint16_t uniffi_bitkitcore_checksum_func_jade_logout(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_NOTIFY_DISCONNECTED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_NOTIFY_DISCONNECTED
+uint16_t uniffi_bitkitcore_checksum_func_jade_notify_disconnected(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_PING
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_PING
+uint16_t uniffi_bitkitcore_checksum_func_jade_ping(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_REFRESH_VERSION_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_REFRESH_VERSION_INFO
+uint16_t uniffi_bitkitcore_checksum_func_jade_refresh_version_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SCAN
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SCAN
+uint16_t uniffi_bitkitcore_checksum_func_jade_scan(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SET_TRANSPORT_CALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SET_TRANSPORT_CALLBACK
+uint16_t uniffi_bitkitcore_checksum_func_jade_set_transport_callback(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SIGN_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SIGN_MESSAGE
+uint16_t uniffi_bitkitcore_checksum_func_jade_sign_message(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SIGN_PSBT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SIGN_PSBT
+uint16_t uniffi_bitkitcore_checksum_func_jade_sign_psbt(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_UNLOCK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_UNLOCK
+uint16_t uniffi_bitkitcore_checksum_func_jade_unlock(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_VERIFY_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_VERIFY_ADDRESS
+uint16_t uniffi_bitkitcore_checksum_func_jade_verify_address(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_LNURL_AUTH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_LNURL_AUTH
 uint16_t uniffi_bitkitcore_checksum_func_lnurl_auth(void
@@ -2873,6 +3213,42 @@ uint16_t uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_EVENTLISTENER_ON_EVENT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_EVENTLISTENER_ON_EVENT
 uint16_t uniffi_bitkitcore_checksum_method_eventlistener_on_event(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_SCAN_DEVICES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_SCAN_DEVICES
+uint16_t uniffi_bitkitcore_checksum_method_jadetransportcallback_scan_devices(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_OPEN_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_OPEN_DEVICE
+uint16_t uniffi_bitkitcore_checksum_method_jadetransportcallback_open_device(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_CLOSE_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_CLOSE_DEVICE
+uint16_t uniffi_bitkitcore_checksum_method_jadetransportcallback_close_device(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_WRITE_CHUNK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_WRITE_CHUNK
+uint16_t uniffi_bitkitcore_checksum_method_jadetransportcallback_write_chunk(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_READ_CHUNK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_READ_CHUNK
+uint16_t uniffi_bitkitcore_checksum_method_jadetransportcallback_read_chunk(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_GET_CHUNK_SIZE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_GET_CHUNK_SIZE
+uint16_t uniffi_bitkitcore_checksum_method_jadetransportcallback_get_chunk_size(void
     
 );
 #endif

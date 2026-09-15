@@ -975,6 +975,452 @@ public func FfiConverterTypeEventListener_lower(_ value: EventListener) -> Unsaf
 
 
 /**
+ * Native transport for Jade.
+ *
+ * # Bluetooth contract
+ *
+ * Jade advertises the Nordic UART Service:
+ *
+ * - service `6e400001-b5a3-f393-e0a9-e50e24dcca9e`
+ * - write   `6e400002-b5a3-f393-e0a9-e50e24dcca9e` (host to Jade)
+ * - notify  `6e400003-b5a3-f393-e0a9-e50e24dcca9e` (Jade to host)
+ *
+ * Devices advertise as "Jade" or "Jade <serial>".
+ *
+ * Three requirements that are easy to miss and break signing on real hardware:
+ *
+ * 1. **Write with response.** Write-without-response silently drops chunks on
+ * the ESP32 GATT stack.
+ * 2. **Do not pause between chunks.** Firmware discards a partially received
+ * message after two seconds of silence, three on Jade v1, and answers with
+ * an unattributed error. A 30 KB PSBT is roughly 60 writes, so any UI thread
+ * stall in the middle of a send breaks the operation.
+ * 3. **`read_chunk` must return promptly.** Honour `timeout_ms`, which this
+ * crate keeps short. The long per-operation deadline is enforced in Rust so
+ * the user can cancel.
+ */
+public protocol JadeTransportCallback: AnyObject, Sendable {
+    
+    /**
+     * Discover devices, blocking up to `timeout_ms`.
+     */
+    func scanDevices(timeoutMs: UInt32)  -> [JadeNativeDevice]
+    
+    /**
+     * Open a connection and enable notifications.
+     */
+    func openDevice(path: String)  -> JadeTransportResult
+    
+    /**
+     * Close the connection and release the device.
+     */
+    func closeDevice(path: String)  -> JadeTransportResult
+    
+    /**
+     * Write one chunk, no larger than `get_chunk_size`.
+     */
+    func writeChunk(path: String, data: Data)  -> JadeTransportResult
+    
+    /**
+     * Read whatever has arrived, waiting at most `timeout_ms`.
+     *
+     * Returning success with an empty vector is normal and means "nothing yet".
+     */
+    func readChunk(path: String, timeoutMs: UInt32)  -> JadeTransportReadResult
+    
+    /**
+     * Maximum bytes per write.
+     *
+     * For Bluetooth this is `min(negotiated_mtu - 3, 509)`. The value is
+     * clamped into a usable range, so an unnegotiated `0` is not fatal.
+     */
+    func getChunkSize(path: String)  -> UInt32
+    
+}
+/**
+ * Native transport for Jade.
+ *
+ * # Bluetooth contract
+ *
+ * Jade advertises the Nordic UART Service:
+ *
+ * - service `6e400001-b5a3-f393-e0a9-e50e24dcca9e`
+ * - write   `6e400002-b5a3-f393-e0a9-e50e24dcca9e` (host to Jade)
+ * - notify  `6e400003-b5a3-f393-e0a9-e50e24dcca9e` (Jade to host)
+ *
+ * Devices advertise as "Jade" or "Jade <serial>".
+ *
+ * Three requirements that are easy to miss and break signing on real hardware:
+ *
+ * 1. **Write with response.** Write-without-response silently drops chunks on
+ * the ESP32 GATT stack.
+ * 2. **Do not pause between chunks.** Firmware discards a partially received
+ * message after two seconds of silence, three on Jade v1, and answers with
+ * an unattributed error. A 30 KB PSBT is roughly 60 writes, so any UI thread
+ * stall in the middle of a send breaks the operation.
+ * 3. **`read_chunk` must return promptly.** Honour `timeout_ms`, which this
+ * crate keeps short. The long per-operation deadline is enforced in Rust so
+ * the user can cancel.
+ */
+open class JadeTransportCallbackImpl: JadeTransportCallback, @unchecked Sendable {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_bitkitcore_fn_clone_jadetransportcallback(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_bitkitcore_fn_free_jadetransportcallback(pointer, $0) }
+    }
+
+    
+
+    
+    /**
+     * Discover devices, blocking up to `timeout_ms`.
+     */
+open func scanDevices(timeoutMs: UInt32) -> [JadeNativeDevice]  {
+    return try!  FfiConverterSequenceTypeJadeNativeDevice.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_method_jadetransportcallback_scan_devices(self.uniffiClonePointer(),
+        FfiConverterUInt32.lower(timeoutMs),$0
+    )
+})
+}
+    
+    /**
+     * Open a connection and enable notifications.
+     */
+open func openDevice(path: String) -> JadeTransportResult  {
+    return try!  FfiConverterTypeJadeTransportResult_lift(try! rustCall() {
+    uniffi_bitkitcore_fn_method_jadetransportcallback_open_device(self.uniffiClonePointer(),
+        FfiConverterString.lower(path),$0
+    )
+})
+}
+    
+    /**
+     * Close the connection and release the device.
+     */
+open func closeDevice(path: String) -> JadeTransportResult  {
+    return try!  FfiConverterTypeJadeTransportResult_lift(try! rustCall() {
+    uniffi_bitkitcore_fn_method_jadetransportcallback_close_device(self.uniffiClonePointer(),
+        FfiConverterString.lower(path),$0
+    )
+})
+}
+    
+    /**
+     * Write one chunk, no larger than `get_chunk_size`.
+     */
+open func writeChunk(path: String, data: Data) -> JadeTransportResult  {
+    return try!  FfiConverterTypeJadeTransportResult_lift(try! rustCall() {
+    uniffi_bitkitcore_fn_method_jadetransportcallback_write_chunk(self.uniffiClonePointer(),
+        FfiConverterString.lower(path),
+        FfiConverterData.lower(data),$0
+    )
+})
+}
+    
+    /**
+     * Read whatever has arrived, waiting at most `timeout_ms`.
+     *
+     * Returning success with an empty vector is normal and means "nothing yet".
+     */
+open func readChunk(path: String, timeoutMs: UInt32) -> JadeTransportReadResult  {
+    return try!  FfiConverterTypeJadeTransportReadResult_lift(try! rustCall() {
+    uniffi_bitkitcore_fn_method_jadetransportcallback_read_chunk(self.uniffiClonePointer(),
+        FfiConverterString.lower(path),
+        FfiConverterUInt32.lower(timeoutMs),$0
+    )
+})
+}
+    
+    /**
+     * Maximum bytes per write.
+     *
+     * For Bluetooth this is `min(negotiated_mtu - 3, 509)`. The value is
+     * clamped into a usable range, so an unnegotiated `0` is not fatal.
+     */
+open func getChunkSize(path: String) -> UInt32  {
+    return try!  FfiConverterUInt32.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_method_jadetransportcallback_get_chunk_size(self.uniffiClonePointer(),
+        FfiConverterString.lower(path),$0
+    )
+})
+}
+    
+
+}
+
+
+// Put the implementation in a struct so we don't pollute the top-level namespace
+fileprivate struct UniffiCallbackInterfaceJadeTransportCallback {
+
+    // Create the VTable using a series of closures.
+    // Swift automatically converts these into C callback functions.
+    //
+    // This creates 1-element array, since this seems to be the only way to construct a const
+    // pointer that we can pass to the Rust code.
+    static let vtable: [UniffiVTableCallbackInterfaceJadeTransportCallback] = [UniffiVTableCallbackInterfaceJadeTransportCallback(
+        scanDevices: { (
+            uniffiHandle: UInt64,
+            timeoutMs: UInt32,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> [JadeNativeDevice] in
+                guard let uniffiObj = try? FfiConverterTypeJadeTransportCallback.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return uniffiObj.scanDevices(
+                     timeoutMs: try FfiConverterUInt32.lift(timeoutMs)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterSequenceTypeJadeNativeDevice.lower($0) }
+            uniffiTraitInterfaceCall(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn
+            )
+        },
+        openDevice: { (
+            uniffiHandle: UInt64,
+            path: RustBuffer,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> JadeTransportResult in
+                guard let uniffiObj = try? FfiConverterTypeJadeTransportCallback.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return uniffiObj.openDevice(
+                     path: try FfiConverterString.lift(path)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterTypeJadeTransportResult_lower($0) }
+            uniffiTraitInterfaceCall(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn
+            )
+        },
+        closeDevice: { (
+            uniffiHandle: UInt64,
+            path: RustBuffer,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> JadeTransportResult in
+                guard let uniffiObj = try? FfiConverterTypeJadeTransportCallback.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return uniffiObj.closeDevice(
+                     path: try FfiConverterString.lift(path)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterTypeJadeTransportResult_lower($0) }
+            uniffiTraitInterfaceCall(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn
+            )
+        },
+        writeChunk: { (
+            uniffiHandle: UInt64,
+            path: RustBuffer,
+            data: RustBuffer,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> JadeTransportResult in
+                guard let uniffiObj = try? FfiConverterTypeJadeTransportCallback.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return uniffiObj.writeChunk(
+                     path: try FfiConverterString.lift(path),
+                     data: try FfiConverterData.lift(data)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterTypeJadeTransportResult_lower($0) }
+            uniffiTraitInterfaceCall(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn
+            )
+        },
+        readChunk: { (
+            uniffiHandle: UInt64,
+            path: RustBuffer,
+            timeoutMs: UInt32,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> JadeTransportReadResult in
+                guard let uniffiObj = try? FfiConverterTypeJadeTransportCallback.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return uniffiObj.readChunk(
+                     path: try FfiConverterString.lift(path),
+                     timeoutMs: try FfiConverterUInt32.lift(timeoutMs)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterTypeJadeTransportReadResult_lower($0) }
+            uniffiTraitInterfaceCall(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn
+            )
+        },
+        getChunkSize: { (
+            uniffiHandle: UInt64,
+            path: RustBuffer,
+            uniffiOutReturn: UnsafeMutablePointer<UInt32>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> UInt32 in
+                guard let uniffiObj = try? FfiConverterTypeJadeTransportCallback.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return uniffiObj.getChunkSize(
+                     path: try FfiConverterString.lift(path)
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterUInt32.lower($0) }
+            uniffiTraitInterfaceCall(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn
+            )
+        },
+        uniffiFree: { (uniffiHandle: UInt64) -> () in
+            let result = try? FfiConverterTypeJadeTransportCallback.handleMap.remove(handle: uniffiHandle)
+            if result == nil {
+                print("Uniffi callback interface JadeTransportCallback: handle missing in uniffiFree")
+            }
+        }
+    )]
+}
+
+private func uniffiCallbackInitJadeTransportCallback() {
+    uniffi_bitkitcore_fn_init_callback_vtable_jadetransportcallback(UniffiCallbackInterfaceJadeTransportCallback.vtable)
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeTransportCallback: FfiConverter {
+    fileprivate static let handleMap = UniffiHandleMap<JadeTransportCallback>()
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = JadeTransportCallback
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> JadeTransportCallback {
+        return JadeTransportCallbackImpl(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: JadeTransportCallback) -> UnsafeMutableRawPointer {
+        guard let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: handleMap.insert(obj: value))) else {
+            fatalError("Cast to UnsafeMutableRawPointer failed")
+        }
+        return ptr
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeTransportCallback {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: JadeTransportCallback, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeTransportCallback_lift(_ pointer: UnsafeMutableRawPointer) throws -> JadeTransportCallback {
+    return try FfiConverterTypeJadeTransportCallback.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeTransportCallback_lower(_ value: JadeTransportCallback) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeJadeTransportCallback.lower(value)
+}
+
+
+
+
+
+
+/**
  * Callback interface for native Trezor transport operations
  *
  * This trait must be implemented by the native iOS/Android code.
@@ -7646,6 +8092,863 @@ public func FfiConverterTypeIManualRefund_lift(_ buf: RustBuffer) throws -> IMan
 #endif
 public func FfiConverterTypeIManualRefund_lower(_ value: IManualRefund) -> RustBuffer {
     return FfiConverterTypeIManualRefund.lower(value)
+}
+
+
+public struct JadeAccount {
+    public var variant: JadeAddressVariant
+    public var xpub: String
+    public var derivationPath: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(variant: JadeAddressVariant, xpub: String, derivationPath: String) {
+        self.variant = variant
+        self.xpub = xpub
+        self.derivationPath = derivationPath
+    }
+}
+
+#if compiler(>=6)
+extension JadeAccount: Sendable {}
+#endif
+
+
+extension JadeAccount: Equatable, Hashable {
+    public static func ==(lhs: JadeAccount, rhs: JadeAccount) -> Bool {
+        if lhs.variant != rhs.variant {
+            return false
+        }
+        if lhs.xpub != rhs.xpub {
+            return false
+        }
+        if lhs.derivationPath != rhs.derivationPath {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(variant)
+        hasher.combine(xpub)
+        hasher.combine(derivationPath)
+    }
+}
+
+extension JadeAccount: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeAccount: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeAccount {
+        return
+            try JadeAccount(
+                variant: FfiConverterTypeJadeAddressVariant.read(from: &buf), 
+                xpub: FfiConverterString.read(from: &buf), 
+                derivationPath: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: JadeAccount, into buf: inout [UInt8]) {
+        FfiConverterTypeJadeAddressVariant.write(value.variant, into: &buf)
+        FfiConverterString.write(value.xpub, into: &buf)
+        FfiConverterString.write(value.derivationPath, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeAccount_lift(_ buf: RustBuffer) throws -> JadeAccount {
+    return try FfiConverterTypeJadeAccount.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeAccount_lower(_ value: JadeAccount) -> RustBuffer {
+    return FfiConverterTypeJadeAccount.lower(value)
+}
+
+
+public struct JadeAccountExport {
+    public var masterFingerprint: String
+    public var accountIndex: UInt32
+    public var accounts: [JadeAccount]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(masterFingerprint: String, accountIndex: UInt32, accounts: [JadeAccount]) {
+        self.masterFingerprint = masterFingerprint
+        self.accountIndex = accountIndex
+        self.accounts = accounts
+    }
+}
+
+#if compiler(>=6)
+extension JadeAccountExport: Sendable {}
+#endif
+
+
+extension JadeAccountExport: Equatable, Hashable {
+    public static func ==(lhs: JadeAccountExport, rhs: JadeAccountExport) -> Bool {
+        if lhs.masterFingerprint != rhs.masterFingerprint {
+            return false
+        }
+        if lhs.accountIndex != rhs.accountIndex {
+            return false
+        }
+        if lhs.accounts != rhs.accounts {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(masterFingerprint)
+        hasher.combine(accountIndex)
+        hasher.combine(accounts)
+    }
+}
+
+extension JadeAccountExport: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeAccountExport: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeAccountExport {
+        return
+            try JadeAccountExport(
+                masterFingerprint: FfiConverterString.read(from: &buf), 
+                accountIndex: FfiConverterUInt32.read(from: &buf), 
+                accounts: FfiConverterSequenceTypeJadeAccount.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: JadeAccountExport, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.masterFingerprint, into: &buf)
+        FfiConverterUInt32.write(value.accountIndex, into: &buf)
+        FfiConverterSequenceTypeJadeAccount.write(value.accounts, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeAccountExport_lift(_ buf: RustBuffer) throws -> JadeAccountExport {
+    return try FfiConverterTypeJadeAccountExport.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeAccountExport_lower(_ value: JadeAccountExport) -> RustBuffer {
+    return FfiConverterTypeJadeAccountExport.lower(value)
+}
+
+
+public struct JadeDeviceInfo {
+    public var path: String
+    public var transport: JadeTransportKind
+    public var name: String?
+    public var serialNumber: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(path: String, transport: JadeTransportKind, name: String?, serialNumber: String?) {
+        self.path = path
+        self.transport = transport
+        self.name = name
+        self.serialNumber = serialNumber
+    }
+}
+
+#if compiler(>=6)
+extension JadeDeviceInfo: Sendable {}
+#endif
+
+
+extension JadeDeviceInfo: Equatable, Hashable {
+    public static func ==(lhs: JadeDeviceInfo, rhs: JadeDeviceInfo) -> Bool {
+        if lhs.path != rhs.path {
+            return false
+        }
+        if lhs.transport != rhs.transport {
+            return false
+        }
+        if lhs.name != rhs.name {
+            return false
+        }
+        if lhs.serialNumber != rhs.serialNumber {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(path)
+        hasher.combine(transport)
+        hasher.combine(name)
+        hasher.combine(serialNumber)
+    }
+}
+
+extension JadeDeviceInfo: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeDeviceInfo: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeDeviceInfo {
+        return
+            try JadeDeviceInfo(
+                path: FfiConverterString.read(from: &buf), 
+                transport: FfiConverterTypeJadeTransportKind.read(from: &buf), 
+                name: FfiConverterOptionString.read(from: &buf), 
+                serialNumber: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: JadeDeviceInfo, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.path, into: &buf)
+        FfiConverterTypeJadeTransportKind.write(value.transport, into: &buf)
+        FfiConverterOptionString.write(value.name, into: &buf)
+        FfiConverterOptionString.write(value.serialNumber, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeDeviceInfo_lift(_ buf: RustBuffer) throws -> JadeDeviceInfo {
+    return try FfiConverterTypeJadeDeviceInfo.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeDeviceInfo_lower(_ value: JadeDeviceInfo) -> RustBuffer {
+    return FfiConverterTypeJadeDeviceInfo.lower(value)
+}
+
+
+/**
+ * A device the native layer discovered.
+ */
+public struct JadeNativeDevice {
+    /**
+     * Transport specific address: a BLE identifier or a serial device path.
+     */
+    public var path: String
+    public var transport: JadeTransportKind
+    /**
+     * Advertised or descriptor name, for example "Jade C0FFEE".
+     */
+    public var name: String?
+    public var serialNumber: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Transport specific address: a BLE identifier or a serial device path.
+         */path: String, transport: JadeTransportKind, 
+        /**
+         * Advertised or descriptor name, for example "Jade C0FFEE".
+         */name: String?, serialNumber: String?) {
+        self.path = path
+        self.transport = transport
+        self.name = name
+        self.serialNumber = serialNumber
+    }
+}
+
+#if compiler(>=6)
+extension JadeNativeDevice: Sendable {}
+#endif
+
+
+extension JadeNativeDevice: Equatable, Hashable {
+    public static func ==(lhs: JadeNativeDevice, rhs: JadeNativeDevice) -> Bool {
+        if lhs.path != rhs.path {
+            return false
+        }
+        if lhs.transport != rhs.transport {
+            return false
+        }
+        if lhs.name != rhs.name {
+            return false
+        }
+        if lhs.serialNumber != rhs.serialNumber {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(path)
+        hasher.combine(transport)
+        hasher.combine(name)
+        hasher.combine(serialNumber)
+    }
+}
+
+extension JadeNativeDevice: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeNativeDevice: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeNativeDevice {
+        return
+            try JadeNativeDevice(
+                path: FfiConverterString.read(from: &buf), 
+                transport: FfiConverterTypeJadeTransportKind.read(from: &buf), 
+                name: FfiConverterOptionString.read(from: &buf), 
+                serialNumber: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: JadeNativeDevice, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.path, into: &buf)
+        FfiConverterTypeJadeTransportKind.write(value.transport, into: &buf)
+        FfiConverterOptionString.write(value.name, into: &buf)
+        FfiConverterOptionString.write(value.serialNumber, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeNativeDevice_lift(_ buf: RustBuffer) throws -> JadeNativeDevice {
+    return try FfiConverterTypeJadeNativeDevice.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeNativeDevice_lower(_ value: JadeNativeDevice) -> RustBuffer {
+    return FfiConverterTypeJadeNativeDevice.lower(value)
+}
+
+
+public struct JadeSignedMessage {
+    public var signature: String
+    public var address: String
+    public var derivationPath: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(signature: String, address: String, derivationPath: String) {
+        self.signature = signature
+        self.address = address
+        self.derivationPath = derivationPath
+    }
+}
+
+#if compiler(>=6)
+extension JadeSignedMessage: Sendable {}
+#endif
+
+
+extension JadeSignedMessage: Equatable, Hashable {
+    public static func ==(lhs: JadeSignedMessage, rhs: JadeSignedMessage) -> Bool {
+        if lhs.signature != rhs.signature {
+            return false
+        }
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.derivationPath != rhs.derivationPath {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(signature)
+        hasher.combine(address)
+        hasher.combine(derivationPath)
+    }
+}
+
+extension JadeSignedMessage: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeSignedMessage: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeSignedMessage {
+        return
+            try JadeSignedMessage(
+                signature: FfiConverterString.read(from: &buf), 
+                address: FfiConverterString.read(from: &buf), 
+                derivationPath: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: JadeSignedMessage, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.signature, into: &buf)
+        FfiConverterString.write(value.address, into: &buf)
+        FfiConverterString.write(value.derivationPath, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeSignedMessage_lift(_ buf: RustBuffer) throws -> JadeSignedMessage {
+    return try FfiConverterTypeJadeSignedMessage.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeSignedMessage_lower(_ value: JadeSignedMessage) -> RustBuffer {
+    return FfiConverterTypeJadeSignedMessage.lower(value)
+}
+
+
+/**
+ * Outcome of a read.
+ */
+public struct JadeTransportReadResult {
+    public var success: Bool
+    /**
+     * Bytes read. Success with an empty vector means nothing has arrived yet,
+     * which is the normal case while the user is deciding on the device.
+     */
+    public var data: Data
+    /**
+     * Empty on success.
+     */
+    public var error: String
+    public var errorCode: JadeTransportErrorCode?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(success: Bool, 
+        /**
+         * Bytes read. Success with an empty vector means nothing has arrived yet,
+         * which is the normal case while the user is deciding on the device.
+         */data: Data, 
+        /**
+         * Empty on success.
+         */error: String, errorCode: JadeTransportErrorCode?) {
+        self.success = success
+        self.data = data
+        self.error = error
+        self.errorCode = errorCode
+    }
+}
+
+#if compiler(>=6)
+extension JadeTransportReadResult: Sendable {}
+#endif
+
+
+extension JadeTransportReadResult: Equatable, Hashable {
+    public static func ==(lhs: JadeTransportReadResult, rhs: JadeTransportReadResult) -> Bool {
+        if lhs.success != rhs.success {
+            return false
+        }
+        if lhs.data != rhs.data {
+            return false
+        }
+        if lhs.error != rhs.error {
+            return false
+        }
+        if lhs.errorCode != rhs.errorCode {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(success)
+        hasher.combine(data)
+        hasher.combine(error)
+        hasher.combine(errorCode)
+    }
+}
+
+extension JadeTransportReadResult: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeTransportReadResult: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeTransportReadResult {
+        return
+            try JadeTransportReadResult(
+                success: FfiConverterBool.read(from: &buf), 
+                data: FfiConverterData.read(from: &buf), 
+                error: FfiConverterString.read(from: &buf), 
+                errorCode: FfiConverterOptionTypeJadeTransportErrorCode.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: JadeTransportReadResult, into buf: inout [UInt8]) {
+        FfiConverterBool.write(value.success, into: &buf)
+        FfiConverterData.write(value.data, into: &buf)
+        FfiConverterString.write(value.error, into: &buf)
+        FfiConverterOptionTypeJadeTransportErrorCode.write(value.errorCode, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeTransportReadResult_lift(_ buf: RustBuffer) throws -> JadeTransportReadResult {
+    return try FfiConverterTypeJadeTransportReadResult.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeTransportReadResult_lower(_ value: JadeTransportReadResult) -> RustBuffer {
+    return FfiConverterTypeJadeTransportReadResult.lower(value)
+}
+
+
+/**
+ * Outcome of an operation that returns no data.
+ */
+public struct JadeTransportResult {
+    public var success: Bool
+    /**
+     * Empty on success.
+     */
+    public var error: String
+    public var errorCode: JadeTransportErrorCode?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(success: Bool, 
+        /**
+         * Empty on success.
+         */error: String, errorCode: JadeTransportErrorCode?) {
+        self.success = success
+        self.error = error
+        self.errorCode = errorCode
+    }
+}
+
+#if compiler(>=6)
+extension JadeTransportResult: Sendable {}
+#endif
+
+
+extension JadeTransportResult: Equatable, Hashable {
+    public static func ==(lhs: JadeTransportResult, rhs: JadeTransportResult) -> Bool {
+        if lhs.success != rhs.success {
+            return false
+        }
+        if lhs.error != rhs.error {
+            return false
+        }
+        if lhs.errorCode != rhs.errorCode {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(success)
+        hasher.combine(error)
+        hasher.combine(errorCode)
+    }
+}
+
+extension JadeTransportResult: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeTransportResult: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeTransportResult {
+        return
+            try JadeTransportResult(
+                success: FfiConverterBool.read(from: &buf), 
+                error: FfiConverterString.read(from: &buf), 
+                errorCode: FfiConverterOptionTypeJadeTransportErrorCode.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: JadeTransportResult, into buf: inout [UInt8]) {
+        FfiConverterBool.write(value.success, into: &buf)
+        FfiConverterString.write(value.error, into: &buf)
+        FfiConverterOptionTypeJadeTransportErrorCode.write(value.errorCode, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeTransportResult_lift(_ buf: RustBuffer) throws -> JadeTransportResult {
+    return try FfiConverterTypeJadeTransportResult.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeTransportResult_lower(_ value: JadeTransportResult) -> RustBuffer {
+    return FfiConverterTypeJadeTransportResult.lower(value)
+}
+
+
+public struct JadeVersionInfo {
+    public var jadeVersion: String
+    public var jadeState: JadeState
+    public var jadeNetworks: String?
+    public var jadeHasPin: Bool?
+    public var boardType: String?
+    public var jadeConfig: String?
+    public var jadeFeatures: String?
+    public var idfVersion: String?
+    public var chipFeatures: String?
+    public var efuseMac: String?
+    public var batteryStatus: UInt32?
+    public var jadeOtaMaxChunk: UInt32?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(jadeVersion: String, jadeState: JadeState, jadeNetworks: String?, jadeHasPin: Bool?, boardType: String?, jadeConfig: String?, jadeFeatures: String?, idfVersion: String?, chipFeatures: String?, efuseMac: String?, batteryStatus: UInt32?, jadeOtaMaxChunk: UInt32?) {
+        self.jadeVersion = jadeVersion
+        self.jadeState = jadeState
+        self.jadeNetworks = jadeNetworks
+        self.jadeHasPin = jadeHasPin
+        self.boardType = boardType
+        self.jadeConfig = jadeConfig
+        self.jadeFeatures = jadeFeatures
+        self.idfVersion = idfVersion
+        self.chipFeatures = chipFeatures
+        self.efuseMac = efuseMac
+        self.batteryStatus = batteryStatus
+        self.jadeOtaMaxChunk = jadeOtaMaxChunk
+    }
+}
+
+#if compiler(>=6)
+extension JadeVersionInfo: Sendable {}
+#endif
+
+
+extension JadeVersionInfo: Equatable, Hashable {
+    public static func ==(lhs: JadeVersionInfo, rhs: JadeVersionInfo) -> Bool {
+        if lhs.jadeVersion != rhs.jadeVersion {
+            return false
+        }
+        if lhs.jadeState != rhs.jadeState {
+            return false
+        }
+        if lhs.jadeNetworks != rhs.jadeNetworks {
+            return false
+        }
+        if lhs.jadeHasPin != rhs.jadeHasPin {
+            return false
+        }
+        if lhs.boardType != rhs.boardType {
+            return false
+        }
+        if lhs.jadeConfig != rhs.jadeConfig {
+            return false
+        }
+        if lhs.jadeFeatures != rhs.jadeFeatures {
+            return false
+        }
+        if lhs.idfVersion != rhs.idfVersion {
+            return false
+        }
+        if lhs.chipFeatures != rhs.chipFeatures {
+            return false
+        }
+        if lhs.efuseMac != rhs.efuseMac {
+            return false
+        }
+        if lhs.batteryStatus != rhs.batteryStatus {
+            return false
+        }
+        if lhs.jadeOtaMaxChunk != rhs.jadeOtaMaxChunk {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(jadeVersion)
+        hasher.combine(jadeState)
+        hasher.combine(jadeNetworks)
+        hasher.combine(jadeHasPin)
+        hasher.combine(boardType)
+        hasher.combine(jadeConfig)
+        hasher.combine(jadeFeatures)
+        hasher.combine(idfVersion)
+        hasher.combine(chipFeatures)
+        hasher.combine(efuseMac)
+        hasher.combine(batteryStatus)
+        hasher.combine(jadeOtaMaxChunk)
+    }
+}
+
+extension JadeVersionInfo: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeVersionInfo: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeVersionInfo {
+        return
+            try JadeVersionInfo(
+                jadeVersion: FfiConverterString.read(from: &buf), 
+                jadeState: FfiConverterTypeJadeState.read(from: &buf), 
+                jadeNetworks: FfiConverterOptionString.read(from: &buf), 
+                jadeHasPin: FfiConverterOptionBool.read(from: &buf), 
+                boardType: FfiConverterOptionString.read(from: &buf), 
+                jadeConfig: FfiConverterOptionString.read(from: &buf), 
+                jadeFeatures: FfiConverterOptionString.read(from: &buf), 
+                idfVersion: FfiConverterOptionString.read(from: &buf), 
+                chipFeatures: FfiConverterOptionString.read(from: &buf), 
+                efuseMac: FfiConverterOptionString.read(from: &buf), 
+                batteryStatus: FfiConverterOptionUInt32.read(from: &buf), 
+                jadeOtaMaxChunk: FfiConverterOptionUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: JadeVersionInfo, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.jadeVersion, into: &buf)
+        FfiConverterTypeJadeState.write(value.jadeState, into: &buf)
+        FfiConverterOptionString.write(value.jadeNetworks, into: &buf)
+        FfiConverterOptionBool.write(value.jadeHasPin, into: &buf)
+        FfiConverterOptionString.write(value.boardType, into: &buf)
+        FfiConverterOptionString.write(value.jadeConfig, into: &buf)
+        FfiConverterOptionString.write(value.jadeFeatures, into: &buf)
+        FfiConverterOptionString.write(value.idfVersion, into: &buf)
+        FfiConverterOptionString.write(value.chipFeatures, into: &buf)
+        FfiConverterOptionString.write(value.efuseMac, into: &buf)
+        FfiConverterOptionUInt32.write(value.batteryStatus, into: &buf)
+        FfiConverterOptionUInt32.write(value.jadeOtaMaxChunk, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeVersionInfo_lift(_ buf: RustBuffer) throws -> JadeVersionInfo {
+    return try FfiConverterTypeJadeVersionInfo.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeVersionInfo_lower(_ value: JadeVersionInfo) -> RustBuffer {
+    return FfiConverterTypeJadeVersionInfo.lower(value)
+}
+
+
+public struct JadeXpubResponse {
+    public var xpub: String
+    public var derivationPath: String
+    public var masterFingerprint: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(xpub: String, derivationPath: String, masterFingerprint: String) {
+        self.xpub = xpub
+        self.derivationPath = derivationPath
+        self.masterFingerprint = masterFingerprint
+    }
+}
+
+#if compiler(>=6)
+extension JadeXpubResponse: Sendable {}
+#endif
+
+
+extension JadeXpubResponse: Equatable, Hashable {
+    public static func ==(lhs: JadeXpubResponse, rhs: JadeXpubResponse) -> Bool {
+        if lhs.xpub != rhs.xpub {
+            return false
+        }
+        if lhs.derivationPath != rhs.derivationPath {
+            return false
+        }
+        if lhs.masterFingerprint != rhs.masterFingerprint {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(xpub)
+        hasher.combine(derivationPath)
+        hasher.combine(masterFingerprint)
+    }
+}
+
+extension JadeXpubResponse: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeXpubResponse: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeXpubResponse {
+        return
+            try JadeXpubResponse(
+                xpub: FfiConverterString.read(from: &buf), 
+                derivationPath: FfiConverterString.read(from: &buf), 
+                masterFingerprint: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: JadeXpubResponse, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.xpub, into: &buf)
+        FfiConverterString.write(value.derivationPath, into: &buf)
+        FfiConverterString.write(value.masterFingerprint, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeXpubResponse_lift(_ buf: RustBuffer) throws -> JadeXpubResponse {
+    return try FfiConverterTypeJadeXpubResponse.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeXpubResponse_lower(_ value: JadeXpubResponse) -> RustBuffer {
+    return FfiConverterTypeJadeXpubResponse.lower(value)
 }
 
 
@@ -18138,6 +19441,7 @@ public enum HardwareWalletVendor {
     
     case trezor
     case foundation
+    case blockstream
 }
 
 
@@ -18159,6 +19463,8 @@ public struct FfiConverterTypeHardwareWalletVendor: FfiConverterRustBuffer {
         
         case 2: return .foundation
         
+        case 3: return .blockstream
+        
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
@@ -18173,6 +19479,10 @@ public struct FfiConverterTypeHardwareWalletVendor: FfiConverterRustBuffer {
         
         case .foundation:
             writeInt(&buf, Int32(2))
+        
+        
+        case .blockstream:
+            writeInt(&buf, Int32(3))
         
         }
     }
@@ -18197,6 +19507,787 @@ public func FfiConverterTypeHardwareWalletVendor_lower(_ value: HardwareWalletVe
 extension HardwareWalletVendor: Equatable, Hashable {}
 
 extension HardwareWalletVendor: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
+public enum JadeAddressVariant {
+    
+    case pkh
+    case wpkh
+    case shWpkh
+    case tr
+}
+
+
+#if compiler(>=6)
+extension JadeAddressVariant: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeAddressVariant: FfiConverterRustBuffer {
+    typealias SwiftType = JadeAddressVariant
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeAddressVariant {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .pkh
+        
+        case 2: return .wpkh
+        
+        case 3: return .shWpkh
+        
+        case 4: return .tr
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: JadeAddressVariant, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .pkh:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .wpkh:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .shWpkh:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .tr:
+            writeInt(&buf, Int32(4))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeAddressVariant_lift(_ buf: RustBuffer) throws -> JadeAddressVariant {
+    return try FfiConverterTypeJadeAddressVariant.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeAddressVariant_lower(_ value: JadeAddressVariant) -> RustBuffer {
+    return FfiConverterTypeJadeAddressVariant.lower(value)
+}
+
+
+extension JadeAddressVariant: Equatable, Hashable {}
+
+extension JadeAddressVariant: Codable {}
+
+
+
+
+
+
+
+public enum JadeError: Swift.Error {
+
+    
+    
+    case TransportError(errorDetails: String
+    )
+    case DeviceNotFound
+    case DeviceDisconnected
+    case DeviceBusy
+    case NotConnected
+    case NotInitialized
+    case ConnectionError(errorDetails: String
+    )
+    case ProtocolError(errorDetails: String
+    )
+    case Timeout
+    case UserCancelled
+    case DeviceLocked
+    case DeviceUninitialized
+    case InvalidPin
+    case NetworkMismatch(errorDetails: String
+    )
+    case UnsupportedFirmware(installed: String, required: String
+    )
+    case InvalidPath(errorDetails: String
+    )
+    case InvalidPsbt(errorDetails: String
+    )
+    case PsbtTooLarge(size: UInt64, max: UInt64
+    )
+    case FingerprintMismatch(device: String, psbt: String
+    )
+    case NothingSigned
+    case AddressMismatch(expected: String, returned: String
+    )
+    case PinServerError(errorDetails: String
+    )
+    case DeviceError(errorDetails: String
+    )
+    case IoError(errorDetails: String
+    )
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeError: FfiConverterRustBuffer {
+    typealias SwiftType = JadeError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .TransportError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 2: return .DeviceNotFound
+        case 3: return .DeviceDisconnected
+        case 4: return .DeviceBusy
+        case 5: return .NotConnected
+        case 6: return .NotInitialized
+        case 7: return .ConnectionError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 8: return .ProtocolError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 9: return .Timeout
+        case 10: return .UserCancelled
+        case 11: return .DeviceLocked
+        case 12: return .DeviceUninitialized
+        case 13: return .InvalidPin
+        case 14: return .NetworkMismatch(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 15: return .UnsupportedFirmware(
+            installed: try FfiConverterString.read(from: &buf), 
+            required: try FfiConverterString.read(from: &buf)
+            )
+        case 16: return .InvalidPath(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 17: return .InvalidPsbt(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 18: return .PsbtTooLarge(
+            size: try FfiConverterUInt64.read(from: &buf), 
+            max: try FfiConverterUInt64.read(from: &buf)
+            )
+        case 19: return .FingerprintMismatch(
+            device: try FfiConverterString.read(from: &buf), 
+            psbt: try FfiConverterString.read(from: &buf)
+            )
+        case 20: return .NothingSigned
+        case 21: return .AddressMismatch(
+            expected: try FfiConverterString.read(from: &buf), 
+            returned: try FfiConverterString.read(from: &buf)
+            )
+        case 22: return .PinServerError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 23: return .DeviceError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 24: return .IoError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: JadeError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case let .TransportError(errorDetails):
+            writeInt(&buf, Int32(1))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case .DeviceNotFound:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .DeviceDisconnected:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .DeviceBusy:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .NotConnected:
+            writeInt(&buf, Int32(5))
+        
+        
+        case .NotInitialized:
+            writeInt(&buf, Int32(6))
+        
+        
+        case let .ConnectionError(errorDetails):
+            writeInt(&buf, Int32(7))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .ProtocolError(errorDetails):
+            writeInt(&buf, Int32(8))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case .Timeout:
+            writeInt(&buf, Int32(9))
+        
+        
+        case .UserCancelled:
+            writeInt(&buf, Int32(10))
+        
+        
+        case .DeviceLocked:
+            writeInt(&buf, Int32(11))
+        
+        
+        case .DeviceUninitialized:
+            writeInt(&buf, Int32(12))
+        
+        
+        case .InvalidPin:
+            writeInt(&buf, Int32(13))
+        
+        
+        case let .NetworkMismatch(errorDetails):
+            writeInt(&buf, Int32(14))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .UnsupportedFirmware(installed,required):
+            writeInt(&buf, Int32(15))
+            FfiConverterString.write(installed, into: &buf)
+            FfiConverterString.write(required, into: &buf)
+            
+        
+        case let .InvalidPath(errorDetails):
+            writeInt(&buf, Int32(16))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .InvalidPsbt(errorDetails):
+            writeInt(&buf, Int32(17))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .PsbtTooLarge(size,max):
+            writeInt(&buf, Int32(18))
+            FfiConverterUInt64.write(size, into: &buf)
+            FfiConverterUInt64.write(max, into: &buf)
+            
+        
+        case let .FingerprintMismatch(device,psbt):
+            writeInt(&buf, Int32(19))
+            FfiConverterString.write(device, into: &buf)
+            FfiConverterString.write(psbt, into: &buf)
+            
+        
+        case .NothingSigned:
+            writeInt(&buf, Int32(20))
+        
+        
+        case let .AddressMismatch(expected,returned):
+            writeInt(&buf, Int32(21))
+            FfiConverterString.write(expected, into: &buf)
+            FfiConverterString.write(returned, into: &buf)
+            
+        
+        case let .PinServerError(errorDetails):
+            writeInt(&buf, Int32(22))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .DeviceError(errorDetails):
+            writeInt(&buf, Int32(23))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .IoError(errorDetails):
+            writeInt(&buf, Int32(24))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeError_lift(_ buf: RustBuffer) throws -> JadeError {
+    return try FfiConverterTypeJadeError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeError_lower(_ value: JadeError) -> RustBuffer {
+    return FfiConverterTypeJadeError.lower(value)
+}
+
+
+extension JadeError: Equatable, Hashable {}
+
+extension JadeError: Codable {}
+
+
+
+
+extension JadeError: Foundation.LocalizedError {
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
+public enum JadeNetwork {
+    
+    case mainnet
+    case testnet
+    case regtest
+}
+
+
+#if compiler(>=6)
+extension JadeNetwork: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeNetwork: FfiConverterRustBuffer {
+    typealias SwiftType = JadeNetwork
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeNetwork {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .mainnet
+        
+        case 2: return .testnet
+        
+        case 3: return .regtest
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: JadeNetwork, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .mainnet:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .testnet:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .regtest:
+            writeInt(&buf, Int32(3))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeNetwork_lift(_ buf: RustBuffer) throws -> JadeNetwork {
+    return try FfiConverterTypeJadeNetwork.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeNetwork_lower(_ value: JadeNetwork) -> RustBuffer {
+    return FfiConverterTypeJadeNetwork.lower(value)
+}
+
+
+extension JadeNetwork: Equatable, Hashable {}
+
+extension JadeNetwork: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
+public enum JadePingStatus {
+    
+    case idle
+    case busy
+    case awaitingUserInput
+}
+
+
+#if compiler(>=6)
+extension JadePingStatus: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadePingStatus: FfiConverterRustBuffer {
+    typealias SwiftType = JadePingStatus
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadePingStatus {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .idle
+        
+        case 2: return .busy
+        
+        case 3: return .awaitingUserInput
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: JadePingStatus, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .idle:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .busy:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .awaitingUserInput:
+            writeInt(&buf, Int32(3))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadePingStatus_lift(_ buf: RustBuffer) throws -> JadePingStatus {
+    return try FfiConverterTypeJadePingStatus.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadePingStatus_lower(_ value: JadePingStatus) -> RustBuffer {
+    return FfiConverterTypeJadePingStatus.lower(value)
+}
+
+
+extension JadePingStatus: Equatable, Hashable {}
+
+extension JadePingStatus: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
+public enum JadeState {
+    
+    case uninit
+    case unsaved
+    case locked
+    case ready
+    case temp
+    case unknown
+}
+
+
+#if compiler(>=6)
+extension JadeState: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeState: FfiConverterRustBuffer {
+    typealias SwiftType = JadeState
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeState {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .uninit
+        
+        case 2: return .unsaved
+        
+        case 3: return .locked
+        
+        case 4: return .ready
+        
+        case 5: return .temp
+        
+        case 6: return .unknown
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: JadeState, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .uninit:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .unsaved:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .locked:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .ready:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .temp:
+            writeInt(&buf, Int32(5))
+        
+        
+        case .unknown:
+            writeInt(&buf, Int32(6))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeState_lift(_ buf: RustBuffer) throws -> JadeState {
+    return try FfiConverterTypeJadeState.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeState_lower(_ value: JadeState) -> RustBuffer {
+    return FfiConverterTypeJadeState.lower(value)
+}
+
+
+extension JadeState: Equatable, Hashable {}
+
+extension JadeState: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
+public enum JadeTransportErrorCode {
+    
+    case deviceBusy
+    case notConnected
+    case disconnected
+    case timeout
+    case permissionDenied
+}
+
+
+#if compiler(>=6)
+extension JadeTransportErrorCode: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeTransportErrorCode: FfiConverterRustBuffer {
+    typealias SwiftType = JadeTransportErrorCode
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeTransportErrorCode {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .deviceBusy
+        
+        case 2: return .notConnected
+        
+        case 3: return .disconnected
+        
+        case 4: return .timeout
+        
+        case 5: return .permissionDenied
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: JadeTransportErrorCode, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .deviceBusy:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .notConnected:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .disconnected:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .timeout:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .permissionDenied:
+            writeInt(&buf, Int32(5))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeTransportErrorCode_lift(_ buf: RustBuffer) throws -> JadeTransportErrorCode {
+    return try FfiConverterTypeJadeTransportErrorCode.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeTransportErrorCode_lower(_ value: JadeTransportErrorCode) -> RustBuffer {
+    return FfiConverterTypeJadeTransportErrorCode.lower(value)
+}
+
+
+extension JadeTransportErrorCode: Equatable, Hashable {}
+
+extension JadeTransportErrorCode: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
+public enum JadeTransportKind {
+    
+    case bluetooth
+    case serial
+}
+
+
+#if compiler(>=6)
+extension JadeTransportKind: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeJadeTransportKind: FfiConverterRustBuffer {
+    typealias SwiftType = JadeTransportKind
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> JadeTransportKind {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .bluetooth
+        
+        case 2: return .serial
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: JadeTransportKind, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .bluetooth:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .serial:
+            writeInt(&buf, Int32(2))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeTransportKind_lift(_ buf: RustBuffer) throws -> JadeTransportKind {
+    return try FfiConverterTypeJadeTransportKind.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeJadeTransportKind_lower(_ value: JadeTransportKind) -> RustBuffer {
+    return FfiConverterTypeJadeTransportKind.lower(value)
+}
+
+
+extension JadeTransportKind: Equatable, Hashable {}
+
+extension JadeTransportKind: Codable {}
 
 
 
@@ -21523,6 +23614,54 @@ fileprivate struct FfiConverterOptionTypeILspNode: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeJadeDeviceInfo: FfiConverterRustBuffer {
+    typealias SwiftType = JadeDeviceInfo?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeJadeDeviceInfo.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeJadeDeviceInfo.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeJadeVersionInfo: FfiConverterRustBuffer {
+    typealias SwiftType = JadeVersionInfo?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeJadeVersionInfo.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeJadeVersionInfo.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypeOnchainActivity: FfiConverterRustBuffer {
     typealias SwiftType = OnchainActivity?
 
@@ -21827,6 +23966,30 @@ fileprivate struct FfiConverterOptionTypeCoinSelection: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeCoinSelection.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeJadeTransportErrorCode: FfiConverterRustBuffer {
+    typealias SwiftType = JadeTransportErrorCode?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeJadeTransportErrorCode.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeJadeTransportErrorCode.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -22473,6 +24636,81 @@ fileprivate struct FfiConverterSequenceTypeIManualRefund: FfiConverterRustBuffer
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeJadeAccount: FfiConverterRustBuffer {
+    typealias SwiftType = [JadeAccount]
+
+    public static func write(_ value: [JadeAccount], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeJadeAccount.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [JadeAccount] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [JadeAccount]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeJadeAccount.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeJadeDeviceInfo: FfiConverterRustBuffer {
+    typealias SwiftType = [JadeDeviceInfo]
+
+    public static func write(_ value: [JadeDeviceInfo], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeJadeDeviceInfo.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [JadeDeviceInfo] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [JadeDeviceInfo]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeJadeDeviceInfo.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeJadeNativeDevice: FfiConverterRustBuffer {
+    typealias SwiftType = [JadeNativeDevice]
+
+    public static func write(_ value: [JadeNativeDevice], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeJadeNativeDevice.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [JadeNativeDevice] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [JadeNativeDevice]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeJadeNativeDevice.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeLightningActivity: FfiConverterRustBuffer {
     typealias SwiftType = [LightningActivity]
 
@@ -22915,6 +25153,31 @@ fileprivate struct FfiConverterSequenceTypeTxOutput: FfiConverterRustBuffer {
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeTxOutput.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeAccountType: FfiConverterRustBuffer {
+    typealias SwiftType = [AccountType]
+
+    public static func write(_ value: [AccountType], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeAccountType.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [AccountType] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [AccountType]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeAccountType.read(from: &buf))
         }
         return seq
     }
@@ -24129,6 +26392,380 @@ public func isValidBip39Word(word: String) -> Bool  {
         FfiConverterString.lower(word),$0
     )
 })
+}
+/**
+ * Map a generic account type onto Jade's descriptor variant.
+ */
+public func jadeAccountTypeToVariant(accountType: AccountType) -> JadeAddressVariant  {
+    return try!  FfiConverterTypeJadeAddressVariant_lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_jade_account_type_to_variant(
+        FfiConverterTypeAccountType_lower(accountType),$0
+    )
+})
+}
+/**
+ * Abort the operation in flight.
+ *
+ * Jade has no cancel message, so this closes the link. The application should
+ * reconnect afterwards. This is what backs a cancel button on a signing screen.
+ */
+public func jadeCancel()async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_cancel(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
+}
+/**
+ * Open a device and read its firmware and state summary.
+ *
+ * The path normally comes from the last `jade_scan`, but a known Bluetooth
+ * address or serial path can be passed directly to reconnect without a scan.
+ * Any previously open connection is closed first. The returned `jade_state`
+ * tells the application what to do next: `Locked` means call `jade_unlock`,
+ * `Ready` means the device is already usable, and `Uninit` means the user must
+ * create or restore a wallet on the device itself.
+ */
+public func jadeConnect(transport: JadeTransportKind, path: String)async throws  -> JadeVersionInfo  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_connect(FfiConverterTypeJadeTransportKind_lower(transport),FfiConverterString.lower(path)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeJadeVersionInfo_lift,
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
+}
+/**
+ * Close the device and clear session state.
+ *
+ * Safe to call while an operation is waiting on a confirmation: the pending
+ * request returns `UserCancelled` promptly rather than running out its deadline.
+ */
+public func jadeDisconnect()async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_disconnect(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
+}
+/**
+ * Fetch the account keys an import needs in one call.
+ *
+ * Shaped like `passport_parse_account_export` so applications have a single
+ * import path across signers. Each key is fetched under one held connection,
+ * which matters over Bluetooth where every round trip is slow.
+ */
+public func jadeGetAccountExport(network: JadeNetwork, accountIndex: UInt32, accountTypes: [AccountType])async throws  -> JadeAccountExport  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_get_account_export(FfiConverterTypeJadeNetwork_lower(network),FfiConverterUInt32.lower(accountIndex),FfiConverterSequenceTypeAccountType.lower(accountTypes)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeJadeAccountExport_lift,
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
+}
+public func jadeGetConnectedDevice()async  -> JadeDeviceInfo?  {
+    return
+        try!  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_get_connected_device(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypeJadeDeviceInfo.lift,
+            errorHandler: nil
+            
+        )
+}
+/**
+ * The device's master fingerprint, eight lowercase hex characters.
+ *
+ * This must be supplied as `WalletParams.fingerprint` when composing, or the
+ * resulting PSBT carries no BIP32 key origins and the device signs nothing.
+ */
+public func jadeGetMasterFingerprint(network: JadeNetwork)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_get_master_fingerprint(FfiConverterTypeJadeNetwork_lower(network)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
+}
+/**
+ * The version summary read at connect, without touching the device.
+ */
+public func jadeGetVersionInfo()async  -> JadeVersionInfo?  {
+    return
+        try!  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_get_version_info(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypeJadeVersionInfo.lift,
+            errorHandler: nil
+            
+        )
+}
+/**
+ * Fetch an extended public key, echoed back with the path and fingerprint.
+ */
+public func jadeGetXpub(network: JadeNetwork, derivationPath: String)async throws  -> JadeXpubResponse  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_get_xpub(FfiConverterTypeJadeNetwork_lower(network),FfiConverterString.lower(derivationPath)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeJadeXpubResponse_lift,
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
+}
+public func jadeIsConnected() -> Bool  {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_jade_is_connected($0
+    )
+})
+}
+/**
+ * The devices found by the last scan, without starting a new one.
+ */
+public func jadeListDevices()async  -> [JadeDeviceInfo]  {
+    return
+        try!  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_list_devices(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeJadeDeviceInfo.lift,
+            errorHandler: nil
+            
+        )
+}
+/**
+ * Lock the device and zero its in-memory key material.
+ */
+public func jadeLogout()async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_logout(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
+}
+/**
+ * Tell the library that the native layer saw the device disconnect.
+ *
+ * Without this, an idle Bluetooth drop is invisible until the next request.
+ */
+public func jadeNotifyDisconnected(path: String)async   {
+    return
+        try!  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_notify_disconnected(FfiConverterString.lower(path)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: nil
+            
+        )
+}
+/**
+ * Check whether the device is idle, busy, or waiting on the user.
+ */
+public func jadePing()async throws  -> JadePingStatus  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_ping(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeJadePingStatus_lift,
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
+}
+/**
+ * Re-read the version summary from the device.
+ */
+public func jadeRefreshVersionInfo()async throws  -> JadeVersionInfo  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_refresh_version_info(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeJadeVersionInfo_lift,
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
+}
+/**
+ * Discover Jade devices.
+ *
+ * Bluetooth discovery is performed by the registered transport callback; on
+ * desktop and Python builds, attached USB serial units are enumerated too.
+ * Returns `DeviceBusy` while a connection is open, because starting a
+ * Bluetooth scan during an active link drops it on Android.
+ */
+public func jadeScan(timeoutMs: UInt32)async throws  -> [JadeDeviceInfo]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_scan(FfiConverterUInt32.lower(timeoutMs)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeJadeDeviceInfo.lift,
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
+}
+/**
+ * Register the native transport.
+ *
+ * Returns `true` when this replaced a previously registered callback, which
+ * lets the application tell a fresh registration from a re-registration.
+ */
+public func jadeSetTransportCallback(callback: JadeTransportCallback) -> Bool  {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+    uniffi_bitkitcore_fn_func_jade_set_transport_callback(
+        FfiConverterTypeJadeTransportCallback_lower(callback),$0
+    )
+})
+}
+/**
+ * Sign a message, returning the signature with the address that verifies it.
+ */
+public func jadeSignMessage(network: JadeNetwork, derivationPath: String, message: String)async throws  -> JadeSignedMessage  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_sign_message(FfiConverterTypeJadeNetwork_lower(network),FfiConverterString.lower(derivationPath),FfiConverterString.lower(message)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeJadeSignedMessage_lift,
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
+}
+/**
+ * Sign a PSBT, returning the signed PSBT base64 encoded.
+ *
+ * The reply is checked against what was sent before it is returned. Feed the
+ * result to `finalize_psbt` with the original PSBT, then broadcast with
+ * `onchain_broadcast_raw_tx`.
+ */
+public func jadeSignPsbt(network: JadeNetwork, psbt: String)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_sign_psbt(FfiConverterTypeJadeNetwork_lower(network),FfiConverterString.lower(psbt)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
+}
+/**
+ * Unlock the device for a network.
+ *
+ * Runs the blind pinserver exchange when the device asks for it, which needs
+ * network access. The PIN is entered on the device and never reaches the host.
+ */
+public func jadeUnlock(network: JadeNetwork)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_unlock(FfiConverterTypeJadeNetwork_lower(network)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
+}
+/**
+ * Display an address on the device and check it against the expected one.
+ *
+ * This always prompts on the device screen, so it is a verification step
+ * rather than a way to fetch an address. Returns `AddressMismatch` when the
+ * device disagrees with `expected_address`.
+ */
+public func jadeVerifyAddress(network: JadeNetwork, variant: JadeAddressVariant, derivationPath: String, expectedAddress: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_jade_verify_address(FfiConverterTypeJadeNetwork_lower(network),FfiConverterTypeJadeAddressVariant_lower(variant),FfiConverterString.lower(derivationPath),FfiConverterString.lower(expectedAddress)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeJadeError_lift
+        )
 }
 public func lnurlAuth(domain: String, k1: String, callback: String, bip32Mnemonic: String, network: Network?, bip39Passphrase: String?)async throws  -> String  {
     return
@@ -25601,6 +28238,69 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_is_valid_bip39_word() != 31846) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_jade_account_type_to_variant() != 35222) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_cancel() != 64344) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_connect() != 62038) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_disconnect() != 22575) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_get_account_export() != 39143) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_get_connected_device() != 31749) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_get_master_fingerprint() != 29630) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_get_version_info() != 28653) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_get_xpub() != 51180) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_is_connected() != 16304) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_list_devices() != 31161) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_logout() != 2301) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_notify_disconnected() != 24935) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_ping() != 45620) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_refresh_version_info() != 52539) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_scan() != 445) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_set_transport_callback() != 61572) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_sign_message() != 257) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_sign_psbt() != 20865) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_unlock() != 35535) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_jade_verify_address() != 54249) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_lnurl_auth() != 58593) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -25883,6 +28583,24 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_eventlistener_on_event() != 35531) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_method_jadetransportcallback_scan_devices() != 38147) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_jadetransportcallback_open_device() != 21299) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_jadetransportcallback_close_device() != 16955) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_jadetransportcallback_write_chunk() != 12779) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_jadetransportcallback_read_chunk() != 21790) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_jadetransportcallback_get_chunk_size() != 29973) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_method_trezortransportcallback_enumerate_devices() != 18766) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -25934,6 +28652,7 @@ private let initializationResult: InitializationResult = {
 
     uniffiCallbackInitBoltzEventListener()
     uniffiCallbackInitEventListener()
+    uniffiCallbackInitJadeTransportCallback()
     uniffiCallbackInitTrezorTransportCallback()
     uniffiCallbackInitTrezorUiCallback()
     return InitializationResult.ok

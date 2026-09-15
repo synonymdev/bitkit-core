@@ -154,6 +154,74 @@ public interface EventListener {
 
 
 /**
+ * Native transport for Jade.
+ *
+ * # Bluetooth contract
+ *
+ * Jade advertises the Nordic UART Service:
+ *
+ * - service `6e400001-b5a3-f393-e0a9-e50e24dcca9e`
+ * - write   `6e400002-b5a3-f393-e0a9-e50e24dcca9e` (host to Jade)
+ * - notify  `6e400003-b5a3-f393-e0a9-e50e24dcca9e` (Jade to host)
+ *
+ * Devices advertise as "Jade" or "Jade <serial>".
+ *
+ * Three requirements that are easy to miss and break signing on real hardware:
+ *
+ * 1. **Write with response.** Write-without-response silently drops chunks on
+ * the ESP32 GATT stack.
+ * 2. **Do not pause between chunks.** Firmware discards a partially received
+ * message after two seconds of silence, three on Jade v1, and answers with
+ * an unattributed error. A 30 KB PSBT is roughly 60 writes, so any UI thread
+ * stall in the middle of a send breaks the operation.
+ * 3. **`read_chunk` must return promptly.** Honour `timeout_ms`, which this
+ * crate keeps short. The long per-operation deadline is enforced in Rust so
+ * the user can cancel.
+ */
+public interface JadeTransportCallback {
+    
+    /**
+     * Discover devices, blocking up to `timeout_ms`.
+     */
+    public fun `scanDevices`(`timeoutMs`: kotlin.UInt): List<JadeNativeDevice>
+    
+    /**
+     * Open a connection and enable notifications.
+     */
+    public fun `openDevice`(`path`: kotlin.String): JadeTransportResult
+    
+    /**
+     * Close the connection and release the device.
+     */
+    public fun `closeDevice`(`path`: kotlin.String): JadeTransportResult
+    
+    /**
+     * Write one chunk, no larger than `get_chunk_size`.
+     */
+    public fun `writeChunk`(`path`: kotlin.String, `data`: kotlin.ByteArray): JadeTransportResult
+    
+    /**
+     * Read whatever has arrived, waiting at most `timeout_ms`.
+     *
+     * Returning success with an empty vector is normal and means "nothing yet".
+     */
+    public fun `readChunk`(`path`: kotlin.String, `timeoutMs`: kotlin.UInt): JadeTransportReadResult
+    
+    /**
+     * Maximum bytes per write.
+     *
+     * For Bluetooth this is `min(negotiated_mtu - 3, 509)`. The value is
+     * clamped into a usable range, so an unnegotiated `0` is not fatal.
+     */
+    public fun `getChunkSize`(`path`: kotlin.String): kotlin.UInt
+    
+    public companion object
+}
+
+
+
+
+/**
  * Callback interface for native Trezor transport operations
  *
  * This trait must be implemented by the native iOS/Android code.
@@ -1238,6 +1306,161 @@ public data class IManualRefund (
     val `votedByName`: kotlin.String?, 
     val `reason`: kotlin.String?, 
     val `targetType`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class JadeAccount (
+    val `variant`: JadeAddressVariant, 
+    val `xpub`: kotlin.String, 
+    val `derivationPath`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class JadeAccountExport (
+    val `masterFingerprint`: kotlin.String, 
+    val `accountIndex`: kotlin.UInt, 
+    val `accounts`: List<JadeAccount>
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class JadeDeviceInfo (
+    val `path`: kotlin.String, 
+    val `transport`: JadeTransportKind, 
+    val `name`: kotlin.String?, 
+    val `serialNumber`: kotlin.String?
+) {
+    public companion object
+}
+
+
+
+/**
+ * A device the native layer discovered.
+ */
+@kotlinx.serialization.Serializable
+public data class JadeNativeDevice (
+    /**
+     * Transport specific address: a BLE identifier or a serial device path.
+     */
+    val `path`: kotlin.String, 
+    val `transport`: JadeTransportKind, 
+    /**
+     * Advertised or descriptor name, for example "Jade C0FFEE".
+     */
+    val `name`: kotlin.String?, 
+    val `serialNumber`: kotlin.String?
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class JadeSignedMessage (
+    val `signature`: kotlin.String, 
+    val `address`: kotlin.String, 
+    val `derivationPath`: kotlin.String
+) {
+    public companion object
+}
+
+
+
+/**
+ * Outcome of a read.
+ */
+@kotlinx.serialization.Serializable
+public data class JadeTransportReadResult (
+    val `success`: kotlin.Boolean, 
+    /**
+     * Bytes read. Success with an empty vector means nothing has arrived yet,
+     * which is the normal case while the user is deciding on the device.
+     */
+    val `data`: kotlin.ByteArray, 
+    /**
+     * Empty on success.
+     */
+    val `error`: kotlin.String, 
+    val `errorCode`: JadeTransportErrorCode?
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as JadeTransportReadResult
+        if (`success` != other.`success`) return false
+        if (!`data`.contentEquals(other.`data`)) return false
+        if (`error` != other.`error`) return false
+        if (`errorCode` != other.`errorCode`) return false
+
+        return true
+    }
+    override fun hashCode(): Int {
+        var result = `success`.hashCode()
+        result = 31 * result + `data`.contentHashCode()
+        result = 31 * result + `error`.hashCode()
+        result = 31 * result + (`errorCode`?.hashCode() ?: 0)
+        return result
+    }
+    public companion object
+}
+
+
+
+/**
+ * Outcome of an operation that returns no data.
+ */
+@kotlinx.serialization.Serializable
+public data class JadeTransportResult (
+    val `success`: kotlin.Boolean, 
+    /**
+     * Empty on success.
+     */
+    val `error`: kotlin.String, 
+    val `errorCode`: JadeTransportErrorCode?
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class JadeVersionInfo (
+    val `jadeVersion`: kotlin.String, 
+    val `jadeState`: JadeState, 
+    val `jadeNetworks`: kotlin.String?, 
+    val `jadeHasPin`: kotlin.Boolean?, 
+    val `boardType`: kotlin.String?, 
+    val `jadeConfig`: kotlin.String?, 
+    val `jadeFeatures`: kotlin.String?, 
+    val `idfVersion`: kotlin.String?, 
+    val `chipFeatures`: kotlin.String?, 
+    val `efuseMac`: kotlin.String?, 
+    val `batteryStatus`: kotlin.UInt?, 
+    val `jadeOtaMaxChunk`: kotlin.UInt?
+) {
+    public companion object
+}
+
+
+
+@kotlinx.serialization.Serializable
+public data class JadeXpubResponse (
+    val `xpub`: kotlin.String, 
+    val `derivationPath`: kotlin.String, 
+    val `masterFingerprint`: kotlin.String
 ) {
     public companion object
 }
@@ -4050,7 +4273,272 @@ public enum class HardwareWalletTransport {
 public enum class HardwareWalletVendor {
     
     TREZOR,
-    FOUNDATION;
+    FOUNDATION,
+    BLOCKSTREAM;
+    public companion object
+}
+
+
+
+
+
+
+
+@kotlinx.serialization.Serializable
+public enum class JadeAddressVariant {
+    
+    PKH,
+    WPKH,
+    SH_WPKH,
+    TR;
+    public companion object
+}
+
+
+
+
+
+
+
+public sealed class JadeException: kotlin.Exception() {
+    
+    public class TransportException(
+        public val `errorDetails`: kotlin.String,
+    ) : JadeException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class DeviceNotFound(
+    ) : JadeException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class DeviceDisconnected(
+    ) : JadeException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class DeviceBusy(
+    ) : JadeException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class NotConnected(
+    ) : JadeException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class NotInitialized(
+    ) : JadeException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class ConnectionException(
+        public val `errorDetails`: kotlin.String,
+    ) : JadeException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class ProtocolException(
+        public val `errorDetails`: kotlin.String,
+    ) : JadeException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class Timeout(
+    ) : JadeException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class UserCancelled(
+    ) : JadeException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class DeviceLocked(
+    ) : JadeException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class DeviceUninitialized(
+    ) : JadeException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class InvalidPin(
+    ) : JadeException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class NetworkMismatch(
+        public val `errorDetails`: kotlin.String,
+    ) : JadeException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class UnsupportedFirmware(
+        public val `installed`: kotlin.String,
+        public val `required`: kotlin.String,
+    ) : JadeException() {
+        override val message: String
+            get() = "installed=${ `installed` }, required=${ `required` }"
+    }
+    
+    public class InvalidPath(
+        public val `errorDetails`: kotlin.String,
+    ) : JadeException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class InvalidPsbt(
+        public val `errorDetails`: kotlin.String,
+    ) : JadeException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class PsbtTooLarge(
+        public val `size`: kotlin.ULong,
+        public val `max`: kotlin.ULong,
+    ) : JadeException() {
+        override val message: String
+            get() = "size=${ `size` }, max=${ `max` }"
+    }
+    
+    public class FingerprintMismatch(
+        public val `device`: kotlin.String,
+        public val `psbt`: kotlin.String,
+    ) : JadeException() {
+        override val message: String
+            get() = "device=${ `device` }, psbt=${ `psbt` }"
+    }
+    
+    public class NothingSigned(
+    ) : JadeException() {
+        override val message: String
+            get() = ""
+    }
+    
+    public class AddressMismatch(
+        public val `expected`: kotlin.String,
+        public val `returned`: kotlin.String,
+    ) : JadeException() {
+        override val message: String
+            get() = "expected=${ `expected` }, returned=${ `returned` }"
+    }
+    
+    public class PinServerException(
+        public val `errorDetails`: kotlin.String,
+    ) : JadeException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class DeviceException(
+        public val `errorDetails`: kotlin.String,
+    ) : JadeException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+    public class IoException(
+        public val `errorDetails`: kotlin.String,
+    ) : JadeException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
+}
+
+
+
+
+
+@kotlinx.serialization.Serializable
+public enum class JadeNetwork {
+    
+    MAINNET,
+    TESTNET,
+    REGTEST;
+    public companion object
+}
+
+
+
+
+
+
+
+@kotlinx.serialization.Serializable
+public enum class JadePingStatus {
+    
+    IDLE,
+    BUSY,
+    AWAITING_USER_INPUT;
+    public companion object
+}
+
+
+
+
+
+
+
+@kotlinx.serialization.Serializable
+public enum class JadeState {
+    
+    UNINIT,
+    UNSAVED,
+    LOCKED,
+    READY,
+    TEMP,
+    UNKNOWN;
+    public companion object
+}
+
+
+
+
+
+
+
+@kotlinx.serialization.Serializable
+public enum class JadeTransportErrorCode {
+    
+    DEVICE_BUSY,
+    NOT_CONNECTED,
+    DISCONNECTED,
+    TIMEOUT,
+    PERMISSION_DENIED;
+    public companion object
+}
+
+
+
+
+
+
+
+@kotlinx.serialization.Serializable
+public enum class JadeTransportKind {
+    
+    BLUETOOTH,
+    SERIAL;
     public companion object
 }
 
@@ -5078,6 +5566,20 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

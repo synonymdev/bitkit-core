@@ -2,6 +2,9 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use bitcoin::consensus::encode::serialize_hex;
 use bitcoin::psbt::Psbt;
 use bitcoin::secp256k1::Secp256k1;
+use bitcoin::sighash::{EcdsaSighashType, TapSighashType};
+use bitcoin::{ScriptBuf, Witness};
+use miniscript::interpreter::{Interpreter, KeySigPair, SatisfiedConstraint};
 use miniscript::psbt::{interpreter_check, PsbtExt};
 
 use super::{CompletedTransaction, PsbtCompletionError};
@@ -35,6 +38,7 @@ pub fn finalize_psbt(
             reason: error.to_string(),
         }
     })?;
+    validate_signature_hash_types(&combined)?;
 
     let transaction =
         combined
@@ -66,6 +70,70 @@ fn validate_signed_input_metadata(
                 return Err(PsbtCompletionError::CombineFailed {
                     reason: format!(
                         "signed PSBT input {index} previous output does not match the original"
+                    ),
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Reject any signature that does not commit to every input and output.
+///
+/// `interpreter_check` verifies each signature under the sighash type the
+/// signature itself carries, so a signer could return a valid `SIGHASH_NONE` or
+/// `ANYONECANPAY` signature and leave the outputs open to rewriting after
+/// broadcast. This walks the finalized satisfaction instead of the partial
+/// signature fields, so a signer that returns already finalized inputs is
+/// covered too.
+fn validate_signature_hash_types(psbt: &Psbt) -> Result<(), PsbtCompletionError> {
+    let empty_script_sig = ScriptBuf::new();
+    let empty_witness = Witness::default();
+    for (index, input) in psbt.inputs.iter().enumerate() {
+        let script_pubkey = previous_output(psbt, index, "finalized")?
+            .map(|output| output.script_pubkey.clone())
+            .ok_or_else(|| PsbtCompletionError::VerificationFailed {
+                reason: format!("finalized PSBT input {index} has no previous output"),
+            })?;
+        let script_sig = input
+            .final_script_sig
+            .as_deref()
+            .unwrap_or(&empty_script_sig);
+        let witness = input
+            .final_script_witness
+            .as_ref()
+            .unwrap_or(&empty_witness);
+        let interpreter = Interpreter::from_txdata(
+            &script_pubkey,
+            script_sig,
+            witness,
+            psbt.unsigned_tx.input[index].sequence,
+            psbt.unsigned_tx.lock_time,
+        )
+        .map_err(|error| PsbtCompletionError::VerificationFailed {
+            reason: format!("input {index}: {error}"),
+        })?;
+
+        for constraint in interpreter.iter_assume_sigs() {
+            let key_sig =
+                match constraint.map_err(|error| PsbtCompletionError::VerificationFailed {
+                    reason: format!("input {index}: {error}"),
+                })? {
+                    SatisfiedConstraint::PublicKey { key_sig }
+                    | SatisfiedConstraint::PublicKeyHash { key_sig, .. } => key_sig,
+                    _ => continue,
+                };
+            let commits_to_transaction = match key_sig {
+                KeySigPair::Ecdsa(_, signature) => signature.sighash_type == EcdsaSighashType::All,
+                KeySigPair::Schnorr(_, signature) => matches!(
+                    signature.sighash_type,
+                    TapSighashType::Default | TapSighashType::All
+                ),
+            };
+            if !commits_to_transaction {
+                return Err(PsbtCompletionError::VerificationFailed {
+                    reason: format!(
+                        "input {index} signature does not commit to the whole transaction"
                     ),
                 });
             }
@@ -134,12 +202,13 @@ mod tests {
     use super::*;
     use bitcoin::absolute::LockTime;
     use bitcoin::hashes::Hash;
-    use bitcoin::key::CompressedPublicKey;
+    use bitcoin::key::{CompressedPublicKey, Keypair, TapTweak};
     use bitcoin::secp256k1::{Message, SecretKey};
-    use bitcoin::sighash::{EcdsaSighashType, SighashCache};
+    use bitcoin::sighash::{Prevouts, SighashCache};
     use bitcoin::transaction::Version;
     use bitcoin::{
-        ecdsa, Address, Amount, Network, OutPoint, Sequence, Transaction, TxIn, TxOut, Txid,
+        ecdsa, taproot, Address, Amount, Network, OutPoint, Sequence, Transaction, TxIn, TxOut,
+        Txid,
     };
 
     #[test]
@@ -203,7 +272,49 @@ mod tests {
         assert!(matches!(error, PsbtCompletionError::CombineFailed { .. }));
     }
 
+    #[test]
+    fn rejects_ecdsa_signature_that_does_not_commit_to_outputs() {
+        let (original, signed) = native_segwit_psbts_with_sighash(EcdsaSighashType::None);
+
+        let error = finalize_psbt(original, signed).unwrap_err();
+
+        assert!(matches!(
+            error,
+            PsbtCompletionError::VerificationFailed { reason }
+                if reason.contains("does not commit to the whole transaction")
+        ));
+    }
+
+    #[test]
+    fn finalizes_taproot_key_spend_psbt() {
+        let (original, signed) = taproot_psbts(TapSighashType::Default);
+
+        let completed = finalize_psbt(original, signed).unwrap();
+        let transaction: Transaction =
+            bitcoin::consensus::deserialize(&hex::decode(&completed.serialized_tx).unwrap())
+                .unwrap();
+
+        assert_eq!(transaction.input[0].witness.len(), 1);
+    }
+
+    #[test]
+    fn rejects_taproot_signature_that_does_not_commit_to_outputs() {
+        let (original, signed) = taproot_psbts(TapSighashType::NonePlusAnyoneCanPay);
+
+        let error = finalize_psbt(original, signed).unwrap_err();
+
+        assert!(matches!(
+            error,
+            PsbtCompletionError::VerificationFailed { reason }
+                if reason.contains("does not commit to the whole transaction")
+        ));
+    }
+
     fn native_segwit_psbts() -> (String, String) {
+        native_segwit_psbts_with_sighash(EcdsaSighashType::All)
+    }
+
+    fn native_segwit_psbts_with_sighash(sighash_type: EcdsaSighashType) -> (String, String) {
         let secp = Secp256k1::new();
         let secret_key = SecretKey::from_slice(&[1; 32]).unwrap();
         let public_key = bitcoin::PublicKey::new(secret_key.public_key(&secp));
@@ -230,7 +341,6 @@ mod tests {
         signed.inputs[0].witness_utxo = Some(spent_output.clone());
         let original = signed.clone();
 
-        let sighash_type = EcdsaSighashType::All;
         let sighash = SighashCache::new(&signed.unsigned_tx)
             .p2wpkh_signature_hash(
                 0,
@@ -248,6 +358,48 @@ mod tests {
                 sighash_type,
             },
         );
+
+        (encode_psbt(&original), encode_psbt(&signed))
+    }
+
+    fn taproot_psbts(sighash_type: TapSighashType) -> (String, String) {
+        let secp = Secp256k1::new();
+        let keypair = Keypair::from_secret_key(&secp, &SecretKey::from_slice(&[3; 32]).unwrap());
+        let (internal_key, _) = keypair.x_only_public_key();
+        let script_pubkey =
+            Address::p2tr(&secp, internal_key, None, Network::Regtest).script_pubkey();
+        let spent_output = TxOut {
+            value: Amount::from_sat(50_000),
+            script_pubkey: script_pubkey.clone(),
+        };
+        let transaction = Transaction {
+            version: Version::TWO,
+            lock_time: LockTime::ZERO,
+            input: vec![TxIn {
+                previous_output: OutPoint::new(Txid::all_zeros(), 0),
+                sequence: Sequence::ENABLE_RBF_NO_LOCKTIME,
+                ..Default::default()
+            }],
+            output: vec![TxOut {
+                value: Amount::from_sat(49_000),
+                script_pubkey,
+            }],
+        };
+        let mut signed = Psbt::from_unsigned_tx(transaction).unwrap();
+        signed.inputs[0].witness_utxo = Some(spent_output.clone());
+        signed.inputs[0].tap_internal_key = Some(internal_key);
+        let original = signed.clone();
+
+        let sighash = SighashCache::new(&signed.unsigned_tx)
+            .taproot_key_spend_signature_hash(0, &Prevouts::All(&[spent_output]), sighash_type)
+            .unwrap();
+        let tweaked = keypair.tap_tweak(&secp, None).to_inner();
+        let signature =
+            secp.sign_schnorr_no_aux_rand(&Message::from_digest(sighash.to_byte_array()), &tweaked);
+        signed.inputs[0].tap_key_sig = Some(taproot::Signature {
+            signature,
+            sighash_type,
+        });
 
         (encode_psbt(&original), encode_psbt(&signed))
     }

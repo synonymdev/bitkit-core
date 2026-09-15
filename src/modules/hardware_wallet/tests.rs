@@ -4,7 +4,7 @@ use super::{get_supported_hardware_wallets, HardwareWalletTransport, HardwareWal
 fn catalog_lists_supported_models_and_transports() {
     let wallets = get_supported_hardware_wallets();
 
-    assert_eq!(wallets.len(), 6);
+    assert_eq!(wallets.len(), 8);
     assert!(wallets
         .iter()
         .filter(|wallet| wallet.vendor == HardwareWalletVendor::Trezor)
@@ -24,4 +24,17 @@ fn catalog_lists_supported_models_and_transports() {
         .unwrap();
     assert_eq!(passport.vendor, HardwareWalletVendor::Foundation);
     assert_eq!(passport.transports, [HardwareWalletTransport::Qr]);
+
+    let jades: Vec<_> = wallets
+        .iter()
+        .filter(|wallet| wallet.vendor == HardwareWalletVendor::Blockstream)
+        .collect();
+    assert_eq!(jades.len(), 2);
+    assert!(jades.iter().all(|wallet| {
+        wallet.transports.contains(&HardwareWalletTransport::Usb)
+            && wallet
+                .transports
+                .contains(&HardwareWalletTransport::Bluetooth)
+    }));
+    assert!(jades.iter().any(|wallet| wallet.model == "Jade Plus"));
 }
