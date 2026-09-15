@@ -4,7 +4,7 @@ Blockstream Jade support for bitkit-core, over Bluetooth (all platforms) and USB
 CDC serial (desktop and Python). Bitcoin single signature only.
 
 The protocol itself lives in
-[`jade-client-rs`](https://github.com/coreyphillips/jade-client-rs). This module
+[`jade-client-rs`](https://github.com/synonymdev/jade-client-rs). This module
 is the FFI adapter. For the wire format, the pinserver exchange, PSBT checks and
 the transport contract, read that crate's documentation; what follows is only
 what is specific to bitkit-core.
