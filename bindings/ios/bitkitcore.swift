@@ -26424,6 +26424,10 @@ public func jadeAccountTypeToVariant(accountType: AccountType) -> JadeAddressVar
  *
  * Jade has no cancel message, so this closes the link. The application should
  * reconnect afterwards. This is what backs a cancel button on a signing screen.
+ *
+ * The aborted request reports `UserCancelled` or `DeviceDisconnected` depending
+ * on where the read loop was when the link closed. Both mean the cancel took
+ * effect, so neither deserves an error message of its own.
  */
 public func jadeCancel()async throws   {
     return
@@ -26467,7 +26471,10 @@ public func jadeConnect(transport: JadeTransportKind, path: String)async throws 
  * Close the device and clear session state.
  *
  * Safe to call while an operation is waiting on a confirmation: the pending
- * request returns `UserCancelled` promptly rather than running out its deadline.
+ * request fails promptly rather than running out its deadline. It reports
+ * `UserCancelled` or `DeviceDisconnected` depending on where the read loop was
+ * when the link closed, so a signing screen should treat both as the
+ * cancellation it asked for.
  */
 public func jadeDisconnect()async throws   {
     return
@@ -28261,13 +28268,13 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_jade_account_type_to_variant() != 35222) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_jade_cancel() != 64344) {
+    if (uniffi_bitkitcore_checksum_func_jade_cancel() != 39228) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_jade_connect() != 62038) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_jade_disconnect() != 22575) {
+    if (uniffi_bitkitcore_checksum_func_jade_disconnect() != 58720) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_jade_get_account_export() != 39143) {

@@ -25,6 +25,9 @@ struct Callback {
     hold_close: Mutex<bool>,
     close_gate: Condvar,
     fail_read: AtomicBool,
+    /// Makes `read_chunk` block for its timeout instead of answering at once,
+    /// which is where a real Bluetooth transport spends a confirmation.
+    slow_read: AtomicBool,
     reads_after_close: AtomicBool,
     only_first_close: AtomicBool,
     close_count: AtomicUsize,
@@ -43,6 +46,7 @@ impl Callback {
             hold_close: Mutex::new(false),
             close_gate: Condvar::new(),
             fail_read: AtomicBool::new(false),
+            slow_read: AtomicBool::new(false),
             reads_after_close: AtomicBool::new(false),
             only_first_close: AtomicBool::new(false),
             close_count: AtomicUsize::new(0),
@@ -156,6 +160,9 @@ impl JadeTransportCallback for Callback {
     }
 
     fn read_chunk(&self, path: String, _timeout_ms: u32) -> JadeTransportReadResult {
+        if self.slow_read.load(Ordering::SeqCst) {
+            std::thread::sleep(Duration::from_millis(200));
+        }
         let released = !self.reads_after_close.load(Ordering::SeqCst)
             && !self.state.lock().unwrap().open.contains(&path);
         if self.fail_read.load(Ordering::SeqCst) || released {
@@ -487,4 +494,63 @@ async fn malformed_base64_psbt_is_rejected_before_reaching_the_device() {
         .await;
 
     assert!(matches!(result, Err(JadeError::InvalidPsbt { .. })));
+}
+
+/// Start a ping and wait until its request has reached the native layer.
+fn ping_in_flight(
+    manager: &Arc<JadeManager>,
+) -> tokio::task::JoinHandle<Result<super::JadePingStatus, JadeError>> {
+    let manager = Arc::clone(manager);
+    tokio::spawn(async move { manager.ping().await })
+}
+
+#[tokio::test]
+#[serial_test::serial(jade_callback)]
+async fn cancel_reports_user_cancelled_when_the_read_loop_is_idle() {
+    let callback = Callback::new();
+    callback.release_replies();
+    let manager = Arc::new(JadeManager::new());
+    connect(&manager, "jade").await.unwrap().unwrap();
+    callback.hold_replies.store(true, Ordering::SeqCst);
+    callback.writes.forget_permits(usize::MAX);
+    let ping = ping_in_flight(&manager);
+    wait_for(&callback.writes).await;
+
+    manager.cancel().await.unwrap();
+
+    assert!(matches!(ping.await.unwrap(), Err(JadeError::UserCancelled)));
+}
+
+#[tokio::test]
+#[serial_test::serial(jade_callback)]
+async fn cancel_reports_the_transport_error_when_it_lands_inside_a_read() {
+    // The crate checks the abort flag at the top of each read loop iteration, so
+    // which error a cancelled operation returns depends on where the loop is
+    // when the link closes. Idle between polls it reports `UserCancelled`, as
+    // the test above shows. Parked inside `read_chunk`, which is where a real
+    // Bluetooth transport spends most of a confirmation because it honours
+    // `timeout_ms`, the transport error returns first and the flag is never
+    // re-read.
+    //
+    // Pinned rather than fixed here: the read loop belongs to `jade-client-rs`.
+    // This fails, and the docs on `jade_cancel` and `jade_disconnect` need
+    // narrowing, once that crate prefers the flag over the transport error.
+    let callback = Callback::new();
+    callback.release_replies();
+    let manager = Arc::new(JadeManager::new());
+    connect(&manager, "jade").await.unwrap().unwrap();
+    callback.hold_replies.store(true, Ordering::SeqCst);
+    callback.writes.forget_permits(usize::MAX);
+    let ping = ping_in_flight(&manager);
+    wait_for(&callback.writes).await;
+
+    // Only now, so the handshake above is not slowed down too.
+    callback.slow_read.store(true, Ordering::SeqCst);
+    tokio::time::sleep(Duration::from_millis(60)).await;
+    manager.cancel().await.unwrap();
+
+    assert!(matches!(
+        ping.await.unwrap(),
+        Err(JadeError::DeviceDisconnected)
+    ));
 }

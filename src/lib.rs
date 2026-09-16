@@ -2667,7 +2667,10 @@ pub async fn jade_connect(
 /// Close the device and clear session state.
 ///
 /// Safe to call while an operation is waiting on a confirmation: the pending
-/// request returns `UserCancelled` promptly rather than running out its deadline.
+/// request fails promptly rather than running out its deadline. It reports
+/// `UserCancelled` or `DeviceDisconnected` depending on where the read loop was
+/// when the link closed, so a signing screen should treat both as the
+/// cancellation it asked for.
 #[uniffi::export]
 pub async fn jade_disconnect() -> Result<(), JadeError> {
     let rt = ensure_runtime();
@@ -2684,6 +2687,10 @@ pub async fn jade_disconnect() -> Result<(), JadeError> {
 ///
 /// Jade has no cancel message, so this closes the link. The application should
 /// reconnect afterwards. This is what backs a cancel button on a signing screen.
+///
+/// The aborted request reports `UserCancelled` or `DeviceDisconnected` depending
+/// on where the read loop was when the link closed. Both mean the cancel took
+/// effect, so neither deserves an error message of its own.
 #[uniffi::export]
 pub async fn jade_cancel() -> Result<(), JadeError> {
     let rt = ensure_runtime();
