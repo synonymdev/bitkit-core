@@ -7,5 +7,6 @@ pub mod lnurl;
 pub mod onchain;
 pub mod pubky;
 pub mod scanner;
+pub mod seedqr;
 pub mod trezor;
 pub mod ur;

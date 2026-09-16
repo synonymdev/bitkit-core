@@ -844,6 +844,16 @@ RustBuffer uniffi_bitkitcore_fn_func_create_withdraw_callback_url(RustBuffer k1,
 uint64_t uniffi_bitkitcore_fn_func_decode(RustBuffer invoice
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DECODE_COMPACT_SEED_QR
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DECODE_COMPACT_SEED_QR
+RustBuffer uniffi_bitkitcore_fn_func_decode_compact_seed_qr(RustBuffer entropy, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DECODE_STANDARD_SEED_QR
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DECODE_STANDARD_SEED_QR
+RustBuffer uniffi_bitkitcore_fn_func_decode_standard_seed_qr(RustBuffer payload, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_ACTIVITIES_BY_WALLET_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_ACTIVITIES_BY_WALLET_ID
 uint32_t uniffi_bitkitcore_fn_func_delete_activities_by_wallet_id(RustBuffer wallet_id, RustCallStatus *_Nonnull out_status
@@ -2199,6 +2209,18 @@ uint16_t uniffi_bitkitcore_checksum_func_create_withdraw_callback_url(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DECODE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DECODE
 uint16_t uniffi_bitkitcore_checksum_func_decode(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DECODE_COMPACT_SEED_QR
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DECODE_COMPACT_SEED_QR
+uint16_t uniffi_bitkitcore_checksum_func_decode_compact_seed_qr(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DECODE_STANDARD_SEED_QR
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DECODE_STANDARD_SEED_QR
+uint16_t uniffi_bitkitcore_checksum_func_decode_standard_seed_qr(void
     
 );
 #endif
