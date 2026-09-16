@@ -523,18 +523,12 @@ async fn cancel_reports_user_cancelled_when_the_read_loop_is_idle() {
 
 #[tokio::test]
 #[serial_test::serial(jade_callback)]
-async fn cancel_reports_the_transport_error_when_it_lands_inside_a_read() {
-    // The crate checks the abort flag at the top of each read loop iteration, so
-    // which error a cancelled operation returns depends on where the loop is
-    // when the link closes. Idle between polls it reports `UserCancelled`, as
-    // the test above shows. Parked inside `read_chunk`, which is where a real
-    // Bluetooth transport spends most of a confirmation because it honours
-    // `timeout_ms`, the transport error returns first and the flag is never
-    // re-read.
-    //
-    // Pinned rather than fixed here: the read loop belongs to `jade-client-rs`.
-    // This fails, and the docs on `jade_cancel` and `jade_disconnect` need
-    // narrowing, once that crate prefers the flag over the transport error.
+async fn cancel_reports_user_cancelled_when_it_lands_inside_a_read() {
+    // The other timing. A cancel closes the link as well as setting the abort
+    // flag, so a loop parked inside `read_chunk` sees the close first. That is
+    // where a real Bluetooth transport spends most of a confirmation, because it
+    // honours `timeout_ms`, and jade-client-rs 0.2.0 prefers the flag so both
+    // paths agree. Against 0.1.0 this returned `DeviceDisconnected`.
     let callback = Callback::new();
     callback.release_replies();
     let manager = Arc::new(JadeManager::new());
@@ -549,8 +543,5 @@ async fn cancel_reports_the_transport_error_when_it_lands_inside_a_read() {
     tokio::time::sleep(Duration::from_millis(60)).await;
     manager.cancel().await.unwrap();
 
-    assert!(matches!(
-        ping.await.unwrap(),
-        Err(JadeError::DeviceDisconnected)
-    ));
+    assert!(matches!(ping.await.unwrap(), Err(JadeError::UserCancelled)));
 }
