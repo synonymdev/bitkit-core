@@ -71,12 +71,16 @@ pub struct JadeTransportReadResult {
 ///    an unattributed error. A 30 KB PSBT is roughly 60 writes, so any UI thread
 ///    stall in the middle of a send breaks the operation.
 /// 3. **`read_chunk` must return promptly.** Honour `timeout_ms`, which this
-///    crate keeps short. The long per-operation deadline is enforced in Rust so
-///    the user can cancel.
+///    crate caps at 250ms. The long per-operation deadline is enforced in Rust
+///    so the user can cancel.
 ///
-/// Once `close_device` has been called for a path, this crate stops reading
-/// from and writing to it, so a transport that keeps reporting empty reads
-/// after closing does not hold a disconnect open until the handshake deadline.
+/// Once `close_device` has been called for a path, this crate issues no further
+/// reads or writes for it and discards the result of one already in flight, so
+/// a transport that keeps reporting empty reads after closing does not hold a
+/// disconnect open until the handshake deadline. A `read_chunk` that has
+/// already started cannot be interrupted, though, so requirement 3 is what
+/// bounds a disconnect issued mid-handshake: an implementation that ignores
+/// `timeout_ms` delays it for as long as that call takes to return.
 #[uniffi::export(with_foreign)]
 pub trait JadeTransportCallback: Send + Sync {
     /// Discover devices, blocking up to `timeout_ms`.
@@ -220,9 +224,16 @@ impl JadeTransport for CallbackTransport {
         let callback = Arc::clone(&self.callback);
         let path = self.path.clone();
         let timeout_ms = timeout.as_millis().min(u128::from(u32::MAX)) as u32;
+        let closed = Arc::clone(&self.closed);
 
         tokio::task::spawn_blocking(move || {
             let result = callback.read_chunk(path, timeout_ms);
+            // `close` cannot interrupt a `read_chunk` that has already entered
+            // the native layer, so re-check afterwards. Bytes that arrive for a
+            // released path are dropped rather than fed back to the parser.
+            if closed.load(Ordering::SeqCst) {
+                return Err(JadeError::from(JadeTransportErrorCode::Disconnected));
+            }
             if !result.success {
                 return Err(to_error(result.error_code, result.error));
             }

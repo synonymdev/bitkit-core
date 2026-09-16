@@ -85,15 +85,30 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
         TAG: ${{ github.event.release.tag_name || inputs.version }}
+        IS_RELEASE_EVENT: ${{ github.event_name == 'release' }}
       shell: bash
       run: |
-        # A manual publish may target a version with no GitHub release; skip the
-        # upload then so the package still reaches GitHub Packages.
-        if gh release view "$TAG" >/dev/null 2>&1; then
-          gh release upload "$TAG" bindings/android/native-debug-symbols.zip --clobber
-        else
-          echo "No release for $TAG; skipping the native debug symbols upload"
+        # A release event always has a release to attach to, so upload straight
+        # away and let any failure fail the step. A manual publish may target a
+        # version with no release; skip the upload only in that case, so the
+        # package still reaches GitHub Packages. Any other lookup failure (auth,
+        # network, rate limiting) has to fail rather than silently publish
+        # without symbols.
+        if [ "$IS_RELEASE_EVENT" != "true" ]; then
+          if ! lookup=$(gh release view "$TAG" 2>&1 >/dev/null); then
+            case "${lookup,,}" in
+              *"not found"*)
+                echo "No release for $TAG; skipping the native debug symbols upload"
+                exit 0
+                ;;
+              *)
+                echo "gh release view $TAG failed: $lookup" >&2
+                exit 1
+                ;;
+            esac
+          fi
         fi
+        gh release upload "$TAG" bindings/android/native-debug-symbols.zip --clobber
 
     # same credentials env vars used in the publishing section of build.gradle.kts
     - name: Publish to GitHub Packages

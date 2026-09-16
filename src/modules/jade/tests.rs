@@ -186,3 +186,90 @@ async fn an_empty_read_is_not_an_error() {
         .unwrap();
     assert!(data.is_empty());
 }
+
+/// A callback whose `read_chunk` parks until the test releases it, so a close
+/// can land while a read is already inside the native layer.
+struct BlockingReadCallback {
+    started: Mutex<Option<std::sync::mpsc::Sender<()>>>,
+    release: Mutex<Option<std::sync::mpsc::Receiver<()>>>,
+}
+
+impl JadeTransportCallback for BlockingReadCallback {
+    fn scan_devices(&self, _timeout_ms: u32) -> Vec<JadeNativeDevice> {
+        Vec::new()
+    }
+
+    fn open_device(&self, _path: String) -> JadeTransportResult {
+        JadeTransportResult {
+            success: true,
+            error: String::new(),
+            error_code: None,
+        }
+    }
+
+    fn close_device(&self, _path: String) -> JadeTransportResult {
+        JadeTransportResult {
+            success: true,
+            error: String::new(),
+            error_code: None,
+        }
+    }
+
+    fn write_chunk(&self, _path: String, _data: Vec<u8>) -> JadeTransportResult {
+        JadeTransportResult {
+            success: true,
+            error: String::new(),
+            error_code: None,
+        }
+    }
+
+    fn read_chunk(&self, _path: String, _timeout_ms: u32) -> JadeTransportReadResult {
+        let started = self.started.lock().unwrap().take().expect("one read only");
+        started.send(()).unwrap();
+        let release = self.release.lock().unwrap().take().expect("one read only");
+        release.recv().unwrap();
+        JadeTransportReadResult {
+            success: true,
+            data: vec![1, 2, 3],
+            error: String::new(),
+            error_code: None,
+        }
+    }
+
+    fn get_chunk_size(&self, _path: String) -> u32 {
+        64
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn bytes_arriving_after_close_are_discarded() {
+    // `close` cannot interrupt a `read_chunk` that is already inside the native
+    // layer, so the guard has to run after the callback returns too. Otherwise a
+    // read that completes for a released path feeds its bytes back to the
+    // parser.
+    let (started_tx, started_rx) = std::sync::mpsc::channel();
+    let (release_tx, release_rx) = std::sync::mpsc::channel();
+    let callback = Arc::new(BlockingReadCallback {
+        started: Mutex::new(Some(started_tx)),
+        release: Mutex::new(Some(release_rx)),
+    });
+    let transport = Arc::new(CallbackTransport::new(
+        callback as Arc<_>,
+        "path".to_string(),
+    ));
+
+    let reader = tokio::spawn({
+        let transport = Arc::clone(&transport);
+        async move { transport.read_some(Duration::from_millis(250)).await }
+    });
+
+    // Only close once the read is parked inside the callback.
+    tokio::task::spawn_blocking(move || started_rx.recv().unwrap())
+        .await
+        .unwrap();
+    transport.close().await.unwrap();
+    release_tx.send(()).unwrap();
+
+    let error = reader.await.unwrap().unwrap_err();
+    assert_eq!(error, JadeError::DeviceDisconnected);
+}
