@@ -15,6 +15,7 @@ on:
       - '**/*.udl'
       - '**/uniffi*.toml'
       - 'rust-toolchain*'
+      - 'update_package.py'
       - 'vendor/**'
   push:
     branches:
@@ -33,6 +34,7 @@ on:
       - '**/*.udl'
       - '**/uniffi*.toml'
       - 'rust-toolchain*'
+      - 'update_package.py'
       - 'vendor/**'
   workflow_dispatch:
     inputs:
