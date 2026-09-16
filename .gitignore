@@ -1,13 +1,22 @@
 target/
+.build/
+.swiftpm/
 __pycache__/
 *.pyc
+
+# Generated Android bindgen outputs
 bindings/android/native-debug-symbols.zip
 bindings/android/lib/src/main/jniLibs/
-# The xcframework's static libraries exceed GitHub's 100 MB file limit. They are
-# already shipped, compressed, inside BitkitCore.xcframework.zip, which is what
-# Package.swift downloads from the GitHub release, so tracking them here would
-# only duplicate that payload.
-bindings/ios/BitkitCore.xcframework/**/libbitkitcore.a
+bindings/android/lib/src/main/kotlin/com/synonym/bitkitcore/bitkitcore.android.kt
+bindings/android/lib/src/main/kotlin/com/synonym/bitkitcore/bitkitcore.common.kt
+
+# Generated Python bindgen outputs
+bindings/python/
+
+# Generated iOS release artifacts
+dist/
+bindings/ios/BitkitCore.xcframework/
+bindings/ios/BitkitCore.xcframework.zip
 .idea/
 .DS_Store
 # AI
