@@ -996,8 +996,16 @@ public func FfiConverterTypeEventListener_lower(_ value: EventListener) -> Unsaf
  * an unattributed error. A 30 KB PSBT is roughly 60 writes, so any UI thread
  * stall in the middle of a send breaks the operation.
  * 3. **`read_chunk` must return promptly.** Honour `timeout_ms`, which this
- * crate keeps short. The long per-operation deadline is enforced in Rust so
- * the user can cancel.
+ * crate caps at 250ms. The long per-operation deadline is enforced in Rust
+ * so the user can cancel.
+ *
+ * Once `close_device` has been called for a path, this crate issues no further
+ * reads or writes for it and discards the result of one already in flight, so
+ * a transport that keeps reporting empty reads after closing does not hold a
+ * disconnect open until the handshake deadline. A `read_chunk` that has
+ * already started cannot be interrupted, though, so requirement 3 is what
+ * bounds a disconnect issued mid-handshake: an implementation that ignores
+ * `timeout_ms` delays it for as long as that call takes to return.
  */
 public protocol JadeTransportCallback: AnyObject, Sendable {
     
@@ -1059,8 +1067,16 @@ public protocol JadeTransportCallback: AnyObject, Sendable {
  * an unattributed error. A 30 KB PSBT is roughly 60 writes, so any UI thread
  * stall in the middle of a send breaks the operation.
  * 3. **`read_chunk` must return promptly.** Honour `timeout_ms`, which this
- * crate keeps short. The long per-operation deadline is enforced in Rust so
- * the user can cancel.
+ * crate caps at 250ms. The long per-operation deadline is enforced in Rust
+ * so the user can cancel.
+ *
+ * Once `close_device` has been called for a path, this crate issues no further
+ * reads or writes for it and discards the result of one already in flight, so
+ * a transport that keeps reporting empty reads after closing does not hold a
+ * disconnect open until the handshake deadline. A `read_chunk` that has
+ * already started cannot be interrupted, though, so requirement 3 is what
+ * bounds a disconnect issued mid-handshake: an implementation that ignores
+ * `timeout_ms` delays it for as long as that call takes to return.
  */
 open class JadeTransportCallbackImpl: JadeTransportCallback, @unchecked Sendable {
     fileprivate let pointer: UnsafeMutableRawPointer!
@@ -26524,7 +26540,9 @@ public func jadeGetMasterFingerprint(network: JadeNetwork)async throws  -> Strin
         )
 }
 /**
- * The version summary read at connect, without touching the device.
+ * The version summary read at connect or by the last refresh.
+ *
+ * Neither touches the device nor waits for an operation in flight.
  */
 public func jadeGetVersionInfo()async  -> JadeVersionInfo?  {
     return
@@ -26603,6 +26621,8 @@ public func jadeLogout()async throws   {
  * Tell the library that the native layer saw the device disconnect.
  *
  * Without this, an idle Bluetooth drop is invisible until the next request.
+ * Await it before reconnecting the same path: a notification that is still
+ * pending when a reconnect to that path completes closes the new connection.
  */
 public func jadeNotifyDisconnected(path: String)async   {
     return
@@ -28259,7 +28279,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_jade_get_master_fingerprint() != 29630) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_jade_get_version_info() != 28653) {
+    if (uniffi_bitkitcore_checksum_func_jade_get_version_info() != 58697) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_jade_get_xpub() != 51180) {
@@ -28274,7 +28294,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_jade_logout() != 2301) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_jade_notify_disconnected() != 24935) {
+    if (uniffi_bitkitcore_checksum_func_jade_notify_disconnected() != 17140) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_jade_ping() != 45620) {
