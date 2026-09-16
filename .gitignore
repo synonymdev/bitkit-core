@@ -10,6 +10,9 @@ bindings/android/lib/src/main/jniLibs/
 bindings/android/lib/src/main/kotlin/com/synonym/bitkitcore/bitkitcore.android.kt
 bindings/android/lib/src/main/kotlin/com/synonym/bitkitcore/bitkitcore.common.kt
 
+# Generated Python bindgen outputs
+bindings/python/
+
 # Generated iOS release artifacts
 dist/
 bindings/ios/BitkitCore.xcframework/
