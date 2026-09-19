@@ -89,6 +89,7 @@ pub use modules::boltz as boltz_swaps;
 pub use modules::lnurl;
 pub use modules::onchain;
 pub use modules::scanner::{DecodingError, LnurlPayData, Scanner};
+pub use modules::seedqr::{decode_compact_seed_qr, decode_standard_seed_qr, SeedQrError};
 
 use bip39::Mnemonic;
 use bitcoin::bip32::Xpriv;
