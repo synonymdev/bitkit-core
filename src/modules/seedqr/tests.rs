@@ -2,12 +2,34 @@ use super::{decode_compact_seed_qr, decode_standard_seed_qr, SeedQrError};
 
 const EXPECTED_MNEMONIC: &str =
     "forum undo fragile fade shy sign arrest garment culture tube off merit";
+const STANDARD_PAYLOAD: &str = "073318950739065415961602009907670428187212261116";
 
 #[test]
 fn decodes_standard_seedqr() {
-    let payload = "073318950739065415961602009907670428187212261116".to_string();
+    assert_eq!(
+        decode_standard_seed_qr(STANDARD_PAYLOAD.to_string()).unwrap(),
+        EXPECTED_MNEMONIC
+    );
+}
 
-    assert_eq!(decode_standard_seed_qr(payload).unwrap(), EXPECTED_MNEMONIC);
+#[test]
+fn rejects_standard_seedqr_with_short_length() {
+    let payload = STANDARD_PAYLOAD.strip_suffix('6').unwrap().to_string();
+
+    assert_eq!(
+        decode_standard_seed_qr(payload),
+        Err(SeedQrError::InvalidStandardPayload)
+    );
+}
+
+#[test]
+fn rejects_standard_seedqr_with_overlong_length() {
+    let payload = format!("{STANDARD_PAYLOAD}0");
+
+    assert_eq!(
+        decode_standard_seed_qr(payload),
+        Err(SeedQrError::InvalidStandardPayload)
+    );
 }
 
 #[test]
