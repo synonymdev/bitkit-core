@@ -21557,6 +21557,92 @@ extension Scanner: Codable {}
 
 
 
+
+public enum SeedQrError: Swift.Error {
+
+    
+    
+    case InvalidStandardPayload
+    case InvalidCompactPayload
+    case InvalidMnemonic
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeSeedQrError: FfiConverterRustBuffer {
+    typealias SwiftType = SeedQrError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SeedQrError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .InvalidStandardPayload
+        case 2: return .InvalidCompactPayload
+        case 3: return .InvalidMnemonic
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: SeedQrError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case .InvalidStandardPayload:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .InvalidCompactPayload:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .InvalidMnemonic:
+            writeInt(&buf, Int32(3))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSeedQrError_lift(_ buf: RustBuffer) throws -> SeedQrError {
+    return try FfiConverterTypeSeedQrError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeSeedQrError_lower(_ value: SeedQrError) -> RustBuffer {
+    return FfiConverterTypeSeedQrError.lower(value)
+}
+
+
+extension SeedQrError: Equatable, Hashable {}
+
+extension SeedQrError: Codable {}
+
+
+
+
+extension SeedQrError: Foundation.LocalizedError {
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+
+
+
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
@@ -25868,6 +25954,20 @@ public func decode(invoice: String)async throws  -> Scanner  {
             errorHandler: FfiConverterTypeDecodingError_lift
         )
 }
+public func decodeCompactSeedQr(entropy: Data)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeSeedQrError_lift) {
+    uniffi_bitkitcore_fn_func_decode_compact_seed_qr(
+        FfiConverterData.lower(entropy),$0
+    )
+})
+}
+public func decodeStandardSeedQr(payload: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeSeedQrError_lift) {
+    uniffi_bitkitcore_fn_func_decode_standard_seed_qr(
+        FfiConverterString.lower(payload),$0
+    )
+})
+}
 public func deleteActivitiesByWalletId(walletId: String)throws  -> UInt32  {
     return try  FfiConverterUInt32.lift(try rustCallWithError(FfiConverterTypeActivityError_lift) {
     uniffi_bitkitcore_fn_func_delete_activities_by_wallet_id(
@@ -28097,6 +28197,12 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_decode() != 28437) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_decode_compact_seed_qr() != 58531) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_decode_standard_seed_qr() != 53117) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_delete_activities_by_wallet_id() != 15848) {
