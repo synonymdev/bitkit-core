@@ -7,6 +7,10 @@ pub mod account_info;
 mod callbacks;
 mod errors;
 mod implementation;
+/// Mobile-only, like the callback transport that is its only caller. Also
+/// built under `test` so the redaction rules can be exercised on the host.
+#[cfg(any(target_os = "android", target_os = "ios", test))]
+pub(crate) mod log_sanitizer;
 #[cfg(test)]
 mod tests;
 mod types;
