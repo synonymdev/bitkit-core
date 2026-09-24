@@ -2,18 +2,23 @@ use super::{
     account::{validate_delegation, ENTRY_POINT},
     amount::token_amount,
     keys::{derive_key, parse_address},
-    paymaster::{Pimlico, PAYMASTER},
+    paymaster::{with_margin, Pimlico, PAYMASTER},
     rpc::Rpc,
     store::{QuoteData, Store},
-    transaction::{event_data, EntryPoint, Erc20, Paymaster, Plan},
-    types::{CHAIN_ID, EXPLORER, TOKEN},
+    transaction::{
+        event_data, BridgeHelper, EntryPoint, Erc20, MessagingFee, Oft, Paymaster, Plan, SendParam,
+    },
+    types::{BRIDGE_HELPER, CHAIN_ID, EXPLORER, OFT, TOKEN},
     user_operation::Authorization,
-    UsdtError, UsdtQuote, UsdtTransfer, UsdtTransferStatus,
+    UsdtDestination, UsdtError, UsdtQuote, UsdtTransfer, UsdtTransferStatus,
 };
 use alloy_primitives::{Address, Bytes, B256, U256};
 use alloy_sol_types::{SolCall, SolEvent};
 use serde_json::{json, Value};
-use std::sync::{atomic::AtomicU64, Arc};
+use std::sync::{
+    atomic::{AtomicU64, AtomicUsize, Ordering},
+    Arc,
+};
 use tokio::sync::Mutex;
 
 #[derive(uniffi::Object)]
@@ -23,6 +28,7 @@ pub struct UsdtWallet {
     pub(super) paymaster: Pimlico,
     pub(super) store: Store,
     operation: Mutex<()>,
+    bridge_poll_offset: AtomicUsize,
     pub(super) history_range_limit: AtomicU64,
 }
 
@@ -50,6 +56,7 @@ impl UsdtWallet {
             paymaster,
             store,
             operation: Mutex::new(()),
+            bridge_poll_offset: AtomicUsize::new(0),
             history_range_limit: AtomicU64::new(super::history::MAX_LOG_RANGE),
         }))
     }
@@ -75,41 +82,45 @@ impl UsdtWallet {
         &self,
         recipient: String,
         amount: u64,
+        destination: UsdtDestination,
     ) -> Result<UsdtQuote, UsdtError> {
         if amount == 0 {
             return Err(UsdtError::InvalidAmount);
         }
         let recipient = parse_address(recipient.trim())?;
-        if recipient == self.address || recipient == TOKEN {
+        if recipient == self.address
+            || (destination == UsdtDestination::Arbitrum && recipient == TOKEN)
+        {
             return Err(UsdtError::InvalidAddress);
         }
         self.store.require_no_pending()?;
         self.rpc.verify_chain().await?;
         self.require_balance(amount, 0).await?;
-        let calls = vec![(
-            TOKEN,
-            Erc20::transferCall {
-                recipient,
-                amount: U256::from(amount),
-            }
-            .abi_encode()
-            .into(),
-        )];
+        let (calls, received_amount, bridge_fee) =
+            self.transfer_calls(recipient, amount, destination).await?;
+        if bridge_fee > 0 {
+            self.require_balance(amount, bridge_fee).await?;
+        }
         let nonce = self.nonce("latest").await?;
         let authorization = self.authorization().await?;
         let created_block = self.block_number().await?;
         let timestamp = self.block_timestamp(created_block).await?;
-        let (operation, maximum_fee, operation_expires_at) = self
+        let (operation, gas_fee, operation_expires_at) = self
             .paymaster
             .prepare(self.address, nonce, authorization, &calls, timestamp)
             .await?;
         let expires_at =
             now().saturating_add(operation_expires_at.saturating_sub(timestamp).min(120));
+        let maximum_fee = gas_fee
+            .checked_add(bridge_fee)
+            .ok_or(UsdtError::InvalidAmount)?;
         self.require_balance(amount, maximum_fee).await?;
         let quote = UsdtQuote {
             id: uuid::Uuid::new_v4().to_string(),
             recipient: recipient.to_checksum(None),
+            destination,
             amount,
+            received_amount,
             maximum_fee,
             expires_at,
         };
@@ -177,9 +188,11 @@ impl UsdtWallet {
             id: quote_id,
             tx_hash: String::new(),
             user_operation_hash: Some(format!("{hash:#x}")),
+            bridge_guid: None,
             recipient: data.quote.recipient,
+            destination: data.quote.destination,
             amount: data.quote.amount,
-            received_amount: data.quote.amount,
+            received_amount: data.quote.received_amount,
             fee: None,
             is_incoming: false,
             status: UsdtTransferStatus::Pending,
@@ -209,7 +222,14 @@ impl UsdtWallet {
             return self.history();
         }
         self.rpc.verify_chain().await?;
+        self.refresh_bridges(&transfers).await?;
         for mut transfer in transfers {
+            if matches!(
+                transfer.status,
+                UsdtTransferStatus::Bridging | UsdtTransferStatus::BridgeNeedsAttention
+            ) {
+                continue;
+            }
             let Some(plan) = self.store.pending_plan(&transfer.id)? else {
                 continue;
             };
@@ -367,6 +387,37 @@ impl UsdtWallet {
         self.store.update_transfer(transfer)
     }
 
+    async fn refresh_bridges(&self, transfers: &[UsdtTransfer]) -> Result<(), UsdtError> {
+        let mut bridges: Vec<_> = transfers
+            .iter()
+            .filter(|transfer| {
+                matches!(
+                    transfer.status,
+                    UsdtTransferStatus::Bridging | UsdtTransferStatus::BridgeNeedsAttention
+                )
+            })
+            .collect();
+        if bridges.is_empty() {
+            return Ok(());
+        }
+        let offset = self.bridge_poll_offset.fetch_add(1, Ordering::Relaxed) % bridges.len();
+        bridges.rotate_left(offset);
+        // Rotate the first check so stalled bridges cannot starve later status checks or sends.
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
+        for transfer in bridges {
+            match tokio::time::timeout_at(deadline, self.rpc.bridge_status(transfer)).await {
+                Ok(Ok(status)) => {
+                    let mut transfer = transfer.clone();
+                    transfer.status = status;
+                    self.store.update_transfer(&transfer)?;
+                }
+                Ok(Err(_)) => {}
+                Err(_) => break,
+            }
+        }
+        Ok(())
+    }
+
     pub(super) async fn block_number(&self) -> Result<u64, UsdtError> {
         u64::try_from(self.rpc.call::<U256>("eth_blockNumber", json!([])).await?)
             .map_err(|_| UsdtError::InvalidResponse)
@@ -497,6 +548,7 @@ impl UsdtWallet {
             .map_err(|_| UsdtError::InvalidResponse)?;
         let logs = super::transaction::operation_logs(receipt, operation_hash)?;
         let mut gas_fee = None;
+        let mut bridge_fee = None;
         for log in logs {
             let address: Address = serde_json::from_value(log["address"].clone())?;
             let data = event_data(log)?;
@@ -511,15 +563,173 @@ impl UsdtWallet {
                     }
                 }
             }
+            if success && address == BRIDGE_HELPER {
+                if let Ok(event) = BridgeHelper::LogSend::decode_log_data(&data) {
+                    if event.sender == self.address
+                        && event.oft == OFT
+                        && event.amountLD == U256::from(transfer.amount)
+                    {
+                        bridge_fee = Some(token_amount(event.feeInToken)?);
+                    }
+                }
+            }
+            if success && address == OFT {
+                if let Ok(event) = Oft::OFTSent::decode_log_data(&data) {
+                    if event.fromAddress == BRIDGE_HELPER
+                        && transfer.destination.endpoint() == Some(event.dstEid)
+                        && event.amountSentLD == U256::from(transfer.amount)
+                    {
+                        transfer.bridge_guid = Some(format!("{:#x}", event.guid));
+                        transfer.received_amount = token_amount(event.amountReceivedLD)?;
+                    }
+                }
+            }
         }
-        transfer.fee = gas_fee;
+        transfer.fee = gas_fee.and_then(|fee| fee.checked_add(bridge_fee.unwrap_or(0)));
         transfer.status = if !success {
             transfer.received_amount = 0;
             UsdtTransferStatus::Failed
-        } else {
+        } else if transfer.destination == UsdtDestination::Arbitrum {
             UsdtTransferStatus::Confirmed
+        } else if transfer.bridge_guid.is_some() {
+            UsdtTransferStatus::Bridging
+        } else {
+            UsdtTransferStatus::BridgeNeedsAttention
         };
         Ok(())
+    }
+    async fn transfer_calls(
+        &self,
+        recipient: Address,
+        amount: u64,
+        destination: UsdtDestination,
+    ) -> Result<(Vec<(Address, Bytes)>, u64, u64), UsdtError> {
+        let Some(eid) = destination.endpoint() else {
+            return Ok((
+                vec![(
+                    TOKEN,
+                    Erc20::transferCall {
+                        recipient,
+                        amount: U256::from(amount),
+                    }
+                    .abi_encode()
+                    .into(),
+                )],
+                amount,
+                0,
+            ));
+        };
+        let token = self.rpc.contract(OFT, Oft::tokenCall {}).await?;
+        let helper_token = self
+            .rpc
+            .contract(BRIDGE_HELPER, BridgeHelper::tokenCall {})
+            .await?;
+        let peer = self.rpc.contract(OFT, Oft::peersCall { eid }).await?;
+        if token != TOKEN || helper_token != TOKEN || peer.is_zero() {
+            return Err(UsdtError::UnsupportedRoute);
+        }
+        let mut param = SendParam {
+            dstEid: eid,
+            to: recipient.into_word(),
+            amountLD: U256::from(amount),
+            minAmountLD: U256::ZERO,
+            extraOptions: Bytes::new(),
+            composeMsg: Bytes::new(),
+            oftCmd: Bytes::new(),
+        };
+        let oft = self
+            .rpc
+            .contract(
+                OFT,
+                Oft::quoteOFTCall {
+                    param: param.clone(),
+                },
+            )
+            .await?;
+        if U256::from(amount) < oft.limit.minAmountLD
+            || U256::from(amount) > oft.limit.maxAmountLD
+            || oft.receipt.amountSentLD != U256::from(amount)
+            || oft.receipt.amountReceivedLD.is_zero()
+            || oft.receipt.amountReceivedLD > U256::from(amount)
+        {
+            return Err(UsdtError::InvalidAmount);
+        }
+        param.minAmountLD = oft.receipt.amountReceivedLD;
+        let fee = self
+            .rpc
+            .contract(
+                OFT,
+                Oft::quoteSendCall {
+                    param: param.clone(),
+                    payInLzToken: false,
+                },
+            )
+            .await?;
+        let maximum_native = self
+            .rpc
+            .contract(BRIDGE_HELPER, BridgeHelper::maxGasCall {})
+            .await?;
+        if !fee.lzTokenFee.is_zero()
+            || fee.nativeFee > maximum_native
+            || self.rpc.balance(BRIDGE_HELPER).await? < fee.nativeFee
+        {
+            return Err(UsdtError::UnsupportedRoute);
+        }
+        let total = self
+            .rpc
+            .contract(
+                BRIDGE_HELPER,
+                BridgeHelper::quoteSendCall {
+                    param: param.clone(),
+                    fee: fee.clone(),
+                },
+            )
+            .await?;
+        let fee = MessagingFee {
+            nativeFee: fee.nativeFee,
+            lzTokenFee: U256::ZERO,
+        };
+        let token_fee = total
+            .checked_sub(U256::from(amount))
+            .ok_or(UsdtError::InvalidResponse)?;
+        let token_fee = with_margin(token_fee)?;
+        let approval = U256::from(amount)
+            .checked_add(token_fee)
+            .ok_or(UsdtError::InvalidResponse)?;
+        Ok((
+            vec![
+                (
+                    TOKEN,
+                    Erc20::approveCall {
+                        spender: BRIDGE_HELPER,
+                        amount: approval,
+                    }
+                    .abi_encode()
+                    .into(),
+                ),
+                (
+                    BRIDGE_HELPER,
+                    BridgeHelper::sendCall {
+                        oft: OFT,
+                        param,
+                        fee,
+                    }
+                    .abi_encode()
+                    .into(),
+                ),
+                (
+                    TOKEN,
+                    Erc20::approveCall {
+                        spender: BRIDGE_HELPER,
+                        amount: U256::ZERO,
+                    }
+                    .abi_encode()
+                    .into(),
+                ),
+            ],
+            token_amount(oft.receipt.amountReceivedLD)?,
+            token_amount(token_fee)?,
+        ))
     }
 }
 
