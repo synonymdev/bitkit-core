@@ -273,13 +273,6 @@ fn approval_margin(value: U256) -> Result<U256, UsdtError> {
         .ok_or(UsdtError::InvalidResponse)
 }
 
-pub(super) fn with_margin(value: U256) -> Result<U256, UsdtError> {
-    value
-        .checked_add(value / U256::from(5))
-        .and_then(|value| value.checked_add(U256::from(1)))
-        .ok_or(UsdtError::InvalidResponse)
-}
-
 struct Terms {
     exchange_rate: U256,
     post_op_gas: U256,

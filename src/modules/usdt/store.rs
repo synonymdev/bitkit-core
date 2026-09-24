@@ -135,8 +135,6 @@ impl Store {
             UsdtTransferStatus::Confirmed
                 | UsdtTransferStatus::Failed
                 | UsdtTransferStatus::Replaced
-                | UsdtTransferStatus::Bridging
-                | UsdtTransferStatus::BridgeNeedsAttention
         );
         let mut connection = self.connection()?;
         let tx = connection.transaction()?;
@@ -264,16 +262,6 @@ impl Store {
             if let Some(data) = existing {
                 let saved: UsdtTransfer = decode(&data)?;
                 transfer.id = saved.id;
-                if saved.tx_hash == transfer.tx_hash
-                    && saved.bridge_guid == transfer.bridge_guid
-                    && transfer.status == UsdtTransferStatus::Bridging
-                    && matches!(
-                        saved.status,
-                        UsdtTransferStatus::Confirmed | UsdtTransferStatus::BridgeNeedsAttention
-                    )
-                {
-                    transfer.status = saved.status;
-                }
                 tx.execute(
                     "UPDATE usdt_transfers SET data=?1, raw=NULL WHERE id=?2",
                     params![serde_json::to_string(&transfer)?, transfer.id],
@@ -299,12 +287,7 @@ impl Store {
         let mut result = Vec::new();
         for row in rows {
             let transfer: UsdtTransfer = decode(&row?)?;
-            if matches!(
-                transfer.status,
-                UsdtTransferStatus::Pending
-                    | UsdtTransferStatus::Bridging
-                    | UsdtTransferStatus::BridgeNeedsAttention
-            ) {
+            if transfer.status == UsdtTransferStatus::Pending {
                 result.push(transfer);
             }
         }

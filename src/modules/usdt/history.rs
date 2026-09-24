@@ -1,9 +1,9 @@
 use super::{
     account::{SimpleAccount, ENTRY_POINT},
     amount::token_amount,
-    transaction::{event_data, BridgeHelper, EntryPoint, Erc20},
-    types::{BRIDGE_HELPER, EXPLORER, OFT, TOKEN},
-    UsdtDestination, UsdtError, UsdtTransfer, UsdtTransferStatus, UsdtWallet,
+    transaction::{event_data, EntryPoint, Erc20},
+    types::{EXPLORER, TOKEN},
+    UsdtError, UsdtTransfer, UsdtTransferStatus, UsdtWallet,
 };
 use alloy_primitives::{Address, Bytes, U256};
 use alloy_sol_types::{SolCall, SolEvent};
@@ -233,9 +233,7 @@ impl UsdtWallet {
                 id: format!("{hash}:{index}"),
                 tx_hash: hash.into(),
                 user_operation_hash: None,
-                bridge_guid: None,
                 recipient: event.to.to_checksum(None),
-                destination: UsdtDestination::Arbitrum,
                 amount: token_amount(event.value)?,
                 received_amount: token_amount(event.value)?,
                 fee: None,
@@ -266,8 +264,8 @@ impl UsdtWallet {
         };
         for (event, saved) in owned_operations {
             let operation_hash = format!("{:#x}", event.userOpHash);
-            let (recipient, amount, destination) = if let Some(saved) = saved {
-                (saved.recipient, saved.amount, saved.destination)
+            let (recipient, amount) = if let Some(saved) = saved {
+                (saved.recipient, saved.amount)
             } else {
                 let Some(op) = batch.as_ref().and_then(|batch| {
                     batch
@@ -277,18 +275,16 @@ impl UsdtWallet {
                 }) else {
                     continue;
                 };
-                let Some((recipient, amount, destination)) = decode_payment(&op.callData)? else {
+                let Some((recipient, amount)) = decode_payment(&op.callData)? else {
                     continue;
                 };
-                (recipient.to_checksum(None), amount, destination)
+                (recipient.to_checksum(None), amount)
             };
             let mut transfer = UsdtTransfer {
                 id: operation_hash.clone(),
                 tx_hash: hash.into(),
                 user_operation_hash: Some(operation_hash),
-                bridge_guid: None,
                 recipient,
-                destination,
                 amount,
                 received_amount: amount,
                 fee: None,
@@ -313,7 +309,7 @@ impl UsdtWallet {
     }
 }
 
-fn decode_payment(data: &[u8]) -> Result<Option<(Address, u64, UsdtDestination)>, UsdtError> {
+fn decode_payment(data: &[u8]) -> Result<Option<(Address, u64)>, UsdtError> {
     let Ok(calls) = decode_calls(data) else {
         return Ok(None);
     };
@@ -324,38 +320,8 @@ fn decode_payment(data: &[u8]) -> Result<Option<(Address, u64, UsdtDestination)>
         if target == TOKEN {
             if let Ok(call) = Erc20::transferCall::abi_decode(&data) {
                 payment_count += 1;
-                payment = Some((
-                    call.recipient,
-                    token_amount(call.amount)?,
-                    UsdtDestination::Arbitrum,
-                ));
+                payment = Some((call.recipient, token_amount(call.amount)?));
             } else if Erc20::approveCall::abi_decode(&data).is_err() {
-                supported = false;
-            }
-        } else if target == BRIDGE_HELPER {
-            if let Ok(call) = BridgeHelper::sendCall::abi_decode(&data) {
-                if call.oft != OFT {
-                    supported = false;
-                    continue;
-                }
-                let Some(destination) = [
-                    UsdtDestination::Ethereum,
-                    UsdtDestination::Polygon,
-                    UsdtDestination::Plasma,
-                    UsdtDestination::Stable,
-                ]
-                .into_iter()
-                .find(|d| d.endpoint() == Some(call.param.dstEid)) else {
-                    supported = false;
-                    continue;
-                };
-                payment_count += 1;
-                payment = Some((
-                    Address::from_word(call.param.to),
-                    token_amount(call.param.amountLD)?,
-                    destination,
-                ));
-            } else {
                 supported = false;
             }
         } else {

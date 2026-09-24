@@ -1,4 +1,0 @@
-{
-  "request": "{\"owner\":\"0x9858EfFD232B4033E47d90003D41EC34EcaEda94\",\"payload\":{\"action\":\"receive\",\"amount\":\"100000000\",\"network\":\"ethereum\"},\"timestamp\":1800000000}",
-  "signature": "0xe4a2d8340e92339d4f0627a6bf6a9bdaaae55498726ed75155a1d891761cd8cc23d6555526f69ce111c584dad43fbd974669dd9778f69c75c1b869065e05a0381b"
-}
