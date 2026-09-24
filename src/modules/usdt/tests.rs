@@ -1601,6 +1601,31 @@ async fn sync_history_to_tip(wallet: &UsdtWallet) {
 }
 
 #[tokio::test]
+async fn deposit_http_throttling_is_distinct_from_network_failure() {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!("http://{}", listener.local_addr().unwrap());
+    let server = tokio::spawn(async move {
+        let (mut socket, _) = listener.accept().await.unwrap();
+        let mut request = [0u8; 4096];
+        assert!(socket.read(&mut request).await.unwrap() > 0);
+        socket
+            .write_all(
+                b"HTTP/1.1 429 Too Many Requests\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+            )
+            .await
+            .unwrap();
+    });
+    let client =
+        UsdtDepositClient::new(usdt_address(TEST_PHRASE.into(), None).unwrap(), url).unwrap();
+    assert!(matches!(
+        client.networks().await,
+        Err(UsdtError::RateLimited)
+    ));
+    server.await.unwrap();
+}
+
+#[tokio::test]
 async fn invalid_chain_data_and_stored_json_have_distinct_errors() {
     let chain = MockChain::start().await;
     let dir = tempfile::tempdir().unwrap();
