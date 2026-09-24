@@ -25,6 +25,7 @@ impl UsdtWallet {
         if start > tip {
             return Err(UsdtError::NetworkUnavailable);
         }
+        let mut ceiling = MAX_LOG_RANGE;
         let mut next = start;
         let mut width = self
             .history_range_limit
@@ -45,7 +46,7 @@ impl UsdtWallet {
                 Err(_) => {
                     self.history_range_limit
                         .store((width / 2).max(1), Ordering::Relaxed);
-                    return Ok(false);
+                    return Err(UsdtError::NetworkUnavailable);
                 }
             };
             match result {
@@ -92,6 +93,7 @@ impl UsdtWallet {
                 }
                 Err(UsdtError::LogRangeTooLarge) if next < end => {
                     width = (width / 2).max(1);
+                    ceiling = width;
                     self.history_range_limit.store(width, Ordering::Relaxed);
                     continue;
                 }
@@ -113,7 +115,7 @@ impl UsdtWallet {
             }
             next = end + 1;
             self.store.save_history_progress(next)?;
-            width = (width * 2).min(MAX_LOG_RANGE);
+            width = (width * 2).min(ceiling);
             self.history_range_limit.store(width, Ordering::Relaxed);
             width = width.min(tip - next + 1);
         }
@@ -126,6 +128,10 @@ impl UsdtWallet {
         deadline: tokio::time::Instant,
     ) -> Result<bool, UsdtError> {
         let block = self.rpc.block(number).await?;
+        let block_hash = format!("{:#x}", block.hash);
+        if self.store.begin_history_block(number, &block_hash)? {
+            return Ok(true);
+        }
         let timestamp = u64::try_from(block.timestamp).map_err(|_| UsdtError::InvalidResponse)?;
         if self.store.history_progress()? != Some(number) {
             self.store.save_history_progress(number)?;
@@ -141,6 +147,10 @@ impl UsdtWallet {
             let receipt = self.rpc.block_receipt(*hash, &block, number).await?;
             self.save_receipt_history(&id, timestamp, &receipt).await?;
         }
+        if self.rpc.block(number).await?.hash != block.hash {
+            return Err(UsdtError::NetworkUnavailable);
+        }
+        self.store.complete_history_block(number, &block_hash)?;
         Ok(true)
     }
 
@@ -265,6 +275,10 @@ impl UsdtWallet {
             None
         };
         for (event, saved) in owned_operations {
+            // Unknown fee collection keeps its raw debits and refunds intact.
+            if event.paymaster != super::paymaster::PAYMASTER {
+                continue;
+            }
             let operation_hash = format!("{:#x}", event.userOpHash);
             let (recipient, amount, destination) = if let Some(saved) = saved {
                 (saved.recipient, saved.amount, saved.destination)
@@ -324,11 +338,10 @@ fn decode_payment(data: &[u8]) -> Result<Option<(Address, u64, UsdtDestination)>
         if target == TOKEN {
             if let Ok(call) = Erc20::transferCall::abi_decode(&data) {
                 payment_count += 1;
-                payment = Some((
-                    call.recipient,
-                    token_amount(call.amount)?,
-                    UsdtDestination::Arbitrum,
-                ));
+                let Ok(amount) = token_amount(call.amount) else {
+                    return Ok(None);
+                };
+                payment = Some((call.recipient, amount, UsdtDestination::Arbitrum));
             } else if Erc20::approveCall::abi_decode(&data).is_err() {
                 supported = false;
             }
@@ -338,21 +351,17 @@ fn decode_payment(data: &[u8]) -> Result<Option<(Address, u64, UsdtDestination)>
                     supported = false;
                     continue;
                 }
-                let Some(destination) = [
-                    UsdtDestination::Ethereum,
-                    UsdtDestination::Polygon,
-                    UsdtDestination::Plasma,
-                    UsdtDestination::Stable,
-                ]
-                .into_iter()
-                .find(|d| d.endpoint() == Some(call.param.dstEid)) else {
+                let Some(destination) = UsdtDestination::from_endpoint(call.param.dstEid) else {
                     supported = false;
                     continue;
                 };
                 payment_count += 1;
                 payment = Some((
                     Address::from_word(call.param.to),
-                    token_amount(call.param.amountLD)?,
+                    match token_amount(call.param.amountLD) {
+                        Ok(amount) => amount,
+                        Err(_) => return Ok(None),
+                    },
                     destination,
                 ));
             } else {

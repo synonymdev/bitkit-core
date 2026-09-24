@@ -24265,6 +24265,9 @@ public enum UsdtError: Swift.Error {
     case PendingTransfer
     case UnsupportedRoute
     case DepositNeedsAttention
+    case DepositNotFound
+    case DepositAuthorizationRejected
+    case DepositAmountOutOfRange
     case NotConfigured
     case NetworkUnavailable
     case RateLimited
@@ -24301,17 +24304,20 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
         case 9: return .PendingTransfer
         case 10: return .UnsupportedRoute
         case 11: return .DepositNeedsAttention
-        case 12: return .NotConfigured
-        case 13: return .NetworkUnavailable
-        case 14: return .RateLimited
-        case 15: return .LogRangeTooLarge
-        case 16: return .TransactionRejected(
+        case 12: return .DepositNotFound
+        case 13: return .DepositAuthorizationRejected
+        case 14: return .DepositAmountOutOfRange
+        case 15: return .NotConfigured
+        case 16: return .NetworkUnavailable
+        case 17: return .RateLimited
+        case 18: return .LogRangeTooLarge
+        case 19: return .TransactionRejected(
             reason: try FfiConverterString.read(from: &buf)
             )
-        case 17: return .Storage(
+        case 20: return .Storage(
             reason: try FfiConverterString.read(from: &buf)
             )
-        case 18: return .InvalidResponse
+        case 21: return .InvalidResponse
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -24368,34 +24374,46 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(11))
         
         
-        case .NotConfigured:
+        case .DepositNotFound:
             writeInt(&buf, Int32(12))
         
         
-        case .NetworkUnavailable:
+        case .DepositAuthorizationRejected:
             writeInt(&buf, Int32(13))
         
         
-        case .RateLimited:
+        case .DepositAmountOutOfRange:
             writeInt(&buf, Int32(14))
         
         
-        case .LogRangeTooLarge:
+        case .NotConfigured:
             writeInt(&buf, Int32(15))
         
         
-        case let .TransactionRejected(reason):
+        case .NetworkUnavailable:
             writeInt(&buf, Int32(16))
+        
+        
+        case .RateLimited:
+            writeInt(&buf, Int32(17))
+        
+        
+        case .LogRangeTooLarge:
+            writeInt(&buf, Int32(18))
+        
+        
+        case let .TransactionRejected(reason):
+            writeInt(&buf, Int32(19))
             FfiConverterString.write(reason, into: &buf)
             
         
         case let .Storage(reason):
-            writeInt(&buf, Int32(17))
+            writeInt(&buf, Int32(20))
             FfiConverterString.write(reason, into: &buf)
             
         
         case .InvalidResponse:
-            writeInt(&buf, Int32(18))
+            writeInt(&buf, Int32(21))
         
         }
     }

@@ -4,11 +4,14 @@ use super::{
     user_operation::sign_hash,
     UsdtError,
 };
-use alloy_primitives::{eip191_hash_message, Address};
+use alloy_primitives::{address, eip191_hash_message, Address};
 use serde::{de::DeserializeOwned, Deserialize, Deserializer, Serialize};
 use serde_json::{json, Value};
 use std::{sync::Arc, time::Duration};
 use zeroize::Zeroizing;
+
+const ETHEREUM_USDT: Address = address!("dAC17F958D2ee523a2206206994597C13D831ec7");
+const TRON_USDT: &str = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, uniffi::Enum)]
 #[serde(rename_all = "lowercase")]
@@ -29,7 +32,7 @@ pub struct UsdtDepositAddress {
     pub min_usd_cents: Option<String>,
     pub max_usd_cents: Option<String>,
     pub slippage_bps: u32,
-    #[serde(default)]
+    #[serde(skip)]
     pub uri: String,
 }
 
@@ -38,7 +41,7 @@ pub struct UsdtDeposit {
     pub id: String,
     pub network: String,
     pub asset: String,
-    #[serde(deserialize_with = "optional_number")]
+    #[serde(default, deserialize_with = "optional_number")]
     pub amount: Option<u64>,
     pub source_tx: String,
     pub status: String,
@@ -55,9 +58,9 @@ pub struct UsdtDepositPage {
 #[derive(Clone, Debug, Deserialize, uniffi::Record)]
 pub struct UsdtDepositOrder {
     pub status: String,
-    #[serde(deserialize_with = "optional_number")]
+    #[serde(default, deserialize_with = "optional_number")]
     pub amount_in: Option<u64>,
-    #[serde(deserialize_with = "optional_number")]
+    #[serde(default, deserialize_with = "optional_number")]
     pub amount_out: Option<u64>,
     pub destination_tx: Option<String>,
     pub refund_tx: Option<String>,
@@ -92,12 +95,19 @@ impl UsdtDepositClient {
     pub async fn networks(&self) -> Result<Vec<UsdtDepositNetwork>, UsdtError> {
         #[derive(Deserialize)]
         struct Networks {
-            networks: Vec<UsdtDepositNetwork>,
+            networks: Vec<String>,
         }
         Ok(self
             .response::<Networks>(self.client.get(&self.url))
             .await?
-            .networks)
+            .networks
+            .into_iter()
+            .filter_map(|network| match network.as_str() {
+                "ethereum" => Some(UsdtDepositNetwork::Ethereum),
+                "tron" => Some(UsdtDepositNetwork::Tron),
+                _ => None,
+            })
+            .collect())
     }
 
     pub async fn receive(
@@ -121,17 +131,25 @@ impl UsdtDepositClient {
             )
             .await?;
         if result.network != network
-            || parse_address(&result.recipient)? != self.address
+            || parse_address(&result.recipient).map_err(|_| UsdtError::InvalidResponse)?
+                != self.address
             || result.amount != amount
             || result.estimated_received == 0
             || result.slippage_bps != 50
         {
             return Err(UsdtError::InvalidResponse);
         }
-        validate_source_address(&result.address, network)?;
+        validate_source_address(&result.address, network)
+            .map_err(|_| UsdtError::InvalidResponse)?;
+        if network == UsdtDepositNetwork::Ethereum
+            && parse_address(&result.address)? == self.address
+        {
+            return Err(UsdtError::InvalidResponse);
+        }
         result.uri = match network {
             UsdtDepositNetwork::Ethereum => format!(
-                "ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address={}",
+                "ethereum:{}@1/transfer?address={}",
+                ETHEREUM_USDT.to_checksum(None),
                 result.address
             ),
             UsdtDepositNetwork::Tron => result.address.clone(),
@@ -145,12 +163,17 @@ impl UsdtDepositClient {
         mnemonic: String,
         passphrase: Option<String>,
     ) -> Result<UsdtDepositPage, UsdtError> {
-        self.call(
-            json!({"action":"history","offset":offset}),
-            mnemonic.into(),
-            passphrase.map(Into::into),
-        )
-        .await
+        let page: UsdtDepositPage = self
+            .call(
+                json!({"action":"history","offset":offset}),
+                mnemonic.into(),
+                passphrase.map(Into::into),
+            )
+            .await?;
+        if page.next_offset.is_some_and(|next| next <= offset) {
+            return Err(UsdtError::InvalidResponse);
+        }
+        Ok(page)
     }
 
     pub async fn detail(
@@ -184,11 +207,12 @@ impl UsdtDepositClient {
     ) -> Result<(), UsdtError> {
         let mnemonic = Zeroizing::new(mnemonic);
         let passphrase = passphrase.map(Zeroizing::new);
-        validate_source_address(refund_address.trim(), network)?;
+        let refund_address = refund_address.trim();
+        validate_source_address(refund_address, network)?;
         let result: Value = self
             .call(
                 json!({"action":"refund","depositId":deposit_id,"offset":offset,
-            "refundAddress":refund_address.trim()}),
+            "refundAddress":refund_address}),
                 mnemonic,
                 passphrase,
             )
@@ -249,17 +273,16 @@ impl UsdtDepositClient {
             let error = value.unwrap_or_default();
             return Err(match error["error"].as_str() {
                 Some("not_configured") => UsdtError::NotConfigured,
-                Some("invalid_authorization") => UsdtError::InvalidCredentials,
+                Some("invalid_authorization") => UsdtError::DepositAuthorizationRejected,
+                Some("not_found") => UsdtError::DepositNotFound,
                 Some("clock_skew") => UsdtError::ClockSkew,
-                Some("amount_too_small" | "amount_too_large" | "amount_exceeds_liquidity") => {
-                    UsdtError::InvalidAmount
-                }
+                Some("amount_too_small" | "amount_too_large") => UsdtError::DepositAmountOutOfRange,
+                Some("amount_exceeds_liquidity") => UsdtError::UnsupportedRoute,
                 Some("invalid_refund_address") => UsdtError::InvalidAddress,
                 Some("route_unavailable") => UsdtError::UnsupportedRoute,
                 Some(
                     "refund_not_available"
                     | "instruction_conflict"
-                    | "not_found"
                     | "operator_required"
                     | "standing_tron_refund_requires_operator",
                 ) => UsdtError::DepositNeedsAttention,
@@ -273,12 +296,18 @@ impl UsdtDepositClient {
 fn validate_source_address(value: &str, network: UsdtDepositNetwork) -> Result<(), UsdtError> {
     match network {
         UsdtDepositNetwork::Ethereum => {
-            parse_address(value)?;
+            if parse_address(value)? == ETHEREUM_USDT {
+                return Err(UsdtError::InvalidAddress);
+            }
         }
         UsdtDepositNetwork::Tron => {
             let payload =
                 bitcoin::base58::decode_check(value).map_err(|_| UsdtError::InvalidAddress)?;
-            if payload.len() != 21 || payload[0] != 0x41 {
+            if payload.len() != 21
+                || payload[0] != 0x41
+                || payload[1..].iter().all(|byte| *byte == 0)
+                || value == TRON_USDT
+            {
                 return Err(UsdtError::InvalidAddress);
             }
         }
@@ -336,7 +365,15 @@ mod tests {
 
     #[test]
     fn deposit_addresses_and_transport_reject_wrong_networks() {
-        let tron = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+        let tron = "TJRabPrwbZy45sbavfcjinPJC18kjpRTv8";
+        for bad in [TRON_USDT, "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb"] {
+            assert!(validate_source_address(bad, UsdtDepositNetwork::Tron).is_err());
+        }
+        assert!(validate_source_address(
+            &ETHEREUM_USDT.to_checksum(None),
+            UsdtDepositNetwork::Ethereum
+        )
+        .is_err());
         assert!(validate_source_address(tron, UsdtDepositNetwork::Tron).is_ok());
         assert!(validate_source_address(tron, UsdtDepositNetwork::Ethereum).is_err());
         assert!(validate_source_address(
@@ -355,5 +392,141 @@ mod tests {
             )
             .is_err());
         }
+    }
+
+    async fn service(responses: Vec<(u16, Value)>) -> (String, tokio::task::JoinHandle<()>) {
+        use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}/v1/usdt/deposits", listener.local_addr().unwrap());
+        let task = tokio::spawn(async move {
+            for (status, value) in responses {
+                let (socket, _) = listener.accept().await.unwrap();
+                let mut reader = BufReader::new(socket);
+                let mut length = 0;
+                loop {
+                    let mut line = String::new();
+                    reader.read_line(&mut line).await.unwrap();
+                    if line == "\r\n" {
+                        break;
+                    }
+                    if let Some(value) = line.to_ascii_lowercase().strip_prefix("content-length:") {
+                        length = value.trim().parse().unwrap();
+                    }
+                }
+                reader.read_exact(&mut vec![0; length]).await.unwrap();
+                let body = value.to_string();
+                reader.get_mut().write_all(format!("HTTP/1.1 {status} Response\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).as_bytes()).await.unwrap();
+            }
+        });
+        (url, task)
+    }
+
+    #[tokio::test]
+    async fn service_responses_cover_receive_history_detail_and_refund() {
+        let owner = super::super::usdt_address(PHRASE.into(), None).unwrap();
+        let address = "0x1111111111111111111111111111111111111111";
+        let deposit = json!({"id":"dep_one","network":"ethereum","asset":"USDT","source_tx":"0xsource","status":"held","code":null,"refund_tx":null});
+        let (url, server) = service(vec![
+            (200, json!({"networks":["ethereum","tron","bitcoin"]})),
+            (200, json!({"network":"ethereum","address":address,"recipient":owner,"amount":"100000000","estimated_received":"98500000","slippage_bps":50,"uri":123})),
+            (200, json!({"deposits":[deposit],"next_offset":50})),
+            (200, json!({"deposit":deposit,"order":{"status":"held"}})),
+            (202, json!({"status":"refund_requested"})),
+        ]).await;
+        let client = UsdtDepositClient::new(owner, url).unwrap();
+        assert_eq!(
+            client.networks().await.unwrap(),
+            vec![UsdtDepositNetwork::Ethereum, UsdtDepositNetwork::Tron]
+        );
+        let received = client
+            .receive(
+                UsdtDepositNetwork::Ethereum,
+                100_000_000,
+                PHRASE.into(),
+                None,
+            )
+            .await
+            .unwrap();
+        assert_eq!(received.estimated_received, 98_500_000);
+        assert!(received.uri.contains(address));
+        let page = client.history(0, PHRASE.into(), None).await.unwrap();
+        assert_eq!(page.deposits[0].amount, None);
+        assert_eq!(page.next_offset, Some(50));
+        let detail = client
+            .detail("dep_one".into(), 0, PHRASE.into(), None)
+            .await
+            .unwrap();
+        assert_eq!(detail.order.unwrap().amount_out, None);
+        client
+            .request_refund(
+                "dep_one".into(),
+                0,
+                address.into(),
+                UsdtDepositNetwork::Ethereum,
+                PHRASE.into(),
+                None,
+            )
+            .await
+            .unwrap();
+        server.await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn service_errors_preserve_recovery_actions() {
+        for (code, expected) in [
+            ("not_found", UsdtError::DepositNotFound),
+            (
+                "invalid_authorization",
+                UsdtError::DepositAuthorizationRejected,
+            ),
+            ("clock_skew", UsdtError::ClockSkew),
+            ("amount_too_small", UsdtError::DepositAmountOutOfRange),
+            ("amount_too_large", UsdtError::DepositAmountOutOfRange),
+            ("amount_exceeds_liquidity", UsdtError::UnsupportedRoute),
+            (
+                "standing_tron_refund_requires_operator",
+                UsdtError::DepositNeedsAttention,
+            ),
+            ("provider_unavailable", UsdtError::NetworkUnavailable),
+        ] {
+            let (url, server) = service(vec![(400, json!({"error":code}))]).await;
+            let owner = super::super::usdt_address(PHRASE.into(), None).unwrap();
+            let client = UsdtDepositClient::new(owner, url).unwrap();
+            let error = client.history(0, PHRASE.into(), None).await.unwrap_err();
+            assert_eq!(
+                std::mem::discriminant(&error),
+                std::mem::discriminant(&expected)
+            );
+            server.await.unwrap();
+        }
+    }
+
+    #[tokio::test]
+    async fn invalid_service_addresses_and_nonadvancing_pages_are_rejected() {
+        let owner = super::super::usdt_address(PHRASE.into(), None).unwrap();
+        let (url, server) = service(vec![
+            (200, json!({"network":"ethereum","address":ETHEREUM_USDT,"recipient":owner,"amount":"100000000","estimated_received":"98500000","slippage_bps":50})),
+            (200, json!({"network":"ethereum","address":"0x1111111111111111111111111111111111111111","recipient":"invalid","amount":"100000000","estimated_received":"98500000","slippage_bps":50})),
+            (200, json!({"deposits":[],"next_offset":0})),
+        ]).await;
+        let client = UsdtDepositClient::new(owner, url).unwrap();
+        for _ in 0..2 {
+            assert!(matches!(
+                client
+                    .receive(
+                        UsdtDepositNetwork::Ethereum,
+                        100_000_000,
+                        PHRASE.into(),
+                        None
+                    )
+                    .await,
+                Err(UsdtError::InvalidResponse)
+            ));
+        }
+        assert!(matches!(
+            client.history(0, PHRASE.into(), None).await,
+            Err(UsdtError::InvalidResponse)
+        ));
+        server.await.unwrap();
     }
 }
