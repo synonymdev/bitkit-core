@@ -17,6 +17,22 @@ pub enum UsdtDestination {
 }
 
 impl UsdtDestination {
+    pub(super) fn token(self) -> Address {
+        match self {
+            Self::Arbitrum => TOKEN,
+            Self::Ethereum => address!("dAC17F958D2ee523a2206206994597C13D831ec7"),
+            Self::Polygon => address!("c2132D05D31c914a87C6611C10748AEb04B58e8F"),
+            Self::Plasma => address!("B8CE59FC3717ada4C02eaDF9682A9e934F625ebb"),
+            Self::Stable => address!("779Ded0c9e1022225f8E0630b35a9b54bE713736"),
+        }
+    }
+
+    pub(super) fn from_endpoint(eid: u32) -> Option<Self> {
+        [Self::Ethereum, Self::Polygon, Self::Plasma, Self::Stable]
+            .into_iter()
+            .find(|d| d.endpoint() == Some(eid))
+    }
+
     pub(super) fn endpoint(self) -> Option<u32> {
         match self {
             Self::Stable => Some(30396),

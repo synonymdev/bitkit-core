@@ -92,6 +92,11 @@ fn wallet_requires_both_provider_endpoints() {
     for (rpc, bundler) in [
         ("", "https://provider.example"),
         ("https://provider.example", ""),
+        ("not a url", "https://provider.example"),
+        (
+            "https://provider.example",
+            "https://example.com?api-key=secret",
+        ),
     ] {
         assert!(matches!(
             UsdtWallet::new(
@@ -231,6 +236,8 @@ struct ChainState {
     delay_gas_estimate: bool,
     paymaster: alloy_primitives::Address,
     helper_balance: alloy_primitives::U256,
+    native_message_fee: u64,
+    helper_token_fee: u64,
     history_input: Option<alloy_primitives::Bytes>,
     history_target: Option<alloy_primitives::Address>,
     receipt_logs: Option<Vec<serde_json::Value>>,
@@ -250,6 +257,9 @@ struct ChainState {
     incoming_count: u64,
     block_reads: usize,
     fail_block_read_at: Option<usize>,
+    authorization_change_on_block_read: bool,
+    receipt_reads: usize,
+    receipt_response: Option<serde_json::Value>,
 }
 impl Drop for MockChain {
     fn drop(&mut self) {
@@ -280,6 +290,8 @@ impl MockChain {
             delay_gas_estimate: false,
             paymaster: paymaster::PAYMASTER,
             helper_balance: U256::from(1_000_000_000_000_000u64),
+            native_message_fee: 10_000_000_000,
+            helper_token_fee: 300_000,
             history_input: None,
             history_target: Some(account::ENTRY_POINT),
             receipt_logs: None,
@@ -299,6 +311,9 @@ impl MockChain {
             incoming_count: 0,
             block_reads: 0,
             fail_block_read_at: None,
+            authorization_change_on_block_read: false,
+            receipt_reads: 0,
+            receipt_response: None,
         }));
         let server_state = state.clone();
         let task = tokio::spawn(async move {
@@ -336,6 +351,33 @@ impl MockChain {
                 }
                 let body: serde_json::Value =
                     serde_json::from_slice(&request[header_end..]).unwrap();
+                let path = String::from_utf8_lossy(&request[..header_end])
+                    .lines()
+                    .next()
+                    .unwrap()
+                    .split_whitespace()
+                    .nth(1)
+                    .unwrap()
+                    .to_owned();
+                let method = body["method"].as_str().unwrap();
+                let bundler = matches!(
+                    method,
+                    "pimlico_getTokenQuotes"
+                        | "pimlico_getUserOperationGasPrice"
+                        | "pm_getPaymasterData"
+                        | "pm_getPaymasterStubData"
+                        | "eth_estimateUserOperationGas"
+                        | "eth_sendUserOperation"
+                );
+                if path == "/chain" {
+                    assert!(!bundler, "Bundler method on chain endpoint");
+                }
+                if path == "/bundler" {
+                    assert!(
+                        bundler || method == "eth_chainId",
+                        "Chain method on bundler endpoint"
+                    );
+                }
                 let delay = body["method"] == "eth_estimateUserOperationGas"
                     && std::mem::take(&mut server_state.lock().unwrap().delay_gas_estimate);
                 if delay {
@@ -352,8 +394,8 @@ impl MockChain {
         UsdtWallet::new(
             usdt_address(TEST_PHRASE.into(), None).unwrap(),
             dir.path().join("usdt.sqlite").to_string_lossy().into(),
-            self.url.clone(),
-            self.url.clone(),
+            format!("{}/chain", self.url),
+            format!("{}/bundler", self.url),
         )
         .unwrap()
     }
@@ -383,6 +425,9 @@ impl ChainState {
             "eth_blockNumber" => json!(U256::from(self.tip)),
             "eth_getBlockByNumber" => {
                 self.block_reads += 1;
+                if std::mem::take(&mut self.authorization_change_on_block_read) {
+                    self.authorization_nonce += 1;
+                }
                 if self.fail_block_read_at == Some(self.block_reads) {
                     self.fail_block_read_at = None;
                     return json!({"jsonrpc":"2.0","id":1,"error":{"code":-32000,"message":"temporarily unavailable"}});
@@ -429,7 +474,7 @@ impl ChainState {
                         .abi_encode_params()
                 } else if data.starts_with(&Oft::quoteSendCall::SELECTOR) {
                     MessagingFee {
-                        nativeFee: U256::from(10_000_000_000u64),
+                        nativeFee: U256::from(self.native_message_fee),
                         lzTokenFee: U256::ZERO,
                     }
                     .abi_encode()
@@ -439,7 +484,7 @@ impl ChainState {
                     let param = BridgeHelper::quoteSendCall::abi_decode(&data)
                         .unwrap()
                         .param;
-                    (param.amountLD + U256::from(300_000)).abi_encode()
+                    (param.amountLD + U256::from(self.helper_token_fee)).abi_encode()
                 } else {
                     self.balance.abi_encode()
                 };
@@ -449,7 +494,7 @@ impl ChainState {
                 json!({"quotes":[{"token":types::TOKEN,"paymaster":self.paymaster,"postOpGas":"0xc350","exchangeRate":U256::from(3_000_000_000u64)}]})
             }
             "pimlico_getUserOperationGasPrice" => {
-                json!({"fast":{"maxFeePerGas":U256::from(self.gas_price),"maxPriorityFeePerGas":U256::from(100000)}})
+                json!({"slow":{"maxFeePerGas":U256::from(self.gas_price * 9 / 10),"maxPriorityFeePerGas":U256::from(100000)},"fast":{"maxFeePerGas":U256::from(self.gas_price),"maxPriorityFeePerGas":U256::from(100000)}})
             }
             "pm_getPaymasterData" | "pm_getPaymasterStubData" => {
                 let mut data = vec![0; 118];
@@ -582,6 +627,10 @@ impl ChainState {
                 }
             }
             "eth_getTransactionReceipt" => {
+                self.receipt_reads += 1;
+                if let Some(response) = &self.receipt_response {
+                    return json!({"jsonrpc":"2.0","id":1,"result":response});
+                }
                 if self.hide_receipts
                     || self
                         .receipt_failure
@@ -737,7 +786,12 @@ async fn signed_operation_survives_uncertain_broadcast_and_restart() {
         .iter()
         .all(|item| serde_json::to_value(item).unwrap() == serde_json::to_value(&op).unwrap()));
     chain.state.lock().unwrap().mined = true;
+    chain.state.lock().unwrap().timestamp += alloy_primitives::U256::from(60);
     let history = wallet.refresh_transfers().await.unwrap();
+    assert_eq!(
+        history[0].timestamp,
+        u64::try_from(chain.state.lock().unwrap().timestamp).unwrap()
+    );
     assert_eq!(history.len(), 1);
     assert_eq!(history[0].status, UsdtTransferStatus::Confirmed);
     assert_eq!(history[0].fee, Some(123));
@@ -931,7 +985,7 @@ async fn bridge_payment_bounds_token_fees_and_revokes_helper_approval() {
             .into_word()
     );
     assert_eq!(send.param.minAmountLD, U256::from(1_000_000));
-    assert_eq!(send.fee.nativeFee, U256::from(10_000_000_000u64));
+    assert_eq!(send.fee.nativeFee, U256::from(11_000_000_001u64));
     let revoke = transaction::Erc20::approveCall::abi_decode(&calls[3].1).unwrap();
     assert_eq!(revoke.spender, types::BRIDGE_HELPER);
     assert!(revoke.amount.is_zero());
@@ -939,7 +993,30 @@ async fn bridge_payment_bounds_token_fees_and_revokes_helper_approval() {
     assert_eq!(bridge_fee, 360_001);
     assert!(paymaster.amount > U256::from(quote.maximum_fee - bridge_fee));
     assert_eq!(quote.received_amount, 1_000_000);
+    chain.state.lock().unwrap().native_message_fee = 12_000_000_000;
+    assert!(matches!(
+        wallet
+            .send(quote.id.clone(), TEST_PHRASE.into(), None)
+            .await,
+        Err(UsdtError::QuoteExpired)
+    ));
+    chain.state.lock().unwrap().native_message_fee = 10_500_000_000;
+    chain.state.lock().unwrap().helper_token_fee = 400_000;
+    assert!(matches!(
+        wallet
+            .send(quote.id.clone(), TEST_PHRASE.into(), None)
+            .await,
+        Err(UsdtError::QuoteExpired)
+    ));
+    chain.state.lock().unwrap().helper_token_fee = 300_000;
     chain.state.lock().unwrap().helper_balance = U256::ZERO;
+    assert!(matches!(
+        wallet
+            .send(quote.id.clone(), TEST_PHRASE.into(), None)
+            .await,
+        Err(UsdtError::UnsupportedRoute)
+    ));
+    assert!(chain.state.lock().unwrap().operations.is_empty());
     assert!(matches!(
         wallet
             .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Polygon)
@@ -1025,6 +1102,10 @@ async fn bundled_operations_cannot_contribute_another_payments_bridge_status_or_
         log(paymaster::PAYMASTER, transaction::Paymaster::UserOperationSponsored { userOpHash:own_hash, user:wallet.address, paymasterMode:1, token:types::TOKEN, tokenAmountPaid:U256::from(123), exchangeRate:U256::from(1) }.encode_log_data()),
         log(account::ENTRY_POINT, event(own_hash)),
     ]});
+    assert_eq!(
+        transaction::operation_logs(&receipt, own_hash).unwrap(),
+        &receipt["logs"].as_array().unwrap()[3..]
+    );
     wallet.settle(&mut transfer, &receipt, false).unwrap();
     assert_eq!(transfer.status, UsdtTransferStatus::Failed);
     assert_eq!(transfer.fee, Some(123));
@@ -1089,6 +1170,25 @@ async fn deployed_contracts_collect_usdt_fees_and_revert_failed_bridges_atomical
     let helper_balance = rpc.balance(types::BRIDGE_HELPER).await.unwrap();
     let _: serde_json::Value = rpc
         .call("anvil_setBalance", json!([types::BRIDGE_HELPER, "0x0"]))
+        .await
+        .unwrap();
+    assert!(matches!(
+        wallet
+            .send(bridge.id.clone(), TEST_PHRASE.into(), None)
+            .await,
+        Err(UsdtError::UnsupportedRoute)
+    ));
+    let _: serde_json::Value = rpc
+        .call(
+            "anvil_setBalance",
+            json!([types::BRIDGE_HELPER, helper_balance]),
+        )
+        .await
+        .unwrap();
+    // The helper can lose liquidity after preflight but before execution.
+    let fixture = rpc::Rpc::new("http://127.0.0.1:18546".into(), types::CHAIN_ID).unwrap();
+    let _: bool = fixture
+        .call("test_drainHelperBeforeNextBroadcast", json!([]))
         .await
         .unwrap();
     let before = wallet.balance().await.unwrap();
@@ -1160,6 +1260,15 @@ async fn history_preserves_receipts_with_external_account_call_shapes() {
         .await
         .unwrap();
     let original = chain.state.lock().unwrap().operations[0].call_data.clone();
+    let oversized = account::batch(&[(
+        types::TOKEN,
+        transaction::Erc20::transferCall {
+            recipient: RECIPIENT.parse().unwrap(),
+            amount: U256::MAX,
+        }
+        .abi_encode()
+        .into(),
+    )]);
     let single = account::SimpleAccount::executeCall {
         target: types::TOKEN,
         value: U256::ZERO,
@@ -1175,6 +1284,7 @@ async fn history_preserves_receipts_with_external_account_call_shapes() {
     for (call_data, outer, expected_outgoing) in [
         (original.clone(), None, true),
         (single, None, true),
+        (oversized, None, false),
         (Bytes::from_static(&[1, 2, 3, 4]), None, false),
         (original, Some(Bytes::from_static(&[5, 6, 7, 8])), false),
     ] {
@@ -1427,7 +1537,7 @@ async fn interrupted_history_resumes_without_repeating_completed_work() {
     })
     .await
     .unwrap();
-    assert!(matches!(error, UsdtError::TransactionRejected { .. }));
+    assert!(matches!(error, UsdtError::NetworkUnavailable));
     assert_eq!(restored.history().unwrap().len(), 24);
     assert!(restored.store.history_progress().unwrap().is_some());
     drop(restored);
@@ -1514,7 +1624,7 @@ async fn history_distinguishes_rate_limits_from_log_range_limits() {
         }
         let error = wallet.sync_history().await.unwrap_err();
         if code == -32000 {
-            assert!(matches!(error, UsdtError::TransactionRejected { .. }));
+            assert!(matches!(error, UsdtError::NetworkUnavailable));
         } else {
             assert!(matches!(error, UsdtError::RateLimited));
         }
@@ -1657,7 +1767,7 @@ async fn stalled_bridge_status_checks_leave_time_for_source_recovery_and_sending
                 let mut reader = BufReader::new(socket);
                 let mut line = String::new();
                 reader.read_line(&mut line).await.unwrap();
-                let hash = line.split_whitespace().nth(1).unwrap().trim_start_matches('/').to_string();
+                let hash = line.split_whitespace().nth(1).unwrap().strip_prefix("/v1/messages/tx/").unwrap().to_string();
                 loop {
                     line.clear();
                     if reader.read_line(&mut line).await.unwrap() == 0 || line == "\r\n" { break; }
@@ -1717,7 +1827,7 @@ async fn stalled_bridge_status_checks_leave_time_for_source_recovery_and_sending
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(attempts.lock().unwrap().len(), 1);
+    assert_eq!(attempts.lock().unwrap().len(), 3);
     assert_eq!(
         history
             .iter()
@@ -1738,23 +1848,26 @@ async fn stalled_bridge_status_checks_leave_time_for_source_recovery_and_sending
         .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
         .await
         .unwrap();
-    // Hold the refresh lock before send, while all bridge status connections stall again.
+    // Replenish the shared RPC burst so this checks polling, not rate-limit waiting.
+    tokio::time::sleep(Duration::from_secs(15)).await;
+    // Destination polling must not hold the mutation lock needed to send.
     let refresh_wallet = wallet.clone();
     let refresh = tokio::spawn(async move { refresh_wallet.refresh_transfers().await });
     tokio::time::timeout(Duration::from_secs(3), async {
-        while attempts.lock().unwrap().len() < 2 {
+        while attempts.lock().unwrap().len() < 6 {
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
     })
     .await
     .unwrap();
     let result = tokio::time::timeout(
-        Duration::from_secs(15),
+        Duration::from_secs(8),
         wallet.send(quote.id, TEST_PHRASE.into(), None),
     )
     .await;
-    refresh.await.unwrap().unwrap();
     assert_eq!(result.unwrap().unwrap().status, UsdtTransferStatus::Pending);
+    assert!(!refresh.is_finished());
+    refresh.await.unwrap().unwrap();
     {
         let attempts = attempts.lock().unwrap();
         assert_ne!(attempts[0], attempts[1]);
@@ -2124,6 +2237,11 @@ async fn dense_block_history_recovers_large_receipts_without_skipping_after_rest
     assert_eq!(history[0].status, UsdtTransferStatus::Confirmed);
     assert_eq!(history[0].fee, Some(123));
     assert_eq!(restored.store.synced_block().unwrap(), Some(20001));
+    let reads = chain.state.lock().unwrap().receipt_reads;
+    drop(restored);
+    let restored = chain.wallet(&dir);
+    sync_history_to_tip(&restored).await;
+    assert_eq!(chain.state.lock().unwrap().receipt_reads, reads);
 }
 
 #[tokio::test]
@@ -2150,4 +2268,357 @@ async fn zero_value_transfers_do_not_require_receipts_or_timestamps() {
     }
     assert!(wallet.sync_history().await.unwrap());
     assert!(wallet.history().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn first_submission_precheck_releases_an_operation_that_was_never_sent() {
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    chain
+        .state
+        .lock()
+        .unwrap()
+        .authorization_change_on_block_read = true;
+    assert!(matches!(
+        wallet
+            .send(quote.id.clone(), TEST_PHRASE.into(), None)
+            .await,
+        Err(UsdtError::QuoteExpired)
+    ));
+    assert!(chain.state.lock().unwrap().operations.is_empty());
+    assert!(wallet.store.pending_plan(&quote.id).unwrap().is_none());
+    let failed = wallet
+        .send(quote.id, TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    assert_eq!(failed.status, UsdtTransferStatus::Failed);
+    assert_eq!(failed.received_amount, 0);
+    assert_eq!(failed.fee, Some(0));
+    wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+async fn moderate_gas_price_movement_preserves_the_approved_fee() {
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    let plan = wallet.store.quote(&quote.id).unwrap().plan;
+    chain.state.lock().unwrap().gas_price = 52_000_000;
+    wallet
+        .send(quote.id, TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    assert_eq!(
+        chain.state.lock().unwrap().operations[0].max_fee_per_gas,
+        plan.operation.max_fee_per_gas
+    );
+}
+
+#[tokio::test]
+async fn unknown_paymaster_history_preserves_principal_fee_and_refund() {
+    use alloy_primitives::{Address, B256, U256};
+    use alloy_sol_types::SolEvent;
+    use serde_json::json;
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    wallet
+        .send(quote.id, TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    let payer = Address::repeat_byte(0xab);
+    let movement = |from, to, value, index| {
+        let event = transaction::Erc20::Transfer {
+            from,
+            to,
+            value: U256::from(value),
+        }
+        .encode_log_data();
+        json!({"address": types::TOKEN, "topics":event.topics(), "data":event.data, "logIndex": U256::from(index)})
+    };
+    {
+        let mut state = chain.state.lock().unwrap();
+        let op = &state.operations[0];
+        let event = transaction::EntryPoint::UserOperationEvent {
+            userOpHash: op.hash(types::CHAIN_ID).unwrap(),
+            sender: wallet.address,
+            paymaster: payer,
+            nonce: U256::ZERO,
+            success: true,
+            actualGasCost: U256::from(1),
+            actualGasUsed: U256::from(1),
+        }
+        .encode_log_data();
+        let log = json!({"address":account::ENTRY_POINT,"topics":event.topics(),"data":event.data,"transactionHash":B256::repeat_byte(7),"blockNumber":"0x4e20","logIndex":"0x3"});
+        state.receipt_logs = Some(vec![
+            movement(wallet.address, payer, 200u64, 0u64),
+            movement(
+                wallet.address,
+                RECIPIENT.parse().unwrap(),
+                1_000_000u64,
+                1u64,
+            ),
+            movement(payer, wallet.address, 50u64, 2u64),
+            log.clone(),
+        ]);
+        state.log_response = Some(vec![log]);
+        state.tip += 3;
+    }
+    let restored_dir = tempfile::tempdir().unwrap();
+    let restored = chain.wallet(&restored_dir);
+    sync_history_to_tip(&restored).await;
+    let history = restored.history().unwrap();
+    assert_eq!(history.len(), 3);
+    assert_eq!(
+        history
+            .iter()
+            .filter(|t| !t.is_incoming)
+            .map(|t| t.amount)
+            .sum::<u64>(),
+        1_000_200
+    );
+    assert_eq!(
+        history
+            .iter()
+            .filter(|t| t.is_incoming)
+            .map(|t| t.amount)
+            .sum::<u64>(),
+        50
+    );
+}
+
+#[tokio::test]
+async fn settlement_requires_matching_canonical_receipts() {
+    use alloy_primitives::B256;
+    use serde_json::json;
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    let sent = wallet
+        .send(quote.id, TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    let receipt = {
+        let mut state = chain.state.lock().unwrap();
+        state.mined = true;
+        state.tip += 3;
+        state
+            .respond(&json!({"method":"eth_getTransactionReceipt","params":[B256::repeat_byte(7)]}))
+            ["result"]
+            .clone()
+    };
+    for (field, value) in [
+        ("transactionHash", json!(B256::ZERO)),
+        ("blockHash", json!(B256::ZERO)),
+        ("blockNumber", json!("0x1")),
+    ] {
+        let mut invalid = receipt.clone();
+        invalid[field] = value;
+        chain.state.lock().unwrap().receipt_response = Some(invalid);
+        assert!(matches!(
+            wallet.refresh_transfers().await,
+            Err(UsdtError::InvalidResponse)
+        ));
+        assert!(wallet.store.pending_plan(&sent.id).unwrap().is_some());
+    }
+    chain.state.lock().unwrap().receipt_response = Some(serde_json::Value::Null);
+    assert!(matches!(
+        wallet.refresh_transfers().await,
+        Err(UsdtError::NetworkUnavailable)
+    ));
+    assert!(wallet.store.pending_plan(&sent.id).unwrap().is_some());
+    chain.state.lock().unwrap().receipt_response = None;
+    assert_eq!(
+        wallet.refresh_transfers().await.unwrap()[0].status,
+        UsdtTransferStatus::Confirmed
+    );
+}
+
+#[tokio::test]
+async fn bridge_settlement_recovers_guid_fees_and_preserves_delivery_on_rescan() {
+    use alloy_primitives::{B256, U256};
+    use alloy_sol_types::SolEvent;
+    use serde_json::json;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let mut wallet = chain.wallet(&dir);
+    let guid = B256::repeat_byte(0xab);
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    std::sync::Arc::get_mut(&mut wallet)
+        .unwrap()
+        .rpc
+        .bridge_status_url = Some(format!("http://{}", listener.local_addr().unwrap()));
+    let message = json!({"guid":guid,"pathway":{"srcEid":30110,"dstEid":30109,"sender":{"address":types::OFT}},"source":{"tx":{"txHash":B256::repeat_byte(7)}},"status":{"name":"DELIVERED"}});
+    let mut responses = Vec::new();
+    for (pointer, value) in [
+        ("/guid", json!(B256::ZERO)),
+        ("/pathway/srcEid", json!(30101)),
+        ("/pathway/dstEid", json!(30101)),
+        ("/pathway/sender/address", json!(RECIPIENT)),
+        ("/source/tx/txHash", json!(B256::ZERO)),
+        ("/status/name", json!("NEW_PROVIDER_STATUS")),
+        ("/status/name", json!("FAILED")),
+    ] {
+        let mut changed = message.clone();
+        *changed.pointer_mut(pointer).unwrap() = value;
+        responses.push((200, json!({"data":[changed]})));
+    }
+    responses.extend([
+        (429, json!({})),
+        (200, json!({"data":null})),
+        (200, json!({"data":[message]})),
+    ]);
+    let server = tokio::spawn(async move {
+        for (status, body) in responses {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = [0; 4096];
+            let size = socket.read(&mut request).await.unwrap();
+            assert!(String::from_utf8_lossy(&request[..size]).starts_with("GET /v1/messages/tx/0x"));
+            let body = body.to_string();
+            socket.write_all(format!("HTTP/1.1 {status} OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).as_bytes()).await.unwrap();
+        }
+    });
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Polygon)
+        .await
+        .unwrap();
+    let sent = wallet
+        .send(quote.id, TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    {
+        let mut state = chain.state.lock().unwrap();
+        state.mined = true;
+        state.tip += 3;
+        let mut logs = state.event_logs();
+        let log = |address, event: alloy_primitives::LogData, index| json!({"address":address,"topics":event.topics(),"data":event.data,"logIndex":U256::from(index)});
+        logs.insert(
+            1,
+            log(
+                types::OFT,
+                transaction::Oft::OFTSent {
+                    guid,
+                    dstEid: 30109,
+                    fromAddress: types::BRIDGE_HELPER,
+                    amountSentLD: U256::from(1_000_000),
+                    amountReceivedLD: U256::from(999_999),
+                }
+                .encode_log_data(),
+                1u64,
+            ),
+        );
+        logs.insert(
+            2,
+            log(
+                types::BRIDGE_HELPER,
+                transaction::BridgeHelper::LogSend {
+                    sender: wallet.address,
+                    oft: types::OFT,
+                    amountLD: U256::from(1_000_000),
+                    nativeFee: U256::from(10_000_000_000u64),
+                    feeInToken: U256::from(300_000),
+                    totalAmount: U256::from(1_300_000),
+                }
+                .encode_log_data(),
+                2u64,
+            ),
+        );
+        logs[3]["logIndex"] = json!("0x3");
+        state.receipt_logs = Some(logs);
+    }
+    sync_history_to_tip(&wallet).await;
+    let pending = wallet.history().unwrap().remove(0);
+    assert_eq!(pending.status, UsdtTransferStatus::Bridging);
+    assert_eq!(pending.bridge_guid, Some(format!("{guid:#x}")));
+    assert_eq!(pending.received_amount, 999_999);
+    assert_eq!(pending.fee, Some(300_123));
+    assert!(wallet.store.pending_plan(&sent.id).unwrap().is_none());
+    for _ in 0..6 {
+        assert_eq!(
+            wallet.rpc.bridge_status(&pending).await.unwrap(),
+            UsdtTransferStatus::Bridging
+        );
+    }
+    assert_eq!(
+        wallet.rpc.bridge_status(&pending).await.unwrap(),
+        UsdtTransferStatus::BridgeNeedsAttention
+    );
+    assert!(matches!(
+        wallet.rpc.bridge_status(&pending).await,
+        Err(UsdtError::NetworkUnavailable)
+    ));
+    assert!(matches!(
+        wallet.rpc.bridge_status(&pending).await,
+        Err(UsdtError::InvalidResponse)
+    ));
+    chain.state.lock().unwrap().chain = 1;
+    let mut delivered = wallet.refresh_transfers().await.unwrap().remove(0);
+    assert_eq!(delivered.status, UsdtTransferStatus::Confirmed);
+    server.await.unwrap();
+    delivered.bridge_guid = delivered.bridge_guid.map(|guid| guid.to_uppercase());
+    delivered.tx_hash = delivered.tx_hash.to_uppercase();
+    wallet.store.update_transfer(&delivered).unwrap();
+    chain.state.lock().unwrap().chain = 42161;
+    sync_history_to_tip(&wallet).await;
+    assert_eq!(
+        wallet.history().unwrap()[0].status,
+        UsdtTransferStatus::Confirmed
+    );
+    drop(wallet);
+    let restored_dir = tempfile::tempdir().unwrap();
+    let restored = chain.wallet(&restored_dir);
+    sync_history_to_tip(&restored).await;
+    let recovered = restored.history().unwrap().remove(0);
+    assert_eq!(recovered.destination, UsdtDestination::Polygon);
+    assert_eq!(recovered.bridge_guid, Some(format!("{guid:#x}")));
+    assert_eq!(recovered.fee, Some(300_123));
+}
+
+#[tokio::test]
+async fn destination_tokens_are_not_payment_recipients() {
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    for destination in [
+        UsdtDestination::Arbitrum,
+        UsdtDestination::Ethereum,
+        UsdtDestination::Polygon,
+        UsdtDestination::Plasma,
+        UsdtDestination::Stable,
+    ] {
+        assert!(matches!(
+            wallet
+                .quote_transfer(
+                    destination.token().to_checksum(None),
+                    1_000_000,
+                    destination
+                )
+                .await,
+            Err(UsdtError::InvalidAddress)
+        ));
+        if let Some(eid) = destination.endpoint() {
+            assert_eq!(UsdtDestination::from_endpoint(eid), Some(destination));
+        }
+    }
 }
