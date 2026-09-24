@@ -199,16 +199,26 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_invalid_lightning_invoice_sync() {
+    async fn test_invalid_lightning_invoice() {
         let invoice = "lnbc1invalid".to_string();
         assert!(matches!(
-            Scanner::decode_onchain(&invoice),
+            Scanner::decode(invoice).await,
             Err(DecodingError::InvalidFormat)
         ));
     }
 
     #[tokio::test]
-    async fn test_duplicate_bip21_params_fails() {
+    async fn test_issue_63_concatenated_bip21_uris_fails() {
+        // Exact regression test payload from https://github.com/synonymdev/bitkit-core/issues/63
+        let invoice = "bitcoin:bcrt1qr289x0fhg62672e8urudfnxnsr8tcax64xk2vk?amount=0.0000002&message=Bitkitbitcoin:bcrt1qr289x0fhg62672e8urudfnxnsr8tcax64xk2vk?amount=0.0000003&message=Bitkit".to_string();
+        assert!(matches!(
+            Scanner::decode(invoice).await,
+            Err(DecodingError::InvalidFormat)
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_duplicate_singleton_amount_fails() {
         let invoice =
             "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?amount=0.000035&amount=0.00005"
                 .to_string();
@@ -216,6 +226,91 @@ mod tests {
             Scanner::decode(invoice).await,
             Err(DecodingError::InvalidFormat)
         ));
+    }
+
+    #[tokio::test]
+    async fn test_duplicate_singleton_case_insensitive_amount_fails() {
+        let invoice =
+            "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?Amount=0.000035&amount=0.00005"
+                .to_string();
+        assert!(matches!(
+            Scanner::decode(invoice).await,
+            Err(DecodingError::InvalidFormat)
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_duplicate_singleton_label_fails() {
+        let invoice =
+            "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?label=one&LABEL=two".to_string();
+        assert!(matches!(
+            Scanner::decode(invoice).await,
+            Err(DecodingError::InvalidFormat)
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_duplicate_singleton_message_fails() {
+        let invoice =
+            "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?message=first&Message=second"
+                .to_string();
+        assert!(matches!(
+            Scanner::decode(invoice).await,
+            Err(DecodingError::InvalidFormat)
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_duplicate_singleton_pop_fails() {
+        let invoice =
+            "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?pop=http1&pop=http2".to_string();
+        assert!(matches!(
+            Scanner::decode(invoice).await,
+            Err(DecodingError::InvalidFormat)
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_allowed_duplicate_payment_instruction_keys_succeeds() {
+        let invoice =
+            "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?pj=https://endpoint1&pj=https://endpoint2"
+                .to_string();
+        let decoded = Scanner::decode(invoice).await.unwrap();
+        match decoded {
+            Scanner::OnChain { invoice } => {
+                assert!(invoice.params.is_some());
+            }
+            _ => assert!(false, "Should be an OnChain invoice"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_repeated_unknown_query_key_succeeds() {
+        let invoice = "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?custom=val1&custom=val2"
+            .to_string();
+        let decoded = Scanner::decode(invoice).await.unwrap();
+        match decoded {
+            Scanner::OnChain { invoice } => {
+                assert!(invoice.params.is_some());
+            }
+            _ => assert!(false, "Should be an OnChain invoice"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_query_key_case_insensitivity_parsed() {
+        let invoice =
+            "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?AMOUNT=0.000035&LABEL=MyLabel&MESSAGE=MyMessage"
+                .to_string();
+        let decoded = Scanner::decode(invoice).await.unwrap();
+        match decoded {
+            Scanner::OnChain { invoice } => {
+                assert_eq!(invoice.amount_satoshis, 3500);
+                assert_eq!(invoice.label.as_deref(), Some("MyLabel"));
+                assert_eq!(invoice.message.as_deref(), Some("MyMessage"));
+            }
+            _ => assert!(false, "Should be an OnChain invoice"),
+        }
     }
 
     #[tokio::test]
