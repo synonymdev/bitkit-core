@@ -308,7 +308,7 @@ impl Scanner {
         })
     }
 
-    fn decode_onchain(invoice_str: &str) -> Result<Self, DecodingError> {
+    pub(crate) fn decode_onchain(invoice_str: &str) -> Result<Self, DecodingError> {
         let without_prefix =
             if invoice_str.len() >= 8 && invoice_str[..8].eq_ignore_ascii_case("bitcoin:") {
                 &invoice_str[8..]
@@ -322,13 +322,7 @@ impl Scanner {
         }
 
         let (address_part, query_part) = match without_prefix.split_once('?') {
-            Some((addr, query)) => {
-                // If there's an additional '?' character in the query, it represents malformed/concatenated URIs
-                if query.contains('?') {
-                    return Err(DecodingError::InvalidFormat);
-                }
-                (addr, Some(query))
-            }
+            Some((addr, query)) => (addr, Some(query)),
             None => (without_prefix, None),
         };
 
@@ -348,16 +342,18 @@ impl Scanner {
                 };
 
                 let lower_k = k.to_ascii_lowercase();
-                let is_singleton = matches!(
-                    lower_k.as_str(),
-                    "amount" | "label" | "message" | "pop" | "req-pop"
-                );
+                let singleton_key = match lower_k.as_str() {
+                    "amount" => Some("amount"),
+                    "label" => Some("label"),
+                    "message" => Some("message"),
+                    "pop" | "req-pop" => Some("pop"),
+                    _ => None,
+                };
 
-                if is_singleton {
-                    if seen_singletons.contains(&lower_k) {
+                if let Some(canonical) = singleton_key {
+                    if !seen_singletons.insert(canonical) {
                         return Err(DecodingError::InvalidFormat);
                     }
-                    seen_singletons.insert(lower_k.clone());
                 }
 
                 params.insert(lower_k, v.to_string());

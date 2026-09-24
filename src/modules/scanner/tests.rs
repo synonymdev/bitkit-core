@@ -271,6 +271,67 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_duplicate_singleton_pop_req_pop_mixed_fails() {
+        // BIP 321 invalid URI: Multiple proof of payment URIs must not appear, even if prefixed with req-
+        let invoice =
+            "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?pop=callback%3a&req-pop=callback%3a"
+                .to_string();
+        assert!(matches!(
+            Scanner::decode(invoice).await,
+            Err(DecodingError::InvalidFormat)
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_duplicate_singleton_req_pop_then_pop_fails() {
+        let invoice =
+            "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?req-pop=callback1&pop=callback2"
+                .to_string();
+        assert!(matches!(
+            Scanner::decode(invoice).await,
+            Err(DecodingError::InvalidFormat)
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_duplicate_singleton_req_pop_fails() {
+        let invoice = "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?req-pop=cb1&REQ-POP=cb2"
+            .to_string();
+        assert!(matches!(
+            Scanner::decode(invoice).await,
+            Err(DecodingError::InvalidFormat)
+        ));
+    }
+
+    #[test]
+    fn test_bip321_spec_invalid_pop_req_pop_example_decode_onchain() {
+        // Exact BIP 321 specification example from section "Invalid URIs":
+        // "Multiple proof of payment URIs must not appear, even if they are sometimes prefixed with req-:
+        //  bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?pop=callback%3a&req-pop=callback%3a"
+        let invoice =
+            "bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?pop=callback%3a&req-pop=callback%3a";
+        assert!(matches!(
+            Scanner::decode_onchain(invoice),
+            Err(DecodingError::InvalidFormat)
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_query_containing_question_mark_data_succeeds() {
+        let invoice =
+            "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?message=Why?&amount=0.000035"
+                .to_string();
+        let decoded = Scanner::decode(invoice).await.unwrap();
+        match decoded {
+            Scanner::OnChain { invoice } => {
+                assert_eq!(invoice.amount_satoshis, 3500);
+                assert_eq!(invoice.message.as_deref(), Some("Why?"));
+            }
+            _ => assert!(false, "Should be an OnChain invoice"),
+        }
+    }
+
+    #[tokio::test]
     async fn test_allowed_duplicate_payment_instruction_keys_succeeds() {
         let invoice =
             "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?pj=https://endpoint1&pj=https://endpoint2"
