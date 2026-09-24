@@ -87,6 +87,9 @@ impl Rpc {
         } else {
             2_097_152
         };
+        if status.is_server_error() {
+            return Err(UsdtError::NetworkUnavailable);
+        }
         let body = bounded_json(response, limit, overflow).await;
         let response: Response =
             match body.and_then(|value| serde_json::from_value(value).map_err(Into::into)) {
@@ -116,8 +119,19 @@ impl Rpc {
             if error.code == -32002 {
                 return Err(UsdtError::NetworkUnavailable);
             }
-            if message.contains("insufficient funds") || message.contains("insufficient balance") {
-                return Err(UsdtError::InsufficientBalance);
+            if matches!(
+                method,
+                "eth_chainId"
+                    | "eth_blockNumber"
+                    | "eth_getCode"
+                    | "eth_getTransactionCount"
+                    | "eth_call"
+                    | "eth_getLogs"
+                    | "eth_getBlockByNumber"
+                    | "eth_getTransactionReceipt"
+                    | "eth_getTransactionByHash"
+            ) {
+                return Err(UsdtError::NetworkUnavailable);
             }
             return Err(UsdtError::TransactionRejected {
                 reason: error.message.chars().take(200).collect(),
@@ -151,6 +165,9 @@ impl Rpc {
         let receipt: Value = self
             .call("eth_getTransactionReceipt", json!([hash]))
             .await?;
+        if receipt.is_null() {
+            return Err(UsdtError::NetworkUnavailable);
+        }
         if serde_json::from_value::<B256>(receipt["transactionHash"].clone())? != hash
             || serde_json::from_value::<B256>(receipt["blockHash"].clone())? != block.hash
             || serde_json::from_value::<U256>(receipt["blockNumber"].clone())? != U256::from(number)

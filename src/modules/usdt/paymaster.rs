@@ -21,6 +21,12 @@ struct GasPrice {
 }
 
 #[derive(Deserialize)]
+struct GasPrices {
+    slow: GasPrice,
+    fast: GasPrice,
+}
+
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct TokenQuote {
     paymaster: Address,
@@ -118,7 +124,7 @@ impl Pimlico {
                     && !quote.exchange_rate.is_zero()
             })
             .ok_or(UsdtError::UnsupportedRoute)?;
-        let price = self.gas_price().await?;
+        let price = self.gas_prices().await?.fast;
         let dummy_signature = Bytes::from_static(&alloy_primitives::hex!("fffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c"));
         let mut op = UserOperation {
             sender: address,
@@ -209,7 +215,7 @@ impl Pimlico {
     }
 
     pub async fn validate_gas(&self, op: &UserOperation) -> Result<(), UsdtError> {
-        let price = self.gas_price().await?;
+        let price = self.gas_prices().await?.slow;
         if price.max_fee_per_gas > op.max_fee_per_gas
             || price.max_priority_fee_per_gas > op.max_priority_fee_per_gas
         {
@@ -234,21 +240,24 @@ impl Pimlico {
         Ok(())
     }
 
-    async fn gas_price(&self) -> Result<GasPrice, UsdtError> {
-        #[derive(Deserialize)]
-        struct Prices {
-            fast: GasPrice,
-        }
-        let price: Prices = self
+    async fn gas_prices(&self) -> Result<GasPrices, UsdtError> {
+        let prices: GasPrices = self
             .rpc
             .call("pimlico_getUserOperationGasPrice", json!([]))
             .await?;
-        if price.fast.max_fee_per_gas.is_zero()
-            || price.fast.max_priority_fee_per_gas > price.fast.max_fee_per_gas
+        for price in [&prices.slow, &prices.fast] {
+            if price.max_fee_per_gas.is_zero()
+                || price.max_priority_fee_per_gas > price.max_fee_per_gas
+            {
+                return Err(UsdtError::InvalidResponse);
+            }
+        }
+        if prices.slow.max_fee_per_gas > prices.fast.max_fee_per_gas
+            || prices.slow.max_priority_fee_per_gas > prices.fast.max_priority_fee_per_gas
         {
             return Err(UsdtError::InvalidResponse);
         }
-        Ok(price.fast)
+        Ok(prices)
     }
 }
 

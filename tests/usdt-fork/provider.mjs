@@ -138,6 +138,7 @@ async function dispatch(method, params) {
     };
   if (method === 'pimlico_getUserOperationGasPrice')
     return {
+      slow: { maxFeePerGas: toBeHex(90_000_000), maxPriorityFeePerGas: toBeHex(1_000_000) },
       fast: { maxFeePerGas: toBeHex(100_000_000), maxPriorityFeePerGas: toBeHex(1_000_000) },
     };
   if (method === 'eth_estimateUserOperationGas') return gas;

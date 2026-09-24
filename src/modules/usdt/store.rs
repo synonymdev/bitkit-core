@@ -28,6 +28,7 @@ impl Store {
             CREATE TABLE IF NOT EXISTS usdt_sync (id INTEGER PRIMARY KEY CHECK(id=1), newest INTEGER NOT NULL);
             CREATE TABLE IF NOT EXISTS usdt_history_progress (id INTEGER PRIMARY KEY CHECK(id=1), next INTEGER NOT NULL);
             CREATE TABLE IF NOT EXISTS usdt_history_receipts (hash TEXT PRIMARY KEY);
+            CREATE TABLE IF NOT EXISTS usdt_history_blocks (number INTEGER PRIMARY KEY, hash TEXT NOT NULL, complete INTEGER NOT NULL);
             CREATE TABLE IF NOT EXISTS usdt_quotes (id TEXT PRIMARY KEY, data TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS usdt_nonce_recovery (id TEXT PRIMARY KEY, block_hash TEXT NOT NULL, next_transaction INTEGER NOT NULL);
             CREATE TABLE IF NOT EXISTS usdt_transfers (id TEXT PRIMARY KEY, hash TEXT NOT NULL, raw TEXT, data TEXT NOT NULL);")?;
@@ -189,6 +190,10 @@ impl Store {
         let tx = connection.transaction()?;
         tx.execute("DELETE FROM usdt_history_progress", [])?;
         tx.execute("DELETE FROM usdt_history_receipts", [])?;
+        tx.execute(
+            "DELETE FROM usdt_history_blocks WHERE number < ?1",
+            [newest.saturating_sub(4096)],
+        )?;
         tx.execute("INSERT INTO usdt_sync (id,newest) VALUES (1,?1) ON CONFLICT(id) DO UPDATE SET newest=excluded.newest", [newest])?;
         tx.commit()?;
         Ok(())
@@ -208,6 +213,10 @@ impl Store {
     pub fn save_history_progress(&self, next: u64) -> Result<(), UsdtError> {
         let mut connection = self.connection()?;
         let tx = connection.transaction()?;
+        tx.execute(
+            "DELETE FROM usdt_history_blocks WHERE number < ?1",
+            [next.saturating_sub(4096)],
+        )?;
         tx.execute("INSERT INTO usdt_history_progress VALUES (1,?1) ON CONFLICT(id) DO UPDATE SET next=excluded.next", [next])?;
         tx.execute("DELETE FROM usdt_history_receipts", [])?;
         tx.commit()?;
@@ -216,9 +225,38 @@ impl Store {
 
     pub fn transaction_timestamp(&self, hash: &str) -> Result<Option<u64>, UsdtError> {
         Ok(self.connection()?.query_row(
-            "SELECT json_extract(data, '$.timestamp') FROM usdt_transfers WHERE json_extract(data, '$.tx_hash')=?1 LIMIT 1",
+            "SELECT json_extract(data, '$.timestamp') FROM usdt_transfers WHERE json_extract(data, '$.tx_hash')=?1 AND json_extract(data, '$.status') != 'Pending' LIMIT 1",
             [hash], |row| row.get(0),
         ).optional()?)
+    }
+
+    pub fn begin_history_block(&self, number: u64, hash: &str) -> Result<bool, UsdtError> {
+        let mut connection = self.connection()?;
+        let tx = connection.transaction()?;
+        let saved: Option<(String, bool)> = tx
+            .query_row(
+                "SELECT hash, complete FROM usdt_history_blocks WHERE number=?1",
+                [number],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()?;
+        if let Some((saved_hash, complete)) = saved {
+            if saved_hash == hash {
+                return Ok(complete);
+            }
+            tx.execute("DELETE FROM usdt_history_receipts", [])?;
+        }
+        tx.execute("INSERT INTO usdt_history_blocks VALUES (?1,?2,0) ON CONFLICT(number) DO UPDATE SET hash=excluded.hash,complete=0", params![number, hash])?;
+        tx.commit()?;
+        Ok(false)
+    }
+
+    pub fn complete_history_block(&self, number: u64, hash: &str) -> Result<(), UsdtError> {
+        self.connection()?.execute(
+            "UPDATE usdt_history_blocks SET complete=1 WHERE number=?1 AND hash=?2",
+            params![number, hash],
+        )?;
+        Ok(())
     }
 
     pub fn has_history_receipt(&self, hash: &str) -> Result<bool, UsdtError> {

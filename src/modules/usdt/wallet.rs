@@ -39,11 +39,11 @@ impl UsdtWallet {
             return Err(UsdtError::NotConfigured);
         }
         let address = parse_address(&address)?;
-        let store = Store::open(&storage_path, &format!("{CHAIN_ID}:{}", address))?;
         let rpc = Rpc::new(rpc_url, CHAIN_ID)?;
         let paymaster = Pimlico {
             rpc: rpc.with_url(bundler_url)?,
         };
+        let store = Store::open(&storage_path, &format!("{CHAIN_ID}:{}", address))?;
         Ok(Arc::new(Self {
             address,
             rpc,
@@ -80,7 +80,15 @@ impl UsdtWallet {
             return Err(UsdtError::InvalidAmount);
         }
         let recipient = parse_address(recipient.trim())?;
-        if recipient == self.address || recipient == TOKEN {
+        if [
+            self.address,
+            TOKEN,
+            ENTRY_POINT,
+            PAYMASTER,
+            super::account::DELEGATE,
+        ]
+        .contains(&recipient)
+        {
             return Err(UsdtError::InvalidAddress);
         }
         self.store.require_no_pending()?;
@@ -173,7 +181,7 @@ impl UsdtWallet {
         }
         let (hash, raw) = data.plan.sign(&key)?;
         drop(key);
-        let transfer = UsdtTransfer {
+        let mut transfer = UsdtTransfer {
             id: quote_id,
             tx_hash: String::new(),
             user_operation_hash: Some(format!("{hash:#x}")),
@@ -188,7 +196,19 @@ impl UsdtWallet {
         };
         self.store.record_signed(&transfer, &raw)?;
         // After persistence a lost response is indeterminate. Retry only the identical signed operation.
-        let _ = self.broadcast(&data.plan, hash).await;
+        if let Err(error) = self.broadcast(&data.plan, hash).await {
+            // These errors occur before submission; later retries may already be queued.
+            if matches!(
+                error,
+                UsdtError::QuoteExpired | UsdtError::UnsupportedDelegation
+            ) {
+                transfer.status = UsdtTransferStatus::Failed;
+                transfer.received_amount = 0;
+                transfer.fee = Some(0);
+                self.store.update_transfer(&transfer)?;
+                return Err(error);
+            }
+        }
         Ok(transfer)
     }
 
@@ -352,6 +372,8 @@ impl UsdtWallet {
                     transfer.received_amount = 0;
                     transfer.fee = Some(0);
                 }
+                transfer.timestamp =
+                    u64::try_from(block.timestamp).map_err(|_| UsdtError::InvalidResponse)?;
                 return self.store.update_transfer(transfer);
             }
             self.store
@@ -419,18 +441,25 @@ impl UsdtWallet {
         if self.authorization().await?.nonce != plan.operation.eip7702_auth.nonce {
             return Err(UsdtError::QuoteExpired);
         }
-        let hash: B256 = self
+        let result: Result<B256, UsdtError> = self
             .paymaster
             .rpc
             .call(
                 "eth_sendUserOperation",
                 json!([plan.operation, ENTRY_POINT]),
             )
-            .await?;
-        if hash != expected_hash {
-            return Err(UsdtError::InvalidResponse);
+            .await;
+        match result {
+            Ok(hash) if hash == expected_hash => Ok(()),
+            Ok(_) => {
+                log::warn!("USDT submission returned an unexpected operation hash; retaining pending payment");
+                Err(UsdtError::InvalidResponse)
+            }
+            Err(error) => {
+                log::warn!("USDT submission could not be confirmed; retaining pending payment");
+                Err(error)
+            }
         }
-        Ok(())
     }
     async fn settle_from_log(
         &self,
@@ -443,11 +472,17 @@ impl UsdtWallet {
         }
         transfer.tx_hash = serde_json::from_value(log["transactionHash"].clone())?;
         transfer.explorer_url = format!("{EXPLORER}/tx/{}", transfer.tx_hash);
-        let receipt = self
-            .rpc
-            .call("eth_getTransactionReceipt", json!([transfer.tx_hash]))
-            .await?;
+        let number = u64::try_from(serde_json::from_value::<U256>(log["blockNumber"].clone())?)
+            .map_err(|_| UsdtError::InvalidResponse)?;
+        let block = self.rpc.block(number).await?;
+        let hash = transfer
+            .tx_hash
+            .parse()
+            .map_err(|_| UsdtError::InvalidResponse)?;
+        let receipt = self.rpc.block_receipt(hash, &block, number).await?;
         self.settle(transfer, &receipt, event.success)?;
+        transfer.timestamp =
+            u64::try_from(block.timestamp).map_err(|_| UsdtError::InvalidResponse)?;
         self.store.update_transfer(transfer)
     }
 
