@@ -15,6 +15,13 @@ pub(super) const PAYMASTER: Address = address!("888888888888Ec68A58AB8094Cc1AD20
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+struct GasPrice {
+    max_fee_per_gas: U256,
+    max_priority_fee_per_gas: U256,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct TokenQuote {
     paymaster: Address,
     token: Address,
@@ -95,16 +102,6 @@ impl Pimlico {
         struct Quotes {
             quotes: Vec<TokenQuote>,
         }
-        #[derive(Deserialize)]
-        struct Prices {
-            fast: GasPrice,
-        }
-        #[derive(Deserialize)]
-        #[serde(rename_all = "camelCase")]
-        struct GasPrice {
-            max_fee_per_gas: U256,
-            max_priority_fee_per_gas: U256,
-        }
         let quotes: Quotes = self
             .rpc
             .call(
@@ -121,15 +118,7 @@ impl Pimlico {
                     && !quote.exchange_rate.is_zero()
             })
             .ok_or(UsdtError::UnsupportedRoute)?;
-        let price: Prices = self
-            .rpc
-            .call("pimlico_getUserOperationGasPrice", json!([]))
-            .await?;
-        if price.fast.max_fee_per_gas.is_zero()
-            || price.fast.max_priority_fee_per_gas > price.fast.max_fee_per_gas
-        {
-            return Err(UsdtError::InvalidResponse);
-        }
+        let price = self.gas_price().await?;
         let dummy_signature = Bytes::from_static(&alloy_primitives::hex!("fffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c"));
         let mut op = UserOperation {
             sender: address,
@@ -140,8 +129,8 @@ impl Pimlico {
             call_gas_limit: U256::ZERO,
             verification_gas_limit: U256::ZERO,
             pre_verification_gas: U256::ZERO,
-            max_fee_per_gas: price.fast.max_fee_per_gas,
-            max_priority_fee_per_gas: price.fast.max_priority_fee_per_gas,
+            max_fee_per_gas: price.max_fee_per_gas,
+            max_priority_fee_per_gas: price.max_priority_fee_per_gas,
             paymaster: PAYMASTER,
             paymaster_verification_gas_limit: U256::ZERO,
             paymaster_post_op_gas_limit: U256::ZERO,
@@ -164,7 +153,7 @@ impl Pimlico {
             valid_after: 0,
         };
         let mut allowance = approval_margin(estimate_terms.maximum_token_cost(&op)?)?;
-        // Final provider data can include a fixed token charge. Rebuild the bounded approval before signing.
+        // Provider data can change gas limits and token charges. Refine both before signing.
         for _ in 0..3 {
             op.call_data = with_approval(calls, allowance);
             self.apply_paymaster(&mut op, "pm_getPaymasterData").await?;
@@ -220,6 +209,12 @@ impl Pimlico {
     }
 
     pub async fn validate_gas(&self, op: &UserOperation) -> Result<(), UsdtError> {
+        let price = self.gas_price().await?;
+        if price.max_fee_per_gas > op.max_fee_per_gas
+            || price.max_priority_fee_per_gas > op.max_priority_fee_per_gas
+        {
+            return Err(UsdtError::QuoteExpired);
+        }
         let estimate: GasEstimate = self
             .rpc
             .call("eth_estimateUserOperationGas", json!([op, ENTRY_POINT]))
@@ -237,6 +232,23 @@ impl Pimlico {
             return Err(UsdtError::QuoteExpired);
         }
         Ok(())
+    }
+
+    async fn gas_price(&self) -> Result<GasPrice, UsdtError> {
+        #[derive(Deserialize)]
+        struct Prices {
+            fast: GasPrice,
+        }
+        let price: Prices = self
+            .rpc
+            .call("pimlico_getUserOperationGasPrice", json!([]))
+            .await?;
+        if price.fast.max_fee_per_gas.is_zero()
+            || price.fast.max_priority_fee_per_gas > price.fast.max_fee_per_gas
+        {
+            return Err(UsdtError::InvalidResponse);
+        }
+        Ok(price.fast)
     }
 }
 

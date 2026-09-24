@@ -57,7 +57,7 @@ impl UsdtWallet {
             store,
             operation: Mutex::new(()),
             bridge_poll_offset: AtomicUsize::new(0),
-            history_range_limit: AtomicU64::new(10_000_000),
+            history_range_limit: AtomicU64::new(super::history::MAX_LOG_RANGE),
         }))
     }
 
@@ -130,7 +130,6 @@ impl UsdtWallet {
                 operation,
                 created_block,
                 expires_at: operation_expires_at,
-                bridge_fee,
             },
         })?;
         Ok(quote)
@@ -142,12 +141,14 @@ impl UsdtWallet {
         mnemonic: String,
         passphrase: Option<String>,
     ) -> Result<UsdtTransfer, UsdtError> {
+        let mnemonic = zeroize::Zeroizing::new(mnemonic);
+        let passphrase = passphrase.map(zeroize::Zeroizing::new);
         let _guard = self.operation.lock().await;
-        let key = derive_key(mnemonic, passphrase)?;
-        if super::keys::key_address(&key) != self.address {
-            return Err(UsdtError::InvalidCredentials);
-        }
         if let Some(existing) = self.store.transfer(&quote_id)? {
+            let key = derive_key(mnemonic, passphrase)?;
+            if super::keys::key_address(&key) != self.address {
+                return Err(UsdtError::InvalidCredentials);
+            }
             return Ok(existing);
         }
         self.store.require_no_pending()?;
@@ -174,10 +175,15 @@ impl UsdtWallet {
         {
             return Err(UsdtError::QuoteExpired);
         }
+        let key = derive_key(mnemonic, passphrase)?;
+        if super::keys::key_address(&key) != self.address {
+            return Err(UsdtError::InvalidCredentials);
+        }
         if data.quote.expires_at <= now() + 5 {
             return Err(UsdtError::QuoteExpired);
         }
         let (hash, raw) = data.plan.sign(&key)?;
+        drop(key);
         let transfer = UsdtTransfer {
             id: quote_id,
             tx_hash: String::new(),
@@ -187,7 +193,6 @@ impl UsdtWallet {
             destination: data.quote.destination,
             amount: data.quote.amount,
             received_amount: data.quote.received_amount,
-            bridge_fee: data.plan.bridge_fee,
             fee: None,
             is_incoming: false,
             status: UsdtTransferStatus::Pending,
@@ -203,10 +208,7 @@ impl UsdtWallet {
     pub async fn sync_history(&self) -> Result<bool, UsdtError> {
         let _guard = self.operation.lock().await;
         self.rpc.verify_chain().await?;
-        match tokio::time::timeout(std::time::Duration::from_secs(20), self.scan_history()).await {
-            Ok(result) => result.map(|()| true),
-            Err(_) => Ok(false),
-        }
+        self.scan_history().await
     }
 
     pub fn history(&self) -> Result<Vec<UsdtTransfer>, UsdtError> {
@@ -264,10 +266,15 @@ impl UsdtWallet {
                 if nonce > plan.operation.nonce {
                     // A nonce advance alone cannot distinguish this payment from a replacement.
                     let block = self.nonce_consumed_block(&plan, confirmed_tip).await?;
-                    let candidates: Vec<Value> = self.rpc.call("eth_getLogs", json!([{
+                    let candidates: Vec<Value> = match self.rpc.call("eth_getLogs", json!([{
                         "address": ENTRY_POINT, "fromBlock": U256::from(block), "toBlock": U256::from(block),
                         "topics": [EntryPoint::UserOperationEvent::SIGNATURE_HASH, null, self.address.into_word()]
-                    }])).await?;
+                    }])).await {
+                        Ok(logs) => logs,
+                        Err(UsdtError::LogRangeTooLarge) => Vec::new(),
+                        Err(error) => return Err(error),
+                    };
+                    let mut matched = false;
                     for log in candidates
                         .iter()
                         .filter(|log| log["removed"].as_bool() != Some(true))
@@ -292,14 +299,22 @@ impl UsdtWallet {
                             self.settle_from_log(&mut transfer, log, event).await?;
                         } else {
                             transfer.status = UsdtTransferStatus::Replaced;
+                            transfer.received_amount = 0;
+                            transfer.fee = Some(0);
                             self.store.update_transfer(&transfer)?;
                         }
+                        matched = true;
                         break;
+                    }
+                    if !matched {
+                        self.reconcile_consumed_nonce(&mut transfer, &plan, block)
+                            .await?;
                     }
                 } else {
                     let expired = self.block_timestamp(confirmed_tip).await? > plan.expires_at;
                     if nonce == plan.operation.nonce && expired {
                         transfer.status = UsdtTransferStatus::Failed;
+                        transfer.received_amount = 0;
                         transfer.fee = Some(0);
                         self.store.update_transfer(&transfer)?;
                     } else if !expired {
@@ -313,6 +328,65 @@ impl UsdtWallet {
 }
 
 impl UsdtWallet {
+    async fn reconcile_consumed_nonce(
+        &self,
+        transfer: &mut UsdtTransfer,
+        plan: &Plan,
+        number: u64,
+    ) -> Result<(), UsdtError> {
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(20);
+        let block = self.rpc.block(number).await?;
+        let block_hash = format!("{:#x}", block.hash);
+        let start = self.store.nonce_recovery(&transfer.id, &block_hash)?;
+        if start > block.transactions.len() {
+            return Err(UsdtError::InvalidResponse);
+        }
+        for (index, hash) in block.transactions.iter().enumerate().skip(start) {
+            if tokio::time::Instant::now() >= deadline {
+                return Ok(());
+            }
+            let receipt = self.rpc.block_receipt(*hash, &block, number).await?;
+            for log in receipt["logs"]
+                .as_array()
+                .ok_or(UsdtError::InvalidResponse)?
+            {
+                if serde_json::from_value::<Address>(log["address"].clone())? != ENTRY_POINT {
+                    continue;
+                }
+                let Ok(event) = EntryPoint::UserOperationEvent::decode_log_data(&event_data(log)?)
+                else {
+                    continue;
+                };
+                if event.sender != self.address || event.nonce != plan.operation.nonce {
+                    continue;
+                }
+                if event.userOpHash == plan.operation.hash(CHAIN_ID)? {
+                    if event.paymaster != PAYMASTER {
+                        return Err(UsdtError::InvalidResponse);
+                    }
+                    transfer.tx_hash = format!("{hash:#x}");
+                    transfer.explorer_url = format!("{EXPLORER}/tx/{hash:#x}");
+                    self.settle(transfer, &receipt, event.success)?;
+                } else {
+                    transfer.status = UsdtTransferStatus::Replaced;
+                    transfer.received_amount = 0;
+                    transfer.fee = Some(0);
+                }
+                return self.store.update_transfer(transfer);
+            }
+            self.store
+                .save_nonce_recovery(&transfer.id, &block_hash, index + 1)?;
+        }
+        // Empty indexed logs are insufficient; every receipt in the consuming block must be checked.
+        if self.rpc.block(number).await?.hash != block.hash {
+            return Err(UsdtError::NetworkUnavailable);
+        }
+        transfer.status = UsdtTransferStatus::Replaced;
+        transfer.received_amount = 0;
+        transfer.fee = Some(0);
+        self.store.update_transfer(transfer)
+    }
+
     async fn refresh_bridges(&self, transfers: &[UsdtTransfer]) -> Result<(), UsdtError> {
         let mut bridges: Vec<_> = transfers
             .iter()
@@ -511,9 +585,9 @@ impl UsdtWallet {
                 }
             }
         }
-        transfer.bridge_fee = bridge_fee.unwrap_or(0);
-        transfer.fee = gas_fee.and_then(|fee| fee.checked_add(transfer.bridge_fee));
+        transfer.fee = gas_fee.and_then(|fee| fee.checked_add(bridge_fee.unwrap_or(0)));
         transfer.status = if !success {
+            transfer.received_amount = 0;
             UsdtTransferStatus::Failed
         } else if transfer.destination == UsdtDestination::Arbitrum {
             UsdtTransferStatus::Confirmed

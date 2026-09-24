@@ -10,31 +10,56 @@ use alloy_sol_types::{SolCall, SolEvent};
 use serde_json::{json, Value};
 use std::{collections::BTreeMap, sync::atomic::Ordering};
 
+pub(super) const MAX_LOG_RANGE: u64 = 10_000_000;
+
 impl UsdtWallet {
-    pub(super) async fn scan_history(&self) -> Result<(), UsdtError> {
+    pub(super) async fn scan_history(&self) -> Result<bool, UsdtError> {
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(20);
         let tip = self.block_number().await?.saturating_sub(2);
         let previous = self.store.synced_block()?;
         let start = self.store.history_progress()?.unwrap_or_else(|| {
             previous
-                .map(|newest| newest.saturating_sub(4096))
+                .map(|block| block.saturating_sub(4096))
                 .unwrap_or(0)
         });
         if start > tip {
             return Err(UsdtError::NetworkUnavailable);
         }
         let mut next = start;
-        let mut maximum_width = self.history_range_limit.load(Ordering::Relaxed);
-        let mut width = maximum_width.min(tip - start + 1);
+        let mut width = self
+            .history_range_limit
+            .load(Ordering::Relaxed)
+            .min(tip - start + 1);
         while next <= tip {
+            if tokio::time::Instant::now() >= deadline {
+                return Ok(false);
+            }
             let end = next.saturating_add(width - 1).min(tip);
-            match self.history_logs(next, end).await {
+            let query = tokio::time::timeout(
+                std::time::Duration::from_secs(10),
+                self.history_logs(next, end),
+            )
+            .await;
+            let result = match query {
+                Ok(result) => result,
+                Err(_) => {
+                    self.history_range_limit
+                        .store((width / 2).max(1), Ordering::Relaxed);
+                    return Ok(false);
+                }
+            };
+            match result {
                 Ok(transactions) => {
-                    // Persist each receipt before advancing the range. An interrupted dense block
-                    // resumes without re-fetching the receipts already saved in this scan.
+                    if self.store.history_progress()? != Some(next) {
+                        self.store.save_history_progress(next)?;
+                    }
                     let mut timestamps = BTreeMap::new();
                     for ((block, hash), logs) in transactions {
                         if self.store.has_history_receipt(&hash)? {
                             continue;
+                        }
+                        if tokio::time::Instant::now() >= deadline {
+                            return Ok(false);
                         }
                         let needs_receipt = logs.iter().any(|log| {
                             serde_json::from_value::<Address>(log["address"].clone())
@@ -61,26 +86,73 @@ impl UsdtWallet {
                                 timestamps.insert(block, timestamp);
                                 timestamp
                             };
-                        let transfers = self.receipt_history(&hash, timestamp, &receipt).await?;
-                        self.store.save_history_receipt(&transfers, &hash)?;
+                        self.save_receipt_history(&hash, timestamp, &receipt)
+                            .await?;
                     }
-                    if end == tip {
-                        self.store.complete_history(tip)?;
-                        break;
-                    }
-                    next = end + 1;
-                    self.store.save_history_progress(next)?;
-                    width = (width * 2).min(maximum_width).min(tip - next + 1);
                 }
                 Err(UsdtError::LogRangeTooLarge) if next < end => {
                     width = (width / 2).max(1);
-                    maximum_width = width;
                     self.history_range_limit.store(width, Ordering::Relaxed);
+                    continue;
+                }
+                Err(UsdtError::LogRangeTooLarge) => {
+                    if !self.scan_block(next, deadline).await? {
+                        return Ok(false);
+                    }
+                }
+                Err(UsdtError::NetworkUnavailable) => {
+                    self.history_range_limit
+                        .store((width / 2).max(1), Ordering::Relaxed);
+                    return Err(UsdtError::NetworkUnavailable);
                 }
                 Err(error) => return Err(error),
             }
+            if end == tip {
+                self.store.complete_history(tip)?;
+                return Ok(true);
+            }
+            next = end + 1;
+            self.store.save_history_progress(next)?;
+            width = (width * 2).min(MAX_LOG_RANGE);
+            self.history_range_limit.store(width, Ordering::Relaxed);
+            width = width.min(tip - next + 1);
         }
-        Ok(())
+        Ok(true)
+    }
+
+    async fn scan_block(
+        &self,
+        number: u64,
+        deadline: tokio::time::Instant,
+    ) -> Result<bool, UsdtError> {
+        let block = self.rpc.block(number).await?;
+        let timestamp = u64::try_from(block.timestamp).map_err(|_| UsdtError::InvalidResponse)?;
+        if self.store.history_progress()? != Some(number) {
+            self.store.save_history_progress(number)?;
+        }
+        for hash in &block.transactions {
+            let id = format!("{hash:#x}");
+            if self.store.has_history_receipt(&id)? {
+                continue;
+            }
+            if tokio::time::Instant::now() >= deadline {
+                return Ok(false);
+            }
+            let receipt = self.rpc.block_receipt(*hash, &block, number).await?;
+            self.save_receipt_history(&id, timestamp, &receipt).await?;
+        }
+        Ok(true)
+    }
+
+    async fn save_receipt_history(
+        &self,
+        hash: &str,
+        timestamp: u64,
+        receipt: &Value,
+    ) -> Result<(), UsdtError> {
+        // Finish and persist a receipt before yielding the work budget.
+        let transfers = self.receipt_history(hash, timestamp, receipt).await?;
+        self.store.save_history_receipt(&transfers, hash)
     }
 
     async fn history_logs(
@@ -101,6 +173,13 @@ impl UsdtWallet {
         for log in incoming_and_operations.into_iter().chain(outgoing) {
             if log["removed"].as_bool() == Some(true) {
                 continue;
+            }
+            if serde_json::from_value::<Address>(log["address"].clone())? == TOKEN {
+                let event = Erc20::Transfer::decode_log_data(&event_data(&log)?)
+                    .map_err(|_| UsdtError::InvalidResponse)?;
+                if event.value.is_zero() || event.from == event.to {
+                    continue;
+                }
             }
             let hash: String = serde_json::from_value(log["transactionHash"].clone())?;
             let block = u64::try_from(serde_json::from_value::<U256>(log["blockNumber"].clone())?)
@@ -159,7 +238,6 @@ impl UsdtWallet {
                 destination: UsdtDestination::Arbitrum,
                 amount: token_amount(event.value)?,
                 received_amount: token_amount(event.value)?,
-                bridge_fee: 0,
                 fee: None,
                 is_incoming: incoming,
                 status: UsdtTransferStatus::Confirmed,
@@ -213,7 +291,6 @@ impl UsdtWallet {
                 destination,
                 amount,
                 received_amount: amount,
-                bridge_fee: 0,
                 fee: None,
                 is_incoming: false,
                 status: UsdtTransferStatus::Pending,

@@ -1,5 +1,5 @@
 use super::{UsdtError, UsdtTransfer, UsdtTransferStatus};
-use alloy_primitives::{Address, Bytes, U256};
+use alloy_primitives::{Address, Bytes, B256, U256};
 use alloy_sol_types::SolCall;
 use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::{json, Value};
@@ -8,6 +8,13 @@ use tokio::{sync::Mutex, time::Instant};
 
 const REQUEST_INTERVAL: Duration = Duration::from_millis(750);
 const BURST_WINDOW: Duration = Duration::from_millis(750 * 19);
+
+#[derive(Deserialize)]
+pub(super) struct Block {
+    pub hash: B256,
+    pub timestamp: U256,
+    pub transactions: Vec<B256>,
+}
 
 pub(super) struct Rpc {
     client: reqwest::Client,
@@ -31,18 +38,7 @@ struct RpcError {
 
 impl Rpc {
     pub fn new(url: String, chain_id: u64) -> Result<Self, UsdtError> {
-        let parsed = url::Url::parse(&url).map_err(|_| UsdtError::NetworkUnavailable)?;
-        if parsed.scheme() != "https"
-            && !(parsed.scheme() == "http"
-                && matches!(parsed.host_str(), Some("127.0.0.1" | "localhost")))
-        {
-            return Err(UsdtError::NetworkUnavailable);
-        }
-        let client = reqwest::Client::builder()
-            .timeout(Duration::from_secs(25))
-            .redirect(reqwest::redirect::Policy::none())
-            .build()
-            .map_err(|_| UsdtError::NetworkUnavailable)?;
+        let client = endpoint_client(&url, Duration::from_secs(25))?;
         Ok(Self {
             client,
             #[cfg(test)]
@@ -83,16 +79,25 @@ impl Rpc {
         if response.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
             return Err(UsdtError::RateLimited);
         }
-        let response = response
-            .error_for_status()
-            .map_err(|_| UsdtError::NetworkUnavailable)?;
+        let status = response.status();
         let overflow = if method == "eth_getLogs" {
             UsdtError::LogRangeTooLarge
         } else {
             UsdtError::InvalidResponse
         };
+        // The proxy projects receipts to fixed-size USDT protocol events.
+        let limit = if method == "eth_getTransactionReceipt" {
+            16 * 1024 * 1024
+        } else {
+            2_097_152
+        };
+        let body = bounded_json(response, limit, overflow).await;
         let response: Response =
-            serde_json::from_value(Self::bounded_json(response, overflow).await?)?;
+            match body.and_then(|value| serde_json::from_value(value).map_err(Into::into)) {
+                Ok(response) => response,
+                Err(_) if !status.is_success() => return Err(UsdtError::NetworkUnavailable),
+                Err(error) => return Err(error),
+            };
         if let Some(error) = response.error {
             let message = error.message.to_ascii_lowercase();
             if error.code == -32016
@@ -112,12 +117,18 @@ impl Rpc {
             if method == "eth_getLogs" && error.code == -32005 {
                 return Err(UsdtError::LogRangeTooLarge);
             }
+            if error.code == -32002 {
+                return Err(UsdtError::NetworkUnavailable);
+            }
             if message.contains("insufficient funds") || message.contains("insufficient balance") {
                 return Err(UsdtError::InsufficientBalance);
             }
             return Err(UsdtError::TransactionRejected {
                 reason: error.message.chars().take(200).collect(),
             });
+        }
+        if !status.is_success() {
+            return Err(UsdtError::NetworkUnavailable);
         }
         serde_json::from_value(response.result.unwrap_or(Value::Null)).map_err(Into::into)
     }
@@ -155,7 +166,7 @@ impl Rpc {
             .map_err(|_| UsdtError::NetworkUnavailable)?
             .error_for_status()
             .map_err(|_| UsdtError::NetworkUnavailable)?;
-        let response = Self::bounded_json(response, UsdtError::InvalidResponse).await?;
+        let response = bounded_json(response, 2_097_152, UsdtError::InvalidResponse).await?;
         let messages = response["data"]
             .as_array()
             .ok_or(UsdtError::InvalidResponse)?;
@@ -188,27 +199,32 @@ impl Rpc {
         })
     }
 
-    async fn bounded_json(
-        mut response: reqwest::Response,
-        overflow: UsdtError,
-    ) -> Result<Value, UsdtError> {
-        let mut body = Vec::new();
-        while let Some(chunk) = response
-            .chunk()
-            .await
-            .map_err(|_| UsdtError::NetworkUnavailable)?
-        {
-            if body.len() + chunk.len() > 2_097_152 {
-                return Err(overflow);
-            }
-            body.extend_from_slice(&chunk);
-        }
-        serde_json::from_slice(&body).map_err(Into::into)
-    }
-
     pub async fn balance(&self, address: Address) -> Result<U256, UsdtError> {
         self.call("eth_getBalance", json!([address, "pending"]))
             .await
+    }
+
+    pub async fn block(&self, number: u64) -> Result<Block, UsdtError> {
+        self.call("eth_getBlockByNumber", json!([U256::from(number), false]))
+            .await
+    }
+
+    pub async fn block_receipt(
+        &self,
+        hash: B256,
+        block: &Block,
+        number: u64,
+    ) -> Result<Value, UsdtError> {
+        let receipt: Value = self
+            .call("eth_getTransactionReceipt", json!([hash]))
+            .await?;
+        if serde_json::from_value::<B256>(receipt["transactionHash"].clone())? != hash
+            || serde_json::from_value::<B256>(receipt["blockHash"].clone())? != block.hash
+            || serde_json::from_value::<U256>(receipt["blockNumber"].clone())? != U256::from(number)
+        {
+            return Err(UsdtError::InvalidResponse);
+        }
+        Ok(receipt)
     }
 
     pub async fn contract<C: SolCall>(&self, to: Address, call: C) -> Result<C::Return, UsdtError> {
@@ -222,9 +238,102 @@ impl Rpc {
     }
 }
 
+pub(super) fn endpoint_client(url: &str, timeout: Duration) -> Result<reqwest::Client, UsdtError> {
+    let parsed = url::Url::parse(url).map_err(|_| UsdtError::NotConfigured)?;
+    if (parsed.scheme() != "https"
+        && !(parsed.scheme() == "http"
+            && matches!(parsed.host_str(), Some("127.0.0.1" | "localhost"))))
+        || !parsed.username().is_empty()
+        || parsed.password().is_some()
+        || parsed.query().is_some()
+        || parsed.fragment().is_some()
+    {
+        return Err(UsdtError::NotConfigured);
+    }
+    reqwest::Client::builder()
+        .timeout(timeout)
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .map_err(|_| UsdtError::NetworkUnavailable)
+}
+
+pub(super) async fn bounded_json(
+    mut response: reqwest::Response,
+    limit: usize,
+    overflow: UsdtError,
+) -> Result<Value, UsdtError> {
+    let mut body = Vec::new();
+    while let Some(chunk) = response
+        .chunk()
+        .await
+        .map_err(|_| UsdtError::NetworkUnavailable)?
+    {
+        if body.len() + chunk.len() > limit {
+            return Err(overflow);
+        }
+        body.extend_from_slice(&chunk);
+    }
+    serde_json::from_slice(&body).map_err(Into::into)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn endpoints_reject_embedded_credentials_and_insecure_remote_hosts() {
+        for url in [
+            "http://example.com",
+            "https://user:key@example.com",
+            "https://example.com?apikey=secret",
+            "https://example.com#secret",
+            "not a url",
+        ] {
+            assert!(matches!(
+                Rpc::new(url.into(), 42161),
+                Err(UsdtError::NotConfigured)
+            ));
+        }
+        assert!(Rpc::new("https://example.com/v1/usdt/chain-rpc".into(), 42161).is_ok());
+        assert!(Rpc::new("http://127.0.0.1:3100/v1/usdt/chain-rpc".into(), 42161).is_ok());
+    }
+
+    #[tokio::test]
+    async fn http_errors_preserve_structured_rejections_and_network_failures() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        for (status, body) in [
+            (
+                400,
+                r#"{"error":{"code":-32602,"message":"Unsupported USDT request"}}"#,
+            ),
+            (
+                502,
+                r#"{"error":{"code":-32002,"message":"Provider unavailable"}}"#,
+            ),
+            (503, "Service unavailable"),
+        ] {
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let url = format!("http://{}", listener.local_addr().unwrap());
+            let server = tokio::spawn(async move {
+                let (mut socket, _) = listener.accept().await.unwrap();
+                let mut request = [0u8; 4096];
+                assert!(socket.read(&mut request).await.unwrap() > 0);
+                let response = format!("HTTP/1.1 {status} Error\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len());
+                socket.write_all(response.as_bytes()).await.unwrap();
+            });
+            let error = Rpc::new(url, 42161)
+                .unwrap()
+                .call::<Value>("eth_estimateUserOperationGas", json!([]))
+                .await
+                .unwrap_err();
+            if status == 400 {
+                assert!(matches!(error, UsdtError::TransactionRejected { .. }));
+            } else {
+                assert!(matches!(error, UsdtError::NetworkUnavailable));
+            }
+            server.await.unwrap();
+        }
+    }
 
     #[tokio::test(start_paused = true)]
     async fn chain_and_bundler_share_bursts_and_sustained_budget() {

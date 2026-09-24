@@ -29,6 +29,7 @@ impl Store {
             CREATE TABLE IF NOT EXISTS usdt_history_progress (id INTEGER PRIMARY KEY CHECK(id=1), next INTEGER NOT NULL);
             CREATE TABLE IF NOT EXISTS usdt_history_receipts (hash TEXT PRIMARY KEY);
             CREATE TABLE IF NOT EXISTS usdt_quotes (id TEXT PRIMARY KEY, data TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS usdt_nonce_recovery (id TEXT PRIMARY KEY, block_hash TEXT NOT NULL, next_transaction INTEGER NOT NULL);
             CREATE TABLE IF NOT EXISTS usdt_transfers (id TEXT PRIMARY KEY, hash TEXT NOT NULL, raw TEXT, data TEXT NOT NULL);")?;
         connection.execute(
             "INSERT OR IGNORE INTO usdt_identity VALUES (1,?1)",
@@ -137,8 +138,42 @@ impl Store {
                 | UsdtTransferStatus::Bridging
                 | UsdtTransferStatus::BridgeNeedsAttention
         );
-        self.connection()?.execute("UPDATE usdt_transfers SET data=?1, raw=CASE WHEN ?2 THEN NULL ELSE raw END WHERE id=?3",
+        let mut connection = self.connection()?;
+        let tx = connection.transaction()?;
+        tx.execute("UPDATE usdt_transfers SET data=?1, raw=CASE WHEN ?2 THEN NULL ELSE raw END WHERE id=?3",
             params![serde_json::to_string(transfer)?, settled, transfer.id])?;
+        if settled {
+            tx.execute(
+                "DELETE FROM usdt_nonce_recovery WHERE id=?1",
+                [&transfer.id],
+            )?;
+        }
+        tx.commit()?;
+        Ok(())
+    }
+
+    pub fn nonce_recovery(&self, id: &str, block_hash: &str) -> Result<usize, UsdtError> {
+        Ok(self
+            .connection()?
+            .query_row(
+                "SELECT next_transaction FROM usdt_nonce_recovery WHERE id=?1 AND block_hash=?2",
+                params![id, block_hash],
+                |row| row.get(0),
+            )
+            .optional()?
+            .unwrap_or(0))
+    }
+
+    pub fn save_nonce_recovery(
+        &self,
+        id: &str,
+        block_hash: &str,
+        next_transaction: usize,
+    ) -> Result<(), UsdtError> {
+        self.connection()?.execute(
+            "INSERT INTO usdt_nonce_recovery VALUES (?1,?2,?3) ON CONFLICT(id) DO UPDATE SET block_hash=excluded.block_hash,next_transaction=excluded.next_transaction",
+            params![id, block_hash, next_transaction],
+        )?;
         Ok(())
     }
 
@@ -242,6 +277,10 @@ impl Store {
                 tx.execute(
                     "UPDATE usdt_transfers SET data=?1, raw=NULL WHERE id=?2",
                     params![serde_json::to_string(&transfer)?, transfer.id],
+                )?;
+                tx.execute(
+                    "DELETE FROM usdt_nonce_recovery WHERE id=?1",
+                    [&transfer.id],
                 )?;
             } else {
                 tx.execute(

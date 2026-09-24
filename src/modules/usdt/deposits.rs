@@ -1,12 +1,14 @@
 use super::{
     keys::{derive_key, key_address, parse_address},
+    rpc::{bounded_json, endpoint_client},
+    user_operation::sign_hash,
     UsdtError,
 };
-use alloy_primitives::{keccak256, Address};
-use bitcoin::secp256k1::{Message, Secp256k1};
+use alloy_primitives::{eip191_hash_message, Address};
 use serde::{de::DeserializeOwned, Deserialize, Deserializer, Serialize};
 use serde_json::{json, Value};
 use std::{sync::Arc, time::Duration};
+use zeroize::Zeroizing;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, uniffi::Enum)]
 #[serde(rename_all = "lowercase")]
@@ -79,24 +81,10 @@ pub struct UsdtDepositClient {
 impl UsdtDepositClient {
     #[uniffi::constructor]
     pub fn new(address: String, service_url: String) -> Result<Arc<Self>, UsdtError> {
-        let url = url::Url::parse(&service_url).map_err(|_| UsdtError::NotConfigured)?;
-        if (!matches!(url.scheme(), "https")
-            && !(url.scheme() == "http"
-                && matches!(url.host_str(), Some("localhost" | "127.0.0.1"))))
-            || !url.username().is_empty()
-            || url.password().is_some()
-            || url.query().is_some()
-            || url.fragment().is_some()
-        {
-            return Err(UsdtError::NotConfigured);
-        }
+        let client = endpoint_client(&service_url, Duration::from_secs(22))?;
         Ok(Arc::new(Self {
             address: parse_address(&address)?,
-            client: reqwest::Client::builder()
-                .timeout(Duration::from_secs(22))
-                .redirect(reqwest::redirect::Policy::none())
-                .build()
-                .map_err(|_| UsdtError::NetworkUnavailable)?,
+            client,
             url: service_url,
         }))
     }
@@ -119,6 +107,8 @@ impl UsdtDepositClient {
         mnemonic: String,
         passphrase: Option<String>,
     ) -> Result<UsdtDepositAddress, UsdtError> {
+        let mnemonic = Zeroizing::new(mnemonic);
+        let passphrase = passphrase.map(Zeroizing::new);
         if amount == 0 {
             return Err(UsdtError::InvalidAmount);
         }
@@ -157,8 +147,8 @@ impl UsdtDepositClient {
     ) -> Result<UsdtDepositPage, UsdtError> {
         self.call(
             json!({"action":"history","offset":offset}),
-            mnemonic,
-            passphrase,
+            mnemonic.into(),
+            passphrase.map(Into::into),
         )
         .await
     }
@@ -173,8 +163,8 @@ impl UsdtDepositClient {
         let result: UsdtDepositDetail = self
             .call(
                 json!({"action":"detail","depositId":deposit_id,"offset":offset}),
-                mnemonic,
-                passphrase,
+                mnemonic.into(),
+                passphrase.map(Into::into),
             )
             .await?;
         if result.deposit.id != deposit_id {
@@ -192,6 +182,8 @@ impl UsdtDepositClient {
         mnemonic: String,
         passphrase: Option<String>,
     ) -> Result<(), UsdtError> {
+        let mnemonic = Zeroizing::new(mnemonic);
+        let passphrase = passphrase.map(Zeroizing::new);
         validate_source_address(refund_address.trim(), network)?;
         let result: Value = self
             .call(
@@ -212,8 +204,8 @@ impl UsdtDepositClient {
     async fn call<T: DeserializeOwned>(
         &self,
         payload: Value,
-        mnemonic: String,
-        passphrase: Option<String>,
+        mnemonic: Zeroizing<String>,
+        passphrase: Option<Zeroizing<String>>,
     ) -> Result<T, UsdtError> {
         let signed = self.authorize(payload, mnemonic, passphrase, super::wallet::now())?;
         self.response(self.client.post(&self.url).json(&signed))
@@ -223,8 +215,8 @@ impl UsdtDepositClient {
     fn authorize(
         &self,
         payload: Value,
-        mnemonic: String,
-        passphrase: Option<String>,
+        mnemonic: Zeroizing<String>,
+        passphrase: Option<Zeroizing<String>>,
         timestamp: u64,
     ) -> Result<Value, UsdtError> {
         let key = derive_key(mnemonic, passphrase)?;
@@ -235,14 +227,7 @@ impl UsdtDepositClient {
             json!({"owner":self.address.to_checksum(None),"timestamp":timestamp,"payload":payload})
                 .to_string();
         let message = format!("Bitkit USDT deposits v1\n{request}");
-        let hash = keccak256(format!(
-            "\x19Ethereum Signed Message:\n{}{message}",
-            message.len()
-        ));
-        let (recovery, signature) = Secp256k1::new()
-            .sign_ecdsa_recoverable(&Message::from_digest(hash.0), &key)
-            .serialize_compact();
-        let signature = format!("0x{}{:02x}", hex::encode(signature), recovery.to_i32() + 27);
+        let signature = sign_hash(eip191_hash_message(message), &key)?;
         drop(key);
         Ok(json!({"request":request,"signature":signature}))
     }
@@ -251,7 +236,7 @@ impl UsdtDepositClient {
         &self,
         request: reqwest::RequestBuilder,
     ) -> Result<T, UsdtError> {
-        let mut response = request
+        let response = request
             .send()
             .await
             .map_err(|_| UsdtError::NetworkUnavailable)?;
@@ -259,22 +244,13 @@ impl UsdtDepositClient {
         if status == reqwest::StatusCode::TOO_MANY_REQUESTS {
             return Err(UsdtError::RateLimited);
         }
-        let mut bytes = Vec::new();
-        while let Some(chunk) = response
-            .chunk()
-            .await
-            .map_err(|_| UsdtError::NetworkUnavailable)?
-        {
-            if bytes.len() + chunk.len() > 262144 {
-                return Err(UsdtError::InvalidResponse);
-            }
-            bytes.extend_from_slice(&chunk);
-        }
+        let value = bounded_json(response, 262144, UsdtError::InvalidResponse).await;
         if !status.is_success() {
-            let error: Value = serde_json::from_slice(&bytes).unwrap_or_default();
+            let error = value.unwrap_or_default();
             return Err(match error["error"].as_str() {
                 Some("not_configured") => UsdtError::NotConfigured,
                 Some("invalid_authorization") => UsdtError::InvalidCredentials,
+                Some("clock_skew") => UsdtError::ClockSkew,
                 Some("amount_too_small" | "amount_too_large" | "amount_exceeds_liquidity") => {
                     UsdtError::InvalidAmount
                 }
@@ -290,7 +266,7 @@ impl UsdtDepositClient {
                 _ => UsdtError::NetworkUnavailable,
             });
         }
-        serde_json::from_slice(&bytes).map_err(Into::into)
+        serde_json::from_value(value?).map_err(Into::into)
     }
 }
 
@@ -340,7 +316,7 @@ mod tests {
             client
                 .authorize(
                     request["payload"].clone(),
-                    PHRASE.into(),
+                    PHRASE.to_owned().into(),
                     None,
                     1_800_000_000
                 )
@@ -350,8 +326,8 @@ mod tests {
         assert!(matches!(
             client.authorize(
                 request["payload"].clone(),
-                PHRASE.into(),
-                Some("other".into()),
+                PHRASE.to_owned().into(),
+                Some("other".to_owned().into()),
                 1_800_000_000
             ),
             Err(UsdtError::InvalidCredentials)

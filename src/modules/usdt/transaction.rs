@@ -5,14 +5,44 @@ use bitcoin::secp256k1::SecretKey;
 use serde::{Deserialize, Serialize};
 
 sol! {
-    struct PackedOperation { address sender; uint256 nonce; bytes initCode; bytes callData; bytes32 accountGasLimits; uint256 preVerificationGas; bytes32 gasFees; bytes paymasterAndData; bytes signature; }
+    struct PackedOperation {
+        address sender;
+        uint256 nonce;
+        bytes initCode;
+        bytes callData;
+        bytes32 accountGasLimits;
+        uint256 preVerificationGas;
+        bytes32 gasFees;
+        bytes paymasterAndData;
+        bytes signature;
+    }
     #[derive(Debug)]
-    struct SendParam { uint32 dstEid; bytes32 to; uint256 amountLD; uint256 minAmountLD; bytes extraOptions; bytes composeMsg; bytes oftCmd; }
+    struct SendParam {
+        uint32 dstEid;
+        bytes32 to;
+        uint256 amountLD;
+        uint256 minAmountLD;
+        bytes extraOptions;
+        bytes composeMsg;
+        bytes oftCmd;
+    }
     #[derive(Debug)]
-    struct MessagingFee { uint256 nativeFee; uint256 lzTokenFee; }
-    struct OFTLimit { uint256 minAmountLD; uint256 maxAmountLD; }
-    struct OFTFeeDetail { int256 feeAmountLD; string description; }
-    struct OFTReceipt { uint256 amountSentLD; uint256 amountReceivedLD; }
+    struct MessagingFee {
+        uint256 nativeFee;
+        uint256 lzTokenFee;
+    }
+    struct OFTLimit {
+        uint256 minAmountLD;
+        uint256 maxAmountLD;
+    }
+    struct OFTFeeDetail {
+        int256 feeAmountLD;
+        string description;
+    }
+    struct OFTReceipt {
+        uint256 amountSentLD;
+        uint256 amountReceivedLD;
+    }
     interface Oft {
         function token() external view returns (address);
         function peers(uint32 eid) external view returns (bytes32);
@@ -72,7 +102,6 @@ pub(super) struct Plan {
     pub operation: UserOperation,
     pub created_block: u64,
     pub expires_at: u64,
-    pub bridge_fee: u64,
 }
 
 impl Plan {

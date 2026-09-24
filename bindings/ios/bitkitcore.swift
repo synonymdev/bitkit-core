@@ -16809,7 +16809,6 @@ public struct UsdtTransfer {
     public var destination: UsdtDestination
     public var amount: UInt64
     public var receivedAmount: UInt64
-    public var bridgeFee: UInt64
     public var fee: UInt64?
     public var isIncoming: Bool
     public var status: UsdtTransferStatus
@@ -16818,7 +16817,7 @@ public struct UsdtTransfer {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, txHash: String, userOperationHash: String?, bridgeGuid: String?, recipient: String, destination: UsdtDestination, amount: UInt64, receivedAmount: UInt64, bridgeFee: UInt64, fee: UInt64?, isIncoming: Bool, status: UsdtTransferStatus, timestamp: UInt64, explorerUrl: String) {
+    public init(id: String, txHash: String, userOperationHash: String?, bridgeGuid: String?, recipient: String, destination: UsdtDestination, amount: UInt64, receivedAmount: UInt64, fee: UInt64?, isIncoming: Bool, status: UsdtTransferStatus, timestamp: UInt64, explorerUrl: String) {
         self.id = id
         self.txHash = txHash
         self.userOperationHash = userOperationHash
@@ -16827,7 +16826,6 @@ public struct UsdtTransfer {
         self.destination = destination
         self.amount = amount
         self.receivedAmount = receivedAmount
-        self.bridgeFee = bridgeFee
         self.fee = fee
         self.isIncoming = isIncoming
         self.status = status
@@ -16867,9 +16865,6 @@ extension UsdtTransfer: Equatable, Hashable {
         if lhs.receivedAmount != rhs.receivedAmount {
             return false
         }
-        if lhs.bridgeFee != rhs.bridgeFee {
-            return false
-        }
         if lhs.fee != rhs.fee {
             return false
         }
@@ -16897,7 +16892,6 @@ extension UsdtTransfer: Equatable, Hashable {
         hasher.combine(destination)
         hasher.combine(amount)
         hasher.combine(receivedAmount)
-        hasher.combine(bridgeFee)
         hasher.combine(fee)
         hasher.combine(isIncoming)
         hasher.combine(status)
@@ -16925,7 +16919,6 @@ public struct FfiConverterTypeUsdtTransfer: FfiConverterRustBuffer {
                 destination: FfiConverterTypeUsdtDestination.read(from: &buf), 
                 amount: FfiConverterUInt64.read(from: &buf), 
                 receivedAmount: FfiConverterUInt64.read(from: &buf), 
-                bridgeFee: FfiConverterUInt64.read(from: &buf), 
                 fee: FfiConverterOptionUInt64.read(from: &buf), 
                 isIncoming: FfiConverterBool.read(from: &buf), 
                 status: FfiConverterTypeUsdtTransferStatus.read(from: &buf), 
@@ -16943,7 +16936,6 @@ public struct FfiConverterTypeUsdtTransfer: FfiConverterRustBuffer {
         FfiConverterTypeUsdtDestination.write(value.destination, into: &buf)
         FfiConverterUInt64.write(value.amount, into: &buf)
         FfiConverterUInt64.write(value.receivedAmount, into: &buf)
-        FfiConverterUInt64.write(value.bridgeFee, into: &buf)
         FfiConverterOptionUInt64.write(value.fee, into: &buf)
         FfiConverterBool.write(value.isIncoming, into: &buf)
         FfiConverterTypeUsdtTransferStatus.write(value.status, into: &buf)
@@ -24266,6 +24258,7 @@ public enum UsdtError: Swift.Error {
     case InvalidAddress
     case WrongNetwork
     case InvalidCredentials
+    case ClockSkew
     case UnsupportedDelegation
     case InsufficientBalance
     case QuoteExpired
@@ -24301,23 +24294,24 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
         case 2: return .InvalidAddress
         case 3: return .WrongNetwork
         case 4: return .InvalidCredentials
-        case 5: return .UnsupportedDelegation
-        case 6: return .InsufficientBalance
-        case 7: return .QuoteExpired
-        case 8: return .PendingTransfer
-        case 9: return .UnsupportedRoute
-        case 10: return .DepositNeedsAttention
-        case 11: return .NotConfigured
-        case 12: return .NetworkUnavailable
-        case 13: return .RateLimited
-        case 14: return .LogRangeTooLarge
-        case 15: return .TransactionRejected(
+        case 5: return .ClockSkew
+        case 6: return .UnsupportedDelegation
+        case 7: return .InsufficientBalance
+        case 8: return .QuoteExpired
+        case 9: return .PendingTransfer
+        case 10: return .UnsupportedRoute
+        case 11: return .DepositNeedsAttention
+        case 12: return .NotConfigured
+        case 13: return .NetworkUnavailable
+        case 14: return .RateLimited
+        case 15: return .LogRangeTooLarge
+        case 16: return .TransactionRejected(
             reason: try FfiConverterString.read(from: &buf)
             )
-        case 16: return .Storage(
+        case 17: return .Storage(
             reason: try FfiConverterString.read(from: &buf)
             )
-        case 17: return .InvalidResponse
+        case 18: return .InvalidResponse
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -24346,58 +24340,62 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(4))
         
         
-        case .UnsupportedDelegation:
+        case .ClockSkew:
             writeInt(&buf, Int32(5))
         
         
-        case .InsufficientBalance:
+        case .UnsupportedDelegation:
             writeInt(&buf, Int32(6))
         
         
-        case .QuoteExpired:
+        case .InsufficientBalance:
             writeInt(&buf, Int32(7))
         
         
-        case .PendingTransfer:
+        case .QuoteExpired:
             writeInt(&buf, Int32(8))
         
         
-        case .UnsupportedRoute:
+        case .PendingTransfer:
             writeInt(&buf, Int32(9))
         
         
-        case .DepositNeedsAttention:
+        case .UnsupportedRoute:
             writeInt(&buf, Int32(10))
         
         
-        case .NotConfigured:
+        case .DepositNeedsAttention:
             writeInt(&buf, Int32(11))
         
         
-        case .NetworkUnavailable:
+        case .NotConfigured:
             writeInt(&buf, Int32(12))
         
         
-        case .RateLimited:
+        case .NetworkUnavailable:
             writeInt(&buf, Int32(13))
         
         
-        case .LogRangeTooLarge:
+        case .RateLimited:
             writeInt(&buf, Int32(14))
         
         
-        case let .TransactionRejected(reason):
+        case .LogRangeTooLarge:
             writeInt(&buf, Int32(15))
-            FfiConverterString.write(reason, into: &buf)
-            
         
-        case let .Storage(reason):
+        
+        case let .TransactionRejected(reason):
             writeInt(&buf, Int32(16))
             FfiConverterString.write(reason, into: &buf)
             
         
-        case .InvalidResponse:
+        case let .Storage(reason):
             writeInt(&buf, Int32(17))
+            FfiConverterString.write(reason, into: &buf)
+            
+        
+        case .InvalidResponse:
+            writeInt(&buf, Int32(18))
         
         }
     }

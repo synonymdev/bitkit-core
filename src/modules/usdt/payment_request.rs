@@ -19,9 +19,12 @@ fn parse_request(value: &str) -> Result<(Address, Option<u64>), UsdtError> {
     if value.len() > 2048 {
         return Err(UsdtError::InvalidAddress);
     }
-    let Some(uri) = value.strip_prefix("ethereum:") else {
+    let Some((scheme, uri)) = value.split_once(':') else {
         return Ok((parse_address(value)?, None));
     };
+    if !scheme.eq_ignore_ascii_case("ethereum") {
+        return Err(UsdtError::InvalidAddress);
+    }
     let (target, query) = uri.split_once('?').unwrap_or((uri, ""));
     let (address, chain) = target
         .strip_prefix("pay-")

@@ -156,7 +156,7 @@ impl UserOperation {
     }
 }
 
-fn sign_hash(hash: B256, key: &SecretKey) -> Result<Bytes, UsdtError> {
+pub(super) fn sign_hash(hash: B256, key: &SecretKey) -> Result<Bytes, UsdtError> {
     let (recovery, signature) = Secp256k1::new()
         .sign_ecdsa_recoverable(&Message::from_digest(hash.0), key)
         .serialize_compact();

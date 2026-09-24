@@ -10,6 +10,8 @@ pub enum UsdtError {
     WrongNetwork,
     #[error("Wallet credentials do not match this USDT account")]
     InvalidCredentials,
+    #[error("Set your device date and time automatically, then try again")]
+    ClockSkew,
     #[error("This account uses another wallet's smart account. Restore its delegation before sending with Bitkit")]
     UnsupportedDelegation,
     #[error("The USDT balance does not cover the amount and maximum fee")]

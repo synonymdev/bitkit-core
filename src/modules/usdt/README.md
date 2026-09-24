@@ -1,116 +1,60 @@
 # USDT on Arbitrum One
 
-Bitkit keeps a separate USDT balance, receive address, authenticated payment flow and activity list. Rust owns account derivation, quotes, signing, persistence and chain access. The native apps retain their existing keychain, authentication, lifecycle and UI components.
+`UsdtWallet` owns seed-derived accounts, fee quotes, signing, durable payment recovery and activity. Amounts use millionths of USDT. The native apps own credentials, payment authentication and presentation.
 
-## Account and recovery
+## Account and authorization
 
-The receive address is the Ethereum address derived from the existing Bitkit BIP39 mnemonic and passphrase at `m/44'/60'/0'/0/0`. EIP-7702 delegates that address to the pinned Simple7702Account implementation (`0xe6Cae83BdE06E4c305530e199D7217f42808555B`) using EntryPoint 0.8 (`0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`).
+The address derives from the Bitkit BIP39 mnemonic and passphrase at `m/44'/60'/0'/0/0`. Arbitrum One (42161), USDT0, EntryPoint 0.8 (`0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`) and Simple7702Account (`0xe6Cae83BdE06E4c305530e199D7217f42808555B`) are pinned in code.
 
-Each authenticated payment signs a chain-specific authorization for the pinned delegate at the current account nonce. This keeps the operation hash bound to that delegate and satisfies the bundler’s `0x7702` factory-marker policy, including after activation. Authorization gas is included in the quoted USDT maximum. Quotes use dummy authorization; they never receive a signing key. There is no factory deployment or separate smart-wallet address.
+Each payment signs a chain-specific EIP-7702 authorization at the current account nonce and an EntryPoint operation committing to that delegate. Authorization costs are included in the USDT fee. There is no separate smart-wallet address or factory deployment. Another wallet with the same derivation can access the address; gas-payment support may differ.
 
-Restoring the same seed and passphrase reconstructs the same address and reads its balance and activity from Arbitrum. Another wallet using the same derivation can access that address, although its gas-payment and delegation support may differ.
+Delegation can persist even when an operation fails. A foreign delegate blocks sends without blocking balance/history reads. Bitkit never silently replaces it.
 
-Delegation persists onchain and can be applied even if the operation fails. Retries retain both signatures and require the authorization nonce to remain current. If authorization was consumed without a known payment result, the signed payment stays pending until an event identifies its outcome or its paymaster terms expire with the EntryPoint nonce unchanged. A different delegate blocks Bitkit sends; balances and incoming/outgoing token history remain readable. Bitkit does not silently replace another wallet's delegation.
+Owned mnemonic/passphrase/seed buffers are zeroized and signing keys are erased on drop on a best-effort basis. FFI, compiler and library-internal copies cannot be guaranteed erased. SQLite contains no seed or private key.
 
-The native keychain is the source of signing credentials. Rust zeroizes its owned mnemonic/passphrase/seed buffers and best-effort erases signing keys; FFI and library-internal copies cannot be guaranteed erased; SQLite stores no seed or private key.
+## Quotes and fees
 
-Signed operations are stored before transmission. A lost response only retries the identical operation, and a quote ID cannot authorize a second payment.
+`quote_transfer` takes a raw recipient, positive atomic amount and destination; it never receives signing credentials. Local quotes last at most 120 seconds and newly quoted paymaster terms must expire within 15 minutes. `send` validates the owner, nonces, balance, gas estimates, current gas prices and deadlines before signing the stored plan. Changed terms require a new review; signing cannot raise the approved fee.
 
-Expiry of the signed paymaster terms with an unchanged on-chain nonce resolves an unmined submission. The shorter local quote deadline cannot release a signed payment. Network timestamps govern these checks. A higher nonce remains pending until an event identifies this payment or its replacement.
+The pinned ERC-20 paymaster collects USDT. Its finite approval includes a 5% margin; the displayed maximum fee comes from signed gas limits and paymaster terms, not the allowance. Call/pre-verification estimates receive 10% execution/L1-data headroom; the charged pre-verification margin is included in the maximum. A residual paymaster allowance can remain and is reset to a finite amount on the next payment.
 
-New attempts require another quote and native authorization. One source-chain payment can be pending at a time; confirmed bridge messages can continue delivery while another payment is made.
+`usdt_parse_payment_request` accepts raw addresses and chain-qualified ERC-681 requests for the pinned token, with exact atomic/scientific amounts. Ambiguous or unsupported parameters are rejected. The caller reviews the parsed amount before requesting a quote.
 
-`balance()` returns USDT in millionths. `sync_history()` returns `true` when caught up and `false` when its 20-second work budget expires; request failures and invalid data return errors. Callers retain recovered activity and continue incomplete scans on a later refresh. Local activity has no fixed entry cap.
+## Persistence and recovery
 
-History scans bounded ranges from genesis, including deposits before delegation. Each completed page and partial-page receipt survives interruption; a completed scan revisits 4096 blocks for delayed indexing. Scans trail the reported tip by two blocks; this lag and revisit do not provide reorg rollback or retract previously saved orphaned activity.
+Signed operations persist atomically before submission. Lost or rejected submission responses do not prove nonexecution: recovery retries only the identical signed operation. A quote ID cannot authorize a second payment. One source-chain payment remains pending at a time.
 
-Incoming and outgoing transfers decode from token logs, including transfers made with another wallet. A combined incoming/EntryPoint filter and an outgoing filter require two log queries per range. Known timestamps are reused.
+A matching operation event settles the payment. Expired signed paymaster terms and an unchanged confirmed EntryPoint nonce release an unmined operation; the shorter quote deadline does not. With an advanced nonce and missing indexed events, recovery checks every receipt in the consuming block. A matching event settles/replaces the payment; complete absence proves external nonce consumption. Missing receipts preserve the pending operation. Progress is stored by payment and block hash so interruption does not restart the proof or carry it onto another block.
 
-Locally recorded payments are matched by their operation hash. For other payments, supported account calls recover payment and fee details only from transactions sent directly to the pinned EntryPoint. Their raw outgoing logs are excluded to avoid duplicates. Unknown wrappers and call shapes retain their token transfers without inventing payment or fee attribution.
+Seed restoration recovers deposits and outgoing activity from genesis, including transfers before delegation and sends through another wallet. Supported direct EntryPoint calls recover payment/fee attribution; unknown wrappers preserve raw token transfers instead of guessing their intent. Failed payments retain attempted amounts but have no delivered amount.
 
-Range and response-size limits reduce the query span; rate limits return a distinct error. Pending-payment recovery can fall back to historical nonce reads and a single-block event query when its full log range is rejected. The RPC provider must support those historical state reads as well as full-history filtered logs.
+`sync_history` returns `true` when caught up and `false` when more work remains. It uses adaptive log ranges and a 20-second soft budget between persisted receipts; an in-flight receipt may finish later. A single-block log overflow falls back to that block's individual receipts. Zero/self transfers are discarded before enrichment. Network failures preserve completed work and never silently skip a block.
 
-## Fees and infrastructure
+Scans trail the reported tip by two blocks and revisit 4096 blocks for delayed indexing. This is not reorg rollback: previously recorded orphaned activity is not retracted. Providers must supply complete filtered logs, canonical blocks/receipts and historical state.
 
-Only the exact Arbitrum USDT0 token is supported: `0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9`, with six decimals. Amounts and fees are integers; no floating point or ETH balance is exposed to the user.
+Payment outcomes and expiry decisions trust the configured chain RPC. A malicious RPC can fabricate or suppress evidence and mislead a user into authorizing another payment; these checks are not light-client proofs.
 
-Pimlico's ERC20 paymaster is the initial provider. Its official supported-token list includes this token. The pinned EntryPoint 0.8 paymaster is `0x888888888888Ec68A58AB8094Cc1AD20Ba3D2402`.
+Storage is wallet-specific and owned by the `UsdtWallet` object. Drop it before deleting its database during an explicit wallet wipe. Async exports use UniFFI's Tokio adapter, preserving cancellation of the polled future; they do not detach sends onto the global runtime used by stateless exports.
 
-A payment atomically batches a limited token approval and execution at the delegated address. Gas, token conversion, fixed charges and expiry are checked before the user approves the maximum fee. Final provider data, calldata and limits are signed together using the EntryPoint 0.8 EIP-712 hash, including the delegate.
+## Transport and cross-network APIs
 
-Local quotes last at most 120 seconds; newly quoted paymaster terms must have a finite deadline within 15 minutes. Recovery of a signed operation always follows its actual signed deadline.
+Both chain and bundler endpoints must be controlled, credential-free HTTPS URLs; HTTP is accepted only on loopback for fixtures. Provider keys belong on the server. Chain/bundler calls share an 80/minute budget with a burst of 20. Responses are bounded to 2 MiB, except protocol-projected receipts up to 16 MiB. The companion service documents provider requirements, receipt projection and deployment limits.
 
-The approval has a 5% margin, while the displayed maximum fee uses the signed gas limits and paymaster terms, not the allowance. Call gas and pre-verification gas receive a 10% margin for execution and Arbitrum L1 data-cost variation; provider verification estimates are retained. The pre-verification margin is charged as part of the payment fee and included in the displayed maximum. Changed or expired terms require another review.
+`UsdtDepositClient` signs Orchestra deposit registration, history, detail and explicit refund requests for the derived account. It uses a separate optional service endpoint; estimates do not imply delivery. A clock-skew error requires correcting the device clock. Source-network fees are paid by the sender. Partner provisioning, delivered deposits and refund acceptance are separate release checks.
 
-A residual allowance to the pinned paymaster can remain after collection; each subsequent payment sets a new finite allowance. The helper allowance is revoked in the bridge batch.
+The outbound bridge API supports Ethereum (30101), Polygon (30109), Plasma (30383) and Stable (30396), alongside direct Arbitrum transfers. Native release flows expose Arbitrum only; bridge routes require explicit service enablement and destination acceptance. Plain deposits on another chain are not automatically forwarded.
 
-Mainnet paymaster access requires a Pimlico project. Keep provider credentials on the server and validate the configured provider's pricing and policy before release.
+Bridges use the pinned OFT and TransactionValueHelper with zero account ETH, a finite USDT approval covering principal/fee, and atomic helper-allowance revocation. The deployed helper requires native liquidity and retains behaviors noted in its OpenZeppelin audit; its verified runtime is not the audit-remediated implementation. Source success means bridging, not delivered. LayerZero status must match the operation GUID/pathway before confirmation; blocked delivery remains visible and never triggers an automatic paid retry. RPC providers see queried addresses; LayerZero Scan sees bridge transaction hashes.
 
-Configure `USDT_BUNDLER_URL` with a controlled HTTPS endpoint forwarding the provider's bundler/paymaster JSON-RPC methods. Do not distribute a private provider key in the apps. A production proxy must retain the key, restrict chain/token/methods and apply abuse controls. Its provisioning belongs to the backend deployment, not to the mobile keychain.
+## Validation and bindings
 
-The apps intentionally show USDT as unavailable when this endpoint is missing. Both endpoints are required by the core constructor; there is no implicit public RPC.
+Run `cargo test --locked --lib modules::usdt`; CI runs these deterministic tests. They cover independent signing/address vectors, fee bounds, uncertain submission, nonce recovery and restored history. Fixtures use public test credentials.
 
-`USDT_RPC_URL` must point to the service's credential-free `/v1/usdt/chain-rpc` endpoint in both mobile apps. The private upstream URL is configured on the service as `ARBITRUM_RPC_URL`; it must never enter a mobile build. Rust allows plain HTTP only on localhost for fixtures.
+For the ignored deployed-contract test, start a fresh Arbitrum Anvil fork on port 18545 and `tests/usdt-fork/provider.mjs` on 18546 after installing its pinned dependencies. Run `cargo test deployed_contracts_collect_usdt_fees_and_revert_failed_bridges_atomically -- --ignored`. The fixture requires Anvil, sets local balances/signing terms and checks deployed bytecode; it does not establish real provider pricing or destination delivery.
 
-Chain and bundler calls share a budget of 80 requests per minute with an initial burst of 20. Native wallets poll every 30 seconds while idle and every ten seconds while receiving or awaiting a pending payment, with a shared ten-second minimum and one-minute backoff after rate limits. History scanning continues after a settlement error, but cancellation and throttling stop the refresh.
+To include the service, start it with `USDT_BRIDGE_NETWORKS=ethereum,polygon,plasma,stable NODE_ENV=test ARBITRUM_RPC_URL=http://127.0.0.1:18545 LOCAL_PROVIDER_URL=http://127.0.0.1:18546`, then pass `USDT_FORK_RPC_URL=http://127.0.0.1:3100/v1/usdt/chain-rpc` and `USDT_FORK_BUNDLER_URL=http://127.0.0.1:3100/v1/usdt/rpc` to the ignored test.
 
-The standalone `bitkit-usdt-service` implements this endpoint at `/v1/usdt/rpc`. It runs independently of Blocktank, validates the pinned EIP-7702/USDT request shapes, and applies per-IP/global request and concurrency limits. Configure the apps with its full HTTPS route.
-
-It adds no wallet login or custody; the endpoint is public with constrained operations, not proof of official-app identity. Its README documents provider credentials, reverse-proxy configuration, limits and local testing. Provisioning and live-provider acceptance remain deployment prerequisites.
-
-- iOS reads these names from build settings/Info.plist or process configuration for local testing.
-- Android reads these names through its existing local-properties/environment build configuration.
-- Arbitrum One (42161) is the only supported USDT chain, including development builds. The UI always labels it. Bitcoin's network selection does not imply USDT testnet support. Storage remains under the existing Bitcoin-network/wallet directory, with a USDT-specific database and identity check.
-
-## Deposits and withdrawals
-
-Receive shares an ERC-681 token-transfer request identifying Arbitrum One and USDT0, and allows copying the raw account address. The sender must select Arbitrum One or bridge into it.
-
-`usdt_parse_payment_request()` accepts the pinned token-transfer URI with an optional `uint256` amount, including exact scientific notation in atomic units. Native send screens prefill that amount for editing and review. Duplicate or unsupported parameters are rejected. `quote_transfer()` takes a raw recipient address and an explicit amount after payment-request parsing and user review; it rejects URIs rather than discarding their requested amounts.
-
-Plain transfers to that address on Ethereum, TRON or another chain are not automatically forwarded.
-
-The optional Orchestra receive flow instead provides a separate reusable deposit address for each enabled source network. Ethereum and TRON USDT are supported by the adapter; the backend advertises only explicitly enabled, provider-supported routes into the pinned Arbitrum USDT0 account. The sender pays the source network fee, while routing costs are deducted from the deposited USDT. There is no Rhino or Relay integration.
-
-Configure `USDT_DEPOSITS_URL` with the service’s HTTPS `/v1/usdt/deposits` route and keep `ORCHESTRA_API_KEY` on the server. Wallet-signed requests bind deposit registration, status and explicit refund requests to the seed-derived address. Estimates are indicative; held deposits and refunds remain visible without implying settlement.
-
-A partner account, route acceptance, funded delivery and refund validation are release prerequisites. Without the endpoint, direct Arbitrum receive remains available.
-
-The native release exposes Arbitrum only. Bridge routes stay disabled at the service until destination delivery has passed funded acceptance. Same-chain payments transfer USDT directly.
-
-Cross-chain payments use the deployed USDT0 TransactionValueHelper, `0xa90f03c856D01F698E7071B393387cd75a8a319A`, and pinned Arbitrum OFT, `0x14E4A1B13bf7F943c8ff7C51fb60FA964A298D92`. The helper supplies native messaging value and collects USDT. Calls carry zero ETH from the account. The bridge approval covers principal plus a bounded token fee and is revoked atomically after sending.
-
-OFT amount/peer checks and helper balance/maxGas checks reject unavailable routes. The review screen shows the exact expected receipt and maximum additional fees.
-
-Supported destinations are Arbitrum One, Ethereum (30101), Polygon (30109), Plasma (30383), and Stable (30396). Arbitrum's LayerZero ID is 30110. TRON, Solana, TON and other deployments are not inferred from USDT0 branding; they are not offered.
-
-The helper is an operational dependency: its operator must maintain native liquidity and its oracle/markup affect pricing. Its verified deployed runtime (`0x9d4c3b4b79a3d31843ec75a03ce6ef43735421fdee489714519afc052f60ef27`) retains behaviors discussed in the OpenZeppelin audit; it is not the audit-remediated implementation.
-
-Bitkit constrains calls to zero native value, a pinned OFT, exact amounts, and finite approvals. Failed execution can still incur the authorized paymaster gas fee.
-
-Bridge-status polling shares a five-second refresh budget and rotates the first unresolved bridge checked, leaving source-chain recovery and sends available when delivery status is unavailable.
-
-A successful source receipt means the bridge has started. Bitkit matches the operation's GUID and LayerZero pathway before marking delivery confirmed. Failed, blocked or `PAYLOAD_STORED` delivery remains visible as requiring attention, with a tracking link. It does not silently retry a destination transaction or charge an additional recovery fee.
-
-The RPC sees queried wallet addresses, and LayerZero Scan sees bridge transaction hashes. Neither service holds the signing key.
-
-## Bindings and local builds
-
-Build core with the repository's `build_ios.sh` and `build_android.sh`, sequentially: the Android script temporarily changes the manifest and example source. Generated Swift/Kotlin bindings and native binaries must come from the same core source.
-
-For local iOS builds, `scripts/build-usdt-local.sh` in bitkit-ios takes the core directory followed by normal xcodebuild arguments and sets the `BITKIT_CORE_LOCAL` package override. Android accepts the absolute generated release AAR through the `bitkitCoreAar` Gradle property.
-
-## Validation
-
-The focused Rust suite covers independent address/signature parity, exact decimal amounts, chain-qualified QR requests, bounded paymaster and bridge fees, own-operation receipt attribution, uncertain submission, nonce/expiry recovery, and seed-restored history. The reference vector uses the public test mnemonic and ethers 6.17.0; it contains no production credential.
-
-The ignored deployed-contract test uses a fresh local Anvil fork of Arbitrum One on port 18545. Install the pinned test-only dependency in `tests/usdt-fork` and start its `provider.mjs` on port 18546, then run the ignored `deployed_contracts_collect_usdt_fees_and_revert_failed_bridges_atomically` Rust test.
-
-The fixture first requires an Anvil client, sets only local token balances and a local paymaster test signer, and uses the deployed contract bytecode. It exercises EIP-7702 activation, USDT post-operation collection, helper send/revoke, and helper failure.
-
-Its fixed estimates and test signatures do not validate Pimlico's real API policy, pricing or production credentials. Restart both fixture processes with a fresh fork for another run.
-
-To include the provider service in that same test, start it with `NODE_ENV=test ARBITRUM_RPC_URL=http://127.0.0.1:18545 LOCAL_PROVIDER_URL=http://127.0.0.1:18546`, then set `USDT_FORK_RPC_URL=http://127.0.0.1:3100/v1/usdt/chain-rpc` and `USDT_FORK_BUNDLER_URL=http://127.0.0.1:3100/v1/usdt/rpc` when running the ignored test. These overrides affect only the fork test; normal wallet configuration uses `USDT_RPC_URL` and `USDT_BUNDLER_URL`.
+Build iOS and Android sequentially with the repository scripts; Android temporarily edits the manifest/example. Generated bindings and native artifacts must use the same source. App configuration and local package overrides belong in each native repository's USDT documentation.
 
 ## References
 

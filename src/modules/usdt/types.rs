@@ -65,7 +65,6 @@ pub struct UsdtTransfer {
     pub destination: UsdtDestination,
     pub amount: u64,
     pub received_amount: u64,
-    pub bridge_fee: u64,
     pub fee: Option<u64>,
     pub is_incoming: bool,
     pub status: UsdtTransferStatus,
