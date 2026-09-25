@@ -148,7 +148,7 @@ async function dispatch(method, params) {
     const op = { ...params[0], paymaster: pmAddress, ...limits };
     const unsigned = concat([
       '0x0300',
-      toBeHex(Math.floor(Date.now() / 1000) + 600, 6),
+      toBeHex(BigInt((await rpc.send('eth_getBlockByNumber', ['latest', false])).timestamp) + 600n, 6),
       toBeHex(0, 6),
       tokenAddress,
       toBeHex(50000, 16),

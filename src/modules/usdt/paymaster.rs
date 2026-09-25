@@ -205,11 +205,14 @@ impl Pimlico {
             return Err(UsdtError::InvalidResponse);
         }
         op.paymaster_data = data.paymaster_data;
-        if let Some(gas) = data.paymaster_verification_gas_limit {
-            op.paymaster_verification_gas_limit = gas;
-        }
-        if let Some(gas) = data.paymaster_post_op_gas_limit {
-            op.paymaster_post_op_gas_limit = gas;
+        // Final data signs the estimated limits; only stub data supplies gas estimates.
+        if method == "pm_getPaymasterStubData" {
+            if let Some(gas) = data.paymaster_verification_gas_limit {
+                op.paymaster_verification_gas_limit = gas;
+            }
+            if let Some(gas) = data.paymaster_post_op_gas_limit {
+                op.paymaster_post_op_gas_limit = gas;
+            }
         }
         Ok(())
     }
@@ -345,6 +348,15 @@ impl Terms {
             .checked_add(self.constant_fee)
             .ok_or(UsdtError::InvalidResponse)
     }
+}
+
+// Packed EntryPoint paymaster data starts after the address and two 16-byte gas limits.
+pub(super) fn supported_payment(data: &[u8]) -> bool {
+    data.get(..20)
+        .is_some_and(|address| address == PAYMASTER.as_slice())
+        && data
+            .get(52..)
+            .is_some_and(|terms| Terms::decode(terms).is_ok())
 }
 
 #[cfg(test)]

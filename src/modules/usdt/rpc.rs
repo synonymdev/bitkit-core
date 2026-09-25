@@ -106,6 +106,7 @@ impl Rpc {
                     "credit",
                     "too many requests",
                     "requests per",
+                    "request rate",
                     "compute units",
                 ]
                 .iter()
@@ -113,10 +114,21 @@ impl Rpc {
             {
                 return Err(UsdtError::RateLimited);
             }
-            if method == "eth_getLogs" && error.code == -32005 {
+            if method == "eth_getLogs"
+                && (error.code == -32005
+                    || [
+                        "block range too",
+                        "block range exceeds",
+                        "query returned too many",
+                        "response size exceeded",
+                        "log query limit",
+                    ]
+                    .iter()
+                    .any(|term| message.contains(term)))
+            {
                 return Err(UsdtError::LogRangeTooLarge);
             }
-            if error.code == -32002 {
+            if matches!(error.code, -32002 | -32603) {
                 return Err(UsdtError::NetworkUnavailable);
             }
             if matches!(
@@ -152,14 +164,15 @@ impl Rpc {
     }
 
     pub async fn block(&self, number: u64) -> Result<Block, UsdtError> {
-        self.call("eth_getBlockByNumber", json!([U256::from(number), false]))
-            .await
+        self.call::<Option<Block>>("eth_getBlockByNumber", json!([U256::from(number), false]))
+            .await?
+            .ok_or(UsdtError::NetworkUnavailable)
     }
 
     pub async fn block_receipt(
         &self,
         hash: B256,
-        block: &Block,
+        block_hash: B256,
         number: u64,
     ) -> Result<Value, UsdtError> {
         let receipt: Value = self
@@ -169,7 +182,7 @@ impl Rpc {
             return Err(UsdtError::NetworkUnavailable);
         }
         if serde_json::from_value::<B256>(receipt["transactionHash"].clone())? != hash
-            || serde_json::from_value::<B256>(receipt["blockHash"].clone())? != block.hash
+            || serde_json::from_value::<B256>(receipt["blockHash"].clone())? != block_hash
             || serde_json::from_value::<U256>(receipt["blockNumber"].clone())? != U256::from(number)
         {
             return Err(UsdtError::InvalidResponse);
@@ -259,6 +272,10 @@ mod tests {
             (
                 502,
                 r#"{"error":{"code":-32002,"message":"Provider unavailable"}}"#,
+            ),
+            (
+                200,
+                r#"{"error":{"code":-32603,"message":"Internal server error"}}"#,
             ),
             (503, "Service unavailable"),
         ] {

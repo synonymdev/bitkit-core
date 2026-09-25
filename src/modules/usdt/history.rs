@@ -5,7 +5,7 @@ use super::{
     types::{EXPLORER, TOKEN},
     UsdtError, UsdtTransfer, UsdtTransferStatus, UsdtWallet,
 };
-use alloy_primitives::{Address, Bytes, U256};
+use alloy_primitives::{Address, Bytes, B256, U256};
 use alloy_sol_types::{SolCall, SolEvent};
 use serde_json::{json, Value};
 use std::{collections::BTreeMap, sync::atomic::Ordering};
@@ -25,14 +25,14 @@ impl UsdtWallet {
         if start > tip {
             return Err(UsdtError::NetworkUnavailable);
         }
-        let mut ceiling = MAX_LOG_RANGE;
+        let initial_limit = self.history_range_limit.load(Ordering::Relaxed);
+        let mut ceiling = initial_limit;
         let mut next = start;
-        let mut width = self
-            .history_range_limit
-            .load(Ordering::Relaxed)
-            .min(tip - start + 1);
+        let mut width = initial_limit.min(tip - start + 1);
         while next <= tip {
             if tokio::time::Instant::now() >= deadline {
+                self.history_range_limit
+                    .store((ceiling * 2).min(MAX_LOG_RANGE), Ordering::Relaxed);
                 return Ok(false);
             }
             let end = next.saturating_add(width - 1).min(tip);
@@ -46,7 +46,11 @@ impl UsdtWallet {
                 Err(_) => {
                     self.history_range_limit
                         .store((width / 2).max(1), Ordering::Relaxed);
-                    return Err(UsdtError::NetworkUnavailable);
+                    return if next > start {
+                        Ok(false)
+                    } else {
+                        Err(UsdtError::NetworkUnavailable)
+                    };
                 }
             };
             match result {
@@ -54,7 +58,7 @@ impl UsdtWallet {
                     if self.store.history_progress()? != Some(next) {
                         self.store.save_history_progress(next)?;
                     }
-                    let mut timestamps = BTreeMap::new();
+                    let mut blocks = BTreeMap::new();
                     for ((block, hash), logs) in transactions {
                         if self.store.has_history_receipt(&hash)? {
                             continue;
@@ -70,23 +74,32 @@ impl UsdtWallet {
                                     .and_then(|data| Erc20::Transfer::decode_log_data(&data).ok())
                                     .is_some_and(|event| event.from == self.address)
                         });
+                        let canonical = match blocks.entry(block) {
+                            std::collections::btree_map::Entry::Occupied(entry) => entry.into_mut(),
+                            std::collections::btree_map::Entry::Vacant(entry) => {
+                                entry.insert(self.rpc.block(block).await?)
+                            }
+                        };
+                        for log in &logs {
+                            if serde_json::from_value::<B256>(log["blockHash"].clone())?
+                                != canonical.hash
+                            {
+                                return Err(UsdtError::NetworkUnavailable);
+                            }
+                        }
                         let receipt = if needs_receipt {
                             self.rpc
-                                .call("eth_getTransactionReceipt", json!([hash]))
+                                .block_receipt(
+                                    hash.parse().map_err(|_| UsdtError::InvalidResponse)?,
+                                    canonical.hash,
+                                    block,
+                                )
                                 .await?
                         } else {
                             json!({"logs": logs})
                         };
-                        let timestamp =
-                            if let Some(timestamp) = self.store.transaction_timestamp(&hash)? {
-                                timestamp
-                            } else if let Some(timestamp) = timestamps.get(&block) {
-                                *timestamp
-                            } else {
-                                let timestamp = self.block_timestamp(block).await?;
-                                timestamps.insert(block, timestamp);
-                                timestamp
-                            };
+                        let timestamp = u64::try_from(canonical.timestamp)
+                            .map_err(|_| UsdtError::InvalidResponse)?;
                         self.save_receipt_history(&hash, timestamp, &receipt)
                             .await?;
                     }
@@ -101,16 +114,26 @@ impl UsdtWallet {
                     if !self.scan_block(next, deadline).await? {
                         return Ok(false);
                     }
+                    // A dense block is not a range limit for the blocks after it.
+                    ceiling = MAX_LOG_RANGE;
+                    width = MAX_LOG_RANGE;
                 }
                 Err(UsdtError::NetworkUnavailable) => {
                     self.history_range_limit
                         .store((width / 2).max(1), Ordering::Relaxed);
-                    return Err(UsdtError::NetworkUnavailable);
+                    return if next > start {
+                        Ok(false)
+                    } else {
+                        Err(UsdtError::NetworkUnavailable)
+                    };
                 }
                 Err(error) => return Err(error),
             }
             if end == tip {
                 self.store.complete_history(tip)?;
+                // Probe for a higher provider limit only after completing a scan.
+                self.history_range_limit
+                    .store((ceiling * 2).min(MAX_LOG_RANGE), Ordering::Relaxed);
                 return Ok(true);
             }
             next = end + 1;
@@ -144,7 +167,7 @@ impl UsdtWallet {
             if tokio::time::Instant::now() >= deadline {
                 return Ok(false);
             }
-            let receipt = self.rpc.block_receipt(*hash, &block, number).await?;
+            let receipt = self.rpc.block_receipt(*hash, block.hash, number).await?;
             self.save_receipt_history(&id, timestamp, &receipt).await?;
         }
         if self.rpc.block(number).await?.hash != block.hash {
@@ -191,7 +214,8 @@ impl UsdtWallet {
                     continue;
                 }
             }
-            let hash: String = serde_json::from_value(log["transactionHash"].clone())?;
+            let hash: B256 = serde_json::from_value(log["transactionHash"].clone())?;
+            let hash = format!("{hash:#x}");
             let block = u64::try_from(serde_json::from_value::<U256>(log["blockNumber"].clone())?)
                 .map_err(|_| UsdtError::InvalidResponse)?;
             if !(start..=end).contains(&block) {
@@ -261,6 +285,16 @@ impl UsdtWallet {
                 .rpc
                 .call("eth_getTransactionByHash", json!([hash]))
                 .await?;
+            if tx.is_null() {
+                return Err(UsdtError::NetworkUnavailable);
+            }
+            if serde_json::from_value::<B256>(tx["hash"].clone())?
+                != hash
+                    .parse::<B256>()
+                    .map_err(|_| UsdtError::InvalidResponse)?
+            {
+                return Err(UsdtError::InvalidResponse);
+            }
             let input: Bytes = serde_json::from_value(tx["input"].clone())?;
             let target: Option<Address> = serde_json::from_value(tx["to"].clone())?;
             // A wrapper's outer calldata need not describe the operation it executes.
@@ -289,7 +323,10 @@ impl UsdtWallet {
                 }) else {
                     continue;
                 };
-                let Some((recipient, amount)) = decode_payment(&op.callData)? else {
+                if !super::paymaster::supported_payment(&op.paymasterAndData) {
+                    continue;
+                }
+                let Some((recipient, amount)) = decode_payment(&op.callData) else {
                     continue;
                 };
                 (recipient.to_checksum(None), amount)
@@ -307,7 +344,7 @@ impl UsdtWallet {
                 timestamp,
                 explorer_url: format!("{EXPLORER}/tx/{hash}"),
             };
-            self.settle(&mut transfer, receipt, event.success)?;
+            self.settle(&mut transfer, receipt)?;
             let operation_logs = super::transaction::operation_logs(receipt, event.userOpHash)?;
             let outgoing_ids: Vec<_> = operation_logs
                 .iter()
@@ -323,32 +360,23 @@ impl UsdtWallet {
     }
 }
 
-fn decode_payment(data: &[u8]) -> Result<Option<(Address, u64)>, UsdtError> {
-    let Ok(calls) = decode_calls(data) else {
-        return Ok(None);
-    };
+fn decode_payment(data: &[u8]) -> Option<(Address, u64)> {
+    let calls = decode_calls(data).ok()?;
     let mut payment = None;
-    let mut payment_count = 0;
-    let mut supported = true;
     for (target, data) in calls {
-        if target == TOKEN {
-            if let Ok(call) = Erc20::transferCall::abi_decode(&data) {
-                payment_count += 1;
-                let Ok(amount) = token_amount(call.amount) else {
-                    return Ok(None);
-                };
-                payment = Some((call.recipient, amount));
-            } else if Erc20::approveCall::abi_decode(&data).is_err() {
-                supported = false;
+        if target != TOKEN {
+            return None;
+        }
+        if let Ok(call) = Erc20::transferCall::abi_decode(&data) {
+            if payment.is_some() {
+                return None;
             }
-        } else {
-            supported = false;
+            payment = Some((call.recipient, token_amount(call.amount).ok()?));
+        } else if Erc20::approveCall::abi_decode(&data).is_err() {
+            return None;
         }
     }
-    if !supported || payment_count != 1 {
-        return Ok(None);
-    }
-    Ok(payment)
+    payment
 }
 
 pub(super) fn decode_calls(data: &[u8]) -> Result<Vec<(Address, Bytes)>, UsdtError> {

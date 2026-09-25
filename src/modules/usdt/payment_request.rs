@@ -7,20 +7,21 @@ use alloy_primitives::Address;
 
 #[uniffi::export]
 pub fn usdt_parse_payment_request(value: String) -> Result<UsdtPaymentRequest, UsdtError> {
-    let (recipient, amount) = parse_request(&value)?;
+    let (recipient, amount, chain_id) = parse_request(&value)?;
     Ok(UsdtPaymentRequest {
         recipient: recipient.to_checksum(None),
         amount,
+        chain_id,
     })
 }
 
-fn parse_request(value: &str) -> Result<(Address, Option<u64>), UsdtError> {
+fn parse_request(value: &str) -> Result<(Address, Option<u64>, Option<u64>), UsdtError> {
     let value = value.trim();
     if value.len() > 2048 {
         return Err(UsdtError::InvalidAddress);
     }
     let Some((scheme, uri)) = value.split_once(':') else {
-        return Ok((parse_address(value)?, None));
+        return Ok((parse_address(value)?, None, None));
     };
     if !scheme.eq_ignore_ascii_case("ethereum") {
         return Err(UsdtError::InvalidAddress);
@@ -35,7 +36,7 @@ fn parse_request(value: &str) -> Result<(Address, Option<u64>), UsdtError> {
         if chain != CHAIN_ID.to_string() || !query.is_empty() {
             return Err(UsdtError::WrongNetwork);
         }
-        return Ok((parse_address(address)?, None));
+        return Ok((parse_address(address)?, None, Some(CHAIN_ID)));
     };
     if chain != CHAIN_ID.to_string() || parse_address(address)? != TOKEN {
         return Err(UsdtError::WrongNetwork);
@@ -53,5 +54,9 @@ fn parse_request(value: &str) -> Result<(Address, Option<u64>), UsdtError> {
             _ => return Err(UsdtError::InvalidAddress),
         }
     }
-    Ok((recipient.ok_or(UsdtError::InvalidAddress)?, amount))
+    Ok((
+        recipient.ok_or(UsdtError::InvalidAddress)?,
+        amount,
+        Some(CHAIN_ID),
+    ))
 }
