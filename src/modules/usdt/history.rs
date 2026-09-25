@@ -350,7 +350,9 @@ impl UsdtWallet {
                 if !super::paymaster::supported_payment(&op.paymasterAndData) {
                     continue;
                 }
-                let Some((recipient, amount, destination)) = decode_payment(&op.callData) else {
+                let Some((recipient, amount, destination)) =
+                    decode_payment(&op.callData, self.address)
+                else {
                     continue;
                 };
                 (recipient.to_checksum(None), amount, destination)
@@ -385,11 +387,14 @@ impl UsdtWallet {
     }
 }
 
-fn decode_payment(data: &[u8]) -> Option<(Address, u64, UsdtDestination)> {
+fn decode_payment(data: &[u8], sender: Address) -> Option<(Address, u64, UsdtDestination)> {
     let mut payment = None;
     for (target, data) in decode_calls(data).ok()? {
         let next = if target == TOKEN {
             if let Ok(call) = Erc20::transferCall::abi_decode(&data) {
+                if call.amount.is_zero() || call.recipient == sender {
+                    return None;
+                }
                 (
                     call.recipient,
                     token_amount(call.amount).ok()?,
