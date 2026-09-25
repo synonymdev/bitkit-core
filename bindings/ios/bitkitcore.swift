@@ -2792,6 +2792,12 @@ public protocol UsdtWalletProtocol: AnyObject, Sendable {
     
     func receiveUri()  -> String
     
+    /**
+     * Checks recent direct-payment execution at the current tip without scanning history or retrying submission.
+     * Missing evidence leaves the signed payment pending; confirmation is L2 execution, not parent-chain finality.
+     */
+    func refreshTransfer(id: String) async throws  -> UsdtTransfer?
+    
     func refreshTransfers() async throws  -> [UsdtTransfer]
     
     func send(quoteId: String, mnemonic: String, passphrase: String?) async throws  -> UsdtTransfer
@@ -2915,6 +2921,27 @@ open func receiveUri() -> String  {
     uniffi_bitkitcore_fn_method_usdtwallet_receive_uri(self.uniffiClonePointer(),$0
     )
 })
+}
+    
+    /**
+     * Checks recent direct-payment execution at the current tip without scanning history or retrying submission.
+     * Missing evidence leaves the signed payment pending; confirmation is L2 execution, not parent-chain finality.
+     */
+open func refreshTransfer(id: String)async throws  -> UsdtTransfer?  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtwallet_refresh_transfer(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(id)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypeUsdtTransfer.lift,
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
 }
     
 open func refreshTransfers()async throws  -> [UsdtTransfer]  {
@@ -25722,6 +25749,30 @@ fileprivate struct FfiConverterOptionTypeUsdtDepositOrder: FfiConverterRustBuffe
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeUsdtTransfer: FfiConverterRustBuffer {
+    typealias SwiftType = UsdtTransfer?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeUsdtTransfer.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeUsdtTransfer.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypeAccountType: FfiConverterRustBuffer {
     typealias SwiftType = AccountType?
 
@@ -30733,6 +30784,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_receive_uri() != 33484) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_refresh_transfer() != 58151) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_refresh_transfers() != 32305) {
