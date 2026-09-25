@@ -1,5 +1,5 @@
 use super::{
-    keys::{derive_key, key_address, parse_address},
+    keys::{derive_owner_key, parse_address},
     rpc::{bounded_json, endpoint_client},
     user_operation::sign_hash,
     UsdtDestination, UsdtError,
@@ -28,7 +28,9 @@ pub struct UsdtDepositAddress {
     pub amount: u64,
     #[serde(deserialize_with = "number")]
     pub estimated_received: u64,
+    #[serde(default, deserialize_with = "deposit_limit")]
     pub min_usd_cents: Option<String>,
+    #[serde(default, deserialize_with = "deposit_limit")]
     pub max_usd_cents: Option<String>,
     pub slippage_bps: u32,
     #[serde(skip)]
@@ -241,10 +243,7 @@ impl UsdtDepositClient {
         passphrase: Option<Zeroizing<String>>,
         timestamp: u64,
     ) -> Result<Value, UsdtError> {
-        let key = derive_key(mnemonic, passphrase)?;
-        if key_address(&key) != self.address {
-            return Err(UsdtError::InvalidCredentials);
-        }
+        let key = derive_owner_key(mnemonic, passphrase, self.address)?;
         let request =
             json!({"owner":self.address.to_checksum(None),"timestamp":timestamp,"payload":payload})
                 .to_string();
@@ -332,15 +331,14 @@ fn validate_source_address(value: &str, network: UsdtDepositNetwork) -> Result<A
     }
 }
 
-fn deposit_limit(value: &Value) -> Result<Option<String>, UsdtError> {
-    if value.is_null() {
-        return Ok(None);
-    }
-    let value = value.as_str().ok_or(UsdtError::InvalidResponse)?;
-    if value.is_empty() || value.len() > 40 || !value.bytes().all(|c| c.is_ascii_digit()) {
-        return Err(UsdtError::InvalidResponse);
-    }
-    Ok(Some(value.into()))
+fn deposit_limit<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
+    let value = Value::deserialize(deserializer)?;
+    Ok(value
+        .as_str()
+        .filter(|value| {
+            !value.is_empty() && value.len() <= 40 && value.bytes().all(|c| c.is_ascii_digit())
+        })
+        .map(str::to_owned))
 }
 
 fn number<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u64, D::Error> {
@@ -615,15 +613,74 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn invalid_service_addresses_and_nonadvancing_pages_are_rejected() {
+    async fn optional_limits_preserve_receive_and_amount_errors() {
+        for (limit, expected) in [
+            (json!("200"), Some("200")),
+            (Value::Null, None),
+            (json!("unknown"), None),
+            (json!(200), None),
+            (json!(""), None),
+            (json!("1".repeat(41)), None),
+        ] {
+            let owner = super::super::usdt_address(PHRASE.into(), None).unwrap();
+            let (url, server) = service(vec![
+                (200, json!({"network":"ethereum","address":"0x1111111111111111111111111111111111111111","recipient":owner,"amount":"100000000","estimated_received":"98500000","slippage_bps":50,"min_usd_cents":limit,"max_usd_cents":limit})),
+                (400, json!({"error":"amount_too_small","min_usd_cents":limit,"max_usd_cents":limit})),
+            ]).await;
+            let client = UsdtDepositClient::new(owner, url).unwrap();
+            let received = client
+                .receive(
+                    UsdtDepositNetwork::Ethereum,
+                    100_000_000,
+                    PHRASE.into(),
+                    None,
+                )
+                .await
+                .unwrap();
+            assert_eq!(received.min_usd_cents.as_deref(), expected);
+            assert_eq!(received.max_usd_cents.as_deref(), expected);
+            let UsdtError::DepositAmountOutOfRange {
+                min_usd_cents,
+                max_usd_cents,
+            } = client
+                .receive(
+                    UsdtDepositNetwork::Ethereum,
+                    100_000_000,
+                    PHRASE.into(),
+                    None,
+                )
+                .await
+                .unwrap_err()
+            else {
+                panic!("Optional limits must not hide the amount error");
+            };
+            assert_eq!(min_usd_cents.as_deref(), expected);
+            assert_eq!(max_usd_cents.as_deref(), expected);
+            server.await.unwrap();
+        }
+    }
+
+    #[tokio::test]
+    async fn invalid_receive_terms_and_nonadvancing_pages_are_rejected() {
         let owner = super::super::usdt_address(PHRASE.into(), None).unwrap();
-        let (url, server) = service(vec![
-            (200, json!({"network":"ethereum","address":UsdtDestination::Ethereum.token(),"recipient":owner,"amount":"100000000","estimated_received":"98500000","slippage_bps":50})),
-            (200, json!({"network":"ethereum","address":"0x1111111111111111111111111111111111111111","recipient":"invalid","amount":"100000000","estimated_received":"98500000","slippage_bps":50})),
-            (200, json!({"deposits":[],"next_offset":0})),
-        ]).await;
+        let mut responses = vec![
+            (
+                200,
+                json!({"network":"ethereum","address":UsdtDestination::Ethereum.token(),"recipient":owner,"amount":"100000000","estimated_received":"98500000","slippage_bps":50}),
+            ),
+            (
+                200,
+                json!({"network":"ethereum","address":"0x1111111111111111111111111111111111111111","recipient":"invalid","amount":"100000000","estimated_received":"98500000","slippage_bps":50}),
+            ),
+        ];
+        for slippage_bps in [0, 49, 51] {
+            responses.push((200, json!({"network":"ethereum","address":"0x1111111111111111111111111111111111111111","recipient":owner,"amount":"100000000","estimated_received":"98500000","slippage_bps":slippage_bps})));
+        }
+        let invalid_receives = responses.len();
+        responses.push((200, json!({"deposits":[],"next_offset":0})));
+        let (url, server) = service(responses).await;
         let client = UsdtDepositClient::new(owner, url).unwrap();
-        for _ in 0..2 {
+        for _ in 0..invalid_receives {
             assert!(matches!(
                 client
                     .receive(

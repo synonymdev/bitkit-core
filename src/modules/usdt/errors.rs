@@ -6,7 +6,7 @@ pub enum UsdtError {
     InvalidAmount,
     #[error("Enter a valid address for the selected network")]
     InvalidAddress,
-    #[error("The payment request is for a different network or token")]
+    #[error("The network or token does not match this USDT account")]
     WrongNetwork,
     #[error("Wallet credentials do not match this USDT account")]
     InvalidCredentials,

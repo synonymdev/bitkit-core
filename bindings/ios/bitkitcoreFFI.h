@@ -720,6 +720,11 @@ void*_Nonnull uniffi_bitkitcore_fn_constructor_usdtwallet_new(RustBuffer address
 uint64_t uniffi_bitkitcore_fn_method_usdtwallet_balance(void*_Nonnull ptr
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_CHECK_RECENT_EXECUTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_CHECK_RECENT_EXECUTION
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_check_recent_execution(void*_Nonnull ptr, RustBuffer id
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_HISTORY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_HISTORY
 RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_history(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -738,11 +743,6 @@ RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_receive_address(void*_Nonnull 
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RECEIVE_URI
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RECEIVE_URI
 RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_receive_uri(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
-);
-#endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_REFRESH_TRANSFER
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_REFRESH_TRANSFER
-uint64_t uniffi_bitkitcore_fn_method_usdtwallet_refresh_transfer(void*_Nonnull ptr, RustBuffer id
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_REFRESH_TRANSFERS
@@ -3544,6 +3544,12 @@ uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_balance(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_CHECK_RECENT_EXECUTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_CHECK_RECENT_EXECUTION
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_check_recent_execution(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_HISTORY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_HISTORY
 uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_history(void
@@ -3565,12 +3571,6 @@ uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_receive_address(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RECEIVE_URI
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RECEIVE_URI
 uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_receive_uri(void
-    
-);
-#endif
-#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_REFRESH_TRANSFER
-#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_REFRESH_TRANSFER
-uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_refresh_transfer(void
     
 );
 #endif
