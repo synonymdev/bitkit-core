@@ -153,7 +153,7 @@ async function dispatch(method, params) {
     const op = { ...params[0], paymaster: pmAddress, ...limits };
     const unsigned = concat([
       '0x0300',
-      toBeHex(Math.floor(Date.now() / 1000) + 600, 6),
+      toBeHex(BigInt((await rpc.send('eth_getBlockByNumber', ['latest', false])).timestamp) + 600n, 6),
       toBeHex(0, 6),
       tokenAddress,
       toBeHex(50000, 16),
@@ -204,6 +204,11 @@ async function dispatch(method, params) {
   return rpc.send(method, params);
 }
 const server = createServer(async (request, response) => {
+  if (request.method === 'GET' && request.url.startsWith('/v1/messages/tx/')) {
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ data: [] }));
+    return;
+  }
   let body = '';
   for await (const chunk of request) body += chunk;
   const call = JSON.parse(body);

@@ -2,15 +2,14 @@ use super::{
     keys::{derive_key, key_address, parse_address},
     rpc::{bounded_json, endpoint_client},
     user_operation::sign_hash,
-    UsdtError,
+    UsdtDestination, UsdtError,
 };
-use alloy_primitives::{address, eip191_hash_message, Address};
+use alloy_primitives::{eip191_hash_message, Address};
 use serde::{de::DeserializeOwned, Deserialize, Deserializer, Serialize};
 use serde_json::{json, Value};
 use std::{sync::Arc, time::Duration};
 use zeroize::Zeroizing;
 
-const ETHEREUM_USDT: Address = address!("dAC17F958D2ee523a2206206994597C13D831ec7");
 const TRON_USDT: &str = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, uniffi::Enum)]
@@ -139,17 +138,16 @@ impl UsdtDepositClient {
         {
             return Err(UsdtError::InvalidResponse);
         }
-        validate_source_address(&result.address, network)
-            .map_err(|_| UsdtError::InvalidResponse)?;
-        if network == UsdtDepositNetwork::Ethereum
-            && parse_address(&result.address)? == self.address
+        if validate_source_address(&result.address, network)
+            .map_err(|_| UsdtError::InvalidResponse)?
+            == self.address
         {
             return Err(UsdtError::InvalidResponse);
         }
         result.uri = match network {
             UsdtDepositNetwork::Ethereum => format!(
                 "ethereum:{}@1/transfer?address={}",
-                ETHEREUM_USDT.to_checksum(None),
+                UsdtDestination::Ethereum.token().to_checksum(None),
                 result.address
             ),
             UsdtDepositNetwork::Tron => result.address.clone(),
@@ -273,10 +271,16 @@ impl UsdtDepositClient {
             let error = value.unwrap_or_default();
             return Err(match error["error"].as_str() {
                 Some("not_configured") => UsdtError::NotConfigured,
+                Some("provider_unavailable") => UsdtError::NetworkUnavailable,
                 Some("invalid_authorization") => UsdtError::DepositAuthorizationRejected,
                 Some("not_found") => UsdtError::DepositNotFound,
                 Some("clock_skew") => UsdtError::ClockSkew,
-                Some("amount_too_small" | "amount_too_large") => UsdtError::DepositAmountOutOfRange,
+                Some("amount_too_small" | "amount_too_large") => {
+                    UsdtError::DepositAmountOutOfRange {
+                        min_usd_cents: deposit_limit(&error["min_usd_cents"])?,
+                        max_usd_cents: deposit_limit(&error["max_usd_cents"])?,
+                    }
+                }
                 Some("amount_exceeds_liquidity") => UsdtError::UnsupportedRoute,
                 Some("invalid_refund_address") => UsdtError::InvalidAddress,
                 Some("route_unavailable") => UsdtError::UnsupportedRoute,
@@ -286,6 +290,14 @@ impl UsdtDepositClient {
                     | "operator_required"
                     | "standing_tron_refund_requires_operator",
                 ) => UsdtError::DepositNeedsAttention,
+                _ if status == reqwest::StatusCode::UNAUTHORIZED
+                    || status == reqwest::StatusCode::FORBIDDEN =>
+                {
+                    UsdtError::DepositAuthorizationRejected
+                }
+                _ if status.is_client_error() || status.is_redirection() => {
+                    UsdtError::InvalidResponse
+                }
                 _ => UsdtError::NetworkUnavailable,
             });
         }
@@ -293,14 +305,19 @@ impl UsdtDepositClient {
     }
 }
 
-fn validate_source_address(value: &str, network: UsdtDepositNetwork) -> Result<(), UsdtError> {
+fn validate_source_address(value: &str, network: UsdtDepositNetwork) -> Result<Address, UsdtError> {
     match network {
         UsdtDepositNetwork::Ethereum => {
-            if parse_address(value)? == ETHEREUM_USDT {
+            let address = parse_address(value)?;
+            if address == UsdtDestination::Ethereum.token() {
                 return Err(UsdtError::InvalidAddress);
             }
+            Ok(address)
         }
         UsdtDepositNetwork::Tron => {
+            if value.len() != 34 || !value.starts_with('T') || !value.is_ascii() {
+                return Err(UsdtError::InvalidAddress);
+            }
             let payload =
                 bitcoin::base58::decode_check(value).map_err(|_| UsdtError::InvalidAddress)?;
             if payload.len() != 21
@@ -310,9 +327,20 @@ fn validate_source_address(value: &str, network: UsdtDepositNetwork) -> Result<(
             {
                 return Err(UsdtError::InvalidAddress);
             }
+            Ok(Address::from_slice(&payload[1..]))
         }
     }
-    Ok(())
+}
+
+fn deposit_limit(value: &Value) -> Result<Option<String>, UsdtError> {
+    if value.is_null() {
+        return Ok(None);
+    }
+    let value = value.as_str().ok_or(UsdtError::InvalidResponse)?;
+    if value.is_empty() || value.len() > 40 || !value.bytes().all(|c| c.is_ascii_digit()) {
+        return Err(UsdtError::InvalidResponse);
+    }
+    Ok(Some(value.into()))
 }
 
 fn number<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u64, D::Error> {
@@ -366,11 +394,15 @@ mod tests {
     #[test]
     fn deposit_addresses_and_transport_reject_wrong_networks() {
         let tron = "TJRabPrwbZy45sbavfcjinPJC18kjpRTv8";
-        for bad in [TRON_USDT, "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb"] {
+        for bad in [
+            TRON_USDT,
+            "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb",
+            &"T".repeat(10000),
+        ] {
             assert!(validate_source_address(bad, UsdtDepositNetwork::Tron).is_err());
         }
         assert!(validate_source_address(
-            &ETHEREUM_USDT.to_checksum(None),
+            &UsdtDestination::Ethereum.token().to_checksum(None),
             UsdtDepositNetwork::Ethereum
         )
         .is_err());
@@ -394,18 +426,25 @@ mod tests {
         }
     }
 
-    async fn service(responses: Vec<(u16, Value)>) -> (String, tokio::task::JoinHandle<()>) {
+    async fn service(
+        responses: Vec<(u16, Value)>,
+    ) -> (String, tokio::task::JoinHandle<Vec<Value>>) {
         use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let url = format!("http://{}/v1/usdt/deposits", listener.local_addr().unwrap());
         let task = tokio::spawn(async move {
+            tokio::time::timeout(Duration::from_secs(10), async move {
+            let mut requests = Vec::new();
             for (status, value) in responses {
                 let (socket, _) = listener.accept().await.unwrap();
                 let mut reader = BufReader::new(socket);
+                let mut first_line = String::new();
+                reader.read_line(&mut first_line).await.unwrap();
+                assert!(first_line == "GET /v1/usdt/deposits HTTP/1.1\r\n" || first_line == "POST /v1/usdt/deposits HTTP/1.1\r\n");
                 let mut length = 0;
                 loop {
                     let mut line = String::new();
-                    reader.read_line(&mut line).await.unwrap();
+                    assert_ne!(reader.read_line(&mut line).await.unwrap(), 0, "Request ended before its headers");
                     if line == "\r\n" {
                         break;
                     }
@@ -413,10 +452,16 @@ mod tests {
                         length = value.trim().parse().unwrap();
                     }
                 }
-                reader.read_exact(&mut vec![0; length]).await.unwrap();
+                let mut bytes = vec![0; length];
+                reader.read_exact(&mut bytes).await.unwrap();
+                if first_line.starts_with("POST") {
+                    requests.push(serde_json::from_slice::<Value>(&bytes).unwrap());
+                }
                 let body = value.to_string();
                 reader.get_mut().write_all(format!("HTTP/1.1 {status} Response\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).as_bytes()).await.unwrap();
             }
+            requests
+            }).await.expect("Deposit fixture requests must complete")
         });
         (url, task)
     }
@@ -428,7 +473,7 @@ mod tests {
         let deposit = json!({"id":"dep_one","network":"ethereum","asset":"USDT","source_tx":"0xsource","status":"held","code":null,"refund_tx":null});
         let (url, server) = service(vec![
             (200, json!({"networks":["ethereum","tron","bitcoin"]})),
-            (200, json!({"network":"ethereum","address":address,"recipient":owner,"amount":"100000000","estimated_received":"98500000","slippage_bps":50,"uri":123})),
+            (200, json!({"network":"ethereum","address":address,"recipient":owner,"amount":"100000000","estimated_received":"98500000","slippage_bps":50,"min_usd_cents":"200","max_usd_cents":"10000","uri":123})),
             (200, json!({"deposits":[deposit],"next_offset":50})),
             (200, json!({"deposit":deposit,"order":{"status":"held"}})),
             (202, json!({"status":"refund_requested"})),
@@ -448,6 +493,8 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(received.estimated_received, 98_500_000);
+        assert_eq!(received.min_usd_cents.as_deref(), Some("200"));
+        assert_eq!(received.max_usd_cents.as_deref(), Some("10000"));
         assert!(received.uri.contains(address));
         let page = client.history(0, PHRASE.into(), None).await.unwrap();
         assert_eq!(page.deposits[0].amount, None);
@@ -461,14 +508,36 @@ mod tests {
             .request_refund(
                 "dep_one".into(),
                 0,
-                address.into(),
+                "0x2222222222222222222222222222222222222222".into(),
                 UsdtDepositNetwork::Ethereum,
                 PHRASE.into(),
                 None,
             )
             .await
             .unwrap();
-        server.await.unwrap();
+        let requests = server.await.unwrap();
+        let expected = [
+            json!({"action":"receive","network":"ethereum","amount":"100000000"}),
+            json!({"action":"history","offset":0}),
+            json!({"action":"detail","depositId":"dep_one","offset":0}),
+            json!({"action":"refund","depositId":"dep_one","offset":0,"refundAddress":"0x2222222222222222222222222222222222222222"}),
+        ];
+        assert_eq!(requests.len(), expected.len());
+        for (signed, payload) in requests.into_iter().zip(expected) {
+            let request: Value = serde_json::from_str(signed["request"].as_str().unwrap()).unwrap();
+            assert_eq!(request["payload"], payload);
+            assert_eq!(
+                signed,
+                client
+                    .authorize(
+                        payload,
+                        PHRASE.to_string().into(),
+                        None,
+                        request["timestamp"].as_u64().unwrap()
+                    )
+                    .unwrap()
+            );
+        }
     }
 
     #[tokio::test]
@@ -480,8 +549,20 @@ mod tests {
                 UsdtError::DepositAuthorizationRejected,
             ),
             ("clock_skew", UsdtError::ClockSkew),
-            ("amount_too_small", UsdtError::DepositAmountOutOfRange),
-            ("amount_too_large", UsdtError::DepositAmountOutOfRange),
+            (
+                "amount_too_small",
+                UsdtError::DepositAmountOutOfRange {
+                    min_usd_cents: None,
+                    max_usd_cents: None,
+                },
+            ),
+            (
+                "amount_too_large",
+                UsdtError::DepositAmountOutOfRange {
+                    min_usd_cents: None,
+                    max_usd_cents: None,
+                },
+            ),
             ("amount_exceeds_liquidity", UsdtError::UnsupportedRoute),
             (
                 "standing_tron_refund_requires_operator",
@@ -489,10 +570,42 @@ mod tests {
             ),
             ("provider_unavailable", UsdtError::NetworkUnavailable),
         ] {
-            let (url, server) = service(vec![(400, json!({"error":code}))]).await;
+            let (url, server) = service(vec![(
+                400,
+                json!({"error":code,"min_usd_cents":"200","max_usd_cents":"10000"}),
+            )])
+            .await;
             let owner = super::super::usdt_address(PHRASE.into(), None).unwrap();
             let client = UsdtDepositClient::new(owner, url).unwrap();
             let error = client.history(0, PHRASE.into(), None).await.unwrap_err();
+            assert_eq!(
+                std::mem::discriminant(&error),
+                std::mem::discriminant(&expected)
+            );
+            if let UsdtError::DepositAmountOutOfRange {
+                min_usd_cents,
+                max_usd_cents,
+            } = error
+            {
+                assert_eq!(min_usd_cents.as_deref(), Some("200"));
+                assert_eq!(max_usd_cents.as_deref(), Some("10000"));
+            }
+            server.await.unwrap();
+        }
+        for (status, expected) in [
+            (429, UsdtError::RateLimited),
+            (401, UsdtError::DepositAuthorizationRejected),
+            (403, UsdtError::DepositAuthorizationRejected),
+            (404, UsdtError::InvalidResponse),
+            (502, UsdtError::NetworkUnavailable),
+        ] {
+            let (url, server) = service(vec![(status, json!({}))]).await;
+            let client = UsdtDepositClient::new(
+                super::super::usdt_address(PHRASE.into(), None).unwrap(),
+                url,
+            )
+            .unwrap();
+            let error = client.networks().await.unwrap_err();
             assert_eq!(
                 std::mem::discriminant(&error),
                 std::mem::discriminant(&expected)
@@ -505,7 +618,7 @@ mod tests {
     async fn invalid_service_addresses_and_nonadvancing_pages_are_rejected() {
         let owner = super::super::usdt_address(PHRASE.into(), None).unwrap();
         let (url, server) = service(vec![
-            (200, json!({"network":"ethereum","address":ETHEREUM_USDT,"recipient":owner,"amount":"100000000","estimated_received":"98500000","slippage_bps":50})),
+            (200, json!({"network":"ethereum","address":UsdtDestination::Ethereum.token(),"recipient":owner,"amount":"100000000","estimated_received":"98500000","slippage_bps":50})),
             (200, json!({"network":"ethereum","address":"0x1111111111111111111111111111111111111111","recipient":"invalid","amount":"100000000","estimated_received":"98500000","slippage_bps":50})),
             (200, json!({"deposits":[],"next_offset":0})),
         ]).await;

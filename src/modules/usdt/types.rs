@@ -48,6 +48,8 @@ impl UsdtDestination {
 pub struct UsdtPaymentRequest {
     pub recipient: String,
     pub amount: Option<u64>,
+    /// An explicit network in the payment URI; bare addresses have no restriction.
+    pub chain_id: Option<u64>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, uniffi::Record)]

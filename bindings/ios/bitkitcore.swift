@@ -16619,12 +16619,20 @@ public func FfiConverterTypeUsdtDepositPage_lower(_ value: UsdtDepositPage) -> R
 public struct UsdtPaymentRequest {
     public var recipient: String
     public var amount: UInt64?
+    /**
+     * An explicit network in the payment URI; bare addresses have no restriction.
+     */
+    public var chainId: UInt64?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(recipient: String, amount: UInt64?) {
+    public init(recipient: String, amount: UInt64?, 
+        /**
+         * An explicit network in the payment URI; bare addresses have no restriction.
+         */chainId: UInt64?) {
         self.recipient = recipient
         self.amount = amount
+        self.chainId = chainId
     }
 }
 
@@ -16641,12 +16649,16 @@ extension UsdtPaymentRequest: Equatable, Hashable {
         if lhs.amount != rhs.amount {
             return false
         }
+        if lhs.chainId != rhs.chainId {
+            return false
+        }
         return true
     }
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(recipient)
         hasher.combine(amount)
+        hasher.combine(chainId)
     }
 }
 
@@ -16662,13 +16674,15 @@ public struct FfiConverterTypeUsdtPaymentRequest: FfiConverterRustBuffer {
         return
             try UsdtPaymentRequest(
                 recipient: FfiConverterString.read(from: &buf), 
-                amount: FfiConverterOptionUInt64.read(from: &buf)
+                amount: FfiConverterOptionUInt64.read(from: &buf), 
+                chainId: FfiConverterOptionUInt64.read(from: &buf)
         )
     }
 
     public static func write(_ value: UsdtPaymentRequest, into buf: inout [UInt8]) {
         FfiConverterString.write(value.recipient, into: &buf)
         FfiConverterOptionUInt64.write(value.amount, into: &buf)
+        FfiConverterOptionUInt64.write(value.chainId, into: &buf)
     }
 }
 
@@ -24267,7 +24281,8 @@ public enum UsdtError: Swift.Error {
     case DepositNeedsAttention
     case DepositNotFound
     case DepositAuthorizationRejected
-    case DepositAmountOutOfRange
+    case DepositAmountOutOfRange(minUsdCents: String?, maxUsdCents: String?
+    )
     case NotConfigured
     case NetworkUnavailable
     case RateLimited
@@ -24306,7 +24321,10 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
         case 11: return .DepositNeedsAttention
         case 12: return .DepositNotFound
         case 13: return .DepositAuthorizationRejected
-        case 14: return .DepositAmountOutOfRange
+        case 14: return .DepositAmountOutOfRange(
+            minUsdCents: try FfiConverterOptionString.read(from: &buf), 
+            maxUsdCents: try FfiConverterOptionString.read(from: &buf)
+            )
         case 15: return .NotConfigured
         case 16: return .NetworkUnavailable
         case 17: return .RateLimited
@@ -24382,9 +24400,11 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(13))
         
         
-        case .DepositAmountOutOfRange:
+        case let .DepositAmountOutOfRange(minUsdCents,maxUsdCents):
             writeInt(&buf, Int32(14))
-        
+            FfiConverterOptionString.write(minUsdCents, into: &buf)
+            FfiConverterOptionString.write(maxUsdCents, into: &buf)
+            
         
         case .NotConfigured:
             writeInt(&buf, Int32(15))

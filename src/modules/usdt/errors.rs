@@ -20,7 +20,7 @@ pub enum UsdtError {
     QuoteExpired,
     #[error("A USDT transaction is pending. Wait for confirmation before sending again")]
     PendingTransfer,
-    #[error("The selected USDT0 route is unavailable")]
+    #[error("The selected USDT payment route is unavailable")]
     UnsupportedRoute,
     #[error("This deposit needs provider assistance. Check its recovery status")]
     DepositNeedsAttention,
@@ -29,7 +29,10 @@ pub enum UsdtError {
     #[error("The deposit service could not verify this request. Try again")]
     DepositAuthorizationRejected,
     #[error("The amount is outside this deposit route's limits. Review the minimum and maximum")]
-    DepositAmountOutOfRange,
+    DepositAmountOutOfRange {
+        min_usd_cents: Option<String>,
+        max_usd_cents: Option<String>,
+    },
     #[error("USDT payments are not configured for this app build")]
     NotConfigured,
     #[error("The network could not be reached. Try again")]
