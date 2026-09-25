@@ -2563,6 +2563,223 @@ public func FfiConverterTypeUrDecoder_lower(_ value: UrDecoder) -> UnsafeMutable
 
 
 
+public protocol UsdtDepositClientProtocol: AnyObject, Sendable {
+    
+    func detail(depositId: String, offset: UInt32, mnemonic: String, passphrase: String?) async throws  -> UsdtDepositDetail
+    
+    func history(offset: UInt32, mnemonic: String, passphrase: String?) async throws  -> UsdtDepositPage
+    
+    func networks() async throws  -> [UsdtDepositNetwork]
+    
+    func receive(network: UsdtDepositNetwork, amount: UInt64, mnemonic: String, passphrase: String?) async throws  -> UsdtDepositAddress
+    
+    func requestRefund(depositId: String, offset: UInt32, refundAddress: String, network: UsdtDepositNetwork, mnemonic: String, passphrase: String?) async throws 
+    
+}
+open class UsdtDepositClient: UsdtDepositClientProtocol, @unchecked Sendable {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_bitkitcore_fn_clone_usdtdepositclient(self.pointer, $0) }
+    }
+public convenience init(address: String, serviceUrl: String)throws  {
+    let pointer =
+        try rustCallWithError(FfiConverterTypeUsdtError_lift) {
+    uniffi_bitkitcore_fn_constructor_usdtdepositclient_new(
+        FfiConverterString.lower(address),
+        FfiConverterString.lower(serviceUrl),$0
+    )
+}
+    self.init(unsafeFromRawPointer: pointer)
+}
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_bitkitcore_fn_free_usdtdepositclient(pointer, $0) }
+    }
+
+    
+
+    
+open func detail(depositId: String, offset: UInt32, mnemonic: String, passphrase: String?)async throws  -> UsdtDepositDetail  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtdepositclient_detail(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(depositId),FfiConverterUInt32.lower(offset),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(passphrase)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeUsdtDepositDetail_lift,
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
+}
+    
+open func history(offset: UInt32, mnemonic: String, passphrase: String?)async throws  -> UsdtDepositPage  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtdepositclient_history(
+                    self.uniffiClonePointer(),
+                    FfiConverterUInt32.lower(offset),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(passphrase)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeUsdtDepositPage_lift,
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
+}
+    
+open func networks()async throws  -> [UsdtDepositNetwork]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtdepositclient_networks(
+                    self.uniffiClonePointer()
+                    
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeUsdtDepositNetwork.lift,
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
+}
+    
+open func receive(network: UsdtDepositNetwork, amount: UInt64, mnemonic: String, passphrase: String?)async throws  -> UsdtDepositAddress  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtdepositclient_receive(
+                    self.uniffiClonePointer(),
+                    FfiConverterTypeUsdtDepositNetwork_lower(network),FfiConverterUInt64.lower(amount),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(passphrase)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeUsdtDepositAddress_lift,
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
+}
+    
+open func requestRefund(depositId: String, offset: UInt32, refundAddress: String, network: UsdtDepositNetwork, mnemonic: String, passphrase: String?)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtdepositclient_request_refund(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(depositId),FfiConverterUInt32.lower(offset),FfiConverterString.lower(refundAddress),FfiConverterTypeUsdtDepositNetwork_lower(network),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(passphrase)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
+}
+    
+
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtDepositClient: FfiConverter {
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = UsdtDepositClient
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> UsdtDepositClient {
+        return UsdtDepositClient(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: UsdtDepositClient) -> UnsafeMutableRawPointer {
+        return value.uniffiClonePointer()
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtDepositClient {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: UsdtDepositClient, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDepositClient_lift(_ pointer: UnsafeMutableRawPointer) throws -> UsdtDepositClient {
+    return try FfiConverterTypeUsdtDepositClient.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDepositClient_lower(_ value: UsdtDepositClient) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeUsdtDepositClient.lower(value)
+}
+
+
+
+
+
+
 public protocol UsdtWalletProtocol: AnyObject, Sendable {
     
     func balance() async throws  -> UInt64
@@ -15957,6 +16174,502 @@ public func FfiConverterTypeUrDecoderStatus_lower(_ value: UrDecoderStatus) -> R
 }
 
 
+public struct UsdtDeposit {
+    public var id: String
+    public var network: String
+    public var asset: String
+    public var amount: UInt64?
+    public var sourceTx: String
+    public var status: String
+    public var code: String?
+    public var refundTx: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, network: String, asset: String, amount: UInt64?, sourceTx: String, status: String, code: String?, refundTx: String?) {
+        self.id = id
+        self.network = network
+        self.asset = asset
+        self.amount = amount
+        self.sourceTx = sourceTx
+        self.status = status
+        self.code = code
+        self.refundTx = refundTx
+    }
+}
+
+#if compiler(>=6)
+extension UsdtDeposit: Sendable {}
+#endif
+
+
+extension UsdtDeposit: Equatable, Hashable {
+    public static func ==(lhs: UsdtDeposit, rhs: UsdtDeposit) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.network != rhs.network {
+            return false
+        }
+        if lhs.asset != rhs.asset {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.sourceTx != rhs.sourceTx {
+            return false
+        }
+        if lhs.status != rhs.status {
+            return false
+        }
+        if lhs.code != rhs.code {
+            return false
+        }
+        if lhs.refundTx != rhs.refundTx {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(network)
+        hasher.combine(asset)
+        hasher.combine(amount)
+        hasher.combine(sourceTx)
+        hasher.combine(status)
+        hasher.combine(code)
+        hasher.combine(refundTx)
+    }
+}
+
+extension UsdtDeposit: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtDeposit: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtDeposit {
+        return
+            try UsdtDeposit(
+                id: FfiConverterString.read(from: &buf), 
+                network: FfiConverterString.read(from: &buf), 
+                asset: FfiConverterString.read(from: &buf), 
+                amount: FfiConverterOptionUInt64.read(from: &buf), 
+                sourceTx: FfiConverterString.read(from: &buf), 
+                status: FfiConverterString.read(from: &buf), 
+                code: FfiConverterOptionString.read(from: &buf), 
+                refundTx: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: UsdtDeposit, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.network, into: &buf)
+        FfiConverterString.write(value.asset, into: &buf)
+        FfiConverterOptionUInt64.write(value.amount, into: &buf)
+        FfiConverterString.write(value.sourceTx, into: &buf)
+        FfiConverterString.write(value.status, into: &buf)
+        FfiConverterOptionString.write(value.code, into: &buf)
+        FfiConverterOptionString.write(value.refundTx, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDeposit_lift(_ buf: RustBuffer) throws -> UsdtDeposit {
+    return try FfiConverterTypeUsdtDeposit.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDeposit_lower(_ value: UsdtDeposit) -> RustBuffer {
+    return FfiConverterTypeUsdtDeposit.lower(value)
+}
+
+
+public struct UsdtDepositAddress {
+    public var network: UsdtDepositNetwork
+    public var address: String
+    public var recipient: String
+    public var amount: UInt64
+    public var estimatedReceived: UInt64
+    public var minUsdCents: String?
+    public var maxUsdCents: String?
+    public var slippageBps: UInt32
+    public var uri: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(network: UsdtDepositNetwork, address: String, recipient: String, amount: UInt64, estimatedReceived: UInt64, minUsdCents: String?, maxUsdCents: String?, slippageBps: UInt32, uri: String) {
+        self.network = network
+        self.address = address
+        self.recipient = recipient
+        self.amount = amount
+        self.estimatedReceived = estimatedReceived
+        self.minUsdCents = minUsdCents
+        self.maxUsdCents = maxUsdCents
+        self.slippageBps = slippageBps
+        self.uri = uri
+    }
+}
+
+#if compiler(>=6)
+extension UsdtDepositAddress: Sendable {}
+#endif
+
+
+extension UsdtDepositAddress: Equatable, Hashable {
+    public static func ==(lhs: UsdtDepositAddress, rhs: UsdtDepositAddress) -> Bool {
+        if lhs.network != rhs.network {
+            return false
+        }
+        if lhs.address != rhs.address {
+            return false
+        }
+        if lhs.recipient != rhs.recipient {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.estimatedReceived != rhs.estimatedReceived {
+            return false
+        }
+        if lhs.minUsdCents != rhs.minUsdCents {
+            return false
+        }
+        if lhs.maxUsdCents != rhs.maxUsdCents {
+            return false
+        }
+        if lhs.slippageBps != rhs.slippageBps {
+            return false
+        }
+        if lhs.uri != rhs.uri {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(network)
+        hasher.combine(address)
+        hasher.combine(recipient)
+        hasher.combine(amount)
+        hasher.combine(estimatedReceived)
+        hasher.combine(minUsdCents)
+        hasher.combine(maxUsdCents)
+        hasher.combine(slippageBps)
+        hasher.combine(uri)
+    }
+}
+
+extension UsdtDepositAddress: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtDepositAddress: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtDepositAddress {
+        return
+            try UsdtDepositAddress(
+                network: FfiConverterTypeUsdtDepositNetwork.read(from: &buf), 
+                address: FfiConverterString.read(from: &buf), 
+                recipient: FfiConverterString.read(from: &buf), 
+                amount: FfiConverterUInt64.read(from: &buf), 
+                estimatedReceived: FfiConverterUInt64.read(from: &buf), 
+                minUsdCents: FfiConverterOptionString.read(from: &buf), 
+                maxUsdCents: FfiConverterOptionString.read(from: &buf), 
+                slippageBps: FfiConverterUInt32.read(from: &buf), 
+                uri: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: UsdtDepositAddress, into buf: inout [UInt8]) {
+        FfiConverterTypeUsdtDepositNetwork.write(value.network, into: &buf)
+        FfiConverterString.write(value.address, into: &buf)
+        FfiConverterString.write(value.recipient, into: &buf)
+        FfiConverterUInt64.write(value.amount, into: &buf)
+        FfiConverterUInt64.write(value.estimatedReceived, into: &buf)
+        FfiConverterOptionString.write(value.minUsdCents, into: &buf)
+        FfiConverterOptionString.write(value.maxUsdCents, into: &buf)
+        FfiConverterUInt32.write(value.slippageBps, into: &buf)
+        FfiConverterString.write(value.uri, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDepositAddress_lift(_ buf: RustBuffer) throws -> UsdtDepositAddress {
+    return try FfiConverterTypeUsdtDepositAddress.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDepositAddress_lower(_ value: UsdtDepositAddress) -> RustBuffer {
+    return FfiConverterTypeUsdtDepositAddress.lower(value)
+}
+
+
+public struct UsdtDepositDetail {
+    public var deposit: UsdtDeposit
+    public var order: UsdtDepositOrder?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(deposit: UsdtDeposit, order: UsdtDepositOrder?) {
+        self.deposit = deposit
+        self.order = order
+    }
+}
+
+#if compiler(>=6)
+extension UsdtDepositDetail: Sendable {}
+#endif
+
+
+extension UsdtDepositDetail: Equatable, Hashable {
+    public static func ==(lhs: UsdtDepositDetail, rhs: UsdtDepositDetail) -> Bool {
+        if lhs.deposit != rhs.deposit {
+            return false
+        }
+        if lhs.order != rhs.order {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(deposit)
+        hasher.combine(order)
+    }
+}
+
+extension UsdtDepositDetail: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtDepositDetail: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtDepositDetail {
+        return
+            try UsdtDepositDetail(
+                deposit: FfiConverterTypeUsdtDeposit.read(from: &buf), 
+                order: FfiConverterOptionTypeUsdtDepositOrder.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: UsdtDepositDetail, into buf: inout [UInt8]) {
+        FfiConverterTypeUsdtDeposit.write(value.deposit, into: &buf)
+        FfiConverterOptionTypeUsdtDepositOrder.write(value.order, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDepositDetail_lift(_ buf: RustBuffer) throws -> UsdtDepositDetail {
+    return try FfiConverterTypeUsdtDepositDetail.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDepositDetail_lower(_ value: UsdtDepositDetail) -> RustBuffer {
+    return FfiConverterTypeUsdtDepositDetail.lower(value)
+}
+
+
+public struct UsdtDepositOrder {
+    public var status: String
+    public var amountIn: UInt64?
+    public var amountOut: UInt64?
+    public var destinationTx: String?
+    public var refundTx: String?
+    public var code: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(status: String, amountIn: UInt64?, amountOut: UInt64?, destinationTx: String?, refundTx: String?, code: String?) {
+        self.status = status
+        self.amountIn = amountIn
+        self.amountOut = amountOut
+        self.destinationTx = destinationTx
+        self.refundTx = refundTx
+        self.code = code
+    }
+}
+
+#if compiler(>=6)
+extension UsdtDepositOrder: Sendable {}
+#endif
+
+
+extension UsdtDepositOrder: Equatable, Hashable {
+    public static func ==(lhs: UsdtDepositOrder, rhs: UsdtDepositOrder) -> Bool {
+        if lhs.status != rhs.status {
+            return false
+        }
+        if lhs.amountIn != rhs.amountIn {
+            return false
+        }
+        if lhs.amountOut != rhs.amountOut {
+            return false
+        }
+        if lhs.destinationTx != rhs.destinationTx {
+            return false
+        }
+        if lhs.refundTx != rhs.refundTx {
+            return false
+        }
+        if lhs.code != rhs.code {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(status)
+        hasher.combine(amountIn)
+        hasher.combine(amountOut)
+        hasher.combine(destinationTx)
+        hasher.combine(refundTx)
+        hasher.combine(code)
+    }
+}
+
+extension UsdtDepositOrder: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtDepositOrder: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtDepositOrder {
+        return
+            try UsdtDepositOrder(
+                status: FfiConverterString.read(from: &buf), 
+                amountIn: FfiConverterOptionUInt64.read(from: &buf), 
+                amountOut: FfiConverterOptionUInt64.read(from: &buf), 
+                destinationTx: FfiConverterOptionString.read(from: &buf), 
+                refundTx: FfiConverterOptionString.read(from: &buf), 
+                code: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: UsdtDepositOrder, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.status, into: &buf)
+        FfiConverterOptionUInt64.write(value.amountIn, into: &buf)
+        FfiConverterOptionUInt64.write(value.amountOut, into: &buf)
+        FfiConverterOptionString.write(value.destinationTx, into: &buf)
+        FfiConverterOptionString.write(value.refundTx, into: &buf)
+        FfiConverterOptionString.write(value.code, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDepositOrder_lift(_ buf: RustBuffer) throws -> UsdtDepositOrder {
+    return try FfiConverterTypeUsdtDepositOrder.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDepositOrder_lower(_ value: UsdtDepositOrder) -> RustBuffer {
+    return FfiConverterTypeUsdtDepositOrder.lower(value)
+}
+
+
+public struct UsdtDepositPage {
+    public var deposits: [UsdtDeposit]
+    public var nextOffset: UInt32?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(deposits: [UsdtDeposit], nextOffset: UInt32?) {
+        self.deposits = deposits
+        self.nextOffset = nextOffset
+    }
+}
+
+#if compiler(>=6)
+extension UsdtDepositPage: Sendable {}
+#endif
+
+
+extension UsdtDepositPage: Equatable, Hashable {
+    public static func ==(lhs: UsdtDepositPage, rhs: UsdtDepositPage) -> Bool {
+        if lhs.deposits != rhs.deposits {
+            return false
+        }
+        if lhs.nextOffset != rhs.nextOffset {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(deposits)
+        hasher.combine(nextOffset)
+    }
+}
+
+extension UsdtDepositPage: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtDepositPage: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtDepositPage {
+        return
+            try UsdtDepositPage(
+                deposits: FfiConverterSequenceTypeUsdtDeposit.read(from: &buf), 
+                nextOffset: FfiConverterOptionUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: UsdtDepositPage, into buf: inout [UInt8]) {
+        FfiConverterSequenceTypeUsdtDeposit.write(value.deposits, into: &buf)
+        FfiConverterOptionUInt32.write(value.nextOffset, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDepositPage_lift(_ buf: RustBuffer) throws -> UsdtDepositPage {
+    return try FfiConverterTypeUsdtDepositPage.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDepositPage_lower(_ value: UsdtDepositPage) -> RustBuffer {
+    return FfiConverterTypeUsdtDepositPage.lower(value)
+}
+
+
 public struct UsdtPaymentRequest {
     public var recipient: String
     public var amount: UInt64?
@@ -23440,6 +24153,78 @@ extension UrPayload: Codable {}
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
+public enum UsdtDepositNetwork {
+    
+    case ethereum
+    case tron
+}
+
+
+#if compiler(>=6)
+extension UsdtDepositNetwork: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtDepositNetwork: FfiConverterRustBuffer {
+    typealias SwiftType = UsdtDepositNetwork
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtDepositNetwork {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .ethereum
+        
+        case 2: return .tron
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: UsdtDepositNetwork, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .ethereum:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .tron:
+            writeInt(&buf, Int32(2))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDepositNetwork_lift(_ buf: RustBuffer) throws -> UsdtDepositNetwork {
+    return try FfiConverterTypeUsdtDepositNetwork.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDepositNetwork_lower(_ value: UsdtDepositNetwork) -> RustBuffer {
+    return FfiConverterTypeUsdtDepositNetwork.lower(value)
+}
+
+
+extension UsdtDepositNetwork: Equatable, Hashable {}
+
+extension UsdtDepositNetwork: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 public enum UsdtDestination {
     
     case stable
@@ -23539,11 +24324,17 @@ public enum UsdtError: Swift.Error {
     case InvalidAddress
     case WrongNetwork
     case InvalidCredentials
+    case ClockSkew
     case UnsupportedDelegation
     case InsufficientBalance
     case QuoteExpired
     case PendingTransfer
     case UnsupportedRoute
+    case DepositNeedsAttention
+    case DepositNotFound
+    case DepositAuthorizationRejected
+    case DepositAmountOutOfRange(minUsdCents: String?, maxUsdCents: String?
+    )
     case NotConfigured
     case NetworkUnavailable
     case RateLimited
@@ -23573,22 +24364,30 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
         case 2: return .InvalidAddress
         case 3: return .WrongNetwork
         case 4: return .InvalidCredentials
-        case 5: return .UnsupportedDelegation
-        case 6: return .InsufficientBalance
-        case 7: return .QuoteExpired
-        case 8: return .PendingTransfer
-        case 9: return .UnsupportedRoute
-        case 10: return .NotConfigured
-        case 11: return .NetworkUnavailable
-        case 12: return .RateLimited
-        case 13: return .LogRangeTooLarge
-        case 14: return .TransactionRejected(
+        case 5: return .ClockSkew
+        case 6: return .UnsupportedDelegation
+        case 7: return .InsufficientBalance
+        case 8: return .QuoteExpired
+        case 9: return .PendingTransfer
+        case 10: return .UnsupportedRoute
+        case 11: return .DepositNeedsAttention
+        case 12: return .DepositNotFound
+        case 13: return .DepositAuthorizationRejected
+        case 14: return .DepositAmountOutOfRange(
+            minUsdCents: try FfiConverterOptionString.read(from: &buf), 
+            maxUsdCents: try FfiConverterOptionString.read(from: &buf)
+            )
+        case 15: return .NotConfigured
+        case 16: return .NetworkUnavailable
+        case 17: return .RateLimited
+        case 18: return .LogRangeTooLarge
+        case 19: return .TransactionRejected(
             reason: try FfiConverterString.read(from: &buf)
             )
-        case 15: return .Storage(
+        case 20: return .Storage(
             reason: try FfiConverterString.read(from: &buf)
             )
-        case 16: return .InvalidResponse
+        case 21: return .InvalidResponse
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -23617,54 +24416,76 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(4))
         
         
-        case .UnsupportedDelegation:
+        case .ClockSkew:
             writeInt(&buf, Int32(5))
         
         
-        case .InsufficientBalance:
+        case .UnsupportedDelegation:
             writeInt(&buf, Int32(6))
         
         
-        case .QuoteExpired:
+        case .InsufficientBalance:
             writeInt(&buf, Int32(7))
         
         
-        case .PendingTransfer:
+        case .QuoteExpired:
             writeInt(&buf, Int32(8))
         
         
-        case .UnsupportedRoute:
+        case .PendingTransfer:
             writeInt(&buf, Int32(9))
         
         
-        case .NotConfigured:
+        case .UnsupportedRoute:
             writeInt(&buf, Int32(10))
         
         
-        case .NetworkUnavailable:
+        case .DepositNeedsAttention:
             writeInt(&buf, Int32(11))
         
         
-        case .RateLimited:
+        case .DepositNotFound:
             writeInt(&buf, Int32(12))
         
         
-        case .LogRangeTooLarge:
+        case .DepositAuthorizationRejected:
             writeInt(&buf, Int32(13))
         
         
-        case let .TransactionRejected(reason):
+        case let .DepositAmountOutOfRange(minUsdCents,maxUsdCents):
             writeInt(&buf, Int32(14))
+            FfiConverterOptionString.write(minUsdCents, into: &buf)
+            FfiConverterOptionString.write(maxUsdCents, into: &buf)
+            
+        
+        case .NotConfigured:
+            writeInt(&buf, Int32(15))
+        
+        
+        case .NetworkUnavailable:
+            writeInt(&buf, Int32(16))
+        
+        
+        case .RateLimited:
+            writeInt(&buf, Int32(17))
+        
+        
+        case .LogRangeTooLarge:
+            writeInt(&buf, Int32(18))
+        
+        
+        case let .TransactionRejected(reason):
+            writeInt(&buf, Int32(19))
             FfiConverterString.write(reason, into: &buf)
             
         
         case let .Storage(reason):
-            writeInt(&buf, Int32(15))
+            writeInt(&buf, Int32(20))
             FfiConverterString.write(reason, into: &buf)
             
         
         case .InvalidResponse:
-            writeInt(&buf, Int32(16))
+            writeInt(&buf, Int32(21))
         
         }
     }
@@ -24949,6 +25770,30 @@ fileprivate struct FfiConverterOptionTypeTrezorFeatures: FfiConverterRustBuffer 
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeTrezorFeatures.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeUsdtDepositOrder: FfiConverterRustBuffer {
+    typealias SwiftType = UsdtDepositOrder?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeUsdtDepositOrder.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeUsdtDepositOrder.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -26336,6 +27181,31 @@ fileprivate struct FfiConverterSequenceTypeTxOutput: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeUsdtDeposit: FfiConverterRustBuffer {
+    typealias SwiftType = [UsdtDeposit]
+
+    public static func write(_ value: [UsdtDeposit], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeUsdtDeposit.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [UsdtDeposit] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [UsdtDeposit]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeUsdtDeposit.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeUsdtTransfer: FfiConverterRustBuffer {
     typealias SwiftType = [UsdtTransfer]
 
@@ -26478,6 +27348,31 @@ fileprivate struct FfiConverterSequenceTypeHardwareWalletTransport: FfiConverter
         seq.reserveCapacity(Int(len))
         for _ in 0 ..< len {
             seq.append(try FfiConverterTypeHardwareWalletTransport.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeUsdtDepositNetwork: FfiConverterRustBuffer {
+    typealias SwiftType = [UsdtDepositNetwork]
+
+    public static func write(_ value: [UsdtDepositNetwork], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeUsdtDepositNetwork.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [UsdtDepositNetwork] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [UsdtDepositNetwork]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeUsdtDepositNetwork.read(from: &buf))
         }
         return seq
     }
@@ -29914,6 +30809,21 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_urdecoder_reset() != 6027) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_method_usdtdepositclient_detail() != 63177) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_usdtdepositclient_history() != 10976) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_usdtdepositclient_networks() != 27890) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_usdtdepositclient_receive() != 27375) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_usdtdepositclient_request_refund() != 10045) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_balance() != 12328) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -29942,6 +30852,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_constructor_urdecoder_new() != 23014) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_constructor_usdtdepositclient_new() != 44626) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_constructor_usdtwallet_new() != 62148) {
