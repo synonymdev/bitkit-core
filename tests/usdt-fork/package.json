@@ -1,0 +1,7 @@
+{
+  "name": "bitkit-usdt-contract-tests",
+  "private": true,
+  "type": "module",
+  "dependencies": { "ethers": "6.17.0" },
+  "scripts": { "start": "node provider.mjs" }
+}
