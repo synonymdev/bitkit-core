@@ -670,7 +670,11 @@ impl ChainState {
                     && (filter["address"] == json!(account::ENTRY_POINT)
                         || filter["address"].is_array())
                 {
-                    json!([self.event_logs()[1]])
+                    json!([self
+                        .event_logs()
+                        .into_iter()
+                        .find(|log| log["address"] == json!(account::ENTRY_POINT.to_checksum(None)))
+                        .unwrap()])
                 } else {
                     json!([])
                 }
@@ -717,7 +721,7 @@ impl ChainState {
     }
     fn event_logs(&self) -> Vec<serde_json::Value> {
         use alloy_primitives::{B256, U256};
-        use alloy_sol_types::SolEvent;
+        use alloy_sol_types::{SolCall, SolEvent};
         use serde_json::json;
         let op = self.operations.first().unwrap();
         let hash = op.hash(types::CHAIN_ID).unwrap();
@@ -744,6 +748,26 @@ impl ChainState {
             json!({"address":paymaster::PAYMASTER,"topics":gas.topics(),"data":gas.data,"transactionHash":B256::repeat_byte(7),"blockNumber":"0x4e20","logIndex":"0x0"}),
             json!({"address":account::ENTRY_POINT.to_checksum(None),"topics":event.topics(),"data":event.data,"transactionHash":B256::repeat_byte(7),"blockNumber":"0x4e20","logIndex":"0x1"}),
         ];
+        for (target, data) in history::decode_calls(&op.call_data).unwrap_or_default() {
+            if target == types::TOKEN {
+                if let Ok(call) = transaction::Erc20::transferCall::abi_decode(&data) {
+                    if call.amount > U256::from(u64::MAX) {
+                        continue;
+                    }
+                    let payment = transaction::Erc20::Transfer {
+                        from: op.sender,
+                        to: call.recipient,
+                        value: call.amount,
+                    }
+                    .encode_log_data();
+                    logs.insert(0, json!({"address":types::TOKEN,"topics":payment.topics(),"data":payment.data,
+                        "transactionHash":B256::repeat_byte(7),"blockNumber":"0x4e20","logIndex":"0x0"}));
+                    for (index, log) in logs.iter_mut().enumerate() {
+                        log["logIndex"] = json!(format!("0x{index:x}"));
+                    }
+                }
+            }
+        }
         if !self.mined {
             logs.clear();
         }
@@ -754,7 +778,7 @@ impl ChainState {
                 value: U256::from(42),
             }
             .encode_log_data();
-            logs.push(json!({"address":types::TOKEN,"topics":event.topics(),"data":event.data,"logIndex":"0x2"}));
+            logs.push(json!({"address":types::TOKEN,"topics":event.topics(),"data":event.data,"logIndex":format!("0x{:x}", logs.len())}));
         }
         if self.external_outgoing {
             let event = transaction::Erc20::Transfer {
@@ -763,7 +787,7 @@ impl ChainState {
                 value: U256::from(77),
             }
             .encode_log_data();
-            logs.push(json!({"address":types::TOKEN,"topics":event.topics(),"data":event.data,"transactionHash":B256::repeat_byte(7),"blockNumber":"0x4e20","logIndex":"0x3"}));
+            logs.push(json!({"address":types::TOKEN,"topics":event.topics(),"data":event.data,"transactionHash":B256::repeat_byte(7),"blockNumber":"0x4e20","logIndex":format!("0x{:x}", logs.len())}));
         }
         logs
     }
@@ -1355,7 +1379,7 @@ async fn history_preserves_receipts_with_external_account_call_shapes() {
         (single, None, true),
         (oversized, None, false),
         (Bytes::from_static(&[1, 2, 3, 4]), None, false),
-        (original, Some(Bytes::from_static(&[5, 6, 7, 8])), false),
+        (original, Some(Bytes::from_static(&[5, 6, 7, 8])), true),
     ] {
         {
             let mut state = chain.state.lock().unwrap();
@@ -1418,6 +1442,7 @@ async fn wrapped_history_preserves_signed_payments_and_restores_token_transfers(
             .into(),
         )]);
         let mut logs = state.event_logs();
+        logs.retain(|log| log["address"] != json!(types::TOKEN));
         for (recipient, amount) in [
             (RECIPIENT.parse().unwrap(), 1_000_000),
             (paymaster::PAYMASTER, 123),
@@ -2173,6 +2198,7 @@ async fn seed_restore_includes_external_token_sends_without_duplicate_operation_
         if unsupported_batch {
             let mut state = chain.state.lock().unwrap();
             state.mined = true;
+            state.external_outgoing = false;
             state.history_input = None;
             let mut calls = history::decode_calls(&state.operations[0].call_data).unwrap();
             calls.push((
@@ -2525,6 +2551,10 @@ async fn settlement_requires_matching_canonical_receipts() {
         invalid[field] = value;
         chain.state.lock().unwrap().receipt_response = Some(invalid);
         assert!(matches!(
+            wallet.refresh_transfer(sent.id.clone()).await,
+            Err(UsdtError::InvalidResponse)
+        ));
+        assert!(matches!(
             wallet.refresh_transfers().await,
             Err(UsdtError::InvalidResponse)
         ));
@@ -2768,13 +2798,13 @@ async fn settlement_uses_the_canonical_operation_outcome() {
             let receipt_event = event(success);
             let log_event = event(!success);
             let mut logs = state.event_logs();
-            logs[1]["data"] = json!(log_event.data);
-            state.log_response = Some(vec![logs[1].clone()]);
+            logs[2]["data"] = json!(log_event.data);
+            state.log_response = Some(vec![logs[2].clone()]);
             let mut receipt = state.respond(
                 &json!({"method":"eth_getTransactionReceipt","params":[B256::repeat_byte(7)]}),
             )["result"]
                 .clone();
-            receipt["logs"][1]["data"] = json!(receipt_event.data);
+            receipt["logs"][2]["data"] = json!(receipt_event.data);
             state.receipt_response = Some(receipt);
         }
         let expected = if success {
@@ -2826,6 +2856,7 @@ async fn external_paymaster_modes_preserve_raw_debits_and_refunds() {
             data[1] = flags;
             state.operations[0].paymaster_data = data.into();
             let mut logs = state.event_logs();
+            logs.retain(|log| log["address"] != json!(types::TOKEN));
             logs.insert(
                 0,
                 movement(wallet.address, paymaster::PAYMASTER, 200u64, 2u64),
@@ -2868,4 +2899,99 @@ async fn external_paymaster_modes_preserve_raw_debits_and_refunds() {
             1_000_200
         );
     }
+}
+
+#[tokio::test]
+async fn recent_execution_requires_the_expected_token_transfer() {
+    use alloy_primitives::U256;
+    use alloy_sol_types::SolEvent;
+    use serde_json::json;
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    let sent = wallet
+        .send(quote.id, TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    chain.state.lock().unwrap().mined = true;
+    // Normal recovery still waits for its indexing buffer.
+    assert_eq!(
+        wallet.refresh_transfers().await.unwrap()[0].status,
+        UsdtTransferStatus::Pending
+    );
+    for (recipient, amount) in [
+        (RECIPIENT.parse().unwrap(), 999u64),
+        (wallet.address, sent.amount),
+    ] {
+        let mut logs = chain.state.lock().unwrap().event_logs();
+        let token = transaction::Erc20::Transfer {
+            from: wallet.address,
+            to: recipient,
+            value: U256::from(amount),
+        }
+        .encode_log_data();
+        logs[0]["topics"] = json!(token.topics());
+        logs[0]["data"] = json!(token.data);
+        chain.state.lock().unwrap().receipt_logs = Some(logs);
+        assert!(matches!(
+            wallet.refresh_transfer(sent.id.clone()).await,
+            Err(UsdtError::InvalidResponse)
+        ));
+        assert!(wallet.store.pending_plan(&sent.id).unwrap().is_some());
+    }
+    let mut logs = chain.state.lock().unwrap().event_logs();
+    logs.remove(0);
+    chain.state.lock().unwrap().receipt_logs = Some(logs);
+    assert!(matches!(
+        wallet.refresh_transfer(sent.id.clone()).await,
+        Err(UsdtError::InvalidResponse)
+    ));
+    assert!(wallet.store.pending_plan(&sent.id).unwrap().is_some());
+    chain.state.lock().unwrap().receipt_logs = None;
+    let result = wallet
+        .refresh_transfer(sent.id.clone())
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(result.status, UsdtTransferStatus::Confirmed);
+    assert_eq!(result.fee, Some(123));
+    assert!(wallet.store.pending_plan(&sent.id).unwrap().is_none());
+}
+
+#[tokio::test]
+async fn execution_check_preserves_unmined_payments_and_throttling() {
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    let sent = wallet
+        .send(quote.id, TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    {
+        let mut state = chain.state.lock().unwrap();
+        state.tip += 3;
+        state.timestamp += alloy_primitives::U256::from(1000);
+    }
+    let result = wallet
+        .refresh_transfer(sent.id.clone())
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(result.status, UsdtTransferStatus::Pending);
+    assert!(wallet.store.pending_plan(&sent.id).unwrap().is_some());
+    assert_eq!(chain.state.lock().unwrap().operations.len(), 1);
+    chain.state.lock().unwrap().log_error = Some((-32016, "rate limit".into()));
+    assert!(matches!(
+        wallet.refresh_transfer(sent.id.clone()).await,
+        Err(UsdtError::RateLimited)
+    ));
+    assert!(wallet.store.pending_plan(&sent.id).unwrap().is_some());
 }

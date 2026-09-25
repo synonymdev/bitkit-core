@@ -223,6 +223,57 @@ impl UsdtWallet {
         Ok(transfer)
     }
 
+    /// Checks recent direct-payment execution at the current tip without scanning history or retrying submission.
+    /// Missing evidence leaves the signed payment pending; confirmation is L2 execution, not parent-chain finality.
+    pub async fn refresh_transfer(&self, id: String) -> Result<Option<UsdtTransfer>, UsdtError> {
+        let check = async {
+            let _guard = self.operation.lock().await;
+            let Some(mut transfer) = self.store.transfer(&id)? else {
+                return Ok(None);
+            };
+            if transfer.destination != UsdtDestination::Arbitrum {
+                return Ok(Some(transfer));
+            }
+            let Some(plan) = self.store.pending_plan(&id)? else {
+                return Ok(Some(transfer));
+            };
+            self.rpc.verify_chain().await?;
+            let hash = plan.operation.hash(CHAIN_ID)?;
+            let tip = self.block_number().await?;
+            let start = plan.created_block.max(tip.saturating_sub(63));
+            if start <= tip {
+                let logs: Vec<Value> = self.rpc.call("eth_getLogs", json!([{
+                        "address": ENTRY_POINT, "fromBlock": U256::from(start), "toBlock": U256::from(tip),
+                        "topics": [EntryPoint::UserOperationEvent::SIGNATURE_HASH, hash, self.address.into_word()]
+                    }])).await?;
+                if let Some(log) = logs
+                    .iter()
+                    .find(|log| log["removed"].as_bool() != Some(true))
+                {
+                    let event = EntryPoint::UserOperationEvent::decode_log_data(&event_data(log)?)
+                        .map_err(|_| UsdtError::InvalidResponse)?;
+                    let number =
+                        u64::try_from(serde_json::from_value::<U256>(log["blockNumber"].clone())?)
+                            .map_err(|_| UsdtError::InvalidResponse)?;
+                    if serde_json::from_value::<Address>(log["address"].clone())? != ENTRY_POINT
+                        || event.userOpHash != hash
+                        || event.nonce != plan.operation.nonce
+                        || number < start
+                        || number > tip
+                    {
+                        return Err(UsdtError::InvalidResponse);
+                    }
+                    self.settle_from_log(&mut transfer, log, event).await?;
+                }
+            }
+            Ok(Some(transfer))
+        };
+        match tokio::time::timeout(std::time::Duration::from_secs(5), check).await {
+            Ok(result) => result,
+            Err(_) => Err(UsdtError::NetworkUnavailable),
+        }
+    }
+
     pub async fn sync_history(&self) -> Result<bool, UsdtError> {
         let _guard = self.operation.lock().await;
         self.rpc.verify_chain().await?;
@@ -625,11 +676,19 @@ impl UsdtWallet {
         {
             return Err(UsdtError::InvalidResponse);
         }
+        let mut transfer_proven = false;
         let mut gas_fee = None;
         let mut bridge_fee = None;
         for log in logs {
             let address: Address = serde_json::from_value(log["address"].clone())?;
             let data = event_data(log)?;
+            if address == TOKEN {
+                if let Ok(payment) = Erc20::Transfer::decode_log_data(&data) {
+                    transfer_proven |= payment.from == self.address
+                        && payment.to == parse_address(&transfer.recipient)?
+                        && payment.value == U256::from(transfer.amount);
+                }
+            }
             if address == PAYMASTER {
                 if let Ok(event) = Paymaster::UserOperationSponsored::decode_log_data(&data) {
                     if event.userOpHash == operation_hash
@@ -662,6 +721,9 @@ impl UsdtWallet {
                     }
                 }
             }
+        }
+        if event.success && transfer.destination == UsdtDestination::Arbitrum && !transfer_proven {
+            return Err(UsdtError::InvalidResponse);
         }
         transfer.fee = if event.success && transfer.destination != UsdtDestination::Arbitrum {
             gas_fee

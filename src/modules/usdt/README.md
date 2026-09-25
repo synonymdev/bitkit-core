@@ -30,6 +30,8 @@ Seed restoration recovers deposits and outgoing activity from genesis, including
 
 `sync_history` returns `true` when caught up and `false` when more work remains. It uses adaptive log ranges and a 20-second soft budget between persisted receipts; an in-flight receipt may finish later. A single-block log overflow falls back to that block's individual receipts. Completed fallback scans are retained by canonical block hash within the revisit window. Zero/self transfers are discarded before enrichment. Network failures preserve completed work and never silently skip a block.
 
+`refresh_transfer` checks one recent direct Arbitrum payment with a five-second request budget. It requires the expected operation outcome and token transfer in a matching canonical receipt and does not scan history, rebroadcast, expire payments or reconcile nonces. It can confirm execution at the current L2 tip; this is provisional sequencer execution, not parent-chain finality. Native send screens may call it approximately once per second during a short foreground window, with cancellation and rate-limit backoff between checks. Missing evidence leaves Pending intact. Normal recovery handles older payments outside its 64-block lookup window.
+
 Scans trail the reported tip by two blocks and revisit 4096 blocks for delayed indexing. This is not reorg rollback: previously recorded orphaned activity is not retracted. Providers must supply complete filtered logs, canonical blocks/receipts and historical state.
 
 Payment outcomes and expiry decisions trust the configured chain RPC. A malicious RPC can fabricate or suppress evidence and mislead a user into authorizing another payment; these checks are not light-client proofs.
