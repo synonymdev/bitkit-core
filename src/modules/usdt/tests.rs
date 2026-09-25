@@ -2362,9 +2362,9 @@ async fn settlement_uses_the_canonical_operation_outcome() {
 }
 
 #[tokio::test]
-async fn external_paymaster_modes_preserve_raw_debits_and_refunds() {
+async fn unrecognized_operations_preserve_raw_debits_and_refunds() {
     use alloy_primitives::{Address, U256};
-    use alloy_sol_types::SolEvent;
+    use alloy_sol_types::{SolCall, SolEvent};
     use serde_json::json;
     let chain = MockChain::start().await;
     let dir = tempfile::tempdir().unwrap();
@@ -2386,7 +2386,13 @@ async fn external_paymaster_modes_preserve_raw_debits_and_refunds() {
         .encode_log_data();
         json!({"address":types::TOKEN,"topics":event.topics(),"data":event.data,"logIndex":U256::from(index)})
     };
-    for flags in [2u8, 4u8] {
+    let recipient = RECIPIENT.parse::<Address>().unwrap();
+    for (flags, recipient, amount, expected_outgoing) in [
+        (2u8, recipient, 1_000_000u64, 1_000_200),
+        (4, recipient, 1_000_000, 1_000_200),
+        (0, recipient, 0, 200),
+        (0, wallet.address, 1_000_000, 200),
+    ] {
         {
             let mut state = chain.state.lock().unwrap();
             state.mined = true;
@@ -2394,21 +2400,22 @@ async fn external_paymaster_modes_preserve_raw_debits_and_refunds() {
             let mut data = state.operations[0].paymaster_data.to_vec();
             data[1] = flags;
             state.operations[0].paymaster_data = data.into();
+            state.operations[0].call_data = account::batch(&[(
+                types::TOKEN,
+                transaction::Erc20::transferCall {
+                    recipient,
+                    amount: U256::from(amount),
+                }
+                .abi_encode()
+                .into(),
+            )]);
             let mut logs = state.event_logs();
             logs.retain(|log| log["address"] != json!(types::TOKEN));
             logs.insert(
                 0,
                 movement(wallet.address, paymaster::PAYMASTER, 200u64, 2u64),
             );
-            logs.insert(
-                1,
-                movement(
-                    wallet.address,
-                    RECIPIENT.parse::<Address>().unwrap(),
-                    1_000_000u64,
-                    3u64,
-                ),
-            );
+            logs.insert(1, movement(wallet.address, recipient, amount, 3u64));
             logs.insert(
                 2,
                 movement(paymaster::PAYMASTER, wallet.address, 50u64, 4u64),
@@ -2419,7 +2426,6 @@ async fn external_paymaster_modes_preserve_raw_debits_and_refunds() {
         let restored = chain.wallet(&restored_dir);
         assert!(restored.sync_history().await.unwrap());
         let history = restored.history().unwrap();
-        assert_eq!(history.len(), 3);
         assert!(history.iter().all(|row| row.user_operation_hash.is_none()));
         assert_eq!(
             history
@@ -2435,7 +2441,7 @@ async fn external_paymaster_modes_preserve_raw_debits_and_refunds() {
                 .filter(|row| !row.is_incoming)
                 .map(|row| row.amount)
                 .sum::<u64>(),
-            1_000_200
+            expected_outgoing
         );
     }
 }
