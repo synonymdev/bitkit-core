@@ -1,5 +1,6 @@
 use super::{
     account::ENTRY_POINT,
+    amount::with_margin,
     rpc::Rpc,
     transaction::Erc20,
     user_operation::{Authorization, UserOperation},
@@ -12,6 +13,8 @@ use serde_json::json;
 
 use super::types::{CHAIN_ID as ARBITRUM_CHAIN_ID, TOKEN as USDT0};
 pub(super) const PAYMASTER: Address = address!("888888888888Ec68A58AB8094Cc1AD20Ba3D2402");
+const MIN_PAYMASTER_VALIDITY_SECONDS: u64 = 15;
+const MAX_PAYMASTER_VALIDITY_SECONDS: u64 = 900;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -63,10 +66,7 @@ impl GasEstimate {
             (&mut op.pre_verification_gas, self.pre_verification_gas),
         ] {
             if estimate > *limit {
-                *limit = estimate
-                    .checked_add(estimate / U256::from(10))
-                    .and_then(|value| value.checked_add(U256::from(1)))
-                    .ok_or(UsdtError::InvalidResponse)?;
+                *limit = with_margin(estimate, 10)?;
                 changed = true;
             }
         }
@@ -158,7 +158,7 @@ impl Pimlico {
             valid_until: 0,
             valid_after: 0,
         };
-        let mut allowance = approval_margin(estimate_terms.maximum_token_cost(&op)?)?;
+        let mut allowance = with_margin(estimate_terms.maximum_token_cost(&op)?, 5)?;
         // Provider data can change gas limits and token charges. Refine both before signing.
         for _ in 0..3 {
             op.call_data = with_approval(calls, allowance);
@@ -171,13 +171,17 @@ impl Pimlico {
             let gas_changed = estimate.apply(&mut op)?;
             let required = terms.maximum_token_cost(&op)?;
             if gas_changed || required > allowance {
-                allowance = allowance.max(approval_margin(required)?);
+                allowance = allowance.max(with_margin(required, 5)?);
                 continue;
             }
-            if terms.valid_until == 0 || terms.valid_until > timestamp.saturating_add(900) {
+            if terms.valid_until == 0
+                || terms.valid_until > timestamp.saturating_add(MAX_PAYMASTER_VALIDITY_SECONDS)
+            {
                 return Err(UsdtError::InvalidResponse);
             }
-            if terms.valid_after > timestamp || terms.valid_until <= timestamp.saturating_add(15) {
+            if terms.valid_after > timestamp
+                || terms.valid_until <= timestamp.saturating_add(MIN_PAYMASTER_VALIDITY_SECONDS)
+            {
                 return Err(UsdtError::QuoteExpired);
             }
             return Ok((
@@ -276,13 +280,6 @@ fn with_approval(calls: &[(Address, Bytes)], amount: U256) -> Bytes {
     )];
     batch.extend_from_slice(calls);
     super::account::batch(&batch)
-}
-
-fn approval_margin(value: U256) -> Result<U256, UsdtError> {
-    value
-        .checked_add(value / U256::from(20))
-        .and_then(|value| value.checked_add(U256::from(1)))
-        .ok_or(UsdtError::InvalidResponse)
 }
 
 struct Terms {

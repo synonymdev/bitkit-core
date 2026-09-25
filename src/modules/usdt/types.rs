@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 
 pub(super) const CHAIN_ID: u64 = 42161;
 pub(super) const TOKEN: Address = address!("Fd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9");
-pub(super) const EXPLORER: &str = "https://arbiscan.io";
 
 #[derive(Clone, Debug, PartialEq, Eq, uniffi::Record)]
 pub struct UsdtPaymentRequest {
@@ -24,16 +23,21 @@ pub struct UsdtQuote {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, uniffi::Enum)]
 pub enum UsdtTransferStatus {
+    /// Signed payment awaiting a conclusive source-chain outcome.
     Pending,
+    /// Payment received on its destination chain.
     Confirmed,
+    /// Source payment failed or was proven not to have executed.
     Failed,
+    /// Another operation consumed the payment nonce.
     Replaced,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, uniffi::Record)]
 pub struct UsdtTransfer {
     pub id: String,
-    pub tx_hash: String,
+    /// Source transaction hash, absent until execution is observed.
+    pub tx_hash: Option<String>,
     pub user_operation_hash: Option<String>,
     pub recipient: String,
     pub amount: u64,
@@ -42,5 +46,12 @@ pub struct UsdtTransfer {
     pub is_incoming: bool,
     pub status: UsdtTransferStatus,
     pub timestamp: u64,
-    pub explorer_url: String,
+}
+
+impl UsdtTransfer {
+    pub(super) fn mark_unexecuted(&mut self, status: UsdtTransferStatus) {
+        self.status = status;
+        self.received_amount = 0;
+        self.fee = Some(0);
+    }
 }

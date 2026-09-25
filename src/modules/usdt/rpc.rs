@@ -16,6 +16,14 @@ pub(super) struct Block {
     pub transactions: Vec<B256>,
 }
 
+impl Block {
+    pub fn timestamp(&self) -> Result<u64, UsdtError> {
+        self.timestamp
+            .try_into()
+            .map_err(|_| UsdtError::InvalidResponse)
+    }
+}
+
 pub(super) struct Rpc {
     client: reqwest::Client,
     url: String,
@@ -191,10 +199,19 @@ impl Rpc {
     }
 
     pub async fn contract<C: SolCall>(&self, to: Address, call: C) -> Result<C::Return, UsdtError> {
+        self.contract_at(to, call, "latest").await
+    }
+
+    pub async fn contract_at<C: SolCall>(
+        &self,
+        to: Address,
+        call: C,
+        block: &str,
+    ) -> Result<C::Return, UsdtError> {
         let bytes: Bytes = self
             .call(
                 "eth_call",
-                json!([{"to":to,"data":Bytes::from(call.abi_encode())},"latest"]),
+                json!([{"to":to,"data":Bytes::from(call.abi_encode())},block]),
             )
             .await?;
         C::abi_decode_returns(&bytes).map_err(|_| UsdtError::InvalidResponse)

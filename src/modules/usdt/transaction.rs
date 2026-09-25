@@ -32,21 +32,33 @@ sol! {
     }
 }
 
+pub(super) fn entry_point_event(
+    log: &serde_json::Value,
+) -> Result<Option<EntryPoint::UserOperationEvent>, UsdtError> {
+    use alloy_sol_types::SolEvent;
+    let address: alloy_primitives::Address = serde_json::from_value(log["address"].clone())?;
+    if address != super::account::ENTRY_POINT {
+        return Ok(None);
+    }
+    let data = event_data(log)?;
+    if data.topics().first() != Some(&EntryPoint::UserOperationEvent::SIGNATURE_HASH) {
+        return Ok(None);
+    }
+    EntryPoint::UserOperationEvent::decode_log_data(&data)
+        .map(Some)
+        .map_err(|_| UsdtError::InvalidResponse)
+}
+
 pub(super) fn operation_logs(
     receipt: &serde_json::Value,
     hash: B256,
 ) -> Result<&[serde_json::Value], UsdtError> {
-    use alloy_sol_types::SolEvent;
     let logs = receipt["logs"]
         .as_array()
         .ok_or(UsdtError::InvalidResponse)?;
     let mut start = 0;
     for (index, log) in logs.iter().enumerate() {
-        let address: alloy_primitives::Address = serde_json::from_value(log["address"].clone())?;
-        if address != super::account::ENTRY_POINT {
-            continue;
-        }
-        if let Ok(event) = EntryPoint::UserOperationEvent::decode_log_data(&event_data(log)?) {
+        if let Some(event) = entry_point_event(log)? {
             if event.userOpHash == hash {
                 return Ok(&logs[start..=index]);
             }
