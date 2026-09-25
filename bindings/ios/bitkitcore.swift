@@ -15906,12 +15906,20 @@ public func FfiConverterTypeUrDecoderStatus_lower(_ value: UrDecoderStatus) -> R
 public struct UsdtPaymentRequest {
     public var recipient: String
     public var amount: UInt64?
+    /**
+     * An explicit network in the payment URI; bare addresses have no restriction.
+     */
+    public var chainId: UInt64?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(recipient: String, amount: UInt64?) {
+    public init(recipient: String, amount: UInt64?, 
+        /**
+         * An explicit network in the payment URI; bare addresses have no restriction.
+         */chainId: UInt64?) {
         self.recipient = recipient
         self.amount = amount
+        self.chainId = chainId
     }
 }
 
@@ -15928,12 +15936,16 @@ extension UsdtPaymentRequest: Equatable, Hashable {
         if lhs.amount != rhs.amount {
             return false
         }
+        if lhs.chainId != rhs.chainId {
+            return false
+        }
         return true
     }
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(recipient)
         hasher.combine(amount)
+        hasher.combine(chainId)
     }
 }
 
@@ -15949,13 +15961,15 @@ public struct FfiConverterTypeUsdtPaymentRequest: FfiConverterRustBuffer {
         return
             try UsdtPaymentRequest(
                 recipient: FfiConverterString.read(from: &buf), 
-                amount: FfiConverterOptionUInt64.read(from: &buf)
+                amount: FfiConverterOptionUInt64.read(from: &buf), 
+                chainId: FfiConverterOptionUInt64.read(from: &buf)
         )
     }
 
     public static func write(_ value: UsdtPaymentRequest, into buf: inout [UInt8]) {
         FfiConverterString.write(value.recipient, into: &buf)
         FfiConverterOptionUInt64.write(value.amount, into: &buf)
+        FfiConverterOptionUInt64.write(value.chainId, into: &buf)
     }
 }
 

@@ -18,7 +18,7 @@ pub enum UsdtError {
     QuoteExpired,
     #[error("A USDT transaction is pending. Wait for confirmation before sending again")]
     PendingTransfer,
-    #[error("The selected USDT0 route is unavailable")]
+    #[error("The selected USDT payment route is unavailable")]
     UnsupportedRoute,
     #[error("USDT payments are not configured for this app build")]
     NotConfigured,

@@ -225,13 +225,6 @@ impl Store {
         Ok(())
     }
 
-    pub fn transaction_timestamp(&self, hash: &str) -> Result<Option<u64>, UsdtError> {
-        Ok(self.connection()?.query_row(
-            "SELECT json_extract(data, '$.timestamp') FROM usdt_transfers WHERE json_extract(data, '$.tx_hash')=?1 AND json_extract(data, '$.status') != 'Pending' LIMIT 1",
-            [hash], |row| row.get(0),
-        ).optional()?)
-    }
-
     pub fn begin_history_block(&self, number: u64, hash: &str) -> Result<bool, UsdtError> {
         let mut connection = self.connection()?;
         let tx = connection.transaction()?;
