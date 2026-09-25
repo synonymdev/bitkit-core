@@ -591,6 +591,7 @@ dependencies = [
 name = "bitkitcore"
 version = "0.5.18"
 dependencies = [
+ "aes-gcm",
  "android_logger",
  "async-trait",
  "base64 0.22.1",
