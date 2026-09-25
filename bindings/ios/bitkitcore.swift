@@ -2567,6 +2567,13 @@ public protocol UsdtWalletProtocol: AnyObject, Sendable {
     
     func balance() async throws  -> UInt64
     
+    /**
+     * Checks recent direct-payment execution with a bounded request budget.
+     * Requires the expected operation and transfer in a canonical receipt; current-tip execution is provisional.
+     * Does not rebroadcast, expire payments or reconcile nonces. Missing evidence leaves the payment pending.
+     */
+    func checkRecentExecution(id: String) async throws  -> UsdtTransfer?
+    
     func history() throws  -> [UsdtTransfer]
     
     func quoteTransfer(recipient: String, amount: UInt64, destination: UsdtDestination) async throws  -> UsdtQuote
@@ -2576,15 +2583,20 @@ public protocol UsdtWalletProtocol: AnyObject, Sendable {
     func receiveUri()  -> String
     
     /**
-     * Checks recent direct-payment execution at the current tip without scanning history or retrying submission.
-     * Missing evidence leaves the signed payment pending; confirmation is L2 execution, not parent-chain finality.
+     * Reconciles pending execution using chain proofs and may rebroadcast the identical signed operation.
      */
-    func refreshTransfer(id: String) async throws  -> UsdtTransfer?
-    
     func refreshTransfers() async throws  -> [UsdtTransfer]
     
+    /**
+     * Repeating a quote ID returns its stored outcome, which may already be failed or replaced.
+     * A pending outcome is durable and retryable; it does not imply bundler acceptance.
+     */
     func send(quoteId: String, mnemonic: String, passphrase: String?) async throws  -> UsdtTransfer
     
+    /**
+     * Saves resumable history progress; returns true when caught up and false when more work remains.
+     * Call between send flows. The soft budget permits an in-flight receipt to finish before yielding.
+     */
     func syncHistory() async throws  -> Bool
     
 }
@@ -2627,6 +2639,9 @@ open class UsdtWallet: UsdtWalletProtocol, @unchecked Sendable {
     public func uniffiClonePointer() -> UnsafeMutableRawPointer {
         return try! rustCall { uniffi_bitkitcore_fn_clone_usdtwallet(self.pointer, $0) }
     }
+    /**
+     * Creates the sole owner of this wallet's database; reuse it for all calls until it is dropped.
+     */
 public convenience init(address: String, storagePath: String, rpcUrl: String, bundlerUrl: String)throws  {
     let pointer =
         try rustCallWithError(FfiConverterTypeUsdtError_lift) {
@@ -2664,6 +2679,28 @@ open func balance()async throws  -> UInt64  {
             completeFunc: ffi_bitkitcore_rust_future_complete_u64,
             freeFunc: ffi_bitkitcore_rust_future_free_u64,
             liftFunc: FfiConverterUInt64.lift,
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
+}
+    
+    /**
+     * Checks recent direct-payment execution with a bounded request budget.
+     * Requires the expected operation and transfer in a canonical receipt; current-tip execution is provisional.
+     * Does not rebroadcast, expire payments or reconcile nonces. Missing evidence leaves the payment pending.
+     */
+open func checkRecentExecution(id: String)async throws  -> UsdtTransfer?  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtwallet_check_recent_execution(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(id)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypeUsdtTransfer.lift,
             errorHandler: FfiConverterTypeUsdtError_lift
         )
 }
@@ -2707,26 +2744,8 @@ open func receiveUri() -> String  {
 }
     
     /**
-     * Checks recent direct-payment execution at the current tip without scanning history or retrying submission.
-     * Missing evidence leaves the signed payment pending; confirmation is L2 execution, not parent-chain finality.
+     * Reconciles pending execution using chain proofs and may rebroadcast the identical signed operation.
      */
-open func refreshTransfer(id: String)async throws  -> UsdtTransfer?  {
-    return
-        try  await uniffiRustCallAsync(
-            rustFutureFunc: {
-                uniffi_bitkitcore_fn_method_usdtwallet_refresh_transfer(
-                    self.uniffiClonePointer(),
-                    FfiConverterString.lower(id)
-                )
-            },
-            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
-            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
-            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterOptionTypeUsdtTransfer.lift,
-            errorHandler: FfiConverterTypeUsdtError_lift
-        )
-}
-    
 open func refreshTransfers()async throws  -> [UsdtTransfer]  {
     return
         try  await uniffiRustCallAsync(
@@ -2744,6 +2763,10 @@ open func refreshTransfers()async throws  -> [UsdtTransfer]  {
         )
 }
     
+    /**
+     * Repeating a quote ID returns its stored outcome, which may already be failed or replaced.
+     * A pending outcome is durable and retryable; it does not imply bundler acceptance.
+     */
 open func send(quoteId: String, mnemonic: String, passphrase: String?)async throws  -> UsdtTransfer  {
     return
         try  await uniffiRustCallAsync(
@@ -2761,6 +2784,10 @@ open func send(quoteId: String, mnemonic: String, passphrase: String?)async thro
         )
 }
     
+    /**
+     * Saves resumable history progress; returns true when caught up and false when more work remains.
+     * Call between send flows. The soft budget permits an in-flight receipt to finish before yielding.
+     */
 open func syncHistory()async throws  -> Bool  {
     return
         try  await uniffiRustCallAsync(
@@ -16130,7 +16157,10 @@ public func FfiConverterTypeUsdtQuote_lower(_ value: UsdtQuote) -> RustBuffer {
 
 public struct UsdtTransfer {
     public var id: String
-    public var txHash: String
+    /**
+     * Source transaction hash, absent until execution is observed.
+     */
+    public var txHash: String?
     public var userOperationHash: String?
     public var bridgeGuid: String?
     public var recipient: String
@@ -16141,11 +16171,13 @@ public struct UsdtTransfer {
     public var isIncoming: Bool
     public var status: UsdtTransferStatus
     public var timestamp: UInt64
-    public var explorerUrl: String
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, txHash: String, userOperationHash: String?, bridgeGuid: String?, recipient: String, destination: UsdtDestination, amount: UInt64, receivedAmount: UInt64, fee: UInt64?, isIncoming: Bool, status: UsdtTransferStatus, timestamp: UInt64, explorerUrl: String) {
+    public init(id: String, 
+        /**
+         * Source transaction hash, absent until execution is observed.
+         */txHash: String?, userOperationHash: String?, bridgeGuid: String?, recipient: String, destination: UsdtDestination, amount: UInt64, receivedAmount: UInt64, fee: UInt64?, isIncoming: Bool, status: UsdtTransferStatus, timestamp: UInt64) {
         self.id = id
         self.txHash = txHash
         self.userOperationHash = userOperationHash
@@ -16158,7 +16190,6 @@ public struct UsdtTransfer {
         self.isIncoming = isIncoming
         self.status = status
         self.timestamp = timestamp
-        self.explorerUrl = explorerUrl
     }
 }
 
@@ -16205,9 +16236,6 @@ extension UsdtTransfer: Equatable, Hashable {
         if lhs.timestamp != rhs.timestamp {
             return false
         }
-        if lhs.explorerUrl != rhs.explorerUrl {
-            return false
-        }
         return true
     }
 
@@ -16224,7 +16252,6 @@ extension UsdtTransfer: Equatable, Hashable {
         hasher.combine(isIncoming)
         hasher.combine(status)
         hasher.combine(timestamp)
-        hasher.combine(explorerUrl)
     }
 }
 
@@ -16240,7 +16267,7 @@ public struct FfiConverterTypeUsdtTransfer: FfiConverterRustBuffer {
         return
             try UsdtTransfer(
                 id: FfiConverterString.read(from: &buf), 
-                txHash: FfiConverterString.read(from: &buf), 
+                txHash: FfiConverterOptionString.read(from: &buf), 
                 userOperationHash: FfiConverterOptionString.read(from: &buf), 
                 bridgeGuid: FfiConverterOptionString.read(from: &buf), 
                 recipient: FfiConverterString.read(from: &buf), 
@@ -16250,14 +16277,13 @@ public struct FfiConverterTypeUsdtTransfer: FfiConverterRustBuffer {
                 fee: FfiConverterOptionUInt64.read(from: &buf), 
                 isIncoming: FfiConverterBool.read(from: &buf), 
                 status: FfiConverterTypeUsdtTransferStatus.read(from: &buf), 
-                timestamp: FfiConverterUInt64.read(from: &buf), 
-                explorerUrl: FfiConverterString.read(from: &buf)
+                timestamp: FfiConverterUInt64.read(from: &buf)
         )
     }
 
     public static func write(_ value: UsdtTransfer, into buf: inout [UInt8]) {
         FfiConverterString.write(value.id, into: &buf)
-        FfiConverterString.write(value.txHash, into: &buf)
+        FfiConverterOptionString.write(value.txHash, into: &buf)
         FfiConverterOptionString.write(value.userOperationHash, into: &buf)
         FfiConverterOptionString.write(value.bridgeGuid, into: &buf)
         FfiConverterString.write(value.recipient, into: &buf)
@@ -16268,7 +16294,6 @@ public struct FfiConverterTypeUsdtTransfer: FfiConverterRustBuffer {
         FfiConverterBool.write(value.isIncoming, into: &buf)
         FfiConverterTypeUsdtTransferStatus.write(value.status, into: &buf)
         FfiConverterUInt64.write(value.timestamp, into: &buf)
-        FfiConverterString.write(value.explorerUrl, into: &buf)
     }
 }
 
@@ -23682,11 +23707,33 @@ extension UsdtError: Foundation.LocalizedError {
 
 public enum UsdtTransferStatus {
     
+    /**
+     * Signed payment awaiting a conclusive source-chain outcome.
+     */
     case pending
+    /**
+     * Payment received on its destination chain.
+     */
     case confirmed
+    /**
+     * Source payment failed or was proven not to have executed.
+     */
     case failed
+    /**
+     * Source payment executed; destination delivery is pending.
+     */
     case bridging
+    /**
+     * Delivery is blocked or its message could not be recovered; it may still complete.
+     */
     case bridgeNeedsAttention
+    /**
+     * Delivery was permanently stopped. This does not imply a refund of source funds or fees.
+     */
+    case bridgeFailed
+    /**
+     * Another operation consumed the payment nonce.
+     */
     case replaced
 }
 
@@ -23715,7 +23762,9 @@ public struct FfiConverterTypeUsdtTransferStatus: FfiConverterRustBuffer {
         
         case 5: return .bridgeNeedsAttention
         
-        case 6: return .replaced
+        case 6: return .bridgeFailed
+        
+        case 7: return .replaced
         
         default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -23745,8 +23794,12 @@ public struct FfiConverterTypeUsdtTransferStatus: FfiConverterRustBuffer {
             writeInt(&buf, Int32(5))
         
         
-        case .replaced:
+        case .bridgeFailed:
             writeInt(&buf, Int32(6))
+        
+        
+        case .replaced:
+            writeInt(&buf, Int32(7))
         
         }
     }
@@ -29864,6 +29917,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_usdtwallet_balance() != 12328) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_check_recent_execution() != 33172) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_history() != 4617) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -29876,22 +29932,19 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_usdtwallet_receive_uri() != 33484) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_method_usdtwallet_refresh_transfer() != 58151) {
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_refresh_transfers() != 34299) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_method_usdtwallet_refresh_transfers() != 32305) {
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_send() != 60030) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_method_usdtwallet_send() != 10847) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_bitkitcore_checksum_method_usdtwallet_sync_history() != 48106) {
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_sync_history() != 25445) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_constructor_urdecoder_new() != 23014) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_constructor_usdtwallet_new() != 63633) {
+    if (uniffi_bitkitcore_checksum_constructor_usdtwallet_new() != 62148) {
         return InitializationResult.apiChecksumMismatch
     }
 

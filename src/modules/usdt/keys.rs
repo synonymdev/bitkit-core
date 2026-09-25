@@ -45,6 +45,18 @@ pub(super) fn key_address(key: &SecretKey) -> Address {
     Address::from_raw_public_key(&public[1..])
 }
 
+pub(super) fn derive_owner_key(
+    mnemonic: Zeroizing<String>,
+    passphrase: Option<Zeroizing<String>>,
+    owner: Address,
+) -> Result<SigningKey, UsdtError> {
+    let key = derive_key(mnemonic, passphrase)?;
+    if key_address(&key) != owner {
+        return Err(UsdtError::InvalidCredentials);
+    }
+    Ok(key)
+}
+
 #[uniffi::export]
 pub fn usdt_address(mnemonic: String, passphrase: Option<String>) -> Result<String, UsdtError> {
     Ok(key_address(&*derive_key(mnemonic.into(), passphrase.map(Into::into))?).to_checksum(None))

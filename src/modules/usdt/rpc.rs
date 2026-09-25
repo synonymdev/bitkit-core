@@ -16,10 +16,16 @@ pub(super) struct Block {
     pub transactions: Vec<B256>,
 }
 
+impl Block {
+    pub fn timestamp(&self) -> Result<u64, UsdtError> {
+        self.timestamp
+            .try_into()
+            .map_err(|_| UsdtError::InvalidResponse)
+    }
+}
+
 pub(super) struct Rpc {
     client: reqwest::Client,
-    #[cfg(test)]
-    pub(super) bridge_status_url: Option<String>,
     url: String,
     chain_id: u64,
     next_request: Arc<Mutex<Instant>>,
@@ -41,8 +47,6 @@ impl Rpc {
         let client = endpoint_client(&url, Duration::from_secs(25))?;
         Ok(Self {
             client,
-            #[cfg(test)]
-            bridge_status_url: None,
             url,
             chain_id,
             next_request: Arc::new(Mutex::new(Instant::now())),
@@ -135,6 +139,13 @@ impl Rpc {
             if matches!(error.code, -32002 | -32603) {
                 return Err(UsdtError::NetworkUnavailable);
             }
+            if method == "eth_call"
+                && error.code == 3
+                && serde_json::from_value::<Address>(params[0]["to"].clone())
+                    .is_ok_and(|to| [super::types::OFT, super::types::BRIDGE_HELPER].contains(&to))
+            {
+                return Err(UsdtError::UnsupportedRoute);
+            }
             if matches!(
                 method,
                 "eth_chainId"
@@ -147,6 +158,7 @@ impl Rpc {
                     | "eth_getBlockByNumber"
                     | "eth_getTransactionReceipt"
                     | "eth_getTransactionByHash"
+                    | "bitkit_getBridgeMessages"
             ) {
                 return Err(UsdtError::NetworkUnavailable);
             }
@@ -172,32 +184,21 @@ impl Rpc {
         &self,
         transfer: &UsdtTransfer,
     ) -> Result<UsdtTransferStatus, UsdtError> {
-        if transfer.bridge_guid.is_none() {
-            return Ok(transfer.status);
-        }
-        let base = "https://scan.layerzero-api.com";
-        #[cfg(test)]
-        let base = self.bridge_status_url.as_deref().unwrap_or(base);
-        let url = format!("{base}/v1/messages/tx/{}", transfer.tx_hash);
-        let response = self
-            .client
-            .get(url)
-            .send()
-            .await
-            .map_err(|_| UsdtError::NetworkUnavailable)?
-            .error_for_status()
-            .map_err(|_| UsdtError::NetworkUnavailable)?;
-        let response = bounded_json(response, 2_097_152, UsdtError::InvalidResponse).await?;
+        let (Some(guid), Some(tx_hash)) =
+            (transfer.bridge_guid.as_deref(), transfer.tx_hash.as_deref())
+        else {
+            return Err(UsdtError::NetworkUnavailable);
+        };
+        let hash: B256 = tx_hash.parse().map_err(|_| UsdtError::InvalidResponse)?;
+        let response: Value = self.call("bitkit_getBridgeMessages", json!([hash])).await?;
         let messages = response["data"]
             .as_array()
             .ok_or(UsdtError::InvalidResponse)?;
         let message = messages.iter().find(|message| {
-            message["guid"].as_str().is_some_and(|guid| {
-                transfer
-                    .bridge_guid
-                    .as_ref()
-                    .is_some_and(|expected| guid.eq_ignore_ascii_case(expected))
-            }) && message["pathway"]["srcEid"].as_u64() == Some(30110)
+            message["guid"]
+                .as_str()
+                .is_some_and(|value| value.eq_ignore_ascii_case(guid))
+                && message["pathway"]["srcEid"].as_u64() == Some(30110)
                 && message["pathway"]["dstEid"].as_u64()
                     == transfer.destination.endpoint().map(u64::from)
                 && message["pathway"]["sender"]["address"]
@@ -205,18 +206,16 @@ impl Rpc {
                     .is_some_and(|a| a.eq_ignore_ascii_case(&super::types::OFT.to_string()))
                 && message["source"]["tx"]["txHash"]
                     .as_str()
-                    .is_some_and(|h| h.eq_ignore_ascii_case(&transfer.tx_hash))
+                    .is_some_and(|h| h.eq_ignore_ascii_case(tx_hash))
         });
         Ok(match message.and_then(|m| m["status"]["name"].as_str()) {
             Some("DELIVERED") => UsdtTransferStatus::Confirmed,
-            Some(
-                "FAILED"
-                | "BLOCKED"
-                | "PAYLOAD_STORED"
-                | "APPLICATION_BURNED"
-                | "APPLICATION_SKIPPED",
-            ) => UsdtTransferStatus::BridgeNeedsAttention,
-            _ => transfer.status,
+            Some("INFLIGHT" | "CONFIRMING") => UsdtTransferStatus::Bridging,
+            Some("FAILED" | "BLOCKED" | "PAYLOAD_STORED") => {
+                UsdtTransferStatus::BridgeNeedsAttention
+            }
+            Some("APPLICATION_BURNED" | "APPLICATION_SKIPPED") => UsdtTransferStatus::BridgeFailed,
+            _ => return Err(UsdtError::NetworkUnavailable),
         })
     }
 
@@ -253,10 +252,19 @@ impl Rpc {
     }
 
     pub async fn contract<C: SolCall>(&self, to: Address, call: C) -> Result<C::Return, UsdtError> {
+        self.contract_at(to, call, "latest").await
+    }
+
+    pub async fn contract_at<C: SolCall>(
+        &self,
+        to: Address,
+        call: C,
+        block: &str,
+    ) -> Result<C::Return, UsdtError> {
         let bytes: Bytes = self
             .call(
                 "eth_call",
-                json!([{"to":to,"data":Bytes::from(call.abi_encode())},"latest"]),
+                json!([{"to":to,"data":Bytes::from(call.abi_encode())},block]),
             )
             .await?;
         C::abi_decode_returns(&bytes).map_err(|_| UsdtError::InvalidResponse)
@@ -357,6 +365,41 @@ mod tests {
                 .unwrap_err();
             if status == 400 {
                 assert!(matches!(error, UsdtError::TransactionRejected { .. }));
+            } else {
+                assert!(matches!(error, UsdtError::NetworkUnavailable));
+            }
+            server.await.unwrap();
+        }
+    }
+
+    #[tokio::test]
+    async fn bridge_reverts_are_distinct_from_rpc_failures() {
+        use super::super::types::{BRIDGE_HELPER, OFT, TOKEN};
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        for (target, code, expected_route) in [
+            (OFT, 3, true),
+            (BRIDGE_HELPER, 3, true),
+            (TOKEN, 3, false),
+            (BRIDGE_HELPER, -32602, false),
+            (BRIDGE_HELPER, -32002, false),
+        ] {
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let url = format!("http://{}", listener.local_addr().unwrap());
+            let server = tokio::spawn(async move {
+                let (mut socket, _) = listener.accept().await.unwrap();
+                let mut request = [0; 4096];
+                assert!(socket.read(&mut request).await.unwrap() > 0);
+                let body = json!({"error":{"code":code,"message":"Provider rejected the request"}})
+                    .to_string();
+                socket.write_all(format!("HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).as_bytes()).await.unwrap();
+            });
+            let error = Rpc::new(url, 42161)
+                .unwrap()
+                .call::<Value>("eth_call", json!([{"to": target, "data":"0x"}, "latest"]))
+                .await
+                .unwrap_err();
+            if expected_route {
+                assert!(matches!(error, UsdtError::UnsupportedRoute));
             } else {
                 assert!(matches!(error, UsdtError::NetworkUnavailable));
             }

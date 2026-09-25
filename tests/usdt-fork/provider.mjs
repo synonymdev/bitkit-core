@@ -201,14 +201,10 @@ async function dispatch(method, params) {
     );
     return hash;
   }
+  if (method === 'bitkit_getBridgeMessages') return { data: [] };
   return rpc.send(method, params);
 }
 const server = createServer(async (request, response) => {
-  if (request.method === 'GET' && request.url.startsWith('/v1/messages/tx/')) {
-    response.writeHead(200, { 'content-type': 'application/json' });
-    response.end(JSON.stringify({ data: [] }));
-    return;
-  }
   let body = '';
   for await (const chunk of request) body += chunk;
   const call = JSON.parse(body);

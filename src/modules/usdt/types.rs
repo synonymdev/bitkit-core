@@ -5,7 +5,6 @@ pub(super) const CHAIN_ID: u64 = 42161;
 pub(super) const TOKEN: Address = address!("Fd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9");
 pub(super) const OFT: Address = address!("14E4A1B13bf7F943c8ff7C51fb60FA964A298D92");
 pub(super) const BRIDGE_HELPER: Address = address!("a90f03c856D01F698E7071B393387cd75a8a319A");
-pub(super) const EXPLORER: &str = "https://arbiscan.io";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, uniffi::Enum)]
 pub enum UsdtDestination {
@@ -65,18 +64,27 @@ pub struct UsdtQuote {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, uniffi::Enum)]
 pub enum UsdtTransferStatus {
+    /// Signed payment awaiting a conclusive source-chain outcome.
     Pending,
+    /// Payment received on its destination chain.
     Confirmed,
+    /// Source payment failed or was proven not to have executed.
     Failed,
+    /// Source payment executed; destination delivery is pending.
     Bridging,
+    /// Delivery is blocked or its message could not be recovered; it may still complete.
     BridgeNeedsAttention,
+    /// Delivery was permanently stopped. This does not imply a refund of source funds or fees.
+    BridgeFailed,
+    /// Another operation consumed the payment nonce.
     Replaced,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, uniffi::Record)]
 pub struct UsdtTransfer {
     pub id: String,
-    pub tx_hash: String,
+    /// Source transaction hash, absent until execution is observed.
+    pub tx_hash: Option<String>,
     pub user_operation_hash: Option<String>,
     pub bridge_guid: Option<String>,
     pub recipient: String,
@@ -87,5 +95,12 @@ pub struct UsdtTransfer {
     pub is_incoming: bool,
     pub status: UsdtTransferStatus,
     pub timestamp: u64,
-    pub explorer_url: String,
+}
+
+impl UsdtTransfer {
+    pub(super) fn mark_unexecuted(&mut self, status: UsdtTransferStatus) {
+        self.status = status;
+        self.received_amount = 0;
+        self.fee = Some(0);
+    }
 }

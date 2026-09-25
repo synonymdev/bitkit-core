@@ -33,6 +33,19 @@ pub fn usdt_format_amount(amount: u64) -> String {
         .to_string()
 }
 
+pub(super) fn with_margin(value: U256, percent: u8) -> Result<U256, UsdtError> {
+    let hundred = U256::from(100);
+    let percent = U256::from(percent);
+    let margin = (value / hundred)
+        .checked_mul(percent)
+        .and_then(|margin| margin.checked_add(value % hundred * percent / hundred))
+        .ok_or(UsdtError::InvalidResponse)?;
+    value
+        .checked_add(margin)
+        .and_then(|value| value.checked_add(U256::from(1)))
+        .ok_or(UsdtError::InvalidResponse)
+}
+
 pub(super) fn token_amount(value: U256) -> Result<u64, UsdtError> {
     value.try_into().map_err(|_| UsdtError::InvalidAmount)
 }
@@ -72,4 +85,28 @@ pub(super) fn parse_atomic_amount(value: &str) -> Result<u64, UsdtError> {
     amount
         .checked_mul(10u64.checked_pow(power).ok_or(UsdtError::InvalidAmount)?)
         .ok_or(UsdtError::InvalidAmount)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn margins_preserve_rounding_without_intermediate_overflow() {
+        for percent in [5, 10, 20] {
+            for value in [
+                U256::ZERO,
+                U256::from(19),
+                U256::from(20),
+                U256::MAX / U256::from(2),
+            ] {
+                let expected = value + value / U256::from(100 / percent) + U256::from(1);
+                assert_eq!(with_margin(value, percent).unwrap(), expected);
+            }
+            assert!(matches!(
+                with_margin(U256::MAX, percent),
+                Err(UsdtError::InvalidResponse)
+            ));
+        }
+    }
 }
