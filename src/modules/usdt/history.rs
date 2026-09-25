@@ -1,9 +1,9 @@
 use super::{
     account::{SimpleAccount, ENTRY_POINT},
     amount::token_amount,
-    transaction::{entry_point_event, event_data, EntryPoint, Erc20},
-    types::TOKEN,
-    UsdtError, UsdtTransfer, UsdtTransferStatus, UsdtWallet,
+    transaction::{entry_point_event, event_data, BridgeHelper, EntryPoint, Erc20},
+    types::{BRIDGE_HELPER, OFT, TOKEN},
+    UsdtDestination, UsdtError, UsdtTransfer, UsdtTransferStatus, UsdtWallet,
 };
 use alloy_primitives::{Address, Bytes, B256, U256};
 use alloy_sol_types::{SolCall, SolEvent};
@@ -164,6 +164,7 @@ impl UsdtWallet {
         if self.store.history_progress()? != Some(number) {
             self.store.save_history_progress(number)?;
         }
+        let mut complete = true;
         for hash in &block.transactions {
             let id = format!("{hash:#x}");
             if self.store.has_history_receipt(&id, &block_hash, true)? {
@@ -173,13 +174,16 @@ impl UsdtWallet {
                 return Ok(false);
             }
             let receipt = self.rpc.block_receipt(*hash, block.hash, number).await?;
-            self.save_receipt_history(&id, number, &block, &receipt, true)
+            complete &= self
+                .save_receipt_history(&id, number, &block, &receipt, true)
                 .await?;
         }
         if self.rpc.block(number).await?.hash != block.hash {
             return Err(UsdtError::NetworkUnavailable);
         }
-        self.store.complete_history_block(number, &block_hash)?;
+        if complete {
+            self.store.complete_history_block(number, &block_hash)?;
+        }
         Ok(true)
     }
 
@@ -190,17 +194,25 @@ impl UsdtWallet {
         block: &super::rpc::Block,
         receipt: &Value,
         complete_receipt: bool,
-    ) -> Result<(), UsdtError> {
+    ) -> Result<bool, UsdtError> {
         // Finish and persist a receipt before yielding the work budget.
         let timestamp = block.timestamp()?;
         let transfers = self.receipt_history(hash, timestamp, receipt).await?;
+        // Missing bridge evidence remains eligible for enrichment without keeping the source pending.
+        let complete_receipt = complete_receipt
+            && transfers.iter().all(|transfer| {
+                transfer.destination == UsdtDestination::Arbitrum
+                    || transfer.status == UsdtTransferStatus::Failed
+                    || (transfer.bridge_guid.is_some() && transfer.fee.is_some())
+            });
         self.store.save_history_receipt(
             &transfers,
             hash,
             number,
             &format!("{:#x}", block.hash),
             complete_receipt,
-        )
+        )?;
+        Ok(complete_receipt)
     }
 
     async fn history_logs(
@@ -278,7 +290,9 @@ impl UsdtWallet {
                 id: format!("{hash}:{index}"),
                 tx_hash: Some(hash.into()),
                 user_operation_hash: None,
+                bridge_guid: None,
                 recipient: event.to.to_checksum(None),
+                destination: UsdtDestination::Arbitrum,
                 amount: token_amount(event.value)?,
                 received_amount: token_amount(event.value)?,
                 fee: None,
@@ -322,8 +336,8 @@ impl UsdtWallet {
                 continue;
             }
             let operation_hash = format!("{:#x}", event.userOpHash);
-            let (recipient, amount) = if let Some(saved) = saved {
-                (saved.recipient, saved.amount)
+            let (recipient, amount, destination) = if let Some(saved) = saved {
+                (saved.recipient, saved.amount, saved.destination)
             } else {
                 let Some(op) = batch.as_ref().and_then(|batch| {
                     batch
@@ -336,16 +350,20 @@ impl UsdtWallet {
                 if !super::paymaster::supported_payment(&op.paymasterAndData) {
                     continue;
                 }
-                let Some((recipient, amount)) = decode_payment(&op.callData, self.address) else {
+                let Some((recipient, amount, destination)) =
+                    decode_payment(&op.callData, self.address)
+                else {
                     continue;
                 };
-                (recipient.to_checksum(None), amount)
+                (recipient.to_checksum(None), amount, destination)
             };
             let mut transfer = UsdtTransfer {
                 id: operation_hash.clone(),
                 tx_hash: Some(hash.into()),
                 user_operation_hash: Some(operation_hash),
+                bridge_guid: None,
                 recipient,
+                destination,
                 amount,
                 received_amount: amount,
                 fee: None,
@@ -369,19 +387,38 @@ impl UsdtWallet {
     }
 }
 
-fn decode_payment(data: &[u8], sender: Address) -> Option<(Address, u64)> {
-    let calls = decode_calls(data).ok()?;
+fn decode_payment(data: &[u8], sender: Address) -> Option<(Address, u64, UsdtDestination)> {
     let mut payment = None;
-    for (target, data) in calls {
-        if target != TOKEN {
-            return None;
-        }
-        if let Ok(call) = Erc20::transferCall::abi_decode(&data) {
-            if payment.is_some() || call.amount.is_zero() || call.recipient == sender {
+    for (target, data) in decode_calls(data).ok()? {
+        let next = if target == TOKEN {
+            if let Ok(call) = Erc20::transferCall::abi_decode(&data) {
+                if call.amount.is_zero() || call.recipient == sender {
+                    return None;
+                }
+                (
+                    call.recipient,
+                    token_amount(call.amount).ok()?,
+                    UsdtDestination::Arbitrum,
+                )
+            } else if Erc20::approveCall::abi_decode(&data).is_ok() {
+                continue;
+            } else {
                 return None;
             }
-            payment = Some((call.recipient, token_amount(call.amount).ok()?));
-        } else if Erc20::approveCall::abi_decode(&data).is_err() {
+        } else if target == BRIDGE_HELPER {
+            let call = BridgeHelper::sendCall::abi_decode(&data).ok()?;
+            if call.oft != OFT {
+                return None;
+            }
+            (
+                Address::from_word(call.param.to),
+                token_amount(call.param.amountLD).ok()?,
+                UsdtDestination::from_endpoint(call.param.dstEid)?,
+            )
+        } else {
+            return None;
+        };
+        if payment.replace(next).is_some() {
             return None;
         }
     }

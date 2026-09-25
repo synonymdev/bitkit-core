@@ -16,6 +16,47 @@ sol! {
         bytes paymasterAndData;
         bytes signature;
     }
+    #[derive(Debug)]
+    struct SendParam {
+        uint32 dstEid;
+        bytes32 to;
+        uint256 amountLD;
+        uint256 minAmountLD;
+        bytes extraOptions;
+        bytes composeMsg;
+        bytes oftCmd;
+    }
+    #[derive(Debug)]
+    struct MessagingFee {
+        uint256 nativeFee;
+        uint256 lzTokenFee;
+    }
+    struct OFTLimit {
+        uint256 minAmountLD;
+        uint256 maxAmountLD;
+    }
+    struct OFTFeeDetail {
+        int256 feeAmountLD;
+        string description;
+    }
+    struct OFTReceipt {
+        uint256 amountSentLD;
+        uint256 amountReceivedLD;
+    }
+    interface Oft {
+        function token() external view returns (address);
+        function peers(uint32 eid) external view returns (bytes32);
+        function quoteOFT(SendParam param) external view returns (OFTLimit limit, OFTFeeDetail[] fees, OFTReceipt receipt);
+        function quoteSend(SendParam param, bool payInLzToken) external view returns (MessagingFee fee);
+        event OFTSent(bytes32 indexed guid, uint32 dstEid, address indexed fromAddress, uint256 amountSentLD, uint256 amountReceivedLD);
+    }
+    interface BridgeHelper {
+        function token() external view returns (address);
+        function maxGas() external view returns (uint256);
+        function quoteSend(SendParam param, MessagingFee fee) external view returns (uint256 totalAmount);
+        function send(address oft, SendParam param, MessagingFee fee) external payable;
+        event LogSend(address indexed sender, address indexed oft, uint256 amountLD, uint256 nativeFee, uint256 feeInToken, uint256 totalAmount);
+    }
     interface EntryPoint {
         function getNonce(address sender, uint192 key) view returns (uint256);
         function handleOps(PackedOperation[] ops, address beneficiary);

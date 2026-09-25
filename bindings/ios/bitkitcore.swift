@@ -2576,7 +2576,7 @@ public protocol UsdtWalletProtocol: AnyObject, Sendable {
     
     func history() throws  -> [UsdtTransfer]
     
-    func quoteTransfer(recipient: String, amount: UInt64) async throws  -> UsdtQuote
+    func quoteTransfer(recipient: String, amount: UInt64, destination: UsdtDestination) async throws  -> UsdtQuote
     
     func receiveAddress()  -> String
     
@@ -2712,13 +2712,13 @@ open func history()throws  -> [UsdtTransfer]  {
 })
 }
     
-open func quoteTransfer(recipient: String, amount: UInt64)async throws  -> UsdtQuote  {
+open func quoteTransfer(recipient: String, amount: UInt64, destination: UsdtDestination)async throws  -> UsdtQuote  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
                 uniffi_bitkitcore_fn_method_usdtwallet_quote_transfer(
                     self.uniffiClonePointer(),
-                    FfiConverterString.lower(recipient),FfiConverterUInt64.lower(amount)
+                    FfiConverterString.lower(recipient),FfiConverterUInt64.lower(amount),FfiConverterTypeUsdtDestination_lower(destination)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
@@ -16046,16 +16046,20 @@ public func FfiConverterTypeUsdtPaymentRequest_lower(_ value: UsdtPaymentRequest
 public struct UsdtQuote {
     public var id: String
     public var recipient: String
+    public var destination: UsdtDestination
     public var amount: UInt64
+    public var receivedAmount: UInt64
     public var maximumFee: UInt64
     public var expiresAt: UInt64
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, recipient: String, amount: UInt64, maximumFee: UInt64, expiresAt: UInt64) {
+    public init(id: String, recipient: String, destination: UsdtDestination, amount: UInt64, receivedAmount: UInt64, maximumFee: UInt64, expiresAt: UInt64) {
         self.id = id
         self.recipient = recipient
+        self.destination = destination
         self.amount = amount
+        self.receivedAmount = receivedAmount
         self.maximumFee = maximumFee
         self.expiresAt = expiresAt
     }
@@ -16074,7 +16078,13 @@ extension UsdtQuote: Equatable, Hashable {
         if lhs.recipient != rhs.recipient {
             return false
         }
+        if lhs.destination != rhs.destination {
+            return false
+        }
         if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.receivedAmount != rhs.receivedAmount {
             return false
         }
         if lhs.maximumFee != rhs.maximumFee {
@@ -16089,7 +16099,9 @@ extension UsdtQuote: Equatable, Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(recipient)
+        hasher.combine(destination)
         hasher.combine(amount)
+        hasher.combine(receivedAmount)
         hasher.combine(maximumFee)
         hasher.combine(expiresAt)
     }
@@ -16108,7 +16120,9 @@ public struct FfiConverterTypeUsdtQuote: FfiConverterRustBuffer {
             try UsdtQuote(
                 id: FfiConverterString.read(from: &buf), 
                 recipient: FfiConverterString.read(from: &buf), 
+                destination: FfiConverterTypeUsdtDestination.read(from: &buf), 
                 amount: FfiConverterUInt64.read(from: &buf), 
+                receivedAmount: FfiConverterUInt64.read(from: &buf), 
                 maximumFee: FfiConverterUInt64.read(from: &buf), 
                 expiresAt: FfiConverterUInt64.read(from: &buf)
         )
@@ -16117,7 +16131,9 @@ public struct FfiConverterTypeUsdtQuote: FfiConverterRustBuffer {
     public static func write(_ value: UsdtQuote, into buf: inout [UInt8]) {
         FfiConverterString.write(value.id, into: &buf)
         FfiConverterString.write(value.recipient, into: &buf)
+        FfiConverterTypeUsdtDestination.write(value.destination, into: &buf)
         FfiConverterUInt64.write(value.amount, into: &buf)
+        FfiConverterUInt64.write(value.receivedAmount, into: &buf)
         FfiConverterUInt64.write(value.maximumFee, into: &buf)
         FfiConverterUInt64.write(value.expiresAt, into: &buf)
     }
@@ -16146,7 +16162,9 @@ public struct UsdtTransfer {
      */
     public var txHash: String?
     public var userOperationHash: String?
+    public var bridgeGuid: String?
     public var recipient: String
+    public var destination: UsdtDestination
     public var amount: UInt64
     public var receivedAmount: UInt64
     public var fee: UInt64?
@@ -16159,11 +16177,13 @@ public struct UsdtTransfer {
     public init(id: String, 
         /**
          * Source transaction hash, absent until execution is observed.
-         */txHash: String?, userOperationHash: String?, recipient: String, amount: UInt64, receivedAmount: UInt64, fee: UInt64?, isIncoming: Bool, status: UsdtTransferStatus, timestamp: UInt64) {
+         */txHash: String?, userOperationHash: String?, bridgeGuid: String?, recipient: String, destination: UsdtDestination, amount: UInt64, receivedAmount: UInt64, fee: UInt64?, isIncoming: Bool, status: UsdtTransferStatus, timestamp: UInt64) {
         self.id = id
         self.txHash = txHash
         self.userOperationHash = userOperationHash
+        self.bridgeGuid = bridgeGuid
         self.recipient = recipient
+        self.destination = destination
         self.amount = amount
         self.receivedAmount = receivedAmount
         self.fee = fee
@@ -16189,7 +16209,13 @@ extension UsdtTransfer: Equatable, Hashable {
         if lhs.userOperationHash != rhs.userOperationHash {
             return false
         }
+        if lhs.bridgeGuid != rhs.bridgeGuid {
+            return false
+        }
         if lhs.recipient != rhs.recipient {
+            return false
+        }
+        if lhs.destination != rhs.destination {
             return false
         }
         if lhs.amount != rhs.amount {
@@ -16217,7 +16243,9 @@ extension UsdtTransfer: Equatable, Hashable {
         hasher.combine(id)
         hasher.combine(txHash)
         hasher.combine(userOperationHash)
+        hasher.combine(bridgeGuid)
         hasher.combine(recipient)
+        hasher.combine(destination)
         hasher.combine(amount)
         hasher.combine(receivedAmount)
         hasher.combine(fee)
@@ -16241,7 +16269,9 @@ public struct FfiConverterTypeUsdtTransfer: FfiConverterRustBuffer {
                 id: FfiConverterString.read(from: &buf), 
                 txHash: FfiConverterOptionString.read(from: &buf), 
                 userOperationHash: FfiConverterOptionString.read(from: &buf), 
+                bridgeGuid: FfiConverterOptionString.read(from: &buf), 
                 recipient: FfiConverterString.read(from: &buf), 
+                destination: FfiConverterTypeUsdtDestination.read(from: &buf), 
                 amount: FfiConverterUInt64.read(from: &buf), 
                 receivedAmount: FfiConverterUInt64.read(from: &buf), 
                 fee: FfiConverterOptionUInt64.read(from: &buf), 
@@ -16255,7 +16285,9 @@ public struct FfiConverterTypeUsdtTransfer: FfiConverterRustBuffer {
         FfiConverterString.write(value.id, into: &buf)
         FfiConverterOptionString.write(value.txHash, into: &buf)
         FfiConverterOptionString.write(value.userOperationHash, into: &buf)
+        FfiConverterOptionString.write(value.bridgeGuid, into: &buf)
         FfiConverterString.write(value.recipient, into: &buf)
+        FfiConverterTypeUsdtDestination.write(value.destination, into: &buf)
         FfiConverterUInt64.write(value.amount, into: &buf)
         FfiConverterUInt64.write(value.receivedAmount, into: &buf)
         FfiConverterOptionUInt64.write(value.fee, into: &buf)
@@ -23405,6 +23437,99 @@ extension UrPayload: Codable {}
 
 
 
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
+public enum UsdtDestination {
+    
+    case stable
+    case ethereum
+    case arbitrum
+    case polygon
+    case plasma
+}
+
+
+#if compiler(>=6)
+extension UsdtDestination: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtDestination: FfiConverterRustBuffer {
+    typealias SwiftType = UsdtDestination
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtDestination {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .stable
+        
+        case 2: return .ethereum
+        
+        case 3: return .arbitrum
+        
+        case 4: return .polygon
+        
+        case 5: return .plasma
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: UsdtDestination, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .stable:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .ethereum:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .arbitrum:
+            writeInt(&buf, Int32(3))
+        
+        
+        case .polygon:
+            writeInt(&buf, Int32(4))
+        
+        
+        case .plasma:
+            writeInt(&buf, Int32(5))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDestination_lift(_ buf: RustBuffer) throws -> UsdtDestination {
+    return try FfiConverterTypeUsdtDestination.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtDestination_lower(_ value: UsdtDestination) -> RustBuffer {
+    return FfiConverterTypeUsdtDestination.lower(value)
+}
+
+
+extension UsdtDestination: Equatable, Hashable {}
+
+extension UsdtDestination: Codable {}
+
+
+
+
+
+
 
 public enum UsdtError: Swift.Error {
 
@@ -23595,6 +23720,18 @@ public enum UsdtTransferStatus {
      */
     case failed
     /**
+     * Source payment executed; destination delivery is pending.
+     */
+    case bridging
+    /**
+     * Delivery is blocked or its message could not be recovered; it may still complete.
+     */
+    case bridgeNeedsAttention
+    /**
+     * Delivery was permanently stopped. This does not imply a refund of source funds or fees.
+     */
+    case bridgeFailed
+    /**
      * Another operation consumed the payment nonce.
      */
     case replaced
@@ -23621,7 +23758,13 @@ public struct FfiConverterTypeUsdtTransferStatus: FfiConverterRustBuffer {
         
         case 3: return .failed
         
-        case 4: return .replaced
+        case 4: return .bridging
+        
+        case 5: return .bridgeNeedsAttention
+        
+        case 6: return .bridgeFailed
+        
+        case 7: return .replaced
         
         default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -23643,8 +23786,20 @@ public struct FfiConverterTypeUsdtTransferStatus: FfiConverterRustBuffer {
             writeInt(&buf, Int32(3))
         
         
-        case .replaced:
+        case .bridging:
             writeInt(&buf, Int32(4))
+        
+        
+        case .bridgeNeedsAttention:
+            writeInt(&buf, Int32(5))
+        
+        
+        case .bridgeFailed:
+            writeInt(&buf, Int32(6))
+        
+        
+        case .replaced:
+            writeInt(&buf, Int32(7))
         
         }
     }
@@ -29768,7 +29923,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_usdtwallet_history() != 4617) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_method_usdtwallet_quote_transfer() != 56645) {
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_quote_transfer() != 3732) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_receive_address() != 540) {

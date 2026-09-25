@@ -286,6 +286,26 @@ impl Store {
             let mut transfer = transfer.clone();
             if let Some(saved) = existing {
                 transfer.id = saved.id;
+                if saved
+                    .tx_hash
+                    .as_deref()
+                    .zip(transfer.tx_hash.as_deref())
+                    .is_some_and(|(a, b)| a.eq_ignore_ascii_case(b))
+                    && saved
+                        .bridge_guid
+                        .as_ref()
+                        .zip(transfer.bridge_guid.as_ref())
+                        .is_some_and(|(a, b)| a.eq_ignore_ascii_case(b))
+                    && transfer.status == UsdtTransferStatus::Bridging
+                    && matches!(
+                        saved.status,
+                        UsdtTransferStatus::Confirmed
+                            | UsdtTransferStatus::BridgeNeedsAttention
+                            | UsdtTransferStatus::BridgeFailed
+                    )
+                {
+                    transfer.status = saved.status;
+                }
                 write_transfer(tx, &transfer)?;
             } else {
                 tx.execute(
@@ -295,6 +315,15 @@ impl Store {
             }
         }
         Ok(())
+    }
+
+    pub fn awaiting_delivery(&self) -> Result<Vec<UsdtTransfer>, UsdtError> {
+        let connection = self.connection()?;
+        let mut statement = connection.prepare(
+            "SELECT data FROM usdt_transfers WHERE json_extract(data, '$.status') IN ('Bridging','BridgeNeedsAttention') AND json_extract(data, '$.bridge_guid') IS NOT NULL ORDER BY json_extract(data, '$.timestamp') DESC, id",
+        )?;
+        let rows = statement.query_map([], |row| row.get::<_, String>(0))?;
+        rows.map(|row| decode(&row?)).collect()
     }
 
     pub fn pending_operation(&self) -> Result<Option<(UsdtTransfer, Plan)>, UsdtError> {
