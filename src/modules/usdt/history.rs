@@ -29,7 +29,8 @@ impl UsdtWallet {
             return Err(UsdtError::NetworkUnavailable);
         }
         let initial_limit = self.history_range_limit.load(Ordering::Relaxed);
-        let mut ceiling = initial_limit;
+        // Retain the last request width, but retry growth after transient failures.
+        let mut ceiling = MAX_LOG_RANGE;
         let mut next = start;
         let mut width = initial_limit.min(tip - start + 1);
         loop {
