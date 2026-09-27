@@ -24,7 +24,7 @@ The pinned ERC-20 paymaster collects USDT. Its finite approval includes a 5% mar
 
 Signed operations persist atomically before submission. Lost or rejected submission responses do not prove nonexecution: recovery retries only the identical signed operation. A quote ID cannot authorize a second payment. One source-chain payment remains pending at a time.
 
-The persisted recovery floor includes the 4096-block history revisit margin below the send-time head, so a head retreat between quoting and execution does not hide the payment.
+The persisted recovery floor includes the 4096-block history revisit margin below the send-time head, allowing recovery across head retreats within that margin.
 
 A matching event in a canonical receipt settles the payment. Discovery logs alone never decide the outcome; unavailable log queries allow independent nonce/receipt proofs to proceed, while rate limits retain backoff. Expired signed paymaster terms and a confirmed EntryPoint nonce that has not passed the signed nonce release an unmined operation; the shorter quote deadline does not. With an advanced nonce and missing indexed events, recovery checks every receipt in the consuming block. A matching event settles/replaces the payment; complete absence proves external nonce consumption. Missing receipts preserve the pending operation. Progress is stored by payment and block hash so interruption does not restart the proof or carry it onto another block.
 
