@@ -18,11 +18,13 @@ Owned mnemonic/passphrase/seed buffers are zeroized and signing keys are erased 
 
 The pinned ERC-20 paymaster collects USDT. Its finite approval includes a 5% margin; the displayed maximum fee comes from signed gas limits and paymaster terms, not the allowance. Call/pre-verification estimates receive 10% execution/L1-data headroom; the charged pre-verification margin is included in the maximum. A residual paymaster allowance can remain and is reset to a finite amount on the next payment.
 
-`usdt_parse_payment_request` accepts raw addresses and chain-qualified ERC-681 requests for the pinned token, with exact atomic/scientific amounts. Ambiguous or unsupported parameters are rejected. The returned `chain_id` preserves explicit network restrictions; bare addresses leave it unset. Callers must honor it and review the parsed amount before requesting a quote.
+`usdt_parse_payment_request` accepts raw addresses and chain-qualified ERC-681 `transfer` requests for the pinned token, with exact atomic/scientific amounts. Native-asset requests and ambiguous or unsupported parameters are rejected. The returned `chain_id` preserves explicit network restrictions; bare addresses leave it unset. Callers must honor it and review the parsed amount before requesting a quote.
 
 ## Persistence and recovery
 
 Signed operations persist atomically before submission. Lost or rejected submission responses do not prove nonexecution: recovery retries only the identical signed operation. A quote ID cannot authorize a second payment. One source-chain payment remains pending at a time.
+
+The persisted recovery floor includes the 4096-block history revisit margin below the send-time head, so a head retreat between quoting and execution does not hide the payment.
 
 A matching event in a canonical receipt settles the payment. Discovery logs alone never decide the outcome; unavailable log queries allow independent nonce/receipt proofs to proceed, while rate limits retain backoff. Expired signed paymaster terms and a confirmed EntryPoint nonce that has not passed the signed nonce release an unmined operation; the shorter quote deadline does not. With an advanced nonce and missing indexed events, recovery checks every receipt in the consuming block. A matching event settles/replaces the payment; complete absence proves external nonce consumption. Missing receipts preserve the pending operation. Progress is stored by payment and block hash so interruption does not restart the proof or carry it onto another block.
 

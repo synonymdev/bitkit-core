@@ -32,12 +32,9 @@ fn parse_request(value: &str) -> Result<(Address, Option<u64>, Option<u64>), Usd
         .unwrap_or(target)
         .split_once('@')
         .ok_or(UsdtError::WrongNetwork)?;
-    let Some(chain) = chain.strip_suffix("/transfer") else {
-        if chain != CHAIN_ID.to_string() || !query.is_empty() {
-            return Err(UsdtError::WrongNetwork);
-        }
-        return Ok((parse_address(address)?, None, Some(CHAIN_ID)));
-    };
+    let chain = chain
+        .strip_suffix("/transfer")
+        .ok_or(UsdtError::WrongNetwork)?;
     if chain != CHAIN_ID.to_string() || parse_address(address)? != TOKEN {
         return Err(UsdtError::WrongNetwork);
     }

@@ -173,18 +173,19 @@ impl UsdtWallet {
         self.require_balance(data.quote.amount, data.quote.maximum_fee)
             .await?;
         self.paymaster.validate_gas(&data.plan.operation).await?;
-        if self
-            .block_timestamp(self.block_number().await?)
-            .await?
-            .saturating_add(5)
-            >= data.plan.expires_at
-        {
+        let block = self.block_number().await?;
+        if self.block_timestamp(block).await?.saturating_add(5) >= data.plan.expires_at {
             return Err(UsdtError::QuoteExpired);
         }
         let key = derive_owner_key(mnemonic, passphrase, self.address)?;
         if data.quote.expires_at <= now() + 5 {
             return Err(UsdtError::QuoteExpired);
         }
+        // A head retreat can place execution before the block used to prepare the quote.
+        data.plan.created_block = data
+            .plan
+            .created_block
+            .min(block.saturating_sub(super::history::HISTORY_REVISIT_BLOCKS));
         let (hash, raw) = data.plan.sign(&key)?;
         drop(key);
         let mut transfer = UsdtTransfer {
@@ -574,7 +575,7 @@ impl UsdtWallet {
         for log in logs {
             let address: Address = serde_json::from_value(log["address"].clone())?;
             let data = event_data(log)?;
-            if address == TOKEN {
+            if event.success && address == TOKEN {
                 if let Ok(payment) = Erc20::Transfer::decode_log_data(&data) {
                     transfer_proven |= payment.from == self.address
                         && payment.to == parse_address(&transfer.recipient)?
