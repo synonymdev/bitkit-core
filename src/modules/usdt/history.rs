@@ -78,7 +78,6 @@ impl UsdtWallet {
             }
             if end == tip {
                 self.store.complete_history(tip)?;
-                // Probe for a higher provider limit only after completing a scan.
                 self.history_range_limit
                     .store((ceiling * 2).min(MAX_LOG_RANGE), Ordering::Relaxed);
                 return Ok(true);
