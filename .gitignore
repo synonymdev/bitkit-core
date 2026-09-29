@@ -24,3 +24,5 @@ bindings/ios/BitkitCore.xcframework.zip
 .claude/worktrees
 *.local.*
 !*.local.template*
+
+/tests/usdt-fork/node_modules/

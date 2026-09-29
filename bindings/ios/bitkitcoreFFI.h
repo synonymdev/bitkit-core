@@ -660,6 +660,66 @@ RustBuffer uniffi_bitkitcore_fn_method_urdecoder_receive(void*_Nonnull ptr, Rust
 void uniffi_bitkitcore_fn_method_urdecoder_reset(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_USDTWALLET
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_USDTWALLET
+void*_Nonnull uniffi_bitkitcore_fn_clone_usdtwallet(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_USDTWALLET
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_USDTWALLET
+void uniffi_bitkitcore_fn_free_usdtwallet(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CONSTRUCTOR_USDTWALLET_NEW
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CONSTRUCTOR_USDTWALLET_NEW
+void*_Nonnull uniffi_bitkitcore_fn_constructor_usdtwallet_new(RustBuffer address, RustBuffer storage_path, RustBuffer rpc_url, RustBuffer bundler_url, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_BALANCE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_BALANCE
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_balance(void*_Nonnull ptr
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_CHECK_RECENT_EXECUTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_CHECK_RECENT_EXECUTION
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_check_recent_execution(void*_Nonnull ptr, RustBuffer id
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_HISTORY
+RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_history(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_QUOTE_TRANSFER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_QUOTE_TRANSFER
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_quote_transfer(void*_Nonnull ptr, RustBuffer recipient, uint64_t amount
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RECEIVE_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RECEIVE_ADDRESS
+RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_receive_address(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RECEIVE_URI
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RECEIVE_URI
+RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_receive_uri(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_REFRESH_TRANSFERS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_REFRESH_TRANSFERS
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_refresh_transfers(void*_Nonnull ptr
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SEND
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SEND
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_send(void*_Nonnull ptr, RustBuffer quote_id, RustBuffer mnemonic, RustBuffer passphrase
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SYNC_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SYNC_HISTORY
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_sync_history(void*_Nonnull ptr
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITIES_FROM_JSON
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITIES_FROM_JSON
 RustBuffer uniffi_bitkitcore_fn_func_activities_from_json(RustBuffer json, RustCallStatus *_Nonnull out_status
@@ -1692,6 +1752,26 @@ void uniffi_bitkitcore_fn_func_upsert_transaction_details(RustBuffer details_lis
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UR_ENCODE_CRYPTO_PSBT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UR_ENCODE_CRYPTO_PSBT
 RustBuffer uniffi_bitkitcore_fn_func_ur_encode_crypto_psbt(RustBuffer psbt, uint32_t max_fragment_length, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_ADDRESS
+RustBuffer uniffi_bitkitcore_fn_func_usdt_address(RustBuffer mnemonic, RustBuffer passphrase, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_FORMAT_AMOUNT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_FORMAT_AMOUNT
+RustBuffer uniffi_bitkitcore_fn_func_usdt_format_amount(uint64_t amount, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_PARSE_AMOUNT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_PARSE_AMOUNT
+uint64_t uniffi_bitkitcore_fn_func_usdt_parse_amount(RustBuffer value, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_PARSE_PAYMENT_REQUEST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_PARSE_PAYMENT_REQUEST
+RustBuffer uniffi_bitkitcore_fn_func_usdt_parse_payment_request(RustBuffer value, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_BITCOIN_ADDRESS
@@ -3196,6 +3276,30 @@ uint16_t uniffi_bitkitcore_checksum_func_ur_encode_crypto_psbt(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_ADDRESS
+uint16_t uniffi_bitkitcore_checksum_func_usdt_address(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_FORMAT_AMOUNT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_FORMAT_AMOUNT
+uint16_t uniffi_bitkitcore_checksum_func_usdt_format_amount(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_PARSE_AMOUNT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_PARSE_AMOUNT
+uint16_t uniffi_bitkitcore_checksum_func_usdt_parse_amount(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_PARSE_PAYMENT_REQUEST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_PARSE_PAYMENT_REQUEST
+uint16_t uniffi_bitkitcore_checksum_func_usdt_parse_payment_request(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 uint16_t uniffi_bitkitcore_checksum_func_validate_bitcoin_address(void
@@ -3364,9 +3468,69 @@ uint16_t uniffi_bitkitcore_checksum_method_urdecoder_reset(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_BALANCE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_BALANCE
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_balance(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_CHECK_RECENT_EXECUTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_CHECK_RECENT_EXECUTION
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_check_recent_execution(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_HISTORY
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_history(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_QUOTE_TRANSFER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_QUOTE_TRANSFER
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_quote_transfer(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RECEIVE_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RECEIVE_ADDRESS
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_receive_address(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RECEIVE_URI
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RECEIVE_URI
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_receive_uri(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_REFRESH_TRANSFERS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_REFRESH_TRANSFERS
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_refresh_transfers(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SEND
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SEND
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_send(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SYNC_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SYNC_HISTORY
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_sync_history(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_CONSTRUCTOR_URDECODER_NEW
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_CONSTRUCTOR_URDECODER_NEW
 uint16_t uniffi_bitkitcore_checksum_constructor_urdecoder_new(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_CONSTRUCTOR_USDTWALLET_NEW
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_CONSTRUCTOR_USDTWALLET_NEW
+uint16_t uniffi_bitkitcore_checksum_constructor_usdtwallet_new(void
     
 );
 #endif

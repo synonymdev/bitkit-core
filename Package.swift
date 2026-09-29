@@ -2,10 +2,13 @@
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
+import Foundation
 
-let tag = "v0.5.18"
-let checksum = "c2bae82e20dd485cc82285cff7667d487d0c64bbd6f4686cb4e8f599e2f6a1eb"
+let tag = "v0.6.0"
+let checksum = "ac07f72265cde752e9f7951383e8d1a01f3568676d156ee592a715bc5a38d32a"
 let url = "https://github.com/synonymdev/bitkit-core/releases/download/\(tag)/BitkitCore.xcframework.zip"
+
+let localBinary = ProcessInfo.processInfo.environment["BITKIT_CORE_LOCAL"] == "1"
 
 let package = Package(
     name: "bitkitcore",
@@ -26,10 +29,15 @@ let package = Package(
             path: "./bindings/ios",
             sources: ["bitkitcore.swift"]
         ),
-        .binaryTarget(
-            name: "BitkitCoreFFI",
-            url: url,
-            checksum: checksum
-        )
+        localBinary
+            ? .binaryTarget(
+                name: "BitkitCoreFFI",
+                path: "./dist/ios/BitkitCore.xcframework"
+            )
+            : .binaryTarget(
+                name: "BitkitCoreFFI",
+                url: url,
+                checksum: checksum
+            )
     ]
 )
