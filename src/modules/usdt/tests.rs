@@ -2791,7 +2791,11 @@ async fn restored_activity_tracks_canonical_execution_without_duplicates() {
 
 #[tokio::test]
 async fn recent_execution_check_returns_stored_activity_while_wallet_is_busy() {
-    use std::time::Duration;
+    use std::{
+        future::{poll_fn, Future},
+        task::Poll,
+        time::Duration,
+    };
     let chain = MockChain::start().await;
     let dir = tempfile::tempdir().unwrap();
     let wallet = chain.wallet(&dir);
@@ -2799,30 +2803,41 @@ async fn recent_execution_check_returns_stored_activity_while_wallet_is_busy() {
         .quote_transfer(RECIPIENT.into(), 1_000_000)
         .await
         .unwrap();
-    chain.state.lock().unwrap().delay_gas_estimate = true;
+    let sent = wallet
+        .send(quote.id, TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    assert_eq!(sent.status, UsdtTransferStatus::Pending);
     {
-        let send = wallet.send(quote.id.clone(), TEST_PHRASE.into(), None);
-        tokio::pin!(send);
-        let gas_estimate_started = async {
-            while chain.state.lock().unwrap().delay_gas_estimate {
-                tokio::time::sleep(Duration::from_millis(10)).await;
-            }
-        };
-        tokio::select! {
-            result = &mut send => panic!("Send completed before the delayed estimate: {result:?}"),
-            result = tokio::time::timeout(Duration::from_secs(5), gas_estimate_started) => result.unwrap(),
-        }
+        let syncing = wallet.sync_history();
+        tokio::pin!(syncing);
+        // Hold history synchronization at its first RPC await while it owns the wallet lock.
+        poll_fn(|cx| {
+            assert!(syncing.as_mut().poll(cx).is_pending());
+            Poll::Ready(())
+        })
+        .await;
+        let stored = tokio::time::timeout(
+            Duration::from_secs(1),
+            wallet.check_recent_execution(sent.id.clone()),
+        )
+        .await
+        .unwrap()
+        .unwrap()
+        .expect("A busy check must return the stored payment");
+        assert_eq!(stored.id, sent.id);
+        assert_eq!(stored.status, UsdtTransferStatus::Pending);
         assert!(tokio::time::timeout(
             Duration::from_secs(1),
-            wallet.check_recent_execution(quote.id),
+            wallet.check_recent_execution("unknown-payment".into()),
         )
         .await
         .unwrap()
         .unwrap()
         .is_none());
     }
-    assert!(wallet.history().unwrap().is_empty());
-    assert!(chain.state.lock().unwrap().operations.is_empty());
+    assert_eq!(wallet.history().unwrap().len(), 1);
+    assert_eq!(chain.state.lock().unwrap().operations.len(), 1);
 }
 
 #[test]
