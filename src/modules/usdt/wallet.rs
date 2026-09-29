@@ -230,12 +230,15 @@ impl UsdtWallet {
     /// Checks recent direct-payment execution with a bounded request budget.
     /// Requires the expected operation and transfer in a canonical receipt; current-tip execution is provisional.
     /// Does not rebroadcast, expire payments or reconcile nonces. Missing evidence leaves the payment pending.
+    /// Returns stored activity immediately when another wallet operation is in progress.
     pub async fn check_recent_execution(
         &self,
         id: String,
     ) -> Result<Option<UsdtTransfer>, UsdtError> {
+        let Ok(_guard) = self.operation.try_lock() else {
+            return self.store.transfer(&id);
+        };
         let check = async {
-            let _guard = self.operation.lock().await;
             let Some(mut transfer) = self.store.transfer(&id)? else {
                 return Ok(None);
             };
@@ -304,8 +307,11 @@ impl UsdtWallet {
 impl UsdtWallet {
     async fn refresh_pending_transfers(&self) -> Result<(), UsdtError> {
         let _guard = self.operation.lock().await;
-        if let Some((mut transfer, plan)) = self.store.pending_operation()? {
+        for (mut transfer, plan) in self.store.pending_operations()? {
             self.recover_pending(&mut transfer, &plan).await?;
+            if transfer.status == UsdtTransferStatus::Pending {
+                break;
+            }
         }
         Ok(())
     }
@@ -341,11 +347,19 @@ impl UsdtWallet {
             }
             return self.settle_from_log(transfer, log, event).await;
         }
+        let block = self.rpc.block(confirmed_tip).await?;
         let nonce = self.nonce(&format!("0x{confirmed_tip:x}")).await?;
         if nonce <= plan.operation.nonce {
-            if self.block_timestamp(confirmed_tip).await? > plan.expires_at {
+            if block.timestamp()? > plan.expires_at {
+                if self.rpc.block(confirmed_tip).await?.hash != block.hash {
+                    return Err(UsdtError::NetworkUnavailable);
+                }
                 transfer.mark_unexecuted(UsdtTransferStatus::Failed);
-                self.store.update_transfer(transfer)?;
+                self.store.settle_transfer(
+                    transfer,
+                    confirmed_tip,
+                    &format!("{:#x}", block.hash),
+                )?;
             } else if self.validate_bridge(plan).await.is_ok() {
                 let _ = self.broadcast(plan, hash).await;
             }
@@ -431,7 +445,7 @@ impl UsdtWallet {
                     transfer.mark_unexecuted(UsdtTransferStatus::Replaced);
                 }
                 transfer.timestamp = block.timestamp()?;
-                return self.store.update_transfer(transfer);
+                return self.store.settle_transfer(transfer, number, &block_hash);
             }
             self.store
                 .save_nonce_recovery(&transfer.id, &block_hash, index + 1)?;
@@ -442,7 +456,7 @@ impl UsdtWallet {
         }
         transfer.mark_unexecuted(UsdtTransferStatus::Replaced);
         transfer.timestamp = block.timestamp()?;
-        self.store.update_transfer(transfer)
+        self.store.settle_transfer(transfer, number, &block_hash)
     }
 
     async fn refresh_bridges(&self, transfers: &[UsdtTransfer]) -> Result<(), UsdtError> {
@@ -606,7 +620,8 @@ impl UsdtWallet {
         let receipt = self.rpc.block_receipt(hash, block.hash, number).await?;
         self.settle(transfer, &receipt)?;
         transfer.timestamp = block.timestamp()?;
-        self.store.update_transfer(transfer)
+        self.store
+            .settle_transfer(transfer, number, &format!("{:#x}", block.hash))
     }
 
     async fn nonce_consumed_block(&self, plan: &Plan, tip: u64) -> Result<u64, UsdtError> {

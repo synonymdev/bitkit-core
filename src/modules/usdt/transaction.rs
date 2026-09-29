@@ -1,6 +1,6 @@
 use super::{user_operation::UserOperation, UsdtError};
 use alloy_primitives::{Bytes, B256};
-use alloy_sol_types::sol;
+use alloy_sol_types::{sol, SolCall};
 use bitcoin::secp256k1::SecretKey;
 use serde::{Deserialize, Serialize};
 
@@ -117,6 +117,17 @@ pub(super) struct Plan {
 }
 
 impl Plan {
+    pub fn bridge_received_amount(&self) -> Result<u64, UsdtError> {
+        let calls = super::history::decode_calls(&self.operation.call_data)?;
+        let (_, data) = calls
+            .iter()
+            .find(|(target, _)| *target == super::types::BRIDGE_HELPER)
+            .ok_or(UsdtError::InvalidResponse)?;
+        let call =
+            BridgeHelper::sendCall::abi_decode(data).map_err(|_| UsdtError::InvalidResponse)?;
+        super::amount::token_amount(call.param.minAmountLD)
+    }
+
     pub fn sign(&mut self, key: &SecretKey) -> Result<(B256, String), UsdtError> {
         let hash = self.operation.sign(key, super::types::CHAIN_ID)?;
         Ok((hash, serde_json::to_string(self)?))

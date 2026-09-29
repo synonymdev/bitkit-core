@@ -2788,6 +2788,7 @@ public protocol UsdtWalletProtocol: AnyObject, Sendable {
      * Checks recent direct-payment execution with a bounded request budget.
      * Requires the expected operation and transfer in a canonical receipt; current-tip execution is provisional.
      * Does not rebroadcast, expire payments or reconcile nonces. Missing evidence leaves the payment pending.
+     * Returns stored activity immediately when another wallet operation is in progress.
      */
     func checkRecentExecution(id: String) async throws  -> UsdtTransfer?
     
@@ -2904,6 +2905,7 @@ open func balance()async throws  -> UInt64  {
      * Checks recent direct-payment execution with a bounded request budget.
      * Requires the expected operation and transfer in a canonical receipt; current-tip execution is provisional.
      * Does not rebroadcast, expire payments or reconcile nonces. Missing evidence leaves the payment pending.
+     * Returns stored activity immediately when another wallet operation is in progress.
      */
 open func checkRecentExecution(id: String)async throws  -> UsdtTransfer?  {
     return
@@ -30827,7 +30829,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_usdtwallet_balance() != 12328) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_method_usdtwallet_check_recent_execution() != 33172) {
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_check_recent_execution() != 56962) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_history() != 4617) {
