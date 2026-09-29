@@ -47,7 +47,10 @@ impl UsdtWallet {
                     if self.store.history_progress()? != Some(next) {
                         self.store.save_history_progress(next)?;
                     }
-                    if !self.scan_history_logs(transactions, end, deadline).await? {
+                    if !self
+                        .scan_history_logs(transactions, next, end, deadline)
+                        .await?
+                    {
                         return Ok(false);
                     }
                 }
@@ -93,59 +96,63 @@ impl UsdtWallet {
     async fn scan_history_logs(
         &self,
         transactions: BTreeMap<(u64, String), Vec<Value>>,
+        start: u64,
         end: u64,
         deadline: tokio::time::Instant,
     ) -> Result<bool, UsdtError> {
-        let mut blocks = BTreeMap::new();
-        let mut transactions = transactions.into_iter().peekable();
-        while let Some(((block, hash), logs)) = transactions.next() {
+        let mut blocks = BTreeMap::<u64, Vec<(String, Vec<Value>)>>::new();
+        for ((number, hash), logs) in transactions {
+            blocks.entry(number).or_default().push((hash, logs));
+        }
+        // Revisit settled activity even when the canonical block no longer contains our logs.
+        for number in self.store.settlement_blocks(start, end)? {
+            blocks.entry(number).or_default();
+        }
+        for (number, transactions) in blocks {
             if tokio::time::Instant::now() >= deadline {
                 return Ok(false);
             }
-            let needs_receipt = logs.iter().any(|log| {
-                serde_json::from_value::<Address>(log["address"].clone())
-                    .is_ok_and(|address| address == ENTRY_POINT)
-                    || event_data(log)
-                        .ok()
-                        .and_then(|data| Erc20::Transfer::decode_log_data(&data).ok())
-                        .is_some_and(|event| event.from == self.address)
-            });
-            let canonical = match blocks.entry(block) {
-                std::collections::btree_map::Entry::Occupied(entry) => entry.into_mut(),
-                std::collections::btree_map::Entry::Vacant(entry) => {
-                    entry.insert(self.rpc.block(block).await?)
+            let canonical = self.rpc.block(number).await?;
+            let block_hash = format!("{:#x}", canonical.hash);
+            self.store.reconcile_block(number, &block_hash)?;
+            for (index, (hash, logs)) in transactions.into_iter().enumerate() {
+                if index > 0 && tokio::time::Instant::now() >= deadline {
+                    return Ok(false);
                 }
-            };
-            for log in &logs {
-                if serde_json::from_value::<B256>(log["blockHash"].clone())? != canonical.hash {
-                    return Err(UsdtError::NetworkUnavailable);
+                let needs_receipt = logs.iter().any(|log| {
+                    serde_json::from_value::<Address>(log["address"].clone())
+                        .is_ok_and(|address| address == ENTRY_POINT)
+                        || event_data(log)
+                            .ok()
+                            .and_then(|data| Erc20::Transfer::decode_log_data(&data).ok())
+                            .is_some_and(|event| event.from == self.address)
+                });
+                for log in &logs {
+                    if serde_json::from_value::<B256>(log["blockHash"].clone())? != canonical.hash {
+                        return Err(UsdtError::NetworkUnavailable);
+                    }
+                }
+                if !self
+                    .store
+                    .has_history_receipt(&hash, &block_hash, needs_receipt)?
+                {
+                    let receipt = if needs_receipt {
+                        self.rpc
+                            .block_receipt(
+                                hash.parse().map_err(|_| UsdtError::InvalidResponse)?,
+                                canonical.hash,
+                                number,
+                            )
+                            .await?
+                    } else {
+                        json!({"logs": logs})
+                    };
+                    self.save_receipt_history(&hash, number, &canonical, &receipt, needs_receipt)
+                        .await?;
                 }
             }
-            if !self.store.has_history_receipt(
-                &hash,
-                &format!("{:#x}", canonical.hash),
-                needs_receipt,
-            )? {
-                let receipt = if needs_receipt {
-                    self.rpc
-                        .block_receipt(
-                            hash.parse().map_err(|_| UsdtError::InvalidResponse)?,
-                            canonical.hash,
-                            block,
-                        )
-                        .await?
-                } else {
-                    json!({"logs": logs})
-                };
-                self.save_receipt_history(&hash, block, canonical, &receipt, needs_receipt)
-                    .await?;
-            }
-            if block < end
-                && transactions
-                    .peek()
-                    .is_none_or(|((next_block, _), _)| *next_block != block)
-            {
-                self.store.save_history_progress(block + 1)?;
+            if number < end {
+                self.store.save_history_progress(number + 1)?;
             }
         }
         Ok(true)

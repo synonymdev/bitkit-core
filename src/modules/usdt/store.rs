@@ -34,8 +34,9 @@ impl Store {
             CREATE TABLE IF NOT EXISTS usdt_history_blocks (number INTEGER PRIMARY KEY, hash TEXT NOT NULL, complete INTEGER NOT NULL);
             CREATE TABLE IF NOT EXISTS usdt_quotes (id TEXT PRIMARY KEY, data TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS usdt_nonce_recovery (id TEXT PRIMARY KEY, block_hash TEXT NOT NULL, next_transaction INTEGER NOT NULL);
-            CREATE TABLE IF NOT EXISTS usdt_transfers (id TEXT PRIMARY KEY, hash TEXT NOT NULL, raw TEXT, data TEXT NOT NULL);
-            CREATE INDEX IF NOT EXISTS usdt_transfers_hash ON usdt_transfers(hash);")?;
+            CREATE TABLE IF NOT EXISTS usdt_transfers (id TEXT PRIMARY KEY, hash TEXT NOT NULL, raw TEXT, data TEXT NOT NULL, block_number INTEGER, block_hash TEXT);
+            CREATE INDEX IF NOT EXISTS usdt_transfers_hash ON usdt_transfers(hash);
+            CREATE INDEX IF NOT EXISTS usdt_transfers_block ON usdt_transfers(block_number);")?;
         connection.execute(
             "INSERT OR IGNORE INTO usdt_identity VALUES (1,?1)",
             [identity],
@@ -134,6 +135,37 @@ impl Store {
         Ok(())
     }
 
+    pub fn settle_transfer(
+        &self,
+        transfer: &UsdtTransfer,
+        number: u64,
+        hash: &str,
+    ) -> Result<(), UsdtError> {
+        let mut connection = self.connection()?;
+        let tx = connection.transaction()?;
+        reconcile_block(&tx, number, hash)?;
+        write_settlement(&tx, transfer, number, hash)?;
+        tx.commit()?;
+        Ok(())
+    }
+
+    pub fn settlement_blocks(&self, start: u64, end: u64) -> Result<Vec<u64>, UsdtError> {
+        let connection = self.connection()?;
+        let mut statement = connection.prepare(
+            "SELECT DISTINCT block_number FROM usdt_transfers WHERE block_number BETWEEN ?1 AND ?2 ORDER BY block_number",
+        )?;
+        let rows = statement.query_map(params![start, end], |row| row.get(0))?;
+        Ok(rows.collect::<Result<_, _>>()?)
+    }
+
+    pub fn reconcile_block(&self, number: u64, hash: &str) -> Result<(), UsdtError> {
+        let mut connection = self.connection()?;
+        let tx = connection.transaction()?;
+        reconcile_block(&tx, number, hash)?;
+        tx.commit()?;
+        Ok(())
+    }
+
     pub fn nonce_recovery(&self, id: &str, block_hash: &str) -> Result<usize, UsdtError> {
         Ok(self
             .connection()?
@@ -172,6 +204,7 @@ impl Store {
         let mut connection = self.connection()?;
         let tx = connection.transaction()?;
         tx.execute("DELETE FROM usdt_history_progress", [])?;
+        prune_settlement_proofs(&tx, newest.saturating_sub(HISTORY_REVISIT_BLOCKS))?;
         tx.execute(
             "DELETE FROM usdt_history_receipts WHERE complete_receipt=0 OR block_number < ?1",
             [newest.saturating_sub(HISTORY_REVISIT_BLOCKS)],
@@ -199,6 +232,7 @@ impl Store {
     pub fn save_history_progress(&self, next: u64) -> Result<(), UsdtError> {
         let mut connection = self.connection()?;
         let tx = connection.transaction()?;
+        prune_settlement_proofs(&tx, next.saturating_sub(HISTORY_REVISIT_BLOCKS))?;
         tx.execute(
             "DELETE FROM usdt_history_blocks WHERE number < ?1",
             [next.saturating_sub(HISTORY_REVISIT_BLOCKS)],
@@ -215,21 +249,16 @@ impl Store {
     pub fn begin_history_block(&self, number: u64, hash: &str) -> Result<bool, UsdtError> {
         let mut connection = self.connection()?;
         let tx = connection.transaction()?;
-        let saved: Option<(String, bool)> = tx
+        reconcile_block(&tx, number, hash)?;
+        let complete: Option<bool> = tx
             .query_row(
-                "SELECT hash, complete FROM usdt_history_blocks WHERE number=?1",
-                [number],
-                |row| Ok((row.get(0)?, row.get(1)?)),
+                "SELECT complete FROM usdt_history_blocks WHERE number=?1 AND hash=?2",
+                params![number, hash],
+                |row| row.get(0),
             )
             .optional()?;
-        if let Some((saved_hash, complete)) = saved {
-            if saved_hash == hash {
-                return Ok(complete);
-            }
-            tx.execute(
-                "DELETE FROM usdt_history_receipts WHERE block_number=?1",
-                [number],
-            )?;
+        if let Some(complete) = complete {
+            return Ok(complete);
         }
         tx.execute("INSERT INTO usdt_history_blocks VALUES (?1,?2,0) ON CONFLICT(number) DO UPDATE SET hash=excluded.hash,complete=0", params![number, hash])?;
         tx.commit()?;
@@ -267,7 +296,8 @@ impl Store {
     ) -> Result<(), UsdtError> {
         let mut connection = self.connection()?;
         let tx = connection.transaction()?;
-        Self::merge_history(&tx, transfers)?;
+        reconcile_block(&tx, block_number, block_hash)?;
+        Self::merge_history(&tx, transfers, block_number, block_hash)?;
         tx.execute(
             "INSERT INTO usdt_history_receipts VALUES (?1,?2,?3,?4) ON CONFLICT(hash) DO UPDATE SET block_number=excluded.block_number,block_hash=excluded.block_hash,complete_receipt=excluded.complete_receipt",
             params![hash, block_number, block_hash, complete_receipt],
@@ -276,7 +306,12 @@ impl Store {
         Ok(())
     }
 
-    fn merge_history(tx: &Transaction<'_>, transfers: &[UsdtTransfer]) -> Result<(), UsdtError> {
+    fn merge_history(
+        tx: &Transaction<'_>,
+        transfers: &[UsdtTransfer],
+        number: u64,
+        block_hash: &str,
+    ) -> Result<(), UsdtError> {
         for transfer in transfers {
             let hash = transfer
                 .user_operation_hash
@@ -286,35 +321,39 @@ impl Store {
             let mut transfer = transfer.clone();
             if let Some(saved) = existing {
                 transfer.id = saved.id;
-                write_transfer(tx, &transfer)?;
+                write_settlement(tx, &transfer, number, block_hash)?;
             } else {
                 tx.execute(
-                    "INSERT INTO usdt_transfers (id,hash,data) VALUES (?1,?2,?3)",
-                    params![transfer.id, hash, serde_json::to_string(&transfer)?],
+                    "INSERT INTO usdt_transfers (id,hash,data,block_number,block_hash) VALUES (?1,?2,?3,?4,?5)",
+                    params![transfer.id, hash, serde_json::to_string(&transfer)?, number, block_hash],
                 )?;
             }
         }
         Ok(())
     }
 
-    pub fn pending_operation(&self) -> Result<Option<(UsdtTransfer, Plan)>, UsdtError> {
-        let saved: Option<(String, String)> = self
-            .connection()?
-            .query_row(
-                "SELECT data,raw FROM usdt_transfers WHERE raw IS NOT NULL",
-                [],
-                |row| Ok((row.get(0)?, row.get(1)?)),
-            )
-            .optional()?;
-        saved
-            .map(|(data, raw)| Ok((decode(&data)?, decode(&raw)?)))
-            .transpose()
+    pub fn pending_operations(&self) -> Result<Vec<(UsdtTransfer, Plan)>, UsdtError> {
+        let connection = self.connection()?;
+        let mut statement = connection.prepare(
+            "SELECT data,raw FROM usdt_transfers WHERE raw IS NOT NULL AND json_extract(data, '$.status')='Pending'",
+        )?;
+        let rows = statement.query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })?;
+        let mut pending: Vec<(UsdtTransfer, Plan)> = rows
+            .map(|row| {
+                let (data, raw) = row?;
+                Ok((decode(&data)?, decode(&raw)?))
+            })
+            .collect::<Result<_, UsdtError>>()?;
+        pending.sort_by_key(|(_, plan)| plan.operation.nonce);
+        Ok(pending)
     }
 
     pub fn pending_plan(&self, id: &str) -> Result<Option<Plan>, UsdtError> {
         let raw: Option<String> = self
             .connection()?
-            .query_row("SELECT raw FROM usdt_transfers WHERE id=?1", [id], |r| {
+            .query_row("SELECT raw FROM usdt_transfers WHERE id=?1 AND json_extract(data, '$.status')='Pending'", [id], |r| {
                 r.get(0)
             })
             .optional()?
@@ -325,8 +364,9 @@ impl Store {
 
 fn write_transfer(connection: &Connection, transfer: &UsdtTransfer) -> Result<(), UsdtError> {
     let settled = transfer.status != UsdtTransferStatus::Pending;
+    // Chain-backed outcomes retain the signed operation until their reorg window passes.
     connection.execute(
-        "UPDATE usdt_transfers SET data=?1, raw=CASE WHEN ?2 THEN NULL ELSE raw END WHERE id=?3",
+        "UPDATE usdt_transfers SET data=?1, raw=CASE WHEN ?2 AND block_number IS NULL THEN NULL ELSE raw END WHERE id=?3",
         params![serde_json::to_string(transfer)?, settled, transfer.id],
     )?;
     if settled {
@@ -335,6 +375,63 @@ fn write_transfer(connection: &Connection, transfer: &UsdtTransfer) -> Result<()
             [&transfer.id],
         )?;
     }
+    Ok(())
+}
+
+fn write_settlement(
+    connection: &Connection,
+    transfer: &UsdtTransfer,
+    number: u64,
+    hash: &str,
+) -> Result<(), UsdtError> {
+    connection.execute(
+        "UPDATE usdt_transfers SET block_number=?1,block_hash=?2 WHERE id=?3",
+        params![number, hash, transfer.id],
+    )?;
+    write_transfer(connection, transfer)
+}
+
+fn reconcile_block(tx: &Transaction<'_>, number: u64, hash: &str) -> Result<(), UsdtError> {
+    // Only a different canonical block proves disappearance; missing logs alone do not.
+    let mut statement = tx.prepare(
+        "SELECT data,raw IS NOT NULL FROM usdt_transfers WHERE block_number=?1 AND block_hash!=?2",
+    )?;
+    let rows = statement.query_map(params![number, hash], |row| {
+        Ok((row.get::<_, String>(0)?, row.get::<_, bool>(1)?))
+    })?;
+    let orphaned = rows.collect::<Result<Vec<_>, _>>()?;
+    for (data, local) in orphaned {
+        let mut transfer: UsdtTransfer = decode(&data)?;
+        if local {
+            transfer.status = UsdtTransferStatus::Pending;
+            transfer.tx_hash = None;
+            transfer.received_amount = transfer.amount;
+            transfer.fee = None;
+            write_transfer(tx, &transfer)?;
+            tx.execute(
+                "UPDATE usdt_transfers SET block_number=NULL,block_hash=NULL WHERE id=?1",
+                [&transfer.id],
+            )?;
+        } else {
+            tx.execute("DELETE FROM usdt_transfers WHERE id=?1", [&transfer.id])?;
+        }
+    }
+    tx.execute(
+        "DELETE FROM usdt_history_receipts WHERE block_number=?1 AND block_hash!=?2",
+        params![number, hash],
+    )?;
+    tx.execute(
+        "DELETE FROM usdt_history_blocks WHERE number=?1 AND hash!=?2",
+        params![number, hash],
+    )?;
+    Ok(())
+}
+
+fn prune_settlement_proofs(connection: &Connection, before: u64) -> Result<(), UsdtError> {
+    connection.execute(
+        "UPDATE usdt_transfers SET raw=NULL,block_number=NULL,block_hash=NULL WHERE block_number < ?1",
+        [before],
+    )?;
     Ok(())
 }
 
@@ -360,7 +457,7 @@ fn decode<T: DeserializeOwned>(data: &str) -> Result<T, UsdtError> {
 
 fn require_no_pending(connection: &Connection) -> Result<(), UsdtError> {
     let pending: bool = connection.query_row(
-        "SELECT EXISTS(SELECT 1 FROM usdt_transfers WHERE raw IS NOT NULL)",
+        "SELECT EXISTS(SELECT 1 FROM usdt_transfers WHERE raw IS NOT NULL AND json_extract(data, '$.status')='Pending')",
         [],
         |row| row.get(0),
     )?;

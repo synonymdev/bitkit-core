@@ -2627,13 +2627,275 @@ async fn history_reuses_receipts_only_while_their_block_remains_canonical() {
         restored.sync_history().await,
         Err(UsdtError::NetworkUnavailable)
     ));
-    assert_eq!(restored.history().unwrap()[0].fee, Some(123));
+    let pending = restored.history().unwrap();
+    assert_eq!(pending[0].status, UsdtTransferStatus::Pending);
+    assert_eq!(pending[0].fee, None);
+    assert_eq!(pending[0].tx_hash, None);
     chain.state.lock().unwrap().log_response = None;
     sync_history_to_tip(&restored).await;
     let history = restored.history().unwrap();
     assert_eq!(history[0].id, sent.id);
     assert_eq!(history[0].fee, Some(456));
     assert_eq!(chain.state.lock().unwrap().receipt_reads, reads + 1);
+}
+
+#[tokio::test]
+async fn orphaned_payment_recovers_its_signed_operation_after_restart() {
+    use alloy_primitives::B256;
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000)
+        .await
+        .unwrap();
+    let sent = wallet
+        .send(quote.id, TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    let signed = serde_json::to_value(&chain.state.lock().unwrap().operations[0]).unwrap();
+    chain.state.lock().unwrap().mined = true;
+    let confirmed = wallet
+        .check_recent_execution(sent.id.clone())
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(confirmed.status, UsdtTransferStatus::Confirmed);
+    drop(wallet);
+    {
+        let mut state = chain.state.lock().unwrap();
+        state.mined = false;
+        state.tip += 3;
+        state.block_transactions = Some(vec![]);
+        state.block_hashes.insert(20000, B256::repeat_byte(0xaa));
+    }
+    let restored = chain.wallet(&dir);
+    sync_history_to_tip(&restored).await;
+    let history = restored.history().unwrap();
+    assert_eq!(history.len(), 1);
+    assert_eq!(history[0].id, sent.id);
+    assert_eq!(history[0].user_operation_hash, sent.user_operation_hash);
+    assert_eq!(history[0].status, UsdtTransferStatus::Pending);
+    assert_eq!(history[0].tx_hash, None);
+    assert_eq!(history[0].fee, None);
+    assert!(matches!(
+        restored.quote_transfer(RECIPIENT.into(), 1_000_000).await,
+        Err(UsdtError::PendingTransfer)
+    ));
+    drop(restored);
+    let restored = chain.wallet(&dir);
+    assert_eq!(
+        restored.refresh_transfers().await.unwrap()[0].status,
+        UsdtTransferStatus::Pending
+    );
+    {
+        let mut state = chain.state.lock().unwrap();
+        assert_eq!(state.operations.len(), 2);
+        assert_eq!(serde_json::to_value(&state.operations[1]).unwrap(), signed);
+        state.mined = true;
+        state.block_transactions = None;
+    }
+    let history = restored.refresh_transfers().await.unwrap();
+    assert_eq!(history.len(), 1);
+    assert_eq!(history[0].id, sent.id);
+    assert_eq!(history[0].user_operation_hash, sent.user_operation_hash);
+    assert_eq!(history[0].status, UsdtTransferStatus::Confirmed);
+    assert_eq!(history[0].received_amount, 1_000_000);
+    assert_eq!(history[0].fee, Some(123));
+    assert_eq!(history[0].tx_hash, confirmed.tx_hash);
+}
+
+#[tokio::test]
+async fn restored_activity_tracks_canonical_execution_without_duplicates() {
+    use alloy_primitives::{B256, U256};
+    use serde_json::json;
+    for incoming in [true, false] {
+        let chain = MockChain::start().await;
+        let dir = tempfile::tempdir().unwrap();
+        let wallet = chain.wallet(&dir);
+        let quote = wallet
+            .quote_transfer(RECIPIENT.into(), 1_000_000)
+            .await
+            .unwrap();
+        let sent = wallet
+            .send(quote.id, TEST_PHRASE.into(), None)
+            .await
+            .unwrap();
+        {
+            let mut state = chain.state.lock().unwrap();
+            state.mined = true;
+            state.incoming = incoming;
+            state.tip += 3;
+            if incoming {
+                let mut log = state.event_logs().pop().unwrap();
+                log["transactionHash"] = json!(B256::repeat_byte(7));
+                log["blockNumber"] = json!(U256::from(20000));
+                state.log_response = Some(vec![log]);
+            }
+        }
+        let restored_dir = tempfile::tempdir().unwrap();
+        let restored = chain.wallet(&restored_dir);
+        sync_history_to_tip(&restored).await;
+        let history = restored.history().unwrap();
+        assert_eq!(history.len(), 1);
+        let original = &history[0];
+        assert_eq!(original.is_incoming, incoming);
+        assert_eq!(original.status, UsdtTransferStatus::Confirmed);
+        chain.state.lock().unwrap().log_response = Some(vec![]);
+        sync_history_to_tip(&restored).await;
+        assert_eq!(restored.history().unwrap()[0].id, original.id);
+        {
+            let mut state = chain.state.lock().unwrap();
+            state.mined = false;
+            state.block_hashes.insert(20000, B256::repeat_byte(0xaa));
+        }
+        sync_history_to_tip(&restored).await;
+        assert!(restored.history().unwrap().is_empty());
+        drop(restored);
+        let restored = chain.wallet(&restored_dir);
+        assert!(restored.history().unwrap().is_empty());
+        {
+            let mut state = chain.state.lock().unwrap();
+            state.mined = true;
+            let mut logs = state.event_logs();
+            for (index, log) in logs.iter_mut().enumerate() {
+                log["logIndex"] = json!(U256::from(index + 16));
+            }
+            if incoming {
+                let mut log = logs.pop().unwrap();
+                log["transactionHash"] = json!(B256::repeat_byte(7));
+                log["blockNumber"] = json!(U256::from(20000));
+                state.log_response = Some(vec![log]);
+            } else {
+                state.log_response = None;
+                state.receipt_logs = Some(logs);
+            }
+        }
+        sync_history_to_tip(&restored).await;
+        sync_history_to_tip(&restored).await;
+        let history = restored.history().unwrap();
+        assert_eq!(history.len(), 1);
+        assert_eq!(history[0].is_incoming, incoming);
+        assert_eq!(history[0].status, UsdtTransferStatus::Confirmed);
+        assert_eq!(history[0].amount, if incoming { 42 } else { sent.amount });
+        assert_eq!(history[0].tx_hash, original.tx_hash);
+        if incoming {
+            assert_ne!(history[0].id, original.id);
+            assert_eq!(history[0].user_operation_hash, None);
+        } else {
+            assert_eq!(history[0].id, original.id);
+            assert_eq!(history[0].user_operation_hash, sent.user_operation_hash);
+        }
+    }
+}
+
+#[tokio::test]
+async fn recent_execution_check_returns_stored_activity_while_wallet_is_busy() {
+    use std::time::Duration;
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000)
+        .await
+        .unwrap();
+    chain.state.lock().unwrap().delay_gas_estimate = true;
+    {
+        let send = wallet.send(quote.id.clone(), TEST_PHRASE.into(), None);
+        tokio::pin!(send);
+        let gas_estimate_started = async {
+            while chain.state.lock().unwrap().delay_gas_estimate {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        };
+        tokio::select! {
+            result = &mut send => panic!("Send completed before the delayed estimate: {result:?}"),
+            result = tokio::time::timeout(Duration::from_secs(5), gas_estimate_started) => result.unwrap(),
+        }
+        assert!(tokio::time::timeout(
+            Duration::from_secs(1),
+            wallet.check_recent_execution(quote.id),
+        )
+        .await
+        .unwrap()
+        .unwrap()
+        .is_none());
+    }
+    assert!(wallet.history().unwrap().is_empty());
+    assert!(chain.state.lock().unwrap().operations.is_empty());
+}
+
+#[test]
+fn orphaned_payments_reopen_in_nonce_order_and_keep_sends_blocked() {
+    use alloy_primitives::{B256, U256};
+    let dir = tempfile::tempdir().unwrap();
+    let store =
+        store::Store::open(dir.path().join("usdt.sqlite").to_str().unwrap(), "account").unwrap();
+    let vector: serde_json::Value =
+        serde_json::from_str(include_str!("fixtures/eip7702-vectors.json")).unwrap();
+    let key = keys::derive_key(TEST_PHRASE.to_owned().into(), None).unwrap();
+    let mut signed = std::collections::BTreeMap::new();
+    let old_block = format!("{:#x}", B256::repeat_byte(0xaa));
+    let new_block = format!("{:#x}", B256::repeat_byte(0xbb));
+    // Retry order must be independent of the order rows were stored.
+    for nonce in [1, 0] {
+        let mut plan = transaction::Plan {
+            operation: serde_json::from_value(vector["operation"].clone()).unwrap(),
+            created_block: 19999,
+            expires_at: wallet::now() + 600,
+        };
+        plan.operation.nonce = U256::from(nonce);
+        let (hash, raw) = plan.sign(&key).unwrap();
+        let mut transfer = UsdtTransfer {
+            id: format!("payment-{nonce}"),
+            tx_hash: None,
+            user_operation_hash: Some(format!("{hash:#x}")),
+            recipient: RECIPIENT.into(),
+            amount: 1_000_000,
+            received_amount: 1_000_000,
+            fee: None,
+            is_incoming: false,
+            status: UsdtTransferStatus::Pending,
+            timestamp: wallet::now(),
+        };
+        store.record_signed(&transfer, &raw).unwrap();
+        signed.insert(plan.operation.nonce, raw);
+        transfer.status = UsdtTransferStatus::Confirmed;
+        transfer.tx_hash = Some(format!("{:#x}", B256::repeat_byte(7)));
+        transfer.fee = Some(123);
+        store.settle_transfer(&transfer, 20000, &old_block).unwrap();
+        store.require_no_pending().unwrap();
+    }
+    store.reconcile_block(20000, &new_block).unwrap();
+    let pending = store.pending_operations().unwrap();
+    assert_eq!(pending.len(), 2);
+    for (nonce, (transfer, plan)) in pending.iter().enumerate() {
+        assert_eq!(plan.operation.nonce, U256::from(nonce));
+        assert_eq!(transfer.id, format!("payment-{nonce}"));
+        assert_eq!(transfer.status, UsdtTransferStatus::Pending);
+        assert_eq!(transfer.tx_hash, None);
+        assert_eq!(transfer.fee, None);
+        assert_eq!(
+            serde_json::to_string(plan).unwrap(),
+            signed[&plan.operation.nonce]
+        );
+    }
+    assert!(matches!(
+        store.require_no_pending(),
+        Err(UsdtError::PendingTransfer)
+    ));
+    let mut settled = pending[0].0.clone();
+    settled.status = UsdtTransferStatus::Confirmed;
+    settled.tx_hash = Some(format!("{:#x}", B256::repeat_byte(7)));
+    settled.fee = Some(123);
+    store.settle_transfer(&settled, 20000, &new_block).unwrap();
+    let pending = store.pending_operations().unwrap();
+    assert_eq!(pending.len(), 1);
+    assert_eq!(pending[0].0.id, "payment-1");
+    assert!(matches!(
+        store.require_no_pending(),
+        Err(UsdtError::PendingTransfer)
+    ));
 }
 
 #[tokio::test]
