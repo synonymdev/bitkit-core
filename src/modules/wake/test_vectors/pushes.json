@@ -1,6 +1,7 @@
 {
-  "description": "Every provider request shape, byte-exact. APNs headers are listed in order; FCM bodies are POSTed to {fcm.base_url}/v1/projects/{project}/messages:send. Cases with device_secret_key decrypt to plaintext. inputs.collapse_key is the producer's collapse_key; topics with collapse = \"topic\" (every peer topic) pass none, so their background and FCM v1 pushes carry no collapse id.",
-  "collapse_rule": "collapse(x) = x when it is 1 to 64 visible ASCII characters (0x21 to 0x7e), else the 64 hex characters of sha256(x)",
+  "description": "Every provider request shape, byte-exact. APNs headers are listed in order; FCM bodies are POSTed to {fcm.base_url}/v1/projects/{project}/messages:send. Cases with device_secret_key decrypt to plaintext. inputs.collapse_key is the producer's collapse_key, which the gateway keeps to itself: pushes carry inputs.collapse_id, derived from it with collapse_secret. Topics with collapse = \"topic\" (every peer topic) pass none, so their background and FCM v1 pushes carry no collapse id.",
+  "collapse_rule": "collapse_id = the 64 lowercase hex characters of HMAC-SHA256(collapse_secret, identity + \"|\" + topic + \"|\" + collapse_key); the apns-collapse-id, FCM collapse_key and fallback tag are collapse(collapse_id), or collapse(wake id) where one is always sent; collapse(x) = x when it is 1 to 64 visible ASCII characters (0x21 to 0x7e), else the 64 hex characters of sha256(x)",
+  "collapse_secret": "7777777777777777777777777777777777777777777777777777777777777777",
   "cases": [
     {
       "name": "apns_v0",
@@ -47,7 +48,9 @@
         "expiration": 1790000060,
         "wake_id": "01a0c450-6c00-7000-8000-000000000001",
         "topic": "blocktank.incomingHtlc",
+        "identity": "ln:023c72addb4fdf09af94f0c94d7fe92a386a7e70cf8a1d85916386bb2535c7b1b1",
         "collapse_key": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "collapse_id": "01708c8803f4e752df60858c2b4fae1c7a5a77df1be560dd5658e10c0b194085",
         "container": "{\"v\":1,\"cipher\":\"bXIadw8XhVApCI59oieKY3P/h33PZz6NSdVFABqcg9CSgNhH5L+odPp6fRlxsbx/A37B0ZTxkuZgONflwXB4AyprdoQGEuDEbM8NSRT1j9uAzrfBR098QxyA5eA4nsKbginEF+oPHY97X0yzHZwxV7qd69X4SKve9PaXn4li383A1ZTqlcXJhtAWA7U5YHiFFrbiHAoQgUr7D01/z0vPKtHvryG+GD0rtFnrIzNwrwt6MH9hGO8gYHp1xPRO0bs432EnkOUO7rRv0JwD6q1VQ+GJrtEp/n8p5tW3QzOd8cexBUGoQM+Q6HlNHFRROjBM1fTIsaZj\",\"iv\":\"000102030405060708090a0b\",\"tag\":\"4521e07642272d9b8aed5157c331ad7a\",\"publicKey\":\"035ab4689e400a4a160cf01cd44730845a54768df8547dcdf073d964f109f18c30\"}"
       },
       "headers": [
@@ -73,7 +76,7 @@
         ],
         [
           "apns-collapse-id",
-          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          "01708c8803f4e752df60858c2b4fae1c7a5a77df1be560dd5658e10c0b194085"
         ]
       ],
       "body": "{\"aps\":{\"content-available\":1},\"wake\":{\"v\":1,\"cipher\":\"bXIadw8XhVApCI59oieKY3P/h33PZz6NSdVFABqcg9CSgNhH5L+odPp6fRlxsbx/A37B0ZTxkuZgONflwXB4AyprdoQGEuDEbM8NSRT1j9uAzrfBR098QxyA5eA4nsKbginEF+oPHY97X0yzHZwxV7qd69X4SKve9PaXn4li383A1ZTqlcXJhtAWA7U5YHiFFrbiHAoQgUr7D01/z0vPKtHvryG+GD0rtFnrIzNwrwt6MH9hGO8gYHp1xPRO0bs432EnkOUO7rRv0JwD6q1VQ+GJrtEp/n8p5tW3QzOd8cexBUGoQM+Q6HlNHFRROjBM1fTIsaZj\",\"iv\":\"000102030405060708090a0b\",\"tag\":\"4521e07642272d9b8aed5157c331ad7a\",\"publicKey\":\"035ab4689e400a4a160cf01cd44730845a54768df8547dcdf073d964f109f18c30\"}}",
@@ -175,7 +178,9 @@
         "expiration": 1790000060,
         "wake_id": "01a0c450-6c00-7000-8000-000000000003",
         "topic": "blocktank.incomingHtlc",
+        "identity": "ln:023c72addb4fdf09af94f0c94d7fe92a386a7e70cf8a1d85916386bb2535c7b1b1",
         "collapse_key": "incomingHtlc:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "collapse_id": "572ecbf3b26e4181d933ff3c1593690288b85dd0f872af6897d29742d3b20dec",
         "title": "Incoming Payment",
         "body": "Open Bitkit now to receive your payment",
         "interruption_level": "time-sensitive",
@@ -204,7 +209,7 @@
         ],
         [
           "apns-collapse-id",
-          "abda80501930fdfd4ae15e1b29c5df0a047946cf41cfd257312306e4a9d8d8a5"
+          "572ecbf3b26e4181d933ff3c1593690288b85dd0f872af6897d29742d3b20dec"
         ]
       ],
       "body": "{\"aps\":{\"alert\":{\"title\":\"Incoming Payment\",\"body\":\"Open Bitkit now to receive your payment\"},\"sound\":\"default\",\"mutable-content\":1,\"interruption-level\":\"time-sensitive\",\"thread-id\":\"blocktank.incomingHtlc\"},\"wake\":{\"v\":1,\"cipher\":\"N8vLNLPyiSvIytusmyeLOes0HH5PiRqiWP1PaZMnU7tzjAXeWkjOfPTHmd81o1zXjtqfj08qV6+nhebRqoFKATvSzGoUeKnhp8AGmAgNBjNklfgJx8GkKjFyaj00975BlBI4s3kfElILeqjis+6KhBHx/gcn+YHIpwyuA91bHEY5C07Nl0hy6jTGesU3h5pxBrSq+JvWz8EBKsVCAWNFAxW/FfRZWUWyFgtjwdl6b1gTM2MLQZ4lqTbftYTJQ7R++g4d/J9NdoDXHvF9gf95nI73NYlEqMFKUUmvMVy8l6eHOP3WFx9e4z/MAlY9O6id2MZrXugm8HoqPQ==\",\"iv\":\"000102030405060708090a0b\",\"tag\":\"08e2e6ca1df355ca8907d3ba21245464\",\"publicKey\":\"03652d1b5efa70cb3b83a53cdf536172d205001f0dd54ca766a6a4ef766a48e6fb\"}}",
@@ -221,7 +226,9 @@
         "expiration": 1790000060,
         "wake_id": "01a0c450-6c00-7000-8000-000000000001",
         "topic": "blocktank.incomingHtlc",
+        "identity": "ln:023c72addb4fdf09af94f0c94d7fe92a386a7e70cf8a1d85916386bb2535c7b1b1",
         "collapse_key": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "collapse_id": "01708c8803f4e752df60858c2b4fae1c7a5a77df1be560dd5658e10c0b194085",
         "title": "Incoming Payment",
         "body": "Open Bitkit now to receive your payment",
         "interruption_level": "time-sensitive"
@@ -249,7 +256,7 @@
         ],
         [
           "apns-collapse-id",
-          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          "01708c8803f4e752df60858c2b4fae1c7a5a77df1be560dd5658e10c0b194085"
         ]
       ],
       "body": "{\"aps\":{\"alert\":{\"title\":\"Incoming Payment\",\"body\":\"Open Bitkit now to receive your payment\"},\"sound\":\"default\",\"interruption-level\":\"time-sensitive\",\"thread-id\":\"blocktank.incomingHtlc\"},\"wake_fallback\":{\"v\":1,\"id\":\"01a0c450-6c00-7000-8000-000000000001\",\"topic\":\"blocktank.incomingHtlc\"}}",
@@ -277,10 +284,12 @@
         "priority": "high",
         "wake_id": "01a0c450-6c00-7000-8000-000000000001",
         "topic": "blocktank.incomingHtlc",
+        "identity": "ln:023c72addb4fdf09af94f0c94d7fe92a386a7e70cf8a1d85916386bb2535c7b1b1",
         "collapse_key": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "collapse_id": "01708c8803f4e752df60858c2b4fae1c7a5a77df1be560dd5658e10c0b194085",
         "container": "{\"v\":1,\"cipher\":\"bXIadw8XhVApCI59oieKY3P/h33PZz6NSdVFABqcg9CSgNhH5L+odPp6fRlxsbx/A37B0ZTxkuZgONflwXB4AyprdoQGEuDEbM8NSRT1j9uAzrfBR098QxyA5eA4nsKbginEF+oPHY97X0yzHZwxV7qd69X4SKve9PaXn4li383A1ZTqlcXJhtAWA7U5YHiFFrbiHAoQgUr7D01/z0vPKtHvryG+GD0rtFnrIzNwrwt6MH9hGO8gYHp1xPRO0bs432EnkOUO7rRv0JwD6q1VQ+GJrtEp/n8p5tW3QzOd8cexBUGoQM+Q6HlNHFRROjBM1fTIsaZj\",\"iv\":\"000102030405060708090a0b\",\"tag\":\"4521e07642272d9b8aed5157c331ad7a\",\"publicKey\":\"035ab4689e400a4a160cf01cd44730845a54768df8547dcdf073d964f109f18c30\"}"
       },
-      "body": "{\"message\":{\"token\":\"e5Hj9fKqTmW-vector:APA91bG0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"android\":{\"priority\":\"high\",\"ttl\":\"60s\",\"collapse_key\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"},\"data\":{\"wake\":\"{\\\"v\\\":1,\\\"cipher\\\":\\\"bXIadw8XhVApCI59oieKY3P/h33PZz6NSdVFABqcg9CSgNhH5L+odPp6fRlxsbx/A37B0ZTxkuZgONflwXB4AyprdoQGEuDEbM8NSRT1j9uAzrfBR098QxyA5eA4nsKbginEF+oPHY97X0yzHZwxV7qd69X4SKve9PaXn4li383A1ZTqlcXJhtAWA7U5YHiFFrbiHAoQgUr7D01/z0vPKtHvryG+GD0rtFnrIzNwrwt6MH9hGO8gYHp1xPRO0bs432EnkOUO7rRv0JwD6q1VQ+GJrtEp/n8p5tW3QzOd8cexBUGoQM+Q6HlNHFRROjBM1fTIsaZj\\\",\\\"iv\\\":\\\"000102030405060708090a0b\\\",\\\"tag\\\":\\\"4521e07642272d9b8aed5157c331ad7a\\\",\\\"publicKey\\\":\\\"035ab4689e400a4a160cf01cd44730845a54768df8547dcdf073d964f109f18c30\\\"}\"}}}",
+      "body": "{\"message\":{\"token\":\"e5Hj9fKqTmW-vector:APA91bG0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"android\":{\"priority\":\"high\",\"ttl\":\"60s\",\"collapse_key\":\"01708c8803f4e752df60858c2b4fae1c7a5a77df1be560dd5658e10c0b194085\"},\"data\":{\"wake\":\"{\\\"v\\\":1,\\\"cipher\\\":\\\"bXIadw8XhVApCI59oieKY3P/h33PZz6NSdVFABqcg9CSgNhH5L+odPp6fRlxsbx/A37B0ZTxkuZgONflwXB4AyprdoQGEuDEbM8NSRT1j9uAzrfBR098QxyA5eA4nsKbginEF+oPHY97X0yzHZwxV7qd69X4SKve9PaXn4li383A1ZTqlcXJhtAWA7U5YHiFFrbiHAoQgUr7D01/z0vPKtHvryG+GD0rtFnrIzNwrwt6MH9hGO8gYHp1xPRO0bs432EnkOUO7rRv0JwD6q1VQ+GJrtEp/n8p5tW3QzOd8cexBUGoQM+Q6HlNHFRROjBM1fTIsaZj\\\",\\\"iv\\\":\\\"000102030405060708090a0b\\\",\\\"tag\\\":\\\"4521e07642272d9b8aed5157c331ad7a\\\",\\\"publicKey\\\":\\\"035ab4689e400a4a160cf01cd44730845a54768df8547dcdf073d964f109f18c30\\\"}\"}}}",
       "body_len": 808,
       "device_secret_key": "5555555555555555555555555555555555555555555555555555555555555555",
       "plaintext": "{\"v\":1,\"id\":\"01a0c450-6c00-7000-8000-000000000001\",\"topic\":\"blocktank.incomingHtlc\",\"urgency\":\"background\",\"deadline\":1790000060,\"payload\":{\"lspId\":\"blocktank-lsp\",\"paymentHash\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}}"
@@ -310,12 +319,14 @@
         "ttl_secs": 45,
         "wake_id": "01a0c450-6c00-7000-8000-000000000001",
         "topic": "blocktank.incomingHtlc",
+        "identity": "ln:023c72addb4fdf09af94f0c94d7fe92a386a7e70cf8a1d85916386bb2535c7b1b1",
         "collapse_key": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "collapse_id": "01708c8803f4e752df60858c2b4fae1c7a5a77df1be560dd5658e10c0b194085",
         "title": "Incoming Payment",
         "body": "Open Bitkit now to receive your payment",
         "channel_id": "wake"
       },
-      "body": "{\"message\":{\"token\":\"e5Hj9fKqTmW-vector:APA91bG0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"android\":{\"priority\":\"high\",\"ttl\":\"45s\",\"notification\":{\"title\":\"Incoming Payment\",\"body\":\"Open Bitkit now to receive your payment\",\"channel_id\":\"wake\",\"tag\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}},\"data\":{\"wake_fallback\":\"{\\\"v\\\":1,\\\"id\\\":\\\"01a0c450-6c00-7000-8000-000000000001\\\",\\\"topic\\\":\\\"blocktank.incomingHtlc\\\"}\"}}}",
+      "body": "{\"message\":{\"token\":\"e5Hj9fKqTmW-vector:APA91bG0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"android\":{\"priority\":\"high\",\"ttl\":\"45s\",\"notification\":{\"title\":\"Incoming Payment\",\"body\":\"Open Bitkit now to receive your payment\",\"channel_id\":\"wake\",\"tag\":\"01708c8803f4e752df60858c2b4fae1c7a5a77df1be560dd5658e10c0b194085\"}},\"data\":{\"wake_fallback\":\"{\\\"v\\\":1,\\\"id\\\":\\\"01a0c450-6c00-7000-8000-000000000001\\\",\\\"topic\\\":\\\"blocktank.incomingHtlc\\\"}\"}}}",
       "body_len": 496
     }
   ]

@@ -126,7 +126,7 @@ Error messages never contain keys, secrets or decrypted plaintext.
 
 `test_vectors/*.json` are copied byte for byte from `crates/wake-proto/vectors`
 of the wake repository at commit
-`6037343ad39603ce436e2a551cac9db877ede9c6`. The tests assert them exactly:
+`782f66510c505b0331e6299e96c1233d3c263484`. The tests assert them exactly:
 the v0 server and client envelopes with their shared points and keys, the v1
 envelope, the registration preimage with both proofs, the legacy signature
 (used to check the test signer), and every push shape in `pushes.json`.
