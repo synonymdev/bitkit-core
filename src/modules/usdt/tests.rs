@@ -248,6 +248,7 @@ struct ChainState {
     helper_balance: alloy_primitives::U256,
     native_message_fee: u64,
     helper_token_fee: u64,
+    oft_received_amount: Option<u64>,
     quote_revert: Option<alloy_primitives::Address>,
     history_input: Option<alloy_primitives::Bytes>,
     history_target: Option<alloy_primitives::Address>,
@@ -310,6 +311,7 @@ impl MockChain {
             helper_balance: U256::from(1_000_000_000_000_000u64),
             native_message_fee: 10_000_000_000,
             helper_token_fee: 300_000,
+            oft_received_amount: None,
             quote_revert: None,
             history_input: None,
             history_target: Some(account::ENTRY_POINT),
@@ -575,7 +577,10 @@ impl ChainState {
                         Vec::<transaction::OFTFeeDetail>::new(),
                         OFTReceipt {
                             amountSentLD: param.amountLD,
-                            amountReceivedLD: param.amountLD,
+                            amountReceivedLD: self
+                                .oft_received_amount
+                                .map(U256::from)
+                                .unwrap_or(param.amountLD),
                         },
                     )
                         .abi_encode_params()
@@ -2770,6 +2775,7 @@ async fn bridge_settlement_recovers_guid_fees_and_preserves_delivery_on_rescan()
     let chain = MockChain::start().await;
     let dir = tempfile::tempdir().unwrap();
     let wallet = chain.wallet(&dir);
+    chain.state.lock().unwrap().oft_received_amount = Some(999_998);
     let guid = B256::repeat_byte(0xab);
     let message = json!({"guid":guid,"pathway":{"srcEid":30110,"dstEid":30109,"sender":{"address":types::OFT}},"source":{"tx":{"txHash":B256::repeat_byte(7)}},"status":{"name":"DELIVERED"}});
     let quote = wallet
@@ -2887,12 +2893,38 @@ async fn bridge_settlement_recovers_guid_fees_and_preserves_delivery_on_rescan()
             )),
         }
     }
+    let mut inflight = message.clone();
+    inflight["status"]["name"] = json!("INFLIGHT");
+    chain
+        .state
+        .lock()
+        .unwrap()
+        .bridge_messages
+        .insert(pending.tx_hash.clone().unwrap(), json!({"data":[inflight]}));
+    assert_eq!(
+        wallet.refresh_transfers().await.unwrap()[0].status,
+        UsdtTransferStatus::Bridging
+    );
+    let requests = chain.state.lock().unwrap().bridge_requests.len();
     let mut retryable = message.clone();
     retryable["status"]["name"] = json!("FAILED");
     chain.state.lock().unwrap().bridge_messages.insert(
         pending.tx_hash.clone().unwrap(),
         json!({"data":[retryable]}),
     );
+    wallet.refresh_transfers().await.unwrap();
+    assert_eq!(chain.state.lock().unwrap().bridge_requests.len(), requests);
+    tokio::time::pause();
+    tokio::time::advance(std::time::Duration::from_secs(29)).await;
+    tokio::time::resume();
+    assert_eq!(
+        wallet.refresh_transfers().await.unwrap()[0].status,
+        UsdtTransferStatus::Bridging
+    );
+    assert_eq!(chain.state.lock().unwrap().bridge_requests.len(), requests);
+    tokio::time::pause();
+    tokio::time::advance(std::time::Duration::from_secs(1)).await;
+    tokio::time::resume();
     assert_eq!(
         wallet.refresh_transfers().await.unwrap()[0].status,
         UsdtTransferStatus::BridgeNeedsAttention
@@ -3013,6 +3045,21 @@ async fn bridge_settlement_recovers_guid_fees_and_preserves_delivery_on_rescan()
     let recovered = wallet.refresh_transfers().await.unwrap().remove(0);
     assert_eq!(recovered.status, UsdtTransferStatus::BridgeNeedsAttention);
     assert_eq!(recovered.bridge_guid, None);
+    assert_eq!(recovered.received_amount, quoted_received_amount);
+    sync_history_to_tip(&wallet).await;
+    assert_eq!(
+        wallet.history().unwrap()[0].received_amount,
+        quoted_received_amount
+    );
+
+    let restored_dir = tempfile::tempdir().unwrap();
+    let restored = chain.wallet(&restored_dir);
+    sync_history_to_tip(&restored).await;
+    let recovered = restored.history().unwrap().remove(0);
+    assert_eq!(recovered.status, UsdtTransferStatus::BridgeNeedsAttention);
+    assert_eq!(recovered.bridge_guid, None);
+    assert_eq!(recovered.amount, 1_000_000);
+    assert_eq!(recovered.received_amount, quoted_received_amount);
 }
 
 #[tokio::test]

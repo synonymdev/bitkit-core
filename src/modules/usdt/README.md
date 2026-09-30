@@ -54,9 +54,11 @@ Bridges use the pinned OFT and TransactionValueHelper with zero account ETH, a f
 
 LayerZero status must match the operation GUID/pathway before confirmation; blocked delivery remains visible and never triggers an automatic paid retry.
 
+Bridge history preserves the saved receiving amount or recovers the signed `minAmountLD` from calldata until a matching `OFTSent` event supplies the source-confirmed amount. The fallback is a minimum receiving amount, not proof of destination delivery.
+
 RPC providers see queried addresses. Delivery checks use `bitkit_getBridgeMessages([sourceTransactionHash])` on the existing chain-service endpoint. The service queries LayerZero Scan without forwarding device headers, projects only message identity/pathway/status fields, and applies its shared request and response limits. LayerZero sees the service IP and the transaction hash; the service still sees the requesting device. Manually opening LayerZero Scan from transaction details connects the browser directly. No delivery requests are made for Arbitrum-only transfers.
 
-Unavailable, unmatched or unknown delivery responses preserve the last status. Those lookups and retryable problems (`FAILED`, `BLOCKED`, `PAYLOAD_STORED`) wait at least one minute before another automatic attempt in the same wallet session. `APPLICATION_BURNED` and `APPLICATION_SKIPPED` stop polling as `BridgeFailed`; `DELIVERED` stops polling as `Confirmed`. No status triggers an automatic paid retry or refund.
+In-flight delivery responses (`INFLIGHT`, `CONFIRMING`) wait at least 30 seconds before another lookup in the same wallet session. Unavailable, unmatched or unknown delivery responses preserve the last status. Those lookups and retryable problems (`FAILED`, `BLOCKED`, `PAYLOAD_STORED`) wait at least one minute before another automatic attempt. `APPLICATION_BURNED` and `APPLICATION_SKIPPED` stop polling as `BridgeFailed`; `DELIVERED` stops polling as `Confirmed`. No status triggers an automatic paid retry or refund.
 
 ## Validation and bindings
 

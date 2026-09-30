@@ -28,6 +28,7 @@ const RECENT_EXECUTION_BUDGET: std::time::Duration = std::time::Duration::from_s
 const NONCE_RECOVERY_BUDGET: std::time::Duration = std::time::Duration::from_secs(20);
 const EXPIRY_SEARCH_BLOCKS: u64 = 4096;
 const QUOTE_LIFETIME_SECONDS: u64 = 120;
+const BRIDGE_POLL_INTERVAL: std::time::Duration = std::time::Duration::from_secs(30);
 const BRIDGE_RETRY_DELAY: std::time::Duration = std::time::Duration::from_secs(60);
 
 #[derive(uniffi::Object)]
@@ -491,12 +492,16 @@ impl UsdtWallet {
         let (first, second, third) =
             tokio::join!(check(batch[0]), check(batch[1]), check(batch[2]));
         for (previous, result) in [first, second, third].into_iter().flatten() {
-            if !matches!(result, Ok(Ok(status)) if status != UsdtTransferStatus::BridgeNeedsAttention)
-            {
+            let delay = match result {
+                Ok(Ok(UsdtTransferStatus::Bridging)) => Some(BRIDGE_POLL_INTERVAL),
+                Ok(Ok(UsdtTransferStatus::Confirmed | UsdtTransferStatus::BridgeFailed)) => None,
+                _ => Some(BRIDGE_RETRY_DELAY),
+            };
+            if let Some(delay) = delay {
                 self.bridge_retry_after
                     .lock()
                     .await
-                    .insert(previous.id.clone(), Instant::now() + BRIDGE_RETRY_DELAY);
+                    .insert(previous.id.clone(), Instant::now() + delay);
             }
             match result {
                 Ok(Ok(status)) if status != previous.status => {

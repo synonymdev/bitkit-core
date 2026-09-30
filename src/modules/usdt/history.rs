@@ -343,8 +343,13 @@ impl UsdtWallet {
                 continue;
             }
             let operation_hash = format!("{:#x}", event.userOpHash);
-            let (recipient, amount, destination) = if let Some(saved) = saved {
-                (saved.recipient, saved.amount, saved.destination)
+            let (recipient, amount, destination, received_amount) = if let Some(saved) = saved {
+                (
+                    saved.recipient,
+                    saved.amount,
+                    saved.destination,
+                    saved.received_amount,
+                )
             } else {
                 let Some(op) = batch.as_ref().and_then(|batch| {
                     batch
@@ -357,12 +362,17 @@ impl UsdtWallet {
                 if !super::paymaster::supported_payment(&op.paymasterAndData) {
                     continue;
                 }
-                let Some((recipient, amount, destination)) =
+                let Some((recipient, amount, destination, received_amount)) =
                     decode_payment(&op.callData, self.address)
                 else {
                     continue;
                 };
-                (recipient.to_checksum(None), amount, destination)
+                (
+                    recipient.to_checksum(None),
+                    amount,
+                    destination,
+                    received_amount,
+                )
             };
             let mut transfer = UsdtTransfer {
                 id: operation_hash.clone(),
@@ -372,7 +382,7 @@ impl UsdtWallet {
                 recipient,
                 destination,
                 amount,
-                received_amount: amount,
+                received_amount,
                 fee: None,
                 is_incoming: false,
                 status: UsdtTransferStatus::Pending,
@@ -394,7 +404,7 @@ impl UsdtWallet {
     }
 }
 
-fn decode_payment(data: &[u8], sender: Address) -> Option<(Address, u64, UsdtDestination)> {
+fn decode_payment(data: &[u8], sender: Address) -> Option<(Address, u64, UsdtDestination, u64)> {
     let mut payment = None;
     for (target, data) in decode_calls(data).ok()? {
         let next = if target == TOKEN {
@@ -402,11 +412,8 @@ fn decode_payment(data: &[u8], sender: Address) -> Option<(Address, u64, UsdtDes
                 if call.amount.is_zero() || call.recipient == sender {
                     return None;
                 }
-                (
-                    call.recipient,
-                    token_amount(call.amount).ok()?,
-                    UsdtDestination::Arbitrum,
-                )
+                let amount = token_amount(call.amount).ok()?;
+                (call.recipient, amount, UsdtDestination::Arbitrum, amount)
             } else if Erc20::approveCall::abi_decode(&data).is_ok() {
                 continue;
             } else {
@@ -421,6 +428,7 @@ fn decode_payment(data: &[u8], sender: Address) -> Option<(Address, u64, UsdtDes
                 Address::from_word(call.param.to),
                 token_amount(call.param.amountLD).ok()?,
                 UsdtDestination::from_endpoint(call.param.dstEid)?,
+                token_amount(call.param.minAmountLD).ok()?,
             )
         } else {
             return None;
