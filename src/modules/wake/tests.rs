@@ -1412,11 +1412,11 @@ fn response(status: u16, body: &str) -> HttpResponse {
     }
 }
 
-fn rejected(status: u16, code: &str, message: &str) -> WakeError {
+fn rejected(status: u16, code: &str, detail: &str) -> WakeError {
     WakeError::GatewayRejected {
         status,
         code: code.to_string(),
-        message: message.to_string(),
+        detail: detail.to_string(),
     }
 }
 

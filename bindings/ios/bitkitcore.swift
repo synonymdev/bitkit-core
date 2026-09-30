@@ -23965,7 +23965,7 @@ public enum WakeError: Swift.Error {
     )
     case RequestFailed(reason: String
     )
-    case GatewayRejected(status: UInt16, code: String, message: String
+    case GatewayRejected(status: UInt16, code: String, detail: String
     )
     case InvalidResponse(reason: String
     )
@@ -24003,7 +24003,7 @@ public struct FfiConverterTypeWakeError: FfiConverterRustBuffer {
         case 6: return .GatewayRejected(
             status: try FfiConverterUInt16.read(from: &buf), 
             code: try FfiConverterString.read(from: &buf), 
-            message: try FfiConverterString.read(from: &buf)
+            detail: try FfiConverterString.read(from: &buf)
             )
         case 7: return .InvalidResponse(
             reason: try FfiConverterString.read(from: &buf)
@@ -24045,11 +24045,11 @@ public struct FfiConverterTypeWakeError: FfiConverterRustBuffer {
             FfiConverterString.write(reason, into: &buf)
             
         
-        case let .GatewayRejected(status,code,message):
+        case let .GatewayRejected(status,code,detail):
             writeInt(&buf, Int32(6))
             FfiConverterUInt16.write(status, into: &buf)
             FfiConverterString.write(code, into: &buf)
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(detail, into: &buf)
             
         
         case let .InvalidResponse(reason):

@@ -342,12 +342,12 @@ fn rejection(response: &HttpResponse) -> WakeError {
         Ok(body) => WakeError::GatewayRejected {
             status: response.status,
             code: body.error,
-            message: body.message,
+            detail: body.message,
         },
         Err(_) => WakeError::GatewayRejected {
             status: response.status,
             code: "unknown".to_string(),
-            message: "the response carries no wake error body".to_string(),
+            detail: "the response carries no wake error body".to_string(),
         },
     }
 }

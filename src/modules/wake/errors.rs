@@ -18,11 +18,11 @@ pub enum WakeError {
     #[error("Request failed: {reason}")]
     RequestFailed { reason: String },
 
-    #[error("Gateway rejected the request with HTTP {status} ({code}): {message}")]
+    #[error("Gateway rejected the request with HTTP {status} ({code}): {detail}")]
     GatewayRejected {
         status: u16,
         code: String,
-        message: String,
+        detail: String,
     },
 
     #[error("Invalid response: {reason}")]
