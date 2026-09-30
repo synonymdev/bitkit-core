@@ -10,4 +10,5 @@ pub mod scanner;
 pub mod seedqr;
 pub mod trezor;
 pub mod ur;
+pub mod usdt;
 pub mod wake;

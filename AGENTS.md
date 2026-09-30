@@ -20,7 +20,7 @@ Android bindings are built and published by `.github/workflows/gradle-publish.ym
 
 ```bash
 cargo test                                     # All tests
-cargo test modules::<module>                   # Single module (scanner, lnurl, onchain, activity, blocktank, boltz, trezor, jade, hardware_wallet, ur, pubky)
+cargo test modules::<module>                   # Single module (scanner, lnurl, onchain, activity, blocktank, boltz, trezor, jade, hardware_wallet, ur, pubky, usdt)
 ```
 
 ## Lint & Format
@@ -35,7 +35,7 @@ Android bindings use ktlint via Gradle plugin (`org.jlleitschuh.gradle.ktlint`),
 ## Architecture
 
 - `src/lib.rs` — UniFFI exports and module re-exports
-- `src/modules/`: core modules: scanner, lnurl, onchain, activity, blocktank, boltz, trezor, jade, hardware_wallet, ur, pubky
+- `src/modules/`: core modules: scanner, lnurl, onchain, activity, blocktank, boltz, trezor, jade, hardware_wallet, ur, pubky, usdt
 - `bindings/` — Platform-specific binding outputs (ios/, android/, python/)
 - `build.sh`, `build_ios.sh`, `build_android.sh`, `build_python.sh` — Build scripts
 

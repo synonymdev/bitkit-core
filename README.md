@@ -24,6 +24,9 @@
   - Channel opening and management
   - Just-in-time channel creation
   - Gift code payments and redemption
+- [USDT Module](src/modules/usdt/README.md)
+  - Seed-derived Arbitrum EIP-7702 accounts and USDT-only payment fees
+  - Quotes, signing, payment recovery and persistent activity
 - Trezor Module
   - Integration with Trezor hardware wallets through deep linking
   - Get device features and capabilities

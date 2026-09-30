@@ -1,0 +1,51 @@
+use thiserror::Error;
+
+#[derive(Debug, Error, uniffi::Error)]
+pub enum UsdtError {
+    #[error("Enter a valid USDT amount with at most six decimal places")]
+    InvalidAmount,
+    #[error("Enter a valid address for the selected network")]
+    InvalidAddress,
+    #[error("The network or token does not match this USDT account")]
+    WrongNetwork,
+    #[error("Wallet credentials do not match this USDT account")]
+    InvalidCredentials,
+    #[error("This account uses another wallet's smart account. Restore its delegation before sending with Bitkit")]
+    UnsupportedDelegation,
+    #[error("The USDT balance does not cover the amount and maximum fee")]
+    InsufficientBalance,
+    #[error("The fee quote has expired or changed. Review a new quote")]
+    QuoteExpired,
+    #[error("A USDT transaction is pending. Wait for confirmation before sending again")]
+    PendingTransfer,
+    #[error("The selected USDT payment route is unavailable")]
+    UnsupportedRoute,
+    #[error("USDT payments are not configured for this app build")]
+    NotConfigured,
+    #[error("The network could not be reached. Try again")]
+    NetworkUnavailable,
+    #[error("Too many requests. Try again shortly")]
+    RateLimited,
+    #[error("The requested log range exceeds the provider limit")]
+    LogRangeTooLarge,
+    #[error("The network rejected the transaction: {reason}")]
+    TransactionRejected { reason: String },
+    #[error("USDT wallet storage failed: {reason}")]
+    Storage { reason: String },
+    #[error("Invalid response from the USDT network")]
+    InvalidResponse,
+}
+
+impl From<rusqlite::Error> for UsdtError {
+    fn from(error: rusqlite::Error) -> Self {
+        Self::Storage {
+            reason: error.to_string(),
+        }
+    }
+}
+
+impl From<serde_json::Error> for UsdtError {
+    fn from(_: serde_json::Error) -> Self {
+        Self::InvalidResponse
+    }
+}
