@@ -91,8 +91,9 @@ pub use modules::onchain;
 pub use modules::scanner::{DecodingError, LnurlPayData, Scanner};
 pub use modules::seedqr::{decode_compact_seed_qr, decode_standard_seed_qr, SeedQrError};
 pub use modules::usdt::{
-    usdt_address, usdt_format_amount, usdt_parse_amount, usdt_parse_payment_request, UsdtError,
-    UsdtPaymentRequest, UsdtQuote, UsdtTransfer, UsdtTransferStatus, UsdtWallet,
+    usdt_address, usdt_format_amount, usdt_parse_amount, usdt_parse_payment_request,
+    UsdtDestination, UsdtError, UsdtPaymentRequest, UsdtQuote, UsdtTransfer, UsdtTransferStatus,
+    UsdtWallet,
 };
 
 use bip39::Mnemonic;

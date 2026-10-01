@@ -321,6 +321,26 @@ impl Store {
             let mut transfer = transfer.clone();
             if let Some(saved) = existing {
                 transfer.id = saved.id;
+                if saved
+                    .tx_hash
+                    .as_deref()
+                    .zip(transfer.tx_hash.as_deref())
+                    .is_some_and(|(a, b)| a.eq_ignore_ascii_case(b))
+                    && saved
+                        .bridge_guid
+                        .as_ref()
+                        .zip(transfer.bridge_guid.as_ref())
+                        .is_some_and(|(a, b)| a.eq_ignore_ascii_case(b))
+                    && transfer.status == UsdtTransferStatus::Bridging
+                    && matches!(
+                        saved.status,
+                        UsdtTransferStatus::Confirmed
+                            | UsdtTransferStatus::BridgeNeedsAttention
+                            | UsdtTransferStatus::BridgeFailed
+                    )
+                {
+                    transfer.status = saved.status;
+                }
                 write_settlement(tx, &transfer, number, block_hash)?;
             } else {
                 tx.execute(
@@ -330,6 +350,15 @@ impl Store {
             }
         }
         Ok(())
+    }
+
+    pub fn awaiting_delivery(&self) -> Result<Vec<UsdtTransfer>, UsdtError> {
+        let connection = self.connection()?;
+        let mut statement = connection.prepare(
+            "SELECT data FROM usdt_transfers WHERE json_extract(data, '$.status') IN ('Bridging','BridgeNeedsAttention') AND json_extract(data, '$.bridge_guid') IS NOT NULL ORDER BY json_extract(data, '$.timestamp') DESC, id",
+        )?;
+        let rows = statement.query_map([], |row| row.get::<_, String>(0))?;
+        rows.map(|row| decode(&row?)).collect()
     }
 
     pub fn pending_operations(&self) -> Result<Vec<(UsdtTransfer, Plan)>, UsdtError> {
@@ -393,19 +422,23 @@ fn write_settlement(
 
 fn reconcile_block(tx: &Transaction<'_>, number: u64, hash: &str) -> Result<(), UsdtError> {
     // Only a different canonical block proves disappearance; missing logs alone do not.
-    let mut statement = tx.prepare(
-        "SELECT data,raw IS NOT NULL FROM usdt_transfers WHERE block_number=?1 AND block_hash!=?2",
-    )?;
+    let mut statement =
+        tx.prepare("SELECT data,raw FROM usdt_transfers WHERE block_number=?1 AND block_hash!=?2")?;
     let rows = statement.query_map(params![number, hash], |row| {
-        Ok((row.get::<_, String>(0)?, row.get::<_, bool>(1)?))
+        Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?))
     })?;
     let orphaned = rows.collect::<Result<Vec<_>, _>>()?;
-    for (data, local) in orphaned {
+    for (data, raw) in orphaned {
         let mut transfer: UsdtTransfer = decode(&data)?;
-        if local {
+        if let Some(raw) = raw {
             transfer.status = UsdtTransferStatus::Pending;
             transfer.tx_hash = None;
-            transfer.received_amount = transfer.amount;
+            transfer.bridge_guid = None;
+            transfer.received_amount = if transfer.destination == super::UsdtDestination::Arbitrum {
+                transfer.amount
+            } else {
+                decode::<Plan>(&raw)?.bridge_received_amount()?
+            };
             transfer.fee = None;
             write_transfer(tx, &transfer)?;
             tx.execute(

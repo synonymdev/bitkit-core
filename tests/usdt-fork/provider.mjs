@@ -109,7 +109,12 @@ function pack(op) {
     signature: op.signature,
   };
 }
+let drainHelperBeforeBroadcast = false;
 async function dispatch(method, params) {
+  if (method === 'test_drainHelperBeforeNextBroadcast') {
+    drainHelperBeforeBroadcast = true;
+    return true;
+  }
   if (method === 'eth_estimateUserOperationGas' || method === 'eth_sendUserOperation') {
     const op = params[0];
     assert.equal(op.factory, '0x7702');
@@ -161,6 +166,10 @@ async function dispatch(method, params) {
     return { paymaster: pmAddress, paymasterData: concat([unsigned, signature]), ...limits };
   }
   if (method === 'eth_sendUserOperation') {
+    if (drainHelperBeforeBroadcast) {
+      drainHelperBeforeBroadcast = false;
+      await rpc.send('anvil_setBalance', ['0xa90f03c856d01f698e7071b393387cd75a8a319a', '0x0']);
+    }
     const op = pack(params[0]);
     const hash = await rpc.send('eth_call', [
       { to: entryAddress, data: entry.interface.encodeFunctionData('getUserOpHash', [op]) },
@@ -192,6 +201,7 @@ async function dispatch(method, params) {
     );
     return hash;
   }
+  if (method === 'bitkit_getBridgeMessages') return { data: [] };
   return rpc.send(method, params);
 }
 const server = createServer(async (request, response) => {
