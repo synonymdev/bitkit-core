@@ -2178,7 +2178,7 @@ public protocol TrezorUiCallback: AnyObject, Sendable {
      * Called when the device requests a passphrase.
      *
      * If `on_device` is true, the device is asking for the passphrase to be
-     * entered on the Trezor itself — return `PassphraseResponse::OnDevice`.
+     * entered on the Trezor itself. Return `PassphraseResponse::OnDevice`.
      *
      * If `on_device` is false, show a passphrase input UI and return
      * `Standard` (no passphrase), `Hidden { value }` (host-entered passphrase),
@@ -2262,7 +2262,7 @@ open func onPinRequest() -> String  {
      * Called when the device requests a passphrase.
      *
      * If `on_device` is true, the device is asking for the passphrase to be
-     * entered on the Trezor itself — return `PassphraseResponse::OnDevice`.
+     * entered on the Trezor itself. Return `PassphraseResponse::OnDevice`.
      *
      * If `on_device` is false, show a passphrase input UI and return
      * `Standard` (no passphrase), `Hidden { value }` (host-entered passphrase),
@@ -13570,7 +13570,7 @@ public struct TrezorGetAddressParams {
      */
     public var path: String
     /**
-     * Coin network (default: Bitcoin)
+     * Coin network (inferred from the path when omitted)
      */
     public var coin: TrezorCoinType?
     /**
@@ -13581,6 +13581,10 @@ public struct TrezorGetAddressParams {
      * Script type (auto-detected from path if not specified)
      */
     public var scriptType: TrezorScriptType?
+    /**
+     * Allow an explicitly selected coin to differ from the path (default: false).
+     */
+    public var crossChain: Bool
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -13589,18 +13593,22 @@ public struct TrezorGetAddressParams {
          * BIP32 path (e.g., "m/84'/0'/0'/0/0")
          */path: String, 
         /**
-         * Coin network (default: Bitcoin)
+         * Coin network (inferred from the path when omitted)
          */coin: TrezorCoinType?, 
         /**
          * Whether to display the address on the device for confirmation
          */showOnTrezor: Bool, 
         /**
          * Script type (auto-detected from path if not specified)
-         */scriptType: TrezorScriptType?) {
+         */scriptType: TrezorScriptType?, 
+        /**
+         * Allow an explicitly selected coin to differ from the path (default: false).
+         */crossChain: Bool = false) {
         self.path = path
         self.coin = coin
         self.showOnTrezor = showOnTrezor
         self.scriptType = scriptType
+        self.crossChain = crossChain
     }
 }
 
@@ -13623,6 +13631,9 @@ extension TrezorGetAddressParams: Equatable, Hashable {
         if lhs.scriptType != rhs.scriptType {
             return false
         }
+        if lhs.crossChain != rhs.crossChain {
+            return false
+        }
         return true
     }
 
@@ -13631,6 +13642,7 @@ extension TrezorGetAddressParams: Equatable, Hashable {
         hasher.combine(coin)
         hasher.combine(showOnTrezor)
         hasher.combine(scriptType)
+        hasher.combine(crossChain)
     }
 }
 
@@ -13648,7 +13660,8 @@ public struct FfiConverterTypeTrezorGetAddressParams: FfiConverterRustBuffer {
                 path: FfiConverterString.read(from: &buf), 
                 coin: FfiConverterOptionTypeTrezorCoinType.read(from: &buf), 
                 showOnTrezor: FfiConverterBool.read(from: &buf), 
-                scriptType: FfiConverterOptionTypeTrezorScriptType.read(from: &buf)
+                scriptType: FfiConverterOptionTypeTrezorScriptType.read(from: &buf), 
+                crossChain: FfiConverterBool.read(from: &buf)
         )
     }
 
@@ -13657,6 +13670,7 @@ public struct FfiConverterTypeTrezorGetAddressParams: FfiConverterRustBuffer {
         FfiConverterOptionTypeTrezorCoinType.write(value.coin, into: &buf)
         FfiConverterBool.write(value.showOnTrezor, into: &buf)
         FfiConverterOptionTypeTrezorScriptType.write(value.scriptType, into: &buf)
+        FfiConverterBool.write(value.crossChain, into: &buf)
     }
 }
 
@@ -13685,13 +13699,17 @@ public struct TrezorGetPublicKeyParams {
      */
     public var path: String
     /**
-     * Coin network (default: Bitcoin)
+     * Coin network (inferred from the path when omitted)
      */
     public var coin: TrezorCoinType?
     /**
      * Whether to display on device for confirmation
      */
     public var showOnTrezor: Bool
+    /**
+     * Allow an explicitly selected coin to differ from the path (default: false).
+     */
+    public var crossChain: Bool
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -13700,14 +13718,18 @@ public struct TrezorGetPublicKeyParams {
          * BIP32 path (e.g., "m/84'/0'/0'")
          */path: String, 
         /**
-         * Coin network (default: Bitcoin)
+         * Coin network (inferred from the path when omitted)
          */coin: TrezorCoinType?, 
         /**
          * Whether to display on device for confirmation
-         */showOnTrezor: Bool) {
+         */showOnTrezor: Bool, 
+        /**
+         * Allow an explicitly selected coin to differ from the path (default: false).
+         */crossChain: Bool = false) {
         self.path = path
         self.coin = coin
         self.showOnTrezor = showOnTrezor
+        self.crossChain = crossChain
     }
 }
 
@@ -13727,6 +13749,9 @@ extension TrezorGetPublicKeyParams: Equatable, Hashable {
         if lhs.showOnTrezor != rhs.showOnTrezor {
             return false
         }
+        if lhs.crossChain != rhs.crossChain {
+            return false
+        }
         return true
     }
 
@@ -13734,6 +13759,7 @@ extension TrezorGetPublicKeyParams: Equatable, Hashable {
         hasher.combine(path)
         hasher.combine(coin)
         hasher.combine(showOnTrezor)
+        hasher.combine(crossChain)
     }
 }
 
@@ -13750,7 +13776,8 @@ public struct FfiConverterTypeTrezorGetPublicKeyParams: FfiConverterRustBuffer {
             try TrezorGetPublicKeyParams(
                 path: FfiConverterString.read(from: &buf), 
                 coin: FfiConverterOptionTypeTrezorCoinType.read(from: &buf), 
-                showOnTrezor: FfiConverterBool.read(from: &buf)
+                showOnTrezor: FfiConverterBool.read(from: &buf), 
+                crossChain: FfiConverterBool.read(from: &buf)
         )
     }
 
@@ -13758,6 +13785,7 @@ public struct FfiConverterTypeTrezorGetPublicKeyParams: FfiConverterRustBuffer {
         FfiConverterString.write(value.path, into: &buf)
         FfiConverterOptionTypeTrezorCoinType.write(value.coin, into: &buf)
         FfiConverterBool.write(value.showOnTrezor, into: &buf)
+        FfiConverterBool.write(value.crossChain, into: &buf)
     }
 }
 
@@ -14113,9 +14141,21 @@ public func FfiConverterTypeTrezorPrevTxOutput_lower(_ value: TrezorPrevTxOutput
  */
 public struct TrezorPublicKeyResponse {
     /**
-     * Extended public key (xpub)
+     * Normalized xpub/tpub. Preserve the selected account type when importing.
      */
     public var xpub: String
+    /**
+     * Firmware SLIP-132 key for BIP-49/BIP-84, or a Taproot descriptor.
+     */
+    public var xpubSegwit: String?
+    /**
+     * Output descriptor returned by the firmware, when available.
+     */
+    public var descriptor: String?
+    /**
+     * Key or descriptor intended for display, not for extended-key import.
+     */
+    public var displayablePublicKey: String
     /**
      * The serialized path (e.g., "m/84'/0'/0'")
      */
@@ -14145,8 +14185,17 @@ public struct TrezorPublicKeyResponse {
     // declare one manually.
     public init(
         /**
-         * Extended public key (xpub)
+         * Normalized xpub/tpub. Preserve the selected account type when importing.
          */xpub: String, 
+        /**
+         * Firmware SLIP-132 key for BIP-49/BIP-84, or a Taproot descriptor.
+         */xpubSegwit: String?, 
+        /**
+         * Output descriptor returned by the firmware, when available.
+         */descriptor: String?, 
+        /**
+         * Key or descriptor intended for display, not for extended-key import.
+         */displayablePublicKey: String, 
         /**
          * The serialized path (e.g., "m/84'/0'/0'")
          */path: String, 
@@ -14166,6 +14215,9 @@ public struct TrezorPublicKeyResponse {
          * Master root fingerprint (from the device's master seed)
          */rootFingerprint: UInt32?) {
         self.xpub = xpub
+        self.xpubSegwit = xpubSegwit
+        self.descriptor = descriptor
+        self.displayablePublicKey = displayablePublicKey
         self.path = path
         self.publicKey = publicKey
         self.chainCode = chainCode
@@ -14183,6 +14235,15 @@ extension TrezorPublicKeyResponse: Sendable {}
 extension TrezorPublicKeyResponse: Equatable, Hashable {
     public static func ==(lhs: TrezorPublicKeyResponse, rhs: TrezorPublicKeyResponse) -> Bool {
         if lhs.xpub != rhs.xpub {
+            return false
+        }
+        if lhs.xpubSegwit != rhs.xpubSegwit {
+            return false
+        }
+        if lhs.descriptor != rhs.descriptor {
+            return false
+        }
+        if lhs.displayablePublicKey != rhs.displayablePublicKey {
             return false
         }
         if lhs.path != rhs.path {
@@ -14208,6 +14269,9 @@ extension TrezorPublicKeyResponse: Equatable, Hashable {
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(xpub)
+        hasher.combine(xpubSegwit)
+        hasher.combine(descriptor)
+        hasher.combine(displayablePublicKey)
         hasher.combine(path)
         hasher.combine(publicKey)
         hasher.combine(chainCode)
@@ -14229,6 +14293,9 @@ public struct FfiConverterTypeTrezorPublicKeyResponse: FfiConverterRustBuffer {
         return
             try TrezorPublicKeyResponse(
                 xpub: FfiConverterString.read(from: &buf), 
+                xpubSegwit: FfiConverterOptionString.read(from: &buf), 
+                descriptor: FfiConverterOptionString.read(from: &buf), 
+                displayablePublicKey: FfiConverterString.read(from: &buf), 
                 path: FfiConverterString.read(from: &buf), 
                 publicKey: FfiConverterString.read(from: &buf), 
                 chainCode: FfiConverterString.read(from: &buf), 
@@ -14240,6 +14307,9 @@ public struct FfiConverterTypeTrezorPublicKeyResponse: FfiConverterRustBuffer {
 
     public static func write(_ value: TrezorPublicKeyResponse, into buf: inout [UInt8]) {
         FfiConverterString.write(value.xpub, into: &buf)
+        FfiConverterOptionString.write(value.xpubSegwit, into: &buf)
+        FfiConverterOptionString.write(value.descriptor, into: &buf)
+        FfiConverterString.write(value.displayablePublicKey, into: &buf)
         FfiConverterString.write(value.path, into: &buf)
         FfiConverterString.write(value.publicKey, into: &buf)
         FfiConverterString.write(value.chainCode, into: &buf)
@@ -14278,9 +14348,13 @@ public struct TrezorSignMessageParams {
      */
     public var message: String
     /**
-     * Coin network (default: Bitcoin)
+     * Coin network (inferred from the path when omitted)
      */
     public var coin: TrezorCoinType?
+    /**
+     * Allow an explicitly selected coin to differ from the path (default: false).
+     */
+    public var crossChain: Bool
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -14292,11 +14366,15 @@ public struct TrezorSignMessageParams {
          * Message to sign
          */message: String, 
         /**
-         * Coin network (default: Bitcoin)
-         */coin: TrezorCoinType?) {
+         * Coin network (inferred from the path when omitted)
+         */coin: TrezorCoinType?, 
+        /**
+         * Allow an explicitly selected coin to differ from the path (default: false).
+         */crossChain: Bool = false) {
         self.path = path
         self.message = message
         self.coin = coin
+        self.crossChain = crossChain
     }
 }
 
@@ -14316,6 +14394,9 @@ extension TrezorSignMessageParams: Equatable, Hashable {
         if lhs.coin != rhs.coin {
             return false
         }
+        if lhs.crossChain != rhs.crossChain {
+            return false
+        }
         return true
     }
 
@@ -14323,6 +14404,7 @@ extension TrezorSignMessageParams: Equatable, Hashable {
         hasher.combine(path)
         hasher.combine(message)
         hasher.combine(coin)
+        hasher.combine(crossChain)
     }
 }
 
@@ -14339,7 +14421,8 @@ public struct FfiConverterTypeTrezorSignMessageParams: FfiConverterRustBuffer {
             try TrezorSignMessageParams(
                 path: FfiConverterString.read(from: &buf), 
                 message: FfiConverterString.read(from: &buf), 
-                coin: FfiConverterOptionTypeTrezorCoinType.read(from: &buf)
+                coin: FfiConverterOptionTypeTrezorCoinType.read(from: &buf), 
+                crossChain: FfiConverterBool.read(from: &buf)
         )
     }
 
@@ -14347,6 +14430,7 @@ public struct FfiConverterTypeTrezorSignMessageParams: FfiConverterRustBuffer {
         FfiConverterString.write(value.path, into: &buf)
         FfiConverterString.write(value.message, into: &buf)
         FfiConverterOptionTypeTrezorCoinType.write(value.coin, into: &buf)
+        FfiConverterBool.write(value.crossChain, into: &buf)
     }
 }
 
@@ -14379,7 +14463,7 @@ public struct TrezorSignTxParams {
      */
     public var outputs: [TrezorTxOutput]
     /**
-     * Coin network (default: Bitcoin)
+     * Coin network (inferred from input paths when omitted)
      */
     public var coin: TrezorCoinType?
     /**
@@ -14405,7 +14489,7 @@ public struct TrezorSignTxParams {
          * Transaction outputs
          */outputs: [TrezorTxOutput], 
         /**
-         * Coin network (default: Bitcoin)
+         * Coin network (inferred from input paths when omitted)
          */coin: TrezorCoinType?, 
         /**
          * Lock time (default: 0)
@@ -14609,7 +14693,7 @@ public struct TrezorSignedTx {
      */
     public var serializedTx: String
     /**
-     * Broadcast transaction ID (populated when push=true)
+     * Optional upstream transaction ID. Broadcasting is a separate Core operation.
      */
     public var txid: String?
 
@@ -14623,7 +14707,7 @@ public struct TrezorSignedTx {
          * Serialized transaction (hex)
          */serializedTx: String, 
         /**
-         * Broadcast transaction ID (populated when push=true)
+         * Optional upstream transaction ID. Broadcasting is a separate Core operation.
          */txid: String?) {
         self.signatures = signatures
         self.serializedTx = serializedTx
@@ -21466,15 +21550,15 @@ extension OnchainError: Foundation.LocalizedError {
 public enum PassphraseResponse {
     
     /**
-     * User cancelled — aborts the pending operation.
+     * User cancelled. Aborts the pending operation.
      */
     case cancel
     /**
-     * Standard wallet — no passphrase, equivalent to `Some("")` on the device.
+     * Standard wallet with no passphrase, equivalent to `Some("")` on the device.
      */
     case standard
     /**
-     * Hidden wallet — derived from the passphrase entered on the host.
+     * Hidden wallet derived from the passphrase entered on the host.
      */
     case hidden(value: String
     )
@@ -23837,7 +23921,7 @@ extension UsdtTransferStatus: Codable {}
 /**
  * Which wallet a connection should open.
  *
- * Passed to `trezor_connect` and consumed at connect time — the passphrase is
+ * Passed to `trezor_connect` and consumed at connect time. The passphrase is
  * a one-shot input, not retained anywhere afterwards. On THP devices (Safe
  * 5/7) it is bound to the session at `ThpCreateNewSession`; on legacy devices
  * the mid-operation `PassphraseRequest` is answered from the UI callback
@@ -23847,7 +23931,7 @@ extension UsdtTransferStatus: Codable {}
 public enum WalletSelection {
     
     /**
-     * The standard wallet — no passphrase.
+     * The standard wallet with no passphrase.
      */
     case standard
     /**
@@ -28766,7 +28850,12 @@ public func trezorGetFeatures()async  -> TrezorFeatures?  {
         )
 }
 /**
- * Get a public key (xpub) from the connected Trezor device.
+ * Get a normalized xpub/tpub and display fields from the connected Trezor.
+ *
+ * When importing `response.xpub`, pass the selected BIP-49/BIP-84/BIP-86
+ * account type as the onchain `script_type` or `account_type_override`.
+ * `displayable_public_key` and Taproot `xpub_segwit` can be descriptors;
+ * do not pass them to extended-key import functions.
  */
 public func trezorGetPublicKey(params: TrezorGetPublicKeyParams)async throws  -> TrezorPublicKeyResponse  {
     return
@@ -29733,7 +29822,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_trezor_get_features() != 13970) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_trezor_get_public_key() != 13743) {
+    if (uniffi_bitkitcore_checksum_func_trezor_get_public_key() != 47787) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_trezor_initialize() != 16053) {
@@ -29907,7 +29996,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_pin_request() != 50474) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 33994) {
+    if (uniffi_bitkitcore_checksum_method_trezoruicallback_on_passphrase_request() != 17317) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_method_urdecoder_receive() != 44279) {

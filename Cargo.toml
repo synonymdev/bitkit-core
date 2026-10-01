@@ -1,6 +1,6 @@
 [package]
 name = "bitkitcore"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2021"
 rust-version = "1.90"
 
@@ -55,11 +55,11 @@ alloy-rlp = "0.3"
 
 # Trezor connect library - non-iOS platforms get USB + Bluetooth
 [target.'cfg(not(target_os = "ios"))'.dependencies]
-trezor-connect-rs = { version = "0.4.0", features = ["psbt"] }
+trezor-connect-rs = { version = "10.0.0", features = ["psbt"] }
 
 # iOS: Bluetooth only (libusb has no iOS backend, so no USB support)
 [target.'cfg(target_os = "ios")'.dependencies]
-trezor-connect-rs = { version = "0.4.0", default-features = false, features = ["bluetooth", "psbt"] }
+trezor-connect-rs = { version = "10.0.0", default-features = false, features = ["bluetooth", "psbt"] }
 
 # JNI for Android (must match btleplug's jni version)
 [target.'cfg(target_os = "android")'.dependencies]
@@ -77,6 +77,7 @@ jade-client-rs = { git = "https://github.com/synonymdev/jade-client-rs", rev = "
 jade-client-rs = { git = "https://github.com/synonymdev/jade-client-rs", rev = "d46d02a", features = ["reqwest-pinserver", "serial"] }
 
 [dev-dependencies]
+prost = "0.13"
 tokio = { version = "1.40.0", features = ["full", "test-util"] }
 serde_json = "1.0.114"
 hex = "0.4.3"

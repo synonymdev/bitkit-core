@@ -211,6 +211,12 @@ impl From<trezor_connect_rs::TrezorError> for TrezorError {
             // Device errors
             TE::Device(device_err) => match device_err {
                 TcDeviceError::NotConnected => TrezorError::NotConnected,
+                TcDeviceError::UnknownCoin => TrezorError::DeviceError {
+                    error_details: "Unknown coin: select Bitcoin, Testnet, Signet, or Regtest explicitly for this path".to_string(),
+                },
+                TcDeviceError::InvalidParameter(message) => TrezorError::DeviceError {
+                    error_details: format!("Invalid parameter: {}", message),
+                },
                 TcDeviceError::ActionCancelled => TrezorError::UserCancelled,
                 TcDeviceError::PinRequired => TrezorError::PinRequired,
                 TcDeviceError::InvalidPin => TrezorError::InvalidPin,

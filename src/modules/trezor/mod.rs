@@ -8,6 +8,12 @@ mod callbacks;
 mod errors;
 mod implementation;
 #[cfg(test)]
+mod migration_tests;
+#[cfg(test)]
+mod signing_tests;
+#[cfg(test)]
+mod test_transport;
+#[cfg(test)]
 mod tests;
 mod types;
 
