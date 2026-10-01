@@ -85,3 +85,13 @@ Build iOS and Android sequentially with the repository scripts; Android temporar
 - [LayerZero message statuses](https://docs.layerzero.network/v2/tools/layerzeroscan/mainnet/messages/get-messagesstatus)
 
 Destination token addresses follow the official USDT0 ecosystem listings for [Polygon](https://usdt0.to/ecosystem/polygon), [Plasma](https://usdt0.to/ecosystem/plasma) and [Stable](https://usdt0.to/ecosystem/stable).
+
+## Incoming deposits
+
+`UsdtDepositClient` authenticates reusable deposit-address registration, indicative quotes, history and detail requests with the wallet account. Its credential-free service URL is separate from the chain and bundler URLs. The companion service holds the Rhino API key and pins the supported USDT routes to this wallet's Arbitrum One account.
+
+Supported source networks are Ethereum, Solana, Polygon, Optimism, Base and Avalanche. The sender makes an ordinary USDT transfer to the returned address and pays the source-network fee. Rhino prices each deposit when processing it; quoted receiving amounts are estimates, not guaranteed delivery or spendable balance. The wallet credits funds only through its Arbitrum history.
+
+History returns at most 100 rows per page. Start with `before = 0, offset = 0`, then pass the returned `next_before` and `next_offset` together. The timestamp stays fixed while paging within a 30-day window and advances backward when that window is exhausted. Missing optional metadata must not hide a pending deposit. Provider recovery states and completed refunds remain visible; refund initiation requires provider support. No client refund command or automatic paid retry is provided.
+
+A clock-skew error requires correcting the device clock. Amount-limit errors include available USD-cent bounds for display. Service enablement, funded delivery, repeated deposits, recovery and provider operating costs need separate acceptance before release.
