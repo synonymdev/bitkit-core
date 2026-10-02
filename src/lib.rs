@@ -2428,7 +2428,12 @@ pub async fn trezor_get_address(
         })
 }
 
-/// Get a public key (xpub) from the connected Trezor device.
+/// Get a normalized xpub/tpub and display fields from the connected Trezor.
+///
+/// When importing `response.xpub`, pass the selected BIP-49/BIP-84/BIP-86
+/// account type as the onchain `script_type` or `account_type_override`.
+/// `displayable_public_key` and Taproot `xpub_segwit` can be descriptors;
+/// do not pass them to extended-key import functions.
 #[uniffi::export]
 pub async fn trezor_get_public_key(
     params: TrezorGetPublicKeyParams,

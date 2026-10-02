@@ -985,7 +985,7 @@ dependencies = [
 
 [[package]]
 name = "bitkitcore"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "alloy-primitives",
  "alloy-rlp",
@@ -1011,6 +1011,7 @@ dependencies = [
  "miniscript 12.3.7",
  "once_cell",
  "openssl",
+ "prost",
  "pubky 0.6.0",
  "pubky-app-specs",
  "r2d2",
@@ -6453,9 +6454,9 @@ dependencies = [
 
 [[package]]
 name = "trezor-connect-rs"
-version = "0.4.0"
+version = "10.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2c59a49eaa8a70bc09a6e7b3177eda0115ff20a4247244fd38bd484e832fd44"
+checksum = "e1aaf8ae225a23e9f008d02fe0b9d541dbe71eac04839028e122a2a7c9b75eed"
 dependencies = [
  "aes-gcm",
  "async-trait",

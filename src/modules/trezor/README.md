@@ -2,6 +2,97 @@
 
 This module provides Trezor hardware wallet integration for bitkit-core, supporting both USB and Bluetooth (BLE) connections on mobile (Android/iOS) and desktop platforms.
 
+## Migrating to trezor-connect-rs 10.0.0 (Core 0.7.0)
+
+Core uses the published registry release. Desktop and Android retain USB and
+Bluetooth, while iOS disables default features and enables Bluetooth only.
+PSBT support remains enabled.
+
+### Public keys and wallet import
+
+`TrezorPublicKeyResponse.xpub` is now always a normalized `xpub` or `tpub`.
+The response also exposes `xpub_segwit`, `descriptor`, and
+`displayable_public_key`, retaining node metadata and `root_fingerprint`.
+
+When importing the normalized key, retain the account type selected for the
+requested derivation path. Pass it to onchain APIs through `script_type`
+(the public argument used by account-info, transaction composition, and PSBT
+helpers). Core forwards that selection to its internal
+`account_type_override`:
+
+| Path purpose | Account type |
+| --- | --- |
+| BIP-44 | `Legacy` |
+| BIP-49 | `WrappedSegwit` |
+| BIP-84 | `NativeSegwit` |
+| BIP-86 | `Taproot` |
+
+For existing prefix-based BIP-49/BIP-84 imports, `xpub_segwit` contains the
+firmware `ypub`/`zpub`/`upub`/`vpub`. Existing stored keys remain accepted.
+Do not rewrite persisted keys, backup contents, or the key inputs to
+`derive_wallet_id`: a representation change must not create a second wallet.
+On reattachment, retain the stored representation and selected account type.
+Normalized keys with an explicit account type produce the same descriptors
+and addresses as their corresponding SLIP-132 keys.
+
+Use `displayable_public_key` for display. For Taproot, `xpub_segwit` and
+`displayable_public_key` can contain a descriptor. Import the normalized
+`xpub` with `Taproot` selected, or use an API designed for descriptors.
+Never send a descriptor to an API that expects a Base58 extended key.
+
+```rust
+let request = TrezorGetPublicKeyParams {
+    path: "m/84'/0'/0'".to_string(),
+    coin: None,
+    show_on_trezor: false,
+    cross_chain: false,
+};
+// Display response.displayable_public_key.
+// Import response.xpub with Some(AccountType::NativeSegwit).
+```
+
+### Networks and path overrides
+
+Omitting `coin` for address derivation, public-key derivation, message signing,
+and direct transaction signing now infers Bitcoin or Testnet from the path.
+Coin type `0` selects Bitcoin and coin type `1` selects Testnet. Regtest must
+be explicit. Signet continues to use the firmware Testnet network.
+
+`TrezorGetAddressParams`, `TrezorGetPublicKeyParams`, and
+`TrezorSignMessageParams` expose `cross_chain`, defaulting to `false` in
+bindings. Rust struct literals must provide it. Explicit coin/path mismatches
+are rejected unless the caller deliberately sets `cross_chain: true`.
+This flag does not override inference when the coin is omitted.
+Unknown coin types return a diagnostic asking for an explicit supported coin.
+
+Core paths require `m/` followed by at least one component. Short paths such
+as `m/0'` infer Bitcoin. BIP-45's second component is a cosigner index,
+so all BIP-45 cosigner paths infer Bitcoin; specify other networks explicitly.
+Message verification retains Core's Bitcoin default when `coin` is omitted.
+PSBT signing also retains its Bitcoin default when its network argument is
+omitted, and passes an explicit network to upstream conversion. Direct signing
+uses the same inferred or explicit network for external-output validation,
+change-key requests, local transaction verification, and the signing request.
+Unsupported multisig and external inputs remain rejected. Broadcasting remains
+a separate Core operation.
+
+Core exposes the existing `TrezorCoinType` UniFFI enum, not upstream serialized
+network strings. Core does not persist serialized upstream `Network` values,
+so no data migration is needed. Upstream serde uses `btc`, `test`, and
+`regtest`; firmware requests still use `Bitcoin`, `Testnet`, and `Regtest`.
+
+### Bindings and release follow-up
+
+Regenerate Swift, Kotlin, and Python with the repository build scripts.
+Core 0.7.0 is a minor release because public records and `xpub` semantics change.
+Android JNI libraries and Python/Kotlin generated output remain untracked.
+Publish platform artifacts through the normal release workflows after review.
+Native Android/iOS consumers must update their Core dependency and constructors,
+use the display fields, and retain account type and stored wallet identity.
+Hardware validation should cover address confirmation, key export, messages,
+transaction signing, and change outputs using test funds, recording the device,
+firmware, and transport. Release and consumer follow-up remain tracked in #161.
+
 ## Architecture
 
 ```
@@ -55,6 +146,7 @@ FFI-compatible types exposed via UniFFI:
 - `TrezorDeviceInfo` - Device metadata (id, transport type, name, model)
 - `TrezorFeatures` - Device capabilities and state
 - `TrezorGetAddressParams` / `TrezorAddressResponse` - Address derivation
+- `TrezorGetPublicKeyParams` / `TrezorPublicKeyResponse` - Key export and display
 - `TrezorSignMessageParams` / `TrezorSignedMessageResponse` - Message signing
 - `TrezorVerifyMessageParams` - Signature verification
 - `TrezorScriptType` - Bitcoin script types (P2PKH, P2SH-P2WPKH, P2WPKH, P2TR)
@@ -99,6 +191,7 @@ pub async fn trezor_scan() -> Result<Vec<TrezorDeviceInfo>, TrezorError>;
 pub async fn trezor_connect(device_id: String) -> Result<TrezorFeatures, TrezorError>;
 pub async fn trezor_get_features() -> Option<TrezorFeatures>;
 pub async fn trezor_refresh_features() -> Result<TrezorFeatures, TrezorError>;
+pub async fn trezor_get_public_key(params: TrezorGetPublicKeyParams) -> Result<TrezorPublicKeyResponse, TrezorError>;
 pub async fn trezor_get_address(params: TrezorGetAddressParams) -> Result<TrezorAddressResponse, TrezorError>;
 pub async fn trezor_sign_message(params: TrezorSignMessageParams) -> Result<TrezorSignedMessageResponse, TrezorError>;
 pub async fn trezor_verify_message(params: TrezorVerifyMessageParams) -> Result<bool, TrezorError>;

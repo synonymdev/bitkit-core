@@ -394,6 +394,13 @@ impl TrezorManager {
         }
     }
 
+    #[cfg(test)]
+    pub(super) fn with_test_device(device: ConnectedDevice) -> Self {
+        let mut manager = Self::new();
+        manager.connected_device = Mutex::new(Some(device));
+        manager
+    }
+
     /// Initialize the Trezor manager.
     ///
     /// On mobile: Verifies that the transport callback is set.
@@ -824,24 +831,7 @@ impl TrezorManager {
         psbt_base64: String,
         network: Option<TrezorCoinType>,
     ) -> Result<TrezorSignedTx, TrezorError> {
-        let btc_network = match network {
-            Some(TrezorCoinType::Testnet) => bitcoin::Network::Testnet,
-            Some(TrezorCoinType::Signet) => bitcoin::Network::Signet,
-            Some(TrezorCoinType::Regtest) => bitcoin::Network::Regtest,
-            _ => bitcoin::Network::Bitcoin,
-        };
-
-        let psbt_bytes = general_purpose::STANDARD
-            .decode(&psbt_base64)
-            .map_err(|e| TrezorError::DeviceError {
-                error_details: format!("Invalid PSBT base64: {}", e),
-            })?;
-        let sign_params = trezor_connect_rs::psbt::psbt_to_sign_tx_params(&psbt_bytes, btc_network)
-            .map_err(|e| TrezorError::DeviceError {
-                error_details: format!("PSBT conversion error: {}", e),
-            })?;
-
-        validate_sign_tx_params(&sign_params)?;
+        let sign_params = psbt_sign_tx_params(&psbt_base64, network)?;
 
         let mut connected_device = self.connected_device.lock().await;
         let device = connected_device.as_mut().ok_or(TrezorError::NotConnected)?;
@@ -958,6 +948,7 @@ impl TrezorManager {
             path: "m/84'/0'/0'".to_string(),
             show_on_trezor: false,
             coin: None,
+            cross_chain: false,
         };
         let response = self.get_public_key(params).await?;
         let fingerprint = response.root_fingerprint.ok_or(TrezorError::DeviceError {
@@ -1006,6 +997,32 @@ impl TrezorManager {
                 .map_err(TrezorError::from)
         }
     }
+}
+
+pub(super) fn psbt_sign_tx_params(
+    psbt_base64: &str,
+    network: Option<TrezorCoinType>,
+) -> Result<SignTxParams, TrezorError> {
+    let btc_network = match network {
+        Some(TrezorCoinType::Testnet) => bitcoin::Network::Testnet,
+        Some(TrezorCoinType::Signet) => bitcoin::Network::Signet,
+        Some(TrezorCoinType::Regtest) => bitcoin::Network::Regtest,
+        _ => bitcoin::Network::Bitcoin,
+    };
+
+    let psbt_bytes =
+        general_purpose::STANDARD
+            .decode(psbt_base64)
+            .map_err(|e| TrezorError::DeviceError {
+                error_details: format!("Invalid PSBT base64: {}", e),
+            })?;
+    let sign_params = trezor_connect_rs::psbt::psbt_to_sign_tx_params(&psbt_bytes, btc_network)
+        .map_err(|e| TrezorError::DeviceError {
+            error_details: format!("PSBT conversion error: {}", e),
+        })?;
+
+    validate_sign_tx_params(&sign_params)?;
+    Ok(sign_params)
 }
 
 impl Default for TrezorManager {
