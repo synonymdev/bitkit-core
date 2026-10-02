@@ -987,6 +987,7 @@ dependencies = [
 name = "bitkitcore"
 version = "0.6.0"
 dependencies = [
+ "aes-gcm",
  "alloy-primitives",
  "alloy-rlp",
  "alloy-sol-types",

@@ -1,0 +1,21 @@
+{
+  "description": "Legacy (v0) envelope as the gateway builds it for deployed Bitkit apps; byte-identical to bitkit-notification-server. The ephemeral key is the per-notification server key.",
+  "scheme": "v0",
+  "label": "bitkit-notifications",
+  "ephemeral_secret_key": "1111111111111111111111111111111111111111111111111111111111111111",
+  "ephemeral_public_key": "034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa",
+  "device_secret_key": "2222222222222222222222222222222222222222222222222222222222222222",
+  "device_public_key": "02466d7fcae563e5cb09a0d1870bb580344804617879a14949cf22285f1bae3f27",
+  "shared_point": "0277e0510d5042e2f5e9e59c977b81eeed590cf7d20c1c51da451a8eaa9fdc45ff",
+  "key": "954b48c50f1c6bf3a6cd20a6d7354775cb0d712a3e332333c87dcd52b83f42f9",
+  "iv": "000102030405060708090a0b0c0d0e0f",
+  "topic": "blocktank.incomingHtlc",
+  "payload": "{\"orderId\":\"abc\"}",
+  "created_at": "2024-01-01T00:00:00.000Z",
+  "plaintext": "{\"source\":\"blocktank\",\"type\":\"incomingHtlc\",\"payload\":{\"orderId\":\"abc\"},\"createdAt\":\"2024-01-01T00:00:00.000Z\"}",
+  "plaintext_len": 111,
+  "cipher": "mvdDR3nQxKFTs/N1fQ5z38Zw079ynGfhKTULDq9Mzm96yPl4T4HRyvGLxpqEz9Kq/zeJnUbNzNNPFA2Kh5bPISCuuna+L375NLJgKEN65Aqu6q8KLXECOLhlgdXTEt38xl946MINUfY45uWdtO9h",
+  "tag": "2bacdc4bd3ba62cdc3376e302dd70a5f",
+  "container": "{\"cipher\":\"mvdDR3nQxKFTs/N1fQ5z38Zw079ynGfhKTULDq9Mzm96yPl4T4HRyvGLxpqEz9Kq/zeJnUbNzNNPFA2Kh5bPISCuuna+L375NLJgKEN65Aqu6q8KLXECOLhlgdXTEt38xl946MINUfY45uWdtO9h\",\"iv\":\"000102030405060708090a0b0c0d0e0f\",\"tag\":\"2bacdc4bd3ba62cdc3376e302dd70a5f\",\"publicKey\":\"034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa\"}",
+  "container_len": 323
+}

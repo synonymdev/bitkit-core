@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add a `wake` module for the wake push gateway: device key, secret and install id generation, a signed registration (`wake_prepare_registration`, `wake_sign_pubky_proof`, `wake_register`), decryption of legacy (v0) and v1 envelopes from any delivered push (`wake_decrypt_push`), and the device routes for acks, presence, topics and unregistering. The v1 wire format is experimental until the apps adopt it. `register_device` and `test_notification` are unchanged.
+
 ## 0.5.16 - 2026-09-14
 
 - Serialize Jade discovery, connection setup, and teardown. A disconnect now cancels connection attempts that are in progress or queued, and a transport opened by a cancelled attempt is closed instead of leaked. A scan started while another lifecycle operation is running returns `DeviceBusy`.

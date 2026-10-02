@@ -1784,6 +1784,89 @@ RustBuffer uniffi_bitkitcore_fn_func_validate_bitcoin_address(RustBuffer address
 void uniffi_bitkitcore_fn_func_validate_mnemonic(RustBuffer mnemonic_phrase, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_ACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_ACK
+uint64_t uniffi_bitkitcore_fn_func_wake_ack(RustBuffer gateway_url, RustBuffer device_secret, RustBuffer wake_id, RustBuffer outcome
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_CLEAR_PRESENCE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_CLEAR_PRESENCE
+uint64_t uniffi_bitkitcore_fn_func_wake_clear_presence(RustBuffer gateway_url, RustBuffer device_secret
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_DECRYPT_PUSH
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_DECRYPT_PUSH
+RustBuffer uniffi_bitkitcore_fn_func_wake_decrypt_push(RustBuffer secret_key_hex, RustBuffer push_json, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_DECRYPT_V0
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_DECRYPT_V0
+RustBuffer uniffi_bitkitcore_fn_func_wake_decrypt_v0(RustBuffer secret_key_hex, RustBuffer cipher, RustBuffer iv, RustBuffer tag, RustBuffer public_key, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_DECRYPT_V1
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_DECRYPT_V1
+RustBuffer uniffi_bitkitcore_fn_func_wake_decrypt_v1(RustBuffer secret_key_hex, RustBuffer container_json, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_GENERATE_DEVICE_SECRET
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_GENERATE_DEVICE_SECRET
+RustBuffer uniffi_bitkitcore_fn_func_wake_generate_device_secret(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_GENERATE_INSTALL_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_GENERATE_INSTALL_ID
+RustBuffer uniffi_bitkitcore_fn_func_wake_generate_install_id(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_GENERATE_KEYPAIR
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_GENERATE_KEYPAIR
+RustBuffer uniffi_bitkitcore_fn_func_wake_generate_keypair(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_LIST_TOPICS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_LIST_TOPICS
+uint64_t uniffi_bitkitcore_fn_func_wake_list_topics(RustBuffer gateway_url
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_PREPARE_REGISTRATION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_PREPARE_REGISTRATION
+RustBuffer uniffi_bitkitcore_fn_func_wake_prepare_registration(RustBuffer audience, RustBuffer app, RustBuffer install_id, RustBuffer platform, RustBuffer environment, RustBuffer push_token, RustBuffer encryption_public_key, RustBuffer secret_sha256, RustBuffer identities, RustBuffer topics, RustBuffer timestamp, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_REGISTER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_REGISTER
+uint64_t uniffi_bitkitcore_fn_func_wake_register(RustBuffer gateway_url, RustBuffer request, RustBuffer proofs
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_SERVER_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_SERVER_INFO
+uint64_t uniffi_bitkitcore_fn_func_wake_server_info(RustBuffer gateway_url
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_SET_PRESENCE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_SET_PRESENCE
+uint64_t uniffi_bitkitcore_fn_func_wake_set_presence(RustBuffer gateway_url, RustBuffer device_secret, uint32_t ttl_secs
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_SET_TOPICS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_SET_TOPICS
+uint64_t uniffi_bitkitcore_fn_func_wake_set_topics(RustBuffer gateway_url, RustBuffer device_secret, RustBuffer topics
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_SIGN_PUBKY_PROOF
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_SIGN_PUBKY_PROOF
+RustBuffer uniffi_bitkitcore_fn_func_wake_sign_pubky_proof(RustBuffer secret_key_hex, RustBuffer message, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_UNREGISTER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_UNREGISTER
+uint64_t uniffi_bitkitcore_fn_func_wake_unregister(RustBuffer gateway_url, RustBuffer device_secret
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_CLOSED_CHANNELS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WIPE_ALL_CLOSED_CHANNELS
 void uniffi_bitkitcore_fn_func_wipe_all_closed_channels(RustCallStatus *_Nonnull out_status
@@ -3309,6 +3392,102 @@ uint16_t uniffi_bitkitcore_checksum_func_validate_bitcoin_address(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_MNEMONIC
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_MNEMONIC
 uint16_t uniffi_bitkitcore_checksum_func_validate_mnemonic(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_ACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_ACK
+uint16_t uniffi_bitkitcore_checksum_func_wake_ack(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_CLEAR_PRESENCE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_CLEAR_PRESENCE
+uint16_t uniffi_bitkitcore_checksum_func_wake_clear_presence(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_DECRYPT_PUSH
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_DECRYPT_PUSH
+uint16_t uniffi_bitkitcore_checksum_func_wake_decrypt_push(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_DECRYPT_V0
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_DECRYPT_V0
+uint16_t uniffi_bitkitcore_checksum_func_wake_decrypt_v0(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_DECRYPT_V1
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_DECRYPT_V1
+uint16_t uniffi_bitkitcore_checksum_func_wake_decrypt_v1(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_GENERATE_DEVICE_SECRET
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_GENERATE_DEVICE_SECRET
+uint16_t uniffi_bitkitcore_checksum_func_wake_generate_device_secret(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_GENERATE_INSTALL_ID
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_GENERATE_INSTALL_ID
+uint16_t uniffi_bitkitcore_checksum_func_wake_generate_install_id(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_GENERATE_KEYPAIR
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_GENERATE_KEYPAIR
+uint16_t uniffi_bitkitcore_checksum_func_wake_generate_keypair(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_LIST_TOPICS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_LIST_TOPICS
+uint16_t uniffi_bitkitcore_checksum_func_wake_list_topics(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_PREPARE_REGISTRATION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_PREPARE_REGISTRATION
+uint16_t uniffi_bitkitcore_checksum_func_wake_prepare_registration(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_REGISTER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_REGISTER
+uint16_t uniffi_bitkitcore_checksum_func_wake_register(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_SERVER_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_SERVER_INFO
+uint16_t uniffi_bitkitcore_checksum_func_wake_server_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_SET_PRESENCE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_SET_PRESENCE
+uint16_t uniffi_bitkitcore_checksum_func_wake_set_presence(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_SET_TOPICS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_SET_TOPICS
+uint16_t uniffi_bitkitcore_checksum_func_wake_set_topics(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_SIGN_PUBKY_PROOF
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_SIGN_PUBKY_PROOF
+uint16_t uniffi_bitkitcore_checksum_func_wake_sign_pubky_proof(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_UNREGISTER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_UNREGISTER
+uint16_t uniffi_bitkitcore_checksum_func_wake_unregister(void
     
 );
 #endif
