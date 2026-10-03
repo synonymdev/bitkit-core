@@ -37,7 +37,7 @@ pub struct UsdtWallet {
     pub(super) rpc: Rpc,
     pub(super) paymaster: Pimlico,
     pub(super) store: Store,
-    operation: Mutex<()>,
+    pub(super) operation: Mutex<()>,
     bridge_poll_offset: AtomicUsize,
     bridge_retry_after: Mutex<HashMap<String, Instant>>,
     pub(super) history_range_limit: AtomicU64,

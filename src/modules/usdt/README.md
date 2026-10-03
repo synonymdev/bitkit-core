@@ -85,3 +85,11 @@ Build iOS and Android sequentially with the repository scripts; Android temporar
 - [LayerZero message statuses](https://docs.layerzero.network/v2/tools/layerzeroscan/mainnet/messages/get-messagesstatus)
 
 Destination token addresses follow the official USDT0 ecosystem listings for [Polygon](https://usdt0.to/ecosystem/polygon), [Plasma](https://usdt0.to/ecosystem/plasma) and [Stable](https://usdt0.to/ecosystem/stable).
+
+## Request-bound payment proofs
+
+`create_payment_proof` signs an executed direct Arbitrum payment using Paykit's `erc20-transfer-eip712` profile. The binding identifies the authenticated payer and payee, the app owning the accepted endpoint, request, reference, billing period and selected conversion quote. Persist this immutable binding and the quote/payment ID before `send`. Retry proof creation and delivery independently after execution; neither action sends funds. A pending payment returns `None`.
+
+`verify_payment_proof` checks the exact receipt log, pinned chain/token/recipient, canonical successful receipt and payer signature. Ordinary ERC-20 senders are supported. The service must retain receipt status and each retained log's original `receiptLogIndex` before filtering. The returned `payment_id` must be claimed at most once across requests and billing periods; `transfer_id` remains the activity identity. Applications validate authenticated request terms, endpoint app ownership, quoted amounts and deadlines against the returned amount and block timestamp.
+
+The proof binding and interoperability vectors follow [Paykit rc59](https://github.com/pubky/paykit-rs/blob/v0.1.0-rc59/specs/erc20-payment-proofs.md). Receipt positions are canonical decimal strings on the wire.

@@ -685,6 +685,11 @@ uint64_t uniffi_bitkitcore_fn_method_usdtwallet_balance(void*_Nonnull ptr
 uint64_t uniffi_bitkitcore_fn_method_usdtwallet_check_recent_execution(void*_Nonnull ptr, RustBuffer id
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_CREATE_PAYMENT_PROOF
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_CREATE_PAYMENT_PROOF
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_create_payment_proof(void*_Nonnull ptr, RustBuffer transfer_id, RustBuffer binding, RustBuffer mnemonic, RustBuffer passphrase
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_HISTORY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_HISTORY
 RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_history(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -718,6 +723,11 @@ uint64_t uniffi_bitkitcore_fn_method_usdtwallet_send(void*_Nonnull ptr, RustBuff
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SYNC_HISTORY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SYNC_HISTORY
 uint64_t uniffi_bitkitcore_fn_method_usdtwallet_sync_history(void*_Nonnull ptr
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_VERIFY_PAYMENT_PROOF
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_VERIFY_PAYMENT_PROOF
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_verify_payment_proof(void*_Nonnull ptr, RustBuffer binding, RustBuffer proof
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITIES_FROM_JSON
@@ -3480,6 +3490,12 @@ uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_check_recent_execution(voi
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_CREATE_PAYMENT_PROOF
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_CREATE_PAYMENT_PROOF
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_create_payment_proof(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_HISTORY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_HISTORY
 uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_history(void
@@ -3519,6 +3535,12 @@ uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_send(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SYNC_HISTORY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SYNC_HISTORY
 uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_sync_history(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_VERIFY_PAYMENT_PROOF
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_VERIFY_PAYMENT_PROOF
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_verify_payment_proof(void
     
 );
 #endif
