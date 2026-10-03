@@ -308,27 +308,57 @@ impl Scanner {
         })
     }
 
-    fn decode_onchain(invoice_str: &str) -> Result<Self, DecodingError> {
-        let parts: Vec<&str> = invoice_str
-            .strip_prefix("bitcoin:")
-            .unwrap_or(invoice_str)
-            .split('?')
-            .collect();
+    pub(crate) fn decode_onchain(invoice_str: &str) -> Result<Self, DecodingError> {
+        let without_prefix =
+            if invoice_str.len() >= 8 && invoice_str[..8].eq_ignore_ascii_case("bitcoin:") {
+                &invoice_str[8..]
+            } else {
+                invoice_str
+            };
 
-        let address = parts[0].to_string();
+        // Reject if there is a second "bitcoin:" URI prefix anywhere in the remainder (issue #63)
+        if without_prefix.to_ascii_lowercase().contains("bitcoin:") {
+            return Err(DecodingError::InvalidFormat);
+        }
 
-        let params = if parts.len() > 1 {
-            parts[1]
-                .split('&')
-                .filter_map(|param| {
-                    param
-                        .split_once('=')
-                        .map(|(k, v)| (k.to_string(), v.to_string()))
-                })
-                .collect::<HashMap<String, String>>()
-        } else {
-            HashMap::new()
+        let (address_part, query_part) = match without_prefix.split_once('?') {
+            Some((addr, query)) => (addr, Some(query)),
+            None => (without_prefix, None),
         };
+
+        let address = address_part.to_string();
+
+        let mut params = HashMap::new();
+        let mut seen_singletons = std::collections::HashSet::new();
+
+        if let Some(query) = query_part {
+            for param in query.split('&') {
+                if param.is_empty() {
+                    continue;
+                }
+                let (k, v) = match param.split_once('=') {
+                    Some((key, val)) => (key, val),
+                    None => (param, ""),
+                };
+
+                let lower_k = k.to_ascii_lowercase();
+                let singleton_key = match lower_k.as_str() {
+                    "amount" => Some("amount"),
+                    "label" => Some("label"),
+                    "message" => Some("message"),
+                    "pop" | "req-pop" => Some("pop"),
+                    _ => None,
+                };
+
+                if let Some(canonical) = singleton_key {
+                    if !seen_singletons.insert(canonical) {
+                        return Err(DecodingError::InvalidFormat);
+                    }
+                }
+
+                params.insert(lower_k, v.to_string());
+            }
+        }
 
         let amount_satoshis = params
             .get("amount")
