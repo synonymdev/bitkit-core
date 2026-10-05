@@ -10,6 +10,8 @@ pub enum UsdtError {
     WrongNetwork,
     #[error("Wallet credentials do not match this USDT account")]
     InvalidCredentials,
+    #[error("Set your device date and time automatically, then try again")]
+    ClockSkew,
     #[error("This account uses another wallet's smart account. Restore its delegation before sending with Bitkit")]
     UnsupportedDelegation,
     #[error("The USDT balance does not cover the amount and maximum fee")]
@@ -20,6 +22,17 @@ pub enum UsdtError {
     PendingTransfer,
     #[error("The selected USDT payment route is unavailable")]
     UnsupportedRoute,
+    #[error("This deposit needs provider assistance. Check its recovery status")]
+    DepositNeedsAttention,
+    #[error("Deposit details changed. Refresh the deposit history and select it again")]
+    DepositNotFound,
+    #[error("The deposit service could not verify this request. Try again")]
+    DepositAuthorizationRejected,
+    #[error("The amount is outside this deposit route's limits. Review the minimum and maximum")]
+    DepositAmountOutOfRange {
+        min_usd_cents: Option<String>,
+        max_usd_cents: Option<String>,
+    },
     #[error("USDT payments are not configured for this app build")]
     NotConfigured,
     #[error("The network could not be reached. Try again")]

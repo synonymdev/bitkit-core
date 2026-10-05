@@ -85,3 +85,19 @@ Build iOS and Android sequentially with the repository scripts; Android temporar
 - [LayerZero message statuses](https://docs.layerzero.network/v2/tools/layerzeroscan/mainnet/messages/get-messagesstatus)
 
 Destination token addresses follow the official USDT0 ecosystem listings for [Polygon](https://usdt0.to/ecosystem/polygon), [Plasma](https://usdt0.to/ecosystem/plasma) and [Stable](https://usdt0.to/ecosystem/stable).
+
+## Incoming deposits
+
+`UsdtDepositClient` authenticates reusable deposit-address registration, indicative quotes, history, detail and refund requests with the wallet account. Its credential-free service URL is separate from the chain and bundler URLs. The companion service holds the Orchestra server key and fixes the destination to this wallet's Arbitrum One USDT0 account.
+
+Supported source networks are Ethereum, Tron, Solana, Polygon, Base and BNB Smart Chain (`bsc`). Arbitrum receives directly through the wallet. The service advertises only explicitly enabled, currently supported routes. The sender transfers USDT to the returned address and pays the source-network fee. Orchestra prices each deposit when processing it; receiving estimates are not guarantees or spendable balance. The wallet credits funds only through its Arbitrum history.
+
+Orchestra's general swap catalog is broader than its standing-address coverage. Optimism, TON, Plasma and HyperEVM are not offered because the approved account does not currently return standing addresses for them. Do not reuse an EVM deposit address on an unlisted network. Additional source networks require provider address support and funded acceptance.
+
+All client amounts use millionths of USDT. The service scales BSC USDT's 18-decimal source units when quoting and normalizes observed BSC deposit/batch amounts to six decimals, rounding only sub-millionth source dust down. Arbitrum output amounts are exact. EVM receive QR payloads pin the token contract and chain; Tron and Solana use the validated address.
+
+History returns at most 50 rows per page. Start with `offset = 0`, then use `next_offset` until it is absent. Retain each row's page offset for detail and refund requests; if new arrivals move it out of the inspected pages, refresh history. Deduplicate deposits by ID. Linked order amounts can include multiple deposits batched together and must be labelled as batch totals.
+
+Refunds require a user-approved address on the source network and provider eligibility; an acknowledgment means queued, not paid. Never infer a refund address from the original sender, which may be an exchange hot wallet. Unconverted Tron refunds require provider assistance. Missing optional metadata must not hide pending deposits. Address recovery depends on the same Orchestra partner account and immutable account-derived reference; provider availability and address control remain trust dependencies.
+
+Use a matching [bitkit-usdt-service](https://github.com/synonymdev/bitkit-usdt-service) deployment with `ORCHESTRA_API_KEY` and `ORCHESTRA_DEPOSIT_NETWORKS`. Enable each source only after funded delivery and provider recovery acceptance. See [Orchestra deposit addresses](https://docs.flashnet.xyz/orchestra/deposit-addresses).
