@@ -744,6 +744,7 @@ impl ActivityDB {
 
     /// Record a successful RBF result atomically. The replacement's rate is stored as pending
     /// metadata until its activity arrives, or applied immediately if that activity already exists.
+    /// Also updates the still-pending original's rate so its estimate reflects the boost until the replacement arrives.
     /// A removed/confirmed original is not resurrected or marked as pending again.
     pub fn record_rbf_boost(
         &mut self,
