@@ -3,7 +3,7 @@ use crate::activity::{
     OnchainActivity, PaymentState, PaymentType, PreActivityMetadata, SortDirection,
     TransactionDetails, TxInput, TxOutput,
 };
-use rusqlite::{Connection, OptionalExtension};
+use rusqlite::{Connection, OptionalExtension, Transaction};
 use serde_json;
 
 pub struct ActivityDB {
@@ -742,6 +742,111 @@ impl ActivityDB {
         }
     }
 
+    /// Record a successful RBF result atomically. The replacement's rate is stored as pending
+    /// metadata until its activity arrives, or applied immediately if that activity already exists.
+    /// A removed/confirmed original is not resurrected or marked as pending again.
+    pub fn record_rbf_boost(
+        &mut self,
+        wallet_id: &str,
+        original_activity_id: &str,
+        replacement_tx_id: &str,
+        fee_rate: u64,
+    ) -> Result<(), ActivityError> {
+        let wallet_id = Self::normalize_wallet_id(wallet_id)?;
+        if original_activity_id.trim().is_empty()
+            || replacement_tx_id.trim().is_empty()
+            || fee_rate == 0
+            || fee_rate > i64::MAX as u64
+        {
+            return Err(ActivityError::InvalidActivity {
+                error_details:
+                    "RBF requires non-blank identifiers and a positive SQLite-compatible fee rate"
+                        .to_string(),
+            });
+        }
+        let record_error = |e: rusqlite::Error| ActivityError::DataError {
+            error_details: format!("Failed to record RBF boost: {}", e),
+        };
+        let tx = self.conn.transaction().map_err(record_error)?;
+        let original = tx
+            .query_row(
+                "SELECT o.tx_id, a.tx_type FROM onchain_activity o
+             JOIN activities a ON a.wallet_id = o.wallet_id AND a.id = o.id
+             WHERE o.wallet_id = ?1 AND o.id = ?2",
+                rusqlite::params![&wallet_id, original_activity_id],
+                |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)),
+            )
+            .optional()
+            .map_err(record_error)?;
+        match original {
+            Some((original_tx_id, tx_type))
+                if original_tx_id != replacement_tx_id && tx_type == "sent" => {}
+            _ => {
+                return Err(ActivityError::InvalidActivity {
+                    error_details:
+                        "RBF original must be a sent activity in this wallet with a different txid"
+                            .to_string(),
+                })
+            }
+        }
+
+        tx.execute(
+            "INSERT INTO pre_activity_metadata (
+                wallet_id, payment_id, tags, tx_id, is_receive, fee_rate, created_at
+             ) VALUES (?1, ?2, '[]', ?2, 0, ?3, strftime('%s', 'now'))
+             ON CONFLICT(wallet_id, payment_id) DO UPDATE SET
+                fee_rate = excluded.fee_rate, tx_id = excluded.tx_id, is_receive = 0",
+            rusqlite::params![&wallet_id, replacement_tx_id, fee_rate as i64],
+        )
+        .map_err(record_error)?;
+        tx.execute(
+            "UPDATE onchain_activity SET is_boosted = 1, fee_rate = ?1
+             WHERE wallet_id = ?2 AND id = ?3 AND does_exist = 1 AND confirmed = 0",
+            rusqlite::params![fee_rate as i64, &wallet_id, original_activity_id],
+        )
+        .map_err(record_error)?;
+        tx.execute(
+            "UPDATE activities SET updated_at = strftime('%s', 'now')
+             WHERE wallet_id = ?1 AND id = ?2 AND id IN (
+                SELECT id FROM onchain_activity WHERE wallet_id = ?1 AND id = ?2 AND does_exist = 1 AND confirmed = 0
+             )",
+            rusqlite::params![&wallet_id, original_activity_id],
+        ).map_err(record_error)?;
+
+        let replacement_id = tx
+            .query_row(
+                "SELECT id FROM onchain_activity WHERE wallet_id = ?1 AND tx_id = ?2",
+                rusqlite::params![&wallet_id, replacement_tx_id],
+                |row| row.get::<_, String>(0),
+            )
+            .optional()
+            .map_err(record_error)?;
+        if let Some(replacement_id) = replacement_id {
+            let metadata = Self::get_pre_activity_metadata_in_connection(
+                &tx,
+                &wallet_id,
+                replacement_tx_id,
+                false,
+            )?
+            .ok_or(ActivityError::DataError {
+                error_details: "Missing replacement fee metadata during RBF recording".to_string(),
+            })?;
+            Self::transfer_pre_activity_metadata_in_transaction(
+                &tx,
+                &wallet_id,
+                replacement_tx_id,
+                &replacement_id,
+                false,
+                metadata,
+            )?;
+            tx.execute(
+                "UPDATE activities SET updated_at = strftime('%s', 'now') WHERE wallet_id = ?1 AND id = ?2",
+                rusqlite::params![&wallet_id, &replacement_id],
+            ).map_err(record_error)?;
+        }
+        tx.commit().map_err(record_error)
+    }
+
     /// Inserts a new onchain activity into the database.
     pub fn insert_onchain_activity(
         &mut self,
@@ -916,6 +1021,23 @@ impl ActivityDB {
         &mut self,
         activities: &[OnchainActivity],
     ) -> Result<(), ActivityError> {
+        self.upsert_onchain_activities_with_fee_rate_policy(activities, false)
+    }
+
+    /// Merge a sync/event snapshot without replacing a fee rate already known for its txid.
+    /// Full upsert/update APIs retain their normal overwrite semantics for deliberate corrections.
+    pub fn upsert_onchain_activity_preserving_fee_rate(
+        &mut self,
+        activity: &OnchainActivity,
+    ) -> Result<(), ActivityError> {
+        self.upsert_onchain_activities_with_fee_rate_policy(std::slice::from_ref(activity), true)
+    }
+
+    fn upsert_onchain_activities_with_fee_rate_policy(
+        &mut self,
+        activities: &[OnchainActivity],
+        preserve_fee_rate: bool,
+    ) -> Result<(), ActivityError> {
         if activities.is_empty() {
             return Ok(());
         }
@@ -966,7 +1088,7 @@ impl ActivityDB {
                     confirmed = excluded.confirmed,
                     value = excluded.value,
                     fee = excluded.fee,
-                    fee_rate = excluded.fee_rate,
+                    fee_rate = CASE WHEN ?16 THEN onchain_activity.fee_rate ELSE excluded.fee_rate END,
                     is_boosted = excluded.is_boosted,
                     boost_tx_ids = excluded.boost_tx_ids,
                     is_transfer = excluded.is_transfer,
@@ -986,10 +1108,55 @@ impl ActivityDB {
                     });
                 }
                 let wallet_id = Self::normalize_wallet_id(&activity.wallet_id)?;
+                let activity_id = if preserve_fee_rate {
+                    if activity.tx_id.trim().is_empty() {
+                        return Err(ActivityError::InvalidActivity {
+                            error_details: "Sync activity txid must not be blank".to_string(),
+                        });
+                    }
+                    tx.query_row(
+                        "SELECT id FROM onchain_activity WHERE wallet_id = ?1 AND tx_id = ?2",
+                        rusqlite::params![&wallet_id, &activity.tx_id],
+                        |row| row.get::<_, String>(0),
+                    )
+                    .optional()
+                    .map_err(|e| ActivityError::RetrievalError {
+                        error_details: format!("Failed to resolve sync activity: {}", e),
+                    })?
+                    .unwrap_or_else(|| activity.id.clone())
+                } else {
+                    activity.id.clone()
+                };
+
+                if preserve_fee_rate {
+                    let existing = tx
+                        .query_row(
+                            "SELECT a.activity_type, o.tx_id FROM activities a
+                         LEFT JOIN onchain_activity o ON a.wallet_id = o.wallet_id AND a.id = o.id
+                         WHERE a.wallet_id = ?1 AND a.id = ?2",
+                            rusqlite::params![&wallet_id, &activity_id],
+                            |row| Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?)),
+                        )
+                        .optional()
+                        .map_err(|e| ActivityError::RetrievalError {
+                            error_details: format!(
+                                "Failed to validate sync activity identity: {}",
+                                e
+                            ),
+                        })?;
+                    if existing.is_some_and(|(kind, txid)| {
+                        kind != "onchain" || txid.as_deref() != Some(&activity.tx_id)
+                    }) {
+                        return Err(ActivityError::InvalidActivity {
+                            error_details: "Sync activity id belongs to a different transaction"
+                                .to_string(),
+                        });
+                    }
+                }
 
                 stmt_act
                     .execute((
-                        &activity.id,
+                        &activity_id,
                         &wallet_id,
                         Self::payment_type_to_string(&activity.tx_type),
                         activity.timestamp,
@@ -1004,7 +1171,7 @@ impl ActivityDB {
                 stmt_onchain
                     .execute((
                         &wallet_id,
-                        &activity.id,
+                        &activity_id,
                         &activity.tx_id,
                         &activity.address,
                         activity.confirmed,
@@ -1018,10 +1185,35 @@ impl ActivityDB {
                         activity.confirm_timestamp,
                         &activity.channel_id,
                         &activity.transfer_tx_id,
+                        preserve_fee_rate,
                     ))
                     .map_err(|e| ActivityError::InsertError {
                         error_details: format!("Failed to upsert onchain_activity: {}", e),
                     })?;
+
+                if preserve_fee_rate {
+                    let search_by_address = activity.tx_type == PaymentType::Received;
+                    let search_key = if search_by_address {
+                        &activity.address
+                    } else {
+                        &activity.tx_id
+                    };
+                    if let Some(metadata) = Self::get_pre_activity_metadata_in_connection(
+                        &tx,
+                        &wallet_id,
+                        search_key,
+                        search_by_address,
+                    )? {
+                        Self::transfer_pre_activity_metadata_in_transaction(
+                            &tx,
+                            &wallet_id,
+                            search_key,
+                            &activity_id,
+                            search_by_address,
+                            metadata,
+                        )?;
+                    }
+                }
             }
         }
 
@@ -1029,8 +1221,10 @@ impl ActivityDB {
             error_details: format!("Failed to commit transaction: {}", e),
         })?;
 
-        for activity in activities {
-            self.apply_pre_activity_metadata_for_onchain(activity, &activity.id);
+        if !preserve_fee_rate {
+            for activity in activities {
+                self.apply_pre_activity_metadata_for_onchain(activity, &activity.id);
+            }
         }
 
         Ok(())
@@ -2630,6 +2824,20 @@ impl ActivityDB {
         search_key: &str,
         search_by_address: bool,
     ) -> Result<Option<PreActivityMetadata>, ActivityError> {
+        Self::get_pre_activity_metadata_in_connection(
+            &self.conn,
+            wallet_id,
+            search_key,
+            search_by_address,
+        )
+    }
+
+    fn get_pre_activity_metadata_in_connection(
+        conn: &Connection,
+        wallet_id: &str,
+        search_key: &str,
+        search_by_address: bool,
+    ) -> Result<Option<PreActivityMetadata>, ActivityError> {
         let wallet_id = Self::normalize_wallet_id(wallet_id)?;
         let sql = if search_by_address {
             "
@@ -2645,8 +2853,7 @@ impl ActivityDB {
             WHERE wallet_id = ?1 AND payment_id = ?2"
         };
 
-        let mut stmt = self
-            .conn
+        let mut stmt = conn
             .prepare(sql)
             .map_err(|e| ActivityError::RetrievalError {
                 error_details: format!("Failed to prepare statement: {}", e),
@@ -2825,14 +3032,36 @@ impl ActivityDB {
                 None => return Ok(Vec::new()),
             };
 
-        let tags = metadata.tags;
-
         let tx = self
             .conn
             .transaction()
             .map_err(|e| ActivityError::DataError {
                 error_details: format!("Failed to start transaction: {}", e),
             })?;
+
+        let tags = Self::transfer_pre_activity_metadata_in_transaction(
+            &tx,
+            &wallet_id,
+            search_key,
+            activity_id,
+            search_by_address,
+            metadata,
+        )?;
+        tx.commit().map_err(|e| ActivityError::DataError {
+            error_details: format!("Failed to commit transaction: {}", e),
+        })?;
+        Ok(tags)
+    }
+
+    fn transfer_pre_activity_metadata_in_transaction(
+        tx: &Transaction<'_>,
+        wallet_id: &str,
+        search_key: &str,
+        activity_id: &str,
+        search_by_address: bool,
+        metadata: PreActivityMetadata,
+    ) -> Result<Vec<String>, ActivityError> {
+        let tags = metadata.tags;
 
         if let Some(address) = &metadata.address {
             if !address.is_empty() {
@@ -2914,10 +3143,6 @@ impl ActivityDB {
                 error_details: format!("Failed to delete pre-activity metadata: {}", e),
             })?;
         }
-
-        tx.commit().map_err(|e| ActivityError::DataError {
-            error_details: format!("Failed to commit transaction: {}", e),
-        })?;
 
         Ok(tags)
     }

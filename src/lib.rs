@@ -592,6 +592,46 @@ pub fn upsert_activity(activity: Activity) -> Result<(), ActivityError> {
     db.upsert_activity(&activity)
 }
 
+/// Persist a successful outgoing RBF result, including its replacement fee rate, in one transaction.
+/// Call after the node has returned the replacement txid; this function does not broadcast anything.
+#[uniffi::export]
+pub fn record_rbf_boost(
+    wallet_id: String,
+    original_activity_id: String,
+    replacement_tx_id: String,
+    fee_rate: u64,
+) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
+    db.record_rbf_boost(
+        &wallet_id,
+        &original_activity_id,
+        &replacement_tx_id,
+        fee_rate,
+    )
+}
+
+/// Merge a sync/event snapshot without overwriting a known fee rate for the same wallet and txid.
+/// Generic upsert_activity/update_activity still accept explicit fee-rate corrections.
+#[uniffi::export]
+pub fn upsert_onchain_activity_preserving_fee_rate(
+    activity: OnchainActivity,
+) -> Result<(), ActivityError> {
+    let mut guard = get_activity_db()?;
+    let db = guard
+        .activity_db
+        .as_mut()
+        .ok_or(ActivityError::ConnectionError {
+            error_details: "Database not initialized. Call init_db first.".to_string(),
+        })?;
+    db.upsert_onchain_activity_preserving_fee_rate(&activity)
+}
+
 #[uniffi::export]
 pub fn insert_activity(activity: Activity) -> Result<(), ActivityError> {
     let mut guard = get_activity_db()?;

@@ -1,6 +1,8 @@
 mod backup_migration;
 mod errors;
 mod implementation;
+#[cfg(test)]
+mod rbf_tests;
 mod tests;
 mod types;
 
