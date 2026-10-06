@@ -2,7 +2,7 @@ use crate::modules::boltz::errors::BoltzError;
 use crate::modules::boltz::models::{
     BoltzDB, CreationIntent, SwapRecord, CREATE_META_TABLE, CREATE_SWAPS_TABLE, SCHEMA_VERSION,
 };
-use crate::modules::boltz::types::{BoltzNetwork, BoltzSwapType};
+use crate::modules::boltz::types::{BoltzNetwork, BoltzSwapStatus, BoltzSwapType};
 use rusqlite::{params, Connection, OptionalExtension, Row};
 
 /// Counter key in `swap_meta` for the next deterministic swap index.
@@ -14,6 +14,7 @@ impl BoltzDB {
         let conn = Connection::open(db_path).map_err(|e| BoltzError::InitializationError {
             error_details: format!("Error opening database: {}", e),
         })?;
+        conn.pragma_update(None, "synchronous", "FULL")?;
         let db = BoltzDB {
             conn: tokio::sync::Mutex::new(conn),
             recovery_gate: tokio::sync::RwLock::new(()),
@@ -74,6 +75,7 @@ impl BoltzDB {
             conn.execute("INSERT INTO pending_spends SELECT swap_id,txid,refund_address FROM pending_spends_v2", [])?;
             conn.execute("DROP TABLE pending_spends_v2", [])?;
         }
+        conn.execute("CREATE TABLE IF NOT EXISTS payment_attempts (swap_id TEXT PRIMARY KEY, started_at INTEGER NOT NULL)", [])?;
         conn.execute("CREATE TABLE IF NOT EXISTS creation_intents (request_key TEXT PRIMARY KEY, id TEXT UNIQUE NOT NULL, intent_json TEXT NOT NULL)", [])?;
         conn.execute("INSERT OR IGNORE INTO swap_meta(key,value) SELECT ?1,COALESCE(MAX(swap_index)+1,0) FROM swaps", params![NEXT_SWAP_INDEX_KEY])?;
         conn.pragma_update(None, "user_version", SCHEMA_VERSION)
@@ -128,6 +130,36 @@ impl BoltzDB {
     pub async fn insert_swap(&self, record: &SwapRecord) -> Result<(), BoltzError> {
         let conn = self.conn.lock().await;
         insert_record(&conn, record)
+    }
+
+    /// Reserve one reverse invoice submission before handing it to the wallet.
+    /// False means a previous submission may have reached the Lightning backend.
+    pub async fn mark_payment_started(&self, swap_id: &str) -> Result<bool, BoltzError> {
+        let _operation = self.recovery_gate.read().await;
+        let _swap = super::guard::lock_swap(swap_id).await;
+        let mut locked = self.conn.lock().await;
+        let conn = locked.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+        let record = conn.query_row(
+            "SELECT id,swap_type,status,network,electrum_url,swap_index,invoice,lockup_address,onchain_address,amount_sat,onchain_amount_sat,timeout_block_height,create_response_json,claim_tx_id,refund_tx_id,created_at,backend_binding,recipient_amount_sat FROM swaps WHERE id=?1",
+            [swap_id], row_to_record,
+        ).optional()?.ok_or_else(|| BoltzError::NotFound {
+            error_details: "Cannot submit payment for an unknown swap".into(),
+        })??;
+        if record.swap_type != BoltzSwapType::Reverse
+            || record.invoice.is_none()
+            || BoltzSwapStatus::from_raw(&record.status).is_terminal()
+            || record.is_locally_complete()
+        {
+            return Err(BoltzError::InvalidInput {
+                error_details: "Payment requires a pending reverse swap invoice".into(),
+            });
+        }
+        let inserted = conn.execute(
+            "INSERT OR IGNORE INTO payment_attempts VALUES (?1,?2)",
+            params![swap_id, chrono::Utc::now().timestamp().max(1)],
+        )?;
+        conn.commit()?;
+        Ok(inserted == 1)
     }
 
     /// Update the raw status string of a swap.
@@ -241,6 +273,36 @@ impl BoltzDB {
             .into_iter()
             .filter(|r| !r.is_locally_complete() || journaled.contains(&r.id))
             .collect())
+    }
+
+    /// Recovery continues even when the application disables new swap creation.
+    pub async fn has_pending_recovery(&self) -> Result<bool, BoltzError> {
+        Ok(!self.list_pending_swaps().await?.is_empty()
+            || !self.creation_intents().await?.is_empty())
+    }
+
+    /// Keep unfinished Pubky work on its original identity, provider and network.
+    /// A missing target means the caller is preparing to replace the current identity.
+    pub(crate) async fn ensure_pubky_binding_allowed(
+        &self,
+        requested: Option<&str>,
+    ) -> Result<(), BoltzError> {
+        let pending = self.list_pending_swaps().await?;
+        let intents = self.creation_intents().await?;
+        let conflicting_swap = pending.iter().any(|swap| {
+            swap.backend_binding
+                .as_deref()
+                .is_some_and(|binding| Some(binding) != requested)
+        });
+        let conflicting_intent = intents
+            .iter()
+            .any(|intent| Some(intent.backend_binding.as_str()) != requested);
+        if conflicting_swap || conflicting_intent {
+            return Err(BoltzError::InvalidInput {
+                error_details: "Finish or recover your pending Pubky swaps before changing provider or identity".into(),
+            });
+        }
+        Ok(())
     }
 
     async fn query_swaps(&self, sql: &str) -> Result<Vec<SwapRecord>, BoltzError> {

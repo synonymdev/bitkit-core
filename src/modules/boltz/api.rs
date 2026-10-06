@@ -273,7 +273,9 @@ impl BoltzDB {
         let response = bridge
             .create(intent.request.clone(), Some(intent.id.clone()))
             .await
-            .map_err(bridge_error)?;
+            .map_err(|error| BoltzError::RecoveryPending {
+                error_details: format!("Negotiation is saved for recovery. Reconnect the same identity and provider: {error}"),
+            })?;
         let record = record_from_response(intent, &response, keys)?;
         super::send::validate_recipient(&record)?;
         self.complete_intent(intent, &record).await?;

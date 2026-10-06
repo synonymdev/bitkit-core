@@ -49,6 +49,69 @@ fn sample_record(id: &str, swap_type: BoltzSwapType) -> SwapRecord {
     }
 }
 
+#[tokio::test]
+async fn pubky_switch_keeps_pending_work_on_its_original_binding() {
+    let db = BoltzDB::new(":memory:").await.unwrap();
+    let mut record = sample_record("pending-pubky", BoltzSwapType::Reverse);
+    record.backend_binding = Some("identity|provider|testnet".into());
+    db.insert_swap(&record).await.unwrap();
+
+    db.ensure_pubky_binding_allowed(record.backend_binding.as_deref())
+        .await
+        .unwrap();
+    assert!(db.ensure_pubky_binding_allowed(None).await.is_err());
+    assert!(db
+        .ensure_pubky_binding_allowed(Some("identity|other|testnet"))
+        .await
+        .is_err());
+    assert!(db
+        .ensure_pubky_binding_allowed(Some("other|provider|testnet"))
+        .await
+        .is_err());
+    assert!(db
+        .ensure_pubky_binding_allowed(Some("identity|provider|bitcoin"))
+        .await
+        .is_err());
+    assert_eq!(db.list_pending_swaps().await.unwrap().len(), 1);
+
+    db.set_claim_tx(&record.id, "confirmed-claim")
+        .await
+        .unwrap();
+    db.ensure_pubky_binding_allowed(None).await.unwrap();
+    db.ensure_pubky_binding_allowed(Some("replacement"))
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+async fn pubky_switch_does_not_block_legacy_boltz_recovery() {
+    let db = BoltzDB::new(":memory:").await.unwrap();
+    db.insert_swap(&sample_record("legacy", BoltzSwapType::Reverse))
+        .await
+        .unwrap();
+    db.ensure_pubky_binding_allowed(None).await.unwrap();
+    db.ensure_pubky_binding_allowed(Some("new-pubky-binding"))
+        .await
+        .unwrap();
+    assert_eq!(db.list_pending_swaps().await.unwrap().len(), 1);
+}
+
+#[tokio::test]
+async fn pubky_switch_waits_for_journaled_spend_recovery() {
+    let db = BoltzDB::new(":memory:").await.unwrap();
+    let mut record = sample_record("journaled-pubky", BoltzSwapType::Reverse);
+    record.backend_binding = Some("original".into());
+    db.insert_swap(&record).await.unwrap();
+    db.set_claim_tx(&record.id, "claim").await.unwrap();
+    db.journal_spend(&record.id, "unresolved-spend", None)
+        .await
+        .unwrap();
+    assert!(db.ensure_pubky_binding_allowed(None).await.is_err());
+    db.ensure_pubky_binding_allowed(Some("original"))
+        .await
+        .unwrap();
+}
+
 /// Block height used for the fixture responses' refund timelock.
 const FIXTURE_LOCKTIME: u32 = 800_000;
 
@@ -782,4 +845,65 @@ fn external_claim_rejects_underpayment_and_wrong_destination() {
     tx.output[0].value = Amount::from_sat(98_100);
     tx.output[0].script_pubkey = bitcoin::ScriptBuf::new();
     assert!(super::send::validate_claim_output(&record, &tx).is_err());
+}
+
+#[tokio::test]
+async fn reverse_payment_admission_is_durable_and_exclusive() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("core.db");
+    let db = BoltzDB::new(path.to_str().unwrap()).await.unwrap();
+    db.insert_swap(&sample_record("reverse", BoltzSwapType::Reverse))
+        .await
+        .unwrap();
+    let (first, second) = tokio::join!(
+        db.mark_payment_started("reverse"),
+        db.mark_payment_started("reverse")
+    );
+    assert_ne!(first.unwrap(), second.unwrap());
+    drop(db);
+    let db = BoltzDB::new(path.to_str().unwrap()).await.unwrap();
+    assert!(!db.mark_payment_started("reverse").await.unwrap());
+    assert!(db.mark_payment_started("unknown").await.is_err());
+    db.insert_swap(&sample_record("submarine", BoltzSwapType::Submarine))
+        .await
+        .unwrap();
+    assert!(db.mark_payment_started("submarine").await.is_err());
+}
+
+#[tokio::test]
+async fn failed_payment_marker_write_never_admits_submission() {
+    let db = BoltzDB::new(":memory:").await.unwrap();
+    db.insert_swap(&sample_record("reverse", BoltzSwapType::Reverse))
+        .await
+        .unwrap();
+    db.conn.lock().await.execute_batch("CREATE TRIGGER fail_payment BEFORE INSERT ON payment_attempts BEGIN SELECT RAISE(FAIL,'disk unavailable'); END;").unwrap();
+    assert!(db.mark_payment_started("reverse").await.is_err());
+    db.conn
+        .lock()
+        .await
+        .execute_batch("DROP TRIGGER fail_payment;")
+        .unwrap();
+    assert!(db.mark_payment_started("reverse").await.unwrap());
+}
+
+#[tokio::test]
+async fn pubky_failure_without_spend_evidence_keeps_recovery_bound() {
+    for swap_type in [BoltzSwapType::Submarine, BoltzSwapType::Reverse] {
+        for status in ["transaction.failed", "swap.expired", "invoice.expired"] {
+            let db = BoltzDB::new(":memory:").await.unwrap();
+            let mut record = sample_record("failed-pubky", swap_type);
+            record.backend_binding = Some("original-provider-binding".into());
+            record.status = status.into();
+            db.insert_swap(&record).await.unwrap();
+            assert!(!record.is_locally_complete());
+            assert!(db.has_pending_recovery().await.unwrap());
+            assert!(db.ensure_pubky_binding_allowed(None).await.is_err());
+            assert!(db.mark_payment_started(&record.id).await.is_err());
+            db.set_claim_tx(&record.id, "persisted-spend")
+                .await
+                .unwrap();
+            assert!(!db.has_pending_recovery().await.unwrap());
+            db.ensure_pubky_binding_allowed(None).await.unwrap();
+        }
+    }
 }

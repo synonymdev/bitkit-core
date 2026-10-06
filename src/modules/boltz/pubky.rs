@@ -1,4 +1,4 @@
-use super::{BoltzError, BoltzNetwork};
+use super::{BoltzDB, BoltzError, BoltzNetwork};
 use once_cell::sync::Lazy;
 use pubky_swap_boltz::{
     chain::{Chain, ElectrumChain},
@@ -6,7 +6,7 @@ use pubky_swap_boltz::{
     service::{Bridge, BridgeSettings},
     store::Store,
 };
-use std::{path::Path, sync::Arc, time::Duration};
+use std::{future::Future, path::Path, sync::Arc, time::Duration};
 use tokio::sync::Mutex;
 use zeroize::Zeroizing;
 
@@ -30,52 +30,100 @@ struct ConfiguredBridge {
     binding: String,
     bridge: Arc<Bridge>,
     chain: Arc<dyn Chain>,
+    provider: Option<Arc<PubkyProvider>>,
+    delivery_task: Option<tokio::task::JoinHandle<()>>,
+}
+
+impl Drop for ConfiguredBridge {
+    fn drop(&mut self) {
+        if let Some(task) = &self.delivery_task {
+            task.abort();
+        }
+    }
 }
 
 static CONFIGURED: Lazy<Mutex<Option<ConfiguredBridge>>> = Lazy::new(|| Mutex::new(None));
+pub(crate) static RECOVERY_WAKEUP: Lazy<tokio::sync::Notify> = Lazy::new(tokio::sync::Notify::new);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
+
+#[derive(Clone)]
+struct SessionCredentials {
+    token: Zeroizing<String>,
+    owner: String,
+    scope: String,
+    wallet_secret: Zeroizing<[u8; 32]>,
+}
 
 /// Connect an existing registered Pubky identity to its configured swap provider.
 /// Repeated calls with the same configuration reuse the bridge and its database.
 /// Disconnect before changing identities, providers, networks, or storage paths.
 pub async fn configure_pubky(
+    db: &BoltzDB,
     config: PubkySwapConfig,
     secret_key_hex: String,
 ) -> Result<(), BoltzError> {
     let config = normalize_config(config)?;
     let secret = decode_secret(secret_key_hex)?;
     let identity = identity_from_secret(&secret);
-    let provider =
-        PubkyProvider::from_secret_key(*secret, config.provider.clone(), REQUEST_TIMEOUT)
-            .await
-            .map_err(bridge_error)?;
-    configure_provider(config, identity, provider).await
+    let provider_config = config.clone();
+    configure_provider(db, config, identity, None, async move {
+        PubkyProvider::from_secret_key_with_storage(
+            *secret,
+            provider_config.provider,
+            REQUEST_TIMEOUT,
+            provider_config.data_dir.into(),
+            provider_config.network.as_bitcoin_network(),
+        )
+        .await
+        .map_err(bridge_error)
+    })
+    .await
 }
 
 /// Use an existing scoped session, including an account imported through Pubky Ring.
 /// The wallet secret derives only a separate communication key, never the account key.
+/// Matching configurations renew the grant in place while keeping recovery attached.
 pub async fn configure_pubky_session(
+    db: &BoltzDB,
     config: PubkySwapConfig,
     session_secret: String,
     public_key: String,
     application_scope: String,
     wallet_secret_hex: String,
 ) -> Result<(), BoltzError> {
+    let session_secret = Zeroizing::new(session_secret);
     let config = normalize_config(config)?;
     let identity = canonical_pubky(&public_key).map_err(bridge_error)?;
     let wallet_secret = decode_secret(wallet_secret_hex)?;
-    let provider = PubkyProvider::from_session(
-        session_secret,
+    let transport_identity = pubky_session_identity(
+        hex::encode(*wallet_secret),
         identity.clone(),
-        application_scope,
-        *wallet_secret,
         config.provider.clone(),
-        REQUEST_TIMEOUT,
-    )
+        application_scope.clone(),
+    )?;
+    let credentials = SessionCredentials {
+        token: session_secret,
+        owner: identity,
+        scope: application_scope,
+        wallet_secret,
+    };
+    let renewal = credentials.clone();
+    let provider_config = config.clone();
+    configure_provider(db, config, transport_identity, Some(renewal), async move {
+        PubkyProvider::from_session_with_storage(
+            credentials.token.to_string(),
+            credentials.owner,
+            credentials.scope,
+            *credentials.wallet_secret,
+            provider_config.provider,
+            REQUEST_TIMEOUT,
+            provider_config.data_dir.into(),
+            provider_config.network.as_bitcoin_network(),
+        )
+        .await
+        .map_err(bridge_error)
+    })
     .await
-    .map_err(bridge_error)?;
-    let transport_identity = provider.identity();
-    configure_provider(config, transport_identity, provider).await
 }
 
 /// Read the account hint in a saved grant for selecting local recovery state.
@@ -118,11 +166,16 @@ fn normalize_config(mut config: PubkySwapConfig) -> Result<PubkySwapConfig, Bolt
     Ok(config)
 }
 
-async fn configure_provider(
+async fn configure_provider<F>(
+    db: &BoltzDB,
     config: PubkySwapConfig,
     identity: String,
-    provider: PubkyProvider,
-) -> Result<(), BoltzError> {
+    renewal: Option<SessionCredentials>,
+    create_provider: F,
+) -> Result<(), BoltzError>
+where
+    F: Future<Output = Result<PubkyProvider, BoltzError>>,
+{
     let binding = format!(
         "{}|{}|{}",
         identity,
@@ -130,6 +183,31 @@ async fn configure_provider(
         config.network.as_str()
     );
     let mut guard = CONFIGURED.lock().await;
+    // Credential renewal changes neither recovery state nor its binding. The inbox
+    // serializes replacement between requests, so active recovery may keep its read guard.
+    if let (Some(active), Some(credentials)) = (guard.as_ref(), renewal) {
+        if active.config == config && active.binding == binding {
+            let provider = active
+                .provider
+                .as_ref()
+                .ok_or_else(|| BoltzError::ConnectionError {
+                    error_details: "The configured Pubky provider is unavailable".into(),
+                })?;
+            provider
+                .renew_session(
+                    credentials.token.to_string(),
+                    credentials.owner,
+                    credentials.scope,
+                    *credentials.wallet_secret,
+                )
+                .await
+                .map_err(bridge_error)?;
+            RECOVERY_WAKEUP.notify_one();
+            return Ok(());
+        }
+    }
+    let _operation = try_configuration_guard(db)?;
+    db.ensure_pubky_binding_allowed(Some(&binding)).await?;
     if let Some(active) = guard.as_ref() {
         if active.config == config && active.binding == binding {
             return Ok(());
@@ -141,6 +219,7 @@ async fn configure_provider(
     }
 
     let store = Store::open(Path::new(&config.data_dir), &binding).map_err(bridge_error)?;
+    let provider = Arc::new(create_provider.await?);
     let chain = ElectrumChain::connect(
         config.electrum_url.clone(),
         config.network.as_bitcoin_network(),
@@ -149,7 +228,7 @@ async fn configure_provider(
     .map_err(bridge_error)?;
     let chain: Arc<dyn Chain> = Arc::new(chain);
     let bridge = Bridge::new(
-        Arc::new(provider),
+        provider.clone(),
         chain.clone(),
         store,
         BridgeSettings {
@@ -158,18 +237,118 @@ async fn configure_provider(
             max_amount_sat: config.max_amount_sat,
         },
     );
+    let delivery_task = provider.subscribe_delivery().map(|mut notifications| {
+        tokio::spawn(async move {
+            while let Ok(()) | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) =
+                notifications.recv().await
+            {
+                RECOVERY_WAKEUP.notify_one();
+            }
+        })
+    });
     *guard = Some(ConfiguredBridge {
         config,
         binding,
         bridge,
         chain,
+        provider: Some(provider),
+        delivery_task,
     });
+    RECOVERY_WAKEUP.notify_one();
+    Ok(())
+}
+
+fn try_configuration_guard(
+    db: &BoltzDB,
+) -> Result<tokio::sync::RwLockWriteGuard<'_, ()>, BoltzError> {
+    // Recovery can take nested read guards. Never queue a writer ahead of them.
+    db.recovery_gate
+        .try_write()
+        .map_err(|_| BoltzError::InvalidInput {
+            error_details: "A swap operation is active. Try again after it finishes".into(),
+        })
+}
+
+/// Detach only when no pending swap or interrupted creation needs this binding.
+/// Reject an active operation without queuing behind its nested recovery reads.
+pub async fn prepare_pubky_switch(db: &BoltzDB) -> Result<(), BoltzError> {
+    let _operation = try_configuration_guard(db)?;
+    db.ensure_pubky_binding_allowed(None).await?;
+    disconnect_pubky().await;
     Ok(())
 }
 
 /// Release the configured Pubky identity while keeping legacy swap recovery active.
 pub async fn disconnect_pubky() {
     CONFIGURED.lock().await.take();
+}
+
+/// Sanitized delivery state for one resource in the configured private store.
+#[derive(Clone, Debug, uniffi::Record)]
+pub struct PubkyDeliveryStatus {
+    pub id: String,
+    pub scope: String,
+    pub published: bool,
+    pub publication_paused: bool,
+    pub cleanup_paused: bool,
+    pub publication_failure: Option<String>,
+    pub cleanup_failure: Option<String>,
+}
+
+/// The independent delivery operation explicitly retried after correction.
+#[derive(Clone, Copy, Debug, uniffi::Enum)]
+pub enum PubkyDeliveryOperation {
+    Publication,
+    Cleanup,
+}
+
+pub async fn pubky_delivery_status() -> Result<Vec<PubkyDeliveryStatus>, BoltzError> {
+    let guard = CONFIGURED.lock().await;
+    let provider = guard
+        .as_ref()
+        .and_then(|active| active.provider.as_ref())
+        .ok_or_else(|| BoltzError::ConnectionError {
+            error_details: "Configure the original Pubky identity and provider first".into(),
+        })?;
+    Ok(provider
+        .delivery_status()
+        .map_err(bridge_error)?
+        .into_iter()
+        .map(|status| PubkyDeliveryStatus {
+            id: status.id,
+            scope: status.scope,
+            published: status.published,
+            publication_paused: status.publication_paused,
+            cleanup_paused: status.cleanup_paused,
+            publication_failure: status
+                .publication_failure
+                .map(|failure| failure.to_string()),
+            cleanup_failure: status.cleanup_failure.map(|failure| failure.to_string()),
+        })
+        .collect())
+}
+
+pub async fn retry_pubky_delivery(
+    id: String,
+    operation: PubkyDeliveryOperation,
+) -> Result<(), BoltzError> {
+    use pubky_swap_boltz::pubky_transport::DeliveryOperation;
+    let guard = CONFIGURED.lock().await;
+    let provider = guard
+        .as_ref()
+        .and_then(|active| active.provider.as_ref())
+        .ok_or_else(|| BoltzError::ConnectionError {
+            error_details: "Configure the original Pubky identity and provider first".into(),
+        })?;
+    let operation = match operation {
+        PubkyDeliveryOperation::Publication => DeliveryOperation::Publication,
+        PubkyDeliveryOperation::Cleanup => DeliveryOperation::Cleanup,
+    };
+    provider
+        .retry_delivery(&id, operation)
+        .map_err(bridge_error)?;
+    RECOVERY_WAKEUP.notify_one();
+    Ok(())
 }
 
 pub(crate) async fn backup_context() -> Option<(String, Arc<Bridge>)> {
@@ -315,6 +494,91 @@ pub(crate) fn bridge_error(error: pubky_swap_boltz::Error) -> BoltzError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::modules::boltz::pubky_fixture as fixture;
+
+    #[tokio::test]
+    async fn busy_configuration_does_not_queue_a_writer() {
+        let db = BoltzDB::new(":memory:").await.unwrap();
+        let recovery = db.recovery_gate.read().await;
+        assert!(try_configuration_guard(&db).is_err());
+        // Claim and refund recovery must still acquire their nested read guard.
+        let nested = db.recovery_gate.try_read().unwrap();
+        drop(nested);
+        drop(recovery);
+        assert!(try_configuration_guard(&db).is_ok());
+    }
+
+    #[tokio::test]
+    #[serial_test::serial(pubky_configuration)]
+    async fn rejected_switch_preserves_the_configured_bridge() {
+        let db = BoltzDB::new(":memory:").await.unwrap();
+        let configured = fixture::fixture_bridge().unwrap();
+        let binding = fixture::fixture_binding();
+        *CONFIGURED.lock().await = Some(ConfiguredBridge {
+            config: PubkySwapConfig {
+                network: BoltzNetwork::Regtest,
+                provider: fixture::fixture_provider(),
+                electrum_url: "tcp://127.0.0.1:50001".into(),
+                data_dir: "/unused-test-data".into(),
+                max_fee_bps: 500,
+                max_amount_sat: 1_000_000,
+            },
+            binding,
+            bridge: configured.clone(),
+            chain: Arc::new(fixture::FixtureChain),
+            provider: None,
+            delivery_task: None,
+        });
+        // An unreadable intent must fail closed, too, without dropping recovery access.
+        db.conn
+            .lock()
+            .await
+            .execute(
+                "INSERT INTO creation_intents VALUES ('key','id','invalid-json')",
+                [],
+            )
+            .unwrap();
+        assert!(prepare_pubky_switch(&db).await.is_err());
+        assert!(Arc::ptr_eq(
+            &bridge(BoltzNetwork::Regtest).await.unwrap(),
+            &configured
+        ));
+        db.conn
+            .lock()
+            .await
+            .execute("DELETE FROM creation_intents", [])
+            .unwrap();
+        prepare_pubky_switch(&db).await.unwrap();
+        assert!(CONFIGURED.lock().await.is_none());
+    }
+
+    #[tokio::test]
+    #[serial_test::serial(pubky_configuration)]
+    async fn repeated_configuration_does_not_reopen_exclusive_journals() {
+        let db = BoltzDB::new(":memory:").await.unwrap();
+        let config = PubkySwapConfig {
+            network: BoltzNetwork::Regtest,
+            provider: fixture::fixture_provider(),
+            electrum_url: "tcp://127.0.0.1:50001".into(),
+            data_dir: "/unused-test-data".into(),
+            max_fee_bps: 500,
+            max_amount_sat: 1_000_000,
+        };
+        *CONFIGURED.lock().await = Some(ConfiguredBridge {
+            config: config.clone(),
+            binding: fixture::fixture_binding(),
+            bridge: fixture::fixture_bridge().unwrap(),
+            chain: Arc::new(fixture::FixtureChain),
+            provider: None,
+            delivery_task: None,
+        });
+        configure_provider(&db, config, fixture::fixture_identity(), None, async {
+            panic!("reused configuration must not initialize another journal owner")
+        })
+        .await
+        .unwrap();
+        disconnect_pubky().await;
+    }
 
     fn grant_fixture(owner: &str, token: &str) -> String {
         use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
@@ -324,6 +588,129 @@ mod tests {
         });
         let payload = URL_SAFE_NO_PAD.encode(serde_json::to_vec(&claims).unwrap());
         format!("pubky-grant-credential-v1:{owner}:fixture:e30.{payload}.fixture")
+    }
+
+    async fn configured_session_fixture() -> (PubkySwapConfig, Arc<Bridge>) {
+        let owner = identity_from_secret(&[11; 32]);
+        let provider = Arc::new(
+            PubkyProvider::from_session(
+                grant_fixture(&owner, "original"),
+                owner.clone(),
+                "/pub/bitkit.to/bitkit/wallet/".into(),
+                [12; 32],
+                owner.clone(),
+                REQUEST_TIMEOUT,
+            )
+            .await
+            .unwrap(),
+        );
+        let config = PubkySwapConfig {
+            network: BoltzNetwork::Regtest,
+            provider: owner,
+            electrum_url: "tcp://127.0.0.1:50001".into(),
+            data_dir: "/unused-test-data".into(),
+            max_fee_bps: 500,
+            max_amount_sat: 1_000_000,
+        };
+        let bridge = fixture::fixture_bridge().unwrap();
+        *CONFIGURED.lock().await = Some(ConfiguredBridge {
+            binding: format!("{}|{}|regtest", provider.identity(), config.provider),
+            config: config.clone(),
+            bridge: bridge.clone(),
+            chain: Arc::new(fixture::FixtureChain),
+            provider: Some(provider),
+            delivery_task: None,
+        });
+        (config, bridge)
+    }
+
+    async fn renew_fixture_session(
+        db: &BoltzDB,
+        config: &PubkySwapConfig,
+        token: String,
+    ) -> Result<(), BoltzError> {
+        configure_pubky_session(
+            db,
+            config.clone(),
+            token,
+            config.provider.clone(),
+            "/pub/bitkit.to/bitkit/wallet/".into(),
+            hex::encode([12; 32]),
+        )
+        .await
+    }
+
+    #[tokio::test]
+    #[serial_test::serial(pubky_configuration)]
+    async fn session_renewal_remains_available_during_recovery_and_rejects_invalid_credentials() {
+        let db = BoltzDB::new(":memory:").await.unwrap();
+        let (config, configured) = configured_session_fixture().await;
+        let recovery = db.recovery_gate.read().await;
+        renew_fixture_session(&db, &config, grant_fixture(&config.provider, "renewed"))
+            .await
+            .unwrap();
+        let mut changed_config = config.clone();
+        changed_config.max_amount_sat += 1;
+        assert!(renew_fixture_session(
+            &db,
+            &changed_config,
+            grant_fixture(&config.provider, "renewed"),
+        )
+        .await
+        .is_err());
+        assert!(db.recovery_gate.try_read().is_ok());
+        assert!(Arc::ptr_eq(
+            &bridge(BoltzNetwork::Regtest).await.unwrap(),
+            &configured
+        ));
+        drop(recovery);
+
+        // Reusing the binding must validate the new credential rather than return cached success.
+        assert!(renew_fixture_session(&db, &config, "invalid grant".into())
+            .await
+            .is_err());
+        assert!(Arc::ptr_eq(
+            &bridge(BoltzNetwork::Regtest).await.unwrap(),
+            &configured
+        ));
+        renew_fixture_session(&db, &config, grant_fixture(&config.provider, "renewed"))
+            .await
+            .unwrap();
+        assert!(Arc::ptr_eq(
+            &bridge(BoltzNetwork::Regtest).await.unwrap(),
+            &configured
+        ));
+        disconnect_pubky().await;
+    }
+
+    #[tokio::test]
+    #[serial_test::serial(pubky_configuration)]
+    async fn cancelled_session_renewal_preserves_the_bridge_without_blocking_recovery() {
+        let db = BoltzDB::new(":memory:").await.unwrap();
+        let (config, configured) = configured_session_fixture().await;
+        let guard = CONFIGURED.lock().await;
+        let mut renewal = Box::pin(renew_fixture_session(
+            &db,
+            &config,
+            grant_fixture(&config.provider, "renewed"),
+        ));
+        tokio::select! {
+            biased;
+            result = &mut renewal => panic!("renewal must wait for configuration lock: {result:?}"),
+            _ = tokio::task::yield_now() => {}
+        }
+        assert!(db.recovery_gate.try_read().is_ok());
+        drop(renewal);
+        assert!(db.recovery_gate.try_read().is_ok());
+        drop(guard);
+        assert!(Arc::ptr_eq(
+            &bridge(BoltzNetwork::Regtest).await.unwrap(),
+            &configured
+        ));
+        renew_fixture_session(&db, &config, grant_fixture(&config.provider, "renewed"))
+            .await
+            .unwrap();
+        disconnect_pubky().await;
     }
 
     #[tokio::test]
@@ -362,6 +749,45 @@ mod tests {
             )
             .unwrap()
         );
+    }
+
+    #[tokio::test]
+    async fn same_account_session_uses_a_stable_distinct_transport_identity() {
+        let owner = identity_from_secret(&[11; 32]);
+        let scope = "/pub/bitkit.to/bitkit/wallet/";
+        let transport = pubky_session_identity(
+            hex::encode([12; 32]),
+            owner.clone(),
+            owner.clone(),
+            scope.into(),
+        )
+        .unwrap();
+        assert_ne!(transport, owner);
+        for credential in ["original-grant", "renewed-grant"] {
+            let handle = PubkyProvider::from_session(
+                grant_fixture(&owner, credential),
+                owner.clone(),
+                scope.into(),
+                [12; 32],
+                owner.clone(),
+                REQUEST_TIMEOUT,
+            )
+            .await
+            .unwrap();
+            assert_eq!(handle.identity(), transport);
+            assert_eq!(handle.provider_key(), owner);
+        }
+    }
+
+    #[tokio::test]
+    async fn different_account_root_identity_remains_the_authenticated_transport() {
+        let owner = identity_from_secret(&[13; 32]);
+        let provider = identity_from_secret(&[14; 32]);
+        let handle = PubkyProvider::from_secret_key([13; 32], provider.clone(), REQUEST_TIMEOUT)
+            .await
+            .unwrap();
+        assert_eq!(handle.identity(), owner);
+        assert_eq!(handle.provider_key(), provider);
     }
 
     #[test]

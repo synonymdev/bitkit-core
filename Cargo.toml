@@ -78,9 +78,3 @@ path = "example/main.rs"
 
 [patch."https://github.com/coreyphillips/pubky-swap-boltz"]
 pubky-swap-boltz = { path = "../../testing/pubky-swap-boltz" }
-
-
-[patch."https://github.com/coreyphillips/pubky-swap"]
-pubky-transport = { path = "../../testing/pubky-swap/pubky-transport" }
-swap-common = { path = "../../testing/pubky-swap/swap-common" }
-swap-config = { path = "../../testing/pubky-swap/swap-config" }

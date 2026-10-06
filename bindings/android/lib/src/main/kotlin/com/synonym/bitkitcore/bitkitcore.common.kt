@@ -1636,6 +1636,24 @@ public data class PubkyAuthDetails (
 
 
 
+/**
+ * Sanitized delivery state for one resource in the configured private store.
+ */
+@kotlinx.serialization.Serializable
+public data class PubkyDeliveryStatus (
+    val `id`: kotlin.String, 
+    val `scope`: kotlin.String, 
+    val `published`: kotlin.Boolean, 
+    val `publicationPaused`: kotlin.Boolean, 
+    val `cleanupPaused`: kotlin.Boolean, 
+    val `publicationFailure`: kotlin.String?, 
+    val `cleanupFailure`: kotlin.String?
+) {
+    public companion object
+}
+
+
+
 @kotlinx.serialization.Serializable
 public data class PubkyProfile (
     val `name`: kotlin.String, 
@@ -1664,12 +1682,12 @@ public data class PubkyProfileLink (
  */
 @kotlinx.serialization.Serializable
 public data class PubkySendTerms (
-    val `pairHash`: kotlin.String,
-    val `minimumLockupSat`: kotlin.ULong,
-    val `maximumLockupSat`: kotlin.ULong,
-    val `baseFeeSat`: kotlin.ULong,
-    val `feePpm`: kotlin.ULong,
-    val `lockupFeeSat`: kotlin.ULong,
+    val `pairHash`: kotlin.String, 
+    val `minimumLockupSat`: kotlin.ULong, 
+    val `maximumLockupSat`: kotlin.ULong, 
+    val `baseFeeSat`: kotlin.ULong, 
+    val `feePpm`: kotlin.ULong, 
+    val `lockupFeeSat`: kotlin.ULong, 
     val `claimFeeSat`: kotlin.ULong
 ) {
     public companion object
@@ -1682,20 +1700,20 @@ public data class PubkySendTerms (
  */
 @kotlinx.serialization.Serializable
 public data class PubkySwapConfig (
-    val `network`: BoltzNetwork,
+    val `network`: BoltzNetwork, 
     /**
      * Provider public key, in plain z32 or with a `pubky` prefix.
      */
-    val `provider`: kotlin.String,
-    val `electrumUrl`: kotlin.String,
+    val `provider`: kotlin.String, 
+    val `electrumUrl`: kotlin.String, 
     /**
      * Absolute directory in the application's private wallet storage.
      */
-    val `dataDir`: kotlin.String,
+    val `dataDir`: kotlin.String, 
     /**
      * Maximum total swap fee, in basis points.
      */
-    val `maxFeeBps`: kotlin.UShort,
+    val `maxFeeBps`: kotlin.UShort, 
     /**
      * Maximum total amount admitted for one swap, in satoshis.
      */
@@ -3421,6 +3439,13 @@ public sealed class BoltzException: kotlin.Exception() {
             get() = "errorDetails=${ `errorDetails` }"
     }
     
+    public class RecoveryPending(
+        public val `errorDetails`: kotlin.String,
+    ) : BoltzException() {
+        override val message: String
+            get() = "errorDetails=${ `errorDetails` }"
+    }
+    
     public class BroadcastException(
         public val `errorDetails`: kotlin.String,
     ) : BoltzException() {
@@ -4375,6 +4400,23 @@ public enum class PubkyAuthKind {
 
 
 
+/**
+ * The independent delivery operation explicitly retried after correction.
+ */
+
+@kotlinx.serialization.Serializable
+public enum class PubkyDeliveryOperation {
+    
+    PUBLICATION,
+    CLEANUP;
+    public companion object
+}
+
+
+
+
+
+
 
 public sealed class PubkyException: kotlin.Exception() {
     
@@ -5125,6 +5167,8 @@ public enum class WordCount {
     WORDS24;
     public companion object
 }
+
+
 
 
 

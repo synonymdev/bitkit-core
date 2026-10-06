@@ -1621,6 +1621,16 @@ internal typealias UniffiVTableCallbackInterfaceTrezorUiCallbackUniffiByValue = 
 
 
 
+
+
+
+
+
+
+
+
+
+
 @Synchronized
 private fun findLibraryName(componentName: String): String {
     val libOverride = System.getProperty("uniffi.component.$componentName.libraryOverride")
@@ -1726,10 +1736,22 @@ internal object IntegrityCheckingUniffiLib : Library {
         if (uniffi_bitkitcore_checksum_func_boltz_get_swap() != 17473) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
+        if (uniffi_bitkitcore_checksum_func_boltz_has_pending_recovery() != 34632) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
         if (uniffi_bitkitcore_checksum_func_boltz_list_pending_swaps() != 20926) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_boltz_list_swaps() != 16447) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_mark_payment_started() != 33121) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_prepare_pubky_switch() != 7958) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_pubky_delivery_status() != 9959) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_boltz_pubky_session_account() != 59186) {
@@ -1742,6 +1764,9 @@ internal object IntegrityCheckingUniffiLib : Library {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_boltz_restore_backup() != 61009) {
+            throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+        }
+        if (uniffi_bitkitcore_checksum_func_boltz_retry_pubky_delivery() != 26151) {
             throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
         }
         if (uniffi_bitkitcore_checksum_func_boltz_start_swap_updates() != 168) {
@@ -2354,10 +2379,22 @@ internal object IntegrityCheckingUniffiLib : Library {
     external fun uniffi_bitkitcore_checksum_func_boltz_get_swap(
     ): Int
     @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_has_pending_recovery(
+    ): Int
+    @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_list_pending_swaps(
     ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_list_swaps(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_mark_payment_started(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_prepare_pubky_switch(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_pubky_delivery_status(
     ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_pubky_session_account(
@@ -2370,6 +2407,9 @@ internal object IntegrityCheckingUniffiLib : Library {
     ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_restore_backup(
+    ): Int
+    @JvmStatic
+    external fun uniffi_bitkitcore_checksum_func_boltz_retry_pubky_delivery(
     ): Int
     @JvmStatic
     external fun uniffi_bitkitcore_checksum_func_boltz_start_swap_updates(
@@ -3222,10 +3262,23 @@ internal object UniffiLib : Library {
         `swapId`: RustBufferByValue,
     ): Long
     @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_has_pending_recovery(
+    ): Long
+    @JvmStatic
     external fun uniffi_bitkitcore_fn_func_boltz_list_pending_swaps(
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_boltz_list_swaps(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_mark_payment_started(
+        `swapId`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_prepare_pubky_switch(
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_pubky_delivery_status(
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_boltz_pubky_session_account(
@@ -3252,6 +3305,11 @@ internal object UniffiLib : Library {
     external fun uniffi_bitkitcore_fn_func_boltz_restore_backup(
         `snapshotJson`: RustBufferByValue,
         `pubkyDataRoot`: RustBufferByValue,
+    ): Long
+    @JvmStatic
+    external fun uniffi_bitkitcore_fn_func_boltz_retry_pubky_delivery(
+        `id`: RustBufferByValue,
+        `operation`: RustBufferByValue,
     ): Long
     @JvmStatic
     external fun uniffi_bitkitcore_fn_func_boltz_start_swap_updates(
@@ -8418,6 +8476,43 @@ public object FfiConverterTypePubkyAuthDetails: FfiConverterRustBuffer<PubkyAuth
 
 
 
+public object FfiConverterTypePubkyDeliveryStatus: FfiConverterRustBuffer<PubkyDeliveryStatus> {
+    override fun read(buf: ByteBuffer): PubkyDeliveryStatus {
+        return PubkyDeliveryStatus(
+            FfiConverterString.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterBoolean.read(buf),
+            FfiConverterBoolean.read(buf),
+            FfiConverterBoolean.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: PubkyDeliveryStatus): ULong = (
+            FfiConverterString.allocationSize(value.`id`) +
+            FfiConverterString.allocationSize(value.`scope`) +
+            FfiConverterBoolean.allocationSize(value.`published`) +
+            FfiConverterBoolean.allocationSize(value.`publicationPaused`) +
+            FfiConverterBoolean.allocationSize(value.`cleanupPaused`) +
+            FfiConverterOptionalString.allocationSize(value.`publicationFailure`) +
+            FfiConverterOptionalString.allocationSize(value.`cleanupFailure`)
+    )
+
+    override fun write(value: PubkyDeliveryStatus, buf: ByteBuffer) {
+        FfiConverterString.write(value.`id`, buf)
+        FfiConverterString.write(value.`scope`, buf)
+        FfiConverterBoolean.write(value.`published`, buf)
+        FfiConverterBoolean.write(value.`publicationPaused`, buf)
+        FfiConverterBoolean.write(value.`cleanupPaused`, buf)
+        FfiConverterOptionalString.write(value.`publicationFailure`, buf)
+        FfiConverterOptionalString.write(value.`cleanupFailure`, buf)
+    }
+}
+
+
+
+
 public object FfiConverterTypePubkyProfile: FfiConverterRustBuffer<PubkyProfile> {
     override fun read(buf: ByteBuffer): PubkyProfile {
         return PubkyProfile(
@@ -10462,16 +10557,19 @@ public object FfiConverterTypeBoltzError : FfiConverterRustBuffer<BoltzException
             5 -> BoltzException.SwapException(
                 FfiConverterString.read(buf),
                 )
-            6 -> BoltzException.BroadcastException(
+            6 -> BoltzException.RecoveryPending(
                 FfiConverterString.read(buf),
                 )
-            7 -> BoltzException.InvalidInput(
+            7 -> BoltzException.BroadcastException(
                 FfiConverterString.read(buf),
                 )
-            8 -> BoltzException.SerializationException(
+            8 -> BoltzException.InvalidInput(
                 FfiConverterString.read(buf),
                 )
-            9 -> BoltzException.NotFound(
+            9 -> BoltzException.SerializationException(
+                FfiConverterString.read(buf),
+                )
+            10 -> BoltzException.NotFound(
                 FfiConverterString.read(buf),
                 )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
@@ -10501,6 +10599,11 @@ public object FfiConverterTypeBoltzError : FfiConverterRustBuffer<BoltzException
                 + FfiConverterString.allocationSize(value.`errorDetails`)
             )
             is BoltzException.SwapException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`errorDetails`)
+            )
+            is BoltzException.RecoveryPending -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4UL
                 + FfiConverterString.allocationSize(value.`errorDetails`)
@@ -10555,23 +10658,28 @@ public object FfiConverterTypeBoltzError : FfiConverterRustBuffer<BoltzException
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is BoltzException.BroadcastException -> {
+            is BoltzException.RecoveryPending -> {
                 buf.putInt(6)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is BoltzException.InvalidInput -> {
+            is BoltzException.BroadcastException -> {
                 buf.putInt(7)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is BoltzException.SerializationException -> {
+            is BoltzException.InvalidInput -> {
                 buf.putInt(8)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
-            is BoltzException.NotFound -> {
+            is BoltzException.SerializationException -> {
                 buf.putInt(9)
+                FfiConverterString.write(value.`errorDetails`, buf)
+                Unit
+            }
+            is BoltzException.NotFound -> {
+                buf.putInt(10)
                 FfiConverterString.write(value.`errorDetails`, buf)
                 Unit
             }
@@ -11951,6 +12059,24 @@ public object FfiConverterTypePubkyAuthKind: FfiConverterRustBuffer<PubkyAuthKin
     override fun allocationSize(value: PubkyAuthKind): ULong = 4UL
 
     override fun write(value: PubkyAuthKind, buf: ByteBuffer) {
+        buf.putInt(value.ordinal + 1)
+    }
+}
+
+
+
+
+
+public object FfiConverterTypePubkyDeliveryOperation: FfiConverterRustBuffer<PubkyDeliveryOperation> {
+    override fun read(buf: ByteBuffer): PubkyDeliveryOperation = try {
+        PubkyDeliveryOperation.entries[buf.getInt() - 1]
+    } catch (e: IndexOutOfBoundsException) {
+        throw RuntimeException("invalid enum value, something is very wrong!!", e)
+    }
+
+    override fun allocationSize(value: PubkyDeliveryOperation): ULong = 4UL
+
+    override fun write(value: PubkyDeliveryOperation, buf: ByteBuffer) {
         buf.putInt(value.ordinal + 1)
     }
 }
@@ -14930,6 +15056,31 @@ public object FfiConverterSequenceTypePreActivityMetadata: FfiConverterRustBuffe
 
 
 
+public object FfiConverterSequenceTypePubkyDeliveryStatus: FfiConverterRustBuffer<List<PubkyDeliveryStatus>> {
+    override fun read(buf: ByteBuffer): List<PubkyDeliveryStatus> {
+        val len = buf.getInt()
+        return List<PubkyDeliveryStatus>(len) {
+            FfiConverterTypePubkyDeliveryStatus.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<PubkyDeliveryStatus>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.sumOf { FfiConverterTypePubkyDeliveryStatus.allocationSize(it) }
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<PubkyDeliveryStatus>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypePubkyDeliveryStatus.write(it, buf)
+        }
+    }
+}
+
+
+
+
 public object FfiConverterSequenceTypePubkyProfileLink: FfiConverterRustBuffer<List<PubkyProfileLink>> {
     override fun read(buf: ByteBuffer): List<PubkyProfileLink> {
         val len = buf.getInt()
@@ -15610,7 +15761,7 @@ public suspend fun `boltzConfigurePubky`(`config`: PubkySwapConfig, `secretKeyHe
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BoltzExceptionErrorHandler,
     )
@@ -15636,7 +15787,7 @@ public suspend fun `boltzConfigurePubkySession`(`config`: PubkySwapConfig, `sess
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         BoltzExceptionErrorHandler,
     )
@@ -15719,7 +15870,7 @@ public suspend fun `boltzDisconnectPubky`() {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
-
+        
         // Error FFI converter
         UniffiNullRustCallStatusErrorHandler,
     )
@@ -15807,6 +15958,25 @@ public suspend fun `boltzGetSwap`(`swapId`: kotlin.String): BoltzSwap? {
 }
 
 /**
+ * Whether saved swaps or interrupted negotiations still need wallet recovery.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzHasPendingRecovery`(): kotlin.Boolean {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_has_pending_recovery(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_i8(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_i8(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_i8(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_i8(future) },
+        // lift function
+        { FfiConverterBoolean.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
  * List swaps that have not reached a terminal state (for recovery/resume).
  */
 @Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
@@ -15839,6 +16009,68 @@ public suspend fun `boltzListSwaps`(): List<BoltzSwap> {
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
         // lift function
         { FfiConverterSequenceTypeBoltzSwap.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Persist reverse payment intent before submitting the invoice to Lightning.
+ * False means an earlier submission may have succeeded and must be reconciled.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzMarkPaymentStarted`(`swapId`: kotlin.String): kotlin.Boolean {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_mark_payment_started(
+            FfiConverterString.lower(`swapId`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_i8(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_i8(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_i8(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_i8(future) },
+        // lift function
+        { FfiConverterBoolean.lift(it) },
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Prepare to change Pubky provider or identity without abandoning unfinished work.
+ * Rejects pending Pubky swaps and unresolved creation attempts, leaving the bridge
+ * unchanged on failure. On success it disconnects while swap creation is paused.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzPreparePubkySwitch`() {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_prepare_pubky_switch(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
+
+/**
+ * Inspect durable delivery failures without exposing message bodies.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzPubkyDeliveryStatus`(): List<PubkyDeliveryStatus> {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_pubky_delivery_status(
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_rust_buffer(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_rust_buffer(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_rust_buffer(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_rust_buffer(future) },
+        // lift function
+        { FfiConverterSequenceTypePubkyDeliveryStatus.lift(it) },
         // Error FFI converter
         BoltzExceptionErrorHandler,
     )
@@ -15919,7 +16151,29 @@ public suspend fun `boltzRestoreBackup`(`snapshotJson`: kotlin.String, `pubkyDat
         { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
         // lift function
         { Unit },
+        
+        // Error FFI converter
+        BoltzExceptionErrorHandler,
+    )
+}
 
+/**
+ * Explicitly resume a paused delivery after correcting its reported failure.
+ */
+@Throws(BoltzException::class, kotlin.coroutines.cancellation.CancellationException::class)
+public suspend fun `boltzRetryPubkyDelivery`(`id`: kotlin.String, `operation`: PubkyDeliveryOperation) {
+    return uniffiRustCallAsync(
+        UniffiLib.uniffi_bitkitcore_fn_func_boltz_retry_pubky_delivery(
+            FfiConverterString.lower(`id`),
+            FfiConverterTypePubkyDeliveryOperation.lower(`operation`),
+        ),
+        { future, callback, continuation -> UniffiLib.ffi_bitkitcore_rust_future_poll_void(future, callback, continuation) },
+        { future, continuation -> UniffiLib.ffi_bitkitcore_rust_future_complete_void(future, continuation) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_free_void(future) },
+        { future -> UniffiLib.ffi_bitkitcore_rust_future_cancel_void(future) },
+        // lift function
+        { Unit },
+        
         // Error FFI converter
         BoltzExceptionErrorHandler,
     )

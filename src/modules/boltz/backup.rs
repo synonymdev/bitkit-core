@@ -18,7 +18,7 @@ use std::{
     str::FromStr,
 };
 
-const VERSION: u32 = 1;
+const VERSION: u32 = 2;
 const MAX_BYTES: usize = 16 * 1024 * 1024;
 const MAX_RECORDS: usize = 10_000;
 const MAX_IDENTITIES: usize = 100;
@@ -36,6 +36,10 @@ struct Snapshot {
 #[serde(deny_unknown_fields)]
 struct IdentitySnapshot {
     identity: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    network: Option<BoltzNetwork>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    provider: Option<String>,
     store: StoreSnapshot,
 }
 
@@ -46,6 +50,15 @@ struct CoreSnapshot {
     intents: Vec<CreationIntent>,
     next_swap_index: u64,
     pending_spends: Vec<PendingSpend>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    payment_attempts: Vec<PaymentAttempt>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PaymentAttempt {
+    swap_id: String,
+    started_at: u64,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -80,42 +93,36 @@ pub async fn export_backup(db: &BoltzDB, pubky_data_root: String) -> Result<Stri
         let active_path = Path::new(active_path)
             .canonicalize()
             .map_err(|e| invalid(&e.to_string()))?;
-        if active_path.parent() != Some(root.as_path()) {
+        if !active_path.starts_with(&root) || active_path == root {
             return Err(invalid(
                 "configured identity is outside the supplied recovery root",
             ));
         }
     }
     let mut identities = Vec::new();
-    if root.exists() {
-        for entry in std::fs::read_dir(&root).map_err(|e| invalid(&e.to_string()))? {
-            let entry = entry.map_err(|e| invalid(&e.to_string()))?;
-            if identities.len() >= MAX_IDENTITIES {
-                return Err(invalid("too many identities"));
-            }
-            let identity = entry
-                .file_name()
-                .into_string()
-                .map_err(|_| invalid("non-UTF8 identity directory"))?;
-            validate_identity(&identity)?;
-            let path = checked_identity_path(&root, &identity, false)?;
-            let store = if let Some((active_path, bridge)) = &active {
-                if Path::new(active_path)
-                    .canonicalize()
-                    .map_err(|e| invalid(&e.to_string()))?
-                    == path
-                {
-                    bridge.export_snapshot().map_err(super::api::bridge_error)?
-                } else {
-                    Store::snapshot_directory(&path).map_err(super::api::bridge_error)?
-                }
+    for (identity, network, provider, path) in store_directories(&root)? {
+        reject_delivery_backup(&path)?;
+        let store = if let Some((active_path, bridge)) = &active {
+            if Path::new(active_path)
+                .canonicalize()
+                .map_err(|e| invalid(&e.to_string()))?
+                == path
+            {
+                bridge.export_snapshot().map_err(super::api::bridge_error)?
             } else {
                 Store::snapshot_directory(&path).map_err(super::api::bridge_error)?
-            };
-            identities.push(IdentitySnapshot { identity, store });
-        }
+            }
+        } else {
+            Store::snapshot_directory(&path).map_err(super::api::bridge_error)?
+        };
+        identities.push(IdentitySnapshot {
+            identity,
+            network,
+            provider,
+            store,
+        });
     }
-    identities.sort_by(|a, b| a.identity.cmp(&b.identity));
+    identities.sort_by_key(|identity| identity.store.identity_binding.clone());
     let snapshot = Snapshot {
         version: VERSION,
         core,
@@ -151,17 +158,21 @@ pub async fn restore_backup(
         .try_write()
         .map_err(|_| invalid("a swap operation is active; retry after it finishes"))?;
     let root = checked_root(&pubky_data_root, false)?;
+    validate_restore_layout(&root, &snapshot.identities)?;
     let fingerprint = sha256::Hash::hash(&serde_json::to_vec(&snapshot)?).to_string();
     let local = db.core_snapshot().await?;
     let mut completion_evidence = snapshot.identities.clone();
     // Preflight every store and the core merge before writing any imported record.
     for identity in &snapshot.identities {
-        let path = checked_identity_path(&root, &identity.identity, true)?;
+        let path = snapshot_path(&root, identity)?;
+        reject_delivery_backup(&path)?;
         Store::validate_directory_import(&path, &identity.store)
             .map_err(super::api::bridge_error)?;
         if path.join("swaps.sqlite3").exists() {
             completion_evidence.push(IdentitySnapshot {
                 identity: identity.identity.clone(),
+                network: identity.network,
+                provider: identity.provider.clone(),
                 store: Store::snapshot_directory(&path).map_err(super::api::bridge_error)?,
             });
         }
@@ -173,7 +184,7 @@ pub async fn restore_backup(
     db.begin_recovery_import(merged.next_swap_index, &fingerprint, &root)
         .await?;
     for identity in &snapshot.identities {
-        let path = checked_identity_path(&root, &identity.identity, true)?;
+        let path = snapshot_path(&root, identity)?;
         Store::import_directory(&path, &identity.store).map_err(super::api::bridge_error)?;
     }
     // Accepted wrapper records must exist before their wallet recovery handles.
@@ -251,6 +262,13 @@ fn checked_identity_path(
     }
 }
 
+#[path = "backup_paths.rs"]
+mod paths;
+use paths::{
+    reject_delivery_backup, snapshot_path, store_directories, validate_restore_layout,
+    validate_store_scope,
+};
+
 fn binding_parts(binding: &str) -> Result<(&str, BoltzNetwork), BoltzError> {
     let parts: Vec<_> = binding.split('|').collect();
     if parts.len() != 3 {
@@ -264,7 +282,7 @@ fn binding_parts(binding: &str) -> Result<(&str, BoltzNetwork), BoltzError> {
 }
 
 fn validate_snapshot(snapshot: &Snapshot) -> Result<(), BoltzError> {
-    if snapshot.version != VERSION || snapshot.identities.len() > MAX_IDENTITIES {
+    if !matches!(snapshot.version, 1 | VERSION) || snapshot.identities.len() > MAX_IDENTITIES {
         return Err(invalid("unsupported version or identity count"));
     }
     validate_core(&snapshot.core)?;
@@ -277,7 +295,15 @@ fn validate_snapshot(snapshot: &Snapshot) -> Result<(), BoltzError> {
             .checked_add(identity.store.swaps.len())
             .filter(|count| *count <= MAX_RECORDS)
             .ok_or_else(|| invalid("too many wrapper records"))?;
-        if !directories.insert(&identity.identity) {
+        validate_store_scope(identity)?;
+        if snapshot.version == 1 && identity.network.is_some() {
+            return Err(invalid("nested stores require snapshot version 2"));
+        }
+        if !directories.insert((
+            &identity.identity,
+            identity.network.map(|n| n.as_str()),
+            &identity.provider,
+        )) {
             return Err(invalid("duplicate identity directory"));
         }
         identity
@@ -354,6 +380,7 @@ fn normalized_request(request: &CreateRequest) -> Result<CreateRequest, BoltzErr
 fn validate_core(core: &CoreSnapshot) -> Result<(), BoltzError> {
     if core.swaps.len().saturating_add(core.intents.len()) > MAX_RECORDS
         || core.pending_spends.len() > MAX_RECORDS * 10
+        || core.payment_attempts.len() > MAX_RECORDS
         || core.next_swap_index > super::models::SWAP_INDEX_LIMIT
     {
         return Err(invalid("too many records or invalid derivation counter"));
@@ -514,6 +541,19 @@ fn validate_core(core: &CoreSnapshot) -> Result<(), BoltzError> {
                 super::validation::validate_onchain_address(address, intent.network)?;
             }
             _ => return Err(invalid("unsupported creation request")),
+        }
+    }
+    let mut payments = HashSet::new();
+    for payment in &core.payment_attempts {
+        if payment.started_at == 0
+            || payment.started_at > i64::MAX as u64
+            || !payments.insert(&payment.swap_id)
+            || !core
+                .swaps
+                .iter()
+                .any(|swap| swap.id == payment.swap_id && swap.swap_type == BoltzSwapType::Reverse)
+        {
+            return Err(invalid("invalid reverse payment attempt"));
         }
     }
     let mut journal = HashSet::new();
@@ -684,6 +724,17 @@ fn merge_core(
             local.pending_spends.push(spend);
         }
     }
+    for incoming in incoming.payment_attempts {
+        if let Some(existing) = local
+            .payment_attempts
+            .iter_mut()
+            .find(|payment| payment.swap_id == incoming.swap_id)
+        {
+            existing.started_at = existing.started_at.min(incoming.started_at);
+        } else {
+            local.payment_attempts.push(incoming);
+        }
+    }
     local.pending_spends.retain(|spend| {
         local
             .swaps
@@ -755,6 +806,7 @@ impl BoltzDB {
     async fn write_core_snapshot(&self, snapshot: &CoreSnapshot) -> Result<(), BoltzError> {
         let mut locked = self.conn.lock().await;
         let conn = locked.transaction()?;
+        conn.execute("DELETE FROM payment_attempts", [])?;
         conn.execute("DELETE FROM pending_spends", [])?;
         conn.execute("DELETE FROM creation_intents", [])?;
         conn.execute("DELETE FROM swaps", [])?;
@@ -769,6 +821,12 @@ impl BoltzDB {
                     intent.id,
                     serde_json::to_string(intent)?
                 ],
+            )?;
+        }
+        for payment in &snapshot.payment_attempts {
+            conn.execute(
+                "INSERT INTO payment_attempts VALUES (?1,?2)",
+                params![payment.swap_id, payment.started_at],
             )?;
         }
         for spend in &snapshot.pending_spends {
@@ -817,7 +875,18 @@ fn read_core(conn: &Connection) -> Result<CoreSnapshot, BoltzError> {
             })
         })?
         .collect::<rusqlite::Result<Vec<_>>>()?;
+    let mut statement =
+        conn.prepare("SELECT swap_id,started_at FROM payment_attempts ORDER BY swap_id")?;
+    let payment_attempts = statement
+        .query_map([], |row| {
+            Ok(PaymentAttempt {
+                swap_id: row.get(0)?,
+                started_at: row.get(1)?,
+            })
+        })?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
     Ok(CoreSnapshot {
+        payment_attempts,
         swaps,
         intents,
         next_swap_index,

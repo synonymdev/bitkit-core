@@ -5088,9 +5088,8 @@ dependencies = [
 
 [[package]]
 name = "pubky-messenger"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b200a985ffe58078c671711ae546c9679f341e95b69ea1634c1a68d83794f6bd"
+version = "0.4.0"
+source = "git+https://github.com/coreyphillips/pubky-messenger?rev=4fff0ce2183f7273c0418801c262ed291a0a145a#4fff0ce2183f7273c0418801c262ed291a0a145a"
 dependencies = [
  "anyhow",
  "bip39",
@@ -5102,6 +5101,7 @@ dependencies = [
  "pkarr 3.10.0",
  "pubky 0.4.2",
  "pubky-common 0.3.1",
+ "reqwest 0.12.28",
  "serde",
  "serde_json",
  "sha2 0.10.9",
@@ -5152,9 +5152,11 @@ dependencies = [
 [[package]]
 name = "pubky-transport"
 version = "0.1.0"
+source = "git+https://github.com/coreyphillips/pubky-swap?rev=ca3d5f375da4f1248023a33d7e5c060083e5fc72#ca3d5f375da4f1248023a33d7e5c060083e5fc72"
 dependencies = [
  "bip39",
  "blake3",
+ "fs2",
  "futures",
  "iroh",
  "pkarr 3.10.0",
@@ -6518,6 +6520,7 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 [[package]]
 name = "swap-common"
 version = "0.1.0"
+source = "git+https://github.com/coreyphillips/pubky-swap?rev=ca3d5f375da4f1248023a33d7e5c060083e5fc72#ca3d5f375da4f1248023a33d7e5c060083e5fc72"
 dependencies = [
  "anyhow",
  "bitcoin 0.32.8",
@@ -8393,7 +8396,3 @@ name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
-
-[[patch.unused]]
-name = "swap-config"
-version = "0.1.0"

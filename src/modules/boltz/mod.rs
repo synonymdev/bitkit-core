@@ -8,6 +8,8 @@ mod guard;
 mod listener;
 mod models;
 mod pubky;
+#[cfg(test)]
+mod pubky_fixture;
 mod refund;
 mod send;
 pub use send::{get_send_terms, PubkySendTerms};
@@ -25,8 +27,9 @@ pub use listener::{
 };
 pub use models::{BoltzDB, SwapRecord};
 pub use pubky::{
-    configure_pubky, configure_pubky_session, disconnect_pubky, pubky_session_account,
-    pubky_session_identity, PubkySwapConfig,
+    configure_pubky, configure_pubky_session, disconnect_pubky, prepare_pubky_switch,
+    pubky_delivery_status, pubky_session_account, pubky_session_identity, retry_pubky_delivery,
+    PubkyDeliveryOperation, PubkyDeliveryStatus, PubkySwapConfig,
 };
 pub use refund::refund_submarine_swap_guarded;
 pub use types::*;

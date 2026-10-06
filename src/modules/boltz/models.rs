@@ -77,7 +77,7 @@ pub const CREATE_META_TABLE: &str = "CREATE TABLE IF NOT EXISTS swap_meta (
 
 /// Current `boltz.db` schema version, written to `PRAGMA user_version` so future
 /// changes have a migration anchor.
-pub const SCHEMA_VERSION: i64 = 5;
+pub const SCHEMA_VERSION: i64 = 6;
 
 /// Internal, fully-detailed representation of a persisted swap, including
 /// secrets. This is never exposed across the FFI boundary — use
@@ -154,9 +154,14 @@ impl SwapRecord {
     pub fn is_locally_complete(&self) -> bool {
         let status = BoltzSwapStatus::from_raw(&self.status);
         if self.backend_binding.is_some()
-            && self.swap_type == BoltzSwapType::Submarine
+            && self.claim_tx_id.is_none()
             && self.refund_tx_id.is_none()
-            && status == BoltzSwapStatus::SwapExpired
+            && matches!(
+                status,
+                BoltzSwapStatus::TransactionFailed
+                    | BoltzSwapStatus::InvoiceExpired
+                    | BoltzSwapStatus::SwapExpired
+            )
         {
             return false;
         }

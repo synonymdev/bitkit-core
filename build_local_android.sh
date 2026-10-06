@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-local_version="${LOCAL_BITKIT_CORE_VERSION:-0.5.14-pubky-swap-boltz-local}"
+local_version="${LOCAL_BITKIT_CORE_VERSION:-0.5.14-pubky-durable-20260928-local}"
 # The Bitkit app already bundles this helper through Paykit.
 bundle_tls_helper="${LOCAL_BUNDLE_PUBKY_TLS_HELPER:-false}"
 export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-${ANDROID_NDK_ROOT:-}}"
@@ -22,8 +22,8 @@ command -v gobley-uniffi-bindgen >/dev/null
 # every packaged ABI. Build only the shared library consumed by Android.
 export CARGO_PROFILE_RELEASE_DEBUG=2
 export CARGO_PROFILE_RELEASE_STRIP=false
-cargo ndk -o bindings/android/lib/src/main/jniLibs \
-    -t armeabi-v7a -t arm64-v8a -t x86 -t x86_64 rustc --lib --crate-type cdylib --release --locked
+cargo ndk -t armeabi-v7a -t arm64-v8a -t x86 -t x86_64 \
+    rustc --lib --crate-type cdylib --release --locked
 
 # Binding metadata can be read directly from the Android library.
 binding_library=target/aarch64-linux-android/release/libbitkitcore.so

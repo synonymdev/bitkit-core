@@ -18,6 +18,9 @@ pub enum BoltzError {
     #[error("Swap error: {error_details}")]
     SwapError { error_details: String },
 
+    #[error("Swap recovery pending: {error_details}")]
+    RecoveryPending { error_details: String },
+
     #[error("Broadcast error: {error_details}")]
     BroadcastError { error_details: String },
 

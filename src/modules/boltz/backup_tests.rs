@@ -349,6 +349,8 @@ async fn accepted_pubky_contracts_and_all_spend_attempts_roundtrip() {
                     core: source.core_snapshot().await.unwrap(),
                     identities: vec![IdentitySnapshot {
                         identity: identity.clone(),
+                        network: None,
+                        provider: None,
                         store: bridge.export_snapshot().unwrap(),
                     }],
                 })
@@ -361,6 +363,9 @@ async fn accepted_pubky_contracts_and_all_spend_attempts_roundtrip() {
             .unwrap();
         let record = record_from_response(&intent, &response, &key).unwrap();
         source.complete_intent(&intent, &record).await.unwrap();
+        if !refund {
+            assert!(source.mark_payment_started(&record.id).await.unwrap());
+        }
         // More than one signed/broadcast attempt can exist before completion was recorded.
         for txid in ["aa".repeat(32), "bb".repeat(32)] {
             source
@@ -429,6 +434,9 @@ async fn accepted_pubky_contracts_and_all_spend_attempts_roundtrip() {
         assert_eq!(restored.create_response_json, record.create_response_json);
         assert_eq!(restored.backend_binding, record.backend_binding);
         assert_eq!(target.pending_spends(&record.id).await.unwrap().len(), 2);
+        if record.swap_type == BoltzSwapType::Reverse {
+            assert!(!target.mark_payment_started(&record.id).await.unwrap());
+        }
     }
     assert!(target.creation_intents().await.unwrap().is_empty());
     assert_eq!(target.reserve_swap_index().await.unwrap(), 2);
@@ -504,4 +512,156 @@ async fn derivation_counter_never_enters_hardened_child_space() {
     assert!(db.reserve_swap_index().await.is_err());
     // An exhausted counter is valid recovery data for existing swap keys.
     assert!(export_backup(&db, data_root).await.is_ok());
+}
+
+#[tokio::test]
+async fn nested_stores_keep_their_network_and_provider_scope() {
+    let directory = tempfile::tempdir().unwrap();
+    let source_root = directory.path().join("source");
+    let target_root = directory.path().join("target");
+    let identity = fixture::fixture_identity();
+    let providers = [
+        fixture::fixture_provider(),
+        pubky_swap_boltz::identity_from_secret(&[8; 32]),
+    ];
+    for network in ["regtest", "mainnet"] {
+        for provider in &providers {
+            let path = source_root.join(&identity).join(network).join(provider);
+            drop(Store::open(&path, &format!("{identity}|{provider}|{network}")).unwrap());
+        }
+    }
+    let db = database(&directory.path().join("core.db")).await;
+    let snapshot = export_backup(&db, root(&source_root)).await.unwrap();
+    let decoded: Snapshot = serde_json::from_str(&snapshot).unwrap();
+    assert_eq!(decoded.identities.len(), 4);
+    let target = database(&directory.path().join("target.db")).await;
+    restore_backup(&target, snapshot.clone(), root(&target_root))
+        .await
+        .unwrap();
+    for scope in &decoded.identities {
+        let path = snapshot_path(&target_root, scope).unwrap();
+        assert_eq!(
+            Store::snapshot_directory(&path).unwrap().identity_binding,
+            scope.store.identity_binding
+        );
+    }
+    let mut mismatched: serde_json::Value = serde_json::from_str(&snapshot).unwrap();
+    mismatched["identities"][0]["provider"] =
+        serde_json::json!(pubky_swap_boltz::identity_from_secret(&[9; 32]));
+    assert!(
+        restore_backup(&target, mismatched.to_string(), root(&target_root))
+            .await
+            .is_err()
+    );
+}
+
+#[tokio::test]
+async fn delivery_journals_make_backup_support_explicit() {
+    let directory = tempfile::tempdir().unwrap();
+    let data_root = directory.path().join("stores");
+    let path = data_root
+        .join(fixture::fixture_identity())
+        .join("regtest")
+        .join(fixture::fixture_provider());
+    drop(Store::open(&path, &fixture::fixture_binding()).unwrap());
+    let db = database(&directory.path().join("core.db")).await;
+    let snapshot = export_backup(&db, root(&data_root)).await.unwrap();
+    std::fs::create_dir(path.join("delivery")).unwrap();
+    assert!(restore_backup(&db, snapshot, root(&data_root))
+        .await
+        .unwrap_err()
+        .to_string()
+        .contains("durable delivery journals are not supported"));
+    let error = export_backup(&db, root(&data_root))
+        .await
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("durable delivery journals are not supported"));
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn nested_network_symlinks_are_rejected() {
+    let directory = tempfile::tempdir().unwrap();
+    let data_root = directory.path().join("stores");
+    let identity_path = data_root.join(fixture::fixture_identity());
+    std::fs::create_dir_all(&identity_path).unwrap();
+    std::os::unix::fs::symlink(directory.path(), identity_path.join("regtest")).unwrap();
+    let db = database(&directory.path().join("core.db")).await;
+    assert!(export_backup(&db, root(&data_root)).await.is_err());
+}
+
+#[tokio::test]
+async fn restore_rejects_a_layout_alias_before_writing() {
+    for source_nested in [false, true] {
+        let directory = tempfile::tempdir().unwrap();
+        let source_root = directory.path().join("source");
+        let target_root = directory.path().join("target");
+        let identity = fixture::fixture_identity();
+        let provider = fixture::fixture_provider();
+        let store_path = |root: &Path, nested| {
+            let path = root.join(&identity);
+            if nested {
+                path.join("regtest").join(&provider)
+            } else {
+                path
+            }
+        };
+        let source_path = store_path(&source_root, source_nested);
+        let existing_path = store_path(&target_root, !source_nested);
+        drop(Store::open(&source_path, &fixture::fixture_binding()).unwrap());
+        drop(Store::open(&existing_path, &fixture::fixture_binding()).unwrap());
+        let source = database(&directory.path().join("source.db")).await;
+        source.reserve_swap_index().await.unwrap();
+        let snapshot = export_backup(&source, root(&source_root)).await.unwrap();
+        let target = database(&directory.path().join("target.db")).await;
+        let error = restore_backup(&target, snapshot, root(&target_root))
+            .await
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("another recovery directory layout"));
+        assert!(!store_path(&target_root, source_nested)
+            .join("swaps.sqlite3")
+            .exists());
+        assert_eq!(target.core_snapshot().await.unwrap().next_swap_index, 0);
+        target.ensure_recovery_complete().await.unwrap();
+        assert_eq!(
+            Store::snapshot_directory(&existing_path)
+                .unwrap()
+                .identity_binding,
+            fixture::fixture_binding()
+        );
+    }
+}
+
+#[tokio::test]
+async fn restore_cannot_bypass_an_existing_nested_delivery_journal() {
+    let directory = tempfile::tempdir().unwrap();
+    let source_root = directory.path().join("source");
+    let target_root = directory.path().join("target");
+    let identity = fixture::fixture_identity();
+    let source_path = source_root.join(&identity);
+    let existing_path = target_root
+        .join(&identity)
+        .join("regtest")
+        .join(fixture::fixture_provider());
+    drop(Store::open(&source_path, &fixture::fixture_binding()).unwrap());
+    drop(Store::open(&existing_path, &fixture::fixture_binding()).unwrap());
+    let delivery = existing_path.join("delivery");
+    std::fs::create_dir(&delivery).unwrap();
+    std::fs::write(delivery.join("pending-fixture"), b"pending delivery").unwrap();
+    let source = database(&directory.path().join("source.db")).await;
+    let snapshot = export_backup(&source, root(&source_root)).await.unwrap();
+    let target = database(&directory.path().join("target.db")).await;
+    let error = restore_backup(&target, snapshot, root(&target_root))
+        .await
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("durable delivery journals are not supported"));
+    assert!(!target_root.join(&identity).join("swaps.sqlite3").exists());
+    assert_eq!(
+        std::fs::read(delivery.join("pending-fixture")).unwrap(),
+        b"pending delivery"
+    );
+    target.ensure_recovery_complete().await.unwrap();
 }

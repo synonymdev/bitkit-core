@@ -2857,8 +2857,10 @@ pub async fn boltz_configure_pubky(
     config: PubkySwapConfig,
     secret_key_hex: String,
 ) -> Result<(), BoltzError> {
-    let task =
-        ensure_runtime().spawn(async move { boltz::configure_pubky(config, secret_key_hex).await });
+    let task = ensure_runtime().spawn(async move {
+        let db = get_boltz_db().await?;
+        boltz::configure_pubky(&db, config, secret_key_hex).await
+    });
     let _abort_on_cancel = AbortSwapConfiguration(task.abort_handle());
     task.await.unwrap_or_else(|e| Err(boltz_runtime_err(e)))
 }
@@ -2892,7 +2894,9 @@ pub async fn boltz_configure_pubky_session(
     wallet_secret_hex: String,
 ) -> Result<(), BoltzError> {
     let task = ensure_runtime().spawn(async move {
+        let db = get_boltz_db().await?;
         boltz::configure_pubky_session(
+            &db,
             config,
             session_secret,
             public_key,
@@ -2900,6 +2904,20 @@ pub async fn boltz_configure_pubky_session(
             wallet_secret_hex,
         )
         .await
+    });
+    let _abort_on_cancel = AbortSwapConfiguration(task.abort_handle());
+    task.await
+        .unwrap_or_else(|error| Err(boltz_runtime_err(error)))
+}
+
+/// Prepare to change Pubky provider or identity without abandoning unfinished work.
+/// Rejects pending Pubky swaps and unresolved creation attempts, leaving the bridge
+/// unchanged on failure. On success it disconnects while swap creation is paused.
+#[uniffi::export]
+pub async fn boltz_prepare_pubky_switch() -> Result<(), BoltzError> {
+    let task = ensure_runtime().spawn(async {
+        let db = get_boltz_db().await?;
+        boltz::prepare_pubky_switch(&db).await
     });
     let _abort_on_cancel = AbortSwapConfiguration(task.abort_handle());
     task.await
@@ -3110,6 +3128,46 @@ pub async fn boltz_list_pending_swaps() -> Result<Vec<BoltzSwap>, BoltzError> {
     })
     .await
     .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Whether saved swaps or interrupted negotiations still need wallet recovery.
+#[uniffi::export]
+pub async fn boltz_has_pending_recovery() -> Result<bool, BoltzError> {
+    ensure_runtime()
+        .spawn(async move { get_boltz_db().await?.has_pending_recovery().await })
+        .await
+        .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Inspect durable delivery failures without exposing message bodies.
+#[uniffi::export]
+pub async fn boltz_pubky_delivery_status() -> Result<Vec<boltz::PubkyDeliveryStatus>, BoltzError> {
+    ensure_runtime()
+        .spawn(boltz::pubky_delivery_status())
+        .await
+        .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Explicitly resume a paused delivery after correcting its reported failure.
+#[uniffi::export]
+pub async fn boltz_retry_pubky_delivery(
+    id: String,
+    operation: boltz::PubkyDeliveryOperation,
+) -> Result<(), BoltzError> {
+    ensure_runtime()
+        .spawn(boltz::retry_pubky_delivery(id, operation))
+        .await
+        .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
+}
+
+/// Persist reverse payment intent before submitting the invoice to Lightning.
+/// False means an earlier submission may have succeeded and must be reconciled.
+#[uniffi::export]
+pub async fn boltz_mark_payment_started(swap_id: String) -> Result<bool, BoltzError> {
+    ensure_runtime()
+        .spawn(async move { get_boltz_db().await?.mark_payment_started(&swap_id).await })
+        .await
+        .unwrap_or_else(|e| Err(boltz_runtime_err(e)))
 }
 
 /// Fetch a single swap by id.

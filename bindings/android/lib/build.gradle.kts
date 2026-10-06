@@ -141,6 +141,7 @@ val validateReleaseNativeLibraries by tasks.registering {
             val requiredSymbols = listOf(
                 "Java_to_bitkit_services_PubkySwapInit_nativeInit",
                 "uniffi_bitkitcore_fn_func_boltz_configure_pubky",
+                "uniffi_bitkitcore_fn_func_boltz_prepare_pubky_switch",
                 "uniffi_bitkitcore_fn_func_boltz_disconnect_pubky",
                 "uniffi_bitkitcore_fn_func_boltz_export_backup",
                 "uniffi_bitkitcore_fn_func_boltz_restore_backup",

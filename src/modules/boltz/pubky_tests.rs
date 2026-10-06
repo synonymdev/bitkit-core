@@ -6,8 +6,7 @@ use boltz_client::util::fees::Fee;
 use pubky_swap_boltz::model::{CreateRequest, ReverseRequest, SubmarineRequest};
 use std::str::FromStr;
 
-#[path = "pubky_fixture.rs"]
-mod fixture;
+use crate::modules::boltz::pubky_fixture as fixture;
 
 const MNEMONIC: &str =
     "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
@@ -26,6 +25,107 @@ fn intent(request: CreateRequest, claim_address: Option<String>) -> CreationInte
         created_at: now_secs(),
         request,
     }
+}
+
+fn unresolved_intent() -> CreationIntent {
+    intent(
+        CreateRequest::Submarine(SubmarineRequest {
+            from: "BTC".into(),
+            to: "BTC".into(),
+            invoice: "unresolved-invoice".into(),
+            refund_public_key: String::new(),
+            pair_hash: String::new(),
+            referral_id: String::new(),
+            error: String::new(),
+        }),
+        None,
+    )
+}
+
+#[tokio::test]
+async fn pubky_switch_rejects_an_unresolved_creation_after_restart() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("boltz.db");
+    let db = BoltzDB::new(path.to_str().unwrap()).await.unwrap();
+    let pending = unresolved_intent();
+    assert!(!db.has_pending_recovery().await.unwrap());
+    db.save_intent(&pending).await.unwrap();
+    assert!(db.has_pending_recovery().await.unwrap());
+    drop(db);
+    let db = BoltzDB::new(path.to_str().unwrap()).await.unwrap();
+
+    assert!(db.list_pending_swaps().await.unwrap().is_empty());
+    assert!(db.has_pending_recovery().await.unwrap());
+    assert!(crate::modules::boltz::prepare_pubky_switch(&db)
+        .await
+        .is_err());
+    assert!(db
+        .ensure_pubky_binding_allowed(Some("replacement"))
+        .await
+        .is_err());
+    db.ensure_pubky_binding_allowed(Some(&pending.backend_binding))
+        .await
+        .unwrap();
+    assert_eq!(db.creation_intents().await.unwrap()[0].id, pending.id);
+}
+
+#[tokio::test]
+async fn same_account_root_and_session_recovery_bindings_cannot_replace_each_other() {
+    let owner = fixture::fixture_identity();
+    let transport = crate::modules::boltz::pubky_session_identity(
+        hex::encode([15; 32]),
+        owner.clone(),
+        owner.clone(),
+        "/pub/bitkit.to/bitkit/wallet/".into(),
+    )
+    .unwrap();
+    let root_binding = format!("{owner}|{owner}|regtest");
+    let session_binding = format!("{transport}|{owner}|regtest");
+    for (saved, replacement) in [
+        (&root_binding, &session_binding),
+        (&session_binding, &root_binding),
+    ] {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("boltz.db");
+        let db = BoltzDB::new(path.to_str().unwrap()).await.unwrap();
+        let mut pending = unresolved_intent();
+        pending.backend_binding = saved.clone();
+        db.save_intent(&pending).await.unwrap();
+        drop(db);
+        let restored = BoltzDB::new(path.to_str().unwrap()).await.unwrap();
+        restored
+            .ensure_pubky_binding_allowed(Some(saved))
+            .await
+            .unwrap();
+        assert!(restored
+            .ensure_pubky_binding_allowed(Some(replacement))
+            .await
+            .is_err());
+        assert!(restored.ensure_pubky_binding_allowed(None).await.is_err());
+        assert_eq!(restored.creation_intents().await.unwrap()[0].id, pending.id);
+        assert!(restored.has_pending_recovery().await.unwrap());
+    }
+}
+
+#[tokio::test]
+async fn pubky_switch_rejects_active_creation_without_blocking_recovery() {
+    let db = BoltzDB::new(":memory:").await.unwrap();
+    let creation = db.recovery_gate.read().await;
+    let rejection = tokio::time::timeout(
+        std::time::Duration::from_millis(100),
+        crate::modules::boltz::prepare_pubky_switch(&db),
+    )
+    .await
+    .expect("switch must reject an active operation without waiting");
+    assert!(rejection.is_err());
+    let nested = db.recovery_gate.try_read().unwrap();
+    db.save_intent(&unresolved_intent()).await.unwrap();
+    drop(nested);
+    drop(creation);
+    assert!(crate::modules::boltz::prepare_pubky_switch(&db)
+        .await
+        .is_err());
+    assert_eq!(db.creation_intents().await.unwrap().len(), 1);
 }
 
 fn destination(keys: &boltz_client::Keypair) -> bitcoin::Address {

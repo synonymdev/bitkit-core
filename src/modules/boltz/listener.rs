@@ -174,10 +174,8 @@ pub async fn start_swap_updates(
         }
     }
 
-    // Reconcile every pending swap against Boltz's REST status once per minute
-    // for as long as the stream runs, so a live event that was dropped or lagged
-    // (the process loop skips `RecvError::Lagged`) self-heals without an app
-    // restart. Swaps are reconciled serially to rate-limit the REST calls.
+    // Per-swap locks retain serialized claim and broadcast decisions while a
+    // slow provider lookup cannot prevent other pending swaps from recovering.
     let reconcile_task = {
         let alive = TaskAlive::new();
         let db = db.clone();
@@ -186,35 +184,18 @@ pub async fn start_swap_updates(
         tokio::spawn(async move {
             let _alive = alive;
             let mut interval = tokio::time::interval(std::time::Duration::from_secs(5));
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             let mut last_legacy = tokio::time::Instant::now() - RECONCILE_INTERVAL;
             loop {
-                interval.tick().await;
+                tokio::select! {
+                    _ = interval.tick() => {},
+                    _ = super::pubky::RECOVERY_WAKEUP.notified() => {},
+                }
                 let legacy_due = last_legacy.elapsed() >= RECONCILE_INTERVAL;
                 if legacy_due {
                     last_legacy = tokio::time::Instant::now();
-                    if let Err(error) = db
-                        .recover_creation_intents(
-                            network,
-                            &config.mnemonic,
-                            config.bip39_passphrase.as_deref(),
-                        )
-                        .await
-                    {
-                        log::warn!("Failed to recover pending Pubky creations: {}", error);
-                    }
                 }
-                let pending = match db.list_pending_swaps().await {
-                    Ok(pending) => pending,
-                    Err(e) => {
-                        log::warn!("Failed to list pending swaps for reconcile: {}", e);
-                        continue;
-                    }
-                };
-                for record in pending.iter().filter(|r| r.network == network) {
-                    if record.backend_binding.is_some() || legacy_due {
-                        reconcile_swap(&db, &listener, &config, network, &record.id).await;
-                    }
-                }
+                reconcile_pending(&db, &listener, &config, network, legacy_due).await;
             }
         })
     };
@@ -299,6 +280,70 @@ pub async fn subscribe_if_active(network: BoltzNetwork, swap_id: &str) {
         }
     }
     reconcile_swap(&db, &listener, &config, network, swap_id).await;
+}
+
+const RECOVERY_WORK_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(65);
+const MAX_RECOVERY_WORKERS: usize = 4;
+
+async fn reconcile_pending(
+    db: &Arc<BoltzDB>,
+    listener: &Arc<dyn BoltzEventListener>,
+    config: &AutoClaimConfig,
+    network: BoltzNetwork,
+    legacy_due: bool,
+) {
+    let mut work = tokio::task::JoinSet::new();
+    let recovery_db = db.clone();
+    let recovery_config = config.clone();
+    work.spawn(async move {
+        let result = tokio::time::timeout(
+            RECOVERY_WORK_TIMEOUT,
+            recovery_db.recover_creation_intents(
+                network,
+                &recovery_config.mnemonic,
+                recovery_config.bip39_passphrase.as_deref(),
+            ),
+        )
+        .await;
+        match result {
+            Ok(Ok(())) => {}
+            Ok(Err(error)) => log::warn!("Creation recovery remains pending: {}", error),
+            Err(_) => log::warn!("Creation recovery reached its time limit and remains pending"),
+        }
+    });
+    let pending = match db.list_pending_swaps().await {
+        Ok(pending) => pending,
+        Err(error) => {
+            log::warn!("Failed to list pending swaps: {}", error);
+            while work.join_next().await.is_some() {}
+            return;
+        }
+    };
+    for record in pending.into_iter().filter(|record| {
+        record.network == network && (record.backend_binding.is_some() || legacy_due)
+    }) {
+        while work.len() >= MAX_RECOVERY_WORKERS {
+            work.join_next().await;
+        }
+        let db = db.clone();
+        let listener = listener.clone();
+        let config = config.clone();
+        work.spawn(async move {
+            if tokio::time::timeout(
+                RECOVERY_WORK_TIMEOUT,
+                reconcile_swap(&db, &listener, &config, network, &record.id),
+            )
+            .await
+            .is_err()
+            {
+                log::warn!(
+                    "Swap {} recovery reached its time limit and remains pending",
+                    record.id
+                );
+            }
+        });
+    }
+    while work.join_next().await.is_some() {}
 }
 
 /// Fetch a swap's current status from Boltz over REST and run it through
