@@ -103,7 +103,8 @@ fn wallet_requires_both_provider_endpoints() {
                 RECIPIENT.into(),
                 path.to_string_lossy().into(),
                 rpc.into(),
-                bundler.into()
+                bundler.into(),
+                None,
             ),
             Err(UsdtError::NotConfigured)
         ));
@@ -133,6 +134,7 @@ fn payment_request_round_trips_receive_uri_and_rejects_wrong_asset_or_network() 
         dir.path().join("usdt.sqlite").to_string_lossy().into(),
         "https://provider.example".into(),
         "https://bundler.example".into(),
+        None,
     )
     .unwrap();
     let request = usdt_parse_payment_request(wallet.receive_uri()).unwrap();
@@ -235,6 +237,7 @@ async fn payment_proof_binds_execution_to_request_and_receiver() {
             .into(),
         format!("{}/chain", chain.url),
         format!("{}/bundler", chain.url),
+        None,
     )
     .unwrap();
     let binding = UsdtPaymentProofBinding {
@@ -433,6 +436,8 @@ struct ChainState {
     bridge_messages: std::collections::HashMap<String, serde_json::Value>,
     bridge_requests: Vec<String>,
     bridge_delay: std::time::Duration,
+    orchestra_received: Option<u64>,
+    orchestra_delivery: serde_json::Value,
     paymaster: alloy_primitives::Address,
     helper_balance: alloy_primitives::U256,
     native_message_fee: u64,
@@ -496,6 +501,8 @@ impl MockChain {
             bridge_messages: Default::default(),
             bridge_requests: vec![],
             bridge_delay: std::time::Duration::ZERO,
+            orchestra_received: Some(950_000),
+            orchestra_delivery: serde_json::json!({"status":"bridging", "received_amount":null,"destination_tx":null,"refund_tx":null,"refund_amount":null}),
             paymaster: paymaster::PAYMASTER,
             helper_balance: U256::from(1_000_000_000_000_000u64),
             native_message_fee: 10_000_000_000,
@@ -546,14 +553,18 @@ impl MockChain {
                 if header_end == 0 {
                     continue;
                 }
-                let length: usize = String::from_utf8_lossy(&request[..header_end])
+                let headers = String::from_utf8_lossy(&request[..header_end]);
+                let mut request_line = headers.lines().next().unwrap().split_whitespace();
+                let http_method = request_line.next().unwrap().to_owned();
+                let path = request_line.next().unwrap().to_owned();
+                let length: usize = headers
                     .lines()
                     .find_map(|line| {
                         line.to_lowercase()
                             .strip_prefix("content-length:")
                             .map(|v| v.trim().parse().unwrap())
                     })
-                    .unwrap();
+                    .unwrap_or(0);
                 while request.len() < header_end + length {
                     let mut chunk = [0u8; 4096];
                     let n = socket.read(&mut chunk).await.unwrap();
@@ -562,17 +573,15 @@ impl MockChain {
                     }
                     request.extend_from_slice(&chunk[..n]);
                 }
-                let body: serde_json::Value =
-                    serde_json::from_slice(&request[header_end..]).unwrap();
-                let path = String::from_utf8_lossy(&request[..header_end])
-                    .lines()
-                    .next()
-                    .unwrap()
-                    .split_whitespace()
-                    .nth(1)
-                    .unwrap()
-                    .to_owned();
-                let method = body["method"].as_str().unwrap();
+                let body: serde_json::Value = if http_method == "GET" {
+                    assert_eq!(path, "/bridges");
+                    assert_eq!(length, 0);
+                    serde_json::Value::Null
+                } else {
+                    assert_eq!(http_method, "POST");
+                    serde_json::from_slice(&request[header_end..]).unwrap()
+                };
+                let method = body["method"].as_str().unwrap_or("");
                 let bundler = matches!(
                     method,
                     "pimlico_getTokenQuotes"
@@ -605,7 +614,11 @@ impl MockChain {
                 } else {
                     std::time::Duration::ZERO
                 };
-                let mut response = server_state.lock().unwrap().respond(&body);
+                let mut response = if http_method == "GET" {
+                    serde_json::json!({"networks":["ethereum", "polygon", "plasma", "base", "bsc", "solana", "tron", "unknown-network"]})
+                } else {
+                    server_state.lock().unwrap().respond(&body)
+                };
                 if body["method"] == "eth_getLogs" {
                     if let Some(logs) = response["result"].as_array_mut() {
                         for log in logs {
@@ -634,11 +647,19 @@ impl MockChain {
         Self { url, state, task }
     }
     fn wallet(&self, dir: &tempfile::TempDir) -> std::sync::Arc<UsdtWallet> {
+        self.wallet_with_bridges(dir, false)
+    }
+    fn wallet_with_bridges(
+        &self,
+        dir: &tempfile::TempDir,
+        enabled: bool,
+    ) -> std::sync::Arc<UsdtWallet> {
         UsdtWallet::new(
             usdt_address(TEST_PHRASE.into(), None).unwrap(),
             dir.path().join("usdt.sqlite").to_string_lossy().into(),
             format!("{}/chain", self.url),
             format!("{}/bundler", self.url),
+            enabled.then(|| format!("{}/bridges", self.url)),
         )
         .unwrap()
     }
@@ -654,6 +675,16 @@ impl ChainState {
         use alloy_primitives::{Bytes, U256};
         use alloy_sol_types::{SolCall, SolValue};
         use serde_json::json;
+        if body["action"] == "quote" {
+            return if let Some(amount) = self.orchestra_received {
+                json!({"quote_id":"orchestra-quote", "funding_address":"0x2222222222222222222222222222222222222222", "received_amount":amount.to_string(),"expires_at":wallet::now()+120,"ticket":"quote-ticket"})
+            } else {
+                json!({"error":"route_unavailable"})
+            };
+        }
+        if body["action"] == "status" {
+            return self.orchestra_delivery.clone();
+        }
         if matches!(
             body["method"].as_str(),
             Some("eth_estimateUserOperationGas" | "eth_sendUserOperation")
@@ -1544,6 +1575,7 @@ async fn deployed_contracts_collect_usdt_fees_and_revert_failed_bridges_atomical
         dir.path().join("usdt.sqlite").to_string_lossy().into(),
         std::env::var("USDT_FORK_RPC_URL").unwrap_or_else(|_| "http://127.0.0.1:18546".into()),
         std::env::var("USDT_FORK_BUNDLER_URL").unwrap_or_else(|_| "http://127.0.0.1:18546".into()),
+        None,
     )
     .unwrap();
     assert_eq!(rpc.balance(wallet.address).await.unwrap(), U256::ZERO);
@@ -1829,6 +1861,7 @@ fn stored_activity_is_complete_and_sorted_newest_first() {
             tx_hash: Some(format!("tx-{index}")),
             user_operation_hash: None,
             bridge_guid: None,
+            orchestra: None,
             recipient: RECIPIENT.into(),
             destination: UsdtDestination::Arbitrum,
             amount: 1,
@@ -2195,6 +2228,7 @@ async fn stalled_bridge_status_checks_leave_time_for_source_recovery_and_sending
             id: format!("bridge-{index}"),
             tx_hash: Some(format!("{:#x}", alloy_primitives::B256::repeat_byte(index))),
             user_operation_hash: None,
+            orchestra: None,
             bridge_guid: Some(format!(
                 "{:#x}",
                 alloy_primitives::B256::repeat_byte(index + 10)
@@ -3270,7 +3304,7 @@ async fn infrastructure_and_token_addresses_are_not_payment_recipients() {
         UsdtDestination::Stable,
     ] {
         let mut recipients = vec![
-            destination.token(),
+            destination.token().unwrap(),
             account::ENTRY_POINT,
             account::DELEGATE,
             paymaster::PAYMASTER,
@@ -3849,6 +3883,8 @@ fn orphaned_payments_reopen_in_nonce_order_and_keep_sends_blocked() {
     // Retry order must be independent of the order rows were stored.
     for nonce in [1, 0] {
         let mut plan = transaction::Plan {
+            refund_block: None,
+            orchestra: None,
             operation: serde_json::from_value(vector["operation"].clone()).unwrap(),
             created_block: 19999,
             expires_at: wallet::now() + 600,
@@ -3860,6 +3896,7 @@ fn orphaned_payments_reopen_in_nonce_order_and_keep_sends_blocked() {
             tx_hash: None,
             user_operation_hash: Some(format!("{hash:#x}")),
             bridge_guid: None,
+            orchestra: None,
             destination: UsdtDestination::Arbitrum,
             recipient: RECIPIENT.into(),
             amount: 1_000_000,
@@ -4180,4 +4217,368 @@ async fn history_regains_query_width_before_finishing_restoration() {
         .map(|(start, end)| end - start + 1)
         .collect();
     assert!(widths.contains(&history::MAX_LOG_RANGE));
+}
+
+#[tokio::test]
+async fn outbound_quotes_select_the_best_usable_receipt_for_total_debit() {
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet_with_bridges(&dir, true);
+    for (received, destination, provider) in [
+        (
+            Some(950_000),
+            UsdtDestination::Ethereum,
+            UsdtBridgeProvider::Orchestra,
+        ),
+        (
+            Some(500_000),
+            UsdtDestination::Ethereum,
+            UsdtBridgeProvider::Usdt0,
+        ),
+        (None, UsdtDestination::Ethereum, UsdtBridgeProvider::Usdt0),
+        (
+            Some(950_000),
+            UsdtDestination::Base,
+            UsdtBridgeProvider::Orchestra,
+        ),
+    ] {
+        chain.state.lock().unwrap().orchestra_received = received;
+        let quote = wallet
+            .quote_transfer(RECIPIENT.into(), 1_000_000, destination)
+            .await
+            .unwrap();
+        assert_eq!(quote.bridge_provider, Some(provider));
+        assert_eq!(quote.amount, 1_000_000);
+        let plan = wallet.store.quote(&quote.id).unwrap().plan;
+        if provider == UsdtBridgeProvider::Orchestra {
+            let route = plan.orchestra.unwrap();
+            assert_eq!(route.recipient, RECIPIENT);
+            assert_eq!(route.received_amount, quote.received_amount);
+            assert_eq!(route.amount, quote.amount);
+            assert_eq!(route.destination, destination);
+        } else {
+            assert!(plan.orchestra.is_none());
+        }
+    }
+    chain.state.lock().unwrap().orchestra_received = None;
+    assert!(wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Solana)
+        .await
+        .is_err());
+}
+
+#[tokio::test]
+async fn orchestra_destinations_follow_available_gateway_networks() {
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    assert!(wallet.orchestra_destinations().await.unwrap().is_empty());
+    drop(wallet);
+    let wallet = chain.wallet_with_bridges(&dir, true);
+    assert_eq!(
+        wallet.orchestra_destinations().await.unwrap(),
+        vec![
+            UsdtDestination::Ethereum,
+            UsdtDestination::Polygon,
+            UsdtDestination::Plasma,
+            UsdtDestination::Base,
+            UsdtDestination::Bsc,
+            UsdtDestination::Solana,
+            UsdtDestination::Tron,
+        ]
+    );
+}
+
+#[tokio::test]
+async fn orchestra_funding_reorg_restores_the_signed_payment_after_restart() {
+    use alloy_primitives::B256;
+    for status in [
+        UsdtTransferStatus::Confirmed,
+        UsdtTransferStatus::BridgeRefunded,
+    ] {
+        let chain = MockChain::start().await;
+        let dir = tempfile::tempdir().unwrap();
+        let wallet = chain.wallet_with_bridges(&dir, true);
+        let quote = wallet
+            .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Base)
+            .await
+            .unwrap();
+        let sent = wallet
+            .send(quote.id, TEST_PHRASE.into(), None)
+            .await
+            .unwrap();
+        let original_plan =
+            serde_json::to_value(wallet.store.pending_plan(&sent.id).unwrap().unwrap()).unwrap();
+        {
+            let mut state = chain.state.lock().unwrap();
+            state.mined = true;
+            state.tip += 3;
+        }
+        wallet.refresh_transfers().await.unwrap();
+        let mut transfer = wallet.store.transfer(&sent.id).unwrap().unwrap();
+        assert_eq!(transfer.status, UsdtTransferStatus::Bridging);
+        assert!(transfer.tx_hash.is_some());
+        assert!(transfer.fee.is_some());
+
+        // Persist each terminal delivery outcome before the source funding is orphaned.
+        transfer.status = status;
+        let bridge = transfer.orchestra.as_mut().unwrap();
+        let refund_block = if status == UsdtTransferStatus::BridgeRefunded {
+            bridge.refund_tx = Some(B256::repeat_byte(9).to_string());
+            bridge.refund_amount = Some(900_000);
+            transfer.received_amount = 0;
+            Some((20001, chain.state.lock().unwrap().block_hash(20001)))
+        } else {
+            bridge.destination_tx = Some("destination-transaction".into());
+            transfer.received_amount = 949_000;
+            None
+        };
+        wallet
+            .store
+            .update_delivery(&transfer, refund_block)
+            .unwrap();
+        drop(wallet);
+        {
+            let mut state = chain.state.lock().unwrap();
+            state.mined = false;
+            state.block_hashes.insert(20000, B256::repeat_byte(0xab));
+        }
+        let wallet = chain.wallet_with_bridges(&dir, true);
+        sync_history_to_tip(&wallet).await;
+        drop(wallet);
+        let wallet = chain.wallet_with_bridges(&dir, true);
+        let pending = wallet.store.pending_operations().unwrap();
+        assert_eq!(pending.len(), 1, "orphaned {status:?} funding must reopen");
+        let (reopened, plan) = &pending[0];
+        assert_eq!(reopened.status, UsdtTransferStatus::Pending);
+        assert_eq!(reopened.id, sent.id);
+        assert_eq!(reopened.user_operation_hash, sent.user_operation_hash);
+        assert_eq!(reopened.recipient, sent.recipient);
+        assert_eq!(reopened.destination, sent.destination);
+        assert_eq!(reopened.received_amount, sent.received_amount);
+        assert!(reopened.tx_hash.is_none());
+        assert!(reopened.fee.is_none());
+        assert_eq!(reopened.orchestra, sent.orchestra);
+        assert_eq!(serde_json::to_value(plan).unwrap(), original_plan);
+        assert!(matches!(
+            wallet.store.require_no_pending(),
+            Err(UsdtError::PendingTransfer)
+        ));
+        assert_eq!(chain.state.lock().unwrap().operations.len(), 1);
+    }
+}
+
+#[tokio::test]
+async fn orchestra_funding_keeps_delivery_identity_through_restart_and_history() {
+    use serde_json::json;
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet_with_bridges(&dir, true);
+    let recipient = "6G41T4zUUYm47xgYBFoUioUGhigxS98Cj79y7C5nAf1L";
+    let quote = wallet
+        .quote_transfer(recipient.into(), 1_000_000, UsdtDestination::Solana)
+        .await
+        .unwrap();
+    let sent = wallet
+        .send(quote.id.clone(), TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    assert_eq!(sent.status, UsdtTransferStatus::Pending);
+    assert_eq!(
+        sent.orchestra.as_ref().unwrap().funding_address,
+        "0x2222222222222222222222222222222222222222"
+    );
+    assert_eq!(
+        wallet.store.orchestra_plan(&sent.id).unwrap().ticket,
+        "quote-ticket"
+    );
+    drop(wallet);
+    {
+        let mut state = chain.state.lock().unwrap();
+        state.mined = true;
+        state.tip += 3;
+    }
+    let wallet = chain.wallet_with_bridges(&dir, true);
+    assert_eq!(
+        wallet.refresh_transfers().await.unwrap()[0].status,
+        UsdtTransferStatus::Bridging
+    );
+    wallet.store.require_no_pending().unwrap();
+    sync_history_to_tip(&wallet).await;
+    let payment = wallet.store.transfer(&sent.id).unwrap().unwrap();
+    assert_eq!(payment.recipient, recipient);
+    assert_eq!(payment.destination, UsdtDestination::Solana);
+    assert_eq!(payment.status, UsdtTransferStatus::Bridging);
+    assert!(payment.fee.is_some());
+    // Delivery tracking outlives the source receipt revisit window.
+    chain.state.lock().unwrap().tip += 10000;
+    sync_history_to_tip(&wallet).await;
+    assert_eq!(
+        wallet.store.orchestra_plan(&sent.id).unwrap().ticket,
+        "quote-ticket"
+    );
+    drop(wallet);
+    chain.state.lock().unwrap().orchestra_delivery = json!({"status":"completed", "received_amount":"949000","destination_tx":"destination-transaction","refund_tx":null,"refund_amount":null});
+    let wallet = chain.wallet_with_bridges(&dir, true);
+    let delivered = wallet
+        .refresh_transfers()
+        .await
+        .unwrap()
+        .into_iter()
+        .find(|tx| tx.id == sent.id)
+        .unwrap();
+    assert_eq!(delivered.status, UsdtTransferStatus::Confirmed);
+    assert_eq!(delivered.received_amount, 949_000);
+    assert_eq!(
+        delivered.orchestra.unwrap().destination_tx.as_deref(),
+        Some("destination-transaction")
+    );
+    assert_eq!(
+        wallet
+            .send(quote.id, TEST_PHRASE.into(), None)
+            .await
+            .unwrap()
+            .status,
+        UsdtTransferStatus::Confirmed
+    );
+    assert_eq!(chain.state.lock().unwrap().operations.len(), 1);
+}
+
+#[test]
+fn outbound_recipients_follow_the_selected_chain() {
+    for (value, network) in [
+        (RECIPIENT, UsdtDestination::Base),
+        (RECIPIENT, UsdtDestination::Bsc),
+        ("TJRabPrwbZy45sbavfcjinPJC18kjpRTv8", UsdtDestination::Tron),
+        (
+            "6G41T4zUUYm47xgYBFoUioUGhigxS98Cj79y7C5nAf1L",
+            UsdtDestination::Solana,
+        ),
+    ] {
+        assert_eq!(
+            usdt_validate_recipient(value.into(), network).unwrap(),
+            value
+        );
+    }
+    for (value, network) in [
+        (RECIPIENT, UsdtDestination::Tron),
+        (RECIPIENT, UsdtDestination::Solana),
+        ("TJRabPrwbZy45sbavfcjinPJC18kjpRTv8", UsdtDestination::Base),
+        (
+            "0x55d398326f99059ff775485246999027b3197955",
+            UsdtDestination::Bsc,
+        ),
+        ("11111111111111111111111111111111", UsdtDestination::Solana),
+    ] {
+        assert!(usdt_validate_recipient(value.into(), network).is_err());
+    }
+}
+
+#[tokio::test]
+async fn orchestra_refunds_require_a_matching_confirmed_usdt_receipt() {
+    use alloy_primitives::{Address, B256, U256};
+    use alloy_sol_types::SolEvent;
+    use serde_json::json;
+    let chain = MockChain::start().await;
+    let directory = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet_with_bridges(&directory, true);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Base)
+        .await
+        .unwrap();
+    wallet
+        .send(quote.id.clone(), TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    {
+        let mut state = chain.state.lock().unwrap();
+        state.mined = true;
+        state.tip += 3;
+    }
+    wallet.refresh_transfers().await.unwrap();
+    let refund_hash = B256::repeat_byte(9);
+    let event = transaction::Erc20::Transfer {
+        from: Address::repeat_byte(2),
+        to: wallet.address,
+        value: U256::from(900_000),
+    }
+    .encode_log_data();
+    let receipt = json!({"transactionHash":refund_hash,"blockHash":chain.state.lock().unwrap().block_hash(21000),"blockNumber":"0x5208","status":"0x1","logs":[{"address":types::TOKEN,"topics":event.topics(),"data":event.data}]});
+    chain.state.lock().unwrap().tip = 21002;
+    chain.state.lock().unwrap().orchestra_delivery = json!({"status":"refunded", "received_amount":null,"destination_tx":null,"refund_tx":refund_hash,"refund_amount":"900000"});
+    drop(wallet);
+    // Provider reports cannot substitute for a successful canonical refund to this wallet.
+    for valid in [false, true] {
+        let mut response = receipt.clone();
+        if !valid {
+            response["status"] = json!("0x0");
+        }
+        chain.state.lock().unwrap().receipt_response = Some(response);
+        let wallet = chain.wallet_with_bridges(&directory, true);
+        let result = wallet
+            .refresh_transfers()
+            .await
+            .unwrap()
+            .into_iter()
+            .find(|transfer| transfer.id == quote.id)
+            .unwrap();
+        assert_eq!(
+            result.status,
+            if valid {
+                UsdtTransferStatus::BridgeRefunded
+            } else {
+                UsdtTransferStatus::Bridging
+            }
+        );
+        if valid {
+            assert_eq!(result.received_amount, 0);
+            assert_eq!(result.orchestra.unwrap().refund_amount, Some(900_000));
+        }
+    }
+    let wallet = chain.wallet_with_bridges(&directory, true);
+    wallet.store.complete_history(24500).unwrap();
+    assert_eq!(
+        wallet.store.settlement_blocks(20000, 25000).unwrap(),
+        vec![21000]
+    );
+    let new_hash = B256::repeat_byte(0xab);
+    chain
+        .state
+        .lock()
+        .unwrap()
+        .block_hashes
+        .insert(21000, new_hash);
+    wallet
+        .store
+        .reconcile_block(21000, &new_hash.to_string())
+        .unwrap();
+    drop(wallet);
+    let wallet = chain.wallet_with_bridges(&directory, true);
+    let transfer = wallet.store.transfer(&quote.id).unwrap().unwrap();
+    assert_eq!(transfer.status, UsdtTransferStatus::Bridging);
+    assert!(transfer.orchestra.unwrap().refund_tx.is_none());
+    assert!(wallet.store.pending_operations().unwrap().is_empty());
+    assert!(wallet.store.orchestra_plan(&quote.id).is_ok());
+    wallet.refresh_transfers().await.unwrap();
+    assert_eq!(
+        wallet.store.transfer(&quote.id).unwrap().unwrap().status,
+        UsdtTransferStatus::Bridging
+    );
+    let mut canonical = receipt;
+    canonical["blockHash"] = json!(new_hash);
+    chain.state.lock().unwrap().receipt_response = Some(canonical);
+    drop(wallet);
+    let wallet = chain.wallet_with_bridges(&directory, true);
+    wallet.refresh_transfers().await.unwrap();
+    assert_eq!(
+        wallet.store.transfer(&quote.id).unwrap().unwrap().status,
+        UsdtTransferStatus::BridgeRefunded
+    );
+    wallet.store.complete_history(26000).unwrap();
+    assert!(wallet
+        .store
+        .settlement_blocks(20000, 27000)
+        .unwrap()
+        .is_empty());
+    assert!(wallet.store.orchestra_plan(&quote.id).is_err());
 }

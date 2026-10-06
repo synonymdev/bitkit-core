@@ -91,9 +91,10 @@ pub use modules::onchain;
 pub use modules::scanner::{DecodingError, LnurlPayData, Scanner};
 pub use modules::seedqr::{decode_compact_seed_qr, decode_standard_seed_qr, SeedQrError};
 pub use modules::usdt::{
-    usdt_address, usdt_format_amount, usdt_parse_amount, usdt_parse_payment_request, UsdtDeposit,
-    UsdtDepositAddress, UsdtDepositClient, UsdtDepositDetail, UsdtDepositNetwork, UsdtDepositOrder,
-    UsdtDepositPage, UsdtDestination, UsdtError, UsdtPaymentProof, UsdtPaymentProofBinding,
+    usdt_address, usdt_format_amount, usdt_parse_amount, usdt_parse_payment_request,
+    usdt_validate_recipient, UsdtBridgeProvider, UsdtDeposit, UsdtDepositAddress,
+    UsdtDepositClient, UsdtDepositDetail, UsdtDepositNetwork, UsdtDepositOrder, UsdtDepositPage,
+    UsdtDestination, UsdtError, UsdtOrchestraTransfer, UsdtPaymentProof, UsdtPaymentProofBinding,
     UsdtPaymentRequest, UsdtQuote, UsdtTransfer, UsdtTransferStatus, UsdtVerifiedPayment,
     UsdtWallet,
 };
