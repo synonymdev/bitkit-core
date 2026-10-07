@@ -121,12 +121,23 @@ async fn restore_is_atomic_and_rejects_other_accounts_and_conflicting_payments()
     assert!(target.history().unwrap().is_empty());
     target.restore_backup(snapshot.clone()).await.unwrap();
     let mut conflict: serde_json::Value = serde_json::from_str(&snapshot).unwrap();
+    conflict["transfers"][0]["plan"] = serde_json::Value::Null;
+    conflict["transfers"][0]["transfer"]["status"] = serde_json::json!("Failed");
+    conflict["transfers"][0]["transfer"]["user_operation_hash"] =
+        serde_json::json!(alloy_primitives::B256::repeat_byte(1).to_string());
     let mut extra = conflict["transfers"][0].clone();
     extra["transfer"]["id"] = serde_json::json!("another-id");
+    extra["transfer"]["user_operation_hash"] =
+        serde_json::json!(alloy_primitives::B256::repeat_byte(2).to_string());
+    // Insert a distinct payment before the later ID conflict must roll it back.
     conflict["transfers"]
         .as_array_mut()
         .unwrap()
         .insert(0, extra);
+    let empty_directory = tempfile::tempdir().unwrap();
+    let empty = chain.wallet(&empty_directory);
+    empty.restore_backup(conflict.to_string()).await.unwrap();
+    assert_eq!(empty.history().unwrap().len(), 2);
     assert!(matches!(
         target.restore_backup(conflict.to_string()).await,
         Err(UsdtError::InvalidBackup)
