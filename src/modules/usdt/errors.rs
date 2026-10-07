@@ -2,6 +2,10 @@ use thiserror::Error;
 
 #[derive(Debug, Error, uniffi::Error)]
 pub enum UsdtError {
+    #[error("The payment recovery backup could not be saved. Retry when backup is available")]
+    BackupUnavailable,
+    #[error("The USDT recovery backup is invalid or conflicts with local payments")]
+    InvalidBackup,
     #[error("The payment proof does not match this request or a successful USDT payment")]
     InvalidPaymentProof,
     #[error("Enter a valid USDT amount with at most six decimal places")]

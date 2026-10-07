@@ -410,7 +410,10 @@ impl UsdtWallet {
     }
 }
 
-fn decode_payment(data: &[u8], sender: Address) -> Option<(Address, u64, UsdtDestination, u64)> {
+pub(super) fn decode_payment(
+    data: &[u8],
+    sender: Address,
+) -> Option<(Address, u64, UsdtDestination, u64)> {
     let mut payment = None;
     for (target, data) in decode_calls(data).ok()? {
         let next = if target == TOKEN {

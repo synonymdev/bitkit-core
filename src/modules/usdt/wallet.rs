@@ -37,6 +37,7 @@ pub struct UsdtWallet {
     pub(super) rpc: Rpc,
     pub(super) paymaster: Pimlico,
     pub(super) store: Store,
+    backup: Arc<dyn super::UsdtBackup>,
     orchestra: Option<super::orchestra::Orchestra>,
     pub(super) operation: Mutex<()>,
     bridge_poll_offset: AtomicUsize,
@@ -54,6 +55,7 @@ impl UsdtWallet {
         rpc_url: String,
         bundler_url: String,
         bridge_url: Option<String>,
+        backup: Arc<dyn super::UsdtBackup>,
     ) -> Result<Arc<Self>, UsdtError> {
         if rpc_url.is_empty() || bundler_url.is_empty() {
             return Err(UsdtError::NotConfigured);
@@ -69,6 +71,7 @@ impl UsdtWallet {
             rpc,
             paymaster,
             store,
+            backup,
             orchestra: bridge_url
                 .map(super::orchestra::Orchestra::new)
                 .transpose()?,
@@ -231,6 +234,7 @@ impl UsdtWallet {
             timestamp: now(),
         };
         self.store.record_signed(&transfer, &raw)?;
+        self.backup.persist(self.export_backup()?).await?;
         // After persistence a lost response is indeterminate. Retry only the identical signed operation.
         if let Err(error) = self.broadcast(&data.plan, hash).await {
             // These errors occur before submission; later retries may already be queued.
@@ -470,6 +474,7 @@ impl UsdtWallet {
                     &format!("{:#x}", block.hash),
                 )?;
             } else if self.validate_bridge(plan).await.is_ok() {
+                self.backup.persist(self.export_backup()?).await?;
                 let _ = self.broadcast(plan, hash).await;
             }
             return Ok(());

@@ -1,3 +1,4 @@
+mod backup;
 use super::*;
 
 #[test]
@@ -105,6 +106,7 @@ fn wallet_requires_both_provider_endpoints() {
                 rpc.into(),
                 bundler.into(),
                 None,
+                std::sync::Arc::new(TestBackup),
             ),
             Err(UsdtError::NotConfigured)
         ));
@@ -135,6 +137,7 @@ fn payment_request_round_trips_receive_uri_and_rejects_wrong_asset_or_network() 
         "https://provider.example".into(),
         "https://bundler.example".into(),
         None,
+        std::sync::Arc::new(TestBackup),
     )
     .unwrap();
     let request = usdt_parse_payment_request(wallet.receive_uri()).unwrap();
@@ -220,6 +223,15 @@ fn payment_requests_preserve_exact_token_amounts_and_reject_ambiguous_terms() {
 const TEST_PHRASE: &str = "test test test test test test test test test test test junk";
 const RECIPIENT: &str = "0x1111111111111111111111111111111111111111";
 
+struct TestBackup;
+
+#[async_trait::async_trait]
+impl UsdtBackup for TestBackup {
+    async fn persist(&self, _snapshot: String) -> Result<(), UsdtError> {
+        Ok(())
+    }
+}
+
 #[tokio::test]
 async fn payment_proof_binds_execution_to_request_and_receiver() {
     use alloy_primitives::{B256, U256};
@@ -238,6 +250,7 @@ async fn payment_proof_binds_execution_to_request_and_receiver() {
         format!("{}/chain", chain.url),
         format!("{}/bundler", chain.url),
         None,
+        std::sync::Arc::new(TestBackup),
     )
     .unwrap();
     let binding = UsdtPaymentProofBinding {
@@ -660,6 +673,7 @@ impl MockChain {
             format!("{}/chain", self.url),
             format!("{}/bundler", self.url),
             enabled.then(|| format!("{}/bridges", self.url)),
+            std::sync::Arc::new(TestBackup),
         )
         .unwrap()
     }
@@ -1576,6 +1590,7 @@ async fn deployed_contracts_collect_usdt_fees_and_revert_failed_bridges_atomical
         std::env::var("USDT_FORK_RPC_URL").unwrap_or_else(|_| "http://127.0.0.1:18546".into()),
         std::env::var("USDT_FORK_BUNDLER_URL").unwrap_or_else(|_| "http://127.0.0.1:18546".into()),
         None,
+        std::sync::Arc::new(TestBackup),
     )
     .unwrap();
     assert_eq!(rpc.balance(wallet.address).await.unwrap(), U256::ZERO);
@@ -2255,7 +2270,13 @@ async fn stalled_bridge_status_checks_leave_time_for_source_recovery_and_sending
     }
     wallet
         .store
-        .save_history_receipt(&bridges, "bridges", 1000, "block", true)
+        .save_history_receipt(
+            &bridges,
+            "bridges",
+            1000,
+            &chain.state.lock().unwrap().block_hash(1000).to_string(),
+            true,
+        )
         .unwrap();
     // A signed operation with no nonce consumption must still resolve once expired.
     let quote = wallet

@@ -1,5 +1,6 @@
 mod account;
 mod amount;
+mod backup;
 mod deposits;
 mod errors;
 mod history;
@@ -16,6 +17,7 @@ mod user_operation;
 mod wallet;
 
 pub use amount::{usdt_format_amount, usdt_parse_amount};
+pub use backup::UsdtBackup;
 pub use deposits::*;
 pub use errors::UsdtError;
 pub use keys::usdt_address;
