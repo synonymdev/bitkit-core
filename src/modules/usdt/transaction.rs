@@ -111,6 +111,8 @@ pub(super) fn operation_logs(
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(super) struct Plan {
+    pub refund_block: Option<(u64, B256)>,
+    pub orchestra: Option<super::orchestra::OrchestraPlan>,
     pub operation: UserOperation,
     pub created_block: u64,
     pub expires_at: u64,
@@ -118,6 +120,9 @@ pub(super) struct Plan {
 
 impl Plan {
     pub fn bridge_received_amount(&self) -> Result<u64, UsdtError> {
+        if let Some(plan) = &self.orchestra {
+            return Ok(plan.received_amount);
+        }
         let calls = super::history::decode_calls(&self.operation.call_data)?;
         let (_, data) = calls
             .iter()

@@ -712,7 +712,7 @@ void uniffi_bitkitcore_fn_free_usdtwallet(void*_Nonnull ptr, RustCallStatus *_No
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CONSTRUCTOR_USDTWALLET_NEW
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CONSTRUCTOR_USDTWALLET_NEW
-void*_Nonnull uniffi_bitkitcore_fn_constructor_usdtwallet_new(RustBuffer address, RustBuffer storage_path, RustBuffer rpc_url, RustBuffer bundler_url, RustCallStatus *_Nonnull out_status
+void*_Nonnull uniffi_bitkitcore_fn_constructor_usdtwallet_new(RustBuffer address, RustBuffer storage_path, RustBuffer rpc_url, RustBuffer bundler_url, RustBuffer bridge_url, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_BALANCE
@@ -733,6 +733,11 @@ uint64_t uniffi_bitkitcore_fn_method_usdtwallet_create_payment_proof(void*_Nonnu
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_HISTORY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_HISTORY
 RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_history(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_ORCHESTRA_DESTINATIONS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_ORCHESTRA_DESTINATIONS
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_orchestra_destinations(void*_Nonnull ptr
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_QUOTE_TRANSFER
@@ -1822,6 +1827,11 @@ uint64_t uniffi_bitkitcore_fn_func_usdt_parse_amount(RustBuffer value, RustCallS
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_PARSE_PAYMENT_REQUEST
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_PARSE_PAYMENT_REQUEST
 RustBuffer uniffi_bitkitcore_fn_func_usdt_parse_payment_request(RustBuffer value, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_VALIDATE_RECIPIENT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_VALIDATE_RECIPIENT
+RustBuffer uniffi_bitkitcore_fn_func_usdt_validate_recipient(RustBuffer value, RustBuffer destination, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_BITCOIN_ADDRESS
@@ -3350,6 +3360,12 @@ uint16_t uniffi_bitkitcore_checksum_func_usdt_parse_payment_request(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_VALIDATE_RECIPIENT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_VALIDATE_RECIPIENT
+uint16_t uniffi_bitkitcore_checksum_func_usdt_validate_recipient(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 uint16_t uniffi_bitkitcore_checksum_func_validate_bitcoin_address(void
@@ -3569,6 +3585,12 @@ uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_create_payment_proof(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_HISTORY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_HISTORY
 uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_history(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_ORCHESTRA_DESTINATIONS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_ORCHESTRA_DESTINATIONS
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_orchestra_destinations(void
     
 );
 #endif

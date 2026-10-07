@@ -37,6 +37,7 @@ pub struct UsdtWallet {
     pub(super) rpc: Rpc,
     pub(super) paymaster: Pimlico,
     pub(super) store: Store,
+    orchestra: Option<super::orchestra::Orchestra>,
     pub(super) operation: Mutex<()>,
     bridge_poll_offset: AtomicUsize,
     bridge_retry_after: Mutex<HashMap<String, Instant>>,
@@ -46,12 +47,13 @@ pub struct UsdtWallet {
 #[uniffi::export(async_runtime = "tokio")]
 impl UsdtWallet {
     /// Creates the sole owner of this wallet's database; reuse it for all calls until it is dropped.
-    #[uniffi::constructor]
+    #[uniffi::constructor(default(bridge_url = None))]
     pub fn new(
         address: String,
         storage_path: String,
         rpc_url: String,
         bundler_url: String,
+        bridge_url: Option<String>,
     ) -> Result<Arc<Self>, UsdtError> {
         if rpc_url.is_empty() || bundler_url.is_empty() {
             return Err(UsdtError::NotConfigured);
@@ -67,6 +69,9 @@ impl UsdtWallet {
             rpc,
             paymaster,
             store,
+            orchestra: bridge_url
+                .map(super::orchestra::Orchestra::new)
+                .transpose()?,
             operation: Mutex::new(()),
             bridge_poll_offset: AtomicUsize::new(0),
             bridge_retry_after: Mutex::new(HashMap::new()),
@@ -100,55 +105,67 @@ impl UsdtWallet {
         if amount == 0 {
             return Err(UsdtError::InvalidAmount);
         }
-        let recipient = parse_address(recipient.trim())?;
-        if recipient == self.address
-            || recipient == destination.token()
-            || [ENTRY_POINT, PAYMASTER, super::account::DELEGATE].contains(&recipient)
-            || (destination == UsdtDestination::Arbitrum
-                && [OFT, BRIDGE_HELPER].contains(&recipient))
-        {
+        let recipient = super::orchestra::validate_recipient(recipient.trim(), destination)?;
+        if recipient == self.receive_address() {
             return Err(UsdtError::InvalidAddress);
         }
         self.store.require_no_pending()?;
         self.rpc.verify_chain().await?;
         self.require_balance(amount, 0).await?;
-        let (calls, received_amount, bridge_fee) =
-            self.transfer_calls(recipient, amount, destination).await?;
-        let nonce = self.nonce("latest").await?;
-        let authorization = self.authorization().await?;
-        let created_block = self.block_number().await?;
-        let timestamp = self.block_timestamp(created_block).await?;
-        let (operation, gas_fee, operation_expires_at) = self
-            .paymaster
-            .prepare(self.address, nonce, authorization, &calls, timestamp)
-            .await?;
-        let expires_at = now().saturating_add(
-            operation_expires_at
-                .saturating_sub(timestamp)
-                .min(QUOTE_LIFETIME_SECONDS),
-        );
-        let maximum_fee = gas_fee
-            .checked_add(bridge_fee)
-            .ok_or(UsdtError::InvalidAmount)?;
-        self.require_balance(amount, maximum_fee).await?;
-        let quote = UsdtQuote {
-            id: uuid::Uuid::new_v4().to_string(),
-            recipient: recipient.to_checksum(None),
-            destination,
-            amount,
-            received_amount,
-            maximum_fee,
-            expires_at,
+        let direct = self.prepare_quote(&recipient, amount, destination, false);
+        let routed = async {
+            if destination == UsdtDestination::Arbitrum
+                || destination == UsdtDestination::Stable
+                || self.orchestra.is_none()
+            {
+                return Err(UsdtError::UnsupportedRoute);
+            }
+            self.prepare_quote(&recipient, amount, destination, true)
+                .await
         };
-        self.store.save_quote(&QuoteData {
-            quote: quote.clone(),
-            plan: Plan {
-                operation,
-                created_block,
-                expires_at: operation_expires_at,
-            },
-        })?;
-        Ok(quote)
+        let (direct, routed) = tokio::join!(direct, routed);
+        let fresh = |candidate: Result<QuoteData, UsdtError>| {
+            candidate.and_then(|data| {
+                if data.quote.expires_at <= now() + 5 {
+                    Err(UsdtError::QuoteExpired)
+                } else {
+                    Ok(data)
+                }
+            })
+        };
+        let selected = match (fresh(direct), fresh(routed)) {
+            (Ok(a), Ok(b)) => {
+                if better_quote(&b.quote, &a.quote)? {
+                    b
+                } else {
+                    a
+                }
+            }
+            (Ok(a), Err(_)) | (Err(_), Ok(a)) => a,
+            (Err(a), Err(b)) => {
+                return Err(
+                    if destination.endpoint().is_some() || destination == UsdtDestination::Arbitrum
+                    {
+                        a
+                    } else {
+                        b
+                    },
+                )
+            }
+        };
+        if selected.quote.expires_at <= now() + 5 {
+            return Err(UsdtError::QuoteExpired);
+        }
+        self.store.save_quote(&selected)?;
+        Ok(selected.quote)
+    }
+
+    /// Available Orchestra destinations. USDT0 destinations retain the app's existing configuration.
+    pub async fn orchestra_destinations(&self) -> Result<Vec<UsdtDestination>, UsdtError> {
+        match &self.orchestra {
+            Some(client) => client.networks().await,
+            None => Ok(Vec::new()),
+        }
     }
 
     /// Repeating a quote ID returns its stored outcome, which may already be failed or replaced.
@@ -203,6 +220,7 @@ impl UsdtWallet {
             tx_hash: None,
             user_operation_hash: Some(format!("{hash:#x}")),
             bridge_guid: None,
+            orchestra: data.plan.orchestra.as_ref().map(|plan| plan.transfer()),
             recipient: data.quote.recipient,
             destination: data.quote.destination,
             amount: data.quote.amount,
@@ -306,6 +324,96 @@ impl UsdtWallet {
 }
 
 impl UsdtWallet {
+    async fn prepare_quote(
+        &self,
+        recipient: &str,
+        amount: u64,
+        destination: UsdtDestination,
+        use_orchestra: bool,
+    ) -> Result<QuoteData, UsdtError> {
+        let orchestra = if use_orchestra {
+            Some(
+                self.orchestra
+                    .as_ref()
+                    .ok_or(UsdtError::UnsupportedRoute)?
+                    .quote(self.address, recipient.into(), amount, destination)
+                    .await?,
+            )
+        } else {
+            None
+        };
+        let (calls, received_amount, bridge_fee) = if let Some(plan) = &orchestra {
+            (
+                vec![(
+                    TOKEN,
+                    Erc20::transferCall {
+                        recipient: parse_address(&plan.funding_address)?,
+                        amount: U256::from(amount),
+                    }
+                    .abi_encode()
+                    .into(),
+                )],
+                plan.received_amount,
+                0,
+            )
+        } else {
+            if destination != UsdtDestination::Arbitrum && destination.endpoint().is_none() {
+                return Err(UsdtError::UnsupportedRoute);
+            }
+            self.transfer_calls(parse_address(recipient)?, amount, destination)
+                .await?
+        };
+        let nonce = self.nonce("latest").await?;
+        let authorization = self.authorization().await?;
+        let created_block = self.block_number().await?;
+        let timestamp = self.block_timestamp(created_block).await?;
+        let (operation, gas_fee, operation_expires_at) = self
+            .paymaster
+            .prepare(self.address, nonce, authorization, &calls, timestamp)
+            .await?;
+        let mut expires_at = now().saturating_add(
+            operation_expires_at
+                .saturating_sub(timestamp)
+                .min(QUOTE_LIFETIME_SECONDS),
+        );
+        if let Some(plan) = &orchestra {
+            expires_at = expires_at.min(plan.expires_at);
+        }
+        let maximum_fee = gas_fee
+            .checked_add(bridge_fee)
+            .ok_or(UsdtError::InvalidAmount)?;
+        amount
+            .checked_add(maximum_fee)
+            .ok_or(UsdtError::InvalidAmount)?;
+        self.require_balance(amount, maximum_fee).await?;
+        let bridge_provider = if orchestra.is_some() {
+            Some(super::UsdtBridgeProvider::Orchestra)
+        } else if destination == UsdtDestination::Arbitrum {
+            None
+        } else {
+            Some(super::UsdtBridgeProvider::Usdt0)
+        };
+        Ok(QuoteData {
+            quote: UsdtQuote {
+                id: uuid::Uuid::new_v4().to_string(),
+                recipient: recipient.into(),
+                destination,
+                amount,
+                received_amount,
+                maximum_fee,
+                expires_at,
+                bridge_provider,
+            },
+            plan: Plan {
+                refund_block: None,
+                operation,
+                orchestra,
+                created_block,
+                expires_at: operation_expires_at,
+            },
+        })
+    }
+
     async fn refresh_pending_transfers(&self) -> Result<(), UsdtError> {
         let _guard = self.operation.lock().await;
         for (mut transfer, plan) in self.store.pending_operations()? {
@@ -484,7 +592,7 @@ impl UsdtWallet {
                 transfer,
                 tokio::time::timeout(
                     std::time::Duration::from_secs(10),
-                    self.rpc.bridge_status(transfer),
+                    self.bridge_delivery(transfer),
                 )
                 .await,
             ))
@@ -492,9 +600,20 @@ impl UsdtWallet {
         let (first, second, third) =
             tokio::join!(check(batch[0]), check(batch[1]), check(batch[2]));
         for (previous, result) in [first, second, third].into_iter().flatten() {
-            let delay = match result {
-                Ok(Ok(UsdtTransferStatus::Bridging)) => Some(BRIDGE_POLL_INTERVAL),
-                Ok(Ok(UsdtTransferStatus::Confirmed | UsdtTransferStatus::BridgeFailed)) => None,
+            let delay = match &result {
+                Ok(Ok((updated, _))) if updated.status == UsdtTransferStatus::Bridging => {
+                    Some(BRIDGE_POLL_INTERVAL)
+                }
+                Ok(Ok((updated, _)))
+                    if matches!(
+                        updated.status,
+                        UsdtTransferStatus::Confirmed
+                            | UsdtTransferStatus::BridgeFailed
+                            | UsdtTransferStatus::BridgeRefunded
+                    ) =>
+                {
+                    None
+                }
                 _ => Some(BRIDGE_RETRY_DELAY),
             };
             if let Some(delay) = delay {
@@ -504,7 +623,14 @@ impl UsdtWallet {
                     .insert(previous.id.clone(), Instant::now() + delay);
             }
             match result {
-                Ok(Ok(status)) if status != previous.status => {
+                Ok(Ok((updated, refund_block))) => {
+                    if updated.status == previous.status
+                        && updated.orchestra == previous.orchestra
+                        && updated.received_amount == previous.received_amount
+                        && refund_block.is_none()
+                    {
+                        continue;
+                    }
                     let _guard = self.operation.lock().await;
                     let Some(mut current) = self.store.transfer(&previous.id)? else {
                         continue;
@@ -515,19 +641,141 @@ impl UsdtWallet {
                         .zip(previous.tx_hash.as_deref())
                         .is_some_and(|(a, b)| a.eq_ignore_ascii_case(b))
                         && current.bridge_guid == previous.bridge_guid
+                        && current.orchestra == previous.orchestra
                         && current.status == previous.status
                     {
-                        current.status = status;
-                        self.store.update_transfer(&current)?;
+                        current.status = updated.status;
+                        current.orchestra = updated.orchestra;
+                        current.received_amount = updated.received_amount;
+                        if !self.store.update_delivery(&current, refund_block)? {
+                            self.bridge_retry_after
+                                .lock()
+                                .await
+                                .insert(previous.id.clone(), Instant::now() + BRIDGE_RETRY_DELAY);
+                            log::warn!("USDT refund receipt already assigned to another payment");
+                        }
                     }
                 }
-                Ok(Ok(_)) => {}
                 _ => log::warn!(
                     "USDT bridge delivery lookup unavailable; retaining last known status"
                 ),
             }
         }
         Ok(())
+    }
+
+    async fn bridge_delivery(
+        &self,
+        transfer: &UsdtTransfer,
+    ) -> Result<(UsdtTransfer, Option<(u64, B256)>), UsdtError> {
+        let mut updated = transfer.clone();
+        let Some(bridge) = updated.orchestra.as_mut() else {
+            updated.status = self.rpc.bridge_status(transfer).await?;
+            return Ok((updated, None));
+        };
+        let plan = self.store.orchestra_plan(&transfer.id)?;
+        if plan.quote_id != bridge.quote_id
+            || plan.funding_address != bridge.funding_address
+            || plan.recipient != transfer.recipient
+            || plan.destination != transfer.destination
+            || plan.amount != transfer.amount
+        {
+            return Err(UsdtError::InvalidResponse);
+        }
+        let delivery = self
+            .orchestra
+            .as_ref()
+            .ok_or(UsdtError::NotConfigured)?
+            .status(
+                &plan,
+                transfer
+                    .tx_hash
+                    .as_deref()
+                    .ok_or(UsdtError::InvalidResponse)?,
+            )
+            .await?;
+        let mut refund_block = None;
+        updated.status = match delivery.status.as_str() {
+            "bridging" => UsdtTransferStatus::Bridging,
+            "needs_attention" => UsdtTransferStatus::BridgeNeedsAttention,
+            "completed" => {
+                let amount = delivery
+                    .received_amount
+                    .filter(|amount| *amount > 0 && *amount <= transfer.amount)
+                    .ok_or(UsdtError::InvalidResponse)?;
+                let hash = delivery
+                    .destination_tx
+                    .filter(|hash| !hash.is_empty() && hash.len() <= 128)
+                    .ok_or(UsdtError::InvalidResponse)?;
+                bridge.destination_tx = Some(hash);
+                updated.received_amount = amount;
+                UsdtTransferStatus::Confirmed
+            }
+            "refunded" => {
+                let amount = delivery
+                    .refund_amount
+                    .filter(|amount| *amount > 0 && *amount <= transfer.amount)
+                    .ok_or(UsdtError::InvalidResponse)?;
+                let hash = delivery.refund_tx.ok_or(UsdtError::InvalidResponse)?;
+                refund_block = Some(self.verify_refund(&hash, amount).await?);
+                bridge.refund_tx = Some(hash);
+                bridge.refund_amount = Some(amount);
+                updated.received_amount = 0;
+                UsdtTransferStatus::BridgeRefunded
+            }
+            _ => return Err(UsdtError::InvalidResponse),
+        };
+        Ok((updated, refund_block))
+    }
+
+    async fn verify_refund(&self, hash: &str, amount: u64) -> Result<(u64, B256), UsdtError> {
+        let hash: B256 = hash.parse().map_err(|_| UsdtError::InvalidResponse)?;
+        let receipt: Value = self
+            .rpc
+            .call("eth_getTransactionReceipt", json!([hash]))
+            .await?;
+        let number = token_amount(serde_json::from_value(receipt["blockNumber"].clone())?)?;
+        if number > self.block_number().await?.saturating_sub(2) {
+            return Err(UsdtError::NetworkUnavailable);
+        }
+        let block = self.rpc.block(number).await?;
+        let receipt = self.rpc.block_receipt(hash, block.hash, number).await?;
+        if serde_json::from_value::<U256>(receipt["status"].clone())? != U256::from(1) {
+            return Err(UsdtError::InvalidResponse);
+        }
+        let mut incoming = U256::ZERO;
+        let mut outgoing = U256::ZERO;
+        let mut matching_transfer = false;
+        for log in receipt["logs"]
+            .as_array()
+            .ok_or(UsdtError::InvalidResponse)?
+        {
+            if serde_json::from_value::<Address>(log["address"].clone())? == TOKEN {
+                if let Ok(event) = Erc20::Transfer::decode_log_data(&event_data(log)?) {
+                    if event.to == self.address {
+                        incoming = incoming
+                            .checked_add(event.value)
+                            .ok_or(UsdtError::InvalidResponse)?;
+                        matching_transfer |=
+                            event.from != self.address && event.value == U256::from(amount);
+                    }
+                    if event.from == self.address {
+                        outgoing = outgoing
+                            .checked_add(event.value)
+                            .ok_or(UsdtError::InvalidResponse)?;
+                    }
+                }
+            }
+        }
+        if matching_transfer
+            && incoming
+                .checked_sub(outgoing)
+                .is_some_and(|net| net >= U256::from(amount))
+        {
+            Ok((number, block.hash))
+        } else {
+            Err(UsdtError::InvalidResponse)
+        }
     }
 
     pub(super) async fn block_number(&self) -> Result<u64, UsdtError> {
@@ -582,6 +830,13 @@ impl UsdtWallet {
     }
 
     async fn broadcast(&self, plan: &Plan, expected_hash: B256) -> Result<(), UsdtError> {
+        if plan
+            .orchestra
+            .as_ref()
+            .is_some_and(|quote| quote.expires_at <= now() + 5)
+        {
+            return Err(UsdtError::QuoteExpired);
+        }
         if self.authorization().await?.nonce != plan.operation.eip7702_auth.nonce {
             return Err(UsdtError::QuoteExpired);
         }
@@ -678,6 +933,15 @@ impl UsdtWallet {
         if event.sender != self.address || event.paymaster != PAYMASTER {
             return Err(UsdtError::InvalidResponse);
         }
+        let funding_recipient = if !event.success {
+            Address::ZERO
+        } else if let Some(orchestra) = &transfer.orchestra {
+            parse_address(&orchestra.funding_address)?
+        } else if transfer.destination == UsdtDestination::Arbitrum {
+            parse_address(&transfer.recipient)?
+        } else {
+            Address::ZERO
+        };
         let mut transfer_proven = false;
         let mut gas_fee = None;
         let mut bridge_fee = None;
@@ -687,7 +951,7 @@ impl UsdtWallet {
             if event.success && address == TOKEN {
                 if let Ok(payment) = Erc20::Transfer::decode_log_data(&data) {
                     transfer_proven |= payment.from == self.address
-                        && payment.to == parse_address(&transfer.recipient)?
+                        && payment.to == funding_recipient
                         && payment.value == U256::from(transfer.amount);
                 }
             }
@@ -702,7 +966,7 @@ impl UsdtWallet {
                     }
                 }
             }
-            if event.success && address == BRIDGE_HELPER {
+            if event.success && transfer.orchestra.is_none() && address == BRIDGE_HELPER {
                 if let Ok(event) = BridgeHelper::LogSend::decode_log_data(&data) {
                     if event.sender == self.address
                         && event.oft == OFT
@@ -712,7 +976,7 @@ impl UsdtWallet {
                     }
                 }
             }
-            if event.success && address == OFT {
+            if event.success && transfer.orchestra.is_none() && address == OFT {
                 if let Ok(event) = Oft::OFTSent::decode_log_data(&data) {
                     if event.fromAddress == BRIDGE_HELPER
                         && transfer.destination.endpoint() == Some(event.dstEid)
@@ -724,10 +988,16 @@ impl UsdtWallet {
                 }
             }
         }
-        if event.success && transfer.destination == UsdtDestination::Arbitrum && !transfer_proven {
+        if event.success
+            && (transfer.destination == UsdtDestination::Arbitrum || transfer.orchestra.is_some())
+            && !transfer_proven
+        {
             return Err(UsdtError::InvalidResponse);
         }
-        transfer.fee = if event.success && transfer.destination != UsdtDestination::Arbitrum {
+        transfer.fee = if event.success
+            && transfer.destination != UsdtDestination::Arbitrum
+            && transfer.orchestra.is_none()
+        {
             gas_fee
                 .zip(bridge_fee)
                 .and_then(|(gas, bridge)| gas.checked_add(bridge))
@@ -739,7 +1009,7 @@ impl UsdtWallet {
             UsdtTransferStatus::Failed
         } else if transfer.destination == UsdtDestination::Arbitrum {
             UsdtTransferStatus::Confirmed
-        } else if transfer.bridge_guid.is_some() {
+        } else if transfer.bridge_guid.is_some() || transfer.orchestra.is_some() {
             UsdtTransferStatus::Bridging
         } else {
             UsdtTransferStatus::BridgeNeedsAttention
@@ -747,6 +1017,13 @@ impl UsdtWallet {
         Ok(())
     }
     async fn validate_bridge(&self, plan: &Plan) -> Result<(), UsdtError> {
+        if plan
+            .orchestra
+            .as_ref()
+            .is_some_and(|quote| quote.expires_at <= now() + 5)
+        {
+            return Err(UsdtError::QuoteExpired);
+        }
         let calls = super::history::decode_calls(&plan.operation.call_data)?;
         let Some((_, data)) = calls.iter().find(|(target, _)| *target == BRIDGE_HELPER) else {
             return Ok(());
@@ -935,4 +1212,21 @@ impl UsdtWallet {
 
 pub(super) fn now() -> u64 {
     chrono::Utc::now().timestamp().max(0) as u64
+}
+
+// Compare the expected receipt per maximum USDT debit without floating-point rates.
+// A tie keeps the USDT0 route; only usable, funded-balance candidates reach this comparison.
+fn better_quote(candidate: &UsdtQuote, current: &UsdtQuote) -> Result<bool, UsdtError> {
+    let candidate_total = candidate
+        .amount
+        .checked_add(candidate.maximum_fee)
+        .ok_or(UsdtError::InvalidAmount)?;
+    let current_total = current
+        .amount
+        .checked_add(current.maximum_fee)
+        .ok_or(UsdtError::InvalidAmount)?;
+    Ok(
+        u128::from(candidate.received_amount) * u128::from(current_total)
+            > u128::from(current.received_amount) * u128::from(candidate_total),
+    )
 }
