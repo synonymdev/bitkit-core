@@ -938,4 +938,310 @@ mod tests {
         let _ = adapter.on_passphrase_request(true);
         assert_eq!(*mock.last_passphrase_on_device.lock().unwrap(), Some(true));
     }
+
+    mod log_sanitizer {
+        use crate::modules::trezor::log_sanitizer::sanitize_debug_log;
+
+        /// Literal fixtures, so the regression test below can grep for them.
+        const TEST_CREDENTIAL: &str =
+            "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
+        const TEST_XPUB: &str = "xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL";
+        const TEST_PSBT: &str = "cHNidP8BAHUCAAAAASaBcTce3/KF6Tet7qSze3gADAVmy7OtZGQXE8pCFxv2AAAAAAD+////AtPf9QUAAAAAGXapFQ==";
+        const TEST_FRAME_HEX: &str =
+            "042000ff0a20d3f1e5c7b9a84206ff1e2d3c4b5a69788796a5b4c3d2e1f00112233445566778899";
+        const TEST_FRAME_GROUPS: &str = "04, 20, 00, ff, 0a, 20, d3, f1, e5, c7, b9, a8";
+        const TEST_MNEMONIC: &str =
+            "abandon ability able about above absent absorb abstract absurd abuse access accident";
+
+        fn sanitized(message: &str) -> String {
+            let (_, message) = sanitize_debug_log("THP", message);
+            message
+        }
+
+        #[test]
+        fn test_labeled_credential_is_redacted() {
+            let output = sanitized(&format!("Loaded credential={}", TEST_CREDENTIAL));
+            assert_eq!(output, "Loaded credential=<redacted>");
+        }
+
+        #[test]
+        fn test_labeled_pair_like_secret_is_redacted() {
+            for (message, expected) in [
+                ("credential=SGVsbG8gV29ybGQ=", "credential=<redacted>"),
+                (
+                    "host_static_key=c2VjcmV0a2V5bWF0ZXJpYWwxMjM0NTY3ODkw=",
+                    "host_static_key=<redacted>",
+                ),
+                ("session_id=trezor:abcd1234", "session_id=<redacted>"),
+                ("token=user:hunter2", "token=<redacted>"),
+            ] {
+                assert_eq!(sanitized(message), expected);
+            }
+        }
+
+        #[test]
+        fn test_nested_secret_under_innocuous_label_is_redacted() {
+            for (message, expected) in [
+                (
+                    r#"context={"token":"hunter2"}"#,
+                    r#"context={"token":"<redacted>"}"#,
+                ),
+                (
+                    "request=[passphrase=hunter2]",
+                    "request=[passphrase=<redacted>]",
+                ),
+                ("detail=\"pin=1234\"", "detail=\"pin=<redacted>\""),
+                ("state=token:hunter2", "state=token:<redacted>"),
+            ] {
+                assert_eq!(sanitized(message), expected);
+            }
+        }
+
+        #[test]
+        fn test_two_word_label_is_redacted() {
+            let output = sanitized(&format!("seed phrase: {}", TEST_MNEMONIC));
+            assert_eq!(output, "seed phrase: <redacted>");
+
+            let output = sanitized("wallet passphrase: correct horse battery");
+            assert_eq!(output, "wallet passphrase: <redacted>");
+        }
+
+        #[test]
+        fn test_spaced_separator_after_multiword_value_is_redacted() {
+            let output = sanitized("passphrase=hunter2 pin = 1234");
+            assert_eq!(output, "passphrase=<redacted> pin = <redacted>");
+        }
+
+        #[test]
+        fn test_escaped_quote_does_not_end_a_quoted_secret() {
+            let output = sanitized(r#"passphrase="hunter\"tail""#);
+            assert_eq!(output, r#"passphrase="<redacted>""#);
+        }
+
+        #[test]
+        fn test_unclosed_quote_does_not_defeat_redaction() {
+            // An unclosed quote used to match no value at all, forwarding the
+            // whole pair verbatim.
+            assert_eq!(sanitized(r#"passphrase="hunter2"#), "passphrase=<redacted>");
+            assert_eq!(
+                sanitized(&format!(r#"{{"credential": "{}"#, TEST_CREDENTIAL)),
+                r#"{"credential": <redacted>"#
+            );
+            // An innocuous value must not lose its last character to a closing
+            // delimiter that was never there.
+            assert_eq!(sanitized(r#"state="paired"#), r#"state="paired"#);
+        }
+
+        #[test]
+        fn test_labeled_psbt_is_redacted() {
+            let output = sanitized(&format!("signing psbt={}", TEST_PSBT));
+            assert_eq!(output, "signing psbt=<redacted>");
+        }
+
+        #[test]
+        fn test_unexpected_secret_label_is_redacted() {
+            // Matching on key fragments catches labels nobody enumerated.
+            let output = sanitized(&format!(
+                "thp_credential={} master_key={}",
+                TEST_CREDENTIAL, TEST_XPUB
+            ));
+            assert_eq!(output, "thp_credential=<redacted> master_key=<redacted>");
+        }
+
+        #[test]
+        fn test_json_string_and_array_values_are_redacted() {
+            let output = sanitized(&format!(
+                r#"{{"host_static_key": "{}", "credential": [1, 2, 3]}}"#,
+                TEST_CREDENTIAL
+            ));
+            assert_eq!(
+                output,
+                r#"{"host_static_key": "<redacted>", "credential": [<redacted>]}"#
+            );
+        }
+
+        #[test]
+        fn test_bare_xpub_is_redacted() {
+            let output = sanitized(&format!("account descriptor {} at m/84'/0'/0'", TEST_XPUB));
+            assert_eq!(output, "account descriptor <redacted> at m/84'/0'/0'");
+        }
+
+        #[test]
+        fn test_bare_frame_hex_is_redacted() {
+            let output = sanitized(&format!("wrote frame {}", TEST_FRAME_HEX));
+            assert_eq!(output, "wrote frame <redacted>");
+        }
+
+        #[test]
+        fn test_grouped_frame_bytes_are_redacted() {
+            // Debug formatters split a frame into byte groups, which the
+            // contiguous-hex pass alone does not recognise.
+            let output = sanitized(
+                "wrote frame [04, 20, 00, ff, 0a, 20, d3, f1, e5, c7, b9, a8, 42, 06, ff, 1e]",
+            );
+            assert_eq!(output, "wrote frame [<redacted>]");
+
+            let output = sanitized("<< 04 20 00 ff 0a 20 d3 f1 e5 c7 b9 a8");
+            assert_eq!(output, "<< <redacted>");
+
+            let output = sanitized("read [4, 32, 0, 255, 10, 32, 211, 241, 229, 199]");
+            assert_eq!(output, "read [<redacted>]");
+        }
+
+        #[test]
+        fn test_multiword_secret_is_redacted_in_full() {
+            let output =
+                sanitized("mnemonic=abandon ability able about above absent absorb abstract abuse");
+            assert_eq!(output, "mnemonic=<redacted>");
+
+            // Neighbouring diagnostics still survive.
+            let output = sanitized("passphrase=correct horse battery staple, state=paired");
+            assert_eq!(output, "passphrase=<redacted>, state=paired");
+
+            let output = sanitized("passphrase=correct horse battery device=trezor");
+            assert_eq!(output, "passphrase=<redacted> device=trezor");
+        }
+
+        #[test]
+        fn test_bare_numeric_secret_is_redacted() {
+            let output = sanitized("token=1234567890 session_id=4815162342");
+            assert_eq!(output, "token=<redacted> session_id=<redacted>");
+
+            let output = sanitized("credential_count=3, key_len=32");
+            assert_eq!(output, "credential_count=3, key_len=32");
+        }
+
+        #[test]
+        fn test_bare_psbt_is_redacted() {
+            let output = sanitized(&format!("tx {}", TEST_PSBT));
+            assert_eq!(output, "tx <redacted>");
+        }
+
+        #[test]
+        fn test_connection_state_passes_through() {
+            let message = "trezor_state=1 (0=needs pairing, 1=paired, 2=autoconnect)";
+            assert_eq!(sanitized(message), message);
+        }
+
+        #[test]
+        fn test_error_codes_pass_through() {
+            let message = "Attempt 2 FAILED: THP Error: DecryptionFailed (error_code: 17)";
+            assert_eq!(sanitized(message), message);
+        }
+
+        #[test]
+        fn test_byte_lengths_and_booleans_pass_through() {
+            // Counts and flags under a sensitive label are the diagnostics
+            // worth keeping, so they must survive redaction.
+            let message = "Completion payload: 48 bytes (credential_sent=true)";
+            assert_eq!(sanitized(message), message);
+
+            let message = "try_to_unlock=false, has_credentials=true";
+            assert_eq!(sanitized(message), message);
+
+            let message = "Parsed credential: host_key=32bytes, credential=139bytes";
+            assert_eq!(sanitized(message), message);
+        }
+
+        #[test]
+        fn test_short_hex_metadata_passes_through() {
+            let message = "Channel allocated: a1b2";
+            assert_eq!(sanitized(message), message);
+        }
+
+        #[test]
+        fn test_tag_passes_through() {
+            let (tag, _) = sanitize_debug_log("HANDSHAKE", "Creating THP session...");
+            assert_eq!(tag, "HANDSHAKE");
+        }
+
+        #[test]
+        fn test_long_message_is_truncated() {
+            let output = sanitized(&"chunk ".repeat(200));
+            assert!(output.ends_with("\u{2026}<truncated>"));
+            assert!(output.chars().count() < 530);
+        }
+
+        #[test]
+        fn test_multibyte_message_truncation_does_not_panic() {
+            let output = sanitized(&"\u{e9}".repeat(1000));
+            assert!(output.ends_with("\u{2026}<truncated>"));
+        }
+
+        #[test]
+        fn test_deeply_chained_pairs_do_not_exhaust_the_stack() {
+            // Redaction descends into nested values, so an unbounded input
+            // used to recurse once per link and abort the process. Run on a
+            // thread with a small stack to catch a regression on mobile.
+            let worker = std::thread::Builder::new()
+                .stack_size(256 * 1024)
+                .spawn(|| sanitized(&("a=".repeat(20_000) + "1")))
+                .expect("spawn");
+            assert!(worker.join().expect("no stack overflow").len() < 600);
+        }
+
+        #[test]
+        fn test_no_fixture_secret_survives_sanitization() {
+            let fixtures = [
+                format!("credential={}", TEST_CREDENTIAL),
+                format!(
+                    "Stored credential {} for ble:AA:BB:CC:DD:EE:FF",
+                    TEST_CREDENTIAL
+                ),
+                format!(r#"{{"credential":"{}"}}"#, TEST_CREDENTIAL),
+                format!("thp_credential={}", TEST_CREDENTIAL),
+                format!("xpub={}", TEST_XPUB),
+                format!("derived {} for account 0", TEST_XPUB),
+                format!("psbt={}", TEST_PSBT),
+                format!("Signing {}", TEST_PSBT),
+                format!("frame={}", TEST_FRAME_HEX),
+                format!("<< {}", TEST_FRAME_HEX),
+                format!("frame=[{}]", TEST_FRAME_GROUPS),
+                format!("<< {}", TEST_FRAME_GROUPS),
+                format!("mnemonic={}", TEST_MNEMONIC),
+                format!("recovery: {} (12 words)", TEST_MNEMONIC),
+                "passphrase=hunter2 pin=1234 mnemonic=[a, b, c]".to_string(),
+                "session_token=4815162342".to_string(),
+                "passphrase=hunter2 pin = 1234".to_string(),
+                r#"passphrase="hunter2\"1234""#.to_string(),
+                r#"passphrase="hunter2"#.to_string(),
+                format!(
+                    r#"context={{"passphrase":"hunter2","seed":"{}"}}"#,
+                    TEST_MNEMONIC
+                ),
+                format!("seed phrase: {}", TEST_MNEMONIC),
+                format!("recovery seed = {} pin = 1234", TEST_MNEMONIC),
+            ];
+
+            for fixture in fixtures {
+                for (tag, message) in [
+                    sanitize_debug_log("THP", &fixture),
+                    sanitize_debug_log(&fixture, "THP"),
+                ] {
+                    let output = format!("{} {}", tag, message);
+                    for secret in [
+                        TEST_CREDENTIAL,
+                        TEST_XPUB,
+                        TEST_PSBT,
+                        TEST_FRAME_HEX,
+                        "hunter2",
+                        "1234",
+                        "4815162342",
+                        // Tails, so a redaction covering only the first word or
+                        // byte group still fails the test.
+                        "ability",
+                        "d3, f1",
+                    ] {
+                        assert!(
+                            !output.contains(secret),
+                            "leaked {:?} from fixture {:?}: {:?}",
+                            secret,
+                            fixture,
+                            output
+                        );
+                    }
+                }
+            }
+        }
+    }
 }
