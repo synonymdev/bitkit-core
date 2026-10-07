@@ -341,7 +341,10 @@ impl UsdtDepositNetwork {
     }
 }
 
-fn validate_source_address(value: &str, network: UsdtDepositNetwork) -> Result<(), UsdtError> {
+pub(super) fn validate_source_address(
+    value: &str,
+    network: UsdtDepositNetwork,
+) -> Result<(), UsdtError> {
     if network == UsdtDepositNetwork::Tron {
         if value.len() != 34 || !value.starts_with('T') || !value.is_ascii() || value == TRON_USDT {
             return Err(UsdtError::InvalidAddress);
@@ -380,12 +383,14 @@ fn deposit_limit<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<St
         .map(str::to_owned))
 }
 
-fn number<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u64, D::Error> {
+pub(super) fn number<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u64, D::Error> {
     String::deserialize(deserializer)?
         .parse()
         .map_err(serde::de::Error::custom)
 }
-fn optional_number<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<u64>, D::Error> {
+pub(super) fn optional_number<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Option<u64>, D::Error> {
     Option::<String>::deserialize(deserializer)?
         .map(|v| v.parse().map_err(serde::de::Error::custom))
         .transpose()

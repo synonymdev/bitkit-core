@@ -210,7 +210,8 @@ impl UsdtWallet {
             && transfers.iter().all(|transfer| {
                 transfer.destination == UsdtDestination::Arbitrum
                     || transfer.status == UsdtTransferStatus::Failed
-                    || (transfer.bridge_guid.is_some() && transfer.fee.is_some())
+                    || ((transfer.bridge_guid.is_some() || transfer.orchestra.is_some())
+                        && transfer.fee.is_some())
             });
         self.store.save_history_receipt(
             &transfers,
@@ -298,6 +299,7 @@ impl UsdtWallet {
                 tx_hash: Some(hash.into()),
                 user_operation_hash: None,
                 bridge_guid: None,
+                orchestra: None,
                 recipient: event.to.to_checksum(None),
                 destination: UsdtDestination::Arbitrum,
                 amount: token_amount(event.value)?,
@@ -343,42 +345,46 @@ impl UsdtWallet {
                 continue;
             }
             let operation_hash = format!("{:#x}", event.userOpHash);
-            let (recipient, amount, destination, received_amount) = if let Some(saved) = saved {
-                (
-                    saved.recipient,
-                    saved.amount,
-                    saved.destination,
-                    saved.received_amount,
-                )
-            } else {
-                let Some(op) = batch.as_ref().and_then(|batch| {
-                    batch
-                        .ops
-                        .iter()
-                        .find(|op| op.sender == self.address && op.nonce == event.nonce)
-                }) else {
-                    continue;
+            let (recipient, amount, destination, received_amount, orchestra) =
+                if let Some(saved) = saved {
+                    (
+                        saved.recipient,
+                        saved.amount,
+                        saved.destination,
+                        saved.received_amount,
+                        saved.orchestra,
+                    )
+                } else {
+                    let Some(op) = batch.as_ref().and_then(|batch| {
+                        batch
+                            .ops
+                            .iter()
+                            .find(|op| op.sender == self.address && op.nonce == event.nonce)
+                    }) else {
+                        continue;
+                    };
+                    if !super::paymaster::supported_payment(&op.paymasterAndData) {
+                        continue;
+                    }
+                    let Some((recipient, amount, destination, received_amount)) =
+                        decode_payment(&op.callData, self.address)
+                    else {
+                        continue;
+                    };
+                    (
+                        recipient.to_checksum(None),
+                        amount,
+                        destination,
+                        received_amount,
+                        None,
+                    )
                 };
-                if !super::paymaster::supported_payment(&op.paymasterAndData) {
-                    continue;
-                }
-                let Some((recipient, amount, destination, received_amount)) =
-                    decode_payment(&op.callData, self.address)
-                else {
-                    continue;
-                };
-                (
-                    recipient.to_checksum(None),
-                    amount,
-                    destination,
-                    received_amount,
-                )
-            };
             let mut transfer = UsdtTransfer {
                 id: operation_hash.clone(),
                 tx_hash: Some(hash.into()),
                 user_operation_hash: Some(operation_hash),
                 bridge_guid: None,
+                orchestra,
                 recipient,
                 destination,
                 amount,
@@ -404,7 +410,10 @@ impl UsdtWallet {
     }
 }
 
-fn decode_payment(data: &[u8], sender: Address) -> Option<(Address, u64, UsdtDestination, u64)> {
+pub(super) fn decode_payment(
+    data: &[u8],
+    sender: Address,
+) -> Option<(Address, u64, UsdtDestination, u64)> {
     let mut payment = None;
     for (target, data) in decode_calls(data).ok()? {
         let next = if target == TOKEN {

@@ -47,6 +47,7 @@ fn deposit_addresses_and_transport_reject_wrong_networks() {
     assert!(validate_source_address(
         &super::super::UsdtDestination::Ethereum
             .token()
+            .unwrap()
             .to_checksum(None),
         UsdtDepositNetwork::Ethereum
     )

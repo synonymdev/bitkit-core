@@ -2563,6 +2563,218 @@ public func FfiConverterTypeUrDecoder_lower(_ value: UrDecoder) -> UnsafeMutable
 
 
 
+/**
+ * Saves recovery data before a signed payment can be submitted, including automatic retries.
+ * Implementations must encrypt the snapshot, persist it remotely with its application payment
+ * associations, and return only after acknowledgement. Do not log the snapshot or call mutating
+ * wallet methods from this callback. A failed backup leaves the payment pending locally.
+ */
+public protocol UsdtBackup: AnyObject, Sendable {
+    
+    func persist(snapshot: String) async throws 
+    
+}
+/**
+ * Saves recovery data before a signed payment can be submitted, including automatic retries.
+ * Implementations must encrypt the snapshot, persist it remotely with its application payment
+ * associations, and return only after acknowledgement. Do not log the snapshot or call mutating
+ * wallet methods from this callback. A failed backup leaves the payment pending locally.
+ */
+open class UsdtBackupImpl: UsdtBackup, @unchecked Sendable {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_bitkitcore_fn_clone_usdtbackup(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_bitkitcore_fn_free_usdtbackup(pointer, $0) }
+    }
+
+    
+
+    
+open func persist(snapshot: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtbackup_persist(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(snapshot)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
+}
+    
+
+}
+
+
+// Put the implementation in a struct so we don't pollute the top-level namespace
+fileprivate struct UniffiCallbackInterfaceUsdtBackup {
+
+    // Create the VTable using a series of closures.
+    // Swift automatically converts these into C callback functions.
+    //
+    // This creates 1-element array, since this seems to be the only way to construct a const
+    // pointer that we can pass to the Rust code.
+    static let vtable: [UniffiVTableCallbackInterfaceUsdtBackup] = [UniffiVTableCallbackInterfaceUsdtBackup(
+        persist: { (
+            uniffiHandle: UInt64,
+            snapshot: RustBuffer,
+            uniffiFutureCallback: @escaping UniffiForeignFutureCompleteVoid,
+            uniffiCallbackData: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<UniffiForeignFuture>
+        ) in
+            let makeCall = {
+                () async throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeUsdtBackup.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try await uniffiObj.persist(
+                     snapshot: try FfiConverterString.lift(snapshot)
+                )
+            }
+
+            let uniffiHandleSuccess = { (returnValue: ()) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus()
+                    )
+                )
+            }
+            let uniffiHandleError = { (statusCode, errorBuf) in
+                uniffiFutureCallback(
+                    uniffiCallbackData,
+                    UniffiForeignFutureStructVoid(
+                        callStatus: RustCallStatus(code: statusCode, errorBuf: errorBuf)
+                    )
+                )
+            }
+            let uniffiForeignFuture = uniffiTraitInterfaceCallAsyncWithError(
+                makeCall: makeCall,
+                handleSuccess: uniffiHandleSuccess,
+                handleError: uniffiHandleError,
+                lowerError: FfiConverterTypeUsdtError_lower
+            )
+            uniffiOutReturn.pointee = uniffiForeignFuture
+        },
+        uniffiFree: { (uniffiHandle: UInt64) -> () in
+            let result = try? FfiConverterTypeUsdtBackup.handleMap.remove(handle: uniffiHandle)
+            if result == nil {
+                print("Uniffi callback interface UsdtBackup: handle missing in uniffiFree")
+            }
+        }
+    )]
+}
+
+private func uniffiCallbackInitUsdtBackup() {
+    uniffi_bitkitcore_fn_init_callback_vtable_usdtbackup(UniffiCallbackInterfaceUsdtBackup.vtable)
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtBackup: FfiConverter {
+    fileprivate static let handleMap = UniffiHandleMap<UsdtBackup>()
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = UsdtBackup
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> UsdtBackup {
+        return UsdtBackupImpl(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: UsdtBackup) -> UnsafeMutableRawPointer {
+        guard let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: handleMap.insert(obj: value))) else {
+            fatalError("Cast to UnsafeMutableRawPointer failed")
+        }
+        return ptr
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtBackup {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: UsdtBackup, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtBackup_lift(_ pointer: UnsafeMutableRawPointer) throws -> UsdtBackup {
+    return try FfiConverterTypeUsdtBackup.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtBackup_lower(_ value: UsdtBackup) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeUsdtBackup.lower(value)
+}
+
+
+
+
+
+
 public protocol UsdtDepositClientProtocol: AnyObject, Sendable {
     
     func detail(depositId: String, offset: UInt32, mnemonic: String, passphrase: String?) async throws  -> UsdtDepositDetail
@@ -2792,7 +3004,24 @@ public protocol UsdtWalletProtocol: AnyObject, Sendable {
      */
     func checkRecentExecution(id: String) async throws  -> UsdtTransfer?
     
+    /**
+     * Signs the executed direct payment using the Paykit ERC-20 EIP-712 profile.
+     * Persist the binding and payment ID before send. Retry this after execution; it never sends.
+     */
+    func createPaymentProof(transferId: String, binding: UsdtPaymentProofBinding, mnemonic: String, passphrase: String?) async throws  -> UsdtPaymentProof?
+    
+    /**
+     * Portable recovery data without keys, fee quotes or rebuildable history caches.
+     * Contains signed operations: store only inside an authenticated, encrypted backup.
+     */
+    func exportBackup() throws  -> String
+    
     func history() throws  -> [UsdtTransfer]
+    
+    /**
+     * Available Orchestra destinations. USDT0 destinations retain the app's existing configuration.
+     */
+    func orchestraDestinations() async throws  -> [UsdtDestination]
     
     func quoteTransfer(recipient: String, amount: UInt64, destination: UsdtDestination) async throws  -> UsdtQuote
     
@@ -2806,6 +3035,13 @@ public protocol UsdtWalletProtocol: AnyObject, Sendable {
     func refreshTransfers() async throws  -> [UsdtTransfer]
     
     /**
+     * Atomically merges recovery data for this account. Existing local outcomes take precedence.
+     * Restored signed operations remain pending until chain reconciliation proves their outcome;
+     * recovery may resubmit only the original signed payload through the backup callback.
+     */
+    func restoreBackup(snapshot: String) async throws 
+    
+    /**
      * Repeating a quote ID returns its stored outcome, which may already be failed or replaced.
      * A pending outcome is durable and retryable; it does not imply bundler acceptance.
      */
@@ -2816,6 +3052,13 @@ public protocol UsdtWalletProtocol: AnyObject, Sendable {
      * Call between send flows. The soft budget permits an in-flight receipt to finish before yielding.
      */
     func syncHistory() async throws  -> Bool
+    
+    /**
+     * Verifies a successful canonical ERC-20 transfer to this wallet and its request signature.
+     * Ordinary EOA transfers are supported. None means evidence is not yet available.
+     * The caller verifies accepted terms, payment-time deadlines and payment_id deduplication.
+     */
+    func verifyPaymentProof(binding: UsdtPaymentProofBinding, proof: UsdtPaymentProof) async throws  -> UsdtVerifiedPayment?
     
 }
 open class UsdtWallet: UsdtWalletProtocol, @unchecked Sendable {
@@ -2860,14 +3103,16 @@ open class UsdtWallet: UsdtWalletProtocol, @unchecked Sendable {
     /**
      * Creates the sole owner of this wallet's database; reuse it for all calls until it is dropped.
      */
-public convenience init(address: String, storagePath: String, rpcUrl: String, bundlerUrl: String)throws  {
+public convenience init(address: String, storagePath: String, rpcUrl: String, bundlerUrl: String, bridgeUrl: String?, backup: UsdtBackup)throws  {
     let pointer =
         try rustCallWithError(FfiConverterTypeUsdtError_lift) {
     uniffi_bitkitcore_fn_constructor_usdtwallet_new(
         FfiConverterString.lower(address),
         FfiConverterString.lower(storagePath),
         FfiConverterString.lower(rpcUrl),
-        FfiConverterString.lower(bundlerUrl),$0
+        FfiConverterString.lower(bundlerUrl),
+        FfiConverterOptionString.lower(bridgeUrl),
+        FfiConverterTypeUsdtBackup_lower(backup),$0
     )
 }
     self.init(unsafeFromRawPointer: pointer)
@@ -2924,11 +3169,63 @@ open func checkRecentExecution(id: String)async throws  -> UsdtTransfer?  {
         )
 }
     
+    /**
+     * Signs the executed direct payment using the Paykit ERC-20 EIP-712 profile.
+     * Persist the binding and payment ID before send. Retry this after execution; it never sends.
+     */
+open func createPaymentProof(transferId: String, binding: UsdtPaymentProofBinding, mnemonic: String, passphrase: String?)async throws  -> UsdtPaymentProof?  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtwallet_create_payment_proof(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(transferId),FfiConverterTypeUsdtPaymentProofBinding_lower(binding),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(passphrase)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypeUsdtPaymentProof.lift,
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
+}
+    
+    /**
+     * Portable recovery data without keys, fee quotes or rebuildable history caches.
+     * Contains signed operations: store only inside an authenticated, encrypted backup.
+     */
+open func exportBackup()throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeUsdtError_lift) {
+    uniffi_bitkitcore_fn_method_usdtwallet_export_backup(self.uniffiClonePointer(),$0
+    )
+})
+}
+    
 open func history()throws  -> [UsdtTransfer]  {
     return try  FfiConverterSequenceTypeUsdtTransfer.lift(try rustCallWithError(FfiConverterTypeUsdtError_lift) {
     uniffi_bitkitcore_fn_method_usdtwallet_history(self.uniffiClonePointer(),$0
     )
 })
+}
+    
+    /**
+     * Available Orchestra destinations. USDT0 destinations retain the app's existing configuration.
+     */
+open func orchestraDestinations()async throws  -> [UsdtDestination]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtwallet_orchestra_destinations(
+                    self.uniffiClonePointer()
+                    
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeUsdtDestination.lift,
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
 }
     
 open func quoteTransfer(recipient: String, amount: UInt64, destination: UsdtDestination)async throws  -> UsdtQuote  {
@@ -2983,6 +3280,28 @@ open func refreshTransfers()async throws  -> [UsdtTransfer]  {
 }
     
     /**
+     * Atomically merges recovery data for this account. Existing local outcomes take precedence.
+     * Restored signed operations remain pending until chain reconciliation proves their outcome;
+     * recovery may resubmit only the original signed payload through the backup callback.
+     */
+open func restoreBackup(snapshot: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtwallet_restore_backup(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(snapshot)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
+}
+    
+    /**
      * Repeating a quote ID returns its stored outcome, which may already be failed or replaced.
      * A pending outcome is durable and retryable; it does not imply bundler acceptance.
      */
@@ -3020,6 +3339,28 @@ open func syncHistory()async throws  -> Bool  {
             completeFunc: ffi_bitkitcore_rust_future_complete_i8,
             freeFunc: ffi_bitkitcore_rust_future_free_i8,
             liftFunc: FfiConverterBool.lift,
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
+}
+    
+    /**
+     * Verifies a successful canonical ERC-20 transfer to this wallet and its request signature.
+     * Ordinary EOA transfers are supported. None means evidence is not yet available.
+     * The caller verifies accepted terms, payment-time deadlines and payment_id deduplication.
+     */
+open func verifyPaymentProof(binding: UsdtPaymentProofBinding, proof: UsdtPaymentProof)async throws  -> UsdtVerifiedPayment?  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtwallet_verify_payment_proof(
+                    self.uniffiClonePointer(),
+                    FfiConverterTypeUsdtPaymentProofBinding_lower(binding),FfiConverterTypeUsdtPaymentProof_lower(proof)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypeUsdtVerifiedPayment.lift,
             errorHandler: FfiConverterTypeUsdtError_lift
         )
 }
@@ -16774,6 +17115,328 @@ public func FfiConverterTypeUsdtDepositPage_lower(_ value: UsdtDepositPage) -> R
 }
 
 
+public struct UsdtOrchestraTransfer {
+    public var quoteId: String
+    public var fundingAddress: String
+    public var destinationTx: String?
+    public var refundTx: String?
+    public var refundAmount: UInt64?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(quoteId: String, fundingAddress: String, destinationTx: String?, refundTx: String?, refundAmount: UInt64?) {
+        self.quoteId = quoteId
+        self.fundingAddress = fundingAddress
+        self.destinationTx = destinationTx
+        self.refundTx = refundTx
+        self.refundAmount = refundAmount
+    }
+}
+
+#if compiler(>=6)
+extension UsdtOrchestraTransfer: Sendable {}
+#endif
+
+
+extension UsdtOrchestraTransfer: Equatable, Hashable {
+    public static func ==(lhs: UsdtOrchestraTransfer, rhs: UsdtOrchestraTransfer) -> Bool {
+        if lhs.quoteId != rhs.quoteId {
+            return false
+        }
+        if lhs.fundingAddress != rhs.fundingAddress {
+            return false
+        }
+        if lhs.destinationTx != rhs.destinationTx {
+            return false
+        }
+        if lhs.refundTx != rhs.refundTx {
+            return false
+        }
+        if lhs.refundAmount != rhs.refundAmount {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(quoteId)
+        hasher.combine(fundingAddress)
+        hasher.combine(destinationTx)
+        hasher.combine(refundTx)
+        hasher.combine(refundAmount)
+    }
+}
+
+extension UsdtOrchestraTransfer: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtOrchestraTransfer: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtOrchestraTransfer {
+        return
+            try UsdtOrchestraTransfer(
+                quoteId: FfiConverterString.read(from: &buf), 
+                fundingAddress: FfiConverterString.read(from: &buf), 
+                destinationTx: FfiConverterOptionString.read(from: &buf), 
+                refundTx: FfiConverterOptionString.read(from: &buf), 
+                refundAmount: FfiConverterOptionUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: UsdtOrchestraTransfer, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.quoteId, into: &buf)
+        FfiConverterString.write(value.fundingAddress, into: &buf)
+        FfiConverterOptionString.write(value.destinationTx, into: &buf)
+        FfiConverterOptionString.write(value.refundTx, into: &buf)
+        FfiConverterOptionUInt64.write(value.refundAmount, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtOrchestraTransfer_lift(_ buf: RustBuffer) throws -> UsdtOrchestraTransfer {
+    return try FfiConverterTypeUsdtOrchestraTransfer.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtOrchestraTransfer_lower(_ value: UsdtOrchestraTransfer) -> RustBuffer {
+    return FfiConverterTypeUsdtOrchestraTransfer.lower(value)
+}
+
+
+public struct UsdtPaymentProof {
+    public var chainId: String
+    public var transactionHash: String
+    /**
+     * Decimal position in the complete receipt logs array, not the block-wide RPC logIndex.
+     */
+    public var receiptLogIndex: String
+    public var signature: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(chainId: String, transactionHash: String, 
+        /**
+         * Decimal position in the complete receipt logs array, not the block-wide RPC logIndex.
+         */receiptLogIndex: String, signature: String) {
+        self.chainId = chainId
+        self.transactionHash = transactionHash
+        self.receiptLogIndex = receiptLogIndex
+        self.signature = signature
+    }
+}
+
+#if compiler(>=6)
+extension UsdtPaymentProof: Sendable {}
+#endif
+
+
+extension UsdtPaymentProof: Equatable, Hashable {
+    public static func ==(lhs: UsdtPaymentProof, rhs: UsdtPaymentProof) -> Bool {
+        if lhs.chainId != rhs.chainId {
+            return false
+        }
+        if lhs.transactionHash != rhs.transactionHash {
+            return false
+        }
+        if lhs.receiptLogIndex != rhs.receiptLogIndex {
+            return false
+        }
+        if lhs.signature != rhs.signature {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(chainId)
+        hasher.combine(transactionHash)
+        hasher.combine(receiptLogIndex)
+        hasher.combine(signature)
+    }
+}
+
+extension UsdtPaymentProof: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtPaymentProof: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtPaymentProof {
+        return
+            try UsdtPaymentProof(
+                chainId: FfiConverterString.read(from: &buf), 
+                transactionHash: FfiConverterString.read(from: &buf), 
+                receiptLogIndex: FfiConverterString.read(from: &buf), 
+                signature: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: UsdtPaymentProof, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.chainId, into: &buf)
+        FfiConverterString.write(value.transactionHash, into: &buf)
+        FfiConverterString.write(value.receiptLogIndex, into: &buf)
+        FfiConverterString.write(value.signature, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtPaymentProof_lift(_ buf: RustBuffer) throws -> UsdtPaymentProof {
+    return try FfiConverterTypeUsdtPaymentProof.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtPaymentProof_lower(_ value: UsdtPaymentProof) -> RustBuffer {
+    return FfiConverterTypeUsdtPaymentProof.lower(value)
+}
+
+
+/**
+ * Immutable Paykit request fields, using the canonical strings from the accepted request/proof.
+ * Pubky keys are bare z32; absent period and conversion quote fields are empty strings.
+ */
+public struct UsdtPaymentProofBinding {
+    public var payer: String
+    public var payee: String
+    public var paymentAppId: String
+    public var paymentRequestId: String
+    public var paymentReference: String
+    public var paymentEndpointIdentifier: String
+    public var periodStartsAt: String
+    public var periodEndsAt: String
+    public var conversionQuoteId: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(payer: String, payee: String, paymentAppId: String, paymentRequestId: String, paymentReference: String, paymentEndpointIdentifier: String, periodStartsAt: String, periodEndsAt: String, conversionQuoteId: String) {
+        self.payer = payer
+        self.payee = payee
+        self.paymentAppId = paymentAppId
+        self.paymentRequestId = paymentRequestId
+        self.paymentReference = paymentReference
+        self.paymentEndpointIdentifier = paymentEndpointIdentifier
+        self.periodStartsAt = periodStartsAt
+        self.periodEndsAt = periodEndsAt
+        self.conversionQuoteId = conversionQuoteId
+    }
+}
+
+#if compiler(>=6)
+extension UsdtPaymentProofBinding: Sendable {}
+#endif
+
+
+extension UsdtPaymentProofBinding: Equatable, Hashable {
+    public static func ==(lhs: UsdtPaymentProofBinding, rhs: UsdtPaymentProofBinding) -> Bool {
+        if lhs.payer != rhs.payer {
+            return false
+        }
+        if lhs.payee != rhs.payee {
+            return false
+        }
+        if lhs.paymentAppId != rhs.paymentAppId {
+            return false
+        }
+        if lhs.paymentRequestId != rhs.paymentRequestId {
+            return false
+        }
+        if lhs.paymentReference != rhs.paymentReference {
+            return false
+        }
+        if lhs.paymentEndpointIdentifier != rhs.paymentEndpointIdentifier {
+            return false
+        }
+        if lhs.periodStartsAt != rhs.periodStartsAt {
+            return false
+        }
+        if lhs.periodEndsAt != rhs.periodEndsAt {
+            return false
+        }
+        if lhs.conversionQuoteId != rhs.conversionQuoteId {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(payer)
+        hasher.combine(payee)
+        hasher.combine(paymentAppId)
+        hasher.combine(paymentRequestId)
+        hasher.combine(paymentReference)
+        hasher.combine(paymentEndpointIdentifier)
+        hasher.combine(periodStartsAt)
+        hasher.combine(periodEndsAt)
+        hasher.combine(conversionQuoteId)
+    }
+}
+
+extension UsdtPaymentProofBinding: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtPaymentProofBinding: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtPaymentProofBinding {
+        return
+            try UsdtPaymentProofBinding(
+                payer: FfiConverterString.read(from: &buf), 
+                payee: FfiConverterString.read(from: &buf), 
+                paymentAppId: FfiConverterString.read(from: &buf), 
+                paymentRequestId: FfiConverterString.read(from: &buf), 
+                paymentReference: FfiConverterString.read(from: &buf), 
+                paymentEndpointIdentifier: FfiConverterString.read(from: &buf), 
+                periodStartsAt: FfiConverterString.read(from: &buf), 
+                periodEndsAt: FfiConverterString.read(from: &buf), 
+                conversionQuoteId: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: UsdtPaymentProofBinding, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.payer, into: &buf)
+        FfiConverterString.write(value.payee, into: &buf)
+        FfiConverterString.write(value.paymentAppId, into: &buf)
+        FfiConverterString.write(value.paymentRequestId, into: &buf)
+        FfiConverterString.write(value.paymentReference, into: &buf)
+        FfiConverterString.write(value.paymentEndpointIdentifier, into: &buf)
+        FfiConverterString.write(value.periodStartsAt, into: &buf)
+        FfiConverterString.write(value.periodEndsAt, into: &buf)
+        FfiConverterString.write(value.conversionQuoteId, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtPaymentProofBinding_lift(_ buf: RustBuffer) throws -> UsdtPaymentProofBinding {
+    return try FfiConverterTypeUsdtPaymentProofBinding.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtPaymentProofBinding_lower(_ value: UsdtPaymentProofBinding) -> RustBuffer {
+    return FfiConverterTypeUsdtPaymentProofBinding.lower(value)
+}
+
+
 public struct UsdtPaymentRequest {
     public var recipient: String
     public var amount: UInt64?
@@ -16861,6 +17524,10 @@ public func FfiConverterTypeUsdtPaymentRequest_lower(_ value: UsdtPaymentRequest
 
 
 public struct UsdtQuote {
+    /**
+     * Absent for a direct Arbitrum payment. The provider is fixed when this quote is approved.
+     */
+    public var bridgeProvider: UsdtBridgeProvider?
     public var id: String
     public var recipient: String
     public var destination: UsdtDestination
@@ -16871,7 +17538,11 @@ public struct UsdtQuote {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, recipient: String, destination: UsdtDestination, amount: UInt64, receivedAmount: UInt64, maximumFee: UInt64, expiresAt: UInt64) {
+    public init(
+        /**
+         * Absent for a direct Arbitrum payment. The provider is fixed when this quote is approved.
+         */bridgeProvider: UsdtBridgeProvider?, id: String, recipient: String, destination: UsdtDestination, amount: UInt64, receivedAmount: UInt64, maximumFee: UInt64, expiresAt: UInt64) {
+        self.bridgeProvider = bridgeProvider
         self.id = id
         self.recipient = recipient
         self.destination = destination
@@ -16889,6 +17560,9 @@ extension UsdtQuote: Sendable {}
 
 extension UsdtQuote: Equatable, Hashable {
     public static func ==(lhs: UsdtQuote, rhs: UsdtQuote) -> Bool {
+        if lhs.bridgeProvider != rhs.bridgeProvider {
+            return false
+        }
         if lhs.id != rhs.id {
             return false
         }
@@ -16914,6 +17588,7 @@ extension UsdtQuote: Equatable, Hashable {
     }
 
     public func hash(into hasher: inout Hasher) {
+        hasher.combine(bridgeProvider)
         hasher.combine(id)
         hasher.combine(recipient)
         hasher.combine(destination)
@@ -16935,6 +17610,7 @@ public struct FfiConverterTypeUsdtQuote: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtQuote {
         return
             try UsdtQuote(
+                bridgeProvider: FfiConverterOptionTypeUsdtBridgeProvider.read(from: &buf), 
                 id: FfiConverterString.read(from: &buf), 
                 recipient: FfiConverterString.read(from: &buf), 
                 destination: FfiConverterTypeUsdtDestination.read(from: &buf), 
@@ -16946,6 +17622,7 @@ public struct FfiConverterTypeUsdtQuote: FfiConverterRustBuffer {
     }
 
     public static func write(_ value: UsdtQuote, into buf: inout [UInt8]) {
+        FfiConverterOptionTypeUsdtBridgeProvider.write(value.bridgeProvider, into: &buf)
         FfiConverterString.write(value.id, into: &buf)
         FfiConverterString.write(value.recipient, into: &buf)
         FfiConverterTypeUsdtDestination.write(value.destination, into: &buf)
@@ -16980,6 +17657,7 @@ public struct UsdtTransfer {
     public var txHash: String?
     public var userOperationHash: String?
     public var bridgeGuid: String?
+    public var orchestra: UsdtOrchestraTransfer?
     public var recipient: String
     public var destination: UsdtDestination
     public var amount: UInt64
@@ -16994,11 +17672,12 @@ public struct UsdtTransfer {
     public init(id: String, 
         /**
          * Source transaction hash, absent until execution is observed.
-         */txHash: String?, userOperationHash: String?, bridgeGuid: String?, recipient: String, destination: UsdtDestination, amount: UInt64, receivedAmount: UInt64, fee: UInt64?, isIncoming: Bool, status: UsdtTransferStatus, timestamp: UInt64) {
+         */txHash: String?, userOperationHash: String?, bridgeGuid: String?, orchestra: UsdtOrchestraTransfer?, recipient: String, destination: UsdtDestination, amount: UInt64, receivedAmount: UInt64, fee: UInt64?, isIncoming: Bool, status: UsdtTransferStatus, timestamp: UInt64) {
         self.id = id
         self.txHash = txHash
         self.userOperationHash = userOperationHash
         self.bridgeGuid = bridgeGuid
+        self.orchestra = orchestra
         self.recipient = recipient
         self.destination = destination
         self.amount = amount
@@ -17027,6 +17706,9 @@ extension UsdtTransfer: Equatable, Hashable {
             return false
         }
         if lhs.bridgeGuid != rhs.bridgeGuid {
+            return false
+        }
+        if lhs.orchestra != rhs.orchestra {
             return false
         }
         if lhs.recipient != rhs.recipient {
@@ -17061,6 +17743,7 @@ extension UsdtTransfer: Equatable, Hashable {
         hasher.combine(txHash)
         hasher.combine(userOperationHash)
         hasher.combine(bridgeGuid)
+        hasher.combine(orchestra)
         hasher.combine(recipient)
         hasher.combine(destination)
         hasher.combine(amount)
@@ -17087,6 +17770,7 @@ public struct FfiConverterTypeUsdtTransfer: FfiConverterRustBuffer {
                 txHash: FfiConverterOptionString.read(from: &buf), 
                 userOperationHash: FfiConverterOptionString.read(from: &buf), 
                 bridgeGuid: FfiConverterOptionString.read(from: &buf), 
+                orchestra: FfiConverterOptionTypeUsdtOrchestraTransfer.read(from: &buf), 
                 recipient: FfiConverterString.read(from: &buf), 
                 destination: FfiConverterTypeUsdtDestination.read(from: &buf), 
                 amount: FfiConverterUInt64.read(from: &buf), 
@@ -17103,6 +17787,7 @@ public struct FfiConverterTypeUsdtTransfer: FfiConverterRustBuffer {
         FfiConverterOptionString.write(value.txHash, into: &buf)
         FfiConverterOptionString.write(value.userOperationHash, into: &buf)
         FfiConverterOptionString.write(value.bridgeGuid, into: &buf)
+        FfiConverterOptionTypeUsdtOrchestraTransfer.write(value.orchestra, into: &buf)
         FfiConverterString.write(value.recipient, into: &buf)
         FfiConverterTypeUsdtDestination.write(value.destination, into: &buf)
         FfiConverterUInt64.write(value.amount, into: &buf)
@@ -17127,6 +17812,122 @@ public func FfiConverterTypeUsdtTransfer_lift(_ buf: RustBuffer) throws -> UsdtT
 #endif
 public func FfiConverterTypeUsdtTransfer_lower(_ value: UsdtTransfer) -> RustBuffer {
     return FfiConverterTypeUsdtTransfer.lower(value)
+}
+
+
+public struct UsdtVerifiedPayment {
+    /**
+     * Verified chain, transaction and receipt position; claim at most once across requests/periods.
+     */
+    public var paymentId: String
+    /**
+     * Existing incoming activity identity (transaction and block-wide log index).
+     */
+    public var transferId: String
+    public var sender: String
+    public var recipient: String
+    public var amount: UInt64
+    public var timestamp: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Verified chain, transaction and receipt position; claim at most once across requests/periods.
+         */paymentId: String, 
+        /**
+         * Existing incoming activity identity (transaction and block-wide log index).
+         */transferId: String, sender: String, recipient: String, amount: UInt64, timestamp: UInt64) {
+        self.paymentId = paymentId
+        self.transferId = transferId
+        self.sender = sender
+        self.recipient = recipient
+        self.amount = amount
+        self.timestamp = timestamp
+    }
+}
+
+#if compiler(>=6)
+extension UsdtVerifiedPayment: Sendable {}
+#endif
+
+
+extension UsdtVerifiedPayment: Equatable, Hashable {
+    public static func ==(lhs: UsdtVerifiedPayment, rhs: UsdtVerifiedPayment) -> Bool {
+        if lhs.paymentId != rhs.paymentId {
+            return false
+        }
+        if lhs.transferId != rhs.transferId {
+            return false
+        }
+        if lhs.sender != rhs.sender {
+            return false
+        }
+        if lhs.recipient != rhs.recipient {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.timestamp != rhs.timestamp {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(paymentId)
+        hasher.combine(transferId)
+        hasher.combine(sender)
+        hasher.combine(recipient)
+        hasher.combine(amount)
+        hasher.combine(timestamp)
+    }
+}
+
+extension UsdtVerifiedPayment: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtVerifiedPayment: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtVerifiedPayment {
+        return
+            try UsdtVerifiedPayment(
+                paymentId: FfiConverterString.read(from: &buf), 
+                transferId: FfiConverterString.read(from: &buf), 
+                sender: FfiConverterString.read(from: &buf), 
+                recipient: FfiConverterString.read(from: &buf), 
+                amount: FfiConverterUInt64.read(from: &buf), 
+                timestamp: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: UsdtVerifiedPayment, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.paymentId, into: &buf)
+        FfiConverterString.write(value.transferId, into: &buf)
+        FfiConverterString.write(value.sender, into: &buf)
+        FfiConverterString.write(value.recipient, into: &buf)
+        FfiConverterUInt64.write(value.amount, into: &buf)
+        FfiConverterUInt64.write(value.timestamp, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtVerifiedPayment_lift(_ buf: RustBuffer) throws -> UsdtVerifiedPayment {
+    return try FfiConverterTypeUsdtVerifiedPayment.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtVerifiedPayment_lower(_ value: UsdtVerifiedPayment) -> RustBuffer {
+    return FfiConverterTypeUsdtVerifiedPayment.lower(value)
 }
 
 
@@ -24257,6 +25058,78 @@ extension UrPayload: Codable {}
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
+public enum UsdtBridgeProvider {
+    
+    case usdt0
+    case orchestra
+}
+
+
+#if compiler(>=6)
+extension UsdtBridgeProvider: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeUsdtBridgeProvider: FfiConverterRustBuffer {
+    typealias SwiftType = UsdtBridgeProvider
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtBridgeProvider {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .usdt0
+        
+        case 2: return .orchestra
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: UsdtBridgeProvider, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .usdt0:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .orchestra:
+            writeInt(&buf, Int32(2))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtBridgeProvider_lift(_ buf: RustBuffer) throws -> UsdtBridgeProvider {
+    return try FfiConverterTypeUsdtBridgeProvider.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeUsdtBridgeProvider_lower(_ value: UsdtBridgeProvider) -> RustBuffer {
+    return FfiConverterTypeUsdtBridgeProvider.lower(value)
+}
+
+
+extension UsdtBridgeProvider: Equatable, Hashable {}
+
+extension UsdtBridgeProvider: Codable {}
+
+
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
 public enum UsdtDepositNetwork {
     
     case ethereum
@@ -24364,6 +25237,10 @@ public enum UsdtDestination {
     case arbitrum
     case polygon
     case plasma
+    case base
+    case bsc
+    case solana
+    case tron
 }
 
 
@@ -24391,6 +25268,14 @@ public struct FfiConverterTypeUsdtDestination: FfiConverterRustBuffer {
         
         case 5: return .plasma
         
+        case 6: return .base
+        
+        case 7: return .bsc
+        
+        case 8: return .solana
+        
+        case 9: return .tron
+        
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
@@ -24417,6 +25302,22 @@ public struct FfiConverterTypeUsdtDestination: FfiConverterRustBuffer {
         
         case .plasma:
             writeInt(&buf, Int32(5))
+        
+        
+        case .base:
+            writeInt(&buf, Int32(6))
+        
+        
+        case .bsc:
+            writeInt(&buf, Int32(7))
+        
+        
+        case .solana:
+            writeInt(&buf, Int32(8))
+        
+        
+        case .tron:
+            writeInt(&buf, Int32(9))
         
         }
     }
@@ -24452,6 +25353,9 @@ public enum UsdtError: Swift.Error {
 
     
     
+    case BackupUnavailable
+    case InvalidBackup
+    case InvalidPaymentProof
     case InvalidAmount
     case InvalidAddress
     case WrongNetwork
@@ -24492,34 +25396,37 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
         
 
         
-        case 1: return .InvalidAmount
-        case 2: return .InvalidAddress
-        case 3: return .WrongNetwork
-        case 4: return .InvalidCredentials
-        case 5: return .ClockSkew
-        case 6: return .UnsupportedDelegation
-        case 7: return .InsufficientBalance
-        case 8: return .QuoteExpired
-        case 9: return .PendingTransfer
-        case 10: return .UnsupportedRoute
-        case 11: return .DepositNeedsAttention
-        case 12: return .DepositNotFound
-        case 13: return .DepositAuthorizationRejected
-        case 14: return .DepositAmountOutOfRange(
+        case 1: return .BackupUnavailable
+        case 2: return .InvalidBackup
+        case 3: return .InvalidPaymentProof
+        case 4: return .InvalidAmount
+        case 5: return .InvalidAddress
+        case 6: return .WrongNetwork
+        case 7: return .InvalidCredentials
+        case 8: return .ClockSkew
+        case 9: return .UnsupportedDelegation
+        case 10: return .InsufficientBalance
+        case 11: return .QuoteExpired
+        case 12: return .PendingTransfer
+        case 13: return .UnsupportedRoute
+        case 14: return .DepositNeedsAttention
+        case 15: return .DepositNotFound
+        case 16: return .DepositAuthorizationRejected
+        case 17: return .DepositAmountOutOfRange(
             minUsdCents: try FfiConverterOptionString.read(from: &buf), 
             maxUsdCents: try FfiConverterOptionString.read(from: &buf)
             )
-        case 15: return .NotConfigured
-        case 16: return .NetworkUnavailable
-        case 17: return .RateLimited
-        case 18: return .LogRangeTooLarge
-        case 19: return .TransactionRejected(
+        case 18: return .NotConfigured
+        case 19: return .NetworkUnavailable
+        case 20: return .RateLimited
+        case 21: return .LogRangeTooLarge
+        case 22: return .TransactionRejected(
             reason: try FfiConverterString.read(from: &buf)
             )
-        case 20: return .Storage(
+        case 23: return .Storage(
             reason: try FfiConverterString.read(from: &buf)
             )
-        case 21: return .InvalidResponse
+        case 24: return .InvalidResponse
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -24532,92 +25439,104 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
 
         
         
-        case .InvalidAmount:
+        case .BackupUnavailable:
             writeInt(&buf, Int32(1))
         
         
-        case .InvalidAddress:
+        case .InvalidBackup:
             writeInt(&buf, Int32(2))
         
         
-        case .WrongNetwork:
+        case .InvalidPaymentProof:
             writeInt(&buf, Int32(3))
         
         
-        case .InvalidCredentials:
+        case .InvalidAmount:
             writeInt(&buf, Int32(4))
         
         
-        case .ClockSkew:
+        case .InvalidAddress:
             writeInt(&buf, Int32(5))
         
         
-        case .UnsupportedDelegation:
+        case .WrongNetwork:
             writeInt(&buf, Int32(6))
         
         
-        case .InsufficientBalance:
+        case .InvalidCredentials:
             writeInt(&buf, Int32(7))
         
         
-        case .QuoteExpired:
+        case .ClockSkew:
             writeInt(&buf, Int32(8))
         
         
-        case .PendingTransfer:
+        case .UnsupportedDelegation:
             writeInt(&buf, Int32(9))
         
         
-        case .UnsupportedRoute:
+        case .InsufficientBalance:
             writeInt(&buf, Int32(10))
         
         
-        case .DepositNeedsAttention:
+        case .QuoteExpired:
             writeInt(&buf, Int32(11))
         
         
-        case .DepositNotFound:
+        case .PendingTransfer:
             writeInt(&buf, Int32(12))
         
         
-        case .DepositAuthorizationRejected:
+        case .UnsupportedRoute:
             writeInt(&buf, Int32(13))
         
         
-        case let .DepositAmountOutOfRange(minUsdCents,maxUsdCents):
+        case .DepositNeedsAttention:
             writeInt(&buf, Int32(14))
+        
+        
+        case .DepositNotFound:
+            writeInt(&buf, Int32(15))
+        
+        
+        case .DepositAuthorizationRejected:
+            writeInt(&buf, Int32(16))
+        
+        
+        case let .DepositAmountOutOfRange(minUsdCents,maxUsdCents):
+            writeInt(&buf, Int32(17))
             FfiConverterOptionString.write(minUsdCents, into: &buf)
             FfiConverterOptionString.write(maxUsdCents, into: &buf)
             
         
         case .NotConfigured:
-            writeInt(&buf, Int32(15))
-        
-        
-        case .NetworkUnavailable:
-            writeInt(&buf, Int32(16))
-        
-        
-        case .RateLimited:
-            writeInt(&buf, Int32(17))
-        
-        
-        case .LogRangeTooLarge:
             writeInt(&buf, Int32(18))
         
         
-        case let .TransactionRejected(reason):
+        case .NetworkUnavailable:
             writeInt(&buf, Int32(19))
+        
+        
+        case .RateLimited:
+            writeInt(&buf, Int32(20))
+        
+        
+        case .LogRangeTooLarge:
+            writeInt(&buf, Int32(21))
+        
+        
+        case let .TransactionRejected(reason):
+            writeInt(&buf, Int32(22))
             FfiConverterString.write(reason, into: &buf)
             
         
         case let .Storage(reason):
-            writeInt(&buf, Int32(20))
+            writeInt(&buf, Int32(23))
             FfiConverterString.write(reason, into: &buf)
             
         
         case .InvalidResponse:
-            writeInt(&buf, Int32(21))
+            writeInt(&buf, Int32(24))
         
         }
     }
@@ -24685,6 +25604,10 @@ public enum UsdtTransferStatus {
      */
     case bridgeFailed
     /**
+     * Source-chain receipt proves USDT was returned to this wallet.
+     */
+    case bridgeRefunded
+    /**
      * Another operation consumed the payment nonce.
      */
     case replaced
@@ -24717,7 +25640,9 @@ public struct FfiConverterTypeUsdtTransferStatus: FfiConverterRustBuffer {
         
         case 6: return .bridgeFailed
         
-        case 7: return .replaced
+        case 7: return .bridgeRefunded
+        
+        case 8: return .replaced
         
         default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -24751,8 +25676,12 @@ public struct FfiConverterTypeUsdtTransferStatus: FfiConverterRustBuffer {
             writeInt(&buf, Int32(6))
         
         
-        case .replaced:
+        case .bridgeRefunded:
             writeInt(&buf, Int32(7))
+        
+        
+        case .replaced:
+            writeInt(&buf, Int32(8))
         
         }
     }
@@ -25934,6 +26863,54 @@ fileprivate struct FfiConverterOptionTypeUsdtDepositOrder: FfiConverterRustBuffe
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeUsdtOrchestraTransfer: FfiConverterRustBuffer {
+    typealias SwiftType = UsdtOrchestraTransfer?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeUsdtOrchestraTransfer.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeUsdtOrchestraTransfer.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeUsdtPaymentProof: FfiConverterRustBuffer {
+    typealias SwiftType = UsdtPaymentProof?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeUsdtPaymentProof.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeUsdtPaymentProof.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypeUsdtTransfer: FfiConverterRustBuffer {
     typealias SwiftType = UsdtTransfer?
 
@@ -25950,6 +26927,30 @@ fileprivate struct FfiConverterOptionTypeUsdtTransfer: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeUsdtTransfer.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeUsdtVerifiedPayment: FfiConverterRustBuffer {
+    typealias SwiftType = UsdtVerifiedPayment?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeUsdtVerifiedPayment.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeUsdtVerifiedPayment.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -26310,6 +27311,30 @@ fileprivate struct FfiConverterOptionTypeUrPayload: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeUrPayload.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeUsdtBridgeProvider: FfiConverterRustBuffer {
+    typealias SwiftType = UsdtBridgeProvider?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeUsdtBridgeProvider.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeUsdtBridgeProvider.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }
@@ -27513,6 +28538,31 @@ fileprivate struct FfiConverterSequenceTypeUsdtDepositNetwork: FfiConverterRustB
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeUsdtDestination: FfiConverterRustBuffer {
+    typealias SwiftType = [UsdtDestination]
+
+    public static func write(_ value: [UsdtDestination], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeUsdtDestination.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [UsdtDestination] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [UsdtDestination]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeUsdtDestination.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterDictionaryStringString: FfiConverterRustBuffer {
     public static func write(_ value: [String: String], into buf: inout [UInt8]) {
         let len = Int32(value.count)
@@ -27580,6 +28630,89 @@ fileprivate func uniffiFutureContinuationCallback(handle: UInt64, pollResult: In
     } else {
         print("uniffiFutureContinuationCallback invalid handle")
     }
+}
+private func uniffiTraitInterfaceCallAsync<T>(
+    makeCall: @escaping () async throws -> T,
+    handleSuccess: @escaping (T) -> (),
+    handleError: @escaping (Int8, RustBuffer) -> ()
+) -> UniffiForeignFuture {
+    let task = Task {
+        // Note: it's important we call either `handleSuccess` or `handleError` exactly once.  Each
+        // call consumes an Arc reference, which means there should be no possibility of a double
+        // call.  The following code is structured so that will will never call both `handleSuccess`
+        // and `handleError`, even in the face of weird errors.
+        //
+        // On platforms that need extra machinery to make C-ABI calls, like JNA or ctypes, it's
+        // possible that we fail to make either call.  However, it doesn't seem like this is
+        // possible on Swift since swift can just make the C call directly.
+        var callResult: T
+        do {
+            callResult = try await makeCall()
+        } catch {
+            handleError(CALL_UNEXPECTED_ERROR, FfiConverterString.lower(String(describing: error)))
+            return
+        }
+        handleSuccess(callResult)
+    }
+    let handle = UNIFFI_FOREIGN_FUTURE_HANDLE_MAP.insert(obj: task)
+    return UniffiForeignFuture(handle: handle, free: uniffiForeignFutureFree)
+
+}
+
+private func uniffiTraitInterfaceCallAsyncWithError<T, E>(
+    makeCall: @escaping () async throws -> T,
+    handleSuccess: @escaping (T) -> (),
+    handleError: @escaping (Int8, RustBuffer) -> (),
+    lowerError: @escaping (E) -> RustBuffer
+) -> UniffiForeignFuture {
+    let task = Task {
+        // See the note in uniffiTraitInterfaceCallAsync for details on `handleSuccess` and
+        // `handleError`.
+        var callResult: T
+        do {
+            callResult = try await makeCall()
+        } catch let error as E {
+            handleError(CALL_ERROR, lowerError(error))
+            return
+        } catch {
+            handleError(CALL_UNEXPECTED_ERROR, FfiConverterString.lower(String(describing: error)))
+            return
+        }
+        handleSuccess(callResult)
+    }
+    let handle = UNIFFI_FOREIGN_FUTURE_HANDLE_MAP.insert(obj: task)
+    return UniffiForeignFuture(handle: handle, free: uniffiForeignFutureFree)
+}
+
+// Borrow the callback handle map implementation to store foreign future handles
+// TODO: consolidate the handle-map code (https://github.com/mozilla/uniffi-rs/pull/1823)
+fileprivate let UNIFFI_FOREIGN_FUTURE_HANDLE_MAP = UniffiHandleMap<UniffiForeignFutureTask>()
+
+// Protocol for tasks that handle foreign futures.
+//
+// Defining a protocol allows all tasks to be stored in the same handle map.  This can't be done
+// with the task object itself, since has generic parameters.
+fileprivate protocol UniffiForeignFutureTask {
+    func cancel()
+}
+
+extension Task: UniffiForeignFutureTask {}
+
+private func uniffiForeignFutureFree(handle: UInt64) {
+    do {
+        let task = try UNIFFI_FOREIGN_FUTURE_HANDLE_MAP.remove(handle: handle)
+        // Set the cancellation flag on the task.  If it's still running, the code can check the
+        // cancellation flag or call `Task.checkCancellation()`.  If the task has completed, this is
+        // a no-op.
+        task.cancel()
+    } catch {
+        print("uniffiForeignFutureFree: handle missing from handlemap")
+    }
+}
+
+// For testing
+public func uniffiForeignFutureHandleCountBitkitcore() -> Int {
+    UNIFFI_FOREIGN_FUTURE_HANDLE_MAP.count
 }
 /**
  * Decode activities from Core's canonical backup JSON, defaulting a
@@ -30200,6 +31333,17 @@ public func usdtParsePaymentRequest(value: String)throws  -> UsdtPaymentRequest 
     )
 })
 }
+/**
+ * Validates a recipient for the chosen network; payment URIs remain Arbitrum-only.
+ */
+public func usdtValidateRecipient(value: String, destination: UsdtDestination)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeUsdtError_lift) {
+    uniffi_bitkitcore_fn_func_usdt_validate_recipient(
+        FfiConverterString.lower(value),
+        FfiConverterTypeUsdtDestination_lower(destination),$0
+    )
+})
+}
 public func validateBitcoinAddress(address: String)throws  -> ValidationResult  {
     return try  FfiConverterTypeValidationResult_lift(try rustCallWithError(FfiConverterTypeAddressError_lift) {
     uniffi_bitkitcore_fn_func_validate_bitcoin_address(
@@ -30862,6 +32006,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_usdt_parse_payment_request() != 63265) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_usdt_validate_recipient() != 17281) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_validate_bitcoin_address() != 56003) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -30946,6 +32093,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_urdecoder_reset() != 6027) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_method_usdtbackup_persist() != 15054) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_method_usdtdepositclient_detail() != 63177) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -30967,7 +32117,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_usdtwallet_check_recent_execution() != 56962) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_create_payment_proof() != 39351) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_export_backup() != 55033) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_history() != 4617) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_orchestra_destinations() != 39605) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_quote_transfer() != 3732) {
@@ -30982,10 +32141,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_method_usdtwallet_refresh_transfers() != 34299) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_restore_backup() != 26015) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_send() != 60030) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_sync_history() != 25445) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_verify_payment_proof() != 42574) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_constructor_urdecoder_new() != 23014) {
@@ -30994,7 +32159,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_constructor_usdtdepositclient_new() != 44626) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_constructor_usdtwallet_new() != 62148) {
+    if (uniffi_bitkitcore_checksum_constructor_usdtwallet_new() != 47659) {
         return InitializationResult.apiChecksumMismatch
     }
 
@@ -31003,6 +32168,7 @@ private let initializationResult: InitializationResult = {
     uniffiCallbackInitJadeTransportCallback()
     uniffiCallbackInitTrezorTransportCallback()
     uniffiCallbackInitTrezorUiCallback()
+    uniffiCallbackInitUsdtBackup()
     return InitializationResult.ok
 }()
 
