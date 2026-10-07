@@ -2,6 +2,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error, uniffi::Error)]
 pub enum UsdtError {
+    #[error("The payment proof does not match this request or a successful USDT payment")]
+    InvalidPaymentProof,
     #[error("Enter a valid USDT amount with at most six decimal places")]
     InvalidAmount,
     #[error("Enter a valid address for the selected network")]

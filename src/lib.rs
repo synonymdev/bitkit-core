@@ -93,8 +93,9 @@ pub use modules::seedqr::{decode_compact_seed_qr, decode_standard_seed_qr, SeedQ
 pub use modules::usdt::{
     usdt_address, usdt_format_amount, usdt_parse_amount, usdt_parse_payment_request, UsdtDeposit,
     UsdtDepositAddress, UsdtDepositClient, UsdtDepositDetail, UsdtDepositNetwork, UsdtDepositOrder,
-    UsdtDepositPage, UsdtDestination, UsdtError, UsdtPaymentRequest, UsdtQuote, UsdtTransfer,
-    UsdtTransferStatus, UsdtWallet,
+    UsdtDepositPage, UsdtDestination, UsdtError, UsdtPaymentProof, UsdtPaymentProofBinding,
+    UsdtPaymentRequest, UsdtQuote, UsdtTransfer, UsdtTransferStatus, UsdtVerifiedPayment,
+    UsdtWallet,
 };
 
 use bip39::Mnemonic;

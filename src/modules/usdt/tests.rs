@@ -218,6 +218,195 @@ fn payment_requests_preserve_exact_token_amounts_and_reject_ambiguous_terms() {
 const TEST_PHRASE: &str = "test test test test test test test test test test test junk";
 const RECIPIENT: &str = "0x1111111111111111111111111111111111111111";
 
+#[tokio::test]
+async fn payment_proof_binds_execution_to_request_and_receiver() {
+    use alloy_primitives::{B256, U256};
+    use alloy_sol_types::SolEvent;
+    let chain = MockChain::start().await;
+    let sender_dir = tempfile::tempdir().unwrap();
+    let receiver_dir = tempfile::tempdir().unwrap();
+    let sender = chain.wallet(&sender_dir);
+    let receiver = UsdtWallet::new(
+        RECIPIENT.into(),
+        receiver_dir
+            .path()
+            .join("usdt.sqlite")
+            .to_string_lossy()
+            .into(),
+        format!("{}/chain", chain.url),
+        format!("{}/bundler", chain.url),
+    )
+    .unwrap();
+    let binding = UsdtPaymentProofBinding {
+        payer: "8jsf5bm1ck3r7sn6pfx4q9mgqq5xn8fi6sizw6pxgjc8zs1bt4io".into(),
+        payee: "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy".into(),
+        payment_app_id: "example".into(),
+        payment_request_id: "b7f9c2a1-6d43-4b0e-a8d4-0fe2c712ab33".into(),
+        payment_reference: "invoice-1".into(),
+        payment_endpoint_identifier: "usdt-arbitrum-address".into(),
+        period_starts_at: String::new(),
+        period_ends_at: String::new(),
+        conversion_quote_id: String::new(),
+    };
+    let quote = sender
+        .quote_transfer(RECIPIENT.into(), 50_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    assert!(sender
+        .create_payment_proof(quote.id.clone(), binding.clone(), TEST_PHRASE.into(), None)
+        .await
+        .is_err());
+    sender
+        .send(quote.id.clone(), TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    assert!(sender
+        .create_payment_proof(quote.id.clone(), binding.clone(), TEST_PHRASE.into(), None)
+        .await
+        .unwrap()
+        .is_none());
+    chain.state.lock().unwrap().mined = true;
+    sender
+        .check_recent_execution(quote.id.clone())
+        .await
+        .unwrap();
+    let proof = sender
+        .create_payment_proof(quote.id.clone(), binding.clone(), TEST_PHRASE.into(), None)
+        .await
+        .unwrap()
+        .unwrap();
+    let recreated = sender
+        .create_payment_proof(quote.id.clone(), binding.clone(), TEST_PHRASE.into(), None)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(proof.signature, recreated.signature);
+    chain.state.lock().unwrap().hide_receipts = true;
+    assert!(receiver
+        .verify_payment_proof(binding.clone(), proof.clone())
+        .await
+        .unwrap()
+        .is_none());
+    chain.state.lock().unwrap().hide_receipts = false;
+    let verified = receiver
+        .verify_payment_proof(binding.clone(), proof.clone())
+        .await
+        .unwrap()
+        .unwrap();
+    let hash = format!("{:#x}", B256::repeat_byte(7));
+    assert_eq!(verified.payment_id, format!("42161:{hash}:0"));
+    assert_eq!(verified.transfer_id, format!("{hash}:0"));
+    assert_eq!(verified.amount, 50_000);
+    assert_eq!(verified.sender, sender.receive_address());
+    // The proxy retains original receipt positions even when unrelated logs are removed.
+    let mut receipt = chain.state.lock().unwrap().respond(&serde_json::json!({
+        "method": "eth_getTransactionReceipt", "params": [hash]
+    }))["result"]
+        .clone();
+    for (index, log) in receipt["logs"]
+        .as_array_mut()
+        .unwrap()
+        .iter_mut()
+        .enumerate()
+    {
+        log["receiptLogIndex"] = serde_json::json!((index + 3).to_string());
+        log["logIndex"] = serde_json::json!(format!("0x{:x}", index + 42));
+    }
+    chain.state.lock().unwrap().receipt_response = Some(receipt.clone());
+    let indexed_proof = sender
+        .create_payment_proof(quote.id, binding.clone(), TEST_PHRASE.into(), None)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(indexed_proof.receipt_log_index, "3");
+    let indexed_payment = receiver
+        .verify_payment_proof(binding.clone(), indexed_proof.clone())
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(indexed_payment.payment_id, format!("42161:{hash}:3"));
+    assert_eq!(indexed_payment.transfer_id, format!("{hash}:42"));
+    for mutation in ["missing_position", "duplicate_position", "failed", "reorg"] {
+        let mut invalid = receipt.clone();
+        match mutation {
+            "missing_position" => {
+                invalid["logs"][0]
+                    .as_object_mut()
+                    .unwrap()
+                    .remove("receiptLogIndex");
+            }
+            "duplicate_position" => {
+                invalid["logs"][1]["receiptLogIndex"] =
+                    invalid["logs"][0]["receiptLogIndex"].clone()
+            }
+            "failed" => invalid["status"] = serde_json::json!("0x0"),
+            "reorg" => invalid["blockHash"] = serde_json::json!(B256::repeat_byte(99)),
+            _ => unreachable!(),
+        }
+        chain.state.lock().unwrap().receipt_response = Some(invalid);
+        assert!(
+            receiver
+                .verify_payment_proof(binding.clone(), indexed_proof.clone())
+                .await
+                .is_err(),
+            "{mutation}"
+        );
+    }
+    chain.state.lock().unwrap().receipt_response = None;
+    let mut other_request = binding.clone();
+    other_request.payment_reference = "other-invoice".into();
+    assert!(receiver
+        .verify_payment_proof(other_request, proof.clone())
+        .await
+        .is_err());
+    assert!(sender
+        .verify_payment_proof(binding.clone(), proof.clone())
+        .await
+        .is_err());
+    let logs = chain.state.lock().unwrap().event_logs();
+    // Verification supports an ordinary ERC-20 transfer, without an EntryPoint operation.
+    chain.state.lock().unwrap().receipt_logs = Some(vec![logs[0].clone()]);
+    assert!(receiver
+        .verify_payment_proof(binding.clone(), proof.clone())
+        .await
+        .unwrap()
+        .is_some());
+    let mut wrong_token = logs[0].clone();
+    wrong_token["address"] = serde_json::json!(account::DELEGATE);
+    chain.state.lock().unwrap().receipt_logs = Some(vec![wrong_token]);
+    assert!(receiver
+        .verify_payment_proof(binding.clone(), proof.clone())
+        .await
+        .is_err());
+    let mut wrong_recipient = logs[0].clone();
+    let event = transaction::Erc20::Transfer {
+        from: sender.address,
+        to: account::DELEGATE,
+        value: U256::from(50_000),
+    }
+    .encode_log_data();
+    wrong_recipient["topics"] = serde_json::json!(event.topics());
+    wrong_recipient["data"] = serde_json::json!(event.data);
+    chain.state.lock().unwrap().receipt_logs = Some(vec![wrong_recipient]);
+    assert!(receiver
+        .verify_payment_proof(binding.clone(), proof.clone())
+        .await
+        .is_err());
+    chain.state.lock().unwrap().receipt_logs = Some(vec![logs[0].clone()]);
+    let mut wrong_index = proof.clone();
+    wrong_index.receipt_log_index = "1".into();
+    assert!(receiver
+        .verify_payment_proof(binding.clone(), wrong_index)
+        .await
+        .is_err());
+    let mut wrong_chain = proof.clone();
+    wrong_chain.chain_id = "1".into();
+    assert!(receiver
+        .verify_payment_proof(binding, wrong_chain)
+        .await
+        .is_err());
+}
+
 struct MockChain {
     url: String,
     state: std::sync::Arc<std::sync::Mutex<ChainState>>,
@@ -759,14 +948,17 @@ impl ChainState {
                 {
                     return json!({"jsonrpc":"2.0","id":1,"result":null});
                 }
-                let logs = self.receipt_logs.clone().unwrap_or_else(|| {
+                let mut logs = self.receipt_logs.clone().unwrap_or_else(|| {
                     if body["params"][0] == json!(alloy_primitives::B256::repeat_byte(7)) {
                         self.event_logs()
                     } else {
                         vec![]
                     }
                 });
-                json!({"transactionHash":body["params"][0],"blockHash":self.block_hash(20000),"blockNumber":"0x4e20","logs":logs,"padding":" ".repeat(self.receipt_padding)})
+                for (index, log) in logs.iter_mut().enumerate() {
+                    log["receiptLogIndex"] = json!(index.to_string());
+                }
+                json!({"status":"0x1","transactionHash":body["params"][0],"blockHash":self.block_hash(20000),"blockNumber":"0x4e20","logs":logs,"padding":" ".repeat(self.receipt_padding)})
             }
             "eth_getTransactionByHash" => {
                 let op = &self.operations[0];
@@ -863,6 +1055,9 @@ impl ChainState {
             }
             .encode_log_data();
             logs.push(json!({"address":types::TOKEN,"topics":event.topics(),"data":event.data,"transactionHash":B256::repeat_byte(7),"blockNumber":"0x4e20","logIndex":format!("0x{:x}", logs.len())}));
+        }
+        for log in &mut logs {
+            log["blockHash"] = json!(self.block_hash(20000));
         }
         logs
     }

@@ -6,6 +6,7 @@ mod history;
 mod keys;
 mod paymaster;
 mod payment_request;
+mod proof;
 mod rpc;
 mod store;
 mod transaction;
@@ -18,6 +19,7 @@ pub use deposits::*;
 pub use errors::UsdtError;
 pub use keys::usdt_address;
 pub use payment_request::usdt_parse_payment_request;
+pub use proof::{UsdtPaymentProof, UsdtPaymentProofBinding, UsdtVerifiedPayment};
 pub use types::*;
 pub use wallet::UsdtWallet;
 

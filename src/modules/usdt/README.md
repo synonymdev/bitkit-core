@@ -101,3 +101,11 @@ History returns at most 50 rows per page. Start with `offset = 0`, then use `nex
 Refunds require a user-approved address on the source network and provider eligibility; an acknowledgment means queued, not paid. Never infer a refund address from the original sender, which may be an exchange hot wallet. Unconverted Tron refunds require provider assistance. Missing optional metadata must not hide pending deposits. Address recovery depends on the same Orchestra partner account and immutable account-derived reference; provider availability and address control remain trust dependencies.
 
 Use a matching [bitkit-usdt-service](https://github.com/synonymdev/bitkit-usdt-service) deployment with `ORCHESTRA_API_KEY` and `ORCHESTRA_DEPOSIT_NETWORKS`. Enable each source only after funded delivery and provider recovery acceptance. See [Orchestra deposit addresses](https://docs.flashnet.xyz/orchestra/deposit-addresses).
+
+## Request-bound payment proofs
+
+`create_payment_proof` signs an executed direct Arbitrum payment using Paykit's `erc20-transfer-eip712` profile. The binding identifies the authenticated payer and payee, the app owning the accepted endpoint, request, reference, billing period and selected conversion quote. Persist this immutable binding and the quote/payment ID before `send`. Retry proof creation and delivery independently after execution; neither action sends funds. A pending payment returns `None`.
+
+`verify_payment_proof` checks the exact receipt log, pinned chain/token/recipient, canonical successful receipt and payer signature. Ordinary ERC-20 senders are supported. The service must retain receipt status and each retained log's original `receiptLogIndex` before filtering. The returned `payment_id` must be claimed at most once across requests and billing periods; `transfer_id` remains the activity identity. Applications validate authenticated request terms, endpoint app ownership, quoted amounts and deadlines against the returned amount and block timestamp.
+
+The proof binding and interoperability vectors follow [Paykit rc59](https://github.com/pubky/paykit-rs/blob/v0.1.0-rc59/specs/erc20-payment-proofs.md). Receipt positions are canonical decimal strings on the wire.
