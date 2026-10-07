@@ -54,6 +54,10 @@ USDT0 bridges use the pinned OFT and TransactionValueHelper with zero account ET
 
 LayerZero status must match the operation GUID/pathway before confirmation; blocked delivery remains visible and never triggers an automatic paid retry.
 
+Orchestra delivery and refund attribution trust the configured gateway and provider. Core bounds reported delivery by the sent principal. A reported refund also requires a successful canonical Arbitrum receipt with a matching USDT transfer and at least that amount in net credit to the wallet. Self-transfers and refund transactions already assigned to another payment cannot settle a refund. One refund transaction can settle at most one payment, even if a provider batches several refunds.
+
+These checks prove receipt of funds, not which Orchestra order caused it. The current gateway contract does not pin a refund sender; an unrelated incoming payment cannot be distinguished from a refund without trusting the order association. `BridgeRefunded` retains that association across restart and receipt pruning. Funding and refund reorgs reopen the affected payment within the history revisit window.
+
 Bridge history preserves the saved receiving amount or recovers the signed `minAmountLD` from calldata until a matching `OFTSent` event supplies the source-confirmed amount. The fallback is a minimum receiving amount, not proof of destination delivery.
 
 RPC providers see queried addresses. Delivery checks use `bitkit_getBridgeMessages([sourceTransactionHash])` on the existing chain-service endpoint. The service queries LayerZero Scan without forwarding device headers, projects only message identity/pathway/status fields, and applies its shared request and response limits. LayerZero sees the service IP and the transaction hash; the service still sees the requesting device. Manually opening LayerZero Scan from transaction details connects the browser directly. No delivery requests are made for Arbitrum-only transfers.

@@ -4418,6 +4418,15 @@ async fn orchestra_funding_keeps_delivery_identity_through_restart_and_history()
         "quote-ticket"
     );
     drop(wallet);
+    for amount in [0, 1_000_001] {
+        chain.state.lock().unwrap().orchestra_delivery = json!({"status":"completed", "received_amount":amount.to_string(),"destination_tx":"destination-transaction","refund_tx":null,"refund_amount":null});
+        let wallet = chain.wallet_with_bridges(&dir, true);
+        wallet.refresh_transfers().await.unwrap();
+        let transfer = wallet.store.transfer(&sent.id).unwrap().unwrap();
+        assert_eq!(transfer.status, UsdtTransferStatus::Bridging);
+        assert_eq!(transfer.received_amount, 950_000);
+        assert!(transfer.orchestra.unwrap().destination_tx.is_none());
+    }
     chain.state.lock().unwrap().orchestra_delivery = json!({"status":"completed", "received_amount":"949000","destination_tx":"destination-transaction","refund_tx":null,"refund_amount":null});
     let wallet = chain.wallet_with_bridges(&dir, true);
     let delivered = wallet
@@ -4459,6 +4468,13 @@ fn outbound_recipients_follow_the_selected_chain() {
             usdt_validate_recipient(value.into(), network).unwrap(),
             value
         );
+    }
+    for address in [types::OFT, types::BRIDGE_HELPER] {
+        assert!(matches!(
+            usdt_validate_recipient(address.to_string(), UsdtDestination::Arbitrum),
+            Err(UsdtError::InvalidAddress)
+        ));
+        assert!(usdt_validate_recipient(address.to_string(), UsdtDestination::Base).is_ok());
     }
     for (value, network) in [
         (RECIPIENT, UsdtDestination::Tron),
@@ -4506,13 +4522,37 @@ async fn orchestra_refunds_require_a_matching_confirmed_usdt_receipt() {
     let receipt = json!({"transactionHash":refund_hash,"blockHash":chain.state.lock().unwrap().block_hash(21000),"blockNumber":"0x5208","status":"0x1","logs":[{"address":types::TOKEN,"topics":event.topics(),"data":event.data}]});
     chain.state.lock().unwrap().tip = 21002;
     chain.state.lock().unwrap().orchestra_delivery = json!({"status":"refunded", "received_amount":null,"destination_tx":null,"refund_tx":refund_hash,"refund_amount":"900000"});
+    let owner = wallet.address;
     drop(wallet);
     // Provider reports cannot substitute for a successful canonical refund to this wallet.
-    for valid in [false, true] {
+    for case in [
+        "reverted",
+        "wrong_token",
+        "self_transfer",
+        "round_trip",
+        "valid",
+    ] {
         let mut response = receipt.clone();
-        if !valid {
-            response["status"] = json!("0x0");
+        match case {
+            "reverted" => response["status"] = json!("0x0"),
+            "wrong_token" => response["logs"][0]["address"] = json!(Address::repeat_byte(3)),
+            "self_transfer" => {
+                response["logs"][0]["topics"][1] = json!(owner.into_word());
+            }
+            "round_trip" => {
+                let outgoing = transaction::Erc20::Transfer {
+                    from: owner,
+                    to: Address::repeat_byte(2),
+                    value: U256::from(900_000),
+                }
+                .encode_log_data();
+                response["logs"].as_array_mut().unwrap().push(json!({
+                    "address": types::TOKEN, "topics": outgoing.topics(), "data": outgoing.data
+                }));
+            }
+            _ => {}
         }
+        let valid = case == "valid";
         chain.state.lock().unwrap().receipt_response = Some(response);
         let wallet = chain.wallet_with_bridges(&directory, true);
         let result = wallet
@@ -4581,4 +4621,109 @@ async fn orchestra_refunds_require_a_matching_confirmed_usdt_receipt() {
         .unwrap()
         .is_empty());
     assert!(wallet.store.orchestra_plan(&quote.id).is_err());
+}
+
+#[tokio::test]
+async fn orchestra_refund_receipts_are_exclusive_across_restart_and_pruning() {
+    use alloy_primitives::{B256, U256};
+    let chain = MockChain::start().await;
+    let directory = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet_with_bridges(&directory, true);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Base)
+        .await
+        .unwrap();
+    let mut plan = wallet.store.quote(&quote.id).unwrap().plan;
+    let key = keys::derive_key(TEST_PHRASE.to_owned().into(), None).unwrap();
+    let mut payments = Vec::new();
+    for nonce in 0..2 {
+        plan.operation.nonce = U256::from(nonce);
+        let (hash, raw) = plan.sign(&key).unwrap();
+        let transfer = UsdtTransfer {
+            id: format!("payment-{nonce}"),
+            tx_hash: Some(B256::repeat_byte(nonce + 1).to_string()),
+            user_operation_hash: Some(hash.to_string()),
+            bridge_guid: None,
+            orchestra: Some(plan.orchestra.as_ref().unwrap().transfer()),
+            recipient: RECIPIENT.into(),
+            destination: UsdtDestination::Base,
+            amount: 1_000_000,
+            received_amount: 950_000,
+            fee: Some(10_000),
+            is_incoming: false,
+            status: UsdtTransferStatus::Bridging,
+            timestamp: wallet::now(),
+        };
+        wallet.store.record_signed(&transfer, &raw).unwrap();
+        wallet
+            .store
+            .settle_transfer(&transfer, 20000, &B256::repeat_byte(1).to_string())
+            .unwrap();
+        let mut refunded = transfer;
+        refunded.status = UsdtTransferStatus::BridgeRefunded;
+        refunded.received_amount = 0;
+        let bridge = refunded.orchestra.as_mut().unwrap();
+        bridge.refund_tx = Some(B256::repeat_byte(0xab).to_string());
+        bridge.refund_amount = Some(900_000);
+        payments.push(refunded);
+    }
+    let block = (21000, B256::repeat_byte(2));
+    assert!(wallet
+        .store
+        .update_delivery(&payments[0], Some(block))
+        .unwrap());
+    // Retrying the same association is idempotent, including transaction-hash casing.
+    payments[0].orchestra.as_mut().unwrap().refund_tx = Some(format!("0x{}", "AB".repeat(32)));
+    assert!(wallet
+        .store
+        .update_delivery(&payments[0], Some(block))
+        .unwrap());
+    assert!(!wallet
+        .store
+        .update_delivery(&payments[1], Some(block))
+        .unwrap());
+    assert_eq!(
+        wallet
+            .store
+            .transfer(&payments[1].id)
+            .unwrap()
+            .unwrap()
+            .status,
+        UsdtTransferStatus::Bridging
+    );
+    // An orphaned refund releases its claim without reopening source funding.
+    wallet
+        .store
+        .reconcile_block(block.0, &B256::repeat_byte(3).to_string())
+        .unwrap();
+    assert!(wallet
+        .store
+        .update_delivery(&payments[1], Some((block.0, B256::repeat_byte(3))))
+        .unwrap());
+    wallet.store.complete_history(26000).unwrap();
+    drop(wallet);
+    let wallet = chain.wallet_with_bridges(&directory, true);
+    assert!(wallet.store.orchestra_plan(&payments[1].id).is_err());
+    assert!(!wallet
+        .store
+        .update_delivery(&payments[0], Some(block))
+        .unwrap());
+    assert_eq!(
+        wallet
+            .store
+            .transfer(&payments[0].id)
+            .unwrap()
+            .unwrap()
+            .status,
+        UsdtTransferStatus::Bridging
+    );
+    assert_eq!(
+        wallet
+            .store
+            .transfer(&payments[1].id)
+            .unwrap()
+            .unwrap()
+            .status,
+        UsdtTransferStatus::BridgeRefunded
+    );
 }

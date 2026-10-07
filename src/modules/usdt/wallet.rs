@@ -47,7 +47,7 @@ pub struct UsdtWallet {
 #[uniffi::export(async_runtime = "tokio")]
 impl UsdtWallet {
     /// Creates the sole owner of this wallet's database; reuse it for all calls until it is dropped.
-    #[uniffi::constructor]
+    #[uniffi::constructor(default(bridge_url = None))]
     pub fn new(
         address: String,
         storage_path: String,
@@ -106,10 +106,7 @@ impl UsdtWallet {
             return Err(UsdtError::InvalidAmount);
         }
         let recipient = super::orchestra::validate_recipient(recipient.trim(), destination)?;
-        if recipient == self.receive_address()
-            || (destination == UsdtDestination::Arbitrum
-                && [OFT, BRIDGE_HELPER].contains(&parse_address(&recipient)?))
-        {
+        if recipient == self.receive_address() {
             return Err(UsdtError::InvalidAddress);
         }
         self.store.require_no_pending()?;
@@ -627,6 +624,13 @@ impl UsdtWallet {
             }
             match result {
                 Ok(Ok((updated, refund_block))) => {
+                    if updated.status == previous.status
+                        && updated.orchestra == previous.orchestra
+                        && updated.received_amount == previous.received_amount
+                        && refund_block.is_none()
+                    {
+                        continue;
+                    }
                     let _guard = self.operation.lock().await;
                     let Some(mut current) = self.store.transfer(&previous.id)? else {
                         continue;
@@ -643,7 +647,13 @@ impl UsdtWallet {
                         current.status = updated.status;
                         current.orchestra = updated.orchestra;
                         current.received_amount = updated.received_amount;
-                        self.store.update_delivery(&current, refund_block)?;
+                        if !self.store.update_delivery(&current, refund_block)? {
+                            self.bridge_retry_after
+                                .lock()
+                                .await
+                                .insert(previous.id.clone(), Instant::now() + BRIDGE_RETRY_DELAY);
+                            log::warn!("USDT refund receipt already assigned to another payment");
+                        }
                     }
                 }
                 _ => log::warn!(
@@ -691,7 +701,7 @@ impl UsdtWallet {
             "completed" => {
                 let amount = delivery
                     .received_amount
-                    .filter(|amount| *amount > 0)
+                    .filter(|amount| *amount > 0 && *amount <= transfer.amount)
                     .ok_or(UsdtError::InvalidResponse)?;
                 let hash = delivery
                     .destination_tx
@@ -733,19 +743,39 @@ impl UsdtWallet {
         if serde_json::from_value::<U256>(receipt["status"].clone())? != U256::from(1) {
             return Err(UsdtError::InvalidResponse);
         }
+        let mut incoming = U256::ZERO;
+        let mut outgoing = U256::ZERO;
+        let mut matching_transfer = false;
         for log in receipt["logs"]
             .as_array()
             .ok_or(UsdtError::InvalidResponse)?
         {
             if serde_json::from_value::<Address>(log["address"].clone())? == TOKEN {
                 if let Ok(event) = Erc20::Transfer::decode_log_data(&event_data(log)?) {
-                    if event.to == self.address && event.value == U256::from(amount) {
-                        return Ok((number, block.hash));
+                    if event.to == self.address {
+                        incoming = incoming
+                            .checked_add(event.value)
+                            .ok_or(UsdtError::InvalidResponse)?;
+                        matching_transfer |=
+                            event.from != self.address && event.value == U256::from(amount);
+                    }
+                    if event.from == self.address {
+                        outgoing = outgoing
+                            .checked_add(event.value)
+                            .ok_or(UsdtError::InvalidResponse)?;
                     }
                 }
             }
         }
-        Err(UsdtError::InvalidResponse)
+        if matching_transfer
+            && incoming
+                .checked_sub(outgoing)
+                .is_some_and(|net| net >= U256::from(amount))
+        {
+            Ok((number, block.hash))
+        } else {
+            Err(UsdtError::InvalidResponse)
+        }
     }
 
     pub(super) async fn block_number(&self) -> Result<u64, UsdtError> {

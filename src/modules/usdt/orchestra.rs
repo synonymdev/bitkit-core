@@ -194,6 +194,8 @@ pub(super) fn validate_recipient(
         _ => {
             let address = parse_address(value)?;
             if destination.token() == Some(address)
+                || (destination == UsdtDestination::Arbitrum
+                    && [super::types::OFT, super::types::BRIDGE_HELPER].contains(&address))
                 || [
                     super::account::ENTRY_POINT,
                     super::account::DELEGATE,

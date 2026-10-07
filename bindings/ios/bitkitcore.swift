@@ -2878,7 +2878,7 @@ open class UsdtWallet: UsdtWalletProtocol, @unchecked Sendable {
     /**
      * Creates the sole owner of this wallet's database; reuse it for all calls until it is dropped.
      */
-public convenience init(address: String, storagePath: String, rpcUrl: String, bundlerUrl: String, bridgeUrl: String?)throws  {
+public convenience init(address: String, storagePath: String, rpcUrl: String, bundlerUrl: String, bridgeUrl: String? = nil)throws  {
     let pointer =
         try rustCallWithError(FfiConverterTypeUsdtError_lift) {
     uniffi_bitkitcore_fn_constructor_usdtwallet_new(
@@ -31796,7 +31796,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_constructor_usdtdepositclient_new() != 44626) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_constructor_usdtwallet_new() != 32397) {
+    if (uniffi_bitkitcore_checksum_constructor_usdtwallet_new() != 14616) {
         return InitializationResult.apiChecksumMismatch
     }
 

@@ -136,14 +136,29 @@ impl Store {
         Ok(())
     }
 
+    /// Returns false when the refund transaction already belongs to another payment.
     pub fn update_delivery(
         &self,
         transfer: &UsdtTransfer,
         refund_block: Option<(u64, B256)>,
-    ) -> Result<(), UsdtError> {
+    ) -> Result<bool, UsdtError> {
         let mut connection = self.connection()?;
-        let tx = connection.transaction()?;
+        let tx = connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
         if let Some(block) = refund_block {
+            let refund = transfer
+                .orchestra
+                .as_ref()
+                .and_then(|bridge| bridge.refund_tx.as_deref())
+                .ok_or(UsdtError::InvalidResponse)?;
+            // Keep the claim in transfer history after its reorg evidence is pruned.
+            let used: bool = tx.query_row(
+                "SELECT EXISTS(SELECT 1 FROM usdt_transfers WHERE id!=?1 AND lower(json_extract(data, '$.orchestra.refund_tx'))=lower(?2))",
+                params![transfer.id, refund],
+                |row| row.get(0),
+            )?;
+            if used {
+                return Ok(false);
+            }
             tx.execute(
                 "UPDATE usdt_transfers SET raw=json_set(raw, '$.refund_block', json(?1)) WHERE id=?2",
                 params![serde_json::to_string(&block)?, transfer.id],
@@ -151,7 +166,7 @@ impl Store {
         }
         write_transfer(&tx, transfer)?;
         tx.commit()?;
-        Ok(())
+        Ok(true)
     }
 
     pub fn settle_transfer(
