@@ -2564,10 +2564,12 @@ public func FfiConverterTypeUrDecoder_lower(_ value: UrDecoder) -> UnsafeMutable
 
 
 /**
- * Saves recovery data before a signed payment can be submitted, including automatic retries.
+ * Saves recovery data before a signed payment can be submitted.
  * Implementations must encrypt the snapshot, persist it remotely with its application payment
- * associations, and return only after acknowledgement. Do not log the snapshot or call mutating
- * wallet methods from this callback. A failed backup leaves the payment pending locally.
+ * associations, and return only after acknowledgement. Automatic retries reuse an unchanged
+ * acknowledged snapshot within the same wallet session. Applications must separately back up
+ * association-only changes. Do not log the snapshot or call mutating wallet methods from this
+ * callback. A failed backup leaves the payment pending locally.
  */
 public protocol UsdtBackup: AnyObject, Sendable {
     
@@ -2575,10 +2577,12 @@ public protocol UsdtBackup: AnyObject, Sendable {
     
 }
 /**
- * Saves recovery data before a signed payment can be submitted, including automatic retries.
+ * Saves recovery data before a signed payment can be submitted.
  * Implementations must encrypt the snapshot, persist it remotely with its application payment
- * associations, and return only after acknowledgement. Do not log the snapshot or call mutating
- * wallet methods from this callback. A failed backup leaves the payment pending locally.
+ * associations, and return only after acknowledgement. Automatic retries reuse an unchanged
+ * acknowledged snapshot within the same wallet session. Applications must separately back up
+ * association-only changes. Do not log the snapshot or call mutating wallet methods from this
+ * callback. A failed backup leaves the payment pending locally.
  */
 open class UsdtBackupImpl: UsdtBackup, @unchecked Sendable {
     fileprivate let pointer: UnsafeMutableRawPointer!

@@ -72,6 +72,7 @@ async fn submission_and_recovery_wait_for_remote_backup() {
     let original = serde_json::to_value(&chain.state.lock().unwrap().operations[0]).unwrap();
     backup.unavailable.store(true, Ordering::SeqCst);
     wallet.refresh_transfers().await.unwrap();
+    assert_eq!(chain.state.lock().unwrap().operations.len(), 2);
     assert_eq!(backup.writes.load(Ordering::SeqCst), 1);
     drop(wallet);
     let restored_directory = tempfile::tempdir().unwrap();

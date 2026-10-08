@@ -4696,16 +4696,18 @@ async fn orchestra_refund_receipts_are_exclusive_across_restart_and_pruning() {
         .store
         .update_delivery(&payments[0], Some(block))
         .unwrap());
-    // Retrying the same association is idempotent, including transaction-hash casing.
-    payments[0].orchestra.as_mut().unwrap().refund_tx = Some(format!("0x{}", "AB".repeat(32)));
-    assert!(wallet
-        .store
-        .update_delivery(&payments[0], Some(block))
-        .unwrap());
-    assert!(!wallet
-        .store
-        .update_delivery(&payments[1], Some(block))
-        .unwrap());
+    // Receipt identity is independent of hash casing and the optional hex prefix.
+    for refund in [format!("0x{}", "AB".repeat(32)), "AB".repeat(32)] {
+        payments[0].orchestra.as_mut().unwrap().refund_tx = Some(refund);
+        assert!(wallet
+            .store
+            .update_delivery(&payments[0], Some(block))
+            .unwrap());
+        assert!(!wallet
+            .store
+            .update_delivery(&payments[1], Some(block))
+            .unwrap());
+    }
     assert_eq!(
         wallet
             .store
@@ -4720,6 +4722,7 @@ async fn orchestra_refund_receipts_are_exclusive_across_restart_and_pruning() {
         .store
         .reconcile_block(block.0, &B256::repeat_byte(3).to_string())
         .unwrap();
+    payments[1].orchestra.as_mut().unwrap().refund_tx = Some("AB".repeat(32));
     assert!(wallet
         .store
         .update_delivery(&payments[1], Some((block.0, B256::repeat_byte(3))))

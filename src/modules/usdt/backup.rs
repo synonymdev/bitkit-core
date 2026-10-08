@@ -7,10 +7,12 @@ use rusqlite::{params, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-/// Saves recovery data before a signed payment can be submitted, including automatic retries.
+/// Saves recovery data before a signed payment can be submitted.
 /// Implementations must encrypt the snapshot, persist it remotely with its application payment
-/// associations, and return only after acknowledgement. Do not log the snapshot or call mutating
-/// wallet methods from this callback. A failed backup leaves the payment pending locally.
+/// associations, and return only after acknowledgement. Automatic retries reuse an unchanged
+/// acknowledged snapshot within the same wallet session. Applications must separately back up
+/// association-only changes. Do not log the snapshot or call mutating wallet methods from this
+/// callback. A failed backup leaves the payment pending locally.
 #[uniffi::export(with_foreign)]
 #[async_trait::async_trait]
 pub trait UsdtBackup: Send + Sync {

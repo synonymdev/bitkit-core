@@ -443,9 +443,11 @@ pub(super) fn refund_claimed(
     id: &str,
     refund: &str,
 ) -> Result<bool, UsdtError> {
+    let refund = refund.to_ascii_lowercase();
+    let refund = refund.strip_prefix("0x").unwrap_or(&refund);
     // Keep the claim in transfer history after its reorg evidence is pruned.
     Ok(connection.query_row(
-        "SELECT EXISTS(SELECT 1 FROM usdt_transfers WHERE id!=?1 AND lower(json_extract(data, '$.orchestra.refund_tx'))=lower(?2))",
+        "SELECT EXISTS(SELECT 1 FROM usdt_transfers WHERE id!=?1 AND lower(json_extract(data, '$.orchestra.refund_tx')) IN (?2, '0x' || ?2))",
         params![id, refund],
         |row| row.get(0),
     )?)
