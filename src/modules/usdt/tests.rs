@@ -4781,4 +4781,30 @@ async fn orchestra_refund_receipts_are_exclusive_across_restart_and_pruning() {
         ));
         assert!(empty.history().unwrap().is_empty());
     }
+
+    let mut discovered: UsdtTransfer =
+        serde_json::from_value(duplicate["transfer"].clone()).unwrap();
+    discovered.id = discovered.user_operation_hash.clone().unwrap();
+    discovered.recipient = plan.orchestra.as_ref().unwrap().funding_address.clone();
+    discovered.destination = UsdtDestination::Arbitrum;
+    discovered.orchestra = None;
+    discovered.status = UsdtTransferStatus::Confirmed;
+    discovered.received_amount = discovered.amount;
+    wallet
+        .store
+        .save_history_receipt(
+            &[discovered],
+            &B256::repeat_byte(4).to_string(),
+            27000,
+            &B256::repeat_byte(5).to_string(),
+            true,
+        )
+        .unwrap();
+    let snapshot = wallet.export_backup().unwrap();
+    backup["transfers"] = json!([duplicate]);
+    assert!(matches!(
+        wallet.restore_backup(backup.to_string()).await,
+        Err(UsdtError::InvalidBackup)
+    ));
+    assert_eq!(wallet.export_backup().unwrap(), snapshot);
 }
