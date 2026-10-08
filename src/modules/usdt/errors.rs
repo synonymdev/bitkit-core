@@ -68,3 +68,9 @@ impl From<serde_json::Error> for UsdtError {
         Self::InvalidResponse
     }
 }
+
+impl From<uniffi::UnexpectedUniFFICallbackError> for UsdtError {
+    fn from(_: uniffi::UnexpectedUniFFICallbackError) -> Self {
+        Self::BackupUnavailable
+    }
+}

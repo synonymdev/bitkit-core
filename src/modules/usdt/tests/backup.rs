@@ -1,12 +1,14 @@
 use super::*;
+use serde_json::json;
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
+    atomic::{AtomicBool, AtomicUsize, Ordering},
     Arc, Mutex,
 };
 
 #[derive(Default)]
 struct RemoteBackup {
     unavailable: AtomicBool,
+    writes: AtomicUsize,
     snapshot: Mutex<Option<String>>,
 }
 
@@ -17,6 +19,7 @@ impl UsdtBackup for RemoteBackup {
             return Err(UsdtError::BackupUnavailable);
         }
         *self.snapshot.lock().unwrap() = Some(snapshot);
+        self.writes.fetch_add(1, Ordering::SeqCst);
         Ok(())
     }
 }
@@ -67,9 +70,12 @@ async fn submission_and_recovery_wait_for_remote_backup() {
     let snapshot = backup.snapshot.lock().unwrap().clone().unwrap();
     assert!(!snapshot.contains(TEST_PHRASE));
     let original = serde_json::to_value(&chain.state.lock().unwrap().operations[0]).unwrap();
+    backup.unavailable.store(true, Ordering::SeqCst);
+    wallet.refresh_transfers().await.unwrap();
+    assert_eq!(backup.writes.load(Ordering::SeqCst), 1);
     drop(wallet);
     let restored_directory = tempfile::tempdir().unwrap();
-    let restored = backed_up_wallet(&chain, &restored_directory, backup);
+    let restored = backed_up_wallet(&chain, &restored_directory, backup.clone());
     restored.restore_backup(snapshot.clone()).await.unwrap();
     restored.restore_backup(snapshot).await.unwrap();
     assert_eq!(restored.history().unwrap().len(), 1);
@@ -79,15 +85,88 @@ async fn submission_and_recovery_wait_for_remote_backup() {
             .await,
         Err(UsdtError::PendingTransfer)
     ));
+    let submitted = chain.state.lock().unwrap().operations.len();
+    assert!(matches!(
+        restored.refresh_transfers().await,
+        Err(UsdtError::BackupUnavailable)
+    ));
+    assert_eq!(chain.state.lock().unwrap().operations.len(), submitted);
+    backup.unavailable.store(false, Ordering::SeqCst);
     restored.refresh_transfers().await.unwrap();
+    assert_eq!(backup.writes.load(Ordering::SeqCst), 2);
     assert_eq!(
-        serde_json::to_value(&chain.state.lock().unwrap().operations[1]).unwrap(),
+        serde_json::to_value(chain.state.lock().unwrap().operations.last().unwrap()).unwrap(),
         original
     );
     chain.state.lock().unwrap().mined = true;
     let history = restored.refresh_transfers().await.unwrap();
     assert_eq!(history[0].id, quote.id);
     assert_eq!(history[0].status, UsdtTransferStatus::Confirmed);
+    chain.state.lock().unwrap().nonce = 1;
+    let next = restored
+        .quote_transfer(RECIPIENT.into(), 2_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    backup.unavailable.store(true, Ordering::SeqCst);
+    let submitted = chain.state.lock().unwrap().operations.len();
+    assert!(matches!(
+        restored.send(next.id, TEST_PHRASE.into(), None).await,
+        Err(UsdtError::BackupUnavailable)
+    ));
+    assert_eq!(chain.state.lock().unwrap().operations.len(), submitted);
+}
+
+#[test]
+fn foreign_backup_errors_are_recoverable() {
+    let result = <Result<(), UsdtError> as uniffi::LiftReturn<crate::UniFfiTag>>::handle_callback_unexpected_error(
+        uniffi::UnexpectedUniFFICallbackError { reason: "remote storage unavailable".into() },
+    );
+    assert!(matches!(result, Err(UsdtError::BackupUnavailable)));
+}
+
+#[tokio::test]
+async fn restore_matches_operation_hashes_independently_of_hex_case() {
+    let chain = MockChain::start().await;
+    let directory = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&directory);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    wallet
+        .send(quote.id, TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    let snapshot = wallet.export_backup().unwrap();
+    let mut backup: serde_json::Value = serde_json::from_str(&snapshot).unwrap();
+    let mut duplicate = backup["transfers"][0].clone();
+    let hash = duplicate["transfer"]["user_operation_hash"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    duplicate["transfer"]["user_operation_hash"] = json!(format!("0x{}", hash[2..].to_uppercase()));
+    backup["transfers"] = json!([duplicate.clone()]);
+    wallet.restore_backup(backup.to_string()).await.unwrap();
+    assert_eq!(wallet.export_backup().unwrap(), snapshot);
+    duplicate["transfer"]["id"] = json!("another-payment");
+    backup = serde_json::from_str(&snapshot).unwrap();
+    backup["transfers"]
+        .as_array_mut()
+        .unwrap()
+        .push(duplicate.clone());
+    let empty_directory = tempfile::tempdir().unwrap();
+    let empty = chain.wallet(&empty_directory);
+    assert!(matches!(
+        empty.restore_backup(backup.to_string()).await,
+        Err(UsdtError::InvalidBackup)
+    ));
+    assert!(empty.history().unwrap().is_empty());
+    backup["transfers"] = json!([duplicate]);
+    assert!(matches!(
+        wallet.restore_backup(backup.to_string()).await,
+        Err(UsdtError::InvalidBackup)
+    ));
+    assert_eq!(wallet.export_backup().unwrap(), snapshot);
 }
 
 #[tokio::test]

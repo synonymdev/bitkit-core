@@ -88,15 +88,25 @@ impl Store {
     }
 
     fn restore_backup(&self, snapshot: &str, owner: Address) -> Result<(), UsdtError> {
-        let backup: Backup =
+        let mut backup: Backup =
             serde_json::from_str(snapshot).map_err(|_| UsdtError::InvalidBackup)?;
         if backup.identity != format!("{CHAIN_ID}:{owner}") {
             return Err(UsdtError::InvalidCredentials);
         }
         let mut ids = HashSet::new();
         let mut hashes = HashSet::new();
-        for item in &backup.transfers {
-            let transfer = &item.transfer;
+        for item in &mut backup.transfers {
+            let transfer = &mut item.transfer;
+            let refund = transfer
+                .orchestra
+                .as_mut()
+                .and_then(|bridge| bridge.refund_tx.as_mut());
+            for hash in transfer.user_operation_hash.iter_mut().chain(refund) {
+                *hash = hash
+                    .parse::<B256>()
+                    .map_err(|_| UsdtError::InvalidBackup)?
+                    .to_string();
+            }
             let hash = transfer
                 .user_operation_hash
                 .as_deref()
@@ -219,6 +229,7 @@ impl Store {
                         }
                     }
                 }
+                require_refund_owner(&tx, &id, &transfer)?;
                 tx.execute(
                     "UPDATE usdt_transfers SET id=?1,data=?2,raw=COALESCE(raw,?4) WHERE id=?3",
                     params![
@@ -246,6 +257,7 @@ impl Store {
                         plan.bridge_received_amount()?
                     };
             }
+            require_refund_owner(&tx, &item.transfer.id, &item.transfer)?;
             tx.execute(
                 "INSERT INTO usdt_transfers (id,hash,data,raw,block_number,block_hash) VALUES (?1,?2,?3,?4,?5,?6)",
                 params![
@@ -263,4 +275,21 @@ impl Store {
         tx.commit()?;
         Ok(())
     }
+}
+
+fn require_refund_owner(
+    connection: &rusqlite::Connection,
+    id: &str,
+    transfer: &UsdtTransfer,
+) -> Result<(), UsdtError> {
+    if let Some(refund) = transfer
+        .orchestra
+        .as_ref()
+        .and_then(|bridge| bridge.refund_tx.as_deref())
+    {
+        if super::store::refund_claimed(connection, id, refund)? {
+            return Err(UsdtError::InvalidBackup);
+        }
+    }
+    Ok(())
 }
