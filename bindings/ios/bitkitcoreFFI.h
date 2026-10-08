@@ -398,6 +398,12 @@ typedef void (*UniffiCallbackInterfaceTrezorUiCallbackMethod1)(uint64_t, int8_t,
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_USDT_BACKUP_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_USDT_BACKUP_METHOD0
+typedef void (*UniffiCallbackInterfaceUsdtBackupMethod0)(uint64_t, RustBuffer, UniffiForeignFutureCompleteVoid _Nonnull, uint64_t, UniffiForeignFuture* _Nonnull
+    );
+
+#endif
 #ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER
 #define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER
 typedef struct UniffiVTableCallbackInterfaceBoltzEventListener {
@@ -452,6 +458,14 @@ typedef struct UniffiVTableCallbackInterfaceTrezorUiCallback {
     UniffiCallbackInterfaceTrezorUiCallbackMethod1 _Nonnull onPassphraseRequest;
     UniffiCallbackInterfaceFree _Nonnull uniffiFree;
 } UniffiVTableCallbackInterfaceTrezorUiCallback;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_USDT_BACKUP
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_USDT_BACKUP
+typedef struct UniffiVTableCallbackInterfaceUsdtBackup {
+    UniffiCallbackInterfaceUsdtBackupMethod0 _Nonnull persist;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfaceUsdtBackup;
 
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_BOLTZEVENTLISTENER
@@ -660,6 +674,26 @@ RustBuffer uniffi_bitkitcore_fn_method_urdecoder_receive(void*_Nonnull ptr, Rust
 void uniffi_bitkitcore_fn_method_urdecoder_reset(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_USDTBACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_USDTBACKUP
+void*_Nonnull uniffi_bitkitcore_fn_clone_usdtbackup(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_USDTBACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_USDTBACKUP
+void uniffi_bitkitcore_fn_free_usdtbackup(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_USDTBACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_USDTBACKUP
+void uniffi_bitkitcore_fn_init_callback_vtable_usdtbackup(const UniffiVTableCallbackInterfaceUsdtBackup* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTBACKUP_PERSIST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTBACKUP_PERSIST
+uint64_t uniffi_bitkitcore_fn_method_usdtbackup_persist(void*_Nonnull ptr, RustBuffer snapshot
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_USDTDEPOSITCLIENT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_USDTDEPOSITCLIENT
 void*_Nonnull uniffi_bitkitcore_fn_clone_usdtdepositclient(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
@@ -712,7 +746,7 @@ void uniffi_bitkitcore_fn_free_usdtwallet(void*_Nonnull ptr, RustCallStatus *_No
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CONSTRUCTOR_USDTWALLET_NEW
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CONSTRUCTOR_USDTWALLET_NEW
-void*_Nonnull uniffi_bitkitcore_fn_constructor_usdtwallet_new(RustBuffer address, RustBuffer storage_path, RustBuffer rpc_url, RustBuffer bundler_url, RustBuffer bridge_url, RustCallStatus *_Nonnull out_status
+void*_Nonnull uniffi_bitkitcore_fn_constructor_usdtwallet_new(RustBuffer address, RustBuffer storage_path, RustBuffer rpc_url, RustBuffer bundler_url, RustBuffer bridge_url, void*_Nonnull backup, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_BALANCE
@@ -728,6 +762,11 @@ uint64_t uniffi_bitkitcore_fn_method_usdtwallet_check_recent_execution(void*_Non
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_CREATE_PAYMENT_PROOF
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_CREATE_PAYMENT_PROOF
 uint64_t uniffi_bitkitcore_fn_method_usdtwallet_create_payment_proof(void*_Nonnull ptr, RustBuffer transfer_id, RustBuffer binding, RustBuffer mnemonic, RustBuffer passphrase
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_EXPORT_BACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_EXPORT_BACKUP
+RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_export_backup(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_HISTORY
@@ -758,6 +797,11 @@ RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_receive_uri(void*_Nonnull ptr,
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_REFRESH_TRANSFERS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_REFRESH_TRANSFERS
 uint64_t uniffi_bitkitcore_fn_method_usdtwallet_refresh_transfers(void*_Nonnull ptr
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RESTORE_BACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RESTORE_BACKUP
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_restore_backup(void*_Nonnull ptr, RustBuffer snapshot
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SEND
@@ -3534,6 +3578,12 @@ uint16_t uniffi_bitkitcore_checksum_method_urdecoder_reset(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTBACKUP_PERSIST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTBACKUP_PERSIST
+uint16_t uniffi_bitkitcore_checksum_method_usdtbackup_persist(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTDEPOSITCLIENT_DETAIL
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTDEPOSITCLIENT_DETAIL
 uint16_t uniffi_bitkitcore_checksum_method_usdtdepositclient_detail(void
@@ -3582,6 +3632,12 @@ uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_create_payment_proof(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_EXPORT_BACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_EXPORT_BACKUP
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_export_backup(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_HISTORY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_HISTORY
 uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_history(void
@@ -3615,6 +3671,12 @@ uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_receive_uri(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_REFRESH_TRANSFERS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_REFRESH_TRANSFERS
 uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_refresh_transfers(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RESTORE_BACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RESTORE_BACKUP
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_restore_backup(void
     
 );
 #endif

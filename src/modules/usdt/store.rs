@@ -52,7 +52,7 @@ impl Store {
         Ok(Self(Mutex::new(connection)))
     }
 
-    fn connection(&self) -> Result<MutexGuard<'_, Connection>, UsdtError> {
+    pub(super) fn connection(&self) -> Result<MutexGuard<'_, Connection>, UsdtError> {
         self.0.lock().map_err(|_| UsdtError::Storage {
             reason: "USDT storage lock unavailable".into(),
         })

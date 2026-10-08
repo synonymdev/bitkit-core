@@ -985,7 +985,7 @@ dependencies = [
 
 [[package]]
 name = "bitkitcore"
-version = "0.7.0"
+version = "0.8.0-rc2"
 dependencies = [
  "alloy-primitives",
  "alloy-rlp",
