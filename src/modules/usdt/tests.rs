@@ -4533,7 +4533,7 @@ async fn orchestra_refunds_require_a_matching_confirmed_usdt_receipt() {
         state.tip += 3;
     }
     wallet.refresh_transfers().await.unwrap();
-    let refund_hash = B256::repeat_byte(9);
+    let refund_hash = B256::repeat_byte(0xab);
     let event = transaction::Erc20::Transfer {
         from: Address::repeat_byte(2),
         to: wallet.address,
@@ -4542,7 +4542,7 @@ async fn orchestra_refunds_require_a_matching_confirmed_usdt_receipt() {
     .encode_log_data();
     let receipt = json!({"transactionHash":refund_hash,"blockHash":chain.state.lock().unwrap().block_hash(21000),"blockNumber":"0x5208","status":"0x1","logs":[{"address":types::TOKEN,"topics":event.topics(),"data":event.data}]});
     chain.state.lock().unwrap().tip = 21002;
-    chain.state.lock().unwrap().orchestra_delivery = json!({"status":"refunded", "received_amount":null,"destination_tx":null,"refund_tx":refund_hash,"refund_amount":"900000"});
+    chain.state.lock().unwrap().orchestra_delivery = json!({"status":"refunded", "received_amount":null,"destination_tx":null,"refund_tx":"AB".repeat(32),"refund_amount":"900000"});
     let owner = wallet.address;
     drop(wallet);
     // Provider reports cannot substitute for a successful canonical refund to this wallet.
@@ -4593,7 +4593,9 @@ async fn orchestra_refunds_require_a_matching_confirmed_usdt_receipt() {
         );
         if valid {
             assert_eq!(result.received_amount, 0);
-            assert_eq!(result.orchestra.unwrap().refund_amount, Some(900_000));
+            let bridge = result.orchestra.unwrap();
+            assert_eq!(bridge.refund_amount, Some(900_000));
+            assert_eq!(bridge.refund_tx, Some(refund_hash.to_string()));
         }
     }
     let wallet = chain.wallet_with_bridges(&directory, true);
@@ -4647,6 +4649,7 @@ async fn orchestra_refunds_require_a_matching_confirmed_usdt_receipt() {
 #[tokio::test]
 async fn orchestra_refund_receipts_are_exclusive_across_restart_and_pruning() {
     use alloy_primitives::{B256, U256};
+    use serde_json::{json, Value};
     let chain = MockChain::start().await;
     let directory = tempfile::tempdir().unwrap();
     let wallet = chain.wallet_with_bridges(&directory, true);
@@ -4693,16 +4696,18 @@ async fn orchestra_refund_receipts_are_exclusive_across_restart_and_pruning() {
         .store
         .update_delivery(&payments[0], Some(block))
         .unwrap());
-    // Retrying the same association is idempotent, including transaction-hash casing.
-    payments[0].orchestra.as_mut().unwrap().refund_tx = Some(format!("0x{}", "AB".repeat(32)));
-    assert!(wallet
-        .store
-        .update_delivery(&payments[0], Some(block))
-        .unwrap());
-    assert!(!wallet
-        .store
-        .update_delivery(&payments[1], Some(block))
-        .unwrap());
+    // Receipt identity is independent of hash casing and the optional hex prefix.
+    for refund in [format!("0x{}", "AB".repeat(32)), "AB".repeat(32)] {
+        payments[0].orchestra.as_mut().unwrap().refund_tx = Some(refund);
+        assert!(wallet
+            .store
+            .update_delivery(&payments[0], Some(block))
+            .unwrap());
+        assert!(!wallet
+            .store
+            .update_delivery(&payments[1], Some(block))
+            .unwrap());
+    }
     assert_eq!(
         wallet
             .store
@@ -4717,6 +4722,7 @@ async fn orchestra_refund_receipts_are_exclusive_across_restart_and_pruning() {
         .store
         .reconcile_block(block.0, &B256::repeat_byte(3).to_string())
         .unwrap();
+    payments[1].orchestra.as_mut().unwrap().refund_tx = Some("AB".repeat(32));
     assert!(wallet
         .store
         .update_delivery(&payments[1], Some((block.0, B256::repeat_byte(3))))
@@ -4747,4 +4753,61 @@ async fn orchestra_refund_receipts_are_exclusive_across_restart_and_pruning() {
             .status,
         UsdtTransferStatus::BridgeRefunded
     );
+
+    let snapshot = wallet.export_backup().unwrap();
+    let mut backup: Value = serde_json::from_str(&snapshot).unwrap();
+    let refunded = backup["transfers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|item| item["transfer"]["status"] == "BridgeRefunded")
+        .unwrap()
+        .clone();
+    assert!(refunded["plan"].is_null());
+    let mut duplicate = refunded.clone();
+    duplicate["transfer"]["id"] = json!("another-refund");
+    duplicate["transfer"]["user_operation_hash"] = json!(B256::repeat_byte(0xcd).to_string());
+    for refund in [format!("0x{}", "AB".repeat(32)), "AB".repeat(32)] {
+        duplicate["transfer"]["orchestra"]["refund_tx"] = json!(refund);
+        backup["transfers"] = json!([duplicate.clone()]);
+        assert!(matches!(
+            wallet.restore_backup(backup.to_string()).await,
+            Err(UsdtError::InvalidBackup)
+        ));
+        assert_eq!(wallet.export_backup().unwrap(), snapshot);
+        backup["transfers"] = json!([refunded.clone(), duplicate.clone()]);
+        let empty_directory = tempfile::tempdir().unwrap();
+        let empty = chain.wallet_with_bridges(&empty_directory, true);
+        assert!(matches!(
+            empty.restore_backup(backup.to_string()).await,
+            Err(UsdtError::InvalidBackup)
+        ));
+        assert!(empty.history().unwrap().is_empty());
+    }
+
+    let mut discovered: UsdtTransfer =
+        serde_json::from_value(duplicate["transfer"].clone()).unwrap();
+    discovered.id = discovered.user_operation_hash.clone().unwrap();
+    discovered.recipient = plan.orchestra.as_ref().unwrap().funding_address.clone();
+    discovered.destination = UsdtDestination::Arbitrum;
+    discovered.orchestra = None;
+    discovered.status = UsdtTransferStatus::Confirmed;
+    discovered.received_amount = discovered.amount;
+    wallet
+        .store
+        .save_history_receipt(
+            &[discovered],
+            &B256::repeat_byte(4).to_string(),
+            27000,
+            &B256::repeat_byte(5).to_string(),
+            true,
+        )
+        .unwrap();
+    let snapshot = wallet.export_backup().unwrap();
+    backup["transfers"] = json!([duplicate]);
+    assert!(matches!(
+        wallet.restore_backup(backup.to_string()).await,
+        Err(UsdtError::InvalidBackup)
+    ));
+    assert_eq!(wallet.export_backup().unwrap(), snapshot);
 }

@@ -150,13 +150,7 @@ impl Store {
                 .as_ref()
                 .and_then(|bridge| bridge.refund_tx.as_deref())
                 .ok_or(UsdtError::InvalidResponse)?;
-            // Keep the claim in transfer history after its reorg evidence is pruned.
-            let used: bool = tx.query_row(
-                "SELECT EXISTS(SELECT 1 FROM usdt_transfers WHERE id!=?1 AND lower(json_extract(data, '$.orchestra.refund_tx'))=lower(?2))",
-                params![transfer.id, refund],
-                |row| row.get(0),
-            )?;
-            if used {
+            if refund_claimed(&tx, &transfer.id, refund)? {
                 return Ok(false);
             }
             tx.execute(
@@ -442,6 +436,21 @@ impl Store {
             .flatten();
         raw.map(|raw| decode(&raw)).transpose()
     }
+}
+
+pub(super) fn refund_claimed(
+    connection: &Connection,
+    id: &str,
+    refund: &str,
+) -> Result<bool, UsdtError> {
+    let refund = refund.to_ascii_lowercase();
+    let refund = refund.strip_prefix("0x").unwrap_or(&refund);
+    // Keep the claim in transfer history after its reorg evidence is pruned.
+    Ok(connection.query_row(
+        "SELECT EXISTS(SELECT 1 FROM usdt_transfers WHERE id!=?1 AND lower(json_extract(data, '$.orchestra.refund_tx')) IN (?2, '0x' || ?2))",
+        params![id, refund],
+        |row| row.get(0),
+    )?)
 }
 
 fn write_transfer(connection: &Connection, transfer: &UsdtTransfer) -> Result<(), UsdtError> {

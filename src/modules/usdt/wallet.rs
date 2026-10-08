@@ -13,7 +13,7 @@ use super::{
     user_operation::Authorization,
     UsdtDestination, UsdtError, UsdtQuote, UsdtTransfer, UsdtTransferStatus,
 };
-use alloy_primitives::{Address, Bytes, B256, U256};
+use alloy_primitives::{keccak256, Address, Bytes, B256, U256};
 use alloy_sol_types::{SolCall, SolEvent};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -38,6 +38,7 @@ pub struct UsdtWallet {
     pub(super) paymaster: Pimlico,
     pub(super) store: Store,
     backup: Arc<dyn super::UsdtBackup>,
+    acknowledged_backup: Mutex<Option<B256>>,
     orchestra: Option<super::orchestra::Orchestra>,
     pub(super) operation: Mutex<()>,
     bridge_poll_offset: AtomicUsize,
@@ -72,6 +73,7 @@ impl UsdtWallet {
             paymaster,
             store,
             backup,
+            acknowledged_backup: Mutex::new(None),
             orchestra: bridge_url
                 .map(super::orchestra::Orchestra::new)
                 .transpose()?,
@@ -234,7 +236,7 @@ impl UsdtWallet {
             timestamp: now(),
         };
         self.store.record_signed(&transfer, &raw)?;
-        self.backup.persist(self.export_backup()?).await?;
+        self.persist_backup().await?;
         // After persistence a lost response is indeterminate. Retry only the identical signed operation.
         if let Err(error) = self.broadcast(&data.plan, hash).await {
             // These errors occur before submission; later retries may already be queued.
@@ -328,6 +330,17 @@ impl UsdtWallet {
 }
 
 impl UsdtWallet {
+    async fn persist_backup(&self) -> Result<(), UsdtError> {
+        let snapshot = self.export_backup()?;
+        let hash = keccak256(snapshot.as_bytes());
+        let mut acknowledged = self.acknowledged_backup.lock().await;
+        if *acknowledged != Some(hash) {
+            self.backup.persist(snapshot).await?;
+            *acknowledged = Some(hash);
+        }
+        Ok(())
+    }
+
     async fn prepare_quote(
         &self,
         recipient: &str,
@@ -474,7 +487,7 @@ impl UsdtWallet {
                     &format!("{:#x}", block.hash),
                 )?;
             } else if self.validate_bridge(plan).await.is_ok() {
-                self.backup.persist(self.export_backup()?).await?;
+                self.persist_backup().await?;
                 let _ = self.broadcast(plan, hash).await;
             }
             return Ok(());
@@ -721,9 +734,13 @@ impl UsdtWallet {
                     .refund_amount
                     .filter(|amount| *amount > 0 && *amount <= transfer.amount)
                     .ok_or(UsdtError::InvalidResponse)?;
-                let hash = delivery.refund_tx.ok_or(UsdtError::InvalidResponse)?;
-                refund_block = Some(self.verify_refund(&hash, amount).await?);
-                bridge.refund_tx = Some(hash);
+                let hash = delivery
+                    .refund_tx
+                    .ok_or(UsdtError::InvalidResponse)?
+                    .parse::<B256>()
+                    .map_err(|_| UsdtError::InvalidResponse)?;
+                refund_block = Some(self.verify_refund(hash, amount).await?);
+                bridge.refund_tx = Some(hash.to_string());
                 bridge.refund_amount = Some(amount);
                 updated.received_amount = 0;
                 UsdtTransferStatus::BridgeRefunded
@@ -733,8 +750,7 @@ impl UsdtWallet {
         Ok((updated, refund_block))
     }
 
-    async fn verify_refund(&self, hash: &str, amount: u64) -> Result<(u64, B256), UsdtError> {
-        let hash: B256 = hash.parse().map_err(|_| UsdtError::InvalidResponse)?;
+    async fn verify_refund(&self, hash: B256, amount: u64) -> Result<(u64, B256), UsdtError> {
         let receipt: Value = self
             .rpc
             .call("eth_getTransactionReceipt", json!([hash]))
