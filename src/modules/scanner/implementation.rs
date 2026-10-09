@@ -316,11 +316,6 @@ impl Scanner {
                 invoice_str
             };
 
-        // Reject if there is a second "bitcoin:" URI prefix anywhere in the remainder (issue #63)
-        if without_prefix.to_ascii_lowercase().contains("bitcoin:") {
-            return Err(DecodingError::InvalidFormat);
-        }
-
         let (address_part, query_part) = match without_prefix.split_once('?') {
             Some((addr, query)) => (addr, Some(query)),
             None => (without_prefix, None),

@@ -332,6 +332,66 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_bitcoin_colon_in_query_values_succeeds() {
+        let address = "mipcBbFg9gMiCh81Kj8tqqdgoZub1ZJRfn";
+        for (key, value) in [
+            ("message", "bitcoin:donation"),
+            ("label", "BITCOIN:donation"),
+            ("custom", "bitcoin:donation"),
+            ("custom", "https://example.com/bitcoin:donation"),
+            ("message", "bitcoin%3Adonation"),
+            ("message", "bitcoin:1BoatSLRHtKNngkdXEeobR76b53LETtpyT"),
+        ] {
+            let uri = format!("bitcoin:{address}?amount=0.000035&{key}={value}");
+            let decoded = Scanner::decode(uri.clone()).await.unwrap();
+            match decoded {
+                Scanner::OnChain { invoice } => {
+                    assert_eq!(invoice.address, address, "{uri}");
+                    assert_eq!(invoice.amount_satoshis, 3500, "{uri}");
+                    assert_eq!(
+                        invoice
+                            .params
+                            .as_ref()
+                            .unwrap()
+                            .get(key)
+                            .map(String::as_str),
+                        Some(value),
+                        "{uri}"
+                    );
+                    match key {
+                        "message" => assert_eq!(invoice.message.as_deref(), Some(value), "{uri}"),
+                        "label" => assert_eq!(invoice.label.as_deref(), Some(value), "{uri}"),
+                        _ => {}
+                    }
+                }
+                _ => panic!("Expected an on-chain invoice for '{uri}'"),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_duplicate_query_keys_still_fail_with_bitcoin_colon_values() {
+        let address = "mipcBbFg9gMiCh81Kj8tqqdgoZub1ZJRfn";
+        for query in [
+            "message=bitcoin:donation&Message=other",
+            "label=BITCOIN:donation&label=other",
+            "pop=bitcoin:donation&req-pop=other",
+        ] {
+            assert!(matches!(
+                Scanner::decode(format!("bitcoin:{address}?{query}")).await,
+                Err(DecodingError::InvalidFormat)
+            ));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_concatenated_uri_in_address_is_rejected() {
+        let address = "mipcBbFg9gMiCh81Kj8tqqdgoZub1ZJRfn";
+        let uri = format!("bitcoin:{address}bitcoin:{address}?amount=0.000035");
+        assert!(Scanner::decode(uri).await.is_err());
+    }
+
+    #[tokio::test]
     async fn test_allowed_duplicate_payment_instruction_keys_succeeds() {
         let invoice =
             "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?pj=https://endpoint1&pj=https://endpoint2"
