@@ -331,6 +331,35 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_decode_onchain_non_ascii_prefix_does_not_panic() {
+        for input in ["", "€", "€€€", "1234567€", "💸💸💸"] {
+            match Scanner::decode_onchain(input).unwrap() {
+                Scanner::OnChain { invoice } => assert_eq!(invoice.address, input),
+                _ => panic!("Expected an on-chain invoice for '{input}'"),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_bare_query_keys_have_empty_values() {
+        let address = "mipcBbFg9gMiCh81Kj8tqqdgoZub1ZJRfn";
+        let uri = format!("bitcoin:{address}?message&label&custom");
+        match Scanner::decode(uri).await.unwrap() {
+            Scanner::OnChain { invoice } => {
+                assert_eq!(invoice.address, address);
+                assert_eq!(invoice.message.as_deref(), Some(""));
+                assert_eq!(invoice.label.as_deref(), Some(""));
+                let params = invoice.params.unwrap();
+                assert_eq!(params.len(), 3);
+                for key in ["message", "label", "custom"] {
+                    assert_eq!(params.get(key).map(String::as_str), Some(""));
+                }
+            }
+            _ => panic!("Expected an on-chain invoice"),
+        }
+    }
+
     #[tokio::test]
     async fn test_bitcoin_colon_in_query_values_succeeds() {
         let address = "mipcBbFg9gMiCh81Kj8tqqdgoZub1ZJRfn";
@@ -421,7 +450,7 @@ mod tests {
     #[tokio::test]
     async fn test_query_key_case_insensitivity_parsed() {
         let invoice =
-            "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?AMOUNT=0.000035&LABEL=MyLabel&MESSAGE=MyMessage"
+            "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?AMOUNT=0.000035&LABEL=MyLabel&MESSAGE=MyMessage&Custom=first&custom=second"
                 .to_string();
         let decoded = Scanner::decode(invoice).await.unwrap();
         match decoded {
@@ -429,6 +458,9 @@ mod tests {
                 assert_eq!(invoice.amount_satoshis, 3500);
                 assert_eq!(invoice.label.as_deref(), Some("MyLabel"));
                 assert_eq!(invoice.message.as_deref(), Some("MyMessage"));
+                let params = invoice.params.unwrap();
+                assert_eq!(params.get("custom").map(String::as_str), Some("second"));
+                assert!(!params.contains_key("Custom"));
             }
             _ => assert!(false, "Should be an OnChain invoice"),
         }

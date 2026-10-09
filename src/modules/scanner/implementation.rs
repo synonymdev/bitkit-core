@@ -309,12 +309,14 @@ impl Scanner {
     }
 
     pub(crate) fn decode_onchain(invoice_str: &str) -> Result<Self, DecodingError> {
-        let without_prefix =
-            if invoice_str.len() >= 8 && invoice_str[..8].eq_ignore_ascii_case("bitcoin:") {
-                &invoice_str[8..]
-            } else {
-                invoice_str
-            };
+        let without_prefix = if invoice_str
+            .get(..8)
+            .is_some_and(|prefix| prefix.eq_ignore_ascii_case("bitcoin:"))
+        {
+            &invoice_str[8..]
+        } else {
+            invoice_str
+        };
 
         let (address_part, query_part) = match without_prefix.split_once('?') {
             Some((addr, query)) => (addr, Some(query)),
@@ -341,6 +343,7 @@ impl Scanner {
                     "amount" => Some("amount"),
                     "label" => Some("label"),
                     "message" => Some("message"),
+                    // BIP321 explicitly aliases pop/req-pop; general required-parameter handling is separate.
                     "pop" | "req-pop" => Some("pop"),
                     _ => None,
                 };
