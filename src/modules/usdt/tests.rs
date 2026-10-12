@@ -3909,6 +3909,7 @@ fn orphaned_payments_reopen_in_nonce_order_and_keep_sends_blocked() {
             operation: serde_json::from_value(vector["operation"].clone()).unwrap(),
             created_block: 19999,
             expires_at: wallet::now() + 600,
+            submission_deadline: None,
         };
         plan.operation.nonce = U256::from(nonce);
         let (hash, raw) = plan.sign(&key).unwrap();

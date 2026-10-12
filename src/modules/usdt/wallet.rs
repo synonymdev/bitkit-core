@@ -21,6 +21,7 @@ use std::sync::{
     atomic::{AtomicU64, AtomicUsize, Ordering},
     Arc,
 };
+use std::time::SystemTime;
 use tokio::{sync::Mutex, time::Instant};
 
 const RECENT_EXECUTION_BLOCKS: u64 = 64;
@@ -181,15 +182,41 @@ impl UsdtWallet {
         mnemonic: String,
         passphrase: Option<String>,
     ) -> Result<UsdtTransfer, UsdtError> {
+        self.send_with_deadline(quote_id, mnemonic, passphrase, None)
+            .await
+    }
+
+    /// Submits only while the approved deadline is valid, including automatic recovery retries.
+    /// This limits submission, not chain inclusion. An already submitted payment may still settle.
+    /// Repeating a quote ID retains its original deadline and returns its stored outcome.
+    /// The optional deadline is an RFC 3339 timestamp with up to nanosecond precision.
+    pub async fn send_with_deadline(
+        &self,
+        quote_id: String,
+        mnemonic: String,
+        passphrase: Option<String>,
+        submission_deadline: Option<String>,
+    ) -> Result<UsdtTransfer, UsdtError> {
         let mnemonic = zeroize::Zeroizing::new(mnemonic);
         let passphrase = passphrase.map(zeroize::Zeroizing::new);
+        let submission_deadline = submission_deadline
+            .map(|value| {
+                chrono::DateTime::parse_from_rfc3339(&value)
+                    .ok()
+                    .filter(|value| value.timestamp_subsec_nanos() < 1_000_000_000)
+                    .map(SystemTime::from)
+                    .ok_or(UsdtError::InvalidSubmissionDeadline)
+            })
+            .transpose()?;
         let _guard = self.operation.lock().await;
         if let Some(existing) = self.store.transfer(&quote_id)? {
             derive_owner_key(mnemonic, passphrase, self.address)?;
             return Ok(existing);
         }
+        self.rpc.check_submission_deadline(submission_deadline)?;
         self.store.require_no_pending()?;
         let mut data = self.store.quote(&quote_id)?;
+        data.plan.submission_deadline = submission_deadline;
         if data.quote.expires_at <= now() + 5 {
             return Err(UsdtError::QuoteExpired);
         }
@@ -239,6 +266,9 @@ impl UsdtWallet {
         self.persist_backup().await?;
         // After persistence a lost response is indeterminate. Retry only the identical signed operation.
         if let Err(error) = self.broadcast(&data.plan, hash).await {
+            if matches!(error, UsdtError::SubmissionDeadlineExpired) {
+                return Err(error);
+            }
             // These errors occur before submission; later retries may already be queued.
             if matches!(
                 error,
@@ -427,6 +457,7 @@ impl UsdtWallet {
                 orchestra,
                 created_block,
                 expires_at: operation_expires_at,
+                submission_deadline: None,
             },
         })
     }
@@ -864,9 +895,10 @@ impl UsdtWallet {
         let result: Result<B256, UsdtError> = self
             .paymaster
             .rpc
-            .call(
+            .call_with_deadline(
                 "eth_sendUserOperation",
                 json!([plan.operation, ENTRY_POINT]),
+                plan.submission_deadline,
             )
             .await;
         match result {

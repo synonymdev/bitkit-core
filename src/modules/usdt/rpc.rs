@@ -3,7 +3,10 @@ use alloy_primitives::{Address, Bytes, B256, U256};
 use alloy_sol_types::SolCall;
 use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::{json, Value};
-use std::{sync::Arc, time::Duration};
+use std::{
+    sync::Arc,
+    time::{Duration, SystemTime},
+};
 use tokio::{sync::Mutex, time::Instant};
 
 const REQUEST_INTERVAL: Duration = Duration::from_millis(750);
@@ -29,6 +32,8 @@ pub(super) struct Rpc {
     url: String,
     chain_id: u64,
     next_request: Arc<Mutex<Instant>>,
+    #[cfg(test)]
+    pub(super) clock: Arc<std::sync::Mutex<Option<SystemTime>>>,
 }
 
 #[derive(Deserialize)]
@@ -50,12 +55,18 @@ impl Rpc {
             url,
             chain_id,
             next_request: Arc::new(Mutex::new(Instant::now())),
+            #[cfg(test)]
+            clock: Arc::default(),
         })
     }
 
     pub fn with_url(&self, url: String) -> Result<Self, UsdtError> {
         let mut rpc = Self::new(url, self.chain_id)?;
         rpc.next_request = self.next_request.clone();
+        #[cfg(test)]
+        {
+            rpc.clock = self.clock.clone();
+        }
         Ok(rpc)
     }
 
@@ -72,11 +83,22 @@ impl Rpc {
         method: &str,
         params: Value,
     ) -> Result<T, UsdtError> {
+        self.call_with_deadline(method, params, None).await
+    }
+
+    pub async fn call_with_deadline<T: DeserializeOwned>(
+        &self,
+        method: &str,
+        params: Value,
+        submission_deadline: Option<SystemTime>,
+    ) -> Result<T, UsdtError> {
         self.reserve_request().await;
-        let response = self
+        let request = self
             .client
             .post(&self.url)
-            .json(&json!({"jsonrpc":"2.0","id":1,"method":method,"params":params}))
+            .json(&json!({"jsonrpc":"2.0","id":1,"method":method,"params":params}));
+        self.check_submission_deadline(submission_deadline)?;
+        let response = request
             .send()
             .await
             .map_err(|_| UsdtError::NetworkUnavailable)?;
@@ -170,6 +192,16 @@ impl Rpc {
             return Err(UsdtError::NetworkUnavailable);
         }
         serde_json::from_value(response.result.unwrap_or(Value::Null)).map_err(Into::into)
+    }
+
+    pub fn check_submission_deadline(&self, deadline: Option<SystemTime>) -> Result<(), UsdtError> {
+        let now = SystemTime::now();
+        #[cfg(test)]
+        let now = self.clock.lock().unwrap().unwrap_or(now);
+        if deadline.is_some_and(|deadline| now > deadline) {
+            return Err(UsdtError::SubmissionDeadlineExpired);
+        }
+        Ok(())
     }
 
     async fn reserve_request(&self) {
@@ -312,6 +344,34 @@ pub(super) async fn bounded_json(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test(start_paused = true)]
+    async fn submission_deadline_is_checked_after_rate_limit_wait() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let rpc = Rpc::new(format!("http://{}", listener.local_addr().unwrap()), 42161).unwrap();
+        let deadline = std::time::UNIX_EPOCH + Duration::new(2_000_000_000, 123_456_789);
+        let clock = rpc.clock.clone();
+        *clock.lock().unwrap() = Some(deadline);
+        assert!(rpc.check_submission_deadline(Some(deadline)).is_ok());
+        *rpc.next_request.lock().await = Instant::now() + BURST_WINDOW + Duration::from_secs(10);
+        let submission = tokio::spawn(async move {
+            rpc.call_with_deadline::<Value>("eth_sendUserOperation", json!([]), Some(deadline))
+                .await
+        });
+        tokio::task::yield_now().await;
+        assert!(!submission.is_finished());
+        *clock.lock().unwrap() = Some(deadline + Duration::from_nanos(1));
+        tokio::time::advance(Duration::from_secs(10)).await;
+        assert!(matches!(
+            submission.await.unwrap(),
+            Err(UsdtError::SubmissionDeadlineExpired)
+        ));
+        assert!(
+            tokio::time::timeout(Duration::from_millis(1), listener.accept())
+                .await
+                .is_err()
+        );
+    }
 
     #[test]
     fn endpoints_reject_embedded_credentials_and_insecure_remote_hosts() {

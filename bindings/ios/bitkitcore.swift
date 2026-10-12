@@ -3052,6 +3052,14 @@ public protocol UsdtWalletProtocol: AnyObject, Sendable {
     func send(quoteId: String, mnemonic: String, passphrase: String?) async throws  -> UsdtTransfer
     
     /**
+     * Submits only while the approved deadline is valid, including automatic recovery retries.
+     * This limits submission, not chain inclusion. An already submitted payment may still settle.
+     * Repeating a quote ID retains its original deadline and returns its stored outcome.
+     * The optional deadline is an RFC 3339 timestamp with up to nanosecond precision.
+     */
+    func sendWithDeadline(quoteId: String, mnemonic: String, passphrase: String?, submissionDeadline: String?) async throws  -> UsdtTransfer
+    
+    /**
      * Saves resumable history progress; returns true when caught up and false when more work remains.
      * Call between send flows. The soft budget permits an in-flight receipt to finish before yielding.
      */
@@ -3316,6 +3324,29 @@ open func send(quoteId: String, mnemonic: String, passphrase: String?)async thro
                 uniffi_bitkitcore_fn_method_usdtwallet_send(
                     self.uniffiClonePointer(),
                     FfiConverterString.lower(quoteId),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(passphrase)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeUsdtTransfer_lift,
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
+}
+    
+    /**
+     * Submits only while the approved deadline is valid, including automatic recovery retries.
+     * This limits submission, not chain inclusion. An already submitted payment may still settle.
+     * Repeating a quote ID retains its original deadline and returns its stored outcome.
+     * The optional deadline is an RFC 3339 timestamp with up to nanosecond precision.
+     */
+open func sendWithDeadline(quoteId: String, mnemonic: String, passphrase: String?, submissionDeadline: String?)async throws  -> UsdtTransfer  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtwallet_send_with_deadline(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(quoteId),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(passphrase),FfiConverterOptionString.lower(submissionDeadline)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
@@ -25368,6 +25399,8 @@ public enum UsdtError: Swift.Error {
     case UnsupportedDelegation
     case InsufficientBalance
     case QuoteExpired
+    case SubmissionDeadlineExpired
+    case InvalidSubmissionDeadline
     case PendingTransfer
     case UnsupportedRoute
     case DepositNeedsAttention
@@ -25411,26 +25444,28 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
         case 9: return .UnsupportedDelegation
         case 10: return .InsufficientBalance
         case 11: return .QuoteExpired
-        case 12: return .PendingTransfer
-        case 13: return .UnsupportedRoute
-        case 14: return .DepositNeedsAttention
-        case 15: return .DepositNotFound
-        case 16: return .DepositAuthorizationRejected
-        case 17: return .DepositAmountOutOfRange(
+        case 12: return .SubmissionDeadlineExpired
+        case 13: return .InvalidSubmissionDeadline
+        case 14: return .PendingTransfer
+        case 15: return .UnsupportedRoute
+        case 16: return .DepositNeedsAttention
+        case 17: return .DepositNotFound
+        case 18: return .DepositAuthorizationRejected
+        case 19: return .DepositAmountOutOfRange(
             minUsdCents: try FfiConverterOptionString.read(from: &buf), 
             maxUsdCents: try FfiConverterOptionString.read(from: &buf)
             )
-        case 18: return .NotConfigured
-        case 19: return .NetworkUnavailable
-        case 20: return .RateLimited
-        case 21: return .LogRangeTooLarge
-        case 22: return .TransactionRejected(
+        case 20: return .NotConfigured
+        case 21: return .NetworkUnavailable
+        case 22: return .RateLimited
+        case 23: return .LogRangeTooLarge
+        case 24: return .TransactionRejected(
             reason: try FfiConverterString.read(from: &buf)
             )
-        case 23: return .Storage(
+        case 25: return .Storage(
             reason: try FfiConverterString.read(from: &buf)
             )
-        case 24: return .InvalidResponse
+        case 26: return .InvalidResponse
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -25487,60 +25522,68 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(11))
         
         
-        case .PendingTransfer:
+        case .SubmissionDeadlineExpired:
             writeInt(&buf, Int32(12))
         
         
-        case .UnsupportedRoute:
+        case .InvalidSubmissionDeadline:
             writeInt(&buf, Int32(13))
         
         
-        case .DepositNeedsAttention:
+        case .PendingTransfer:
             writeInt(&buf, Int32(14))
         
         
-        case .DepositNotFound:
+        case .UnsupportedRoute:
             writeInt(&buf, Int32(15))
         
         
-        case .DepositAuthorizationRejected:
+        case .DepositNeedsAttention:
             writeInt(&buf, Int32(16))
         
         
-        case let .DepositAmountOutOfRange(minUsdCents,maxUsdCents):
+        case .DepositNotFound:
             writeInt(&buf, Int32(17))
+        
+        
+        case .DepositAuthorizationRejected:
+            writeInt(&buf, Int32(18))
+        
+        
+        case let .DepositAmountOutOfRange(minUsdCents,maxUsdCents):
+            writeInt(&buf, Int32(19))
             FfiConverterOptionString.write(minUsdCents, into: &buf)
             FfiConverterOptionString.write(maxUsdCents, into: &buf)
             
         
         case .NotConfigured:
-            writeInt(&buf, Int32(18))
-        
-        
-        case .NetworkUnavailable:
-            writeInt(&buf, Int32(19))
-        
-        
-        case .RateLimited:
             writeInt(&buf, Int32(20))
         
         
-        case .LogRangeTooLarge:
+        case .NetworkUnavailable:
             writeInt(&buf, Int32(21))
         
         
-        case let .TransactionRejected(reason):
+        case .RateLimited:
             writeInt(&buf, Int32(22))
+        
+        
+        case .LogRangeTooLarge:
+            writeInt(&buf, Int32(23))
+        
+        
+        case let .TransactionRejected(reason):
+            writeInt(&buf, Int32(24))
             FfiConverterString.write(reason, into: &buf)
             
         
         case let .Storage(reason):
-            writeInt(&buf, Int32(23))
+            writeInt(&buf, Int32(25))
             FfiConverterString.write(reason, into: &buf)
             
         
         case .InvalidResponse:
-            writeInt(&buf, Int32(24))
+            writeInt(&buf, Int32(26))
         
         }
     }
@@ -32149,6 +32192,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_send() != 60030) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_send_with_deadline() != 23330) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_sync_history() != 25445) {

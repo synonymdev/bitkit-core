@@ -176,28 +176,34 @@ impl Store {
                 .user_operation_hash
                 .clone()
                 .unwrap_or_else(|| item.transfer.id.clone());
-            let existing: Option<String> = tx
+            let existing: Option<(String, Option<String>)> = tx
                 .query_row(
-                    "SELECT hash FROM usdt_transfers WHERE id=?1",
+                    "SELECT hash,raw FROM usdt_transfers WHERE id=?1",
                     [&item.transfer.id],
-                    |row| row.get(0),
+                    |row| Ok((row.get(0)?, row.get(1)?)),
                 )
                 .optional()?;
-            if let Some(existing) = existing {
+            if let Some((existing, raw)) = existing {
                 if existing != hash {
                     return Err(UsdtError::InvalidBackup);
+                }
+                if raw.is_some() {
+                    tx.execute(
+                        "UPDATE usdt_transfers SET raw=?1 WHERE id=?2",
+                        params![merge_plan(raw, item.plan.as_ref())?, item.transfer.id],
+                    )?;
                 }
                 continue;
             }
             // Seed recovery can discover a payment before its application ID is restored.
-            let discovered: Option<(String, String)> = tx
+            let discovered: Option<(String, String, Option<String>)> = tx
                 .query_row(
-                    "SELECT id,data FROM usdt_transfers WHERE hash=?1",
+                    "SELECT id,data,raw FROM usdt_transfers WHERE hash=?1",
                     [&hash],
-                    |row| Ok((row.get(0)?, row.get(1)?)),
+                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
                 )
                 .optional()?;
-            if let Some((id, data)) = discovered {
+            if let Some((id, data, raw)) = discovered {
                 if id != hash {
                     return Err(UsdtError::InvalidBackup);
                 }
@@ -233,14 +239,12 @@ impl Store {
                 }
                 require_refund_owner(&tx, &id, &transfer)?;
                 tx.execute(
-                    "UPDATE usdt_transfers SET id=?1,data=?2,raw=COALESCE(raw,?4) WHERE id=?3",
+                    "UPDATE usdt_transfers SET id=?1,data=?2,raw=?4 WHERE id=?3",
                     params![
                         transfer.id,
                         serde_json::to_string(&transfer)?,
                         id,
-                        item.plan
-                            .map(|plan| serde_json::to_string(&plan))
-                            .transpose()?
+                        merge_plan(raw, item.plan.as_ref())?
                     ],
                 )?;
                 continue;
@@ -277,6 +281,24 @@ impl Store {
         tx.commit()?;
         Ok(())
     }
+}
+
+fn merge_plan(raw: Option<String>, restored: Option<&Plan>) -> Result<Option<String>, UsdtError> {
+    let Some(raw) = raw else {
+        return restored
+            .map(serde_json::to_string)
+            .transpose()
+            .map_err(Into::into);
+    };
+    let Some(deadline) = restored.and_then(|plan| plan.submission_deadline) else {
+        return Ok(Some(raw));
+    };
+    let mut plan: Plan = serde_json::from_str(&raw)?;
+    plan.submission_deadline = Some(
+        plan.submission_deadline
+            .map_or(deadline, |local| local.min(deadline)),
+    );
+    Ok(Some(serde_json::to_string(&plan)?))
 }
 
 fn require_refund_owner(

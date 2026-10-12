@@ -809,6 +809,11 @@ uint64_t uniffi_bitkitcore_fn_method_usdtwallet_restore_backup(void*_Nonnull ptr
 uint64_t uniffi_bitkitcore_fn_method_usdtwallet_send(void*_Nonnull ptr, RustBuffer quote_id, RustBuffer mnemonic, RustBuffer passphrase
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SEND_WITH_DEADLINE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SEND_WITH_DEADLINE
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_send_with_deadline(void*_Nonnull ptr, RustBuffer quote_id, RustBuffer mnemonic, RustBuffer passphrase, RustBuffer submission_deadline
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SYNC_HISTORY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SYNC_HISTORY
 uint64_t uniffi_bitkitcore_fn_method_usdtwallet_sync_history(void*_Nonnull ptr
@@ -3683,6 +3688,12 @@ uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_restore_backup(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SEND
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SEND
 uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_send(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SEND_WITH_DEADLINE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SEND_WITH_DEADLINE
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_send_with_deadline(void
     
 );
 #endif
