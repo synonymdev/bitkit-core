@@ -6,7 +6,7 @@ use super::{
     user_operation::{Authorization, UserOperation},
     UsdtError,
 };
-use alloy_primitives::{address, Address, Bytes, U256};
+use alloy_primitives::{address, keccak256, Address, Bytes, U256};
 use alloy_sol_types::SolCall;
 use serde::Deserialize;
 use serde_json::json;
@@ -36,6 +36,7 @@ struct TokenQuote {
     token: Address,
     post_op_gas: U256,
     exchange_rate: U256,
+    balance_slot: Option<U256>,
 }
 
 #[derive(Deserialize)]
@@ -103,6 +104,70 @@ impl Pimlico {
         calls: &[(Address, Bytes)],
         timestamp: u64,
     ) -> Result<(UserOperation, u64, u64), UsdtError> {
+        let (mut op, estimate_terms) = self
+            .prepare_estimate(address, nonce, authorization, calls, false)
+            .await?;
+        let mut allowance = with_margin(estimate_terms.maximum_token_cost(&op)?, 5)?;
+        // Provider data can change gas limits and token charges. Refine both before signing.
+        for _ in 0..3 {
+            op.call_data = with_approval(calls, allowance);
+            self.apply_paymaster(&mut op, "pm_getPaymasterData").await?;
+            let terms = Terms::decode(&op.paymaster_data)?;
+            let estimate: GasEstimate = self
+                .rpc
+                .call("eth_estimateUserOperationGas", json!([op, ENTRY_POINT]))
+                .await?;
+            let gas_changed = estimate.apply(&mut op)?;
+            let required = terms.maximum_token_cost(&op)?;
+            if gas_changed || required > allowance {
+                allowance = allowance.max(with_margin(required, 5)?);
+                continue;
+            }
+            if terms.valid_until == 0
+                || terms.valid_until > timestamp.saturating_add(MAX_PAYMASTER_VALIDITY_SECONDS)
+            {
+                return Err(UsdtError::InvalidResponse);
+            }
+            if terms.valid_after > timestamp
+                || terms.valid_until <= timestamp.saturating_add(MIN_PAYMASTER_VALIDITY_SECONDS)
+            {
+                return Err(UsdtError::QuoteExpired);
+            }
+            return Ok((
+                op,
+                required
+                    .try_into()
+                    .map_err(|_| UsdtError::InvalidResponse)?,
+                terms.valid_until,
+            ));
+        }
+        Err(UsdtError::QuoteExpired)
+    }
+
+    /// Discovers a fee budget without asking the paymaster to sign an unaffordable payment.
+    pub async fn estimate_maximum_fee(
+        &self,
+        address: Address,
+        nonce: U256,
+        authorization: Authorization,
+        calls: &[(Address, Bytes)],
+    ) -> Result<u64, UsdtError> {
+        let (op, terms) = self
+            .prepare_estimate(address, nonce, authorization, calls, true)
+            .await?;
+        with_margin(terms.maximum_token_cost(&op)?, 5)?
+            .try_into()
+            .map_err(|_| UsdtError::InvalidResponse)
+    }
+
+    async fn prepare_estimate(
+        &self,
+        address: Address,
+        nonce: U256,
+        authorization: Authorization,
+        calls: &[(Address, Bytes)],
+        balance_override: bool,
+    ) -> Result<(UserOperation, Terms), UsdtError> {
         self.rpc.verify_chain().await?;
         #[derive(Deserialize)]
         struct Quotes {
@@ -146,53 +211,40 @@ impl Pimlico {
         };
         self.apply_paymaster(&mut op, "pm_getPaymasterStubData")
             .await?;
+        let params = if balance_override {
+            // USDT0 uses the legacy USDT balance mapping. Never override code or authorization.
+            let slot = quote.balance_slot.ok_or(UsdtError::UnsupportedRoute)?;
+            if slot != U256::from(51) {
+                return Err(UsdtError::UnsupportedRoute);
+            }
+            let key = keccak256(
+                [
+                    address.into_word().as_slice(),
+                    slot.to_be_bytes::<32>().as_slice(),
+                ]
+                .concat(),
+            );
+            json!([op, ENTRY_POINT, {USDT0.to_string(): {"stateDiff": {key.to_string(): format!("{:#066x}", u128::MAX)}}}])
+        } else {
+            json!([op, ENTRY_POINT])
+        };
         let estimate: GasEstimate = self
             .rpc
-            .call("eth_estimateUserOperationGas", json!([op, ENTRY_POINT]))
+            .call("eth_estimateUserOperationGas", params)
             .await?;
         estimate.apply(&mut op)?;
         let estimate_terms = Terms {
             exchange_rate: quote.exchange_rate,
             post_op_gas: quote.post_op_gas,
-            constant_fee: U256::ZERO,
+            constant_fee: if balance_override {
+                Terms::decode(&op.paymaster_data)?.constant_fee
+            } else {
+                U256::ZERO
+            },
             valid_until: 0,
             valid_after: 0,
         };
-        let mut allowance = with_margin(estimate_terms.maximum_token_cost(&op)?, 5)?;
-        // Provider data can change gas limits and token charges. Refine both before signing.
-        for _ in 0..3 {
-            op.call_data = with_approval(calls, allowance);
-            self.apply_paymaster(&mut op, "pm_getPaymasterData").await?;
-            let terms = Terms::decode(&op.paymaster_data)?;
-            let estimate: GasEstimate = self
-                .rpc
-                .call("eth_estimateUserOperationGas", json!([op, ENTRY_POINT]))
-                .await?;
-            let gas_changed = estimate.apply(&mut op)?;
-            let required = terms.maximum_token_cost(&op)?;
-            if gas_changed || required > allowance {
-                allowance = allowance.max(with_margin(required, 5)?);
-                continue;
-            }
-            if terms.valid_until == 0
-                || terms.valid_until > timestamp.saturating_add(MAX_PAYMASTER_VALIDITY_SECONDS)
-            {
-                return Err(UsdtError::InvalidResponse);
-            }
-            if terms.valid_after > timestamp
-                || terms.valid_until <= timestamp.saturating_add(MIN_PAYMASTER_VALIDITY_SECONDS)
-            {
-                return Err(UsdtError::QuoteExpired);
-            }
-            return Ok((
-                op,
-                required
-                    .try_into()
-                    .map_err(|_| UsdtError::InvalidResponse)?,
-                terms.valid_until,
-            ));
-        }
-        Err(UsdtError::QuoteExpired)
+        Ok((op, estimate_terms))
     }
 
     async fn apply_paymaster(&self, op: &mut UserOperation, method: &str) -> Result<(), UsdtError> {

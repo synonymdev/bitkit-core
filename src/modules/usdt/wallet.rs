@@ -32,6 +32,13 @@ const QUOTE_LIFETIME_SECONDS: u64 = 120;
 const BRIDGE_POLL_INTERVAL: std::time::Duration = std::time::Duration::from_secs(30);
 const BRIDGE_RETRY_DELAY: std::time::Duration = std::time::Duration::from_secs(60);
 
+struct PreparedCalls {
+    calls: Vec<(Address, Bytes)>,
+    received_amount: u64,
+    bridge_fee: u64,
+    orchestra: Option<super::orchestra::OrchestraPlan>,
+}
+
 #[derive(uniffi::Object)]
 pub struct UsdtWallet {
     pub(super) address: Address,
@@ -108,62 +115,23 @@ impl UsdtWallet {
         amount: u64,
         destination: UsdtDestination,
     ) -> Result<UsdtQuote, UsdtError> {
-        if amount == 0 {
-            return Err(UsdtError::InvalidAmount);
+        self.quote_payment(recipient, amount, destination, false)
+            .await
+    }
+
+    /// Quotes the available balance less a conservative fee reserve. Final fees may leave dust.
+    /// Returns a normal, funded quote; approval and sending use the same checks as any transfer.
+    pub async fn quote_max_transfer(
+        &self,
+        recipient: String,
+        destination: UsdtDestination,
+    ) -> Result<UsdtQuote, UsdtError> {
+        let balance = self.balance().await?;
+        if balance == 0 {
+            return Err(UsdtError::InsufficientBalance);
         }
-        let recipient = super::orchestra::validate_recipient(recipient.trim(), destination)?;
-        if recipient == self.receive_address() {
-            return Err(UsdtError::InvalidAddress);
-        }
-        self.store.require_no_pending()?;
-        self.rpc.verify_chain().await?;
-        self.require_balance(amount, 0).await?;
-        let direct = self.prepare_quote(&recipient, amount, destination, false);
-        let routed = async {
-            if destination == UsdtDestination::Arbitrum
-                || destination == UsdtDestination::Stable
-                || self.orchestra.is_none()
-            {
-                return Err(UsdtError::UnsupportedRoute);
-            }
-            self.prepare_quote(&recipient, amount, destination, true)
-                .await
-        };
-        let (direct, routed) = tokio::join!(direct, routed);
-        let fresh = |candidate: Result<QuoteData, UsdtError>| {
-            candidate.and_then(|data| {
-                if data.quote.expires_at <= now() + 5 {
-                    Err(UsdtError::QuoteExpired)
-                } else {
-                    Ok(data)
-                }
-            })
-        };
-        let selected = match (fresh(direct), fresh(routed)) {
-            (Ok(a), Ok(b)) => {
-                if better_quote(&b.quote, &a.quote)? {
-                    b
-                } else {
-                    a
-                }
-            }
-            (Ok(a), Err(_)) | (Err(_), Ok(a)) => a,
-            (Err(a), Err(b)) => {
-                return Err(
-                    if destination.endpoint().is_some() || destination == UsdtDestination::Arbitrum
-                    {
-                        a
-                    } else {
-                        b
-                    },
-                )
-            }
-        };
-        if selected.quote.expires_at <= now() + 5 {
-            return Err(UsdtError::QuoteExpired);
-        }
-        self.store.save_quote(&selected)?;
-        Ok(selected.quote)
+        self.quote_payment(recipient, balance, destination, true)
+            .await
     }
 
     /// Available Orchestra destinations. USDT0 destinations retain the app's existing configuration.
@@ -248,6 +216,7 @@ impl UsdtWallet {
         let (hash, raw) = data.plan.sign(&key)?;
         drop(key);
         let mut transfer = UsdtTransfer {
+            sender: Some(self.receive_address()),
             id: quote_id,
             tx_hash: None,
             user_operation_hash: Some(format!("{hash:#x}")),
@@ -360,6 +329,141 @@ impl UsdtWallet {
 }
 
 impl UsdtWallet {
+    async fn quote_payment(
+        &self,
+        recipient: String,
+        amount: u64,
+        destination: UsdtDestination,
+        maximum: bool,
+    ) -> Result<UsdtQuote, UsdtError> {
+        if amount == 0 {
+            return Err(UsdtError::InvalidAmount);
+        }
+        let recipient = super::orchestra::validate_recipient(recipient.trim(), destination)?;
+        if recipient == self.receive_address() {
+            return Err(UsdtError::InvalidAddress);
+        }
+        self.store.require_no_pending()?;
+        self.rpc.verify_chain().await?;
+        self.require_balance(amount, 0).await?;
+        let recipient = recipient.as_str();
+        let candidate = |use_orchestra| async move {
+            if maximum {
+                self.prepare_max_quote(recipient, amount, destination, use_orchestra)
+                    .await
+            } else {
+                self.prepare_quote(recipient, amount, destination, use_orchestra)
+                    .await
+            }
+        };
+        let direct = candidate(false);
+        let routed = async {
+            if destination == UsdtDestination::Arbitrum
+                || destination == UsdtDestination::Stable
+                || self.orchestra.is_none()
+            {
+                return Err(UsdtError::UnsupportedRoute);
+            }
+            candidate(true).await
+        };
+        let (direct, routed) = tokio::join!(direct, routed);
+        let fresh = |candidate: Result<QuoteData, UsdtError>| {
+            candidate.and_then(|data| {
+                if data.quote.expires_at <= now() + 5 {
+                    Err(UsdtError::QuoteExpired)
+                } else {
+                    Ok(data)
+                }
+            })
+        };
+        let selected = match (fresh(direct), fresh(routed)) {
+            (Ok(a), Ok(b)) => {
+                if better_quote(&b.quote, &a.quote)? {
+                    b
+                } else {
+                    a
+                }
+            }
+            (Ok(a), Err(_)) | (Err(_), Ok(a)) => a,
+            (Err(a), Err(b)) => {
+                return Err(
+                    if destination.endpoint().is_some() || destination == UsdtDestination::Arbitrum
+                    {
+                        a
+                    } else {
+                        b
+                    },
+                )
+            }
+        };
+        if selected.quote.expires_at <= now() + 5 {
+            return Err(UsdtError::QuoteExpired);
+        }
+        self.store.save_quote(&selected)?;
+        Ok(selected.quote)
+    }
+
+    async fn prepare_max_quote(
+        &self,
+        recipient: &str,
+        balance: u64,
+        destination: UsdtDestination,
+        use_orchestra: bool,
+    ) -> Result<QuoteData, UsdtError> {
+        let mut reserve = 0;
+        let mut last_error = UsdtError::QuoteExpired;
+        for _ in 0..3 {
+            let amount = balance
+                .checked_sub(reserve)
+                .filter(|amount| *amount > 0)
+                .ok_or(UsdtError::InsufficientBalance)?;
+            let payment = self
+                .prepare_calls(recipient, amount, destination, use_orchestra)
+                .await?;
+            let fee = self
+                .paymaster
+                .estimate_maximum_fee(
+                    self.address,
+                    self.nonce("latest").await?,
+                    self.authorization().await?,
+                    &payment.calls,
+                )
+                .await?
+                .checked_add(payment.bridge_fee)
+                .ok_or(UsdtError::InvalidAmount)?;
+            reserve = reserve.max(fee);
+            let amount = balance
+                .checked_sub(reserve)
+                .filter(|amount| *amount > 0)
+                .ok_or(UsdtError::InsufficientBalance)?;
+            match self
+                .prepare_quote(recipient, amount, destination, use_orchestra)
+                .await
+            {
+                Ok(mut data) => {
+                    if data.quote.maximum_fee > reserve {
+                        reserve = data.quote.maximum_fee;
+                        continue;
+                    }
+                    // The reserve is an approval ceiling, never a fee prediction or a promise of zero dust.
+                    data.quote.maximum_fee = reserve;
+                    self.require_balance(amount, reserve).await?;
+                    return Ok(data);
+                }
+                Err(error)
+                    if matches!(
+                        error,
+                        UsdtError::InsufficientBalance | UsdtError::QuoteExpired
+                    ) || matches!(&error, UsdtError::TransactionRejected { reason } if reason.contains("AA50") || reason == "Paymaster fee collection failed") =>
+                {
+                    last_error = error;
+                }
+                Err(error) => return Err(error),
+            }
+        }
+        Err(last_error)
+    }
+
     async fn persist_backup(&self) -> Result<(), UsdtError> {
         let snapshot = self.export_backup()?;
         let hash = keccak256(snapshot.as_bytes());
@@ -371,13 +475,13 @@ impl UsdtWallet {
         Ok(())
     }
 
-    async fn prepare_quote(
+    async fn prepare_calls(
         &self,
         recipient: &str,
         amount: u64,
         destination: UsdtDestination,
         use_orchestra: bool,
-    ) -> Result<QuoteData, UsdtError> {
+    ) -> Result<PreparedCalls, UsdtError> {
         let orchestra = if use_orchestra {
             Some(
                 self.orchestra
@@ -410,6 +514,29 @@ impl UsdtWallet {
             self.transfer_calls(parse_address(recipient)?, amount, destination)
                 .await?
         };
+        Ok(PreparedCalls {
+            calls,
+            received_amount,
+            bridge_fee,
+            orchestra,
+        })
+    }
+
+    async fn prepare_quote(
+        &self,
+        recipient: &str,
+        amount: u64,
+        destination: UsdtDestination,
+        use_orchestra: bool,
+    ) -> Result<QuoteData, UsdtError> {
+        let PreparedCalls {
+            calls,
+            received_amount,
+            bridge_fee,
+            orchestra,
+        } = self
+            .prepare_calls(recipient, amount, destination, use_orchestra)
+            .await?;
         let nonce = self.nonce("latest").await?;
         let authorization = self.authorization().await?;
         let created_block = self.block_number().await?;

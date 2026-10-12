@@ -136,6 +136,10 @@ pub struct UsdtOrchestraTransfer {
 
 #[derive(Clone, Debug, Serialize, Deserialize, uniffi::Record)]
 pub struct UsdtTransfer {
+    /// Source address on Arbitrum, from the token event or this wallet's signed operation.
+    /// Absent in older history. A bridge contract address does not identify the original depositor.
+    #[serde(default)]
+    pub sender: Option<String>,
     pub id: String,
     /// Source transaction hash, absent until execution is observed.
     pub tx_hash: Option<String>,

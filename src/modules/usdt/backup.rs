@@ -99,6 +99,13 @@ impl Store {
         let mut hashes = HashSet::new();
         for item in &mut backup.transfers {
             let transfer = &mut item.transfer;
+            if let Some(sender) = &mut transfer.sender {
+                let address: Address = sender.parse().map_err(|_| UsdtError::InvalidBackup)?;
+                if !transfer.is_incoming && address != owner {
+                    return Err(UsdtError::InvalidBackup);
+                }
+                *sender = address.to_checksum(None);
+            }
             let refund = transfer
                 .orchestra
                 .as_mut()

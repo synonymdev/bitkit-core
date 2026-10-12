@@ -3027,6 +3027,12 @@ public protocol UsdtWalletProtocol: AnyObject, Sendable {
      */
     func orchestraDestinations() async throws  -> [UsdtDestination]
     
+    /**
+     * Quotes the available balance less a conservative fee reserve. Final fees may leave dust.
+     * Returns a normal, funded quote; approval and sending use the same checks as any transfer.
+     */
+    func quoteMaxTransfer(recipient: String, destination: UsdtDestination) async throws  -> UsdtQuote
+    
     func quoteTransfer(recipient: String, amount: UInt64, destination: UsdtDestination) async throws  -> UsdtQuote
     
     func receiveAddress()  -> String
@@ -3236,6 +3242,27 @@ open func orchestraDestinations()async throws  -> [UsdtDestination]  {
             completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
             liftFunc: FfiConverterSequenceTypeUsdtDestination.lift,
+            errorHandler: FfiConverterTypeUsdtError_lift
+        )
+}
+    
+    /**
+     * Quotes the available balance less a conservative fee reserve. Final fees may leave dust.
+     * Returns a normal, funded quote; approval and sending use the same checks as any transfer.
+     */
+open func quoteMaxTransfer(recipient: String, destination: UsdtDestination)async throws  -> UsdtQuote  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_method_usdtwallet_quote_max_transfer(
+                    self.uniffiClonePointer(),
+                    FfiConverterString.lower(recipient),FfiConverterTypeUsdtDestination_lower(destination)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeUsdtQuote_lift,
             errorHandler: FfiConverterTypeUsdtError_lift
         )
 }
@@ -17685,6 +17712,11 @@ public func FfiConverterTypeUsdtQuote_lower(_ value: UsdtQuote) -> RustBuffer {
 
 
 public struct UsdtTransfer {
+    /**
+     * Source address on Arbitrum, from the token event or this wallet's signed operation.
+     * Absent in older history. A bridge contract address does not identify the original depositor.
+     */
+    public var sender: String?
     public var id: String
     /**
      * Source transaction hash, absent until execution is observed.
@@ -17704,10 +17736,15 @@ public struct UsdtTransfer {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(id: String, 
+    public init(
+        /**
+         * Source address on Arbitrum, from the token event or this wallet's signed operation.
+         * Absent in older history. A bridge contract address does not identify the original depositor.
+         */sender: String?, id: String, 
         /**
          * Source transaction hash, absent until execution is observed.
          */txHash: String?, userOperationHash: String?, bridgeGuid: String?, orchestra: UsdtOrchestraTransfer?, recipient: String, destination: UsdtDestination, amount: UInt64, receivedAmount: UInt64, fee: UInt64?, isIncoming: Bool, status: UsdtTransferStatus, timestamp: UInt64) {
+        self.sender = sender
         self.id = id
         self.txHash = txHash
         self.userOperationHash = userOperationHash
@@ -17731,6 +17768,9 @@ extension UsdtTransfer: Sendable {}
 
 extension UsdtTransfer: Equatable, Hashable {
     public static func ==(lhs: UsdtTransfer, rhs: UsdtTransfer) -> Bool {
+        if lhs.sender != rhs.sender {
+            return false
+        }
         if lhs.id != rhs.id {
             return false
         }
@@ -17774,6 +17814,7 @@ extension UsdtTransfer: Equatable, Hashable {
     }
 
     public func hash(into hasher: inout Hasher) {
+        hasher.combine(sender)
         hasher.combine(id)
         hasher.combine(txHash)
         hasher.combine(userOperationHash)
@@ -17801,6 +17842,7 @@ public struct FfiConverterTypeUsdtTransfer: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> UsdtTransfer {
         return
             try UsdtTransfer(
+                sender: FfiConverterOptionString.read(from: &buf), 
                 id: FfiConverterString.read(from: &buf), 
                 txHash: FfiConverterOptionString.read(from: &buf), 
                 userOperationHash: FfiConverterOptionString.read(from: &buf), 
@@ -17818,6 +17860,7 @@ public struct FfiConverterTypeUsdtTransfer: FfiConverterRustBuffer {
     }
 
     public static func write(_ value: UsdtTransfer, into buf: inout [UInt8]) {
+        FfiConverterOptionString.write(value.sender, into: &buf)
         FfiConverterString.write(value.id, into: &buf)
         FfiConverterOptionString.write(value.txHash, into: &buf)
         FfiConverterOptionString.write(value.userOperationHash, into: &buf)
@@ -32174,6 +32217,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_orchestra_destinations() != 39605) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_usdtwallet_quote_max_transfer() != 40699) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_method_usdtwallet_quote_transfer() != 3732) {

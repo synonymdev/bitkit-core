@@ -597,3 +597,43 @@ async fn orchestra_backup_restores_funded_delivery_after_chain_history() {
     restored.refresh_transfers().await.unwrap();
     assert_eq!(chain.state.lock().unwrap().operations.len(), 1);
 }
+
+#[tokio::test]
+async fn transfer_sender_survives_backup_and_old_snapshots_remain_unknown() {
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    let sent = wallet
+        .send(quote.id, TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    assert_eq!(
+        sent.sender.as_deref(),
+        Some(wallet.receive_address().as_str())
+    );
+    let snapshot = wallet.export_backup().unwrap();
+    let restored_dir = tempfile::tempdir().unwrap();
+    let restored = chain.wallet(&restored_dir);
+    restored.restore_backup(snapshot.clone()).await.unwrap();
+    assert_eq!(restored.history().unwrap()[0].sender, sent.sender);
+    let mut old: serde_json::Value = serde_json::from_str(&snapshot).unwrap();
+    old["transfers"][0]["transfer"]
+        .as_object_mut()
+        .unwrap()
+        .remove("sender");
+    let old_dir = tempfile::tempdir().unwrap();
+    let old_wallet = chain.wallet(&old_dir);
+    old_wallet.restore_backup(old.to_string()).await.unwrap();
+    assert_eq!(old_wallet.history().unwrap()[0].sender, None);
+    restored.restore_backup(old.to_string()).await.unwrap();
+    assert_eq!(restored.history().unwrap()[0].sender, sent.sender);
+    old["transfers"][0]["transfer"]["sender"] = json!(RECIPIENT);
+    assert!(matches!(
+        old_wallet.restore_backup(old.to_string()).await,
+        Err(UsdtError::InvalidBackup)
+    ));
+}

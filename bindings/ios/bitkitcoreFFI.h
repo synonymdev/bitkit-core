@@ -779,6 +779,11 @@ RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_history(void*_Nonnull ptr, Rus
 uint64_t uniffi_bitkitcore_fn_method_usdtwallet_orchestra_destinations(void*_Nonnull ptr
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_QUOTE_MAX_TRANSFER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_QUOTE_MAX_TRANSFER
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_quote_max_transfer(void*_Nonnull ptr, RustBuffer recipient, RustBuffer destination
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_QUOTE_TRANSFER
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_QUOTE_TRANSFER
 uint64_t uniffi_bitkitcore_fn_method_usdtwallet_quote_transfer(void*_Nonnull ptr, RustBuffer recipient, uint64_t amount, RustBuffer destination
@@ -3652,6 +3657,12 @@ uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_history(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_ORCHESTRA_DESTINATIONS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_ORCHESTRA_DESTINATIONS
 uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_orchestra_destinations(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_QUOTE_MAX_TRANSFER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_QUOTE_MAX_TRANSFER
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_quote_max_transfer(void
     
 );
 #endif
