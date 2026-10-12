@@ -25597,8 +25597,8 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
         
         case .DepositAuthorizationRejected:
             writeInt(&buf, Int32(19))
-
-
+        
+        
         case let .DepositAmountOutOfRange(minUsdCents,maxUsdCents):
             writeInt(&buf, Int32(20))
             FfiConverterOptionString.write(minUsdCents, into: &buf)
