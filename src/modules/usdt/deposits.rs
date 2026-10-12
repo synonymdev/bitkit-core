@@ -294,6 +294,7 @@ impl UsdtDepositClient {
         if !status.is_success() {
             let error = value.unwrap_or_default();
             return Err(match error["error"].as_str() {
+                Some("xchain_amount_too_small") => UsdtError::BridgeAmountTooSmall,
                 Some("not_configured") => UsdtError::NotConfigured,
                 Some("provider_unavailable") => UsdtError::NetworkUnavailable,
                 Some("invalid_authorization") => UsdtError::DepositAuthorizationRejected,

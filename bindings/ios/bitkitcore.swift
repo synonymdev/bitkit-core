@@ -25435,6 +25435,7 @@ public enum UsdtError: Swift.Error {
     case InvalidBackup
     case InvalidPaymentProof
     case InvalidAmount
+    case BridgeAmountTooSmall
     case InvalidAddress
     case WrongNetwork
     case InvalidCredentials
@@ -25480,35 +25481,36 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
         case 2: return .InvalidBackup
         case 3: return .InvalidPaymentProof
         case 4: return .InvalidAmount
-        case 5: return .InvalidAddress
-        case 6: return .WrongNetwork
-        case 7: return .InvalidCredentials
-        case 8: return .ClockSkew
-        case 9: return .UnsupportedDelegation
-        case 10: return .InsufficientBalance
-        case 11: return .QuoteExpired
-        case 12: return .SubmissionDeadlineExpired
-        case 13: return .InvalidSubmissionDeadline
-        case 14: return .PendingTransfer
-        case 15: return .UnsupportedRoute
-        case 16: return .DepositNeedsAttention
-        case 17: return .DepositNotFound
-        case 18: return .DepositAuthorizationRejected
-        case 19: return .DepositAmountOutOfRange(
+        case 5: return .BridgeAmountTooSmall
+        case 6: return .InvalidAddress
+        case 7: return .WrongNetwork
+        case 8: return .InvalidCredentials
+        case 9: return .ClockSkew
+        case 10: return .UnsupportedDelegation
+        case 11: return .InsufficientBalance
+        case 12: return .QuoteExpired
+        case 13: return .SubmissionDeadlineExpired
+        case 14: return .InvalidSubmissionDeadline
+        case 15: return .PendingTransfer
+        case 16: return .UnsupportedRoute
+        case 17: return .DepositNeedsAttention
+        case 18: return .DepositNotFound
+        case 19: return .DepositAuthorizationRejected
+        case 20: return .DepositAmountOutOfRange(
             minUsdCents: try FfiConverterOptionString.read(from: &buf), 
             maxUsdCents: try FfiConverterOptionString.read(from: &buf)
             )
-        case 20: return .NotConfigured
-        case 21: return .NetworkUnavailable
-        case 22: return .RateLimited
-        case 23: return .LogRangeTooLarge
-        case 24: return .TransactionRejected(
+        case 21: return .NotConfigured
+        case 22: return .NetworkUnavailable
+        case 23: return .RateLimited
+        case 24: return .LogRangeTooLarge
+        case 25: return .TransactionRejected(
             reason: try FfiConverterString.read(from: &buf)
             )
-        case 25: return .Storage(
+        case 26: return .Storage(
             reason: try FfiConverterString.read(from: &buf)
             )
-        case 26: return .InvalidResponse
+        case 27: return .InvalidResponse
 
          default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -25537,96 +25539,100 @@ public struct FfiConverterTypeUsdtError: FfiConverterRustBuffer {
             writeInt(&buf, Int32(4))
         
         
-        case .InvalidAddress:
+        case .BridgeAmountTooSmall:
             writeInt(&buf, Int32(5))
         
         
-        case .WrongNetwork:
+        case .InvalidAddress:
             writeInt(&buf, Int32(6))
         
         
-        case .InvalidCredentials:
+        case .WrongNetwork:
             writeInt(&buf, Int32(7))
         
         
-        case .ClockSkew:
+        case .InvalidCredentials:
             writeInt(&buf, Int32(8))
         
         
-        case .UnsupportedDelegation:
+        case .ClockSkew:
             writeInt(&buf, Int32(9))
         
         
-        case .InsufficientBalance:
+        case .UnsupportedDelegation:
             writeInt(&buf, Int32(10))
         
         
-        case .QuoteExpired:
+        case .InsufficientBalance:
             writeInt(&buf, Int32(11))
         
         
-        case .SubmissionDeadlineExpired:
+        case .QuoteExpired:
             writeInt(&buf, Int32(12))
         
         
-        case .InvalidSubmissionDeadline:
+        case .SubmissionDeadlineExpired:
             writeInt(&buf, Int32(13))
         
         
-        case .PendingTransfer:
+        case .InvalidSubmissionDeadline:
             writeInt(&buf, Int32(14))
         
         
-        case .UnsupportedRoute:
+        case .PendingTransfer:
             writeInt(&buf, Int32(15))
         
         
-        case .DepositNeedsAttention:
+        case .UnsupportedRoute:
             writeInt(&buf, Int32(16))
         
         
-        case .DepositNotFound:
+        case .DepositNeedsAttention:
             writeInt(&buf, Int32(17))
         
         
-        case .DepositAuthorizationRejected:
+        case .DepositNotFound:
             writeInt(&buf, Int32(18))
         
         
-        case let .DepositAmountOutOfRange(minUsdCents,maxUsdCents):
+        case .DepositAuthorizationRejected:
             writeInt(&buf, Int32(19))
+
+
+        case let .DepositAmountOutOfRange(minUsdCents,maxUsdCents):
+            writeInt(&buf, Int32(20))
             FfiConverterOptionString.write(minUsdCents, into: &buf)
             FfiConverterOptionString.write(maxUsdCents, into: &buf)
             
         
         case .NotConfigured:
-            writeInt(&buf, Int32(20))
-        
-        
-        case .NetworkUnavailable:
             writeInt(&buf, Int32(21))
         
         
-        case .RateLimited:
+        case .NetworkUnavailable:
             writeInt(&buf, Int32(22))
         
         
-        case .LogRangeTooLarge:
+        case .RateLimited:
             writeInt(&buf, Int32(23))
         
         
-        case let .TransactionRejected(reason):
+        case .LogRangeTooLarge:
             writeInt(&buf, Int32(24))
-            FfiConverterString.write(reason, into: &buf)
-            
         
-        case let .Storage(reason):
+        
+        case let .TransactionRejected(reason):
             writeInt(&buf, Int32(25))
             FfiConverterString.write(reason, into: &buf)
             
         
-        case .InvalidResponse:
+        case let .Storage(reason):
             writeInt(&buf, Int32(26))
+            FfiConverterString.write(reason, into: &buf)
+            
+        
+        case .InvalidResponse:
+            writeInt(&buf, Int32(27))
         
         }
     }

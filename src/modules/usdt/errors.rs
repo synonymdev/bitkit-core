@@ -10,6 +10,8 @@ pub enum UsdtError {
     InvalidPaymentProof,
     #[error("Enter a valid USDT amount with at most six decimal places")]
     InvalidAmount,
+    #[error("Amount too small to cover bridge costs. Try a larger amount.")]
+    BridgeAmountTooSmall,
     #[error("Enter a valid address for the selected network")]
     InvalidAddress,
     #[error("The network or token does not match this USDT account")]
