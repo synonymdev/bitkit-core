@@ -295,6 +295,7 @@ impl UsdtWallet {
             }
             let index: U256 = serde_json::from_value(log["logIndex"].clone())?;
             result.push(UsdtTransfer {
+                sender: Some(event.from.to_checksum(None)),
                 id: format!("{hash}:{index}"),
                 tx_hash: Some(hash.into()),
                 user_operation_hash: None,
@@ -380,6 +381,7 @@ impl UsdtWallet {
                     )
                 };
             let mut transfer = UsdtTransfer {
+                sender: Some(self.receive_address()),
                 id: operation_hash.clone(),
                 tx_hash: Some(hash.into()),
                 user_operation_hash: Some(operation_hash),

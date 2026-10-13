@@ -21,6 +21,7 @@ use std::sync::{
     atomic::{AtomicU64, AtomicUsize, Ordering},
     Arc,
 };
+use std::time::SystemTime;
 use tokio::{sync::Mutex, time::Instant};
 
 const RECENT_EXECUTION_BLOCKS: u64 = 64;
@@ -30,6 +31,13 @@ const EXPIRY_SEARCH_BLOCKS: u64 = 4096;
 const QUOTE_LIFETIME_SECONDS: u64 = 120;
 const BRIDGE_POLL_INTERVAL: std::time::Duration = std::time::Duration::from_secs(30);
 const BRIDGE_RETRY_DELAY: std::time::Duration = std::time::Duration::from_secs(60);
+
+struct PreparedCalls {
+    calls: Vec<(Address, Bytes)>,
+    received_amount: u64,
+    bridge_fee: u64,
+    orchestra: Option<super::orchestra::OrchestraPlan>,
+}
 
 #[derive(uniffi::Object)]
 pub struct UsdtWallet {
@@ -107,62 +115,23 @@ impl UsdtWallet {
         amount: u64,
         destination: UsdtDestination,
     ) -> Result<UsdtQuote, UsdtError> {
-        if amount == 0 {
-            return Err(UsdtError::InvalidAmount);
+        self.quote_payment(recipient, amount, destination, false)
+            .await
+    }
+
+    /// Quotes the available balance less a conservative fee reserve. Final fees may leave dust.
+    /// Returns a normal, funded quote; approval and sending use the same checks as any transfer.
+    pub async fn quote_max_transfer(
+        &self,
+        recipient: String,
+        destination: UsdtDestination,
+    ) -> Result<UsdtQuote, UsdtError> {
+        let balance = self.balance().await?;
+        if balance == 0 {
+            return Err(UsdtError::InsufficientBalance);
         }
-        let recipient = super::orchestra::validate_recipient(recipient.trim(), destination)?;
-        if recipient == self.receive_address() {
-            return Err(UsdtError::InvalidAddress);
-        }
-        self.store.require_no_pending()?;
-        self.rpc.verify_chain().await?;
-        self.require_balance(amount, 0).await?;
-        let direct = self.prepare_quote(&recipient, amount, destination, false);
-        let routed = async {
-            if destination == UsdtDestination::Arbitrum
-                || destination == UsdtDestination::Stable
-                || self.orchestra.is_none()
-            {
-                return Err(UsdtError::UnsupportedRoute);
-            }
-            self.prepare_quote(&recipient, amount, destination, true)
-                .await
-        };
-        let (direct, routed) = tokio::join!(direct, routed);
-        let fresh = |candidate: Result<QuoteData, UsdtError>| {
-            candidate.and_then(|data| {
-                if data.quote.expires_at <= now() + 5 {
-                    Err(UsdtError::QuoteExpired)
-                } else {
-                    Ok(data)
-                }
-            })
-        };
-        let selected = match (fresh(direct), fresh(routed)) {
-            (Ok(a), Ok(b)) => {
-                if better_quote(&b.quote, &a.quote)? {
-                    b
-                } else {
-                    a
-                }
-            }
-            (Ok(a), Err(_)) | (Err(_), Ok(a)) => a,
-            (Err(a), Err(b)) => {
-                return Err(
-                    if destination.endpoint().is_some() || destination == UsdtDestination::Arbitrum
-                    {
-                        a
-                    } else {
-                        b
-                    },
-                )
-            }
-        };
-        if selected.quote.expires_at <= now() + 5 {
-            return Err(UsdtError::QuoteExpired);
-        }
-        self.store.save_quote(&selected)?;
-        Ok(selected.quote)
+        self.quote_payment(recipient, balance, destination, true)
+            .await
     }
 
     /// Available Orchestra destinations. USDT0 destinations retain the app's existing configuration.
@@ -181,15 +150,41 @@ impl UsdtWallet {
         mnemonic: String,
         passphrase: Option<String>,
     ) -> Result<UsdtTransfer, UsdtError> {
+        self.send_with_deadline(quote_id, mnemonic, passphrase, None)
+            .await
+    }
+
+    /// Submits only while the approved deadline is valid, including automatic recovery retries.
+    /// This limits submission, not chain inclusion. An already submitted payment may still settle.
+    /// Repeating a quote ID retains its original deadline and returns its stored outcome.
+    /// The optional deadline is an RFC 3339 timestamp with up to nanosecond precision.
+    pub async fn send_with_deadline(
+        &self,
+        quote_id: String,
+        mnemonic: String,
+        passphrase: Option<String>,
+        submission_deadline: Option<String>,
+    ) -> Result<UsdtTransfer, UsdtError> {
         let mnemonic = zeroize::Zeroizing::new(mnemonic);
         let passphrase = passphrase.map(zeroize::Zeroizing::new);
+        let submission_deadline = submission_deadline
+            .map(|value| {
+                chrono::DateTime::parse_from_rfc3339(&value)
+                    .ok()
+                    .filter(|value| value.timestamp_subsec_nanos() < 1_000_000_000)
+                    .map(SystemTime::from)
+                    .ok_or(UsdtError::InvalidSubmissionDeadline)
+            })
+            .transpose()?;
         let _guard = self.operation.lock().await;
         if let Some(existing) = self.store.transfer(&quote_id)? {
             derive_owner_key(mnemonic, passphrase, self.address)?;
             return Ok(existing);
         }
+        self.rpc.check_submission_deadline(submission_deadline)?;
         self.store.require_no_pending()?;
         let mut data = self.store.quote(&quote_id)?;
+        data.plan.submission_deadline = submission_deadline;
         if data.quote.expires_at <= now() + 5 {
             return Err(UsdtError::QuoteExpired);
         }
@@ -221,6 +216,7 @@ impl UsdtWallet {
         let (hash, raw) = data.plan.sign(&key)?;
         drop(key);
         let mut transfer = UsdtTransfer {
+            sender: Some(self.receive_address()),
             id: quote_id,
             tx_hash: None,
             user_operation_hash: Some(format!("{hash:#x}")),
@@ -239,6 +235,9 @@ impl UsdtWallet {
         self.persist_backup().await?;
         // After persistence a lost response is indeterminate. Retry only the identical signed operation.
         if let Err(error) = self.broadcast(&data.plan, hash).await {
+            if matches!(error, UsdtError::SubmissionDeadlineExpired) {
+                return Err(error);
+            }
             // These errors occur before submission; later retries may already be queued.
             if matches!(
                 error,
@@ -330,6 +329,138 @@ impl UsdtWallet {
 }
 
 impl UsdtWallet {
+    async fn quote_payment(
+        &self,
+        recipient: String,
+        amount: u64,
+        destination: UsdtDestination,
+        maximum: bool,
+    ) -> Result<UsdtQuote, UsdtError> {
+        if amount == 0 {
+            return Err(UsdtError::InvalidAmount);
+        }
+        let recipient = super::orchestra::validate_recipient(recipient.trim(), destination)?;
+        if recipient == self.receive_address() {
+            return Err(UsdtError::InvalidAddress);
+        }
+        self.store.require_no_pending()?;
+        self.rpc.verify_chain().await?;
+        self.require_balance(amount, 0).await?;
+        let recipient = recipient.as_str();
+        let candidate = |use_orchestra| async move {
+            if maximum {
+                self.prepare_max_quote(recipient, amount, destination, use_orchestra)
+                    .await
+            } else {
+                self.prepare_quote(recipient, amount, destination, use_orchestra)
+                    .await
+            }
+        };
+        let direct = candidate(false);
+        let routed = async {
+            if destination == UsdtDestination::Arbitrum
+                || destination == UsdtDestination::Stable
+                || self.orchestra.is_none()
+            {
+                return Err(UsdtError::UnsupportedRoute);
+            }
+            candidate(true).await
+        };
+        let (direct, routed) = tokio::join!(direct, routed);
+        let fresh = |candidate: Result<QuoteData, UsdtError>| {
+            candidate.and_then(|data| {
+                if data.quote.expires_at <= now() + 5 {
+                    Err(UsdtError::QuoteExpired)
+                } else {
+                    Ok(data)
+                }
+            })
+        };
+        let selected = match (fresh(direct), fresh(routed)) {
+            (Ok(a), Ok(b)) => {
+                if better_quote(&b.quote, &a.quote)? {
+                    b
+                } else {
+                    a
+                }
+            }
+            (Ok(a), Err(_)) | (Err(_), Ok(a)) => a,
+            (Err(a), Err(b)) => {
+                return Err(
+                    if destination.endpoint().is_some() || destination == UsdtDestination::Arbitrum
+                    {
+                        a
+                    } else {
+                        b
+                    },
+                )
+            }
+        };
+        if selected.quote.expires_at <= now() + 5 {
+            return Err(UsdtError::QuoteExpired);
+        }
+        self.store.save_quote(&selected)?;
+        Ok(selected.quote)
+    }
+
+    async fn prepare_max_quote(
+        &self,
+        recipient: &str,
+        balance: u64,
+        destination: UsdtDestination,
+        use_orchestra: bool,
+    ) -> Result<QuoteData, UsdtError> {
+        let mut reserve = 0;
+        let mut last_error = UsdtError::QuoteExpired;
+        for _ in 0..3 {
+            let amount = balance
+                .checked_sub(reserve)
+                .filter(|amount| *amount > 0)
+                .ok_or(UsdtError::InsufficientBalance)?;
+            let payment = self
+                .prepare_calls(recipient, amount, destination, use_orchestra)
+                .await?;
+            let (nonce, authorization) =
+                tokio::try_join!(self.nonce("latest"), self.authorization())?;
+            let fee = self
+                .paymaster
+                .estimate_maximum_fee(self.address, nonce, authorization, &payment.calls)
+                .await?
+                .checked_add(payment.bridge_fee)
+                .ok_or(UsdtError::InvalidAmount)?;
+            reserve = reserve.max(fee);
+            let amount = balance
+                .checked_sub(reserve)
+                .filter(|amount| *amount > 0)
+                .ok_or(UsdtError::InsufficientBalance)?;
+            match self
+                .prepare_quote(recipient, amount, destination, use_orchestra)
+                .await
+            {
+                Ok(mut data) => {
+                    if data.quote.maximum_fee > reserve {
+                        reserve = data.quote.maximum_fee;
+                        continue;
+                    }
+                    // The reserve is an approval ceiling, never a fee prediction or a promise of zero dust.
+                    data.quote.maximum_fee = reserve;
+                    self.require_balance(amount, reserve).await?;
+                    return Ok(data);
+                }
+                Err(error)
+                    if matches!(
+                        error,
+                        UsdtError::InsufficientBalance | UsdtError::QuoteExpired
+                    ) || matches!(&error, UsdtError::TransactionRejected { reason } if reason.contains("AA50") || reason == "Paymaster fee collection failed") =>
+                {
+                    last_error = error;
+                }
+                Err(error) => return Err(error),
+            }
+        }
+        Err(last_error)
+    }
+
     async fn persist_backup(&self) -> Result<(), UsdtError> {
         let snapshot = self.export_backup()?;
         let hash = keccak256(snapshot.as_bytes());
@@ -341,13 +472,13 @@ impl UsdtWallet {
         Ok(())
     }
 
-    async fn prepare_quote(
+    async fn prepare_calls(
         &self,
         recipient: &str,
         amount: u64,
         destination: UsdtDestination,
         use_orchestra: bool,
-    ) -> Result<QuoteData, UsdtError> {
+    ) -> Result<PreparedCalls, UsdtError> {
         let orchestra = if use_orchestra {
             Some(
                 self.orchestra
@@ -380,9 +511,34 @@ impl UsdtWallet {
             self.transfer_calls(parse_address(recipient)?, amount, destination)
                 .await?
         };
-        let nonce = self.nonce("latest").await?;
-        let authorization = self.authorization().await?;
-        let created_block = self.block_number().await?;
+        Ok(PreparedCalls {
+            calls,
+            received_amount,
+            bridge_fee,
+            orchestra,
+        })
+    }
+
+    async fn prepare_quote(
+        &self,
+        recipient: &str,
+        amount: u64,
+        destination: UsdtDestination,
+        use_orchestra: bool,
+    ) -> Result<QuoteData, UsdtError> {
+        let PreparedCalls {
+            calls,
+            received_amount,
+            bridge_fee,
+            orchestra,
+        } = self
+            .prepare_calls(recipient, amount, destination, use_orchestra)
+            .await?;
+        let (nonce, authorization, created_block) = tokio::try_join!(
+            self.nonce("latest"),
+            self.authorization(),
+            self.block_number()
+        )?;
         let timestamp = self.block_timestamp(created_block).await?;
         let (operation, gas_fee, operation_expires_at) = self
             .paymaster
@@ -427,6 +583,7 @@ impl UsdtWallet {
                 orchestra,
                 created_block,
                 expires_at: operation_expires_at,
+                submission_deadline: None,
             },
         })
     }
@@ -864,9 +1021,10 @@ impl UsdtWallet {
         let result: Result<B256, UsdtError> = self
             .paymaster
             .rpc
-            .call(
+            .call_with_deadline(
                 "eth_sendUserOperation",
                 json!([plan.operation, ENTRY_POINT]),
+                plan.submission_deadline,
             )
             .await;
         match result {

@@ -6,7 +6,7 @@ use super::{
     user_operation::{Authorization, UserOperation},
     UsdtError,
 };
-use alloy_primitives::{address, Address, Bytes, U256};
+use alloy_primitives::{address, keccak256, Address, Bytes, U256};
 use alloy_sol_types::SolCall;
 use serde::Deserialize;
 use serde_json::json;
@@ -36,6 +36,7 @@ struct TokenQuote {
     token: Address,
     post_op_gas: U256,
     exchange_rate: U256,
+    balance_slot: Option<U256>,
 }
 
 #[derive(Deserialize)]
@@ -103,61 +104,9 @@ impl Pimlico {
         calls: &[(Address, Bytes)],
         timestamp: u64,
     ) -> Result<(UserOperation, u64, u64), UsdtError> {
-        self.rpc.verify_chain().await?;
-        #[derive(Deserialize)]
-        struct Quotes {
-            quotes: Vec<TokenQuote>,
-        }
-        let quotes: Quotes = self
-            .rpc
-            .call(
-                "pimlico_getTokenQuotes",
-                json!([{ "tokens": [USDT0] }, ENTRY_POINT, U256::from(ARBITRUM_CHAIN_ID)]),
-            )
+        let (mut op, estimate_terms) = self
+            .prepare_estimate(address, nonce, authorization, calls, false)
             .await?;
-        let quote = quotes
-            .quotes
-            .into_iter()
-            .find(|quote| {
-                quote.token == USDT0
-                    && quote.paymaster == PAYMASTER
-                    && !quote.exchange_rate.is_zero()
-            })
-            .ok_or(UsdtError::UnsupportedRoute)?;
-        let price = self.gas_prices().await?.fast;
-        let dummy_signature = Bytes::from_static(&alloy_primitives::hex!("fffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c"));
-        let mut op = UserOperation {
-            sender: address,
-            nonce,
-            factory: Bytes::from_static(&[0x77, 0x02]),
-            factory_data: Bytes::new(),
-            call_data: with_approval(calls, U256::MAX),
-            call_gas_limit: U256::ZERO,
-            verification_gas_limit: U256::ZERO,
-            pre_verification_gas: U256::ZERO,
-            max_fee_per_gas: price.max_fee_per_gas,
-            max_priority_fee_per_gas: price.max_priority_fee_per_gas,
-            paymaster: PAYMASTER,
-            paymaster_verification_gas_limit: U256::ZERO,
-            paymaster_post_op_gas_limit: U256::ZERO,
-            paymaster_data: Bytes::new(),
-            signature: dummy_signature,
-            eip7702_auth: authorization,
-        };
-        self.apply_paymaster(&mut op, "pm_getPaymasterStubData")
-            .await?;
-        let estimate: GasEstimate = self
-            .rpc
-            .call("eth_estimateUserOperationGas", json!([op, ENTRY_POINT]))
-            .await?;
-        estimate.apply(&mut op)?;
-        let estimate_terms = Terms {
-            exchange_rate: quote.exchange_rate,
-            post_op_gas: quote.post_op_gas,
-            constant_fee: U256::ZERO,
-            valid_until: 0,
-            valid_after: 0,
-        };
         let mut allowance = with_margin(estimate_terms.maximum_token_cost(&op)?, 5)?;
         // Provider data can change gas limits and token charges. Refine both before signing.
         for _ in 0..3 {
@@ -193,6 +142,109 @@ impl Pimlico {
             ));
         }
         Err(UsdtError::QuoteExpired)
+    }
+
+    /// Discovers a fee budget without asking the paymaster to sign an unaffordable payment.
+    pub async fn estimate_maximum_fee(
+        &self,
+        address: Address,
+        nonce: U256,
+        authorization: Authorization,
+        calls: &[(Address, Bytes)],
+    ) -> Result<u64, UsdtError> {
+        let (op, terms) = self
+            .prepare_estimate(address, nonce, authorization, calls, true)
+            .await?;
+        with_margin(terms.maximum_token_cost(&op)?, 5)?
+            .try_into()
+            .map_err(|_| UsdtError::InvalidResponse)
+    }
+
+    async fn prepare_estimate(
+        &self,
+        address: Address,
+        nonce: U256,
+        authorization: Authorization,
+        calls: &[(Address, Bytes)],
+        balance_override: bool,
+    ) -> Result<(UserOperation, Terms), UsdtError> {
+        self.rpc.verify_chain().await?;
+        #[derive(Deserialize)]
+        struct Quotes {
+            quotes: Vec<TokenQuote>,
+        }
+        let (quotes, prices) = tokio::try_join!(
+            self.rpc.call::<Quotes>(
+                "pimlico_getTokenQuotes",
+                json!([{ "tokens": [USDT0] }, ENTRY_POINT, U256::from(ARBITRUM_CHAIN_ID)]),
+            ),
+            self.gas_prices()
+        )?;
+        let quote = quotes
+            .quotes
+            .into_iter()
+            .find(|quote| {
+                quote.token == USDT0
+                    && quote.paymaster == PAYMASTER
+                    && !quote.exchange_rate.is_zero()
+            })
+            .ok_or(UsdtError::UnsupportedRoute)?;
+        let price = prices.fast;
+        let dummy_signature = Bytes::from_static(&alloy_primitives::hex!("fffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c"));
+        let mut op = UserOperation {
+            sender: address,
+            nonce,
+            factory: Bytes::from_static(&[0x77, 0x02]),
+            factory_data: Bytes::new(),
+            call_data: with_approval(calls, U256::MAX),
+            call_gas_limit: U256::ZERO,
+            verification_gas_limit: U256::ZERO,
+            pre_verification_gas: U256::ZERO,
+            max_fee_per_gas: price.max_fee_per_gas,
+            max_priority_fee_per_gas: price.max_priority_fee_per_gas,
+            paymaster: PAYMASTER,
+            paymaster_verification_gas_limit: U256::ZERO,
+            paymaster_post_op_gas_limit: U256::ZERO,
+            paymaster_data: Bytes::new(),
+            signature: dummy_signature,
+            eip7702_auth: authorization,
+        };
+        self.apply_paymaster(&mut op, "pm_getPaymasterStubData")
+            .await?;
+        let params = if balance_override {
+            // USDT0 uses the legacy USDT balance mapping. Never override code or authorization.
+            let slot = quote.balance_slot.ok_or(UsdtError::UnsupportedRoute)?;
+            if slot != U256::from(51) {
+                return Err(UsdtError::UnsupportedRoute);
+            }
+            let key = keccak256(
+                [
+                    address.into_word().as_slice(),
+                    slot.to_be_bytes::<32>().as_slice(),
+                ]
+                .concat(),
+            );
+            json!([op, ENTRY_POINT, {USDT0.to_string(): {"stateDiff": {key.to_string(): format!("{:#066x}", u128::MAX)}}}])
+        } else {
+            json!([op, ENTRY_POINT])
+        };
+        let estimate: GasEstimate = self
+            .rpc
+            .call("eth_estimateUserOperationGas", params)
+            .await?;
+        estimate.apply(&mut op)?;
+        let estimate_terms = Terms {
+            exchange_rate: quote.exchange_rate,
+            post_op_gas: quote.post_op_gas,
+            constant_fee: if balance_override {
+                Terms::decode(&op.paymaster_data)?.constant_fee
+            } else {
+                U256::ZERO
+            },
+            valid_until: 0,
+            valid_after: 0,
+        };
+        Ok((op, estimate_terms))
     }
 
     async fn apply_paymaster(&self, op: &mut UserOperation, method: &str) -> Result<(), UsdtError> {

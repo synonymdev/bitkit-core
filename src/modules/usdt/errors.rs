@@ -10,6 +10,8 @@ pub enum UsdtError {
     InvalidPaymentProof,
     #[error("Enter a valid USDT amount with at most six decimal places")]
     InvalidAmount,
+    #[error("Amount too small to cover bridge costs. Try a larger amount.")]
+    BridgeAmountTooSmall,
     #[error("Enter a valid address for the selected network")]
     InvalidAddress,
     #[error("The network or token does not match this USDT account")]
@@ -24,6 +26,10 @@ pub enum UsdtError {
     InsufficientBalance,
     #[error("The fee quote has expired or changed. Review a new quote")]
     QuoteExpired,
+    #[error("The approved payment submission deadline has passed")]
+    SubmissionDeadlineExpired,
+    #[error("The payment submission deadline must be a valid RFC 3339 timestamp")]
+    InvalidSubmissionDeadline,
     #[error("A USDT transaction is pending. Wait for confirmation before sending again")]
     PendingTransfer,
     #[error("The selected USDT payment route is unavailable")]

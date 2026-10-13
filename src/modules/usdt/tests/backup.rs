@@ -10,6 +10,7 @@ struct RemoteBackup {
     unavailable: AtomicBool,
     writes: AtomicUsize,
     snapshot: Mutex<Option<String>>,
+    after_persist: Mutex<Option<Box<dyn Fn() + Send + Sync>>>,
 }
 
 #[async_trait::async_trait]
@@ -20,7 +21,227 @@ impl UsdtBackup for RemoteBackup {
         }
         *self.snapshot.lock().unwrap() = Some(snapshot);
         self.writes.fetch_add(1, Ordering::SeqCst);
+        if let Some(after_persist) = self.after_persist.lock().unwrap().as_ref() {
+            after_persist();
+        }
         Ok(())
+    }
+}
+
+#[tokio::test]
+async fn expired_submission_deadline_does_not_create_payment() {
+    let chain = MockChain::start().await;
+    let directory = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&directory);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    let deadline = std::time::SystemTime::now();
+    for invalid in ["not-a-timestamp", "2026-10-12T00:00:60Z"] {
+        assert!(matches!(
+            wallet
+                .send_with_deadline(
+                    quote.id.clone(),
+                    TEST_PHRASE.into(),
+                    None,
+                    Some(invalid.into())
+                )
+                .await,
+            Err(UsdtError::InvalidSubmissionDeadline)
+        ));
+    }
+    *wallet.rpc.clock.lock().unwrap() = Some(deadline + std::time::Duration::from_nanos(1));
+    assert!(matches!(
+        wallet
+            .send_with_deadline(
+                quote.id,
+                TEST_PHRASE.into(),
+                None,
+                Some(chrono::DateTime::<chrono::Utc>::from(deadline).to_rfc3339())
+            )
+            .await,
+        Err(UsdtError::SubmissionDeadlineExpired)
+    ));
+    assert!(wallet.history().unwrap().is_empty());
+    assert!(chain.state.lock().unwrap().operations.is_empty());
+}
+
+#[tokio::test]
+async fn submission_deadline_prevents_first_broadcast_after_backup_failure() {
+    let chain = MockChain::start().await;
+    let directory = tempfile::tempdir().unwrap();
+    let backup = Arc::new(RemoteBackup::default());
+    backup.unavailable.store(true, Ordering::SeqCst);
+    let wallet = backed_up_wallet(&chain, &directory, backup.clone());
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    let deadline = std::time::SystemTime::now();
+    *wallet.rpc.clock.lock().unwrap() = Some(deadline);
+    assert!(matches!(
+        wallet
+            .send_with_deadline(
+                quote.id,
+                TEST_PHRASE.into(),
+                None,
+                Some(chrono::DateTime::<chrono::Utc>::from(deadline).to_rfc3339())
+            )
+            .await,
+        Err(UsdtError::BackupUnavailable)
+    ));
+    drop(wallet);
+    let reopened = backed_up_wallet(&chain, &directory, backup.clone());
+    *reopened.rpc.clock.lock().unwrap() = Some(deadline + std::time::Duration::from_nanos(1));
+    backup.unavailable.store(false, Ordering::SeqCst);
+    chain.state.lock().unwrap().tip += 3;
+    assert_eq!(
+        reopened.refresh_transfers().await.unwrap()[0].status,
+        UsdtTransferStatus::Pending
+    );
+    assert!(chain.state.lock().unwrap().operations.is_empty());
+}
+
+#[tokio::test]
+async fn submission_deadline_passing_during_backup_prevents_dispatch() {
+    let chain = MockChain::start().await;
+    let directory = tempfile::tempdir().unwrap();
+    let backup = Arc::new(RemoteBackup::default());
+    let wallet = backed_up_wallet(&chain, &directory, backup.clone());
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    let deadline = std::time::SystemTime::now();
+    let clock = wallet.rpc.clock.clone();
+    *clock.lock().unwrap() = Some(deadline);
+    *backup.after_persist.lock().unwrap() = Some(Box::new(move || {
+        *clock.lock().unwrap() = Some(deadline + std::time::Duration::from_nanos(1));
+    }));
+    assert!(matches!(
+        wallet
+            .send_with_deadline(
+                quote.id,
+                TEST_PHRASE.into(),
+                None,
+                Some(chrono::DateTime::<chrono::Utc>::from(deadline).to_rfc3339())
+            )
+            .await,
+        Err(UsdtError::SubmissionDeadlineExpired)
+    ));
+    assert_eq!(backup.writes.load(Ordering::SeqCst), 1);
+    assert!(chain.state.lock().unwrap().operations.is_empty());
+    assert_eq!(
+        wallet.history().unwrap()[0].status,
+        UsdtTransferStatus::Pending
+    );
+    let snapshot: serde_json::Value =
+        serde_json::from_str(&backup.snapshot.lock().unwrap().clone().unwrap()).unwrap();
+    assert_eq!(
+        snapshot["transfers"][0]["plan"]["submission_deadline"],
+        serde_json::to_value(deadline).unwrap()
+    );
+}
+
+#[tokio::test]
+async fn restored_submission_deadline_blocks_rebroadcast_but_allows_settlement() {
+    let chain = MockChain::start().await;
+    let directory = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&directory);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    let deadline = std::time::SystemTime::now();
+    *wallet.rpc.clock.lock().unwrap() = Some(deadline);
+    wallet
+        .send_with_deadline(
+            quote.id.clone(),
+            TEST_PHRASE.into(),
+            None,
+            Some(chrono::DateTime::<chrono::Utc>::from(deadline).to_rfc3339()),
+        )
+        .await
+        .unwrap();
+    let snapshot = wallet.export_backup().unwrap();
+    wallet
+        .send_with_deadline(quote.id.clone(), TEST_PHRASE.into(), None, None)
+        .await
+        .unwrap();
+    assert_eq!(wallet.export_backup().unwrap(), snapshot);
+    drop(wallet);
+
+    let reopened = chain.wallet(&directory);
+    *reopened.rpc.clock.lock().unwrap() = Some(deadline + std::time::Duration::from_nanos(1));
+    chain.state.lock().unwrap().tip += 3;
+    assert_eq!(
+        reopened.refresh_transfers().await.unwrap()[0].status,
+        UsdtTransferStatus::Pending
+    );
+    assert_eq!(chain.state.lock().unwrap().operations.len(), 1);
+
+    let restored_directory = tempfile::tempdir().unwrap();
+    let restored = chain.wallet(&restored_directory);
+    restored.restore_backup(snapshot).await.unwrap();
+    *restored.rpc.clock.lock().unwrap() = Some(deadline + std::time::Duration::from_nanos(1));
+    assert_eq!(
+        restored.refresh_transfers().await.unwrap()[0].status,
+        UsdtTransferStatus::Pending
+    );
+    assert_eq!(chain.state.lock().unwrap().operations.len(), 1);
+    chain.state.lock().unwrap().mined = true;
+    assert_eq!(
+        restored.refresh_transfers().await.unwrap()[0].status,
+        UsdtTransferStatus::Confirmed
+    );
+    assert_eq!(chain.state.lock().unwrap().operations.len(), 1);
+}
+
+#[tokio::test]
+async fn backup_merge_preserves_the_earliest_submission_deadline() {
+    let chain = MockChain::start().await;
+    let directory = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&directory);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    let deadline = std::time::SystemTime::now();
+    *wallet.rpc.clock.lock().unwrap() = Some(deadline);
+    wallet
+        .send_with_deadline(
+            quote.id.clone(),
+            TEST_PHRASE.into(),
+            None,
+            Some(chrono::DateTime::<chrono::Utc>::from(deadline).to_rfc3339()),
+        )
+        .await
+        .unwrap();
+    let original: serde_json::Value =
+        serde_json::from_str(&wallet.export_backup().unwrap()).unwrap();
+    let earlier = deadline - std::time::Duration::from_nanos(1);
+    for (incoming, expected) in [
+        (
+            Some(deadline + std::time::Duration::from_secs(60)),
+            deadline,
+        ),
+        (None, deadline),
+        (Some(earlier), earlier),
+    ] {
+        let mut snapshot = original.clone();
+        snapshot["transfers"][0]["plan"]["submission_deadline"] =
+            serde_json::to_value(incoming).unwrap();
+        wallet.restore_backup(snapshot.to_string()).await.unwrap();
+        assert_eq!(
+            wallet
+                .store
+                .pending_plan(&quote.id)
+                .unwrap()
+                .unwrap()
+                .submission_deadline,
+            Some(expected)
+        );
     }
 }
 
@@ -375,4 +596,44 @@ async fn orchestra_backup_restores_funded_delivery_after_chain_history() {
     );
     restored.refresh_transfers().await.unwrap();
     assert_eq!(chain.state.lock().unwrap().operations.len(), 1);
+}
+
+#[tokio::test]
+async fn transfer_sender_survives_backup_and_old_snapshots_remain_unknown() {
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    let sent = wallet
+        .send(quote.id, TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    assert_eq!(
+        sent.sender.as_deref(),
+        Some(wallet.receive_address().as_str())
+    );
+    let snapshot = wallet.export_backup().unwrap();
+    let restored_dir = tempfile::tempdir().unwrap();
+    let restored = chain.wallet(&restored_dir);
+    restored.restore_backup(snapshot.clone()).await.unwrap();
+    assert_eq!(restored.history().unwrap()[0].sender, sent.sender);
+    let mut old: serde_json::Value = serde_json::from_str(&snapshot).unwrap();
+    old["transfers"][0]["transfer"]
+        .as_object_mut()
+        .unwrap()
+        .remove("sender");
+    let old_dir = tempfile::tempdir().unwrap();
+    let old_wallet = chain.wallet(&old_dir);
+    old_wallet.restore_backup(old.to_string()).await.unwrap();
+    assert_eq!(old_wallet.history().unwrap()[0].sender, None);
+    restored.restore_backup(old.to_string()).await.unwrap();
+    assert_eq!(restored.history().unwrap()[0].sender, sent.sender);
+    old["transfers"][0]["transfer"]["sender"] = json!(RECIPIENT);
+    assert!(matches!(
+        old_wallet.restore_backup(old.to_string()).await,
+        Err(UsdtError::InvalidBackup)
+    ));
 }

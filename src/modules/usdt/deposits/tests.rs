@@ -278,6 +278,7 @@ async fn supported_networks_receive_with_pinned_token_uris() {
 async fn service_errors_preserve_recovery_actions() {
     for (code, expected) in [
         ("not_found", UsdtError::DepositNotFound),
+        ("xchain_amount_too_small", UsdtError::BridgeAmountTooSmall),
         (
             "invalid_authorization",
             UsdtError::DepositAuthorizationRejected,
@@ -434,4 +435,25 @@ async fn invalid_receive_terms_and_nonadvancing_pages_are_rejected() {
         Err(UsdtError::InvalidResponse)
     ));
     server.await.unwrap();
+}
+
+#[tokio::test]
+async fn outbound_quotes_preserve_bridge_cost_errors() {
+    let (url, server) = service(vec![(409, json!({"error":"xchain_amount_too_small"}))]).await;
+    let client = super::super::orchestra::Orchestra::new(url).unwrap();
+    let owner = super::super::usdt_address(PHRASE.into(), None).unwrap();
+    assert!(matches!(
+        client
+            .quote(
+                owner.parse().unwrap(),
+                "TJRabPrwbZy45sbavfcjinPJC18kjpRTv8".into(),
+                3_500_000,
+                super::super::UsdtDestination::Tron,
+            )
+            .await,
+        Err(UsdtError::BridgeAmountTooSmall)
+    ));
+    let requests = server.await.unwrap();
+    assert_eq!(requests[0]["action"], "quote");
+    assert_eq!(requests[0]["amount"], "3500000");
 }

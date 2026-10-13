@@ -116,6 +116,8 @@ pub(super) struct Plan {
     pub operation: UserOperation,
     pub created_block: u64,
     pub expires_at: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub submission_deadline: Option<std::time::SystemTime>,
 }
 
 impl Plan {

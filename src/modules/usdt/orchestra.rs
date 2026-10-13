@@ -165,6 +165,7 @@ impl Orchestra {
         let value = bounded_json(response, 16384, UsdtError::InvalidResponse).await?;
         if !status.is_success() {
             return Err(match value["error"].as_str() {
+                Some("xchain_amount_too_small") => UsdtError::BridgeAmountTooSmall,
                 Some("amount_too_small" | "amount_too_large" | "amount_exceeds_liquidity") => {
                     UsdtError::InvalidAmount
                 }

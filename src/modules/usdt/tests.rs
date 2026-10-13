@@ -435,6 +435,9 @@ struct ChainState {
     paymaster_valid_until: Option<u64>,
     pre_verification_estimates: std::collections::VecDeque<u64>,
     gas_price: u64,
+    gas_prices: std::collections::VecDeque<u64>,
+    estimation_overrides: Vec<serde_json::Value>,
+    enforce_simulation_balance: bool,
     external_outgoing: bool,
     nonce: u64,
     balance: alloy_primitives::U256,
@@ -500,6 +503,9 @@ impl MockChain {
             paymaster_valid_until: None,
             pre_verification_estimates: Default::default(),
             gas_price: 50_000_000,
+            gas_prices: Default::default(),
+            estimation_overrides: vec![],
+            enforce_simulation_balance: false,
             external_outgoing: false,
             nonce: 0,
             balance: U256::from(10_000_000),
@@ -714,6 +720,21 @@ impl ChainState {
                 return json!({"jsonrpc":"2.0","id":1,"error":{"code":-32602,"message":"Invalid EIP-7702 authorization"}});
             }
         }
+        if matches!(
+            body["method"].as_str(),
+            Some("eth_estimateUserOperationGas" | "pm_getPaymasterData")
+        ) {
+            let op: user_operation::UserOperation =
+                serde_json::from_value(body["params"][0].clone()).unwrap();
+            if body["method"] == "eth_estimateUserOperationGas" && !body["params"][2].is_null() {
+                self.estimation_overrides.push(body["params"][2].clone());
+            } else if self.enforce_simulation_balance {
+                let amount = history::decode_payment(&op.call_data, op.sender).unwrap().1;
+                if U256::from(amount) + U256::from(50_000) > self.balance {
+                    return json!({"jsonrpc":"2.0","id":1,"error":{"code":-32500,"message":"AA50 postOp reverted"}});
+                }
+            }
+        }
         let result = match body["method"].as_str().unwrap() {
             "bitkit_getBridgeMessages" => self
                 .bridge_messages
@@ -837,9 +858,12 @@ impl ChainState {
                 json!(Bytes::from(encoded))
             }
             "pimlico_getTokenQuotes" => {
-                json!({"quotes":[{"token":types::TOKEN,"paymaster":self.paymaster,"postOpGas":"0xc350","exchangeRate":U256::from(3_000_000_000u64)}]})
+                json!({"quotes":[{"token":types::TOKEN,"paymaster":self.paymaster,"postOpGas":"0xc350","balanceSlot":"0x33","exchangeRate":U256::from(3_000_000_000u64)}]})
             }
             "pimlico_getUserOperationGasPrice" => {
+                if let Some(price) = self.gas_prices.pop_front() {
+                    self.gas_price = price;
+                }
                 json!({"slow":{"maxFeePerGas":U256::from(self.gas_price * 9 / 10),"maxPriorityFeePerGas":U256::from(100000)},"fast":{"maxFeePerGas":U256::from(self.gas_price),"maxPriorityFeePerGas":U256::from(100000)}})
             }
             "pm_getPaymasterData" | "pm_getPaymasterStubData" => {
@@ -1872,6 +1896,7 @@ fn stored_activity_is_complete_and_sorted_newest_first() {
     .unwrap();
     let transfers: Vec<_> = (0..501)
         .map(|index| UsdtTransfer {
+            sender: None,
             id: format!("receipt-{index}"),
             tx_hash: Some(format!("tx-{index}")),
             user_operation_hash: None,
@@ -2000,6 +2025,16 @@ async fn interrupted_history_resumes_without_repeating_completed_work() {
     let restored = chain.wallet(&restored_dir);
     sync_history_to_tip(&restored).await;
     assert_eq!(restored.history().unwrap().len(), incoming_count);
+    assert!(restored
+        .history()
+        .unwrap()
+        .iter()
+        .all(|transfer| transfer.sender.as_deref()
+            == Some(
+                alloy_primitives::Address::repeat_byte(8)
+                    .to_checksum(None)
+                    .as_str()
+            )));
     assert_eq!(chain.state.lock().unwrap().block_reads, incoming_count + 1);
     sync_history_to_tip(&restored).await;
     assert_eq!(restored.history().unwrap().len(), incoming_count);
@@ -2240,6 +2275,7 @@ async fn stalled_bridge_status_checks_leave_time_for_source_recovery_and_sending
     chain.state.lock().unwrap().bridge_delay = Duration::from_secs(25);
     let bridges: Vec<_> = (0..5)
         .map(|index| UsdtTransfer {
+            sender: None,
             id: format!("bridge-{index}"),
             tx_hash: Some(format!("{:#x}", alloy_primitives::B256::repeat_byte(index))),
             user_operation_hash: None,
@@ -3909,10 +3945,12 @@ fn orphaned_payments_reopen_in_nonce_order_and_keep_sends_blocked() {
             operation: serde_json::from_value(vector["operation"].clone()).unwrap(),
             created_block: 19999,
             expires_at: wallet::now() + 600,
+            submission_deadline: None,
         };
         plan.operation.nonce = U256::from(nonce);
         let (hash, raw) = plan.sign(&key).unwrap();
         let mut transfer = UsdtTransfer {
+            sender: None,
             id: format!("payment-{nonce}"),
             tx_hash: None,
             user_operation_hash: Some(format!("{hash:#x}")),
@@ -4664,6 +4702,7 @@ async fn orchestra_refund_receipts_are_exclusive_across_restart_and_pruning() {
         plan.operation.nonce = U256::from(nonce);
         let (hash, raw) = plan.sign(&key).unwrap();
         let transfer = UsdtTransfer {
+            sender: None,
             id: format!("payment-{nonce}"),
             tx_hash: Some(B256::repeat_byte(nonce + 1).to_string()),
             user_operation_hash: Some(hash.to_string()),
@@ -4810,4 +4849,115 @@ async fn orchestra_refund_receipts_are_exclusive_across_restart_and_pruning() {
         Err(UsdtError::InvalidBackup)
     ));
     assert_eq!(wallet.export_backup().unwrap(), snapshot);
+}
+
+#[tokio::test]
+async fn maximum_quote_reserves_fees_and_uses_overrides_only_for_discovery() {
+    use alloy_primitives::{keccak256, U256};
+    let chain = MockChain::start().await;
+    chain.state.lock().unwrap().enforce_simulation_balance = true;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    let quote = wallet
+        .quote_max_transfer(RECIPIENT.into(), UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    assert_eq!(quote.amount + quote.maximum_fee, 10_000_000);
+    assert!(quote.amount > 0 && quote.maximum_fee > 0);
+    let stored = wallet.store.quote(&quote.id).unwrap();
+    assert_eq!(
+        history::decode_payment(&stored.plan.operation.call_data, wallet.address)
+            .unwrap()
+            .1,
+        quote.amount
+    );
+    let state = chain.state.lock().unwrap();
+    let key = keccak256(
+        [
+            wallet.address.into_word().as_slice(),
+            U256::from(51).to_be_bytes::<32>().as_slice(),
+        ]
+        .concat(),
+    );
+    assert_eq!(
+        state.estimation_overrides[0],
+        serde_json::json!({types::TOKEN.to_string(): {"stateDiff": {key.to_string(): format!("{:#066x}", u128::MAX)}}})
+    );
+    assert!(state.operations.is_empty());
+}
+
+#[tokio::test]
+async fn maximum_quote_reprices_a_changed_fee_and_stops_when_balance_cannot_cover_fees() {
+    use alloy_primitives::U256;
+    let chain = MockChain::start().await;
+    chain.state.lock().unwrap().gas_prices = [50_000_000, 100_000_000, 100_000_000].into();
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    let quote = wallet
+        .quote_max_transfer(RECIPIENT.into(), UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    assert_eq!(quote.amount + quote.maximum_fee, 10_000_000);
+    assert!(quote.maximum_fee > 200_000);
+    assert_eq!(chain.state.lock().unwrap().estimation_overrides.len(), 2);
+    chain.state.lock().unwrap().balance = U256::from(1_000);
+    assert!(matches!(
+        wallet
+            .quote_max_transfer(RECIPIENT.into(), UsdtDestination::Arbitrum)
+            .await,
+        Err(UsdtError::InsufficientBalance)
+    ));
+    assert!(chain.state.lock().unwrap().operations.is_empty());
+}
+
+#[tokio::test]
+async fn maximum_quote_bounds_unstable_fee_retries_without_saving_a_quote() {
+    let chain = MockChain::start().await;
+    chain.state.lock().unwrap().gas_prices = [
+        50_000_000,
+        100_000_000,
+        100_000_000,
+        200_000_000,
+        200_000_000,
+        400_000_000,
+    ]
+    .into();
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    assert!(wallet
+        .quote_max_transfer(RECIPIENT.into(), UsdtDestination::Arbitrum)
+        .await
+        .is_err());
+    assert_eq!(chain.state.lock().unwrap().estimation_overrides.len(), 3);
+    let count: u64 = wallet
+        .store
+        .connection()
+        .unwrap()
+        .query_row("SELECT COUNT(*) FROM usdt_quotes", [], |row| row.get(0))
+        .unwrap();
+    assert_eq!(count, 0);
+    assert!(wallet.history().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn maximum_bridge_quote_includes_source_fees_and_compares_complete_route_budgets() {
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = UsdtWallet::new(
+        usdt_address(TEST_PHRASE.into(), None).unwrap(),
+        dir.path().join("usdt.sqlite").to_string_lossy().into(),
+        chain.url.clone(),
+        chain.url.clone(),
+        Some(chain.url.clone()),
+        std::sync::Arc::new(TestBackup),
+    )
+    .unwrap();
+    let quote = wallet
+        .quote_max_transfer(RECIPIENT.into(), UsdtDestination::Polygon)
+        .await
+        .unwrap();
+    assert_eq!(quote.amount + quote.maximum_fee, 10_000_000);
+    assert_eq!(quote.bridge_provider, Some(UsdtBridgeProvider::Usdt0));
+    assert!(quote.maximum_fee > 300_000);
+    assert!(chain.state.lock().unwrap().operations.is_empty());
 }
