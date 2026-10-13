@@ -173,13 +173,13 @@ impl Pimlico {
         struct Quotes {
             quotes: Vec<TokenQuote>,
         }
-        let quotes: Quotes = self
-            .rpc
-            .call(
+        let (quotes, prices) = tokio::try_join!(
+            self.rpc.call::<Quotes>(
                 "pimlico_getTokenQuotes",
                 json!([{ "tokens": [USDT0] }, ENTRY_POINT, U256::from(ARBITRUM_CHAIN_ID)]),
-            )
-            .await?;
+            ),
+            self.gas_prices()
+        )?;
         let quote = quotes
             .quotes
             .into_iter()
@@ -189,7 +189,7 @@ impl Pimlico {
                     && !quote.exchange_rate.is_zero()
             })
             .ok_or(UsdtError::UnsupportedRoute)?;
-        let price = self.gas_prices().await?.fast;
+        let price = prices.fast;
         let dummy_signature = Bytes::from_static(&alloy_primitives::hex!("fffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c"));
         let mut op = UserOperation {
             sender: address,

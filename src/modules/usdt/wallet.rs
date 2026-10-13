@@ -420,14 +420,11 @@ impl UsdtWallet {
             let payment = self
                 .prepare_calls(recipient, amount, destination, use_orchestra)
                 .await?;
+            let (nonce, authorization) =
+                tokio::try_join!(self.nonce("latest"), self.authorization())?;
             let fee = self
                 .paymaster
-                .estimate_maximum_fee(
-                    self.address,
-                    self.nonce("latest").await?,
-                    self.authorization().await?,
-                    &payment.calls,
-                )
+                .estimate_maximum_fee(self.address, nonce, authorization, &payment.calls)
                 .await?
                 .checked_add(payment.bridge_fee)
                 .ok_or(UsdtError::InvalidAmount)?;
@@ -537,9 +534,11 @@ impl UsdtWallet {
         } = self
             .prepare_calls(recipient, amount, destination, use_orchestra)
             .await?;
-        let nonce = self.nonce("latest").await?;
-        let authorization = self.authorization().await?;
-        let created_block = self.block_number().await?;
+        let (nonce, authorization, created_block) = tokio::try_join!(
+            self.nonce("latest"),
+            self.authorization(),
+            self.block_number()
+        )?;
         let timestamp = self.block_timestamp(created_block).await?;
         let (operation, gas_fee, operation_expires_at) = self
             .paymaster
