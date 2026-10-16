@@ -51,6 +51,17 @@ fn update_activity(activity_id: String, activity: Activity) -> Result<(), Activi
 // Insert or update an activity
 fn upsert_activity(activity: Activity) -> Result<(), ActivityError>
 
+// Record a successful RBF result atomically (does not broadcast a transaction)
+fn record_rbf_boost(
+  wallet_id: String,
+  original_activity_id: String,
+  replacement_tx_id: String,
+  fee_rate: u64
+) -> Result<(), ActivityError>
+
+// Merge a sync/event snapshot without replacing a known rate for the same wallet and txid
+fn upsert_onchain_activity_preserving_fee_rate(activity: OnchainActivity) -> Result<(), ActivityError>
+
 // Get a specific activity by wallet ID and activity ID
 fn get_activity_by_id(wallet_id: String, activity_id: String) -> Result<Option<Activity>, ActivityError>
 

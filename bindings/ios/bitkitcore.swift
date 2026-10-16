@@ -30673,6 +30673,19 @@ public func pubkySignUp(secretKeyHex: String, homeserverPublicKeyZ32: String, si
         )
 }
 /**
+ * Persist a successful outgoing RBF result, including its replacement fee rate, in one transaction.
+ * Call after the node has returned the replacement txid; this function does not broadcast anything.
+ */
+public func recordRbfBoost(walletId: String, originalActivityId: String, replacementTxId: String, feeRate: UInt64)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_record_rbf_boost(
+        FfiConverterString.lower(walletId),
+        FfiConverterString.lower(originalActivityId),
+        FfiConverterString.lower(replacementTxId),
+        FfiConverterUInt64.lower(feeRate),$0
+    )
+}
+}
+/**
  * Refresh all active CJIT entries in the database with latest data from the LSP
  */
 public func refreshActiveCjitEntries()async throws  -> [IcJitEntry]  {
@@ -31380,6 +31393,16 @@ public func upsertOnchainActivities(activities: [OnchainActivity])throws   {try 
     )
 }
 }
+/**
+ * Merge a sync/event snapshot without overwriting a known fee rate for the same wallet and txid.
+ * Generic upsert_activity/update_activity still accept explicit fee-rate corrections.
+ */
+public func upsertOnchainActivityPreservingFeeRate(activity: OnchainActivity)throws   {try rustCallWithError(FfiConverterTypeActivityError_lift) {
+    uniffi_bitkitcore_fn_func_upsert_onchain_activity_preserving_fee_rate(
+        FfiConverterTypeOnchainActivity_lower(activity),$0
+    )
+}
+}
 public func upsertOrders(orders: [IBtOrder])async throws   {
     return
         try  await uniffiRustCallAsync(
@@ -31948,6 +31971,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_pubky_sign_up() != 61692) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_record_rbf_boost() != 15433) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_refresh_active_cjit_entries() != 5324) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -32099,6 +32125,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_upsert_onchain_activities() != 15461) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_upsert_onchain_activity_preserving_fee_rate() != 13661) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_upsert_orders() != 45856) {
