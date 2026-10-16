@@ -1,5 +1,5 @@
 use super::{
-    deposits::{number, optional_number},
+    deposits::{deposit_limit, number, optional_number},
     keys::parse_address,
     rpc::{bounded_json, endpoint_client},
     UsdtDestination, UsdtError, UsdtOrchestraTransfer,
@@ -166,9 +166,13 @@ impl Orchestra {
         if !status.is_success() {
             return Err(match value["error"].as_str() {
                 Some("xchain_amount_too_small") => UsdtError::BridgeAmountTooSmall,
-                Some("amount_too_small" | "amount_too_large" | "amount_exceeds_liquidity") => {
-                    UsdtError::InvalidAmount
-                }
+                Some("amount_too_small") => UsdtError::BridgeAmountBelowMinimum {
+                    min_usd_cents: deposit_limit(&value["min_usd_cents"])?,
+                },
+                Some("amount_too_large") => UsdtError::BridgeAmountAboveMaximum {
+                    max_usd_cents: deposit_limit(&value["max_usd_cents"])?,
+                },
+                Some("amount_exceeds_liquidity") => UsdtError::BridgeLiquidityUnavailable,
                 Some("invalid_address") => UsdtError::InvalidAddress,
                 Some("route_unavailable" | "not_configured") => UsdtError::UnsupportedRoute,
                 _ => UsdtError::NetworkUnavailable,
