@@ -106,6 +106,15 @@ impl Store {
                 }
                 *sender = address.to_checksum(None);
             }
+            if let Some(bridge) = &transfer.orchestra {
+                if !super::orchestra::valid_identifier(&bridge.quote_id) {
+                    return Err(UsdtError::InvalidBackup);
+                }
+                if let Some(hash) = &bridge.destination_tx {
+                    super::orchestra::validate_transaction_id(hash, transfer.destination.network())
+                        .map_err(|_| UsdtError::InvalidBackup)?;
+                }
+            }
             let refund = transfer
                 .orchestra
                 .as_mut()
