@@ -4388,7 +4388,8 @@ async fn orchestra_funding_reorg_restores_the_signed_payment_after_restart() {
             transfer.received_amount = 0;
             Some((20001, chain.state.lock().unwrap().block_hash(20001)))
         } else {
-            bridge.destination_tx = Some("destination-transaction".into());
+            bridge.destination_tx =
+                Some("0x3434343434343434343434343434343434343434343434343434343434343434".into());
             transfer.received_amount = 949_000;
             None
         };
@@ -4478,7 +4479,7 @@ async fn orchestra_funding_keeps_delivery_identity_through_restart_and_history()
     );
     drop(wallet);
     for amount in [0, 1_000_001] {
-        chain.state.lock().unwrap().orchestra_delivery = json!({"status":"completed", "received_amount":amount.to_string(),"destination_tx":"destination-transaction","refund_tx":null,"refund_amount":null});
+        chain.state.lock().unwrap().orchestra_delivery = json!({"status":"completed", "received_amount":amount.to_string(),"destination_tx":"1111111111111111111111111111111111111111111111111111111111111111","refund_tx":null,"refund_amount":null});
         let wallet = chain.wallet_with_bridges(&dir, true);
         wallet.refresh_transfers().await.unwrap();
         let transfer = wallet.store.transfer(&sent.id).unwrap().unwrap();
@@ -4486,7 +4487,7 @@ async fn orchestra_funding_keeps_delivery_identity_through_restart_and_history()
         assert_eq!(transfer.received_amount, 950_000);
         assert!(transfer.orchestra.unwrap().destination_tx.is_none());
     }
-    chain.state.lock().unwrap().orchestra_delivery = json!({"status":"completed", "received_amount":"949000","destination_tx":"destination-transaction","refund_tx":null,"refund_amount":null});
+    chain.state.lock().unwrap().orchestra_delivery = json!({"status":"completed", "received_amount":"949000","destination_tx":"1111111111111111111111111111111111111111111111111111111111111111","refund_tx":null,"refund_amount":null});
     let wallet = chain.wallet_with_bridges(&dir, true);
     let delivered = wallet
         .refresh_transfers()
@@ -4499,7 +4500,7 @@ async fn orchestra_funding_keeps_delivery_identity_through_restart_and_history()
     assert_eq!(delivered.received_amount, 949_000);
     assert_eq!(
         delivered.orchestra.unwrap().destination_tx.as_deref(),
-        Some("destination-transaction")
+        Some("1111111111111111111111111111111111111111111111111111111111111111")
     );
     assert_eq!(
         wallet
