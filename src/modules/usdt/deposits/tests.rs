@@ -457,3 +457,57 @@ async fn outbound_quotes_preserve_bridge_cost_errors() {
     assert_eq!(requests[0]["action"], "quote");
     assert_eq!(requests[0]["amount"], "3500000");
 }
+
+#[tokio::test]
+async fn outbound_quote_errors_preserve_route_limits_and_liquidity() {
+    use super::super::{orchestra::Orchestra, UsdtDestination};
+    let cases = [
+        (
+            json!({"error":"amount_too_small","min_usd_cents":"200"}),
+            "minimum",
+            Some("200"),
+        ),
+        (json!({"error":"amount_too_small"}), "minimum", None),
+        (
+            json!({"error":"amount_too_large","max_usd_cents":"500000"}),
+            "maximum",
+            Some("500000"),
+        ),
+        (
+            json!({"error":"amount_too_large","max_usd_cents":"invalid"}),
+            "maximum",
+            None,
+        ),
+        (
+            json!({"error":"amount_exceeds_liquidity"}),
+            "liquidity",
+            None,
+        ),
+        (json!({"error":"xchain_amount_too_small"}), "cost", None),
+    ];
+    for (response, expected, limit) in cases {
+        let (url, server) = service(vec![(409, response)]).await;
+        let result = Orchestra::new(url)
+            .unwrap()
+            .quote(
+                alloy_primitives::Address::repeat_byte(1),
+                "6G41T4zUUYm47xgYBFoUioUGhigxS98Cj79y7C5nAf1L".into(),
+                1_000_000,
+                UsdtDestination::Solana,
+            )
+            .await;
+        let (kind, actual_limit) = match result {
+            Err(UsdtError::BridgeAmountBelowMinimum { min_usd_cents }) => {
+                ("minimum", min_usd_cents)
+            }
+            Err(UsdtError::BridgeAmountAboveMaximum { max_usd_cents }) => {
+                ("maximum", max_usd_cents)
+            }
+            Err(UsdtError::BridgeLiquidityUnavailable) => ("liquidity", None),
+            Err(UsdtError::BridgeAmountTooSmall) => ("cost", None),
+            other => panic!("Unexpected quote response: {other:?}"),
+        };
+        assert_eq!((kind, actual_limit.as_deref()), (expected, limit));
+        assert_eq!(server.await.unwrap().len(), 1);
+    }
+}

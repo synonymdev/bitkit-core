@@ -374,7 +374,9 @@ pub(super) fn validate_source_address(
     Ok(())
 }
 
-fn deposit_limit<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
+pub(super) fn deposit_limit<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Option<String>, D::Error> {
     let value = Value::deserialize(deserializer)?;
     Ok(value
         .as_str()

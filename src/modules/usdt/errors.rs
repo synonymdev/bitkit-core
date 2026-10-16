@@ -12,6 +12,12 @@ pub enum UsdtError {
     InvalidAmount,
     #[error("Amount too small to cover bridge costs. Try a larger amount.")]
     BridgeAmountTooSmall,
+    #[error("Amount is below the bridge minimum. Try a larger amount")]
+    BridgeAmountBelowMinimum { min_usd_cents: Option<String> },
+    #[error("Amount is above the bridge maximum. Try a smaller amount")]
+    BridgeAmountAboveMaximum { max_usd_cents: Option<String> },
+    #[error("The bridge has insufficient liquidity for this amount. Try a smaller amount or try again later")]
+    BridgeLiquidityUnavailable,
     #[error("Enter a valid address for the selected network")]
     InvalidAddress,
     #[error("The network or token does not match this USDT account")]
