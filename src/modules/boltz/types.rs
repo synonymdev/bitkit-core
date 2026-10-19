@@ -257,6 +257,9 @@ pub struct BoltzSwap {
     pub amount_sat: u64,
     /// For reverse swaps: the onchain amount that will be received.
     pub onchain_amount_sat: Option<u64>,
+    /// For reverse swaps that pay an external address: the exact amount the
+    /// claim sends there. The rest of the onchain amount is the claim fee.
+    pub recipient_amount_sat: Option<u64>,
     /// Lightning invoice associated with the swap (the hold invoice for reverse
     /// swaps, the invoice Boltz pays for submarine swaps).
     pub invoice: Option<String>,

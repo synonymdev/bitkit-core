@@ -804,6 +804,7 @@ async fn external_recipient_survives_database_reopen_and_fixes_claim_fee() {
     let db = BoltzDB::new(path.to_str().unwrap()).await.unwrap();
     let recovered = db.get_swap("external-send").await.unwrap().unwrap();
     assert_eq!(recovered.recipient_amount_sat, Some(98_100));
+    assert_eq!(recovered.to_boltz_swap().recipient_amount_sat, Some(98_100));
     assert!(matches!(
         super::send::claim_fee(&recovered, Some(100.0)).unwrap(),
         boltz_client::util::fees::Fee::Absolute(900)

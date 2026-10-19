@@ -187,6 +187,7 @@ impl SwapRecord {
             swap_index: self.swap_index,
             amount_sat: self.amount_sat,
             onchain_amount_sat: self.onchain_amount_sat,
+            recipient_amount_sat: self.recipient_amount_sat,
             invoice: self.invoice.clone(),
             lockup_address: self.lockup_address.clone(),
             onchain_address: self.onchain_address.clone(),
