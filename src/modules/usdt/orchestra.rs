@@ -105,8 +105,7 @@ impl Orchestra {
             .await?;
         let funding =
             parse_address(&quote.funding_address).map_err(|_| UsdtError::InvalidResponse)?;
-        if quote.quote_id.is_empty()
-            || quote.quote_id.len() > 128
+        if !valid_identifier(&quote.quote_id)
             || quote.ticket.is_empty()
             || quote.ticket.len() > 4096
             || quote.received_amount == 0
@@ -179,6 +178,39 @@ impl Orchestra {
             });
         }
         serde_json::from_value(value).map_err(Into::into)
+    }
+}
+
+pub(super) fn valid_identifier(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 128
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || b"_-".contains(&byte))
+}
+
+pub(super) fn valid_provider_text(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 512
+        && !lazy_regex::regex_is_match!(r"[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]", value)
+}
+
+pub(super) fn validate_transaction_id(value: &str, network: &str) -> Result<(), UsdtError> {
+    let valid = valid_provider_text(value)
+        && match network {
+            "solana" => bitcoin::base58::decode(value).is_ok_and(|bytes| bytes.len() == 64),
+            "tron" => value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit()),
+            "ethereum" | "arbitrum" | "polygon" | "plasma" | "stable" | "base" | "bsc" => {
+                value.len() == 66
+                    && value.starts_with("0x")
+                    && value[2..].bytes().all(|byte| byte.is_ascii_hexdigit())
+            }
+            _ => true,
+        };
+    if valid {
+        Ok(())
+    } else {
+        Err(UsdtError::InvalidResponse)
     }
 }
 

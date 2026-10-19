@@ -566,6 +566,7 @@ async fn orchestra_backup_restores_funded_delivery_after_chain_history() {
     let bridge = refunded.orchestra.as_mut().unwrap();
     bridge.refund_tx = Some(alloy_primitives::B256::repeat_byte(9).to_string());
     bridge.refund_amount = Some(900_000);
+    bridge.destination_tx = Some("historical-provider-reference".into());
     wallet
         .store
         .update_delivery(
@@ -589,7 +590,9 @@ async fn orchestra_backup_restores_funded_delivery_after_chain_history() {
     assert_eq!(payment.recipient, RECIPIENT);
     assert_eq!(payment.status, UsdtTransferStatus::Bridging);
     assert_eq!(payment.received_amount, quote.received_amount);
-    assert!(payment.orchestra.unwrap().refund_tx.is_none());
+    let bridge = payment.orchestra.unwrap();
+    assert!(bridge.refund_tx.is_none());
+    assert!(bridge.destination_tx.is_none());
     assert_eq!(
         restored.store.orchestra_plan(&quote.id).unwrap().ticket,
         "quote-ticket"
