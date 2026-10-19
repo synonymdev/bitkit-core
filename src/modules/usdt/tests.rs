@@ -449,6 +449,7 @@ struct ChainState {
     block_timestamps: std::collections::BTreeMap<u64, alloy_primitives::U256>,
     reject_broadcast: bool,
     delay_gas_estimate: bool,
+    send_read_barrier: Option<(std::sync::Arc<tokio::sync::Barrier>, usize)>,
     bridge_messages: std::collections::HashMap<String, serde_json::Value>,
     bridge_requests: Vec<String>,
     bridge_delay: std::time::Duration,
@@ -517,6 +518,7 @@ impl MockChain {
             block_timestamps: Default::default(),
             reject_broadcast: false,
             delay_gas_estimate: false,
+            send_read_barrier: None,
             bridge_messages: Default::default(),
             bridge_requests: vec![],
             bridge_delay: std::time::Duration::ZERO,
@@ -633,6 +635,28 @@ impl MockChain {
                 } else {
                     std::time::Duration::ZERO
                 };
+                let send_read_barrier = {
+                    let mut state = server_state.lock().unwrap();
+                    let barrier = if matches!(method, "eth_call" | "eth_getCode") {
+                        state
+                            .send_read_barrier
+                            .as_mut()
+                            .map(|(barrier, remaining)| {
+                                *remaining -= 1;
+                                barrier.clone()
+                            })
+                    } else {
+                        None
+                    };
+                    if state
+                        .send_read_barrier
+                        .as_ref()
+                        .is_some_and(|(_, remaining)| *remaining == 0)
+                    {
+                        state.send_read_barrier = None;
+                    }
+                    barrier
+                };
                 let mut response = if http_method == "GET" {
                     serde_json::json!({"networks":["ethereum", "polygon", "plasma", "base", "bsc", "solana", "tron", "unknown-network"]})
                 } else {
@@ -658,6 +682,9 @@ impl MockChain {
                 let response=format!("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{response}",response.len());
                 while requests.try_join_next().is_some() {}
                 requests.spawn(async move {
+                    if let Some(barrier) = send_read_barrier {
+                        barrier.wait().await;
+                    }
                     tokio::time::sleep(bridge_delay).await;
                     let _ = socket.write_all(response.as_bytes()).await;
                 });
@@ -1242,6 +1269,30 @@ async fn fluctuating_gas_estimates_preserve_the_reviewed_operation() {
     );
     assert!(signed.pre_verification_gas >= U256::from(80_400));
     assert!(signed.pre_verification_gas < U256::from(100_000));
+}
+
+#[tokio::test]
+async fn send_preflight_reads_overlap_before_signing() {
+    let chain = MockChain::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let wallet = chain.wallet(&dir);
+    let quote = wallet
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    chain.state.lock().unwrap().send_read_barrier =
+        Some((std::sync::Arc::new(tokio::sync::Barrier::new(3)), 3));
+    let sent = tokio::time::timeout(
+        std::time::Duration::from_secs(10),
+        wallet.send(quote.id, TEST_PHRASE.into(), None),
+    )
+    .await
+    .expect("nonce, delegation and balance reads must run concurrently")
+    .unwrap();
+    assert_eq!(sent.status, UsdtTransferStatus::Pending);
+    let state = chain.state.lock().unwrap();
+    assert!(state.send_read_barrier.is_none());
+    assert_eq!(state.operations.len(), 1);
 }
 
 #[tokio::test]
