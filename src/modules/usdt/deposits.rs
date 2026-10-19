@@ -348,7 +348,7 @@ impl UsdtDepositClient {
                         max_usd_cents: deposit_limit(&error["max_usd_cents"])?,
                     }
                 }
-                Some("amount_exceeds_liquidity") => UsdtError::UnsupportedRoute,
+                Some("amount_exceeds_liquidity") => UsdtError::BridgeLiquidityUnavailable,
                 Some("invalid_refund_address") => UsdtError::InvalidAddress,
                 Some("route_unavailable") => UsdtError::UnsupportedRoute,
                 Some(

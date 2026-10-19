@@ -298,7 +298,10 @@ async fn service_errors_preserve_recovery_actions() {
                 max_usd_cents: None,
             },
         ),
-        ("amount_exceeds_liquidity", UsdtError::UnsupportedRoute),
+        (
+            "amount_exceeds_liquidity",
+            UsdtError::BridgeLiquidityUnavailable,
+        ),
         (
             "standing_tron_refund_requires_operator",
             UsdtError::DepositNeedsAttention,
