@@ -12,6 +12,11 @@ rm -rf ios/
 # Create necessary directories
 echo "Creating build directories..."
 mkdir -p bindings/ios/
+DIST_DIR="dist/ios"
+XCFRAMEWORK_PATH="$DIST_DIR/BitkitCore.xcframework"
+XCFRAMEWORK_ZIP="$DIST_DIR/BitkitCore.xcframework.zip"
+rm -rf "$DIST_DIR"
+mkdir -p "$DIST_DIR"
 
 # Set iOS deployment target
 export IPHONEOS_DEPLOYMENT_TARGET=13.4
@@ -81,7 +86,7 @@ echo "Creating XCFramework..."
 xcodebuild -create-xcframework \
     -library ./target/aarch64-apple-ios-sim/release/libbitkitcore.a -headers "bindings/ios/ios-arm64-sim/Headers" \
     -library ./target/aarch64-apple-ios/release/libbitkitcore.a -headers "bindings/ios/ios-arm64/Headers" \
-    -output "bindings/ios/BitkitCore.xcframework" \
+    -output "$XCFRAMEWORK_PATH" \
     || { echo "Failed to create XCFramework"; exit 1; }
 
 # Clean up temporary directories
@@ -91,12 +96,16 @@ rm -rf "bindings/ios/ios-arm64-sim"
 
 # Create zip file for distribution and checksum calculation
 echo "Creating XCFramework zip file..."
-rm -f ./bindings/ios/BitkitCore.xcframework.zip
-ditto -c -k --sequesterRsrc --keepParent ./bindings/ios/BitkitCore.xcframework ./bindings/ios/BitkitCore.xcframework.zip || { echo "Failed to create zip file"; exit 1; }
+rm -f "$XCFRAMEWORK_ZIP"
+find "$XCFRAMEWORK_PATH" -exec touch -t 198001010000 {} +
+(
+    cd "$DIST_DIR"
+    find BitkitCore.xcframework -print | LC_ALL=C sort | zip -X -q -r BitkitCore.xcframework.zip -@
+) || { echo "Failed to create zip file"; exit 1; }
 
 # Compute checksum
 echo "Computing checksum..."
-CHECKSUM=`swift package compute-checksum ./bindings/ios/BitkitCore.xcframework.zip` || { echo "Failed to compute checksum"; exit 1; }
+CHECKSUM=`swift package compute-checksum "$XCFRAMEWORK_ZIP"` || { echo "Failed to compute checksum"; exit 1; }
 echo "New checksum: $CHECKSUM"
 
 # Update Package.swift with the new checksum using Python script

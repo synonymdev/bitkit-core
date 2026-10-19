@@ -1,0 +1,88 @@
+use thiserror::Error;
+
+#[derive(Debug, Error, uniffi::Error)]
+pub enum UsdtError {
+    #[error("The payment recovery backup could not be saved. Retry when backup is available")]
+    BackupUnavailable,
+    #[error("The USDT recovery backup is invalid or conflicts with local payments")]
+    InvalidBackup,
+    #[error("The payment proof does not match this request or a successful USDT payment")]
+    InvalidPaymentProof,
+    #[error("Enter a valid USDT amount with at most six decimal places")]
+    InvalidAmount,
+    #[error("Amount too small to cover bridge costs. Try a larger amount.")]
+    BridgeAmountTooSmall,
+    #[error("Amount is below the bridge minimum. Try a larger amount")]
+    BridgeAmountBelowMinimum { min_usd_cents: Option<String> },
+    #[error("Amount is above the bridge maximum. Try a smaller amount")]
+    BridgeAmountAboveMaximum { max_usd_cents: Option<String> },
+    #[error("The bridge has insufficient liquidity for this amount. Try a smaller amount or try again later")]
+    BridgeLiquidityUnavailable,
+    #[error("Enter a valid address for the selected network")]
+    InvalidAddress,
+    #[error("The network or token does not match this USDT account")]
+    WrongNetwork,
+    #[error("Wallet credentials do not match this USDT account")]
+    InvalidCredentials,
+    #[error("Set your device date and time automatically, then try again")]
+    ClockSkew,
+    #[error("This account uses another wallet's smart account. Restore its delegation before sending with Bitkit")]
+    UnsupportedDelegation,
+    #[error("The USDT balance does not cover the amount and maximum fee")]
+    InsufficientBalance,
+    #[error("The fee quote has expired or changed. Review a new quote")]
+    QuoteExpired,
+    #[error("The approved payment submission deadline has passed")]
+    SubmissionDeadlineExpired,
+    #[error("The payment submission deadline must be a valid RFC 3339 timestamp")]
+    InvalidSubmissionDeadline,
+    #[error("A USDT transaction is pending. Wait for confirmation before sending again")]
+    PendingTransfer,
+    #[error("The selected USDT payment route is unavailable")]
+    UnsupportedRoute,
+    #[error("This deposit needs provider assistance. Check its recovery status")]
+    DepositNeedsAttention,
+    #[error("Deposit details changed. Refresh the deposit history and select it again")]
+    DepositNotFound,
+    #[error("The deposit service could not verify this request. Try again")]
+    DepositAuthorizationRejected,
+    #[error("The amount is outside this deposit route's limits. Review the minimum and maximum")]
+    DepositAmountOutOfRange {
+        min_usd_cents: Option<String>,
+        max_usd_cents: Option<String>,
+    },
+    #[error("USDT payments are not configured for this app build")]
+    NotConfigured,
+    #[error("The network could not be reached. Try again")]
+    NetworkUnavailable,
+    #[error("Too many requests. Try again shortly")]
+    RateLimited,
+    #[error("The requested log range exceeds the provider limit")]
+    LogRangeTooLarge,
+    #[error("The network rejected the transaction: {reason}")]
+    TransactionRejected { reason: String },
+    #[error("USDT wallet storage failed: {reason}")]
+    Storage { reason: String },
+    #[error("Invalid response from the USDT network")]
+    InvalidResponse,
+}
+
+impl From<rusqlite::Error> for UsdtError {
+    fn from(error: rusqlite::Error) -> Self {
+        Self::Storage {
+            reason: error.to_string(),
+        }
+    }
+}
+
+impl From<serde_json::Error> for UsdtError {
+    fn from(_: serde_json::Error) -> Self {
+        Self::InvalidResponse
+    }
+}
+
+impl From<uniffi::UnexpectedUniFFICallbackError> for UsdtError {
+    fn from(_: uniffi::UnexpectedUniFFICallbackError) -> Self {
+        Self::BackupUnavailable
+    }
+}

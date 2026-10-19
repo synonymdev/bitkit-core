@@ -1,7 +1,8 @@
 [package]
 name = "bitkitcore"
-version = "0.5.14"
+version = "0.8.0-rc7"
 edition = "2021"
+rust-version = "1.90"
 
 [lib]
 crate-type = ["cdylib", "staticlib", "rlib"]
@@ -9,10 +10,10 @@ name = "bitkitcore"
 path = "src/lib.rs"
 
 [dependencies]
-uniffi = { version = "0.29.4", features = [ "cli", "bindgen" ] }
+uniffi = { version = "0.29.4", features = [ "cli", "bindgen", "tokio" ] }
 serde_json = "1.0.114"
 serde = { version = "^1.0.209", features = ["derive"] }
-tokio = { version = "1.40.0", features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { version = "1.40.0", features = ["rt", "rt-multi-thread", "macros", "time", "sync"] }
 bitcoin = "0.32.4"
 miniscript = "12.3.7"
 chrono = "0.4"
@@ -35,7 +36,7 @@ r2d2_sqlite = "0.25.0"
 bitcoin-address-generator = "0.2.0"
 uuid = { version = "1.16.0", features = ["v4"] }
 hex = "0.4.3"
-bip39 = "2.0"
+bip39 = { version = "2.0", features = ["zeroize"] }
 bdk = { version = "0.30.2", features = ["all-keys"] }
 pubky-swap-boltz = { git = "https://github.com/coreyphillips/pubky-swap-boltz", rev = "d65ccf6881d7df7635b00e00f73a771e79f79918", default-features = false, features = ["mobile"] }
 boltz-client = { version = "=0.4.1", default-features = false, features = ["electrum", "ws"] }
@@ -49,22 +50,36 @@ pubky-app-specs = "0.4"
 # Bluetooth (for Android JNI initialization)
 # btleplug is also pulled in transitively by trezor-connect-rs
 btleplug = "0.11"
+alloy-primitives = { version = "1", default-features = false, features = ["std", "serde"] }
+alloy-sol-types = "1"
+alloy-rlp = "0.3"
 
 # Trezor connect library - non-iOS platforms get USB + Bluetooth
 [target.'cfg(not(target_os = "ios"))'.dependencies]
-trezor-connect-rs = { version = "0.4.0", features = ["psbt"] }
+trezor-connect-rs = { version = "10.0.0", features = ["psbt"] }
 
 # iOS: Bluetooth only (libusb has no iOS backend, so no USB support)
 [target.'cfg(target_os = "ios")'.dependencies]
-trezor-connect-rs = { version = "0.4.0", default-features = false, features = ["bluetooth", "psbt"] }
+trezor-connect-rs = { version = "10.0.0", default-features = false, features = ["bluetooth", "psbt"] }
 
 # JNI for Android (must match btleplug's jni version)
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.19"
 android_logger = "0.14"
 
+# Jade hardware wallet protocol. Bluetooth is driven by the native application
+# through JadeTransportCallback, so the crate's own serial transport is only
+# wanted where a Rust side serial port makes sense.
+[target.'cfg(any(target_os = "ios", target_os = "android"))'.dependencies]
+jade-client-rs = { git = "https://github.com/synonymdev/jade-client-rs", rev = "d46d02a", default-features = false, features = ["reqwest-pinserver"] }
+
+# Desktop and Python additionally get the crate's serial transport.
+[target.'cfg(not(any(target_os = "ios", target_os = "android")))'.dependencies]
+jade-client-rs = { git = "https://github.com/synonymdev/jade-client-rs", rev = "d46d02a", features = ["reqwest-pinserver", "serial"] }
+
 [dev-dependencies]
-tokio = { version = "1.40.0", features = ["full"] }
+prost = "0.13"
+tokio = { version = "1.40.0", features = ["full", "test-util"] }
 serde_json = "1.0.114"
 hex = "0.4.3"
 test-case = "3.3.1"

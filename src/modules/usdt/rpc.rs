@@ -1,0 +1,493 @@
+use super::{UsdtError, UsdtTransfer, UsdtTransferStatus};
+use alloy_primitives::{Address, Bytes, B256, U256};
+use alloy_sol_types::SolCall;
+use serde::{de::DeserializeOwned, Deserialize};
+use serde_json::{json, Value};
+use std::{
+    sync::Arc,
+    time::{Duration, SystemTime},
+};
+use tokio::{sync::Mutex, time::Instant};
+
+const REQUEST_INTERVAL: Duration = Duration::from_millis(750);
+const BURST_WINDOW: Duration = Duration::from_millis(750 * 19);
+
+#[derive(Deserialize)]
+pub(super) struct Block {
+    pub hash: B256,
+    pub timestamp: U256,
+    pub transactions: Vec<B256>,
+}
+
+impl Block {
+    pub fn timestamp(&self) -> Result<u64, UsdtError> {
+        self.timestamp
+            .try_into()
+            .map_err(|_| UsdtError::InvalidResponse)
+    }
+}
+
+pub(super) struct Rpc {
+    client: reqwest::Client,
+    url: String,
+    chain_id: u64,
+    next_request: Arc<Mutex<Instant>>,
+    #[cfg(test)]
+    pub(super) clock: Arc<std::sync::Mutex<Option<SystemTime>>>,
+}
+
+#[derive(Deserialize)]
+struct Response {
+    result: Option<Value>,
+    error: Option<RpcError>,
+}
+#[derive(Deserialize)]
+struct RpcError {
+    code: i64,
+    message: String,
+}
+
+impl Rpc {
+    pub fn new(url: String, chain_id: u64) -> Result<Self, UsdtError> {
+        let client = endpoint_client(&url, Duration::from_secs(25))?;
+        Ok(Self {
+            client,
+            url,
+            chain_id,
+            next_request: Arc::new(Mutex::new(Instant::now())),
+            #[cfg(test)]
+            clock: Arc::default(),
+        })
+    }
+
+    pub fn with_url(&self, url: String) -> Result<Self, UsdtError> {
+        let mut rpc = Self::new(url, self.chain_id)?;
+        rpc.next_request = self.next_request.clone();
+        #[cfg(test)]
+        {
+            rpc.clock = self.clock.clone();
+        }
+        Ok(rpc)
+    }
+
+    pub async fn verify_chain(&self) -> Result<(), UsdtError> {
+        let chain: U256 = self.call("eth_chainId", json!([])).await?;
+        if chain != U256::from(self.chain_id) {
+            return Err(UsdtError::WrongNetwork);
+        }
+        Ok(())
+    }
+
+    pub async fn call<T: DeserializeOwned>(
+        &self,
+        method: &str,
+        params: Value,
+    ) -> Result<T, UsdtError> {
+        self.call_with_deadline(method, params, None).await
+    }
+
+    pub async fn call_with_deadline<T: DeserializeOwned>(
+        &self,
+        method: &str,
+        params: Value,
+        submission_deadline: Option<SystemTime>,
+    ) -> Result<T, UsdtError> {
+        self.reserve_request().await;
+        let request = self
+            .client
+            .post(&self.url)
+            .json(&json!({"jsonrpc":"2.0","id":1,"method":method,"params":params}));
+        self.check_submission_deadline(submission_deadline)?;
+        let response = request
+            .send()
+            .await
+            .map_err(|_| UsdtError::NetworkUnavailable)?;
+        if response.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
+            return Err(UsdtError::RateLimited);
+        }
+        let status = response.status();
+        let overflow = if method == "eth_getLogs" {
+            UsdtError::LogRangeTooLarge
+        } else {
+            UsdtError::InvalidResponse
+        };
+        // The proxy projects receipts to fixed-size USDT protocol events.
+        let limit = if method == "eth_getTransactionReceipt" {
+            16 * 1024 * 1024
+        } else {
+            2_097_152
+        };
+        if status.is_server_error() {
+            return Err(UsdtError::NetworkUnavailable);
+        }
+        let body = bounded_json(response, limit, overflow).await;
+        let response: Response =
+            match body.and_then(|value| serde_json::from_value(value).map_err(Into::into)) {
+                Ok(response) => response,
+                Err(_) if !status.is_success() => return Err(UsdtError::NetworkUnavailable),
+                Err(error) => return Err(error),
+            };
+        if let Some(error) = response.error {
+            let message = error.message.to_ascii_lowercase();
+            if error.code == -32016
+                || [
+                    "rate limit",
+                    "quota",
+                    "credit",
+                    "too many requests",
+                    "requests per",
+                    "request rate",
+                    "compute units",
+                ]
+                .iter()
+                .any(|term| message.contains(term))
+            {
+                return Err(UsdtError::RateLimited);
+            }
+            if method == "eth_getLogs"
+                && (error.code == -32005
+                    || [
+                        "block range too",
+                        "block range exceeds",
+                        "query returned too many",
+                        "response size exceeded",
+                        "log query limit",
+                    ]
+                    .iter()
+                    .any(|term| message.contains(term)))
+            {
+                return Err(UsdtError::LogRangeTooLarge);
+            }
+            if matches!(error.code, -32002 | -32603) {
+                return Err(UsdtError::NetworkUnavailable);
+            }
+            if method == "eth_call"
+                && error.code == 3
+                && serde_json::from_value::<Address>(params[0]["to"].clone())
+                    .is_ok_and(|to| [super::types::OFT, super::types::BRIDGE_HELPER].contains(&to))
+            {
+                return Err(UsdtError::UnsupportedRoute);
+            }
+            if matches!(
+                method,
+                "eth_chainId"
+                    | "eth_blockNumber"
+                    | "eth_getCode"
+                    | "eth_getBalance"
+                    | "eth_getTransactionCount"
+                    | "eth_call"
+                    | "eth_getLogs"
+                    | "eth_getBlockByNumber"
+                    | "eth_getTransactionReceipt"
+                    | "eth_getTransactionByHash"
+                    | "bitkit_getBridgeMessages"
+            ) {
+                return Err(UsdtError::NetworkUnavailable);
+            }
+            return Err(UsdtError::TransactionRejected {
+                reason: error.message.chars().take(200).collect(),
+            });
+        }
+        if !status.is_success() {
+            return Err(UsdtError::NetworkUnavailable);
+        }
+        serde_json::from_value(response.result.unwrap_or(Value::Null)).map_err(Into::into)
+    }
+
+    pub fn check_submission_deadline(&self, deadline: Option<SystemTime>) -> Result<(), UsdtError> {
+        let now = SystemTime::now();
+        #[cfg(test)]
+        let now = self.clock.lock().unwrap().unwrap_or(now);
+        if deadline.is_some_and(|deadline| now > deadline) {
+            return Err(UsdtError::SubmissionDeadlineExpired);
+        }
+        Ok(())
+    }
+
+    async fn reserve_request(&self) {
+        let mut next = self.next_request.lock().await;
+        let scheduled = (*next).max(Instant::now());
+        // Allow 20 requests in a burst, then 80/minute across chain and bundler calls.
+        tokio::time::sleep_until(scheduled - BURST_WINDOW).await;
+        *next = scheduled + REQUEST_INTERVAL;
+    }
+
+    pub async fn bridge_status(
+        &self,
+        transfer: &UsdtTransfer,
+    ) -> Result<UsdtTransferStatus, UsdtError> {
+        let (Some(guid), Some(tx_hash)) =
+            (transfer.bridge_guid.as_deref(), transfer.tx_hash.as_deref())
+        else {
+            return Err(UsdtError::NetworkUnavailable);
+        };
+        let hash: B256 = tx_hash.parse().map_err(|_| UsdtError::InvalidResponse)?;
+        let response: Value = self.call("bitkit_getBridgeMessages", json!([hash])).await?;
+        let messages = response["data"]
+            .as_array()
+            .ok_or(UsdtError::InvalidResponse)?;
+        let message = messages.iter().find(|message| {
+            message["guid"]
+                .as_str()
+                .is_some_and(|value| value.eq_ignore_ascii_case(guid))
+                && message["pathway"]["srcEid"].as_u64() == Some(30110)
+                && message["pathway"]["dstEid"].as_u64()
+                    == transfer.destination.endpoint().map(u64::from)
+                && message["pathway"]["sender"]["address"]
+                    .as_str()
+                    .is_some_and(|a| a.eq_ignore_ascii_case(&super::types::OFT.to_string()))
+                && message["source"]["tx"]["txHash"]
+                    .as_str()
+                    .is_some_and(|h| h.eq_ignore_ascii_case(tx_hash))
+        });
+        Ok(match message.and_then(|m| m["status"]["name"].as_str()) {
+            Some("DELIVERED") => UsdtTransferStatus::Confirmed,
+            Some("INFLIGHT" | "CONFIRMING") => UsdtTransferStatus::Bridging,
+            Some("FAILED" | "BLOCKED" | "PAYLOAD_STORED") => {
+                UsdtTransferStatus::BridgeNeedsAttention
+            }
+            Some("APPLICATION_BURNED" | "APPLICATION_SKIPPED") => UsdtTransferStatus::BridgeFailed,
+            _ => return Err(UsdtError::NetworkUnavailable),
+        })
+    }
+
+    pub async fn balance(&self, address: Address) -> Result<U256, UsdtError> {
+        self.call("eth_getBalance", json!([address, "pending"]))
+            .await
+    }
+
+    pub async fn block(&self, number: u64) -> Result<Block, UsdtError> {
+        self.call::<Option<Block>>("eth_getBlockByNumber", json!([U256::from(number), false]))
+            .await?
+            .ok_or(UsdtError::NetworkUnavailable)
+    }
+
+    pub async fn block_receipt(
+        &self,
+        hash: B256,
+        block_hash: B256,
+        number: u64,
+    ) -> Result<Value, UsdtError> {
+        let receipt: Value = self
+            .call("eth_getTransactionReceipt", json!([hash]))
+            .await?;
+        if receipt.is_null() {
+            return Err(UsdtError::NetworkUnavailable);
+        }
+        if serde_json::from_value::<B256>(receipt["transactionHash"].clone())? != hash
+            || serde_json::from_value::<B256>(receipt["blockHash"].clone())? != block_hash
+            || serde_json::from_value::<U256>(receipt["blockNumber"].clone())? != U256::from(number)
+        {
+            return Err(UsdtError::InvalidResponse);
+        }
+        Ok(receipt)
+    }
+
+    pub async fn contract<C: SolCall>(&self, to: Address, call: C) -> Result<C::Return, UsdtError> {
+        self.contract_at(to, call, "latest").await
+    }
+
+    pub async fn contract_at<C: SolCall>(
+        &self,
+        to: Address,
+        call: C,
+        block: &str,
+    ) -> Result<C::Return, UsdtError> {
+        let bytes: Bytes = self
+            .call(
+                "eth_call",
+                json!([{"to":to,"data":Bytes::from(call.abi_encode())},block]),
+            )
+            .await?;
+        C::abi_decode_returns(&bytes).map_err(|_| UsdtError::InvalidResponse)
+    }
+}
+
+pub(super) fn endpoint_client(url: &str, timeout: Duration) -> Result<reqwest::Client, UsdtError> {
+    let parsed = url::Url::parse(url).map_err(|_| UsdtError::NotConfigured)?;
+    if (parsed.scheme() != "https"
+        && !(parsed.scheme() == "http"
+            && matches!(parsed.host_str(), Some("127.0.0.1" | "localhost"))))
+        || !parsed.username().is_empty()
+        || parsed.password().is_some()
+        || parsed.query().is_some()
+        || parsed.fragment().is_some()
+    {
+        return Err(UsdtError::NotConfigured);
+    }
+    reqwest::Client::builder()
+        .timeout(timeout)
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .map_err(|_| UsdtError::NetworkUnavailable)
+}
+
+pub(super) async fn bounded_json(
+    mut response: reqwest::Response,
+    limit: usize,
+    overflow: UsdtError,
+) -> Result<Value, UsdtError> {
+    let mut body = Vec::new();
+    while let Some(chunk) = response
+        .chunk()
+        .await
+        .map_err(|_| UsdtError::NetworkUnavailable)?
+    {
+        if body.len() + chunk.len() > limit {
+            return Err(overflow);
+        }
+        body.extend_from_slice(&chunk);
+    }
+    serde_json::from_slice(&body).map_err(Into::into)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test(start_paused = true)]
+    async fn submission_deadline_is_checked_after_rate_limit_wait() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let rpc = Rpc::new(format!("http://{}", listener.local_addr().unwrap()), 42161).unwrap();
+        let deadline = std::time::UNIX_EPOCH + Duration::new(2_000_000_000, 123_456_789);
+        let clock = rpc.clock.clone();
+        *clock.lock().unwrap() = Some(deadline);
+        assert!(rpc.check_submission_deadline(Some(deadline)).is_ok());
+        *rpc.next_request.lock().await = Instant::now() + BURST_WINDOW + Duration::from_secs(10);
+        let submission = tokio::spawn(async move {
+            rpc.call_with_deadline::<Value>("eth_sendUserOperation", json!([]), Some(deadline))
+                .await
+        });
+        tokio::task::yield_now().await;
+        assert!(!submission.is_finished());
+        *clock.lock().unwrap() = Some(deadline + Duration::from_nanos(1));
+        tokio::time::advance(Duration::from_secs(10)).await;
+        assert!(matches!(
+            submission.await.unwrap(),
+            Err(UsdtError::SubmissionDeadlineExpired)
+        ));
+        assert!(
+            tokio::time::timeout(Duration::from_millis(1), listener.accept())
+                .await
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn endpoints_reject_embedded_credentials_and_insecure_remote_hosts() {
+        for url in [
+            "http://example.com",
+            "https://user:key@example.com",
+            "https://example.com?apikey=secret",
+            "https://example.com#secret",
+            "not a url",
+        ] {
+            assert!(matches!(
+                Rpc::new(url.into(), 42161),
+                Err(UsdtError::NotConfigured)
+            ));
+        }
+        assert!(Rpc::new("https://example.com/v1/usdt/chain-rpc".into(), 42161).is_ok());
+        assert!(Rpc::new("http://127.0.0.1:3100/v1/usdt/chain-rpc".into(), 42161).is_ok());
+    }
+
+    #[tokio::test]
+    async fn http_errors_preserve_structured_rejections_and_network_failures() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        for (status, body) in [
+            (
+                400,
+                r#"{"error":{"code":-32602,"message":"Unsupported USDT request"}}"#,
+            ),
+            (
+                502,
+                r#"{"error":{"code":-32002,"message":"Provider unavailable"}}"#,
+            ),
+            (
+                200,
+                r#"{"error":{"code":-32603,"message":"Internal server error"}}"#,
+            ),
+            (503, "Service unavailable"),
+        ] {
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let url = format!("http://{}", listener.local_addr().unwrap());
+            let server = tokio::spawn(async move {
+                let (mut socket, _) = listener.accept().await.unwrap();
+                let mut request = [0u8; 4096];
+                assert!(socket.read(&mut request).await.unwrap() > 0);
+                let response = format!("HTTP/1.1 {status} Error\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len());
+                socket.write_all(response.as_bytes()).await.unwrap();
+            });
+            let error = Rpc::new(url, 42161)
+                .unwrap()
+                .call::<Value>("eth_estimateUserOperationGas", json!([]))
+                .await
+                .unwrap_err();
+            if status == 400 {
+                assert!(matches!(error, UsdtError::TransactionRejected { .. }));
+            } else {
+                assert!(matches!(error, UsdtError::NetworkUnavailable));
+            }
+            server.await.unwrap();
+        }
+    }
+
+    #[tokio::test]
+    async fn bridge_reverts_are_distinct_from_rpc_failures() {
+        use super::super::types::{BRIDGE_HELPER, OFT, TOKEN};
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        for (target, code, expected_route) in [
+            (OFT, 3, true),
+            (BRIDGE_HELPER, 3, true),
+            (TOKEN, 3, false),
+            (BRIDGE_HELPER, -32602, false),
+            (BRIDGE_HELPER, -32002, false),
+        ] {
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let url = format!("http://{}", listener.local_addr().unwrap());
+            let server = tokio::spawn(async move {
+                let (mut socket, _) = listener.accept().await.unwrap();
+                let mut request = [0; 4096];
+                assert!(socket.read(&mut request).await.unwrap() > 0);
+                let body = json!({"error":{"code":code,"message":"Provider rejected the request"}})
+                    .to_string();
+                socket.write_all(format!("HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).as_bytes()).await.unwrap();
+            });
+            let error = Rpc::new(url, 42161)
+                .unwrap()
+                .call::<Value>("eth_call", json!([{"to": target, "data":"0x"}, "latest"]))
+                .await
+                .unwrap_err();
+            if expected_route {
+                assert!(matches!(error, UsdtError::UnsupportedRoute));
+            } else {
+                assert!(matches!(error, UsdtError::NetworkUnavailable));
+            }
+            server.await.unwrap();
+        }
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn chain_and_bundler_share_bursts_and_sustained_budget() {
+        let chain = Rpc::new("https://chain.example".into(), 42161).unwrap();
+        let bundler = chain.with_url("https://bundler.example".into()).unwrap();
+        let start = Instant::now();
+        for _ in 0..10 {
+            chain.reserve_request().await;
+            bundler.reserve_request().await;
+        }
+        assert_eq!(Instant::now(), start);
+        for _ in 0..80 {
+            chain.reserve_request().await;
+        }
+        assert_eq!(Instant::now() - start, Duration::from_secs(60));
+        tokio::time::sleep(Duration::from_secs(30)).await;
+        let idle = Instant::now();
+        for _ in 0..20 {
+            bundler.reserve_request().await;
+        }
+        assert_eq!(Instant::now(), idle);
+        chain.reserve_request().await;
+        assert_eq!(Instant::now() - idle, REQUEST_INTERVAL);
+    }
+}

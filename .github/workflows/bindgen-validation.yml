@@ -1,0 +1,65 @@
+name: Bindgen Validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Scripts, Cargo, and Android manifests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Validate shell scripts
+        run: bash -n build.sh build_ios.sh build_android.sh build_python.sh
+
+      - name: Validate Cargo manifest
+        run: cargo metadata --locked --format-version 1 > /dev/null
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+
+      - name: Validate Android Gradle manifests
+        working-directory: bindings/android
+        run: ./gradlew projects --no-daemon
+
+  swift-manifest:
+    name: SwiftPM manifest
+    runs-on: macos-15
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate SwiftPM manifest
+        run: swift package dump-package > /dev/null

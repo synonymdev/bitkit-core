@@ -265,6 +265,48 @@ typedef void (*UniffiCallbackInterfaceEventListenerMethod0)(uint64_t, RustBuffer
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD0
+typedef void (*UniffiCallbackInterfaceJadeTransportCallbackMethod0)(uint64_t, uint32_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD1
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD1
+typedef void (*UniffiCallbackInterfaceJadeTransportCallbackMethod1)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD2
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD2
+typedef void (*UniffiCallbackInterfaceJadeTransportCallbackMethod2)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD3
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD3
+typedef void (*UniffiCallbackInterfaceJadeTransportCallbackMethod3)(uint64_t, RustBuffer, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD4
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD4
+typedef void (*UniffiCallbackInterfaceJadeTransportCallbackMethod4)(uint64_t, RustBuffer, uint32_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD5
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK_METHOD5
+typedef void (*UniffiCallbackInterfaceJadeTransportCallbackMethod5)(uint64_t, RustBuffer, uint32_t* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK_METHOD0
 typedef void (*UniffiCallbackInterfaceTrezorTransportCallbackMethod0)(uint64_t, RustBuffer* _Nonnull, 
@@ -356,6 +398,12 @@ typedef void (*UniffiCallbackInterfaceTrezorUiCallbackMethod1)(uint64_t, int8_t,
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_USDT_BACKUP_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_USDT_BACKUP_METHOD0
+typedef void (*UniffiCallbackInterfaceUsdtBackupMethod0)(uint64_t, RustBuffer, UniffiForeignFutureCompleteVoid _Nonnull, uint64_t, UniffiForeignFuture* _Nonnull
+    );
+
+#endif
 #ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER
 #define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER
 typedef struct UniffiVTableCallbackInterfaceBoltzEventListener {
@@ -370,6 +418,19 @@ typedef struct UniffiVTableCallbackInterfaceEventListener {
     UniffiCallbackInterfaceEventListenerMethod0 _Nonnull onEvent;
     UniffiCallbackInterfaceFree _Nonnull uniffiFree;
 } UniffiVTableCallbackInterfaceEventListener;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_JADE_TRANSPORT_CALLBACK
+typedef struct UniffiVTableCallbackInterfaceJadeTransportCallback {
+    UniffiCallbackInterfaceJadeTransportCallbackMethod0 _Nonnull scanDevices;
+    UniffiCallbackInterfaceJadeTransportCallbackMethod1 _Nonnull openDevice;
+    UniffiCallbackInterfaceJadeTransportCallbackMethod2 _Nonnull closeDevice;
+    UniffiCallbackInterfaceJadeTransportCallbackMethod3 _Nonnull writeChunk;
+    UniffiCallbackInterfaceJadeTransportCallbackMethod4 _Nonnull readChunk;
+    UniffiCallbackInterfaceJadeTransportCallbackMethod5 _Nonnull getChunkSize;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfaceJadeTransportCallback;
 
 #endif
 #ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TREZOR_TRANSPORT_CALLBACK
@@ -397,6 +458,14 @@ typedef struct UniffiVTableCallbackInterfaceTrezorUiCallback {
     UniffiCallbackInterfaceTrezorUiCallbackMethod1 _Nonnull onPassphraseRequest;
     UniffiCallbackInterfaceFree _Nonnull uniffiFree;
 } UniffiVTableCallbackInterfaceTrezorUiCallback;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_USDT_BACKUP
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_USDT_BACKUP
+typedef struct UniffiVTableCallbackInterfaceUsdtBackup {
+    UniffiCallbackInterfaceUsdtBackupMethod0 _Nonnull persist;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfaceUsdtBackup;
 
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_BOLTZEVENTLISTENER
@@ -437,6 +506,51 @@ void uniffi_bitkitcore_fn_init_callback_vtable_eventlistener(const UniffiVTableC
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_EVENTLISTENER_ON_EVENT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_EVENTLISTENER_ON_EVENT
 void uniffi_bitkitcore_fn_method_eventlistener_on_event(void*_Nonnull ptr, RustBuffer watcher_id, RustBuffer event, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_JADETRANSPORTCALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_JADETRANSPORTCALLBACK
+void*_Nonnull uniffi_bitkitcore_fn_clone_jadetransportcallback(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_JADETRANSPORTCALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_JADETRANSPORTCALLBACK
+void uniffi_bitkitcore_fn_free_jadetransportcallback(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_JADETRANSPORTCALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_JADETRANSPORTCALLBACK
+void uniffi_bitkitcore_fn_init_callback_vtable_jadetransportcallback(const UniffiVTableCallbackInterfaceJadeTransportCallback* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_SCAN_DEVICES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_SCAN_DEVICES
+RustBuffer uniffi_bitkitcore_fn_method_jadetransportcallback_scan_devices(void*_Nonnull ptr, uint32_t timeout_ms, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_OPEN_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_OPEN_DEVICE
+RustBuffer uniffi_bitkitcore_fn_method_jadetransportcallback_open_device(void*_Nonnull ptr, RustBuffer path, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_CLOSE_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_CLOSE_DEVICE
+RustBuffer uniffi_bitkitcore_fn_method_jadetransportcallback_close_device(void*_Nonnull ptr, RustBuffer path, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_WRITE_CHUNK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_WRITE_CHUNK
+RustBuffer uniffi_bitkitcore_fn_method_jadetransportcallback_write_chunk(void*_Nonnull ptr, RustBuffer path, RustBuffer data, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_READ_CHUNK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_READ_CHUNK
+RustBuffer uniffi_bitkitcore_fn_method_jadetransportcallback_read_chunk(void*_Nonnull ptr, RustBuffer path, uint32_t timeout_ms, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_GET_CHUNK_SIZE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_JADETRANSPORTCALLBACK_GET_CHUNK_SIZE
+uint32_t uniffi_bitkitcore_fn_method_jadetransportcallback_get_chunk_size(void*_Nonnull ptr, RustBuffer path, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_TREZORTRANSPORTCALLBACK
@@ -558,6 +672,161 @@ RustBuffer uniffi_bitkitcore_fn_method_urdecoder_receive(void*_Nonnull ptr, Rust
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_URDECODER_RESET
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_URDECODER_RESET
 void uniffi_bitkitcore_fn_method_urdecoder_reset(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_USDTBACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_USDTBACKUP
+void*_Nonnull uniffi_bitkitcore_fn_clone_usdtbackup(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_USDTBACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_USDTBACKUP
+void uniffi_bitkitcore_fn_free_usdtbackup(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_USDTBACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_USDTBACKUP
+void uniffi_bitkitcore_fn_init_callback_vtable_usdtbackup(const UniffiVTableCallbackInterfaceUsdtBackup* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTBACKUP_PERSIST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTBACKUP_PERSIST
+uint64_t uniffi_bitkitcore_fn_method_usdtbackup_persist(void*_Nonnull ptr, RustBuffer snapshot
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_USDTDEPOSITCLIENT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_USDTDEPOSITCLIENT
+void*_Nonnull uniffi_bitkitcore_fn_clone_usdtdepositclient(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_USDTDEPOSITCLIENT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_USDTDEPOSITCLIENT
+void uniffi_bitkitcore_fn_free_usdtdepositclient(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CONSTRUCTOR_USDTDEPOSITCLIENT_NEW
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CONSTRUCTOR_USDTDEPOSITCLIENT_NEW
+void*_Nonnull uniffi_bitkitcore_fn_constructor_usdtdepositclient_new(RustBuffer address, RustBuffer service_url, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTDEPOSITCLIENT_DETAIL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTDEPOSITCLIENT_DETAIL
+uint64_t uniffi_bitkitcore_fn_method_usdtdepositclient_detail(void*_Nonnull ptr, RustBuffer deposit_id, uint32_t offset, RustBuffer mnemonic, RustBuffer passphrase
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTDEPOSITCLIENT_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTDEPOSITCLIENT_HISTORY
+uint64_t uniffi_bitkitcore_fn_method_usdtdepositclient_history(void*_Nonnull ptr, uint32_t offset, RustBuffer mnemonic, RustBuffer passphrase
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTDEPOSITCLIENT_NETWORKS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTDEPOSITCLIENT_NETWORKS
+uint64_t uniffi_bitkitcore_fn_method_usdtdepositclient_networks(void*_Nonnull ptr
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTDEPOSITCLIENT_RECEIVE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTDEPOSITCLIENT_RECEIVE
+uint64_t uniffi_bitkitcore_fn_method_usdtdepositclient_receive(void*_Nonnull ptr, RustBuffer network, uint64_t amount, RustBuffer mnemonic, RustBuffer passphrase
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTDEPOSITCLIENT_REQUEST_REFUND
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTDEPOSITCLIENT_REQUEST_REFUND
+uint64_t uniffi_bitkitcore_fn_method_usdtdepositclient_request_refund(void*_Nonnull ptr, RustBuffer deposit_id, uint32_t offset, RustBuffer refund_address, RustBuffer network, RustBuffer mnemonic, RustBuffer passphrase
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_USDTWALLET
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_USDTWALLET
+void*_Nonnull uniffi_bitkitcore_fn_clone_usdtwallet(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_USDTWALLET
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_USDTWALLET
+void uniffi_bitkitcore_fn_free_usdtwallet(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CONSTRUCTOR_USDTWALLET_NEW
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CONSTRUCTOR_USDTWALLET_NEW
+void*_Nonnull uniffi_bitkitcore_fn_constructor_usdtwallet_new(RustBuffer address, RustBuffer storage_path, RustBuffer rpc_url, RustBuffer bundler_url, RustBuffer bridge_url, void*_Nonnull backup, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_BALANCE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_BALANCE
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_balance(void*_Nonnull ptr
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_CHECK_RECENT_EXECUTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_CHECK_RECENT_EXECUTION
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_check_recent_execution(void*_Nonnull ptr, RustBuffer id
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_CREATE_PAYMENT_PROOF
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_CREATE_PAYMENT_PROOF
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_create_payment_proof(void*_Nonnull ptr, RustBuffer transfer_id, RustBuffer binding, RustBuffer mnemonic, RustBuffer passphrase
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_EXPORT_BACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_EXPORT_BACKUP
+RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_export_backup(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_HISTORY
+RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_history(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_ORCHESTRA_DESTINATIONS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_ORCHESTRA_DESTINATIONS
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_orchestra_destinations(void*_Nonnull ptr
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_QUOTE_MAX_TRANSFER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_QUOTE_MAX_TRANSFER
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_quote_max_transfer(void*_Nonnull ptr, RustBuffer recipient, RustBuffer destination
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_QUOTE_TRANSFER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_QUOTE_TRANSFER
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_quote_transfer(void*_Nonnull ptr, RustBuffer recipient, uint64_t amount, RustBuffer destination
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RECEIVE_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RECEIVE_ADDRESS
+RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_receive_address(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RECEIVE_URI
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RECEIVE_URI
+RustBuffer uniffi_bitkitcore_fn_method_usdtwallet_receive_uri(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_REFRESH_TRANSFERS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_REFRESH_TRANSFERS
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_refresh_transfers(void*_Nonnull ptr
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RESTORE_BACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_RESTORE_BACKUP
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_restore_backup(void*_Nonnull ptr, RustBuffer snapshot
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SEND
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SEND
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_send(void*_Nonnull ptr, RustBuffer quote_id, RustBuffer mnemonic, RustBuffer passphrase
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SEND_WITH_DEADLINE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SEND_WITH_DEADLINE
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_send_with_deadline(void*_Nonnull ptr, RustBuffer quote_id, RustBuffer mnemonic, RustBuffer passphrase, RustBuffer submission_deadline
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SYNC_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_SYNC_HISTORY
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_sync_history(void*_Nonnull ptr
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_VERIFY_PAYMENT_PROOF
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_USDTWALLET_VERIFY_PAYMENT_PROOF
+uint64_t uniffi_bitkitcore_fn_method_usdtwallet_verify_payment_proof(void*_Nonnull ptr, RustBuffer binding, RustBuffer proof
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ACTIVITIES_FROM_JSON
@@ -742,6 +1011,16 @@ RustBuffer uniffi_bitkitcore_fn_func_create_withdraw_callback_url(RustBuffer k1,
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DECODE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DECODE
 uint64_t uniffi_bitkitcore_fn_func_decode(RustBuffer invoice
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DECODE_COMPACT_SEED_QR
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DECODE_COMPACT_SEED_QR
+RustBuffer uniffi_bitkitcore_fn_func_decode_compact_seed_qr(RustBuffer entropy, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DECODE_STANDARD_SEED_QR
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DECODE_STANDARD_SEED_QR
+RustBuffer uniffi_bitkitcore_fn_func_decode_standard_seed_qr(RustBuffer payload, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_DELETE_ACTIVITIES_BY_WALLET_ID
@@ -1020,6 +1299,120 @@ int8_t uniffi_bitkitcore_fn_func_is_address_used(RustBuffer address, RustCallSta
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_IS_VALID_BIP39_WORD
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_IS_VALID_BIP39_WORD
 int8_t uniffi_bitkitcore_fn_func_is_valid_bip39_word(RustBuffer word, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_ACCOUNT_TYPE_TO_VARIANT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_ACCOUNT_TYPE_TO_VARIANT
+RustBuffer uniffi_bitkitcore_fn_func_jade_account_type_to_variant(RustBuffer account_type, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_CANCEL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_CANCEL
+uint64_t uniffi_bitkitcore_fn_func_jade_cancel(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_CONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_CONNECT
+uint64_t uniffi_bitkitcore_fn_func_jade_connect(RustBuffer transport, RustBuffer path
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_DISCONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_DISCONNECT
+uint64_t uniffi_bitkitcore_fn_func_jade_disconnect(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_ACCOUNT_EXPORT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_ACCOUNT_EXPORT
+uint64_t uniffi_bitkitcore_fn_func_jade_get_account_export(RustBuffer network, uint32_t account_index, RustBuffer account_types
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_CONNECTED_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_CONNECTED_DEVICE
+uint64_t uniffi_bitkitcore_fn_func_jade_get_connected_device(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_MASTER_FINGERPRINT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_MASTER_FINGERPRINT
+uint64_t uniffi_bitkitcore_fn_func_jade_get_master_fingerprint(RustBuffer network
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_VERSION_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_VERSION_INFO
+uint64_t uniffi_bitkitcore_fn_func_jade_get_version_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_XPUB
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_GET_XPUB
+uint64_t uniffi_bitkitcore_fn_func_jade_get_xpub(RustBuffer network, RustBuffer derivation_path
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_IS_CONNECTED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_IS_CONNECTED
+int8_t uniffi_bitkitcore_fn_func_jade_is_connected(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_LIST_DEVICES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_LIST_DEVICES
+uint64_t uniffi_bitkitcore_fn_func_jade_list_devices(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_LOGOUT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_LOGOUT
+uint64_t uniffi_bitkitcore_fn_func_jade_logout(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_NOTIFY_DISCONNECTED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_NOTIFY_DISCONNECTED
+uint64_t uniffi_bitkitcore_fn_func_jade_notify_disconnected(RustBuffer path
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_PING
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_PING
+uint64_t uniffi_bitkitcore_fn_func_jade_ping(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_REFRESH_VERSION_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_REFRESH_VERSION_INFO
+uint64_t uniffi_bitkitcore_fn_func_jade_refresh_version_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SCAN
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SCAN
+uint64_t uniffi_bitkitcore_fn_func_jade_scan(uint32_t timeout_ms
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SET_TRANSPORT_CALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SET_TRANSPORT_CALLBACK
+int8_t uniffi_bitkitcore_fn_func_jade_set_transport_callback(void*_Nonnull callback, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SIGN_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SIGN_MESSAGE
+uint64_t uniffi_bitkitcore_fn_func_jade_sign_message(RustBuffer network, RustBuffer derivation_path, RustBuffer message
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SIGN_PSBT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_SIGN_PSBT
+uint64_t uniffi_bitkitcore_fn_func_jade_sign_psbt(RustBuffer network, RustBuffer psbt
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_UNLOCK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_UNLOCK
+uint64_t uniffi_bitkitcore_fn_func_jade_unlock(RustBuffer network
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_VERIFY_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_JADE_VERIFY_ADDRESS
+uint64_t uniffi_bitkitcore_fn_func_jade_verify_address(RustBuffer network, RustBuffer variant, RustBuffer derivation_path, RustBuffer expected_address
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_LNURL_AUTH
@@ -1468,6 +1861,31 @@ void uniffi_bitkitcore_fn_func_upsert_transaction_details(RustBuffer details_lis
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UR_ENCODE_CRYPTO_PSBT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_UR_ENCODE_CRYPTO_PSBT
 RustBuffer uniffi_bitkitcore_fn_func_ur_encode_crypto_psbt(RustBuffer psbt, uint32_t max_fragment_length, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_ADDRESS
+RustBuffer uniffi_bitkitcore_fn_func_usdt_address(RustBuffer mnemonic, RustBuffer passphrase, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_FORMAT_AMOUNT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_FORMAT_AMOUNT
+RustBuffer uniffi_bitkitcore_fn_func_usdt_format_amount(uint64_t amount, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_PARSE_AMOUNT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_PARSE_AMOUNT
+uint64_t uniffi_bitkitcore_fn_func_usdt_parse_amount(RustBuffer value, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_PARSE_PAYMENT_REQUEST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_PARSE_PAYMENT_REQUEST
+RustBuffer uniffi_bitkitcore_fn_func_usdt_parse_payment_request(RustBuffer value, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_VALIDATE_RECIPIENT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_USDT_VALIDATE_RECIPIENT
+RustBuffer uniffi_bitkitcore_fn_func_usdt_validate_recipient(RustBuffer value, RustBuffer destination, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_VALIDATE_BITCOIN_ADDRESS
@@ -1988,6 +2406,18 @@ uint16_t uniffi_bitkitcore_checksum_func_decode(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DECODE_COMPACT_SEED_QR
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DECODE_COMPACT_SEED_QR
+uint16_t uniffi_bitkitcore_checksum_func_decode_compact_seed_qr(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DECODE_STANDARD_SEED_QR
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DECODE_STANDARD_SEED_QR
+uint16_t uniffi_bitkitcore_checksum_func_decode_standard_seed_qr(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_ACTIVITIES_BY_WALLET_ID
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_DELETE_ACTIVITIES_BY_WALLET_ID
 uint16_t uniffi_bitkitcore_checksum_func_delete_activities_by_wallet_id(void
@@ -2309,6 +2739,132 @@ uint16_t uniffi_bitkitcore_checksum_func_is_address_used(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_IS_VALID_BIP39_WORD
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_IS_VALID_BIP39_WORD
 uint16_t uniffi_bitkitcore_checksum_func_is_valid_bip39_word(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_ACCOUNT_TYPE_TO_VARIANT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_ACCOUNT_TYPE_TO_VARIANT
+uint16_t uniffi_bitkitcore_checksum_func_jade_account_type_to_variant(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_CANCEL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_CANCEL
+uint16_t uniffi_bitkitcore_checksum_func_jade_cancel(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_CONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_CONNECT
+uint16_t uniffi_bitkitcore_checksum_func_jade_connect(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_DISCONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_DISCONNECT
+uint16_t uniffi_bitkitcore_checksum_func_jade_disconnect(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_ACCOUNT_EXPORT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_ACCOUNT_EXPORT
+uint16_t uniffi_bitkitcore_checksum_func_jade_get_account_export(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_CONNECTED_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_CONNECTED_DEVICE
+uint16_t uniffi_bitkitcore_checksum_func_jade_get_connected_device(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_MASTER_FINGERPRINT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_MASTER_FINGERPRINT
+uint16_t uniffi_bitkitcore_checksum_func_jade_get_master_fingerprint(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_VERSION_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_VERSION_INFO
+uint16_t uniffi_bitkitcore_checksum_func_jade_get_version_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_XPUB
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_GET_XPUB
+uint16_t uniffi_bitkitcore_checksum_func_jade_get_xpub(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_IS_CONNECTED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_IS_CONNECTED
+uint16_t uniffi_bitkitcore_checksum_func_jade_is_connected(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_LIST_DEVICES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_LIST_DEVICES
+uint16_t uniffi_bitkitcore_checksum_func_jade_list_devices(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_LOGOUT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_LOGOUT
+uint16_t uniffi_bitkitcore_checksum_func_jade_logout(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_NOTIFY_DISCONNECTED
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_NOTIFY_DISCONNECTED
+uint16_t uniffi_bitkitcore_checksum_func_jade_notify_disconnected(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_PING
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_PING
+uint16_t uniffi_bitkitcore_checksum_func_jade_ping(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_REFRESH_VERSION_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_REFRESH_VERSION_INFO
+uint16_t uniffi_bitkitcore_checksum_func_jade_refresh_version_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SCAN
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SCAN
+uint16_t uniffi_bitkitcore_checksum_func_jade_scan(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SET_TRANSPORT_CALLBACK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SET_TRANSPORT_CALLBACK
+uint16_t uniffi_bitkitcore_checksum_func_jade_set_transport_callback(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SIGN_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SIGN_MESSAGE
+uint16_t uniffi_bitkitcore_checksum_func_jade_sign_message(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SIGN_PSBT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_SIGN_PSBT
+uint16_t uniffi_bitkitcore_checksum_func_jade_sign_psbt(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_UNLOCK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_UNLOCK
+uint16_t uniffi_bitkitcore_checksum_func_jade_unlock(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_VERIFY_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_JADE_VERIFY_ADDRESS
+uint16_t uniffi_bitkitcore_checksum_func_jade_verify_address(void
     
 );
 #endif
@@ -2834,6 +3390,36 @@ uint16_t uniffi_bitkitcore_checksum_func_ur_encode_crypto_psbt(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_ADDRESS
+uint16_t uniffi_bitkitcore_checksum_func_usdt_address(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_FORMAT_AMOUNT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_FORMAT_AMOUNT
+uint16_t uniffi_bitkitcore_checksum_func_usdt_format_amount(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_PARSE_AMOUNT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_PARSE_AMOUNT
+uint16_t uniffi_bitkitcore_checksum_func_usdt_parse_amount(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_PARSE_PAYMENT_REQUEST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_PARSE_PAYMENT_REQUEST
+uint16_t uniffi_bitkitcore_checksum_func_usdt_parse_payment_request(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_VALIDATE_RECIPIENT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_USDT_VALIDATE_RECIPIENT
+uint16_t uniffi_bitkitcore_checksum_func_usdt_validate_recipient(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_VALIDATE_BITCOIN_ADDRESS
 uint16_t uniffi_bitkitcore_checksum_func_validate_bitcoin_address(void
@@ -2873,6 +3459,42 @@ uint16_t uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_EVENTLISTENER_ON_EVENT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_EVENTLISTENER_ON_EVENT
 uint16_t uniffi_bitkitcore_checksum_method_eventlistener_on_event(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_SCAN_DEVICES
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_SCAN_DEVICES
+uint16_t uniffi_bitkitcore_checksum_method_jadetransportcallback_scan_devices(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_OPEN_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_OPEN_DEVICE
+uint16_t uniffi_bitkitcore_checksum_method_jadetransportcallback_open_device(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_CLOSE_DEVICE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_CLOSE_DEVICE
+uint16_t uniffi_bitkitcore_checksum_method_jadetransportcallback_close_device(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_WRITE_CHUNK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_WRITE_CHUNK
+uint16_t uniffi_bitkitcore_checksum_method_jadetransportcallback_write_chunk(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_READ_CHUNK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_READ_CHUNK
+uint16_t uniffi_bitkitcore_checksum_method_jadetransportcallback_read_chunk(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_GET_CHUNK_SIZE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_JADETRANSPORTCALLBACK_GET_CHUNK_SIZE
+uint16_t uniffi_bitkitcore_checksum_method_jadetransportcallback_get_chunk_size(void
     
 );
 #endif
@@ -2966,9 +3588,153 @@ uint16_t uniffi_bitkitcore_checksum_method_urdecoder_reset(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTBACKUP_PERSIST
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTBACKUP_PERSIST
+uint16_t uniffi_bitkitcore_checksum_method_usdtbackup_persist(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTDEPOSITCLIENT_DETAIL
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTDEPOSITCLIENT_DETAIL
+uint16_t uniffi_bitkitcore_checksum_method_usdtdepositclient_detail(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTDEPOSITCLIENT_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTDEPOSITCLIENT_HISTORY
+uint16_t uniffi_bitkitcore_checksum_method_usdtdepositclient_history(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTDEPOSITCLIENT_NETWORKS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTDEPOSITCLIENT_NETWORKS
+uint16_t uniffi_bitkitcore_checksum_method_usdtdepositclient_networks(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTDEPOSITCLIENT_RECEIVE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTDEPOSITCLIENT_RECEIVE
+uint16_t uniffi_bitkitcore_checksum_method_usdtdepositclient_receive(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTDEPOSITCLIENT_REQUEST_REFUND
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTDEPOSITCLIENT_REQUEST_REFUND
+uint16_t uniffi_bitkitcore_checksum_method_usdtdepositclient_request_refund(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_BALANCE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_BALANCE
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_balance(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_CHECK_RECENT_EXECUTION
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_CHECK_RECENT_EXECUTION
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_check_recent_execution(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_CREATE_PAYMENT_PROOF
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_CREATE_PAYMENT_PROOF
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_create_payment_proof(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_EXPORT_BACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_EXPORT_BACKUP
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_export_backup(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_HISTORY
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_history(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_ORCHESTRA_DESTINATIONS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_ORCHESTRA_DESTINATIONS
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_orchestra_destinations(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_QUOTE_MAX_TRANSFER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_QUOTE_MAX_TRANSFER
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_quote_max_transfer(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_QUOTE_TRANSFER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_QUOTE_TRANSFER
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_quote_transfer(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RECEIVE_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RECEIVE_ADDRESS
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_receive_address(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RECEIVE_URI
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RECEIVE_URI
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_receive_uri(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_REFRESH_TRANSFERS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_REFRESH_TRANSFERS
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_refresh_transfers(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RESTORE_BACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_RESTORE_BACKUP
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_restore_backup(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SEND
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SEND
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_send(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SEND_WITH_DEADLINE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SEND_WITH_DEADLINE
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_send_with_deadline(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SYNC_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_SYNC_HISTORY
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_sync_history(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_VERIFY_PAYMENT_PROOF
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_USDTWALLET_VERIFY_PAYMENT_PROOF
+uint16_t uniffi_bitkitcore_checksum_method_usdtwallet_verify_payment_proof(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_CONSTRUCTOR_URDECODER_NEW
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_CONSTRUCTOR_URDECODER_NEW
 uint16_t uniffi_bitkitcore_checksum_constructor_urdecoder_new(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_CONSTRUCTOR_USDTDEPOSITCLIENT_NEW
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_CONSTRUCTOR_USDTDEPOSITCLIENT_NEW
+uint16_t uniffi_bitkitcore_checksum_constructor_usdtdepositclient_new(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_CONSTRUCTOR_USDTWALLET_NEW
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_CONSTRUCTOR_USDTWALLET_NEW
+uint16_t uniffi_bitkitcore_checksum_constructor_usdtwallet_new(void
     
 );
 #endif
