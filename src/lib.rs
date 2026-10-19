@@ -3394,6 +3394,7 @@ pub async fn pubky_get_send_terms(network: BoltzNetwork) -> Result<PubkySendTerm
 
 /// Create an externally addressed swap with a durable recipient amount and reviewed invoice budget.
 #[uniffi::export]
+#[allow(clippy::too_many_arguments)]
 pub async fn pubky_create_send_swap(
     network: BoltzNetwork,
     electrum_url: String,
