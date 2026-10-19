@@ -878,10 +878,8 @@ impl UsdtWallet {
                     .received_amount
                     .filter(|amount| *amount > 0 && *amount <= transfer.amount)
                     .ok_or(UsdtError::InvalidResponse)?;
-                let hash = delivery
-                    .destination_tx
-                    .filter(|hash| !hash.is_empty() && hash.len() <= 128)
-                    .ok_or(UsdtError::InvalidResponse)?;
+                let hash = delivery.destination_tx.ok_or(UsdtError::InvalidResponse)?;
+                super::orchestra::validate_transaction_id(&hash, transfer.destination.network())?;
                 bridge.destination_tx = Some(hash);
                 updated.received_amount = amount;
                 UsdtTransferStatus::Confirmed

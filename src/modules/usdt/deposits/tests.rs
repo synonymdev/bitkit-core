@@ -135,7 +135,7 @@ async fn service(responses: Vec<(u16, Value)>) -> (String, tokio::task::JoinHand
 async fn service_responses_cover_receive_history_detail_and_refund() {
     let owner = super::super::usdt_address(PHRASE.into(), None).unwrap();
     let address = "0x1111111111111111111111111111111111111111";
-    let deposit = json!({"id":"dep_one","network":"ethereum","asset":"USDT","source_tx":"0xsource","status":"held","code":null,"refund_tx":null});
+    let deposit = json!({"id":"dep_one","network":"ethereum","asset":"USDT","source_tx":format!("0x{}", "12".repeat(32)),"status":"held","code":null,"refund_tx":null});
     let (url, server) = service(vec![
         (200, json!({"networks":["ethereum","tron","bitcoin"]})),
         (200, json!({"network":"ethereum","address":address,"recipient":owner,"amount":"100000000","estimated_received":"98500000","slippage_bps":50,"min_usd_cents":"200","max_usd_cents":"10000","uri":123})),
@@ -513,4 +513,59 @@ async fn outbound_quote_errors_preserve_route_limits_and_liquidity() {
         assert_eq!((kind, actual_limit.as_deref()), (expected, limit));
         assert_eq!(server.await.unwrap().len(), 1);
     }
+}
+
+#[tokio::test]
+async fn history_rejects_fields_that_cannot_be_rendered_as_identifiers() {
+    let owner = super::super::usdt_address(PHRASE.into(), None).unwrap();
+    let original = json!({"id":"dep_one","network":"ethereum","asset":"USDT",
+        "source_tx":format!("0x{}", "12".repeat(32)),"status":"held","code":null,"refund_tx":null});
+    for field in [
+        "id",
+        "network",
+        "asset",
+        "status",
+        "code",
+        "source_tx",
+        "refund_tx",
+    ] {
+        for control in ["\n", "\r", "\u{202e}", "\u{2028}"] {
+            let mut deposit = original.clone();
+            deposit[field] = json!(format!("value{control}Refund transaction: forged"));
+            let (url, server) = service(vec![(
+                200,
+                json!({"deposits":[deposit],"next_offset":null}),
+            )])
+            .await;
+            let client = UsdtDepositClient::new(owner.clone(), url).unwrap();
+            assert!(
+                matches!(
+                    client.history(0, PHRASE.into(), None).await,
+                    Err(UsdtError::InvalidResponse)
+                ),
+                "{field}"
+            );
+            server.await.unwrap();
+        }
+    }
+}
+
+#[test]
+fn transaction_identifiers_match_their_network() {
+    use super::super::orchestra::validate_transaction_id;
+    let evm = format!("0x{}", "12".repeat(32));
+    let tron = "12".repeat(32);
+    let solana = bitcoin::base58::encode(&[7; 64]);
+    for network in [
+        "ethereum", "arbitrum", "polygon", "base", "bsc", "plasma", "stable",
+    ] {
+        assert!(validate_transaction_id(&evm, network).is_ok());
+        assert!(validate_transaction_id(&tron, network).is_err());
+    }
+    assert!(validate_transaction_id(&tron, "tron").is_ok());
+    assert!(validate_transaction_id(&solana, "solana").is_ok());
+    assert!(validate_transaction_id(&evm, "tron").is_err());
+    assert!(validate_transaction_id(&tron, "solana").is_err());
+    assert!(validate_transaction_id("unknown-chain-transaction", "unknown").is_ok());
+    assert!(validate_transaction_id("a\nb", "unknown").is_err());
 }

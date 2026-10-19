@@ -198,6 +198,9 @@ impl UsdtDepositClient {
         {
             return Err(UsdtError::InvalidResponse);
         }
+        for deposit in &page.deposits {
+            deposit.validate()?;
+        }
         Ok(page)
     }
 
@@ -217,6 +220,23 @@ impl UsdtDepositClient {
             .await?;
         if result.deposit.id != deposit_id {
             return Err(UsdtError::InvalidResponse);
+        }
+        result.deposit.validate()?;
+        if let Some(order) = &result.order {
+            if !super::orchestra::valid_identifier(&order.status)
+                || order
+                    .code
+                    .as_deref()
+                    .is_some_and(|code| !super::orchestra::valid_identifier(code))
+            {
+                return Err(UsdtError::InvalidResponse);
+            }
+            if let Some(hash) = &order.destination_tx {
+                super::orchestra::validate_transaction_id(hash, "arbitrum")?;
+            }
+            if let Some(hash) = &order.refund_tx {
+                super::orchestra::validate_transaction_id(hash, &result.deposit.network)?;
+            }
         }
         Ok(result)
     }
@@ -244,6 +264,28 @@ impl UsdtDepositClient {
             .await?;
         if result["status"] != "refund_requested" {
             return Err(UsdtError::InvalidResponse);
+        }
+        Ok(())
+    }
+}
+
+impl UsdtDeposit {
+    fn validate(&self) -> Result<(), UsdtError> {
+        use super::orchestra::{valid_identifier, valid_provider_text, validate_transaction_id};
+        if !valid_identifier(&self.id)
+            || !valid_identifier(&self.network)
+            || !valid_identifier(&self.status)
+            || !valid_provider_text(&self.asset)
+            || self
+                .code
+                .as_deref()
+                .is_some_and(|code| !valid_identifier(code))
+        {
+            return Err(UsdtError::InvalidResponse);
+        }
+        validate_transaction_id(&self.source_tx, &self.network)?;
+        if let Some(hash) = &self.refund_tx {
+            validate_transaction_id(hash, &self.network)?;
         }
         Ok(())
     }
