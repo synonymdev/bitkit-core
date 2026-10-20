@@ -189,15 +189,17 @@ impl UsdtWallet {
             return Err(UsdtError::QuoteExpired);
         }
         self.rpc.verify_chain().await?;
-        if self.nonce("latest").await? != data.plan.operation.nonce {
+        let (nonce, authorization, ()) = tokio::try_join!(
+            self.nonce("latest"),
+            self.authorization(),
+            self.require_balance(data.quote.amount, data.quote.maximum_fee),
+        )?;
+        if nonce != data.plan.operation.nonce {
             return Err(UsdtError::QuoteExpired);
         }
-        let authorization = self.authorization().await?;
         if authorization.nonce != data.plan.operation.eip7702_auth.nonce {
             return Err(UsdtError::QuoteExpired);
         }
-        self.require_balance(data.quote.amount, data.quote.maximum_fee)
-            .await?;
         self.validate_bridge(&data.plan).await?;
         self.paymaster.validate_gas(&data.plan.operation).await?;
         let block = self.block_number().await?;
