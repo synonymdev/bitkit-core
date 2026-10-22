@@ -67,6 +67,41 @@ fn record(db: &mut ActivityDB) {
 }
 
 #[test]
+fn original_fee_rate_survives_boost_recording_confirmation_and_reopen() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("activity.sqlite");
+    let mut db = ActivityDB::new(path.to_str().unwrap()).unwrap();
+    db.insert_onchain_activity(&original()).unwrap();
+    record(&mut db);
+
+    let pending = db
+        .get_activity_by_tx_id(DEFAULT_WALLET_ID, "original-tx")
+        .unwrap()
+        .unwrap();
+    assert!(pending.is_boosted);
+    assert_eq!(pending.fee_rate, 1);
+    assert_eq!(pending.fee, 100);
+    assert!(pending.boost_tx_ids.is_empty());
+
+    let mut confirmed = pending;
+    confirmed.confirmed = true;
+    confirmed.confirm_timestamp = Some(200);
+    db.upsert_onchain_activity_preserving_fee_rate(&confirmed)
+        .unwrap();
+    drop(db);
+
+    let db = ActivityDB::new(path.to_str().unwrap()).unwrap();
+    let stored = db
+        .get_activity_by_tx_id(DEFAULT_WALLET_ID, "original-tx")
+        .unwrap()
+        .unwrap();
+    assert!(stored.confirmed);
+    assert_eq!(stored.confirm_timestamp, Some(200));
+    assert_eq!(stored.fee_rate, 1);
+    assert_eq!(stored.fee, 100);
+}
+
+#[test]
 fn replacement_fee_survives_creation_stale_sync_confirmation_and_reopen() {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("activity.sqlite");
@@ -203,7 +238,7 @@ fn removed_original_is_not_resurrected_by_late_boost_completion() {
 }
 
 #[test]
-fn recording_failure_rolls_back_original_rate_pending_metadata_and_replacement() {
+fn recording_failure_rolls_back_original_state_pending_metadata_and_replacement() {
     let (mut db, _directory) = setup();
     db.insert_onchain_activity(&replacement()).unwrap();
     db.add_pre_activity_metadata(&pending_metadata()).unwrap();

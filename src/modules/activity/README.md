@@ -113,6 +113,23 @@ fn wipe_all_transaction_details() -> Result<(), ActivityError>
 fn activity_wipe_all() -> Result<(), ActivityError>
 ```
 
+### RBF fee rates and linkage
+
+`record_rbf_boost` stores the selected fee rate only for the replacement txid. It
+marks a still-pending original as boosted but leaves that transaction's own fee
+and fee rate unchanged, so its history remains accurate if the original confirms.
+
+For outgoing RBF transactions, `boost_tx_ids` on the replacement lists the original
+transactions it replaces. This is not a bidirectional link: consumers populate it
+from replacement events, and `record_rbf_boost` does not append the replacement
+txid to the original's list.
+
+`upsert_onchain_activity_preserving_fee_rate` preserves the stored rate for the
+same wallet and txid while merging the snapshot's other fields. The caller must
+supply the absolute `fee` for that txid, not the fee of a different transaction in
+the RBF chain. A stale or fallback snapshot rate does not overwrite the recorded
+rate; explicit corrections still use the generic update/upsert APIs.
+
 ## Usage Examples
 
 ### iOS (Swift)

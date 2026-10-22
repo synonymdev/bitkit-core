@@ -744,7 +744,7 @@ impl ActivityDB {
 
     /// Record a successful RBF result atomically. The replacement's rate is stored as pending
     /// metadata until its activity arrives, or applied immediately if that activity already exists.
-    /// Also updates the still-pending original's rate so its estimate reflects the boost until the replacement arrives.
+    /// Marks the still-pending original as boosted without changing its own transaction's fee rate.
     /// A removed/confirmed original is not resurrected or marked as pending again.
     pub fn record_rbf_boost(
         &mut self,
@@ -801,9 +801,9 @@ impl ActivityDB {
         )
         .map_err(record_error)?;
         tx.execute(
-            "UPDATE onchain_activity SET is_boosted = 1, fee_rate = ?1
-             WHERE wallet_id = ?2 AND id = ?3 AND does_exist = 1 AND confirmed = 0",
-            rusqlite::params![fee_rate as i64, &wallet_id, original_activity_id],
+            "UPDATE onchain_activity SET is_boosted = 1
+             WHERE wallet_id = ?1 AND id = ?2 AND does_exist = 1 AND confirmed = 0",
+            rusqlite::params![&wallet_id, original_activity_id],
         )
         .map_err(record_error)?;
         tx.execute(
@@ -1026,6 +1026,7 @@ impl ActivityDB {
     }
 
     /// Merge a sync/event snapshot without replacing a fee rate already known for its txid.
+    /// Other fields, including the absolute fee, come from the snapshot and must describe that txid.
     /// Full upsert/update APIs retain their normal overwrite semantics for deliberate corrections.
     pub fn upsert_onchain_activity_preserving_fee_rate(
         &mut self,
@@ -1170,7 +1171,7 @@ impl ActivityDB {
 
                 let boost_tx_ids_str = activity.boost_tx_ids.join(",");
                 stmt_onchain
-                    .execute((
+                    .execute(rusqlite::params![
                         &wallet_id,
                         &activity_id,
                         &activity.tx_id,
@@ -1187,7 +1188,7 @@ impl ActivityDB {
                         &activity.channel_id,
                         &activity.transfer_tx_id,
                         preserve_fee_rate,
-                    ))
+                    ])
                     .map_err(|e| ActivityError::InsertError {
                         error_details: format!("Failed to upsert onchain_activity: {}", e),
                     })?;
