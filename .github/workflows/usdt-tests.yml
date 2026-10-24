@@ -14,6 +14,23 @@ permissions:
   contents: read
 
 jobs:
+  native-recovery-fixture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: tests/native-recovery
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tests/native-recovery/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm run check
+      - run: npm test
+
   usdt-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
