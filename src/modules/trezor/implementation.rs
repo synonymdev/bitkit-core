@@ -307,9 +307,11 @@ impl TransportCallback for CallbackAdapter {
         self.callback.load_thp_credential(device_id.to_string())
     }
 
+    /// Redacts here, the last point bitkit-core controls, because the upstream
+    /// stream is not trusted to be secret-free.
     fn log_debug(&self, tag: &str, message: &str) {
-        self.callback
-            .log_debug(tag.to_string(), message.to_string());
+        let (tag, message) = super::log_sanitizer::sanitize_debug_log(tag, message);
+        self.callback.log_debug(tag, message);
     }
 }
 
