@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
@@ -32,8 +32,27 @@ test('attempt ledger and prepare oracle survive validation errors and restart', 
   const directory = await mkdtemp(join(tmpdir(), 'bitkit-native-protocol-'));
   let server = await start(directory);
   try {
-    assert.equal((await json(server.base, 'case/control', { expectedSnapshot: 'original' })).status, 200);
-    assert.equal((await json(server.base, 'case/control', { expectedSnapshot: 'replacement' })).status, 400);
+    assert.equal((await json(server.base, 'case/control', {
+      mode: 'reject', phase: 'prepare', scenario: 'original', faultMode: 'reject', expectedSnapshot: 'original',
+    })).status, 200);
+    const original = (await json(server.base, 'case/control')).body;
+    for (const invalid of [
+      { mode: 'accept', phase: 'restore', scenario: 'replacement', expectedSnapshot: 'replacement' },
+      { mode: 'commit-drop', faultMode: 'commit-drop' },
+      { mode: 'accept', advance: 'invalid' },
+      { mode: 'accept', advance: Number.MAX_SAFE_INTEGER },
+      { mode: 'accept', type: 'broadcast' },
+    ]) {
+      assert.equal((await json(server.base, 'case/control', invalid)).status, 400);
+      assert.deepEqual((await json(server.base, 'case/control')).body, original);
+      assert.deepEqual(JSON.parse(await readFile(join(directory, 'case.json'), 'utf8')), original);
+    }
+    const blockedWrite = join(directory, 'case.json.tmp');
+    await mkdir(blockedWrite);
+    assert.equal((await json(server.base, 'case/control', { mode: 'accept', advance: 3 })).status, 400);
+    assert.deepEqual((await json(server.base, 'case/control')).body, original);
+    assert.deepEqual(JSON.parse(await readFile(join(directory, 'case.json'), 'utf8')), original);
+    await rm(blockedWrite, { recursive: true });
     const rpc = await json(server.base, 'case/rpc', { jsonrpc: '2.0', id: 1, method: 'eth_sendUserOperation', params: [{}] });
     assert.ok(rpc.body.error);
     const state = (await json(server.base, 'case/control')).body;

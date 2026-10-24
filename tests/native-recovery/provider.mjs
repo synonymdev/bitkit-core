@@ -137,21 +137,32 @@ const server = createServer(async (req, res) => {
     if (endpoint === 'control') {
       if (req.method === 'GET') return json(state);
       const control = JSON.parse(body);
-      if (control.mode) { assert.ok(['accept', 'reject', 'commit-drop'].includes(control.mode)); state.mode = control.mode; }
-      if (control.phase) { assert.ok(['prepare', 'resume', 'restore'].includes(control.phase)); state.phase = control.phase; }
-      if (control.scenario) { assert.match(control.scenario, /^[a-z0-9-]{1,64}$/); state.scenario = control.scenario; }
-      if (control.faultMode) {
+      assert.ok(control && typeof control === 'object' && !Array.isArray(control));
+      const fields = ['mode', 'phase', 'scenario', 'faultMode', 'expectedSnapshot', 'advance'];
+      assert.ok(Object.keys(control).every((key) => fields.includes(key)), 'unknown control field');
+      const next = { ...state };
+      if ('mode' in control) { assert.ok(['accept', 'reject', 'commit-drop'].includes(control.mode)); next.mode = control.mode; }
+      if ('phase' in control) { assert.ok(['prepare', 'resume', 'restore'].includes(control.phase)); next.phase = control.phase; }
+      if ('scenario' in control) { assert.match(control.scenario, /^[a-z0-9-]{1,64}$/); next.scenario = control.scenario; }
+      if ('faultMode' in control) {
         assert.ok(['reject', 'commit-drop'].includes(control.faultMode));
         if (state.faultMode) assert.equal(state.faultMode, control.faultMode);
-        state.faultMode = control.faultMode;
+        next.faultMode = control.faultMode;
       }
-      if (control.expectedSnapshot) {
+      if ('expectedSnapshot' in control) {
         assert.equal(typeof control.expectedSnapshot, 'string');
-        if (state.expectedSnapshot) assert.equal(state.expectedSnapshot, control.expectedSnapshot, 'prepare oracle is immutable');
-        state.expectedSnapshot = control.expectedSnapshot;
+        if ('expectedSnapshot' in state) assert.equal(state.expectedSnapshot, control.expectedSnapshot, 'prepare oracle is immutable');
+        next.expectedSnapshot = control.expectedSnapshot;
       }
-      if (control.advance) state.tip += control.advance;
-      event(state, 'control', control); return json({ ok: true });
+      if ('advance' in control) {
+        assert.ok(Number.isSafeInteger(control.advance) && control.advance >= 0);
+        assert.ok(Number.isSafeInteger(state.tip + control.advance));
+        next.tip += control.advance;
+      }
+      next.events = [...state.events, { sequence: state.events.length + 1, type: 'control', ...control }];
+      save(next);
+      Object.assign(state, next);
+      return json({ ok: true });
     }
     if (endpoint === 'auth') {
       const target = new URL(`http://localhost:${server.address().port}/${id}/verify`);
