@@ -1,0 +1,15 @@
+{
+  "description": "Client-side v0 decryption vector from bitkit-ios BitkitTests/CryptoTests.swift and bitkit-android CryptoTest.kt. The container is assembled from the vector's fields in v0 key order.",
+  "scheme": "v0",
+  "label": "bitkit-notifications",
+  "device_secret_key": "cc74b1a4fdcd35916c766d3318c5a93b7e33a36ebeff0463128bf284975c2680",
+  "device_public_key": "02f7c231fe139475b8193194b42043ae546768167e5cf836f5a4063f5d448a127f",
+  "ephemeral_public_key": "031e9923e689a181a803486b7d8c0d4a5aad360edb70c8bb413a98458d91652213",
+  "shared_point": "028ce542975d6d7b2307c92e527d507b03ffb3d897eb2e0830d29f40d5efd80ee3",
+  "key": "3a9d552cb16dfae40feae644254c4ca46cab82e570de5662aacc4018e33b609b",
+  "iv": "2b8ed77fd2198e3ed88cfaa794a246e8",
+  "tag": "caddd13746d6a6aed16176734964d3a3",
+  "cipher": "l2fInfyw64gO12odo8iipISloQJ45Rc4WjFmpe95brdaAMDq+T/L9ZChcmMCXnR0J6BXd8sSIJe/0bmby8uSZZJuVCzwF76XHfY5oq0Y1/hKzyZTn8nG3dqfiLHnAPy1tZFQfm5ALgjwWnViYJLXoGFpXs7kLMA=",
+  "container": "{\"cipher\":\"l2fInfyw64gO12odo8iipISloQJ45Rc4WjFmpe95brdaAMDq+T/L9ZChcmMCXnR0J6BXd8sSIJe/0bmby8uSZZJuVCzwF76XHfY5oq0Y1/hKzyZTn8nG3dqfiLHnAPy1tZFQfm5ALgjwWnViYJLXoGFpXs7kLMA=\",\"iv\":\"2b8ed77fd2198e3ed88cfaa794a246e8\",\"tag\":\"caddd13746d6a6aed16176734964d3a3\",\"publicKey\":\"031e9923e689a181a803486b7d8c0d4a5aad360edb70c8bb413a98458d91652213\"}",
+  "plaintext": "{\"source\":\"blocktank\",\"type\":\"incomingHtlc\",\"payload\":{\"secretMessage\":\"hello\"},\"createdAt\":\"2024-09-18T13:33:52.555Z\"}"
+}
