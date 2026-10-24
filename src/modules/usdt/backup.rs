@@ -212,6 +212,12 @@ impl Store {
                 .optional()?;
             if let Some((id, data, raw)) = discovered {
                 if id != hash {
+                    // Another snapshot may contain only the chain-discovered alias. Keep the
+                    // application ID and its signed plan regardless of restore order. A second
+                    // application ID is still a conflict; chain evidence is reconciled separately.
+                    if item.transfer.id == hash && item.plan.is_none() {
+                        continue;
+                    }
                     return Err(UsdtError::InvalidBackup);
                 }
                 let mut transfer: UsdtTransfer = serde_json::from_str(&data)?;

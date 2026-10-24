@@ -501,6 +501,58 @@ async fn stale_backups_preserve_newer_outcomes_and_recover_application_ids() {
 }
 
 #[tokio::test]
+async fn recovery_snapshots_merge_chain_aliases_in_either_order_after_restart() {
+    let chain = MockChain::start().await;
+    let source_directory = tempfile::tempdir().unwrap();
+    let source = chain.wallet(&source_directory);
+    let quote = source
+        .quote_transfer(RECIPIENT.into(), 1_000_000, UsdtDestination::Arbitrum)
+        .await
+        .unwrap();
+    source
+        .send(quote.id.clone(), TEST_PHRASE.into(), None)
+        .await
+        .unwrap();
+    let signed = source.export_backup().unwrap();
+    {
+        let mut state = chain.state.lock().unwrap();
+        state.mined = true;
+        state.tip += 3;
+    }
+    let history_directory = tempfile::tempdir().unwrap();
+    let history = chain.wallet(&history_directory);
+    history.sync_history().await.unwrap();
+    let discovered = history.export_backup().unwrap();
+    assert_ne!(history.history().unwrap()[0].id, quote.id);
+
+    for snapshots in [[&signed, &discovered], [&discovered, &signed]] {
+        let directory = tempfile::tempdir().unwrap();
+        let wallet = chain.wallet(&directory);
+        wallet.restore_backup(snapshots[0].clone()).await.unwrap();
+        drop(wallet);
+        let reopened = chain.wallet(&directory);
+        reopened.restore_backup(snapshots[1].clone()).await.unwrap();
+        for snapshot in snapshots {
+            reopened.restore_backup(snapshot.clone()).await.unwrap();
+        }
+        let transfers = reopened.refresh_transfers().await.unwrap();
+        assert_eq!(transfers.len(), 1);
+        assert_eq!(transfers[0].id, quote.id);
+        assert_eq!(transfers[0].status, UsdtTransferStatus::Confirmed);
+        assert_eq!(chain.state.lock().unwrap().operations.len(), 1);
+
+        let before = reopened.export_backup().unwrap();
+        let mut conflict: serde_json::Value = serde_json::from_str(&signed).unwrap();
+        conflict["transfers"][0]["transfer"]["id"] = json!("another-application-id");
+        assert!(matches!(
+            reopened.restore_backup(conflict.to_string()).await,
+            Err(UsdtError::InvalidBackup)
+        ));
+        assert_eq!(reopened.export_backup().unwrap(), before);
+    }
+}
+
+#[tokio::test]
 async fn restored_receipts_reconcile_with_the_canonical_chain() {
     use alloy_primitives::B256;
     let chain = MockChain::start().await;
