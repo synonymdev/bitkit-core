@@ -207,6 +207,37 @@ mod tests {
         ));
     }
 
+    #[test]
+    fn test_doubled_bitkit_uris_fail() {
+        match Scanner::decode_onchain("bitcoin:A?message=Bitkit&lightning=LNA").unwrap() {
+            Scanner::OnChain { invoice } => {
+                assert_eq!(invoice.address, "A");
+                assert_eq!(
+                    invoice.params.unwrap().get("lightning").map(String::as_str),
+                    Some("LNA")
+                );
+            }
+            _ => panic!("expected an on-chain invoice"),
+        }
+
+        // Review payloads: a second URI is concatenated onto the first.
+        // The common Bitkit shape puts message=Bitkit before lightning, so the
+        // second message is hidden inside the first lightning value.
+        for doubled in [
+            "bitcoin:A?message=Bitkit&lightning=LNAbitcoin:B?message=Bitkit&lightning=LNB",
+            "bitcoin:A?amount=0.001&lightning=LNAbitcoin:B?amount=0.002&lightning=LNB",
+            "BITCOIN:A?amount=0.001bitcoin:A?amount=0.002",
+        ] {
+            assert!(
+                matches!(
+                    Scanner::decode_onchain(doubled),
+                    Err(DecodingError::InvalidFormat)
+                ),
+                "{doubled}"
+            );
+        }
+    }
+
     #[tokio::test]
     async fn test_issue_63_concatenated_bip21_uris_fails() {
         // Exact regression test payload from https://github.com/synonymdev/bitkit-core/issues/63

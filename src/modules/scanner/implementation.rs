@@ -338,6 +338,13 @@ impl Scanner {
                     None => (param, ""),
                 };
 
+                // A doubled receive URI is glued onto the previous value, so the
+                // second `bitcoin:` scheme and its `?` never become their own
+                // parameter. `message=bitcoin:<address>` has no following `?`.
+                if value_embeds_bip21_uri(v) {
+                    return Err(DecodingError::InvalidFormat);
+                }
+
                 let lower_k = k.to_ascii_lowercase();
                 let singleton_key = match lower_k.as_str() {
                     "amount" => Some("amount"),
@@ -376,6 +383,15 @@ impl Scanner {
                 params: Some(params),
             },
         })
+    }
+}
+
+fn value_embeds_bip21_uri(value: &str) -> bool {
+    let lower = value.to_ascii_lowercase();
+    let scheme = "bitcoin:";
+    match lower.find(scheme) {
+        Some(start) => lower[start + scheme.len()..].contains('?'),
+        None => false,
     }
 }
 
