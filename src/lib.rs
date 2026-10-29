@@ -54,6 +54,10 @@ pub use crate::modules::jade::{
     JadeTransportReadResult, JadeTransportResult, JadeVersionInfo, JadeXpubResponse,
 };
 use crate::modules::pubky::{PubkyAuthDetails, PubkyAuthKind, PubkyError, PubkyProfile};
+use crate::modules::pubky_swaps::{
+    self as pubky_swaps, PaykitRoute, PaykitRouteRequest, PubkySwapError, PubkySwapRoutePayment,
+    PubkySwapRouteStatus, SwapRouteEdge,
+};
 use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
     get_transport_callback, trezor_is_ble_available, trezor_set_transport_callback,
@@ -509,6 +513,9 @@ pub fn init_db(base_path: String) -> Result<String, DbError> {
     let blocktank_db = rt
         .block_on(async { BlocktankDB::new(&format!("{}/blocktank.db", base_path), None).await })?;
     let boltz_db = rt.block_on(async { BoltzDB::new(&format!("{}/boltz.db", base_path)).await })?;
+    modules::pubky_swaps::init(&base_path).map_err(|e| DbError::InitializationError {
+        error_details: e.to_string(),
+    })?;
 
     // Initialize sync database
     {
@@ -3413,6 +3420,81 @@ pub async fn boltz_stop_swap_updates() {
     let _ = rt
         .spawn(async move { boltz::stop_swap_updates().await })
         .await;
+}
+
+// ============================================================================
+// Pubky Swaps as Paykit routes
+// ============================================================================
+
+fn pubky_swaps_runtime_err(e: tokio::task::JoinError) -> PubkySwapError {
+    PubkySwapError::Transport {
+        error_details: format!("Runtime error: {}", e),
+    }
+}
+
+/// The `swap/1` edges a Pubky Swaps provider advertises right now, read from its live offer
+/// over iroh. The wallet's swap identity is derived from `mnemonic`.
+#[uniffi::export]
+pub async fn pubky_swaps_provider_edges(
+    provider_pubky: String,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+) -> Result<Vec<SwapRouteEdge>, PubkySwapError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        pubky_swaps::provider_edges(provider_pubky, mnemonic, bip39_passphrase).await
+    })
+    .await
+    .unwrap_or_else(|e| Err(pubky_swaps_runtime_err(e)))
+}
+
+/// Pick how to pay a Paykit contact. Returns `Direct` when a balance the wallet holds reaches
+/// one of the contact's endpoints, otherwise the cheapest firm quote from the trusted Pubky
+/// Swaps providers, or `None` with a reason. The user never picks the swap.
+#[uniffi::export]
+pub async fn pubky_swaps_route_paykit_payment(
+    request: PaykitRouteRequest,
+    network: Network,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+) -> Result<PaykitRoute, PubkySwapError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        pubky_swaps::route_paykit_payment(request, network.into(), mnemonic, bip39_passphrase).await
+    })
+    .await
+    .unwrap_or_else(|e| Err(pubky_swaps_runtime_err(e)))
+}
+
+/// Commit to a routed quote and get the hold invoice to pay. The provider's contract and invoice
+/// are checked against the quote and the wallet's own keys before they are returned.
+#[uniffi::export]
+pub async fn pubky_swaps_commit_route(
+    quote_id: String,
+    electrum_url: String,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+) -> Result<PubkySwapRoutePayment, PubkySwapError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        pubky_swaps::commit_route(quote_id, electrum_url, mnemonic, bip39_passphrase).await
+    })
+    .await
+    .unwrap_or_else(|e| Err(pubky_swaps_runtime_err(e)))
+}
+
+/// Advance a committed route: once the provider's lockup has its confirmations, claim it to the
+/// contact's address. Call after paying the hold invoice, until it reports `Claimed`.
+#[uniffi::export]
+pub async fn pubky_swaps_advance(
+    swap_id: String,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+) -> Result<PubkySwapRouteStatus, PubkySwapError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { pubky_swaps::advance_swap(swap_id, mnemonic, bip39_passphrase).await })
+        .await
+        .unwrap_or_else(|e| Err(pubky_swaps_runtime_err(e)))
 }
 
 #[cfg(test)]
