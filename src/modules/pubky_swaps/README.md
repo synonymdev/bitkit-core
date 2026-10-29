@@ -42,8 +42,8 @@ payloads over this carrier.
 
 ## What it does not do yet
 
-- **Discovery:** providers come from the app's configuration, not from published Capability
-  Descriptors (§6, §7).
+- **Discovery:** candidates come from the caller, usually the user's contacts. Each is asked for
+  its live offer over iroh; nothing reads published Capability Descriptors yet (§6, §7).
 - **Paykit transport:** no `paykit-cap.*` messages over Encrypted Links. paykit-rs has no API to
   send extension kinds yet (§17).
 - **Signed terms:** pubky-swap signs nothing at `main`, so quotes and contracts are not

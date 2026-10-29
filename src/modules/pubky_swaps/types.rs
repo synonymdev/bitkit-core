@@ -32,7 +32,8 @@ pub struct PaykitRouteRequest {
     pub contact_endpoints: Vec<PaykitEndpoint>,
     pub lightning_spendable_sat: u64,
     pub onchain_spendable_sat: u64,
-    /// Swap providers the wallet trusts, as bare z-base-32 pubkys.
+    /// Candidate swap providers as pubkys, usually the user's contacts. Each is asked for its
+    /// offer; those that run no provider are skipped.
     pub providers: Vec<String>,
     /// Fee rate for the wallet's own claim transaction.
     pub fee_rate_sat_vb: u64,

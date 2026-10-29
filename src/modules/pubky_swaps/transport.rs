@@ -18,6 +18,7 @@ const MAX_REPLY_BYTES: usize = 64 * 1024;
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(20);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
 
+#[derive(Clone)]
 pub(crate) struct DirectClient {
     endpoint: Endpoint,
 }

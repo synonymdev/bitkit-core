@@ -33,6 +33,9 @@ use super::store::{self, SwapRecord};
 use super::transport::{bare_pubky, DirectClient};
 use super::types::*;
 
+/// How long a candidate provider has to answer an offer request.
+const OFFER_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(8);
+
 /// Quotes the router fetched, kept until the wallet commits to one of them.
 static QUOTES: Lazy<Mutex<HashMap<String, CachedQuote>>> = Lazy::new(Default::default);
 
@@ -196,14 +199,35 @@ pub async fn route_paykit_payment(
 
     let mut offers = HashMap::new();
     let mut edges = vec![];
-    for provider in &request.providers {
-        match fetch_offer(&client, bare_pubky(provider)).await {
-            Ok(offer) if offer.network.to_bitcoin_network() == network => {
+    // Candidates are usually the user's contacts, and most of them run no provider: ask them all at
+    // once and give each a short window to answer.
+    let mut probes = tokio::task::JoinSet::new();
+    let mut candidates: Vec<String> = request
+        .providers
+        .iter()
+        .map(|p| bare_pubky(p).to_string())
+        .collect();
+    candidates.sort();
+    candidates.dedup();
+    for provider in candidates {
+        let client = client.clone();
+        probes.spawn(async move {
+            let offer = tokio::time::timeout(OFFER_TIMEOUT, fetch_offer(&client, &provider)).await;
+            (provider, offer)
+        });
+    }
+    while let Some(probe) = probes.join_next().await {
+        let Ok((provider, offer)) = probe else {
+            continue;
+        };
+        match offer {
+            Ok(Ok(offer)) if offer.network.to_bitcoin_network() == network => {
                 edges.extend(router::edges_from_offer(&offer));
                 offers.insert(offer.provider_pkarr.clone(), offer);
             }
-            Ok(_) => log::warn!("pubky swaps: provider {provider} is on another network"),
-            Err(e) => log::warn!("pubky swaps: no offer from {provider}: {e}"),
+            Ok(Ok(_)) => log::warn!("pubky swaps: provider {provider} is on another network"),
+            Ok(Err(e)) => log::debug!("pubky swaps: no offer from {provider}: {e}"),
+            Err(_) => log::debug!("pubky swaps: {provider} did not answer in time"),
         }
     }
     let ranked = router::rank_reverse_edges(edges, lock_sat, request.lightning_spendable_sat);
