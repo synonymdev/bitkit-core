@@ -52,6 +52,16 @@ btleplug = "0.11"
 alloy-primitives = { version = "1", default-features = false, features = ["std", "serde"] }
 alloy-sol-types = "1"
 alloy-rlp = "0.3"
+# Arkade (src/modules/arkade): Ark Labs' rust-sdk 0.12. ark-client's `sqlite` feature stays off, so sqlite is
+# linked once, through rusqlite above.
+ark-bdk-wallet = "=0.12.0"
+ark-client = { version = "=0.12.0", default-features = false, features = ["tls-webpki-roots"] }
+ark-core = "=0.12.0"
+ark-delegator = "=0.12.0"
+ark-fees = "=0.12.0"
+bech32 = "0.11"
+esplora-client = { version = "0.11.0", default-features = false, features = ["async", "async-https", "tokio"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 
 # Trezor connect library - non-iOS platforms get USB + Bluetooth
 [target.'cfg(not(target_os = "ios"))'.dependencies]
@@ -89,3 +99,10 @@ rust_decimal = "1.30"
 [[bin]]
 name = "example"
 path = "example/main.rs"
+
+# ark-core 0.12.0 builds the owner/operator 2-of-2 leaf as `<operator> CHECKSIGVERIFY <owner> CHECKSIG`; the
+# TypeScript and Go SDKs build `<owner> CHECKSIGVERIFY <operator> CHECKSIG`, so the same key gets different
+# Arkade and boarding addresses (arkade-os/rust-sdk#132). The vendored copy flips the five call sites to the
+# TypeScript order and changes nothing else; drop it once upstream matches.
+[patch.crates-io]
+ark-core = { path = "vendor/ark-core" }
