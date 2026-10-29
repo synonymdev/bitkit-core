@@ -2,8 +2,9 @@
 
 use ark_client::{Blockchain, Error, SpendStatus, TxStatus};
 use ark_core::ExplorerUtxo;
-use bitcoin::{Address, Amount, OutPoint, Transaction, Txid};
-use std::collections::HashSet;
+use bitcoin::{Address, Amount, OutPoint, ScriptBuf, Transaction, Txid};
+use esplora_client::Tx as EsploraTx;
+use std::collections::{HashMap, HashSet};
 use std::future::Future;
 use std::time::{Duration, Instant};
 
@@ -32,12 +33,17 @@ where
 
 /// A request that gets no answer fails after this long instead of hanging the wallet.
 const TIMEOUT_SECS: u64 = 30;
+/// How long a read address history stays good.
+const HISTORY_TTL: Duration = Duration::from_secs(10);
 /// How long a read chain tip stays good: a scan reads it once per address otherwise.
 const TIP_TTL: Duration = Duration::from_secs(30);
 
 pub struct Esplora {
     client: esplora_client::AsyncClient,
     tip: std::sync::Mutex<Option<(u32, Instant)>>,
+    /// Recent address histories: balance, history and the chores read the same few boarding addresses within
+    /// seconds of each other, and mempool.space throttles an address's bursts by refusing connections.
+    histories: std::sync::Mutex<HashMap<ScriptBuf, (Vec<EsploraTx>, Instant)>>,
 }
 
 impl Esplora {
@@ -49,6 +55,7 @@ impl Esplora {
         Ok(Self {
             client,
             tip: std::sync::Mutex::new(None),
+            histories: std::sync::Mutex::new(HashMap::new()),
         })
     }
 
@@ -66,11 +73,32 @@ impl Esplora {
     }
 }
 
+impl Esplora {
+    async fn history(&self, script: &ScriptBuf) -> Result<Vec<EsploraTx>, esplora_client::Error> {
+        if let Some((txs, at)) = self
+            .histories
+            .lock()
+            .ok()
+            .and_then(|h| h.get(script).cloned())
+        {
+            if at.elapsed() < HISTORY_TTL {
+                return Ok(txs);
+            }
+        }
+        let txs = retry(|| self.client.scripthash_txs(script, None)).await?;
+        if let Ok(mut histories) = self.histories.lock() {
+            histories.insert(script.clone(), (txs.clone(), Instant::now()));
+        }
+        Ok(txs)
+    }
+}
+
 impl Blockchain for Esplora {
     async fn find_outpoints(&self, address: &Address) -> Result<Vec<ExplorerUtxo>, Error> {
         let tip = self.tip().await.map_err(Error::consumer)?;
         let script_pubkey = address.script_pubkey();
-        let txs = retry(|| self.client.scripthash_txs(&script_pubkey, None))
+        let txs = self
+            .history(&script_pubkey)
             .await
             .map_err(Error::consumer)?;
 
