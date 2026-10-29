@@ -17,6 +17,7 @@ const DIRECT_ALPN: &[u8] = b"pubky-swap/direct/1";
 const MAX_REPLY_BYTES: usize = 64 * 1024;
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(20);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
+const ONLINE_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(Clone)]
 pub(crate) struct DirectClient {
@@ -31,6 +32,13 @@ impl DirectClient {
             .bind()
             .await
             .map_err(PubkySwapError::transport)?;
+        // Reaching a provider needs a home relay; without one the first connects all time out.
+        if tokio::time::timeout(ONLINE_TIMEOUT, endpoint.online())
+            .await
+            .is_err()
+        {
+            log::warn!("pubky swaps: no home relay after {ONLINE_TIMEOUT:?}");
+        }
         Ok(Self { endpoint })
     }
 

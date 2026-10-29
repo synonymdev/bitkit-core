@@ -34,7 +34,7 @@ use super::transport::{bare_pubky, DirectClient};
 use super::types::*;
 
 /// How long a candidate provider has to answer an offer request.
-const OFFER_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(8);
+const OFFER_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(20);
 
 /// Quotes the router fetched, kept until the wallet commits to one of them.
 static QUOTES: Lazy<Mutex<HashMap<String, CachedQuote>>> = Lazy::new(Default::default);
@@ -534,7 +534,7 @@ pub async fn advance_swap(
 #[cfg(test)]
 mod live_tests {
     //! Against a running regtest provider:
-    //! `PUBKY_SWAPS_PROVIDER=<z32> PUBKY_SWAPS_ELECTRUM=tcp://127.0.0.1:60001
+    //! `PUBKY_SWAPS_PROVIDER=<z32>[,<contact z32>…] PUBKY_SWAPS_ELECTRUM=tcp://127.0.0.1:60001
     //! PUBKY_SWAPS_DESTINATION=<bcrt1…> cargo test --lib pubky_swaps::client::live_tests -- --ignored`
     use super::*;
 
@@ -550,6 +550,8 @@ mod live_tests {
         let dir = std::env::temp_dir().join(format!("pubky-swaps-{}", Uuid::new_v4()));
         store::init(dir.to_str().unwrap()).unwrap();
 
+        let mut providers: Vec<String> = provider.split(',').map(str::to_string).collect();
+        let provider = providers[0].clone();
         let edges = provider_edges(provider.clone(), MNEMONIC.into(), None)
             .await
             .unwrap();
@@ -563,7 +565,7 @@ mod live_tests {
             }],
             lightning_spendable_sat: 500_000,
             onchain_spendable_sat: 0,
-            providers: vec![provider],
+            providers: std::mem::take(&mut providers),
             fee_rate_sat_vb: 2,
         };
         let route = route_paykit_payment(request, bitcoin::Network::Regtest, MNEMONIC.into(), None)
