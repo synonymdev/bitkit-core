@@ -96,13 +96,13 @@ tempfile = "3.2"
 serial_test = "3.2.0"
 rust_decimal = "1.30"
 
-[[bin]]
-name = "example"
-path = "example/main.rs"
-
 # ark-core 0.12.0 builds the owner/operator 2-of-2 leaf as `<operator> CHECKSIGVERIFY <owner> CHECKSIG`; the
 # TypeScript and Go SDKs build `<owner> CHECKSIGVERIFY <operator> CHECKSIG`, so the same key gets different
 # Arkade and boarding addresses (arkade-os/rust-sdk#132). The vendored copy flips the five call sites to the
 # TypeScript order and changes nothing else; drop it once upstream matches.
 [patch.crates-io]
 ark-core = { path = "vendor/ark-core" }
+
+[[bin]]
+name = "example"
+path = "example/main.rs"
