@@ -1,0 +1,1223 @@
+//! Messages exchanged between the client and the Ark server.
+
+use crate::asset::AssetId;
+use crate::tx_graph::TxGraphChunk;
+use crate::ArkAddress;
+use crate::Error;
+use crate::ErrorContext;
+use bitcoin::hex::DisplayHex;
+use bitcoin::secp256k1::PublicKey;
+use bitcoin::taproot::Signature;
+use bitcoin::Amount;
+use bitcoin::OutPoint;
+use bitcoin::Psbt;
+use bitcoin::ScriptBuf;
+use bitcoin::Transaction;
+use bitcoin::Txid;
+use bitcoin::XOnlyPublicKey;
+use musig::musig;
+use std::collections::BTreeMap;
+use std::collections::HashMap;
+use std::str::FromStr;
+
+/// arkd build version targeted by this SDK.
+///
+/// Sent in the `X-Build-Version`/`x-build-version` request header so arkd can
+/// reject clients that target an older incompatible server version. This is the
+/// arkd protocol target, not the Rust crate version.
+///
+/// Update this when the SDK intentionally targets a newer arkd compatibility
+/// baseline.
+pub const TARGET_ARKD_VERSION: &str = "0.9.15";
+
+/// Version of this SDK, as `rust-sdk/<crate version>`.
+///
+/// Sent in the `X-SDK-Version`/`x-sdk-version` request header so arkd can attribute
+/// traffic to this SDK and release. The version is resolved from the crate version at
+/// compile time, unlike [`TARGET_ARKD_VERSION`], which is the hand-maintained arkd
+/// compatibility target.
+pub const SDK_VERSION: &str = concat!("rust-sdk/", env!("CARGO_PKG_VERSION"));
+
+/// An aggregate public nonce per shared internal (non-leaf) node in the batch-tree.
+#[derive(Debug, Clone)]
+pub struct NoncePks(HashMap<Txid, musig::PublicNonce>);
+
+impl NoncePks {
+    pub fn new(nonce_pks: HashMap<Txid, musig::PublicNonce>) -> Self {
+        Self(nonce_pks)
+    }
+
+    /// Get the [`MusigPubNonce`] for the transaction identified by `txid`.
+    pub fn get(&self, txid: &Txid) -> Option<musig::PublicNonce> {
+        self.0.get(txid).copied()
+    }
+
+    pub fn encode(&self) -> HashMap<String, String> {
+        self.0
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.serialize().to_lower_hex_string()))
+            .collect()
+    }
+
+    pub fn decode(map: HashMap<String, String>) -> Result<Self, Error> {
+        let map = map
+            .into_iter()
+            .map(|(k, v)| {
+                let key = k
+                    .parse()
+                    .map_err(Error::ad_hoc)
+                    .context("failed to parse TXID")?;
+
+                let value = {
+                    let nonce_bytes = bitcoin::hex::FromHex::from_hex(&v)
+                        .map_err(Error::ad_hoc)
+                        .context("failed to decode public nonce from hex")?;
+                    musig::PublicNonce::from_byte_array(&nonce_bytes)
+                        .map_err(Error::ad_hoc)
+                        .context("failed to decode public nonce from bytes")?
+                };
+
+                Ok((key, value))
+            })
+            .collect::<Result<HashMap<Txid, musig::PublicNonce>, Error>>()?;
+
+        Ok(Self(map))
+    }
+}
+
+/// A public nonce per public key, where each public key corresponds to a party signing a
+/// transaction in the batch-tree.
+#[derive(Debug, Clone)]
+pub struct TreeTxNoncePks(pub HashMap<XOnlyPublicKey, musig::PublicNonce>);
+
+impl TreeTxNoncePks {
+    pub fn new(tree_nonce_pks: HashMap<XOnlyPublicKey, musig::PublicNonce>) -> Self {
+        Self(tree_nonce_pks)
+    }
+
+    pub fn to_pks(&self) -> Vec<musig::PublicNonce> {
+        self.0.values().copied().collect()
+    }
+
+    pub fn encode(&self) -> HashMap<String, String> {
+        self.0
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.serialize().to_lower_hex_string()))
+            .collect()
+    }
+
+    pub fn decode(map: HashMap<String, String>) -> Result<Self, Error> {
+        let map = map
+            .into_iter()
+            .map(|(k, v)| {
+                let key = k
+                    .parse()
+                    .map_err(Error::ad_hoc)
+                    .context("failed to parse PK")?;
+
+                let value = {
+                    let nonce_bytes = bitcoin::hex::FromHex::from_hex(&v)
+                        .map_err(Error::ad_hoc)
+                        .context("failed to decode public nonce from hex")?;
+                    musig::PublicNonce::from_byte_array(&nonce_bytes)
+                        .map_err(Error::ad_hoc)
+                        .context("failed to decode public nonce from bytes")?
+                };
+
+                Ok((key, value))
+            })
+            .collect::<Result<HashMap<XOnlyPublicKey, musig::PublicNonce>, Error>>()?;
+
+        Ok(Self(map))
+    }
+}
+
+/// A Musig partial signature per shared internal (non-leaf) node in the batch-tree.
+#[derive(Debug, Clone, Default)]
+pub struct PartialSigTree(pub HashMap<Txid, musig::PartialSignature>);
+
+impl PartialSigTree {
+    pub fn encode(&self) -> HashMap<String, String> {
+        self.0
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.serialize().to_lower_hex_string()))
+            .collect()
+    }
+
+    pub fn decode(map: HashMap<String, String>) -> Result<Self, Error> {
+        let map = map
+            .into_iter()
+            .map(|(k, v)| {
+                let key = k
+                    .parse()
+                    .map_err(Error::ad_hoc)
+                    .context("failed to parse TXID")?;
+
+                let value = {
+                    let sig_bytes = bitcoin::hex::FromHex::from_hex(&v)
+                        .map_err(Error::ad_hoc)
+                        .context("failed to decode partial signature from hex")?;
+                    musig::PartialSignature::from_byte_array(&sig_bytes)
+                        .map_err(Error::ad_hoc)
+                        .context("failed to decode partial signature from bytes")?
+                };
+
+                Ok((key, value))
+            })
+            .collect::<Result<HashMap<Txid, musig::PartialSignature>, Error>>()?;
+
+        Ok(Self(map))
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct TxTree {
+    pub nodes: BTreeMap<(usize, usize), TxTreeNode>,
+}
+
+impl TxTree {
+    pub fn new() -> Self {
+        Self {
+            nodes: BTreeMap::new(),
+        }
+    }
+
+    pub fn get_mut(&mut self, level: usize, index: usize) -> Result<&mut TxTreeNode, Error> {
+        self.nodes
+            .get_mut(&(level, index))
+            .ok_or_else(|| Error::ad_hoc("TxTreeNode not found at ({level}, {index})"))
+    }
+
+    pub fn insert(&mut self, node: TxTreeNode, level: usize, index: usize) {
+        self.nodes.insert((level, index), node);
+    }
+
+    pub fn txs(&self) -> impl Iterator<Item = &Transaction> {
+        self.nodes.values().map(|node| &node.tx.unsigned_tx)
+    }
+
+    /// Get all nodes at a specific level.
+    pub fn get_level(&self, level: usize) -> Vec<&TxTreeNode> {
+        self.nodes
+            .range((level, 0)..(level + 1, 0))
+            .map(|(_, node)| node)
+            .collect()
+    }
+
+    /// Iterate over levels in order.
+    pub fn iter_levels(&self) -> impl Iterator<Item = (usize, Vec<&TxTreeNode>)> {
+        let max_level = self
+            .nodes
+            .keys()
+            .map(|(level, _)| *level)
+            .max()
+            .unwrap_or(0);
+
+        (0..=max_level).map(move |level| {
+            let nodes = self.get_level(level);
+            (level, nodes)
+        })
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct TxTreeNode {
+    pub txid: Txid,
+    pub tx: Psbt,
+    pub parent_txid: Txid,
+    pub level: i32,
+    pub level_index: i32,
+    pub leaf: bool,
+}
+
+#[derive(Clone)]
+pub struct GetVtxosRequest {
+    reference: GetVtxosRequestReference,
+    filter: Option<GetVtxosRequestFilter>,
+    page: Option<PageRequest>,
+    before: Option<u64>,
+    after: Option<u64>,
+}
+
+/// Page request for paginated queries.
+#[derive(Debug, Clone, Copy)]
+pub struct PageRequest {
+    /// Number of items per page.
+    pub size: i32,
+    /// Page index (0-based).
+    pub index: i32,
+}
+
+impl GetVtxosRequest {
+    pub fn new_for_addresses(addresses: impl Iterator<Item = ArkAddress>) -> Self {
+        let scripts = addresses
+            .flat_map(|a| [a.to_p2tr_script_pubkey()])
+            .collect();
+
+        Self {
+            reference: GetVtxosRequestReference::Scripts(scripts),
+            filter: None,
+            page: None,
+            before: None,
+            after: None,
+        }
+    }
+
+    pub fn new_for_outpoints(outpoints: &[OutPoint]) -> Self {
+        Self {
+            reference: GetVtxosRequestReference::OutPoints(outpoints.to_vec()),
+            filter: None,
+            page: None,
+            before: None,
+            after: None,
+        }
+    }
+
+    /// Restrict the request to the VTXOs matching `filter`. Only one filter can be set.
+    pub fn with_filter(self, filter: GetVtxosRequestFilter) -> Result<Self, Error> {
+        if self.filter.is_some() {
+            return Err(Error::ad_hoc("GetVtxosRequest filter already set"));
+        }
+
+        Ok(Self {
+            filter: Some(filter),
+            ..self
+        })
+    }
+
+    pub fn spendable_only(self) -> Result<Self, Error> {
+        self.with_filter(GetVtxosRequestFilter::Spendable)
+    }
+
+    pub fn spent_only(self) -> Result<Self, Error> {
+        self.with_filter(GetVtxosRequestFilter::Spent)
+    }
+
+    pub fn recoverable_only(self) -> Result<Self, Error> {
+        self.with_filter(GetVtxosRequestFilter::Recoverable)
+    }
+
+    pub fn pending_only(self) -> Result<Self, Error> {
+        self.with_filter(GetVtxosRequestFilter::PendingOnly)
+    }
+
+    /// Only VTXOs that are neither spent nor unrolled: the spendable and the recoverable ones.
+    pub fn renewable_only(self) -> Result<Self, Error> {
+        self.with_filter(GetVtxosRequestFilter::Renewable)
+    }
+
+    pub fn reference(&self) -> &GetVtxosRequestReference {
+        &self.reference
+    }
+
+    pub fn filter(&self) -> Option<&GetVtxosRequestFilter> {
+        self.filter.as_ref()
+    }
+
+    pub fn with_page(self, size: i32, index: i32) -> Self {
+        Self {
+            page: Some(PageRequest { size, index }),
+            ..self
+        }
+    }
+
+    pub fn page(&self) -> Option<PageRequest> {
+        self.page
+    }
+
+    pub fn with_before(self, before: u64) -> Self {
+        Self {
+            before: Some(before),
+            ..self
+        }
+    }
+
+    pub fn with_after(self, after: u64) -> Self {
+        Self {
+            after: Some(after),
+            ..self
+        }
+    }
+
+    pub fn before(&self) -> Option<u64> {
+        self.before
+    }
+    pub fn after(&self) -> Option<u64> {
+        self.after
+    }
+}
+
+#[derive(Clone)]
+pub enum GetVtxosRequestReference {
+    Scripts(Vec<ScriptBuf>),
+    OutPoints(Vec<OutPoint>),
+}
+
+impl GetVtxosRequestReference {
+    pub fn is_empty(&self) -> bool {
+        match self {
+            GetVtxosRequestReference::Scripts(script_bufs) => script_bufs.is_empty(),
+            GetVtxosRequestReference::OutPoints(outpoints) => outpoints.is_empty(),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GetVtxosRequestFilter {
+    Spendable,
+    Spent,
+    Recoverable,
+    PendingOnly,
+    Renewable,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct VirtualTxOutPoint {
+    pub outpoint: OutPoint,
+    pub created_at: i64,
+    pub expires_at: i64,
+    pub amount: Amount,
+    pub script: ScriptBuf,
+    /// A pre-confirmed VTXO spends from another VTXO and is not a leaf of a batch-tree.
+    pub is_preconfirmed: bool,
+    pub is_swept: bool,
+    pub is_unrolled: bool,
+    pub is_spent: bool,
+    /// If the VTXO is spent, this field references the _checkpoint transaction_ that actually
+    /// spends it. The corresponding Ark transaction is in the `ark_txid` field.
+    ///
+    /// If the VTXO is renewed, this field references the corresponding _forfeit transaction_.
+    pub spent_by: Option<Txid>,
+    /// The list of commitment transactions that are ancestors to this VTXO.
+    pub commitment_txids: Vec<Txid>,
+    /// The commitment TXID onto which this VTXO was forfeited.
+    pub settled_by: Option<Txid>,
+    /// The Ark transaction that _spends_ this VTXO (if we omit the checkpoint transaction).
+    pub ark_txid: Option<Txid>,
+    /// Assets carried by this VTXO.
+    pub assets: Vec<Asset>,
+    /// Number of pre-confirmed transactions between this VTXO and the closest batch-tree leaf.
+    ///
+    /// Zero for VTXOs that are batch-tree leaves themselves.
+    pub depth: u32,
+}
+
+impl VirtualTxOutPoint {
+    /// Check if a VTXO is recoverable.
+    ///
+    /// Recoverable VTXOs can be settled, but they cannot be sent in an offchain transaction. To
+    /// settle them, the original VTXO does not need to be forfeited, as the Arkade server already
+    /// controls it.
+    ///
+    /// An unrolled VTXO is never recoverable: it is onchain, and the Arkade server does not take it
+    /// into a batch.
+    pub fn is_recoverable(&self, dust: Amount) -> bool {
+        if self.is_spent || self.is_unrolled {
+            return false;
+        }
+
+        self.amount < dust || self.is_swept || self.is_expired()
+    }
+
+    /// Check if a VTXO should be treated as unspent wallet state.
+    pub fn is_unspent(&self, dust: Amount) -> bool {
+        self.is_recoverable(dust) || (!self.is_unrolled && !self.is_spent && !self.is_swept)
+    }
+
+    /// Check if a VTXO can be spent in an offchain transaction.
+    pub fn is_spendable_offchain(&self, dust: Amount) -> bool {
+        !self.is_recoverable(dust) && !self.is_unrolled && !self.is_spent && !self.is_swept
+    }
+
+    pub fn is_pre_confirmed_spendable(&self, dust: Amount) -> bool {
+        self.is_spendable_offchain(dust) && self.is_preconfirmed
+    }
+
+    pub fn is_confirmed_spendable(&self, dust: Amount) -> bool {
+        self.is_spendable_offchain(dust) && !self.is_preconfirmed
+    }
+
+    /// Check if a VTXO should be treated as spent wallet state.
+    pub fn is_spent_status(&self, dust: Amount) -> bool {
+        !self.is_recoverable(dust) && (self.is_unrolled || self.is_spent || self.is_swept)
+    }
+
+    /// Check if a VTXO has expired.
+    ///
+    /// Expired VTXOs can be settled, but they cannot be sent in an offchain transaction. To settle
+    /// them, the original VTXO must be forfeited.
+    ///
+    /// NOTE: The server's concept of now may differ from the client's, so client and server may
+    /// sometimes disagree on whether a VTXO has expired or not.
+    pub fn is_expired(&self) -> bool {
+        #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+        let current_timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("valid duration")
+            .as_secs() as i64;
+
+        #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+        let current_timestamp = (js_sys::Date::now() / 1000.0) as i64;
+
+        current_timestamp > self.expires_at && !self.is_swept && !self.is_spent
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Info {
+    pub version: String,
+    pub signer_pk: PublicKey,
+    pub forfeit_pk: PublicKey,
+    pub forfeit_address: bitcoin::Address,
+    pub checkpoint_tapscript: ScriptBuf,
+    pub network: bitcoin::Network,
+    pub session_duration: u64,
+    pub unilateral_exit_delay: bitcoin::Sequence,
+    pub boarding_exit_delay: bitcoin::Sequence,
+    pub utxo_min_amount: Option<Amount>,
+    pub utxo_max_amount: Option<Amount>,
+    pub vtxo_min_amount: Option<Amount>,
+    pub vtxo_max_amount: Option<Amount>,
+    pub dust: Amount,
+    pub fees: Option<FeeInfo>,
+    pub scheduled_session: Option<ScheduledSession>,
+    pub deprecated_signers: Vec<DeprecatedSigner>,
+    pub service_status: HashMap<String, String>,
+    pub digest: String,
+    pub max_tx_weight: i64,
+    pub max_op_return_outputs: i64,
+}
+
+/// Fee information from the server.
+#[derive(Clone, Debug)]
+pub struct FeeInfo {
+    pub intent_fee: IntentFeeInfo,
+    pub tx_fee_rate: String,
+}
+
+/// Intent fee information.
+///
+/// These are CEL like programs which need to be evaluated during runtime. See [`ark-fees`] module
+/// for details.
+#[derive(Clone, Debug, Default)]
+pub struct IntentFeeInfo {
+    pub offchain_input: Option<String>,
+    pub offchain_output: Option<String>,
+    pub onchain_input: Option<String>,
+    pub onchain_output: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub struct ScheduledSession {
+    pub next_start_time: i64,
+    pub next_end_time: i64,
+    pub period: i64,
+    pub duration: i64,
+    pub fees: Option<FeeInfo>,
+}
+
+#[derive(Clone, Debug)]
+pub struct DeprecatedSigner {
+    pub pk: PublicKey,
+    pub cutoff_date: i64,
+}
+
+/// Status of a deprecated server signer at a specific point in time.
+///
+/// arkd uses `cutoff_date == 0` to mean "rotate immediately" rather than "cutoff already
+/// passed". The operator still co-signs for that key, so the status is distinct from
+/// [`Self::Expired`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DeprecatedSignerStatus {
+    /// The signer has a future cooperative-sign cutoff (`cutoff_date > now`).
+    Migratable,
+    /// The signer should be migrated immediately (`cutoff_date == 0`), but still co-signs.
+    DueNow,
+    /// The cooperative-sign cutoff has passed (`cutoff_date != 0 && cutoff_date <= now`).
+    Expired,
+}
+
+impl DeprecatedSignerStatus {
+    /// Classify an advertised deprecated-signer cutoff against `now_unix_secs`.
+    pub fn from_cutoff(cutoff_date: i64, now_unix_secs: i64) -> Self {
+        if cutoff_date == 0 {
+            Self::DueNow
+        } else if cutoff_date > now_unix_secs {
+            Self::Migratable
+        } else {
+            Self::Expired
+        }
+    }
+
+    /// Seconds until the cooperative-sign cutoff, when it is in the future.
+    pub fn seconds_until_cutoff(self, cutoff_date: i64, now_unix_secs: i64) -> Option<i64> {
+        match self {
+            Self::Migratable => Some(cutoff_date - now_unix_secs),
+            Self::DueNow | Self::Expired => None,
+        }
+    }
+
+    /// Whether outputs under this deprecated signer are still cooperatively migratable.
+    pub fn is_cooperatively_migratable(self) -> bool {
+        matches!(self, Self::Migratable | Self::DueNow)
+    }
+}
+
+/// Rotation status for any server signer key known to a client.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ServerSignerStatus {
+    /// The server's current signing key.
+    Current,
+    /// A deprecated signing key advertised by the server.
+    Deprecated(DeprecatedSignerStatus),
+    /// A key that is neither current nor advertised as deprecated.
+    Unknown,
+}
+
+impl ServerSignerStatus {
+    /// Whether this key is a deprecated signer whose cooperative-sign window has closed.
+    pub fn requires_recovery(self) -> bool {
+        matches!(self, Self::Deprecated(DeprecatedSignerStatus::Expired))
+    }
+
+    /// Whether this key belongs to a deprecated signer that can still be cooperatively migrated.
+    pub fn is_pre_cutoff_deprecated(self) -> bool {
+        matches!(
+            self,
+            Self::Deprecated(DeprecatedSignerStatus::Migratable | DeprecatedSignerStatus::DueNow)
+        )
+    }
+}
+
+impl Info {
+    /// Returns all known server signing keys: the current signer followed by all deprecated ones.
+    pub fn all_server_keys(&self) -> impl Iterator<Item = XOnlyPublicKey> + '_ {
+        std::iter::once(self.signer_pk.x_only_public_key().0).chain(
+            self.deprecated_signers
+                .iter()
+                .map(|ds| ds.pk.x_only_public_key().0),
+        )
+    }
+
+    /// Classify `server_pk` relative to the current and deprecated signers advertised by `/info`.
+    pub fn signer_status_at(
+        &self,
+        server_pk: XOnlyPublicKey,
+        now_unix_secs: i64,
+    ) -> ServerSignerStatus {
+        if self.signer_pk.x_only_public_key().0 == server_pk {
+            return ServerSignerStatus::Current;
+        }
+
+        self.deprecated_signers
+            .iter()
+            .find(|ds| ds.pk.x_only_public_key().0 == server_pk)
+            .map(|ds| {
+                ServerSignerStatus::Deprecated(DeprecatedSignerStatus::from_cutoff(
+                    ds.cutoff_date,
+                    now_unix_secs,
+                ))
+            })
+            .unwrap_or(ServerSignerStatus::Unknown)
+    }
+
+    /// Return the deprecated-signer status for `server_pk`, if the key is deprecated.
+    pub fn deprecated_signer_status_at(
+        &self,
+        server_pk: XOnlyPublicKey,
+        now_unix_secs: i64,
+    ) -> Option<DeprecatedSignerStatus> {
+        match self.signer_status_at(server_pk, now_unix_secs) {
+            ServerSignerStatus::Deprecated(status) => Some(status),
+            ServerSignerStatus::Current | ServerSignerStatus::Unknown => None,
+        }
+    }
+
+    /// Returns `true` when `server_pk` belongs to a deprecated signer whose cooperative-sign
+    /// window has closed and whose outputs must wait for recovery instead of joining cooperative
+    /// spends. A `cutoff_date` of `0` means "rotate immediately" but remains co-signable.
+    pub fn signer_requires_recovery_at(
+        &self,
+        server_pk: XOnlyPublicKey,
+        now_unix_secs: i64,
+    ) -> bool {
+        self.signer_status_at(server_pk, now_unix_secs)
+            .requires_recovery()
+    }
+
+    /// Backwards-compatible name for [`Self::signer_requires_recovery_at`].
+    pub fn is_signer_past_cutoff_at(&self, server_pk: XOnlyPublicKey, now_unix_secs: i64) -> bool {
+        self.signer_requires_recovery_at(server_pk, now_unix_secs)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct StreamStartedEvent {
+    pub id: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct BatchStartedEvent {
+    pub id: String,
+    pub intent_id_hashes: Vec<String>,
+    pub batch_expiry: bitcoin::Sequence,
+}
+
+#[derive(Debug, Clone)]
+pub struct BatchFinalizationEvent {
+    pub id: String,
+    pub commitment_tx: Psbt,
+}
+
+#[derive(Debug, Clone)]
+pub struct BatchFinalizedEvent {
+    pub id: String,
+    pub commitment_txid: Txid,
+}
+
+#[derive(Debug, Clone)]
+pub struct BatchFailed {
+    pub id: String,
+    pub reason: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct TreeSigningStartedEvent {
+    pub id: String,
+    pub cosigners_pubkeys: Vec<PublicKey>,
+    pub unsigned_commitment_tx: Psbt,
+}
+
+#[derive(Debug, Clone)]
+pub struct TreeNoncesAggregatedEvent {
+    pub id: String,
+    pub tree_nonces: NoncePks,
+}
+
+#[derive(Debug, Clone)]
+pub struct TreeTxEvent {
+    pub id: String,
+    pub topic: Vec<String>,
+    pub batch_tree_event_type: BatchTreeEventType,
+    pub tx_graph_chunk: TxGraphChunk,
+}
+
+#[derive(Debug, Clone)]
+pub struct TreeSignatureEvent {
+    pub id: String,
+    pub topic: Vec<String>,
+    pub batch_tree_event_type: BatchTreeEventType,
+    pub txid: Txid,
+    pub signature: Signature,
+}
+
+#[derive(Debug, Clone)]
+pub struct TreeNoncesEvent {
+    pub id: String,
+    pub topic: Vec<String>,
+    pub txid: Txid,
+    pub nonces: TreeTxNoncePks,
+}
+
+#[derive(Debug, Clone)]
+pub enum BatchTreeEventType {
+    Vtxo,
+    Connector,
+}
+
+#[derive(Debug, Clone)]
+pub enum StreamEvent {
+    StreamStarted(StreamStartedEvent),
+    BatchStarted(BatchStartedEvent),
+    BatchFinalization(BatchFinalizationEvent),
+    BatchFinalized(BatchFinalizedEvent),
+    BatchFailed(BatchFailed),
+    TreeSigningStarted(TreeSigningStartedEvent),
+    TreeNoncesAggregated(TreeNoncesAggregatedEvent),
+    TreeTx(TreeTxEvent),
+    TreeSignature(TreeSignatureEvent),
+    TreeNonces(TreeNoncesEvent),
+    Heartbeat,
+}
+
+impl StreamEvent {
+    pub fn name(&self) -> String {
+        let s = match self {
+            StreamEvent::StreamStarted(_) => "StreamStarted",
+            StreamEvent::BatchStarted(_) => "BatchStarted",
+            StreamEvent::BatchFinalization(_) => "BatchFinalization",
+            StreamEvent::BatchFinalized(_) => "BatchFinalized",
+            StreamEvent::BatchFailed(_) => "BatchFailed",
+            StreamEvent::TreeSigningStarted(_) => "TreeSigningStarted",
+            StreamEvent::TreeNoncesAggregated(_) => "TreeNoncesAggregated",
+            StreamEvent::TreeTx(_) => "TreeTx",
+            StreamEvent::TreeSignature(_) => "TreeSignature",
+            StreamEvent::TreeNonces(_) => "TreeNoncesEvent",
+            StreamEvent::Heartbeat => "Heartbeat",
+        };
+
+        s.to_string()
+    }
+}
+
+pub enum StreamTransactionData {
+    Commitment(CommitmentTransaction),
+    Ark(ArkTransaction),
+    Heartbeat,
+}
+
+pub struct ArkTransaction {
+    pub txid: Txid,
+    pub tx: Option<Psbt>,
+    pub spent_vtxos: Vec<VirtualTxOutPoint>,
+    pub unspent_vtxos: Vec<VirtualTxOutPoint>,
+    /// key: outpoint, value: checkpoint txid. Only set for offchain txs.
+    pub checkpoint_txs: HashMap<OutPoint, Txid>,
+    pub swept_vtxos: Vec<OutPoint>,
+}
+
+pub struct CommitmentTransaction {
+    pub txid: Txid,
+    pub spent_vtxos: Vec<VirtualTxOutPoint>,
+    pub unspent_vtxos: Vec<VirtualTxOutPoint>,
+}
+
+#[derive(Clone, Debug)]
+pub enum SubscriptionResponse {
+    Event(Box<SubscriptionEvent>),
+    Heartbeat,
+    SubscriptionStarted { subscription_id: String },
+}
+
+/// Filter for indexer subscriptions.
+///
+/// A tx event is dispatched to a subscription when any of its expressions evaluates to true on
+/// the event's tx, OR when the event carries a VTXO whose script is in the subscription's script
+/// set.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct SubscriptionFilter {
+    /// CEL expressions evaluated against each indexed tx envelope. The indexer combines them
+    /// with OR. On update, the field's contents replace any previously set expressions, even
+    /// when the list is empty (which clears them entirely).
+    pub expressions: Vec<String>,
+    /// Scripts to add to the subscription's script set.
+    pub add_scripts: Vec<ScriptBuf>,
+    /// Scripts to remove from the subscription's script set.
+    pub remove_scripts: Vec<ScriptBuf>,
+}
+
+/// Proof of ownership for indexer queries that return transaction data.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum IndexerAuth {
+    /// Intent that directly proves ownership of the queried vtxo or transaction inputs. If
+    /// passed, the outpoint/txids request fields are ignored by the server.
+    Intent { proof: String, message: String },
+    /// A token returned by a previous `GetVtxoChain` or `GetVirtualTxs` call, which can be
+    /// recycled once ownership has already been proved.
+    Token(String),
+}
+
+#[derive(Clone, Debug)]
+pub struct SubscriptionEvent {
+    pub txid: Txid,
+    pub scripts: Vec<ScriptBuf>,
+    pub new_vtxos: Vec<VirtualTxOutPoint>,
+    pub spent_vtxos: Vec<VirtualTxOutPoint>,
+    pub tx: Option<Transaction>,
+    pub checkpoint_txs: HashMap<OutPoint, Txid>,
+}
+
+pub struct VtxoChains {
+    pub inner: Vec<VtxoChain>,
+}
+
+pub struct VtxoChain {
+    pub txid: Txid,
+    pub tx_type: ChainedTxType,
+    pub spends: Vec<Txid>,
+    pub expires_at: i64,
+}
+
+#[derive(Debug)]
+pub enum ChainedTxType {
+    Commitment,
+    Tree,
+    Checkpoint,
+    Ark,
+    Unspecified,
+}
+
+pub struct SubmitOffchainTxResponse {
+    pub signed_ark_tx: Psbt,
+    pub signed_checkpoint_txs: Vec<Psbt>,
+}
+
+#[derive(Debug, Clone)]
+pub struct PendingTx {
+    pub ark_txid: Txid,
+    pub signed_ark_tx: Psbt,
+    pub signed_checkpoint_txs: Vec<Psbt>,
+}
+
+#[derive(Debug, Clone)]
+pub struct FinalizeOffchainTxResponse {}
+
+#[derive(Debug)]
+pub struct VirtualTxsResponse {
+    pub txs: Vec<Psbt>,
+    pub page: Option<IndexerPage>,
+    /// Token that can be recycled as [`IndexerAuth::Token`] for other indexer queries related to
+    /// the same vtxos/txs.
+    pub auth_token: Option<String>,
+}
+
+#[derive(Debug)]
+pub struct IndexerPage {
+    pub current: i32,
+    pub next: i32,
+    pub total: i32,
+}
+
+#[derive(Clone, Debug)]
+pub enum Network {
+    Bitcoin,
+    Testnet,
+    Testnet4,
+    Signet,
+    Regtest,
+    Mutinynet,
+}
+
+/// An asset carried by a VTXO.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Asset {
+    pub asset_id: AssetId,
+    pub amount: u64,
+}
+
+/// Metadata about an issued asset, including its control asset reference.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AssetInfo {
+    pub asset_id: AssetId,
+    pub control_asset_id: Option<AssetId>,
+    pub supply: u64,
+    pub metadata: String,
+}
+
+impl AssetInfo {
+    pub fn can_be_reissued(&self) -> bool {
+        self.control_asset_id.is_some()
+    }
+}
+
+impl From<Network> for bitcoin::Network {
+    fn from(value: Network) -> Self {
+        match value {
+            Network::Bitcoin => bitcoin::Network::Bitcoin,
+            Network::Testnet => bitcoin::Network::Testnet,
+            Network::Testnet4 => bitcoin::Network::Testnet4,
+            Network::Signet => bitcoin::Network::Signet,
+            Network::Regtest => bitcoin::Network::Regtest,
+            Network::Mutinynet => bitcoin::Network::Signet,
+        }
+    }
+}
+
+impl FromStr for Network {
+    type Err = String;
+
+    #[inline]
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "bitcoin" => Ok(Network::Bitcoin),
+            "testnet" => Ok(Network::Testnet),
+            "testnet4" => Ok(Network::Testnet4),
+            "signet" => Ok(Network::Signet),
+            "regtest" => Ok(Network::Regtest),
+            "mutinynet" => Ok(Network::Mutinynet),
+            _ => Err(format!("Unsupported network {}", s.to_owned())),
+        }
+    }
+}
+
+pub fn parse_sequence_number(value: i64) -> Result<bitcoin::Sequence, Error> {
+    /// The threshold that determines whether an expiry or exit delay should be parsed as a
+    /// number of blocks or a number of seconds.
+    ///
+    /// - A value below 512 is considered a number of blocks.
+    /// - A value of 512 or more is considered a number of seconds.
+    const ARBITRARY_SEQUENCE_THRESHOLD: i64 = 512;
+
+    let sequence = if value.is_negative() {
+        return Err(Error::ad_hoc(format!("invalid sequence number: {value}")));
+    } else if value < ARBITRARY_SEQUENCE_THRESHOLD {
+        bitcoin::Sequence::from_height(value as u16)
+    } else {
+        let secs = u32::try_from(value)
+            .map_err(|_| Error::ad_hoc(format!("sequence seconds overflow: {value}")))?;
+
+        bitcoin::Sequence::from_seconds_ceil(secs).map_err(Error::ad_hoc)?
+    };
+
+    Ok(sequence)
+}
+
+/// Parse a fee amount string as satoshis. Returns Amount::ZERO for empty or missing strings.
+pub fn parse_fee_amount(amount_str: Option<String>) -> Amount {
+    amount_str
+        .and_then(|s| {
+            if s.is_empty() {
+                None
+            } else {
+                s.parse::<u64>().ok()
+            }
+        })
+        .map(Amount::from_sat)
+        .unwrap_or(Amount::ZERO)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bitcoin::address::NetworkUnchecked;
+    use bitcoin::secp256k1::PublicKey;
+    use std::collections::HashMap;
+    use std::str::FromStr;
+
+    // Well-known compressed secp256k1 public keys used as test fixtures.
+    const PK_A: &str = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
+    const PK_B: &str = "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5";
+    const PK_C: &str = "02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9";
+    const PK_UNRELATED: &str = "030192e796452d6df9697c280542e1560557bcf79a347d925895043136225c7cb4";
+
+    fn pk(hex: &str) -> PublicKey {
+        PublicKey::from_str(hex).unwrap()
+    }
+
+    fn xonly(hex: &str) -> XOnlyPublicKey {
+        pk(hex).x_only_public_key().0
+    }
+
+    fn make_info(current_hex: &str, deprecated: Vec<(&str, i64)>) -> Info {
+        let dummy_address: bitcoin::Address<NetworkUnchecked> =
+            "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"
+                .parse()
+                .unwrap();
+        Info {
+            version: "1".into(),
+            signer_pk: pk(current_hex),
+            forfeit_pk: pk(current_hex),
+            forfeit_address: dummy_address.assume_checked(),
+            checkpoint_tapscript: ScriptBuf::new(),
+            network: bitcoin::Network::Testnet,
+            session_duration: 0,
+            unilateral_exit_delay: bitcoin::Sequence::ZERO,
+            boarding_exit_delay: bitcoin::Sequence::ZERO,
+            utxo_min_amount: None,
+            utxo_max_amount: None,
+            vtxo_min_amount: None,
+            vtxo_max_amount: None,
+            dust: Amount::ZERO,
+            fees: None,
+            scheduled_session: None,
+            deprecated_signers: deprecated
+                .into_iter()
+                .map(|(key, cutoff)| DeprecatedSigner {
+                    pk: pk(key),
+                    cutoff_date: cutoff,
+                })
+                .collect(),
+            service_status: HashMap::new(),
+            digest: String::new(),
+            max_tx_weight: 0,
+            max_op_return_outputs: 0,
+        }
+    }
+
+    // ── all_server_keys ──────────────────────────────────────────────────────
+
+    #[test]
+    fn all_server_keys_no_deprecated() {
+        let info = make_info(PK_A, vec![]);
+        let keys: Vec<_> = info.all_server_keys().collect();
+        assert_eq!(keys, vec![xonly(PK_A)]);
+    }
+
+    #[test]
+    fn all_server_keys_includes_deprecated_in_order() {
+        let info = make_info(PK_A, vec![(PK_B, 1000), (PK_C, 2000)]);
+        let keys: Vec<_> = info.all_server_keys().collect();
+        assert_eq!(keys, vec![xonly(PK_A), xonly(PK_B), xonly(PK_C)]);
+    }
+
+    #[test]
+    fn all_server_keys_current_is_always_first() {
+        let info = make_info(PK_C, vec![(PK_A, 500), (PK_B, 600)]);
+        let keys: Vec<_> = info.all_server_keys().collect();
+        assert_eq!(keys[0], xonly(PK_C));
+    }
+
+    // ── signer_status_at ────────────────────────────────────────────────────
+
+    #[test]
+    fn signer_status_classifies_current_deprecated_and_unknown() {
+        let now = 1_000_000i64;
+        let info = make_info(PK_A, vec![(PK_B, 0), (PK_C, now + 10)]);
+
+        assert_eq!(
+            info.signer_status_at(xonly(PK_A), now),
+            ServerSignerStatus::Current
+        );
+        assert_eq!(
+            info.signer_status_at(xonly(PK_B), now),
+            ServerSignerStatus::Deprecated(DeprecatedSignerStatus::DueNow)
+        );
+        assert_eq!(
+            info.signer_status_at(xonly(PK_C), now),
+            ServerSignerStatus::Deprecated(DeprecatedSignerStatus::Migratable)
+        );
+        assert_eq!(
+            info.signer_status_at(xonly(PK_UNRELATED), now),
+            ServerSignerStatus::Unknown
+        );
+    }
+
+    #[test]
+    fn signer_status_expired_requires_recovery() {
+        let now = 1_000_000i64;
+        let info = make_info(PK_A, vec![(PK_B, now)]);
+
+        let status = info.signer_status_at(xonly(PK_B), now);
+        assert_eq!(
+            status,
+            ServerSignerStatus::Deprecated(DeprecatedSignerStatus::Expired)
+        );
+        assert!(status.requires_recovery());
+    }
+
+    // ── is_signer_past_cutoff_at ─────────────────────────────────────────────
+
+    #[test]
+    fn current_signer_key_is_never_past_cutoff() {
+        let info = make_info(PK_A, vec![]);
+        assert!(!info.is_signer_past_cutoff_at(xonly(PK_A), i64::MAX));
+    }
+
+    #[test]
+    fn unknown_key_is_not_past_cutoff() {
+        let info = make_info(PK_A, vec![(PK_B, 100)]);
+        assert!(!info.is_signer_past_cutoff_at(xonly(PK_UNRELATED), 200));
+    }
+
+    #[test]
+    fn cutoff_zero_means_rotate_immediately_not_past_cutoff() {
+        // cutoff_date == 0 means "rotate now" but the operator still co-signs.
+        // is_signer_past_cutoff_at must return false so the key is not excluded from batches.
+        let info = make_info(PK_A, vec![(PK_B, 0)]);
+        assert!(!info.is_signer_past_cutoff_at(xonly(PK_B), 9_999_999));
+    }
+
+    #[test]
+    fn future_cutoff_is_not_past() {
+        let now = 1_000_000i64;
+        let info = make_info(PK_A, vec![(PK_B, now + 1)]);
+        assert!(!info.is_signer_past_cutoff_at(xonly(PK_B), now));
+    }
+
+    #[test]
+    fn exact_cutoff_boundary_is_past() {
+        let now = 1_000_000i64;
+        let info = make_info(PK_A, vec![(PK_B, now)]);
+        assert!(info.is_signer_past_cutoff_at(xonly(PK_B), now));
+    }
+
+    #[test]
+    fn past_cutoff_is_past() {
+        let now = 1_000_000i64;
+        let info = make_info(PK_A, vec![(PK_B, now - 1)]);
+        assert!(info.is_signer_past_cutoff_at(xonly(PK_B), now));
+    }
+
+    #[test]
+    fn multiple_deprecated_only_past_key_is_flagged() {
+        let now = 1_000_000i64;
+        // PK_B: future (not past), PK_C: past
+        let info = make_info(PK_A, vec![(PK_B, now + 100), (PK_C, now - 100)]);
+        assert!(!info.is_signer_past_cutoff_at(xonly(PK_B), now));
+        assert!(info.is_signer_past_cutoff_at(xonly(PK_C), now));
+    }
+
+    // ── GetVtxosRequest filters ──────────────────────────────────────────────
+
+    #[test]
+    fn renewable_only_sets_the_renewable_filter() {
+        let request = GetVtxosRequest::new_for_outpoints(&[])
+            .renewable_only()
+            .unwrap();
+
+        assert_eq!(request.filter(), Some(&GetVtxosRequestFilter::Renewable));
+    }
+
+    #[test]
+    fn a_second_filter_is_rejected() {
+        let request = GetVtxosRequest::new_for_outpoints(&[])
+            .renewable_only()
+            .unwrap();
+
+        assert!(request.clone().spendable_only().is_err());
+        assert!(request
+            .with_filter(GetVtxosRequestFilter::Renewable)
+            .is_err());
+    }
+
+    // ── VirtualTxOutPoint status ─────────────────────────────────────────────
+
+    fn vtxo(amount: u64, is_swept: bool, is_unrolled: bool, expires_at: i64) -> VirtualTxOutPoint {
+        VirtualTxOutPoint {
+            outpoint: OutPoint::null(),
+            created_at: 0,
+            expires_at,
+            amount: Amount::from_sat(amount),
+            script: ScriptBuf::new(),
+            is_preconfirmed: false,
+            is_swept,
+            is_unrolled,
+            is_spent: false,
+            spent_by: None,
+            commitment_txids: Vec::new(),
+            settled_by: None,
+            ark_txid: None,
+            assets: Vec::new(),
+            depth: 0,
+        }
+    }
+
+    const DUST: Amount = Amount::from_sat(330);
+    const FAR_FUTURE: i64 = i64::MAX;
+
+    #[test]
+    fn unrolled_vtxo_is_never_recoverable() {
+        let sub_dust = vtxo(100, false, true, FAR_FUTURE);
+        let swept = vtxo(10_000, true, true, FAR_FUTURE);
+        let expired = vtxo(10_000, false, true, 0);
+
+        for vtxo in [sub_dust, swept, expired] {
+            assert!(!vtxo.is_recoverable(DUST));
+            assert!(!vtxo.is_unspent(DUST));
+            assert!(vtxo.is_spent_status(DUST));
+        }
+    }
+
+    #[test]
+    fn recoverable_vtxos_that_are_not_unrolled_stay_recoverable() {
+        let sub_dust = vtxo(100, false, false, FAR_FUTURE);
+        let swept = vtxo(10_000, true, false, FAR_FUTURE);
+        let expired = vtxo(10_000, false, false, 0);
+
+        for vtxo in [sub_dust, swept, expired] {
+            assert!(vtxo.is_recoverable(DUST));
+            assert!(vtxo.is_unspent(DUST));
+            assert!(!vtxo.is_spent_status(DUST));
+        }
+    }
+}
