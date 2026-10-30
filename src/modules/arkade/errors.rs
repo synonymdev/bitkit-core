@@ -16,6 +16,9 @@ pub enum ArkadeError {
     #[error("Lightning address service error: {error_details}")]
     LnurlError { error_details: String },
 
+    #[error("Lightning swap error: {error_details}")]
+    SwapError { error_details: String },
+
     #[error("Network error: {error_details}")]
     NetworkError { error_details: String },
 
@@ -67,6 +70,14 @@ impl ArkadeError {
 impl From<ark_client::Error> for ArkadeError {
     fn from(e: ark_client::Error) -> Self {
         Self::ark(e)
+    }
+}
+
+impl From<super::intents::Error> for ArkadeError {
+    fn from(e: super::intents::Error) -> Self {
+        Self::SwapError {
+            error_details: e.to_string(),
+        }
     }
 }
 

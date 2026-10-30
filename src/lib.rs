@@ -87,8 +87,8 @@ use crate::onchain::{
 pub use modules::activity;
 pub use modules::arkade::{
     self as arkade, ArkadeBalance, ArkadeError, ArkadeEventListener, ArkadeFees,
-    ArkadeHistoryEntry, ArkadeInfo, ArkadeLightningAddress, ArkadeNetwork, ArkadeStartParams,
-    ArkadeVtxo,
+    ArkadeHistoryEntry, ArkadeInfo, ArkadeLightningAddress, ArkadeNetwork, ArkadePayQuote,
+    ArkadeStartParams, ArkadeSwap, ArkadeVtxo,
 };
 pub use modules::boltz as boltz_swaps;
 pub use modules::lnurl;
@@ -3529,6 +3529,35 @@ pub async fn arkade_delegate_info() -> Result<bool, ArkadeError> {
 #[uniffi::export]
 pub async fn arkade_lightning_address() -> Result<ArkadeLightningAddress, ArkadeError> {
     on_arkade_runtime(arkade::lightning_address()).await
+}
+
+/// An invoice for exactly `amount_sat` through Arkade Intents: the payer pays it, the wallet gets it less the
+/// solver's fee. The swap is stored first; the wallet claims it once the solver funds the lockup.
+#[uniffi::export]
+pub async fn arkade_receive(amount_sat: u64) -> Result<ArkadeSwap, ArkadeError> {
+    on_arkade_runtime(arkade::receive(amount_sat)).await
+}
+
+/// What paying `bolt11` through Arkade Intents would cost.
+#[uniffi::export]
+pub async fn arkade_quote_pay(bolt11: String) -> Result<ArkadePayQuote, ArkadeError> {
+    on_arkade_runtime(arkade::quote_pay(bolt11)).await
+}
+
+/// Pay `bolt11` through Arkade Intents, refusing a fee above `max_fee_sat`. Returns once the lockup is funded;
+/// the outcome arrives through the listener's `on_swap`.
+#[uniffi::export]
+pub async fn arkade_pay(
+    bolt11: String,
+    max_fee_sat: Option<u64>,
+) -> Result<ArkadeSwap, ArkadeError> {
+    on_arkade_runtime(arkade::pay(bolt11, max_fee_sat)).await
+}
+
+/// Every Arkade Intents Lightning swap, newest first.
+#[uniffi::export]
+pub async fn arkade_swaps() -> Result<Vec<ArkadeSwap>, ArkadeError> {
+    on_arkade_runtime(arkade::swaps()).await
 }
 
 /// Everything the Arkade wallet keeps in `data_dir`, as one JSON document for the VSS backup.

@@ -59,7 +59,9 @@ ark-client = { version = "=0.12.0", default-features = false, features = ["tls-w
 ark-core = "=0.12.0"
 ark-delegator = "=0.12.0"
 ark-fees = "=0.12.0"
+ark-script = "=0.12.0"
 bech32 = "0.11"
+nostr-sdk = { version = "0.43", default-features = false, features = ["nip44"] }
 esplora-client = { version = "0.11.0", default-features = false, features = ["async", "async-https", "tokio"] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 

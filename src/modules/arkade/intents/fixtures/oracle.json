@@ -1,0 +1,105 @@
+{
+  "comment": "Captured by oracle/capture.mjs from @arkade-os/swap 0.1.0-rc.34 against beta-solver on mainnet. Throwaway wallet, no funds.",
+  "capturedAt": 1793308284,
+  "mnemonic": "teach found fiscal pause dignity stairs shop skull learn grace about one",
+  "walletDescriptor": "tr([337f7e1e/86'/0'/1']xpub6CoB8N5R7boNHVZDQmTpZHBqpg5ZynviQ4Nc2x2oCk3s4g1v91Yyhwm7TeZ4vGk71VprUZBF93MHCyhEA6PGMU9qjtSp19yXaBZqcoxim5y/0/*)",
+  "server": {
+    "signerPubkey": "038202bebddeb1f7442803897a85eaf3ce9254d07df0172fc3725ab5f0d097779c",
+    "unilateralExitDelay": "605184",
+    "network": "bitcoin"
+  },
+  "terms": {
+    "operatorPubkey": "8202bebddeb1f7442803897a85eaf3ce9254d07df0172fc3725ab5f0d097779c",
+    "emulatorPubkey": "39c196415da47b26456a101daaa12ba9e445bfe153197f1e2b750bf40e52092e",
+    "claimDelay": 605184,
+    "hrp": "ark"
+  },
+  "receive": {
+    "claimDescriptor": "tr(0cbc7d57f97372ddeaea715e0eed62c4949ea207050812cf42c4d0c4cb2ced14)",
+    "claimPubkey": "0cbc7d57f97372ddeaea715e0eed62c4949ea207050812cf42c4d0c4cb2ced14",
+    "perArtifactDescriptor": false,
+    "preimageSalt": "754c9e344084d83f673223f72f6030e5eb4210e9f1e0061445879f26506e7562",
+    "mustPersistPreimage": false,
+    "preimageMessage": "41726b6164652d436f6e74726163742d507265696d6167652d53616c7465642d76310cbc7d57f97372ddeaea715e0eed62c4949ea207050812cf42c4d0c4cb2ced14754c9e344084d83f673223f72f6030e5eb4210e9f1e0061445879f26506e7562",
+    "preimage": "15c92b24e610293f811d174ec4a0396d9e5f744a264a117598465dc9cb697cc3",
+    "paymentHash": "08cc1bb5fe3d61dddebffea0275fc1abf3a38e8119efaed31ee141717f297005",
+    "payoutAddress": "ark1qzpq904am6clw3pgqwyh4p02708fy4xs0hcpwt7rwfdttuxsjamecalxzwfmpmvycmsrlqgpdu5t9k9f9p5thptjr7jsk4trupgflerftmvcrs",
+    "amount": 1000,
+    "request": {
+      "v": 1,
+      "type": "rfq_request",
+      "rfq_id": "54a7353b1fdae62b7231b5297be1262c6d00eef89f7b0e8e3e72a4222af15e39",
+      "pair": "lightning:BTC->arkade:BTC",
+      "amount_side": "from",
+      "amount": "1000",
+      "profile": {
+        "payment_hash": "08cc1bb5fe3d61dddebffea0275fc1abf3a38e8119efaed31ee141717f297005",
+        "payout_address": "ark1qzpq904am6clw3pgqwyh4p02708fy4xs0hcpwt7rwfdttuxsjamecalxzwfmpmvycmsrlqgpdu5t9k9f9p5thptjr7jsk4trupgflerftmvcrs",
+        "payout_pubkey": "0cbc7d57f97372ddeaea715e0eed62c4949ea207050812cf42c4d0c4cb2ced14"
+      }
+    },
+    "quote": {
+      "v": 1,
+      "type": "rfq_quote",
+      "rfq_id": "54a7353b1fdae62b7231b5297be1262c6d00eef89f7b0e8e3e72a4222af15e39",
+      "pair": "lightning:BTC->arkade:BTC",
+      "from_amount": 1000,
+      "to_amount": 995,
+      "solver_pubkey": "66422c952f8dcb96e4d0c3f049cd1e265b8461b916d9913c65c2494b64b4e3ce",
+      "valid_until": 1793310083,
+      "refund_locktime": 1793315483,
+      "profile": {
+        "payment_hash": "08cc1bb5fe3d61dddebffea0275fc1abf3a38e8119efaed31ee141717f297005",
+        "invoice": "lnbc10u1p4w8dnmpp5prxphd0784samh4ll6szwh7p40e68r5pr8h6a5c7u9qhzlefwqzsdqz9ccqzdyxqrpwusp5ghpkflpkxyql3ncnn2qtumfjff5ftlgpr0zhv9706l7hgpn5nweq9qxpqysgqgalqdntn7ykj7y2xfezwqmak99d2akwvdeuqv8rk6zygcrsrvx6zgu8pyy75ttqc5mhax6rtq30cc7pq2p4pmnrlme30h52h5j028ggq3jakpx",
+        "lockup_address": "ark1qzpq904am6clw3pgqwyh4p02708fy4xs0hcpwt7rwfdttuxsjamechtuxwlqpe2y88xcsfmcw56gxy8h8dfjvfta4pp34c8cl9ah72xc6v7tzr",
+        "solver_refund_pk_script": "5120891ca8c55ddcbef6d7416148071c9690b59870c42507d52c76adfef0a9df3fa4"
+      }
+    },
+    "lockupAddress": "ark1qzpq904am6clw3pgqwyh4p02708fy4xs0hcpwt7rwfdttuxsjamechtuxwlqpe2y88xcsfmcw56gxy8h8dfjvfta4pp34c8cl9ah72xc6v7tzr",
+    "legacy": null,
+    "invoice": {
+      "raw": "lnbc10u1p4w8dnmpp5prxphd0784samh4ll6szwh7p40e68r5pr8h6a5c7u9qhzlefwqzsdqz9ccqzdyxqrpwusp5ghpkflpkxyql3ncnn2qtumfjff5ftlgpr0zhv9706l7hgpn5nweq9qxpqysgqgalqdntn7ykj7y2xfezwqmak99d2akwvdeuqv8rk6zygcrsrvx6zgu8pyy75ttqc5mhax6rtq30cc7pq2p4pmnrlme30h52h5j028ggq3jakpx",
+      "paymentHash": "08cc1bb5fe3d61dddebffea0275fc1abf3a38e8119efaed31ee141717f297005",
+      "amountSats": 1000,
+      "expiresAt": 1793309783
+    }
+  },
+  "send": {
+    "request": {
+      "v": 1,
+      "type": "rfq_request",
+      "rfq_id": "ee11190da64a2b9f8dfde1786a4b0ddeb4a8f0ffc647ad6308d07ba9da62a3dd",
+      "pair": "arkade:BTC->lightning:BTC",
+      "amount_side": "to",
+      "profile": {
+        "invoice": "lnbc10u1p4w8dnmpp5prxphd0784samh4ll6szwh7p40e68r5pr8h6a5c7u9qhzlefwqzsdqz9ccqzdyxqrpwusp5ghpkflpkxyql3ncnn2qtumfjff5ftlgpr0zhv9706l7hgpn5nweq9qxpqysgqgalqdntn7ykj7y2xfezwqmak99d2akwvdeuqv8rk6zygcrsrvx6zgu8pyy75ttqc5mhax6rtq30cc7pq2p4pmnrlme30h52h5j028ggq3jakpx",
+        "refund_address": "ark1qzpq904am6clw3pgqwyh4p02708fy4xs0hcpwt7rwfdttuxsjamecalxzwfmpmvycmsrlqgpdu5t9k9f9p5thptjr7jsk4trupgflerftmvcrs",
+        "client_refund_pubkey": "0cbc7d57f97372ddeaea715e0eed62c4949ea207050812cf42c4d0c4cb2ced14"
+      }
+    },
+    "quote": {
+      "v": 1,
+      "type": "rfq_quote",
+      "rfq_id": "ee11190da64a2b9f8dfde1786a4b0ddeb4a8f0ffc647ad6308d07ba9da62a3dd",
+      "pair": "arkade:BTC->lightning:BTC",
+      "from_amount": 1004,
+      "to_amount": 1000,
+      "solver_pubkey": "66422c952f8dcb96e4d0c3f049cd1e265b8461b916d9913c65c2494b64b4e3ce",
+      "valid_until": 1793309184,
+      "refund_locktime": 1793920668,
+      "profile": {
+        "payment_hash": "08cc1bb5fe3d61dddebffea0275fc1abf3a38e8119efaed31ee141717f297005",
+        "lockup_address": "ark1qzpq904am6clw3pgqwyh4p02708fy4xs0hcpwt7rwfdttuxsjameew3n8ds24nmmf88cz4c89rh3vtmsyr32et7jxk0dzpw9k5q59ngyl39tk4",
+        "refund_without_receiver_delay": 612864,
+        "receiver_pk_script": "5120891ca8c55ddcbef6d7416148071c9690b59870c42507d52c76adfef0a9df3fa4"
+      }
+    },
+    "refund": {
+      "descriptor": "tr(0cbc7d57f97372ddeaea715e0eed62c4949ea207050812cf42c4d0c4cb2ced14)",
+      "pubkey": "0cbc7d57f97372ddeaea715e0eed62c4949ea207050812cf42c4d0c4cb2ced14",
+      "address": "ark1qzpq904am6clw3pgqwyh4p02708fy4xs0hcpwt7rwfdttuxsjamecalxzwfmpmvycmsrlqgpdu5t9k9f9p5thptjr7jsk4trupgflerftmvcrs"
+    },
+    "lockupAddress": "ark1qzpq904am6clw3pgqwyh4p02708fy4xs0hcpwt7rwfdttuxsjameew3n8ds24nmmf88cz4c89rh3vtmsyr32et7jxk0dzpw9k5q59ngyl39tk4",
+    "lockupAddressLegacy": "ark1qzpq904am6clw3pgqwyh4p02708fy4xs0hcpwt7rwfdttuxsjamecmfs6lwyrg77dk5mzws5wrpj9y6ky5kyx84kjddjv7vwhavnylxpfhsjjt"
+  }
+}

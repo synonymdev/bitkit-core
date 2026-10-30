@@ -1,4 +1,4 @@
-use super::types::{ArkadeBalance, ArkadeHistoryEntry};
+use super::types::{ArkadeBalance, ArkadeHistoryEntry, ArkadeSwap};
 use super::wallet::Wallet;
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
@@ -11,10 +11,13 @@ const HISTORY_EVERY: Duration = Duration::from_secs(15);
 ///
 /// Implement this in Swift/Kotlin/Python and register it via `arkade_set_listener` to hear of history entries
 /// that are new, or newly settled, since the last pass: offline Lightning receives the LNURL server claimed,
-/// payments to the Arkade address, boarded deposits and settled offboards.
+/// payments to the Arkade address, boarded deposits and settled offboards; and of each Lightning swap whose
+/// outcome changed.
 #[uniffi::export(with_foreign)]
 pub trait ArkadeEventListener: Send + Sync {
     fn on_history(&self, entries: Vec<ArkadeHistoryEntry>, balance: ArkadeBalance);
+
+    fn on_swap(&self, swap: ArkadeSwap);
 }
 
 pub(crate) static LISTENER: Mutex<Option<Arc<dyn ArkadeEventListener>>> = Mutex::new(None);
@@ -25,7 +28,7 @@ pub fn set_listener(listener: Option<Arc<dyn ArkadeEventListener>>) {
     }
 }
 
-fn listener() -> Option<Arc<dyn ArkadeEventListener>> {
+pub(crate) fn listener() -> Option<Arc<dyn ArkadeEventListener>> {
     LISTENER.lock().ok().and_then(|l| l.clone())
 }
 

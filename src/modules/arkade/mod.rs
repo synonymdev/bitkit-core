@@ -7,6 +7,7 @@
 
 mod errors;
 mod esplora;
+pub mod intents;
 pub mod keys;
 mod listener;
 pub mod lnurl;
@@ -30,9 +31,15 @@ use wallet::Wallet;
 
 /// How often the chores board confirmed deposits and renew outputs near expiry.
 const CHORES_EVERY: Duration = Duration::from_secs(60);
+/// How often open Lightning swaps are driven: funded receives claimed, expired sends refunded.
+const DRIVE_EVERY: Duration = Duration::from_secs(10);
+
+type Swaps = intents::IntentsClient<Wallet, store::SqliteSwaps>;
 
 struct Running {
     wallet: Arc<Wallet>,
+    /// `None` where no solver serves Lightning swaps (mutinynet).
+    swaps: Option<Arc<Swaps>>,
     tasks: Vec<JoinHandle<()>>,
 }
 
@@ -45,7 +52,7 @@ impl Running {
 
 static RUNNING: TokioMutex<Option<Running>> = TokioMutex::const_new(None);
 
-fn install_crypto_provider() {
+pub(crate) fn install_crypto_provider() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
         let _ = rustls::crypto::ring::default_provider().install_default();
@@ -62,11 +69,33 @@ pub async fn start(params: ArkadeStartParams) -> Result<ArkadeInfo, ArkadeError>
     }
     let wallet = Wallet::start(&params).await?;
     let info = wallet.info().await?;
-    let tasks = vec![
+    let mut tasks = vec![
         tokio::spawn(chores(wallet.clone())),
         tokio::spawn(listener::watch_history(wallet.clone())),
     ];
-    *running = Some(Running { wallet, tasks });
+    let swaps = match params.network {
+        ArkadeNetwork::Bitcoin => {
+            let store = Arc::new(store::SqliteSwaps::open(Path::new(&params.data_dir))?);
+            let client = Arc::new(Swaps::new(
+                wallet.clone(),
+                store,
+                intents::SolverCard::beta_solver(),
+            ));
+            client.on_update(Arc::new(|record: &intents::SwapRecord| {
+                if let Some(listener) = listener::listener() {
+                    listener.on_swap(ArkadeSwap::from(record));
+                }
+            }));
+            tasks.push(client.drive(DRIVE_EVERY));
+            Some(client)
+        }
+        ArkadeNetwork::Mutinynet => None,
+    };
+    *running = Some(Running {
+        wallet,
+        swaps,
+        tasks,
+    });
     Ok(info)
 }
 
@@ -84,6 +113,45 @@ async fn wallet() -> Result<Arc<Wallet>, ArkadeError> {
         .as_ref()
         .map(|r| r.wallet.clone())
         .ok_or(ArkadeError::NotStarted)
+}
+
+async fn swaps_client() -> Result<Arc<Swaps>, ArkadeError> {
+    let running = RUNNING.lock().await;
+    let running = running.as_ref().ok_or(ArkadeError::NotStarted)?;
+    running
+        .swaps
+        .clone()
+        .ok_or_else(|| ArkadeError::invalid("Lightning swaps are not available on this network"))
+}
+
+/// An invoice for exactly `amount_sat`: the payer pays it, the wallet gets it less the solver's fee. The swap is
+/// stored before the invoice is returned; its claim happens on the drive loop once the solver funds it.
+pub async fn receive(amount_sat: u64) -> Result<ArkadeSwap, ArkadeError> {
+    Ok(ArkadeSwap::from(
+        &swaps_client().await?.receive(amount_sat).await?,
+    ))
+}
+
+/// What paying `bolt11` would cost.
+pub async fn quote_pay(bolt11: String) -> Result<ArkadePayQuote, ArkadeError> {
+    Ok(swaps_client().await?.quote_pay(&bolt11).await?.into())
+}
+
+/// Funds the lockup for `bolt11`, refusing a fee above `max_fee_sat`; the outcome arrives as a swap event.
+pub async fn pay(bolt11: String, max_fee_sat: Option<u64>) -> Result<ArkadeSwap, ArkadeError> {
+    Ok(ArkadeSwap::from(
+        &swaps_client().await?.pay(&bolt11, max_fee_sat).await?,
+    ))
+}
+
+/// Every Lightning swap, newest first.
+pub async fn swaps() -> Result<Vec<ArkadeSwap>, ArkadeError> {
+    Ok(swaps_client()
+        .await?
+        .swaps()?
+        .iter()
+        .map(ArkadeSwap::from)
+        .collect())
 }
 
 pub async fn info() -> Result<ArkadeInfo, ArkadeError> {

@@ -91,6 +91,74 @@ pub struct ArkadeHistoryEntry {
     pub created_at: u64,
 }
 
+/// A Lightning swap through Arkade Intents (the app's `ArkadeSwap`): `receive` pays into the wallet, `send` pays
+/// an invoice out of it.
+#[derive(Clone, Debug, PartialEq, Eq, uniffi::Record)]
+pub struct ArkadeSwap {
+    pub id: String,
+    /// `receive` or `send`.
+    pub direction: String,
+    /// `accepted`, `open`, `funded`, `claimed`, `paid`, `refunded`, `lapsed`, `needs_recovery` or `failed`.
+    pub outcome: String,
+    pub give_sat: u64,
+    pub take_sat: u64,
+    pub fee_sat: u64,
+    pub bolt11: String,
+    pub payment_hash: String,
+    /// Unix seconds.
+    pub created_at: u64,
+    pub updated_at: u64,
+    pub blocked_reason: Option<String>,
+    /// Receive: the last moment the invoice can be paid. Send: when the quote lapses.
+    pub expires_at: u64,
+}
+
+impl From<&super::intents::SwapRecord> for ArkadeSwap {
+    fn from(r: &super::intents::SwapRecord) -> Self {
+        Self {
+            id: r.id.clone(),
+            direction: match r.direction {
+                super::intents::Direction::Receive => "receive",
+                super::intents::Direction::Send => "send",
+            }
+            .to_string(),
+            outcome: r.outcome.as_str().to_string(),
+            give_sat: r.give_sat,
+            take_sat: r.take_sat,
+            fee_sat: r.fee_sat,
+            bolt11: r.bolt11.clone(),
+            payment_hash: r.payment_hash.clone(),
+            created_at: r.created_at,
+            updated_at: r.updated_at,
+            blocked_reason: r.blocked_reason.clone(),
+            expires_at: r.expires_at,
+        }
+    }
+}
+
+/// What paying an invoice would cost.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, uniffi::Record)]
+pub struct ArkadePayQuote {
+    /// `give_sat - take_sat`.
+    pub fee_sat: u64,
+    /// What the wallet funds.
+    pub give_sat: u64,
+    /// The invoice amount.
+    pub take_sat: u64,
+    pub expires_at: u64,
+}
+
+impl From<super::intents::PayQuote> for ArkadePayQuote {
+    fn from(q: super::intents::PayQuote) -> Self {
+        Self {
+            fee_sat: q.fee_sat,
+            give_sat: q.give_sat,
+            take_sat: q.take_sat,
+            expires_at: q.expires_at,
+        }
+    }
+}
+
 pub const SENT: &str = "SENT";
 pub const RECEIVED: &str = "RECEIVED";
 

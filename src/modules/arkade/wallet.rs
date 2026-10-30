@@ -3,6 +3,7 @@
 
 use super::errors::ArkadeError;
 use super::esplora::Esplora;
+use super::intents::{ArkWallet, WalletError};
 use super::keys::Keys;
 use super::lnurl::{ArkadeLightningAddress, Destinations, LnurlService};
 use super::store::{self, SqliteContracts};
@@ -13,10 +14,10 @@ use ark_client::{
 };
 use ark_core::history::Transaction;
 use ark_core::send::SendReceiver;
-use ark_core::server::Info;
+use ark_core::server::{Info, VirtualTxOutPoint};
 use ark_core::ArkAddress;
 use ark_delegator::DelegatorClient;
-use bitcoin::{Address, Amount, OutPoint, Sequence, Txid, XOnlyPublicKey};
+use bitcoin::{Address, Amount, OutPoint, Psbt, Sequence, Txid, XOnlyPublicKey};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::str::FromStr;
@@ -42,6 +43,8 @@ pub struct Wallet {
     /// register competing intents for the same outputs.
     pub batch: tokio::sync::Mutex<()>,
     pub watcher: std::sync::Mutex<Option<VtxoWatcherHandle>>,
+    /// `m/86'/c'/1'/0/0`, the TypeScript wallet's static key: the Lightning swaps' claim and refund key.
+    identity: bitcoin::secp256k1::Keypair,
 }
 
 pub struct BoardingUtxo {
@@ -140,6 +143,7 @@ impl Wallet {
             lnurl,
             batch: tokio::sync::Mutex::new(()),
             watcher: std::sync::Mutex::new(watcher),
+            identity: keys.identity,
         }))
     }
 
@@ -546,4 +550,83 @@ pub fn now_secs() -> u64 {
 /// A `Send` RNG: the batch futures hold it across awaits on a multi-threaded runtime.
 fn rng() -> rand::rngs::StdRng {
     rand::SeedableRng::from_entropy()
+}
+
+/// The Arkade Intents client's wallet: network I/O on the ark-client `Client` and the identity key.
+#[async_trait::async_trait]
+impl ArkWallet for Wallet {
+    async fn server_info(&self) -> Result<Info, WalletError> {
+        self.client.server_info().await.map_err(wallet_error)
+    }
+
+    async fn address(&self) -> Result<ArkAddress, WalletError> {
+        Ok(self
+            .client
+            .get_offchain_address()
+            .await
+            .map_err(wallet_error)?
+            .0)
+    }
+
+    fn identity_keypair(&self) -> Result<bitcoin::secp256k1::Keypair, WalletError> {
+        Ok(self.identity)
+    }
+
+    async fn vtxos(&self, address: &ArkAddress) -> Result<Vec<VirtualTxOutPoint>, WalletError> {
+        self.client
+            .get_virtual_tx_outpoints(std::iter::once(*address))
+            .await
+            .map_err(wallet_error)
+    }
+
+    async fn virtual_tx(&self, txid: Txid) -> Result<Option<Psbt>, WalletError> {
+        let response = self
+            .client
+            .network_client()
+            .get_virtual_txs(vec![txid.to_string()], None, None)
+            .await
+            .map_err(wallet_error)?;
+        Ok(response
+            .txs
+            .into_iter()
+            .find(|tx| tx.unsigned_tx.compute_txid() == txid))
+    }
+
+    async fn submit_offchain(
+        &self,
+        ark_tx: Psbt,
+        checkpoints: Vec<Psbt>,
+    ) -> Result<Vec<Psbt>, WalletError> {
+        let response = self
+            .client
+            .network_client()
+            .submit_offchain_transaction_request(ark_tx, checkpoints)
+            .await
+            .map_err(wallet_error)?;
+        Ok(response.signed_checkpoint_txs)
+    }
+
+    async fn finalize_offchain(
+        &self,
+        ark_txid: Txid,
+        checkpoints: Vec<Psbt>,
+    ) -> Result<(), WalletError> {
+        self.client
+            .network_client()
+            .finalize_offchain_transaction(ark_txid, checkpoints)
+            .await
+            .map(|_| ())
+            .map_err(wallet_error)
+    }
+
+    async fn send(&self, address: &ArkAddress, amount: Amount) -> Result<Txid, WalletError> {
+        self.client
+            .send(vec![SendReceiver::bitcoin(*address, amount)])
+            .await
+            .map_err(wallet_error)
+    }
+}
+
+fn wallet_error(e: impl std::fmt::Display) -> WalletError {
+    WalletError(format!("{e:#}"))
 }
