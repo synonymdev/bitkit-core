@@ -308,27 +308,62 @@ impl Scanner {
         })
     }
 
-    fn decode_onchain(invoice_str: &str) -> Result<Self, DecodingError> {
-        let parts: Vec<&str> = invoice_str
-            .strip_prefix("bitcoin:")
-            .unwrap_or(invoice_str)
-            .split('?')
-            .collect();
-
-        let address = parts[0].to_string();
-
-        let params = if parts.len() > 1 {
-            parts[1]
-                .split('&')
-                .filter_map(|param| {
-                    param
-                        .split_once('=')
-                        .map(|(k, v)| (k.to_string(), v.to_string()))
-                })
-                .collect::<HashMap<String, String>>()
+    pub(crate) fn decode_onchain(invoice_str: &str) -> Result<Self, DecodingError> {
+        let without_prefix = if invoice_str
+            .get(..8)
+            .is_some_and(|prefix| prefix.eq_ignore_ascii_case("bitcoin:"))
+        {
+            &invoice_str[8..]
         } else {
-            HashMap::new()
+            invoice_str
         };
+
+        let (address_part, query_part) = match without_prefix.split_once('?') {
+            Some((addr, query)) => (addr, Some(query)),
+            None => (without_prefix, None),
+        };
+
+        let address = address_part.to_string();
+
+        let mut params = HashMap::new();
+        let mut seen_singletons = std::collections::HashSet::new();
+
+        if let Some(query) = query_part {
+            for param in query.split('&') {
+                if param.is_empty() {
+                    continue;
+                }
+                let (k, v) = match param.split_once('=') {
+                    Some((key, val)) => (key, val),
+                    None => (param, ""),
+                };
+
+                // A doubled receive URI is glued onto the previous value, so the
+                // second payment URI never becomes its own parameter.
+                // `message=bitcoin:<address>` has no following query.
+                if value_embeds_bip21_uri(v) {
+                    return Err(DecodingError::InvalidFormat);
+                }
+
+                let lower_k = k.to_ascii_lowercase();
+                let singleton_key = match lower_k.as_str() {
+                    "amount" => Some("amount"),
+                    "label" => Some("label"),
+                    "message" => Some("message"),
+                    // BIP321 explicitly aliases pop/req-pop; general required-parameter handling is separate.
+                    "pop" | "req-pop" => Some("pop"),
+                    _ => None,
+                };
+
+                if let Some(canonical) = singleton_key {
+                    if !seen_singletons.insert(canonical) {
+                        return Err(DecodingError::InvalidFormat);
+                    }
+                }
+
+                params.insert(lower_k, v.to_string());
+            }
+        }
 
         let amount_satoshis = params
             .get("amount")
@@ -349,6 +384,34 @@ impl Scanner {
             },
         })
     }
+}
+
+fn value_embeds_bip21_uri(value: &str) -> bool {
+    let lower = value.to_ascii_lowercase();
+    let scheme = "bitcoin:";
+    let Some(start) = lower.find(scheme) else {
+        return false;
+    };
+    // The address is only the token before the next `?`. A later question
+    // mark in ordinary text (`bitcoin:donation?`, `?help`) is not a URI.
+    let Some((address, query)) = value[start + scheme.len()..].split_once('?') else {
+        return false;
+    };
+    if address.is_empty() {
+        return false;
+    }
+
+    let normalized = Scanner::normalize_address_for_validation(address);
+    if BitcoinAddressValidator::validate_address(&normalized).is_ok() {
+        return true;
+    }
+
+    // Doubled receive URIs use placeholder addresses, but still glue on a
+    // key=value query. Bare `?` or `?help` does not.
+    query.split('&').any(|param| match param.split_once('=') {
+        Some((key, _)) => !key.is_empty(),
+        None => false,
+    })
 }
 
 #[async_trait]
