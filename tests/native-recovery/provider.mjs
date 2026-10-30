@@ -115,7 +115,13 @@ function rpc(state, method, params) {
       assert.equal(recoverAddress(hashAuthorization({ chainId: auth.chainId, address: auth.address, nonce: auth.nonce }), { r: auth.r, s: auth.s, yParity: Number(BigInt(auth.yParity)) }).toLowerCase(), owner.toLowerCase());
       const existing = state.operations.find((value) => value.hash === hash);
       if (existing) assert.deepEqual(existing.operation, op, 'resubmission must preserve the entire signed payload');
-      else state.operations.push({ hash, operation: op });
+      else {
+        if (state.operations.length) {
+          event(state, 'broadcast-rejected', { hash, reason: 'second distinct operation' });
+          throw Error('a second distinct operation is not allowed');
+        }
+        state.operations.push({ hash, operation: op });
+      }
       event(state, 'broadcast', { hash, payloadSha256: digest(Buffer.from(JSON.stringify(op))) });
       return hash;
     }
@@ -182,23 +188,29 @@ const server = createServer(async (req, res) => {
     }
     if (req.headers.authorization !== `Bearer ${jwt}`) return failure(5, 'fixture authentication required', 401);
     const request = decode(body); const storeId = text(request, 1);
-    const store = state.stores[storeId] ??= { version: 0, records: {} };
+    const store = state.stores[storeId] ?? { version: 0, records: {} };
     if (endpoint === 'putObjects') {
       if (state.mode === 'reject') { event(state, 'backup-rejected'); return failure(3, 'injected backup failure', 500); }
       const items = (request.get(3) ?? []).map((item) => decode(item));
       assert.ok(items.length > 0 && !request.has(4), 'fixture supports nonempty put transactions');
       if (request.has(2) && Number(first(request, 2)) !== store.version) return failure(1, 'global version conflict', 409);
       const keys = items.map((item) => text(item, 1)); assert.equal(new Set(keys).size, keys.length);
-      for (const item of items) {
-        const key = text(item, 1); const version = Number(first(item, 2) ?? 0n);
-        if (version !== -1 && version !== (store.records[key]?.version ?? 0)) return failure(1, 'key version conflict', 409);
+      try {
+        for (const item of items) {
+          const key = text(item, 1); const version = Number(first(item, 2) ?? 0n); const value = first(item, 3) ?? Buffer.alloc(0);
+          if (version !== -1 && version !== (store.records[key]?.version ?? 0)) return failure(1, 'key version conflict', 409);
+          assert.ok(!value.includes('usdtWallet') && !value.includes('signed-operation'), 'expected encrypted recovery bytes');
+        }
+      } catch (error) {
+        event(state, 'backup-invalid', { message: error.message });
+        return json({ error: error.message }, 400);
       }
       for (const item of items) {
         const key = text(item, 1); const value = first(item, 3) ?? Buffer.alloc(0); const version = Number(first(item, 2) ?? 0n);
-        assert.ok(!value.includes('usdtWallet') && !value.includes('signed-operation'), 'expected encrypted recovery bytes');
         store.records[key] = { version: version === -1 ? 1 : version + 1, value: value.toString('base64') };
       }
-      store.version++; event(state, 'backup-committed', { keys, ciphertextSha256: digest(body) });
+      store.version++; state.stores[storeId] = store;
+      event(state, 'backup-committed', { keys, ciphertextSha256: digest(body) });
       if (state.mode === 'commit-drop') { event(state, 'backup-ack-dropped'); return res.destroy(); }
       event(state, 'backup-acknowledged', { keys }); return protobuf(Buffer.alloc(0));
     }

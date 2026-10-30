@@ -76,4 +76,6 @@ After preparing and resuming on one platform, configure `restore` for that same 
 
 Save the native test reports, artifact/source hashes and `<scenario>.json` from the server directory. Each phase must show its own matching fault, zero pre-acknowledgement submission attempts, then a recovery acknowledgement followed by an identical signed payload. Earlier phases' events cannot satisfy later assertions. Repeated submissions of the **same** operation hash are allowed; a second operation is not.
 
+The provider rejects a second distinct valid operation and records `broadcast-rejected`, including after its own restart. A plaintext guard failure records `backup-invalid` and leaves every record and version in that batch unchanged. `npm test` exercises both refusal paths and subsequent valid retries; these protocol controls do not replace the native app phases above.
+
 The `/pubky` endpoint returns 503 for future integration, but these tests do not wire Paykit to it and must not be described as a complete Pubky-outage journey. Contact authorization, homeserver lease/auth recovery, full-wallet migration, concurrent app state changes and deployed-contract settlement require their separate tests.
