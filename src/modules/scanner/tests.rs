@@ -392,6 +392,35 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_question_mark_after_non_address_stays_query_text() {
+        let address = "mipcBbFg9gMiCh81Kj8tqqdgoZub1ZJRfn";
+        let message = "bitcoin:donation?";
+        let uri = format!("bitcoin:{address}?amount=0.000035&message={message}");
+        match Scanner::decode(uri).await.unwrap() {
+            Scanner::OnChain { invoice } => {
+                assert_eq!(invoice.address, address);
+                assert_eq!(invoice.amount_satoshis, 3500);
+                assert_eq!(invoice.message.as_deref(), Some(message));
+            }
+            _ => panic!("Expected an on-chain invoice"),
+        }
+
+        let custom = "https://example.com/bitcoin:donation?help";
+        let uri = format!("bitcoin:{address}?amount=0.000035&custom={custom}");
+        match Scanner::decode(uri).await.unwrap() {
+            Scanner::OnChain { invoice } => {
+                assert_eq!(invoice.address, address);
+                assert_eq!(invoice.amount_satoshis, 3500);
+                assert_eq!(
+                    invoice.params.unwrap().get("custom").map(String::as_str),
+                    Some(custom)
+                );
+            }
+            _ => panic!("Expected an on-chain invoice"),
+        }
+    }
+
+    #[tokio::test]
     async fn test_bitcoin_colon_in_query_values_succeeds() {
         let address = "mipcBbFg9gMiCh81Kj8tqqdgoZub1ZJRfn";
         for (key, value) in [

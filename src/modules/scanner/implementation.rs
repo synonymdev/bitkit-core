@@ -339,8 +339,8 @@ impl Scanner {
                 };
 
                 // A doubled receive URI is glued onto the previous value, so the
-                // second `bitcoin:` scheme and its `?` never become their own
-                // parameter. `message=bitcoin:<address>` has no following `?`.
+                // second payment URI never becomes its own parameter.
+                // `message=bitcoin:<address>` has no following query.
                 if value_embeds_bip21_uri(v) {
                     return Err(DecodingError::InvalidFormat);
                 }
@@ -389,10 +389,29 @@ impl Scanner {
 fn value_embeds_bip21_uri(value: &str) -> bool {
     let lower = value.to_ascii_lowercase();
     let scheme = "bitcoin:";
-    match lower.find(scheme) {
-        Some(start) => lower[start + scheme.len()..].contains('?'),
-        None => false,
+    let Some(start) = lower.find(scheme) else {
+        return false;
+    };
+    // The address is only the token before the next `?`. A later question
+    // mark in ordinary text (`bitcoin:donation?`, `?help`) is not a URI.
+    let Some((address, query)) = value[start + scheme.len()..].split_once('?') else {
+        return false;
+    };
+    if address.is_empty() {
+        return false;
     }
+
+    let normalized = Scanner::normalize_address_for_validation(address);
+    if BitcoinAddressValidator::validate_address(&normalized).is_ok() {
+        return true;
+    }
+
+    // Doubled receive URIs use placeholder addresses, but still glue on a
+    // key=value query. Bare `?` or `?help` does not.
+    query.split('&').any(|param| match param.split_once('=') {
+        Some((key, _)) => !key.is_empty(),
+        None => false,
+    })
 }
 
 #[async_trait]
