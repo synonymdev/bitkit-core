@@ -21,6 +21,7 @@ pub mod wire;
 #[cfg(test)]
 mod client_tests;
 #[cfg(test)]
+#[allow(clippy::print_stdout)] // prints the live quote it checks, run with --nocapture
 mod mainnet_tests;
 #[cfg(test)]
 mod oracle_tests;
