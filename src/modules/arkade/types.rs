@@ -1,11 +1,28 @@
 //! The records the apps get back: the shapes of the bridge's results (`bridge.js` and `ArkadeService.kt`).
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, uniffi::Enum)]
+use super::intents::SolverCard;
+
+#[derive(Clone, Debug, PartialEq, Eq, uniffi::Enum)]
 pub enum ArkadeNetwork {
     /// Mainnet, against Ark Labs' operator.
     Bitcoin,
     /// Arkade's signet, for dev builds.
     Mutinynet,
+    /// A local regtest stack (operator, esplora, solver, LNURL server), for dev builds and tests.
+    Regtest { endpoints: ArkadeRegtestEndpoints },
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, uniffi::Record)]
+pub struct ArkadeRegtestEndpoints {
+    pub ark_server_url: String,
+    pub esplora_url: String,
+    /// The LNURL server for the Lightning address; `None` turns the address off.
+    pub lnurl_url: Option<String>,
+    /// The delegate; `None` leaves renewal to the wallet.
+    pub delegate_url: Option<String>,
+    /// The solver's x-only discovery key; `None` turns Lightning swaps off.
+    pub solver_pubkey: Option<String>,
+    pub solver_relays: Vec<String>,
 }
 
 #[derive(Clone, Debug, uniffi::Record)]
@@ -36,7 +53,7 @@ pub struct ArkadeFees {
 pub struct ArkadeInfo {
     pub ark_address: String,
     pub boarding_address: String,
-    /// `bitcoin` or `mutinynet`.
+    /// `bitcoin`, `mutinynet` or `regtest`.
     pub network: String,
     pub dust: u64,
     /// Seconds (or blocks, below 512), as the operator advertises them.
@@ -165,30 +182,50 @@ pub const RECEIVED: &str = "RECEIVED";
 pub struct NetworkConfig {
     pub name: &'static str,
     pub network: bitcoin::Network,
-    pub ark_server_url: &'static str,
-    pub delegate_url: &'static str,
-    pub esplora_url: &'static str,
-    pub lnurl_url: Option<&'static str>,
+    pub ark_server_url: String,
+    pub delegate_url: Option<String>,
+    pub esplora_url: String,
+    pub lnurl_url: Option<String>,
+    /// Who serves Lightning swaps; `None` where no solver does.
+    pub solver: Option<SolverCard>,
 }
 
 impl ArkadeNetwork {
-    pub fn config(self) -> NetworkConfig {
+    pub fn config(&self) -> NetworkConfig {
         match self {
             Self::Bitcoin => NetworkConfig {
                 name: "bitcoin",
                 network: bitcoin::Network::Bitcoin,
-                ark_server_url: "https://arkade.computer",
-                delegate_url: "https://delegate.arkade.money",
-                esplora_url: "https://mempool.space/api",
-                lnurl_url: Some("https://lnurl.arkade.sh"),
+                ark_server_url: "https://arkade.computer".into(),
+                delegate_url: Some("https://delegate.arkade.money".into()),
+                esplora_url: "https://mempool.space/api".into(),
+                lnurl_url: Some("https://lnurl.arkade.sh".into()),
+                solver: Some(SolverCard::beta_solver()),
             },
             Self::Mutinynet => NetworkConfig {
                 name: "mutinynet",
                 network: bitcoin::Network::Signet,
-                ark_server_url: "https://mutinynet.arkade.sh",
-                delegate_url: "https://delegator.mutinynet.arkade.sh",
-                esplora_url: "https://mutinynet.com/api",
+                ark_server_url: "https://mutinynet.arkade.sh".into(),
+                delegate_url: Some("https://delegator.mutinynet.arkade.sh".into()),
+                esplora_url: "https://mutinynet.com/api".into(),
                 lnurl_url: None,
+                solver: None,
+            },
+            Self::Regtest { endpoints } => NetworkConfig {
+                name: "regtest",
+                network: bitcoin::Network::Regtest,
+                ark_server_url: endpoints.ark_server_url.clone(),
+                delegate_url: endpoints.delegate_url.clone(),
+                esplora_url: endpoints.esplora_url.clone(),
+                lnurl_url: endpoints.lnurl_url.clone(),
+                solver: endpoints
+                    .solver_pubkey
+                    .clone()
+                    .map(|discovery_pubkey| SolverCard {
+                        name: "regtest-solver".into(),
+                        discovery_pubkey,
+                        relays: endpoints.solver_relays.clone(),
+                    }),
             },
         }
     }

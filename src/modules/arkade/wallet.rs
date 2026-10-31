@@ -73,26 +73,29 @@ impl Wallet {
 
         // The TypeScript wallet builds the delegate (3-leaf) address only when the delegate answered, and the
         // plain one otherwise; so does this.
-        let delegator = DelegatorClient::new(config.delegate_url.to_string());
-        let delegator_pk = match delegator.info().await {
-            Ok(info) => Some(parse_xonly(&info.pubkey)?),
-            Err(e) => {
-                log::warn!("delegate info failed, starting without a delegate: {e}");
-                None
-            }
+        let delegator = config.delegate_url.clone().map(DelegatorClient::new);
+        let delegator_pk = match &delegator {
+            Some(delegator) => match delegator.info().await {
+                Ok(info) => Some(parse_xonly(&info.pubkey)?),
+                Err(e) => {
+                    log::warn!("delegate info failed, starting without a delegate: {e}");
+                    None
+                }
+            },
+            None => None,
         };
 
-        let esplora = Arc::new(Esplora::new(config.esplora_url)?);
+        let esplora = Arc::new(Esplora::new(&config.esplora_url)?);
         let onchain = ark_bdk_wallet::Wallet::new_from_xpriv(
             keys.account_xpriv()?,
             config.network,
-            config.esplora_url,
+            &config.esplora_url,
         )
         .map_err(ArkadeError::internal)?;
         let swaps = InMemorySwapStorage::new();
         let contracts = SqliteContracts::open(data_dir)?;
         let client_config = OfflineClientConfig {
-            ark_server_url: config.ark_server_url.to_string(),
+            ark_server_url: config.ark_server_url.clone(),
             delegator_pk,
             ..Default::default()
         };
@@ -129,10 +132,12 @@ impl Wallet {
         }
 
         let client = Arc::new(client);
-        let watcher = delegator_pk
-            .map(|_| client.start_vtxo_watcher(Arc::new(delegator), VtxoWatcherConfig::default()));
+        let watcher = delegator
+            .filter(|_| delegator_pk.is_some())
+            .map(|d| client.start_vtxo_watcher(Arc::new(d), VtxoWatcherConfig::default()));
         let lnurl = config
             .lnurl_url
+            .as_deref()
             .map(|url| LnurlService::new(url, &keys.identity))
             .transpose()?;
         Ok(Arc::new(Self {

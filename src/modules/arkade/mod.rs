@@ -38,7 +38,7 @@ type Swaps = intents::IntentsClient<Wallet, store::SqliteSwaps>;
 
 struct Running {
     wallet: Arc<Wallet>,
-    /// `None` where no solver serves Lightning swaps (mutinynet).
+    /// `None` where no solver serves Lightning swaps (mutinynet, or a regtest stack without one).
     swaps: Option<Arc<Swaps>>,
     tasks: Vec<JoinHandle<()>>,
 }
@@ -73,14 +73,10 @@ pub async fn start(params: ArkadeStartParams) -> Result<ArkadeInfo, ArkadeError>
         tokio::spawn(chores(wallet.clone())),
         tokio::spawn(listener::watch_history(wallet.clone())),
     ];
-    let swaps = match params.network {
-        ArkadeNetwork::Bitcoin => {
+    let swaps = match params.network.config().solver {
+        Some(solver) => {
             let store = Arc::new(store::SqliteSwaps::open(Path::new(&params.data_dir))?);
-            let client = Arc::new(Swaps::new(
-                wallet.clone(),
-                store,
-                intents::SolverCard::beta_solver(),
-            ));
+            let client = Arc::new(Swaps::new(wallet.clone(), store, solver));
             client.on_update(Arc::new(|record: &intents::SwapRecord| {
                 if let Some(listener) = listener::listener() {
                     listener.on_swap(ArkadeSwap::from(record));
@@ -89,7 +85,7 @@ pub async fn start(params: ArkadeStartParams) -> Result<ArkadeInfo, ArkadeError>
             tasks.push(client.drive(DRIVE_EVERY));
             Some(client)
         }
-        ArkadeNetwork::Mutinynet => None,
+        None => None,
     };
     *running = Some(Running {
         wallet,
