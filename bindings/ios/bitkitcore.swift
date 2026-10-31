@@ -4694,7 +4694,7 @@ public struct ArkadeInfo {
     public var arkAddress: String
     public var boardingAddress: String
     /**
-     * `bitcoin` or `mutinynet`.
+     * `bitcoin`, `mutinynet` or `regtest`.
      */
     public var network: String
     public var dust: UInt64
@@ -4713,7 +4713,7 @@ public struct ArkadeInfo {
     // declare one manually.
     public init(arkAddress: String, boardingAddress: String, 
         /**
-         * `bitcoin` or `mutinynet`.
+         * `bitcoin`, `mutinynet` or `regtest`.
          */network: String, dust: UInt64, 
         /**
          * Seconds (or blocks, below 512), as the operator advertises them.
@@ -5014,6 +5014,128 @@ public func FfiConverterTypeArkadePayQuote_lift(_ buf: RustBuffer) throws -> Ark
 #endif
 public func FfiConverterTypeArkadePayQuote_lower(_ value: ArkadePayQuote) -> RustBuffer {
     return FfiConverterTypeArkadePayQuote.lower(value)
+}
+
+
+public struct ArkadeRegtestEndpoints {
+    public var arkServerUrl: String
+    public var esploraUrl: String
+    /**
+     * The LNURL server for the Lightning address; `None` turns the address off.
+     */
+    public var lnurlUrl: String?
+    /**
+     * The delegate; `None` leaves renewal to the wallet.
+     */
+    public var delegateUrl: String?
+    /**
+     * The solver's x-only discovery key; `None` turns Lightning swaps off.
+     */
+    public var solverPubkey: String?
+    public var solverRelays: [String]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(arkServerUrl: String, esploraUrl: String, 
+        /**
+         * The LNURL server for the Lightning address; `None` turns the address off.
+         */lnurlUrl: String?, 
+        /**
+         * The delegate; `None` leaves renewal to the wallet.
+         */delegateUrl: String?, 
+        /**
+         * The solver's x-only discovery key; `None` turns Lightning swaps off.
+         */solverPubkey: String?, solverRelays: [String]) {
+        self.arkServerUrl = arkServerUrl
+        self.esploraUrl = esploraUrl
+        self.lnurlUrl = lnurlUrl
+        self.delegateUrl = delegateUrl
+        self.solverPubkey = solverPubkey
+        self.solverRelays = solverRelays
+    }
+}
+
+#if compiler(>=6)
+extension ArkadeRegtestEndpoints: Sendable {}
+#endif
+
+
+extension ArkadeRegtestEndpoints: Equatable, Hashable {
+    public static func ==(lhs: ArkadeRegtestEndpoints, rhs: ArkadeRegtestEndpoints) -> Bool {
+        if lhs.arkServerUrl != rhs.arkServerUrl {
+            return false
+        }
+        if lhs.esploraUrl != rhs.esploraUrl {
+            return false
+        }
+        if lhs.lnurlUrl != rhs.lnurlUrl {
+            return false
+        }
+        if lhs.delegateUrl != rhs.delegateUrl {
+            return false
+        }
+        if lhs.solverPubkey != rhs.solverPubkey {
+            return false
+        }
+        if lhs.solverRelays != rhs.solverRelays {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(arkServerUrl)
+        hasher.combine(esploraUrl)
+        hasher.combine(lnurlUrl)
+        hasher.combine(delegateUrl)
+        hasher.combine(solverPubkey)
+        hasher.combine(solverRelays)
+    }
+}
+
+extension ArkadeRegtestEndpoints: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadeRegtestEndpoints: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadeRegtestEndpoints {
+        return
+            try ArkadeRegtestEndpoints(
+                arkServerUrl: FfiConverterString.read(from: &buf), 
+                esploraUrl: FfiConverterString.read(from: &buf), 
+                lnurlUrl: FfiConverterOptionString.read(from: &buf), 
+                delegateUrl: FfiConverterOptionString.read(from: &buf), 
+                solverPubkey: FfiConverterOptionString.read(from: &buf), 
+                solverRelays: FfiConverterSequenceString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ArkadeRegtestEndpoints, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.arkServerUrl, into: &buf)
+        FfiConverterString.write(value.esploraUrl, into: &buf)
+        FfiConverterOptionString.write(value.lnurlUrl, into: &buf)
+        FfiConverterOptionString.write(value.delegateUrl, into: &buf)
+        FfiConverterOptionString.write(value.solverPubkey, into: &buf)
+        FfiConverterSequenceString.write(value.solverRelays, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeRegtestEndpoints_lift(_ buf: RustBuffer) throws -> ArkadeRegtestEndpoints {
+    return try FfiConverterTypeArkadeRegtestEndpoints.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeRegtestEndpoints_lower(_ value: ArkadeRegtestEndpoints) -> RustBuffer {
+    return FfiConverterTypeArkadeRegtestEndpoints.lower(value)
 }
 
 
@@ -20922,6 +21044,11 @@ public enum ArkadeNetwork {
      * Arkade's signet, for dev builds.
      */
     case mutinynet
+    /**
+     * A local regtest stack (operator, esplora, solver, LNURL server), for dev builds and tests.
+     */
+    case regtest(endpoints: ArkadeRegtestEndpoints
+    )
 }
 
 
@@ -20943,6 +21070,9 @@ public struct FfiConverterTypeArkadeNetwork: FfiConverterRustBuffer {
         
         case 2: return .mutinynet
         
+        case 3: return .regtest(endpoints: try FfiConverterTypeArkadeRegtestEndpoints.read(from: &buf)
+        )
+        
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
@@ -20958,6 +21088,11 @@ public struct FfiConverterTypeArkadeNetwork: FfiConverterRustBuffer {
         case .mutinynet:
             writeInt(&buf, Int32(2))
         
+        
+        case let .regtest(endpoints):
+            writeInt(&buf, Int32(3))
+            FfiConverterTypeArkadeRegtestEndpoints.write(endpoints, into: &buf)
+            
         }
     }
 }

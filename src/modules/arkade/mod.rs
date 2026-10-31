@@ -11,6 +11,9 @@ pub mod intents;
 pub mod keys;
 mod listener;
 pub mod lnurl;
+#[cfg(test)]
+#[allow(clippy::print_stdout)]
+mod regtest_tests;
 mod store;
 #[cfg(test)]
 mod tests;
