@@ -251,6 +251,20 @@ typedef void (*UniffiForeignFutureCompleteVoid)(uint64_t, UniffiForeignFutureStr
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_ARKADE_EVENT_LISTENER_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_ARKADE_EVENT_LISTENER_METHOD0
+typedef void (*UniffiCallbackInterfaceArkadeEventListenerMethod0)(uint64_t, RustBuffer, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_ARKADE_EVENT_LISTENER_METHOD1
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_ARKADE_EVENT_LISTENER_METHOD1
+typedef void (*UniffiCallbackInterfaceArkadeEventListenerMethod1)(uint64_t, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER_METHOD0
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER_METHOD0
 typedef void (*UniffiCallbackInterfaceBoltzEventListenerMethod0)(uint64_t, RustBuffer, void* _Nonnull, 
@@ -404,6 +418,15 @@ typedef void (*UniffiCallbackInterfaceUsdtBackupMethod0)(uint64_t, RustBuffer, U
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_ARKADE_EVENT_LISTENER
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_ARKADE_EVENT_LISTENER
+typedef struct UniffiVTableCallbackInterfaceArkadeEventListener {
+    UniffiCallbackInterfaceArkadeEventListenerMethod0 _Nonnull onHistory;
+    UniffiCallbackInterfaceArkadeEventListenerMethod1 _Nonnull onSwap;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfaceArkadeEventListener;
+
+#endif
 #ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER
 #define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_BOLTZ_EVENT_LISTENER
 typedef struct UniffiVTableCallbackInterfaceBoltzEventListener {
@@ -467,6 +490,31 @@ typedef struct UniffiVTableCallbackInterfaceUsdtBackup {
     UniffiCallbackInterfaceFree _Nonnull uniffiFree;
 } UniffiVTableCallbackInterfaceUsdtBackup;
 
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_ARKADEEVENTLISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_ARKADEEVENTLISTENER
+void*_Nonnull uniffi_bitkitcore_fn_clone_arkadeeventlistener(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_ARKADEEVENTLISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FREE_ARKADEEVENTLISTENER
+void uniffi_bitkitcore_fn_free_arkadeeventlistener(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_ARKADEEVENTLISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_INIT_CALLBACK_VTABLE_ARKADEEVENTLISTENER
+void uniffi_bitkitcore_fn_init_callback_vtable_arkadeeventlistener(const UniffiVTableCallbackInterfaceArkadeEventListener* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_ARKADEEVENTLISTENER_ON_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_ARKADEEVENTLISTENER_ON_HISTORY
+void uniffi_bitkitcore_fn_method_arkadeeventlistener_on_history(void*_Nonnull ptr, RustBuffer entries, RustBuffer balance, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_ARKADEEVENTLISTENER_ON_SWAP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_METHOD_ARKADEEVENTLISTENER_ON_SWAP
+void uniffi_bitkitcore_fn_method_arkadeeventlistener_on_swap(void*_Nonnull ptr, RustBuffer swap, RustCallStatus *_Nonnull out_status
+);
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_BOLTZEVENTLISTENER
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_CLONE_BOLTZEVENTLISTENER
@@ -873,6 +921,122 @@ void uniffi_bitkitcore_fn_func_add_tags(RustBuffer wallet_id, RustBuffer activit
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_APPROVE_PUBKY_AUTH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_APPROVE_PUBKY_AUTH
 uint64_t uniffi_bitkitcore_fn_func_approve_pubky_auth(RustBuffer auth_url, RustBuffer secret_key_hex
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_BALANCE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_BALANCE
+uint64_t uniffi_bitkitcore_fn_func_arkade_balance(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_DELEGATE_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_DELEGATE_INFO
+uint64_t uniffi_bitkitcore_fn_func_arkade_delegate_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_EXPORT_STATE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_EXPORT_STATE
+RustBuffer uniffi_bitkitcore_fn_func_arkade_export_state(RustBuffer data_dir, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_HISTORY
+uint64_t uniffi_bitkitcore_fn_func_arkade_history(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_IMPORT_STATE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_IMPORT_STATE
+uint64_t uniffi_bitkitcore_fn_func_arkade_import_state(RustBuffer data_dir, RustBuffer json, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_INFO
+uint64_t uniffi_bitkitcore_fn_func_arkade_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_LIGHTNING_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_LIGHTNING_ADDRESS
+uint64_t uniffi_bitkitcore_fn_func_arkade_lightning_address(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_OFFBOARD
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_OFFBOARD
+uint64_t uniffi_bitkitcore_fn_func_arkade_offboard(RustBuffer address, RustBuffer amount_sat
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_OFFBOARD_FEE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_OFFBOARD_FEE
+uint64_t uniffi_bitkitcore_fn_func_arkade_offboard_fee(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_PAY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_PAY
+uint64_t uniffi_bitkitcore_fn_func_arkade_pay(RustBuffer bolt11, RustBuffer max_fee_sat
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_QUOTE_PAY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_QUOTE_PAY
+uint64_t uniffi_bitkitcore_fn_func_arkade_quote_pay(RustBuffer bolt11
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_RECEIVE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_RECEIVE
+uint64_t uniffi_bitkitcore_fn_func_arkade_receive(uint64_t amount_sat
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_RENEW
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_RENEW
+uint64_t uniffi_bitkitcore_fn_func_arkade_renew(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_SEND_ARK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_SEND_ARK
+uint64_t uniffi_bitkitcore_fn_func_arkade_send_ark(RustBuffer address, uint64_t amount_sat
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_SET_LISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_SET_LISTENER
+void uniffi_bitkitcore_fn_func_arkade_set_listener(RustBuffer listener, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_SETTLE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_SETTLE
+uint64_t uniffi_bitkitcore_fn_func_arkade_settle(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_START
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_START
+uint64_t uniffi_bitkitcore_fn_func_arkade_start(RustBuffer params
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_STOP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_STOP
+uint64_t uniffi_bitkitcore_fn_func_arkade_stop(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_SWAPS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_SWAPS
+uint64_t uniffi_bitkitcore_fn_func_arkade_swaps(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_VTXOS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_VTXOS
+uint64_t uniffi_bitkitcore_fn_func_arkade_vtxos(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_WIPE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_WIPE
+uint64_t uniffi_bitkitcore_fn_func_arkade_wipe(RustBuffer data_dir
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
@@ -2260,6 +2424,132 @@ uint16_t uniffi_bitkitcore_checksum_func_approve_pubky_auth(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_BALANCE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_BALANCE
+uint16_t uniffi_bitkitcore_checksum_func_arkade_balance(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_DELEGATE_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_DELEGATE_INFO
+uint16_t uniffi_bitkitcore_checksum_func_arkade_delegate_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_EXPORT_STATE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_EXPORT_STATE
+uint16_t uniffi_bitkitcore_checksum_func_arkade_export_state(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_HISTORY
+uint16_t uniffi_bitkitcore_checksum_func_arkade_history(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_IMPORT_STATE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_IMPORT_STATE
+uint16_t uniffi_bitkitcore_checksum_func_arkade_import_state(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_INFO
+uint16_t uniffi_bitkitcore_checksum_func_arkade_info(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_LIGHTNING_ADDRESS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_LIGHTNING_ADDRESS
+uint16_t uniffi_bitkitcore_checksum_func_arkade_lightning_address(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_OFFBOARD
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_OFFBOARD
+uint16_t uniffi_bitkitcore_checksum_func_arkade_offboard(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_OFFBOARD_FEE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_OFFBOARD_FEE
+uint16_t uniffi_bitkitcore_checksum_func_arkade_offboard_fee(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_PAY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_PAY
+uint16_t uniffi_bitkitcore_checksum_func_arkade_pay(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_QUOTE_PAY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_QUOTE_PAY
+uint16_t uniffi_bitkitcore_checksum_func_arkade_quote_pay(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_RECEIVE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_RECEIVE
+uint16_t uniffi_bitkitcore_checksum_func_arkade_receive(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_RENEW
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_RENEW
+uint16_t uniffi_bitkitcore_checksum_func_arkade_renew(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_SEND_ARK
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_SEND_ARK
+uint16_t uniffi_bitkitcore_checksum_func_arkade_send_ark(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_SET_LISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_SET_LISTENER
+uint16_t uniffi_bitkitcore_checksum_func_arkade_set_listener(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_SETTLE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_SETTLE
+uint16_t uniffi_bitkitcore_checksum_func_arkade_settle(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_START
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_START
+uint16_t uniffi_bitkitcore_checksum_func_arkade_start(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_STOP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_STOP
+uint16_t uniffi_bitkitcore_checksum_func_arkade_stop(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_SWAPS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_SWAPS
+uint16_t uniffi_bitkitcore_checksum_func_arkade_swaps(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_VTXOS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_VTXOS
+uint16_t uniffi_bitkitcore_checksum_func_arkade_vtxos(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_WIPE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_WIPE
+uint16_t uniffi_bitkitcore_checksum_func_arkade_wipe(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_BLOCKTANK_REMOVE_ALL_CJIT_ENTRIES
 uint16_t uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries(void
@@ -3469,6 +3759,18 @@ uint16_t uniffi_bitkitcore_checksum_func_wipe_all_databases(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_TRANSACTION_DETAILS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WIPE_ALL_TRANSACTION_DETAILS
 uint16_t uniffi_bitkitcore_checksum_func_wipe_all_transaction_details(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_ARKADEEVENTLISTENER_ON_HISTORY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_ARKADEEVENTLISTENER_ON_HISTORY
+uint16_t uniffi_bitkitcore_checksum_method_arkadeeventlistener_on_history(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_ARKADEEVENTLISTENER_ON_SWAP
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_METHOD_ARKADEEVENTLISTENER_ON_SWAP
+uint16_t uniffi_bitkitcore_checksum_method_arkadeeventlistener_on_swap(void
     
 );
 #endif

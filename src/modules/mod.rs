@@ -1,4 +1,5 @@
 pub mod activity;
+pub mod arkade;
 pub mod blocktank;
 pub mod boltz;
 pub mod hardware_wallet;

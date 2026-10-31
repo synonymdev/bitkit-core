@@ -85,6 +85,11 @@ use crate::onchain::{
     start_watcher, stop_all_watchers, stop_watcher, EventListener, WatcherParams,
 };
 pub use modules::activity;
+pub use modules::arkade::{
+    self as arkade, ArkadeBalance, ArkadeError, ArkadeEventListener, ArkadeFees,
+    ArkadeHistoryEntry, ArkadeInfo, ArkadeLightningAddress, ArkadeNetwork, ArkadePayQuote,
+    ArkadeStartParams, ArkadeSwap, ArkadeVtxo,
+};
 pub use modules::boltz as boltz_swaps;
 pub use modules::lnurl;
 pub use modules::onchain;
@@ -3413,6 +3418,165 @@ pub async fn boltz_stop_swap_updates() {
     let _ = rt
         .spawn(async move { boltz::stop_swap_updates().await })
         .await;
+}
+
+// ── Arkade ───────────────────────────────────────────────────────────────────
+
+fn arkade_runtime_err(e: tokio::task::JoinError) -> ArkadeError {
+    ArkadeError::InternalError {
+        error_details: format!("Arkade task failed: {e}"),
+    }
+}
+
+/// Runs an Arkade call on the shared runtime, which ark-client's gRPC and the wallet's background tasks need.
+async fn on_arkade_runtime<T, F>(f: F) -> Result<T, ArkadeError>
+where
+    T: Send + 'static,
+    F: std::future::Future<Output = Result<T, ArkadeError>> + Send + 'static,
+{
+    ensure_runtime()
+        .spawn(f)
+        .await
+        .unwrap_or_else(|e| Err(arkade_runtime_err(e)))
+}
+
+/// Start the Arkade wallet from the Bitkit seed (BIP86 account 1), or return its info when it already runs.
+/// `params.restore` scans the operator and the chain for a restored wallet's past outputs; `params.backup` is an
+/// `arkade_export_state` dump imported before the wallet opens its database.
+#[uniffi::export]
+pub async fn arkade_start(params: ArkadeStartParams) -> Result<ArkadeInfo, ArkadeError> {
+    on_arkade_runtime(arkade::start(params)).await
+}
+
+/// Stop the Arkade wallet and its background tasks; its database stays.
+#[uniffi::export]
+pub async fn arkade_stop() {
+    let _ = on_arkade_runtime(async {
+        arkade::stop().await;
+        Ok(())
+    })
+    .await;
+}
+
+/// Register the receiver of Arkade history events, or remove it with `None`.
+#[uniffi::export]
+pub fn arkade_set_listener(listener: Option<Arc<dyn ArkadeEventListener>>) {
+    arkade::set_listener(listener)
+}
+
+#[uniffi::export]
+pub async fn arkade_info() -> Result<ArkadeInfo, ArkadeError> {
+    on_arkade_runtime(arkade::info()).await
+}
+
+#[uniffi::export]
+pub async fn arkade_balance() -> Result<ArkadeBalance, ArkadeError> {
+    on_arkade_runtime(arkade::balance()).await
+}
+
+#[uniffi::export]
+pub async fn arkade_vtxos() -> Result<Vec<ArkadeVtxo>, ArkadeError> {
+    on_arkade_runtime(arkade::vtxos()).await
+}
+
+#[uniffi::export]
+pub async fn arkade_history() -> Result<Vec<ArkadeHistoryEntry>, ArkadeError> {
+    on_arkade_runtime(arkade::history()).await
+}
+
+/// Board confirmed on-chain deposits now instead of on the next one-minute pass; the commitment txid, or `None`
+/// when there was nothing to board.
+#[uniffi::export]
+pub async fn arkade_settle() -> Result<Option<String>, ArkadeError> {
+    on_arkade_runtime(arkade::settle()).await
+}
+
+/// Renew outputs within 3 days of their batch expiry, and recoverable ones; the commitment txid, if any.
+#[uniffi::export]
+pub async fn arkade_renew() -> Result<Option<String>, ArkadeError> {
+    on_arkade_runtime(arkade::renew()).await
+}
+
+/// The operator's fee programs, which `arkade_offboard` pays.
+#[uniffi::export]
+pub async fn arkade_offboard_fee() -> Result<ArkadeFees, ArkadeError> {
+    on_arkade_runtime(arkade::offboard_fee()).await
+}
+
+/// Move `amount_sat`, or everything when `None`, to the on-chain `address` in the next batch, less the
+/// operator's exit fee; the commitment txid.
+#[uniffi::export]
+pub async fn arkade_offboard(
+    address: String,
+    amount_sat: Option<u64>,
+) -> Result<String, ArkadeError> {
+    on_arkade_runtime(arkade::offboard(address, amount_sat)).await
+}
+
+/// Pay `amount_sat` to another Arkade address; the Arkade txid.
+#[uniffi::export]
+pub async fn arkade_send_ark(address: String, amount_sat: u64) -> Result<String, ArkadeError> {
+    on_arkade_runtime(arkade::send_ark(address, amount_sat)).await
+}
+
+/// Whether a delegate renews the wallet's outputs while it is offline.
+#[uniffi::export]
+pub async fn arkade_delegate_info() -> Result<bool, ArkadeError> {
+    on_arkade_runtime(arkade::delegate_info()).await
+}
+
+/// The wallet's Lightning address on Ark Labs' LNURL server, found again from the seed or claimed on first use.
+#[uniffi::export]
+pub async fn arkade_lightning_address() -> Result<ArkadeLightningAddress, ArkadeError> {
+    on_arkade_runtime(arkade::lightning_address()).await
+}
+
+/// An invoice for exactly `amount_sat` through Arkade Intents: the payer pays it, the wallet gets it less the
+/// solver's fee. The swap is stored first; the wallet claims it once the solver funds the lockup.
+#[uniffi::export]
+pub async fn arkade_receive(amount_sat: u64) -> Result<ArkadeSwap, ArkadeError> {
+    on_arkade_runtime(arkade::receive(amount_sat)).await
+}
+
+/// What paying `bolt11` through Arkade Intents would cost.
+#[uniffi::export]
+pub async fn arkade_quote_pay(bolt11: String) -> Result<ArkadePayQuote, ArkadeError> {
+    on_arkade_runtime(arkade::quote_pay(bolt11)).await
+}
+
+/// Pay `bolt11` through Arkade Intents, refusing a fee above `max_fee_sat`. Returns once the lockup is funded;
+/// the outcome arrives through the listener's `on_swap`.
+#[uniffi::export]
+pub async fn arkade_pay(
+    bolt11: String,
+    max_fee_sat: Option<u64>,
+) -> Result<ArkadeSwap, ArkadeError> {
+    on_arkade_runtime(arkade::pay(bolt11, max_fee_sat)).await
+}
+
+/// Every Arkade Intents Lightning swap, newest first.
+#[uniffi::export]
+pub async fn arkade_swaps() -> Result<Vec<ArkadeSwap>, ArkadeError> {
+    on_arkade_runtime(arkade::swaps()).await
+}
+
+/// Everything the Arkade wallet keeps in `data_dir`, as one JSON document for the VSS backup.
+#[uniffi::export]
+pub fn arkade_export_state(data_dir: String) -> Result<String, ArkadeError> {
+    arkade::export_state(&data_dir)
+}
+
+/// Import an `arkade_export_state` dump into `data_dir`; the number of rows added. Import before
+/// `arkade_start`, or pass the dump as `ArkadeStartParams.backup`.
+#[uniffi::export]
+pub fn arkade_import_state(data_dir: String, json: String) -> Result<u64, ArkadeError> {
+    arkade::import_state(&data_dir, &json)
+}
+
+/// Stop the Arkade wallet and delete its database in `data_dir`.
+#[uniffi::export]
+pub async fn arkade_wipe(data_dir: String) -> Result<(), ArkadeError> {
+    on_arkade_runtime(async move { arkade::wipe(&data_dir).await }).await
 }
 
 #[cfg(test)]

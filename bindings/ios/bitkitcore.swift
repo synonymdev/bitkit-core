@@ -586,6 +586,231 @@ fileprivate struct FfiConverterData: FfiConverterRustBuffer {
 
 
 /**
+ * Callback interface for Arkade wallet events.
+ *
+ * Implement this in Swift/Kotlin/Python and register it via `arkade_set_listener` to hear of history entries
+ * that are new, or newly settled, since the last pass: offline Lightning receives the LNURL server claimed,
+ * payments to the Arkade address, boarded deposits and settled offboards; and of each Lightning swap whose
+ * outcome changed.
+ */
+public protocol ArkadeEventListener: AnyObject, Sendable {
+    
+    func onHistory(entries: [ArkadeHistoryEntry], balance: ArkadeBalance) 
+    
+    func onSwap(swap: ArkadeSwap) 
+    
+}
+/**
+ * Callback interface for Arkade wallet events.
+ *
+ * Implement this in Swift/Kotlin/Python and register it via `arkade_set_listener` to hear of history entries
+ * that are new, or newly settled, since the last pass: offline Lightning receives the LNURL server claimed,
+ * payments to the Arkade address, boarded deposits and settled offboards; and of each Lightning swap whose
+ * outcome changed.
+ */
+open class ArkadeEventListenerImpl: ArkadeEventListener, @unchecked Sendable {
+    fileprivate let pointer: UnsafeMutableRawPointer!
+
+    /// Used to instantiate a [FFIObject] without an actual pointer, for fakes in tests, mostly.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public struct NoPointer {
+        public init() {}
+    }
+
+    // TODO: We'd like this to be `private` but for Swifty reasons,
+    // we can't implement `FfiConverter` without making this `required` and we can't
+    // make it `required` without making it `public`.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    required public init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        self.pointer = pointer
+    }
+
+    // This constructor can be used to instantiate a fake object.
+    // - Parameter noPointer: Placeholder value so we can have a constructor separate from the default empty one that may be implemented for classes extending [FFIObject].
+    //
+    // - Warning:
+    //     Any object instantiated with this constructor cannot be passed to an actual Rust-backed object. Since there isn't a backing [Pointer] the FFI lower functions will crash.
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public init(noPointer: NoPointer) {
+        self.pointer = nil
+    }
+
+#if swift(>=5.8)
+    @_documentation(visibility: private)
+#endif
+    public func uniffiClonePointer() -> UnsafeMutableRawPointer {
+        return try! rustCall { uniffi_bitkitcore_fn_clone_arkadeeventlistener(self.pointer, $0) }
+    }
+    // No primary constructor declared for this class.
+
+    deinit {
+        guard let pointer = pointer else {
+            return
+        }
+
+        try! rustCall { uniffi_bitkitcore_fn_free_arkadeeventlistener(pointer, $0) }
+    }
+
+    
+
+    
+open func onHistory(entries: [ArkadeHistoryEntry], balance: ArkadeBalance)  {try! rustCall() {
+    uniffi_bitkitcore_fn_method_arkadeeventlistener_on_history(self.uniffiClonePointer(),
+        FfiConverterSequenceTypeArkadeHistoryEntry.lower(entries),
+        FfiConverterTypeArkadeBalance_lower(balance),$0
+    )
+}
+}
+    
+open func onSwap(swap: ArkadeSwap)  {try! rustCall() {
+    uniffi_bitkitcore_fn_method_arkadeeventlistener_on_swap(self.uniffiClonePointer(),
+        FfiConverterTypeArkadeSwap_lower(swap),$0
+    )
+}
+}
+    
+
+}
+
+
+// Put the implementation in a struct so we don't pollute the top-level namespace
+fileprivate struct UniffiCallbackInterfaceArkadeEventListener {
+
+    // Create the VTable using a series of closures.
+    // Swift automatically converts these into C callback functions.
+    //
+    // This creates 1-element array, since this seems to be the only way to construct a const
+    // pointer that we can pass to the Rust code.
+    static let vtable: [UniffiVTableCallbackInterfaceArkadeEventListener] = [UniffiVTableCallbackInterfaceArkadeEventListener(
+        onHistory: { (
+            uniffiHandle: UInt64,
+            entries: RustBuffer,
+            balance: RustBuffer,
+            uniffiOutReturn: UnsafeMutableRawPointer,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeArkadeEventListener.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return uniffiObj.onHistory(
+                     entries: try FfiConverterSequenceTypeArkadeHistoryEntry.lift(entries),
+                     balance: try FfiConverterTypeArkadeBalance_lift(balance)
+                )
+            }
+
+            
+            let writeReturn = { () }
+            uniffiTraitInterfaceCall(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn
+            )
+        },
+        onSwap: { (
+            uniffiHandle: UInt64,
+            swap: RustBuffer,
+            uniffiOutReturn: UnsafeMutableRawPointer,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeArkadeEventListener.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return uniffiObj.onSwap(
+                     swap: try FfiConverterTypeArkadeSwap_lift(swap)
+                )
+            }
+
+            
+            let writeReturn = { () }
+            uniffiTraitInterfaceCall(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn
+            )
+        },
+        uniffiFree: { (uniffiHandle: UInt64) -> () in
+            let result = try? FfiConverterTypeArkadeEventListener.handleMap.remove(handle: uniffiHandle)
+            if result == nil {
+                print("Uniffi callback interface ArkadeEventListener: handle missing in uniffiFree")
+            }
+        }
+    )]
+}
+
+private func uniffiCallbackInitArkadeEventListener() {
+    uniffi_bitkitcore_fn_init_callback_vtable_arkadeeventlistener(UniffiCallbackInterfaceArkadeEventListener.vtable)
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadeEventListener: FfiConverter {
+    fileprivate static let handleMap = UniffiHandleMap<ArkadeEventListener>()
+
+    typealias FfiType = UnsafeMutableRawPointer
+    typealias SwiftType = ArkadeEventListener
+
+    public static func lift(_ pointer: UnsafeMutableRawPointer) throws -> ArkadeEventListener {
+        return ArkadeEventListenerImpl(unsafeFromRawPointer: pointer)
+    }
+
+    public static func lower(_ value: ArkadeEventListener) -> UnsafeMutableRawPointer {
+        guard let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: handleMap.insert(obj: value))) else {
+            fatalError("Cast to UnsafeMutableRawPointer failed")
+        }
+        return ptr
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadeEventListener {
+        let v: UInt64 = try readInt(&buf)
+        // The Rust code won't compile if a pointer won't fit in a UInt64.
+        // We have to go via `UInt` because that's the thing that's the size of a pointer.
+        let ptr = UnsafeMutableRawPointer(bitPattern: UInt(truncatingIfNeeded: v))
+        if (ptr == nil) {
+            throw UniffiInternalError.unexpectedNullPointer
+        }
+        return try lift(ptr!)
+    }
+
+    public static func write(_ value: ArkadeEventListener, into buf: inout [UInt8]) {
+        // This fiddling is because `Int` is the thing that's the same size as a pointer.
+        // The Rust code won't compile if a pointer won't fit in a `UInt64`.
+        writeInt(&buf, UInt64(bitPattern: Int64(Int(bitPattern: lower(value)))))
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeEventListener_lift(_ pointer: UnsafeMutableRawPointer) throws -> ArkadeEventListener {
+    return try FfiConverterTypeArkadeEventListener.lift(pointer)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeEventListener_lower(_ value: ArkadeEventListener) -> UnsafeMutableRawPointer {
+    return FfiConverterTypeArkadeEventListener.lower(value)
+}
+
+
+
+
+
+
+/**
  * Callback interface for receiving Boltz swap lifecycle events.
  *
  * Implement this in Swift/Kotlin/Python and register it via
@@ -4090,6 +4315,1269 @@ public func FfiConverterTypeAddressInfo_lift(_ buf: RustBuffer) throws -> Addres
 #endif
 public func FfiConverterTypeAddressInfo_lower(_ value: AddressInfo) -> RustBuffer {
     return FfiConverterTypeAddressInfo.lower(value)
+}
+
+
+public struct ArkadeBalance {
+    /**
+     * Spendable now: settled plus preconfirmed.
+     */
+    public var available: UInt64
+    public var settled: UInt64
+    public var preconfirmed: UInt64
+    public var recoverable: UInt64
+    public var boardingConfirmed: UInt64
+    public var boardingUnconfirmed: UInt64
+    public var total: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Spendable now: settled plus preconfirmed.
+         */available: UInt64, settled: UInt64, preconfirmed: UInt64, recoverable: UInt64, boardingConfirmed: UInt64, boardingUnconfirmed: UInt64, total: UInt64) {
+        self.available = available
+        self.settled = settled
+        self.preconfirmed = preconfirmed
+        self.recoverable = recoverable
+        self.boardingConfirmed = boardingConfirmed
+        self.boardingUnconfirmed = boardingUnconfirmed
+        self.total = total
+    }
+}
+
+#if compiler(>=6)
+extension ArkadeBalance: Sendable {}
+#endif
+
+
+extension ArkadeBalance: Equatable, Hashable {
+    public static func ==(lhs: ArkadeBalance, rhs: ArkadeBalance) -> Bool {
+        if lhs.available != rhs.available {
+            return false
+        }
+        if lhs.settled != rhs.settled {
+            return false
+        }
+        if lhs.preconfirmed != rhs.preconfirmed {
+            return false
+        }
+        if lhs.recoverable != rhs.recoverable {
+            return false
+        }
+        if lhs.boardingConfirmed != rhs.boardingConfirmed {
+            return false
+        }
+        if lhs.boardingUnconfirmed != rhs.boardingUnconfirmed {
+            return false
+        }
+        if lhs.total != rhs.total {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(available)
+        hasher.combine(settled)
+        hasher.combine(preconfirmed)
+        hasher.combine(recoverable)
+        hasher.combine(boardingConfirmed)
+        hasher.combine(boardingUnconfirmed)
+        hasher.combine(total)
+    }
+}
+
+extension ArkadeBalance: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadeBalance: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadeBalance {
+        return
+            try ArkadeBalance(
+                available: FfiConverterUInt64.read(from: &buf), 
+                settled: FfiConverterUInt64.read(from: &buf), 
+                preconfirmed: FfiConverterUInt64.read(from: &buf), 
+                recoverable: FfiConverterUInt64.read(from: &buf), 
+                boardingConfirmed: FfiConverterUInt64.read(from: &buf), 
+                boardingUnconfirmed: FfiConverterUInt64.read(from: &buf), 
+                total: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ArkadeBalance, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.available, into: &buf)
+        FfiConverterUInt64.write(value.settled, into: &buf)
+        FfiConverterUInt64.write(value.preconfirmed, into: &buf)
+        FfiConverterUInt64.write(value.recoverable, into: &buf)
+        FfiConverterUInt64.write(value.boardingConfirmed, into: &buf)
+        FfiConverterUInt64.write(value.boardingUnconfirmed, into: &buf)
+        FfiConverterUInt64.write(value.total, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeBalance_lift(_ buf: RustBuffer) throws -> ArkadeBalance {
+    return try FfiConverterTypeArkadeBalance.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeBalance_lower(_ value: ArkadeBalance) -> RustBuffer {
+    return FfiConverterTypeArkadeBalance.lower(value)
+}
+
+
+public struct ArkadeFees {
+    /**
+     * The operator's fee programs (CEL), as `/v1/info` gives them.
+     */
+    public var intentOffchainInput: String
+    public var intentOffchainOutput: String
+    public var intentOnchainInput: String
+    public var intentOnchainOutput: String
+    public var txFeeRate: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The operator's fee programs (CEL), as `/v1/info` gives them.
+         */intentOffchainInput: String, intentOffchainOutput: String, intentOnchainInput: String, intentOnchainOutput: String, txFeeRate: String) {
+        self.intentOffchainInput = intentOffchainInput
+        self.intentOffchainOutput = intentOffchainOutput
+        self.intentOnchainInput = intentOnchainInput
+        self.intentOnchainOutput = intentOnchainOutput
+        self.txFeeRate = txFeeRate
+    }
+}
+
+#if compiler(>=6)
+extension ArkadeFees: Sendable {}
+#endif
+
+
+extension ArkadeFees: Equatable, Hashable {
+    public static func ==(lhs: ArkadeFees, rhs: ArkadeFees) -> Bool {
+        if lhs.intentOffchainInput != rhs.intentOffchainInput {
+            return false
+        }
+        if lhs.intentOffchainOutput != rhs.intentOffchainOutput {
+            return false
+        }
+        if lhs.intentOnchainInput != rhs.intentOnchainInput {
+            return false
+        }
+        if lhs.intentOnchainOutput != rhs.intentOnchainOutput {
+            return false
+        }
+        if lhs.txFeeRate != rhs.txFeeRate {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(intentOffchainInput)
+        hasher.combine(intentOffchainOutput)
+        hasher.combine(intentOnchainInput)
+        hasher.combine(intentOnchainOutput)
+        hasher.combine(txFeeRate)
+    }
+}
+
+extension ArkadeFees: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadeFees: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadeFees {
+        return
+            try ArkadeFees(
+                intentOffchainInput: FfiConverterString.read(from: &buf), 
+                intentOffchainOutput: FfiConverterString.read(from: &buf), 
+                intentOnchainInput: FfiConverterString.read(from: &buf), 
+                intentOnchainOutput: FfiConverterString.read(from: &buf), 
+                txFeeRate: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ArkadeFees, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.intentOffchainInput, into: &buf)
+        FfiConverterString.write(value.intentOffchainOutput, into: &buf)
+        FfiConverterString.write(value.intentOnchainInput, into: &buf)
+        FfiConverterString.write(value.intentOnchainOutput, into: &buf)
+        FfiConverterString.write(value.txFeeRate, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeFees_lift(_ buf: RustBuffer) throws -> ArkadeFees {
+    return try FfiConverterTypeArkadeFees.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeFees_lower(_ value: ArkadeFees) -> RustBuffer {
+    return FfiConverterTypeArkadeFees.lower(value)
+}
+
+
+public struct ArkadeHistoryEntry {
+    /**
+     * The non-empty ids of `boarding_txid`, `commitment_txid` and `ark_txid`, joined by `:`.
+     */
+    public var key: String
+    public var boardingTxid: String?
+    public var commitmentTxid: String?
+    public var arkTxid: String?
+    /**
+     * `SENT` or `RECEIVED` (the bridge's `type`).
+     */
+    public var txType: String
+    /**
+     * `boarding`, `batch`, `offchain` or `exit`.
+     */
+    public var tag: String
+    public var amount: UInt64
+    public var settled: Bool
+    /**
+     * Unix milliseconds.
+     */
+    public var createdAt: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The non-empty ids of `boarding_txid`, `commitment_txid` and `ark_txid`, joined by `:`.
+         */key: String, boardingTxid: String?, commitmentTxid: String?, arkTxid: String?, 
+        /**
+         * `SENT` or `RECEIVED` (the bridge's `type`).
+         */txType: String, 
+        /**
+         * `boarding`, `batch`, `offchain` or `exit`.
+         */tag: String, amount: UInt64, settled: Bool, 
+        /**
+         * Unix milliseconds.
+         */createdAt: UInt64) {
+        self.key = key
+        self.boardingTxid = boardingTxid
+        self.commitmentTxid = commitmentTxid
+        self.arkTxid = arkTxid
+        self.txType = txType
+        self.tag = tag
+        self.amount = amount
+        self.settled = settled
+        self.createdAt = createdAt
+    }
+}
+
+#if compiler(>=6)
+extension ArkadeHistoryEntry: Sendable {}
+#endif
+
+
+extension ArkadeHistoryEntry: Equatable, Hashable {
+    public static func ==(lhs: ArkadeHistoryEntry, rhs: ArkadeHistoryEntry) -> Bool {
+        if lhs.key != rhs.key {
+            return false
+        }
+        if lhs.boardingTxid != rhs.boardingTxid {
+            return false
+        }
+        if lhs.commitmentTxid != rhs.commitmentTxid {
+            return false
+        }
+        if lhs.arkTxid != rhs.arkTxid {
+            return false
+        }
+        if lhs.txType != rhs.txType {
+            return false
+        }
+        if lhs.tag != rhs.tag {
+            return false
+        }
+        if lhs.amount != rhs.amount {
+            return false
+        }
+        if lhs.settled != rhs.settled {
+            return false
+        }
+        if lhs.createdAt != rhs.createdAt {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(key)
+        hasher.combine(boardingTxid)
+        hasher.combine(commitmentTxid)
+        hasher.combine(arkTxid)
+        hasher.combine(txType)
+        hasher.combine(tag)
+        hasher.combine(amount)
+        hasher.combine(settled)
+        hasher.combine(createdAt)
+    }
+}
+
+extension ArkadeHistoryEntry: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadeHistoryEntry: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadeHistoryEntry {
+        return
+            try ArkadeHistoryEntry(
+                key: FfiConverterString.read(from: &buf), 
+                boardingTxid: FfiConverterOptionString.read(from: &buf), 
+                commitmentTxid: FfiConverterOptionString.read(from: &buf), 
+                arkTxid: FfiConverterOptionString.read(from: &buf), 
+                txType: FfiConverterString.read(from: &buf), 
+                tag: FfiConverterString.read(from: &buf), 
+                amount: FfiConverterUInt64.read(from: &buf), 
+                settled: FfiConverterBool.read(from: &buf), 
+                createdAt: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ArkadeHistoryEntry, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.key, into: &buf)
+        FfiConverterOptionString.write(value.boardingTxid, into: &buf)
+        FfiConverterOptionString.write(value.commitmentTxid, into: &buf)
+        FfiConverterOptionString.write(value.arkTxid, into: &buf)
+        FfiConverterString.write(value.txType, into: &buf)
+        FfiConverterString.write(value.tag, into: &buf)
+        FfiConverterUInt64.write(value.amount, into: &buf)
+        FfiConverterBool.write(value.settled, into: &buf)
+        FfiConverterUInt64.write(value.createdAt, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeHistoryEntry_lift(_ buf: RustBuffer) throws -> ArkadeHistoryEntry {
+    return try FfiConverterTypeArkadeHistoryEntry.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeHistoryEntry_lower(_ value: ArkadeHistoryEntry) -> RustBuffer {
+    return FfiConverterTypeArkadeHistoryEntry.lower(value)
+}
+
+
+public struct ArkadeInfo {
+    public var arkAddress: String
+    public var boardingAddress: String
+    /**
+     * `bitcoin`, `mutinynet` or `regtest`.
+     */
+    public var network: String
+    public var dust: UInt64
+    /**
+     * Seconds (or blocks, below 512), as the operator advertises them.
+     */
+    public var unilateralExitDelay: UInt64
+    public var boardingExitDelay: UInt64
+    public var fees: ArkadeFees
+    /**
+     * Whether a delegate renews this wallet's outputs while it is offline.
+     */
+    public var delegate: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(arkAddress: String, boardingAddress: String, 
+        /**
+         * `bitcoin`, `mutinynet` or `regtest`.
+         */network: String, dust: UInt64, 
+        /**
+         * Seconds (or blocks, below 512), as the operator advertises them.
+         */unilateralExitDelay: UInt64, boardingExitDelay: UInt64, fees: ArkadeFees, 
+        /**
+         * Whether a delegate renews this wallet's outputs while it is offline.
+         */delegate: Bool) {
+        self.arkAddress = arkAddress
+        self.boardingAddress = boardingAddress
+        self.network = network
+        self.dust = dust
+        self.unilateralExitDelay = unilateralExitDelay
+        self.boardingExitDelay = boardingExitDelay
+        self.fees = fees
+        self.delegate = delegate
+    }
+}
+
+#if compiler(>=6)
+extension ArkadeInfo: Sendable {}
+#endif
+
+
+extension ArkadeInfo: Equatable, Hashable {
+    public static func ==(lhs: ArkadeInfo, rhs: ArkadeInfo) -> Bool {
+        if lhs.arkAddress != rhs.arkAddress {
+            return false
+        }
+        if lhs.boardingAddress != rhs.boardingAddress {
+            return false
+        }
+        if lhs.network != rhs.network {
+            return false
+        }
+        if lhs.dust != rhs.dust {
+            return false
+        }
+        if lhs.unilateralExitDelay != rhs.unilateralExitDelay {
+            return false
+        }
+        if lhs.boardingExitDelay != rhs.boardingExitDelay {
+            return false
+        }
+        if lhs.fees != rhs.fees {
+            return false
+        }
+        if lhs.delegate != rhs.delegate {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(arkAddress)
+        hasher.combine(boardingAddress)
+        hasher.combine(network)
+        hasher.combine(dust)
+        hasher.combine(unilateralExitDelay)
+        hasher.combine(boardingExitDelay)
+        hasher.combine(fees)
+        hasher.combine(delegate)
+    }
+}
+
+extension ArkadeInfo: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadeInfo: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadeInfo {
+        return
+            try ArkadeInfo(
+                arkAddress: FfiConverterString.read(from: &buf), 
+                boardingAddress: FfiConverterString.read(from: &buf), 
+                network: FfiConverterString.read(from: &buf), 
+                dust: FfiConverterUInt64.read(from: &buf), 
+                unilateralExitDelay: FfiConverterUInt64.read(from: &buf), 
+                boardingExitDelay: FfiConverterUInt64.read(from: &buf), 
+                fees: FfiConverterTypeArkadeFees.read(from: &buf), 
+                delegate: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ArkadeInfo, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.arkAddress, into: &buf)
+        FfiConverterString.write(value.boardingAddress, into: &buf)
+        FfiConverterString.write(value.network, into: &buf)
+        FfiConverterUInt64.write(value.dust, into: &buf)
+        FfiConverterUInt64.write(value.unilateralExitDelay, into: &buf)
+        FfiConverterUInt64.write(value.boardingExitDelay, into: &buf)
+        FfiConverterTypeArkadeFees.write(value.fees, into: &buf)
+        FfiConverterBool.write(value.delegate, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeInfo_lift(_ buf: RustBuffer) throws -> ArkadeInfo {
+    return try FfiConverterTypeArkadeInfo.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeInfo_lower(_ value: ArkadeInfo) -> RustBuffer {
+    return FfiConverterTypeArkadeInfo.lower(value)
+}
+
+
+public struct ArkadeLightningAddress {
+    public var handle: String
+    public var lightningAddress: String?
+    public var lnurl: String
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(handle: String, lightningAddress: String?, lnurl: String) {
+        self.handle = handle
+        self.lightningAddress = lightningAddress
+        self.lnurl = lnurl
+    }
+}
+
+#if compiler(>=6)
+extension ArkadeLightningAddress: Sendable {}
+#endif
+
+
+extension ArkadeLightningAddress: Equatable, Hashable {
+    public static func ==(lhs: ArkadeLightningAddress, rhs: ArkadeLightningAddress) -> Bool {
+        if lhs.handle != rhs.handle {
+            return false
+        }
+        if lhs.lightningAddress != rhs.lightningAddress {
+            return false
+        }
+        if lhs.lnurl != rhs.lnurl {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(handle)
+        hasher.combine(lightningAddress)
+        hasher.combine(lnurl)
+    }
+}
+
+extension ArkadeLightningAddress: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadeLightningAddress: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadeLightningAddress {
+        return
+            try ArkadeLightningAddress(
+                handle: FfiConverterString.read(from: &buf), 
+                lightningAddress: FfiConverterOptionString.read(from: &buf), 
+                lnurl: FfiConverterString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ArkadeLightningAddress, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.handle, into: &buf)
+        FfiConverterOptionString.write(value.lightningAddress, into: &buf)
+        FfiConverterString.write(value.lnurl, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeLightningAddress_lift(_ buf: RustBuffer) throws -> ArkadeLightningAddress {
+    return try FfiConverterTypeArkadeLightningAddress.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeLightningAddress_lower(_ value: ArkadeLightningAddress) -> RustBuffer {
+    return FfiConverterTypeArkadeLightningAddress.lower(value)
+}
+
+
+/**
+ * What paying an invoice would cost.
+ */
+public struct ArkadePayQuote {
+    /**
+     * `give_sat - take_sat`.
+     */
+    public var feeSat: UInt64
+    /**
+     * What the wallet funds.
+     */
+    public var giveSat: UInt64
+    /**
+     * The invoice amount.
+     */
+    public var takeSat: UInt64
+    public var expiresAt: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * `give_sat - take_sat`.
+         */feeSat: UInt64, 
+        /**
+         * What the wallet funds.
+         */giveSat: UInt64, 
+        /**
+         * The invoice amount.
+         */takeSat: UInt64, expiresAt: UInt64) {
+        self.feeSat = feeSat
+        self.giveSat = giveSat
+        self.takeSat = takeSat
+        self.expiresAt = expiresAt
+    }
+}
+
+#if compiler(>=6)
+extension ArkadePayQuote: Sendable {}
+#endif
+
+
+extension ArkadePayQuote: Equatable, Hashable {
+    public static func ==(lhs: ArkadePayQuote, rhs: ArkadePayQuote) -> Bool {
+        if lhs.feeSat != rhs.feeSat {
+            return false
+        }
+        if lhs.giveSat != rhs.giveSat {
+            return false
+        }
+        if lhs.takeSat != rhs.takeSat {
+            return false
+        }
+        if lhs.expiresAt != rhs.expiresAt {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(feeSat)
+        hasher.combine(giveSat)
+        hasher.combine(takeSat)
+        hasher.combine(expiresAt)
+    }
+}
+
+extension ArkadePayQuote: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadePayQuote: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadePayQuote {
+        return
+            try ArkadePayQuote(
+                feeSat: FfiConverterUInt64.read(from: &buf), 
+                giveSat: FfiConverterUInt64.read(from: &buf), 
+                takeSat: FfiConverterUInt64.read(from: &buf), 
+                expiresAt: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ArkadePayQuote, into buf: inout [UInt8]) {
+        FfiConverterUInt64.write(value.feeSat, into: &buf)
+        FfiConverterUInt64.write(value.giveSat, into: &buf)
+        FfiConverterUInt64.write(value.takeSat, into: &buf)
+        FfiConverterUInt64.write(value.expiresAt, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadePayQuote_lift(_ buf: RustBuffer) throws -> ArkadePayQuote {
+    return try FfiConverterTypeArkadePayQuote.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadePayQuote_lower(_ value: ArkadePayQuote) -> RustBuffer {
+    return FfiConverterTypeArkadePayQuote.lower(value)
+}
+
+
+public struct ArkadeRegtestEndpoints {
+    public var arkServerUrl: String
+    public var esploraUrl: String
+    /**
+     * The LNURL server for the Lightning address; `None` turns the address off.
+     */
+    public var lnurlUrl: String?
+    /**
+     * The delegate; `None` leaves renewal to the wallet.
+     */
+    public var delegateUrl: String?
+    /**
+     * The solver's x-only discovery key; `None` turns Lightning swaps off.
+     */
+    public var solverPubkey: String?
+    public var solverRelays: [String]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(arkServerUrl: String, esploraUrl: String, 
+        /**
+         * The LNURL server for the Lightning address; `None` turns the address off.
+         */lnurlUrl: String?, 
+        /**
+         * The delegate; `None` leaves renewal to the wallet.
+         */delegateUrl: String?, 
+        /**
+         * The solver's x-only discovery key; `None` turns Lightning swaps off.
+         */solverPubkey: String?, solverRelays: [String]) {
+        self.arkServerUrl = arkServerUrl
+        self.esploraUrl = esploraUrl
+        self.lnurlUrl = lnurlUrl
+        self.delegateUrl = delegateUrl
+        self.solverPubkey = solverPubkey
+        self.solverRelays = solverRelays
+    }
+}
+
+#if compiler(>=6)
+extension ArkadeRegtestEndpoints: Sendable {}
+#endif
+
+
+extension ArkadeRegtestEndpoints: Equatable, Hashable {
+    public static func ==(lhs: ArkadeRegtestEndpoints, rhs: ArkadeRegtestEndpoints) -> Bool {
+        if lhs.arkServerUrl != rhs.arkServerUrl {
+            return false
+        }
+        if lhs.esploraUrl != rhs.esploraUrl {
+            return false
+        }
+        if lhs.lnurlUrl != rhs.lnurlUrl {
+            return false
+        }
+        if lhs.delegateUrl != rhs.delegateUrl {
+            return false
+        }
+        if lhs.solverPubkey != rhs.solverPubkey {
+            return false
+        }
+        if lhs.solverRelays != rhs.solverRelays {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(arkServerUrl)
+        hasher.combine(esploraUrl)
+        hasher.combine(lnurlUrl)
+        hasher.combine(delegateUrl)
+        hasher.combine(solverPubkey)
+        hasher.combine(solverRelays)
+    }
+}
+
+extension ArkadeRegtestEndpoints: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadeRegtestEndpoints: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadeRegtestEndpoints {
+        return
+            try ArkadeRegtestEndpoints(
+                arkServerUrl: FfiConverterString.read(from: &buf), 
+                esploraUrl: FfiConverterString.read(from: &buf), 
+                lnurlUrl: FfiConverterOptionString.read(from: &buf), 
+                delegateUrl: FfiConverterOptionString.read(from: &buf), 
+                solverPubkey: FfiConverterOptionString.read(from: &buf), 
+                solverRelays: FfiConverterSequenceString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ArkadeRegtestEndpoints, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.arkServerUrl, into: &buf)
+        FfiConverterString.write(value.esploraUrl, into: &buf)
+        FfiConverterOptionString.write(value.lnurlUrl, into: &buf)
+        FfiConverterOptionString.write(value.delegateUrl, into: &buf)
+        FfiConverterOptionString.write(value.solverPubkey, into: &buf)
+        FfiConverterSequenceString.write(value.solverRelays, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeRegtestEndpoints_lift(_ buf: RustBuffer) throws -> ArkadeRegtestEndpoints {
+    return try FfiConverterTypeArkadeRegtestEndpoints.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeRegtestEndpoints_lower(_ value: ArkadeRegtestEndpoints) -> RustBuffer {
+    return FfiConverterTypeArkadeRegtestEndpoints.lower(value)
+}
+
+
+public struct ArkadeStartParams {
+    /**
+     * Where the wallet keeps its database; the app gives each wallet its own.
+     */
+    public var dataDir: String
+    public var mnemonic: String
+    public var passphrase: String?
+    public var network: ArkadeNetwork
+    /**
+     * Scan the operator and the chain for the wallet's past outputs before returning, as a wallet restored from
+     * its phrase needs (TypeScript `wallet.restore()`).
+     */
+    public var restore: Bool
+    /**
+     * An `export_state` dump to import before the wallet opens its storage.
+     */
+    public var backup: String?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Where the wallet keeps its database; the app gives each wallet its own.
+         */dataDir: String, mnemonic: String, passphrase: String?, network: ArkadeNetwork, 
+        /**
+         * Scan the operator and the chain for the wallet's past outputs before returning, as a wallet restored from
+         * its phrase needs (TypeScript `wallet.restore()`).
+         */restore: Bool, 
+        /**
+         * An `export_state` dump to import before the wallet opens its storage.
+         */backup: String?) {
+        self.dataDir = dataDir
+        self.mnemonic = mnemonic
+        self.passphrase = passphrase
+        self.network = network
+        self.restore = restore
+        self.backup = backup
+    }
+}
+
+#if compiler(>=6)
+extension ArkadeStartParams: Sendable {}
+#endif
+
+
+extension ArkadeStartParams: Equatable, Hashable {
+    public static func ==(lhs: ArkadeStartParams, rhs: ArkadeStartParams) -> Bool {
+        if lhs.dataDir != rhs.dataDir {
+            return false
+        }
+        if lhs.mnemonic != rhs.mnemonic {
+            return false
+        }
+        if lhs.passphrase != rhs.passphrase {
+            return false
+        }
+        if lhs.network != rhs.network {
+            return false
+        }
+        if lhs.restore != rhs.restore {
+            return false
+        }
+        if lhs.backup != rhs.backup {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(dataDir)
+        hasher.combine(mnemonic)
+        hasher.combine(passphrase)
+        hasher.combine(network)
+        hasher.combine(restore)
+        hasher.combine(backup)
+    }
+}
+
+extension ArkadeStartParams: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadeStartParams: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadeStartParams {
+        return
+            try ArkadeStartParams(
+                dataDir: FfiConverterString.read(from: &buf), 
+                mnemonic: FfiConverterString.read(from: &buf), 
+                passphrase: FfiConverterOptionString.read(from: &buf), 
+                network: FfiConverterTypeArkadeNetwork.read(from: &buf), 
+                restore: FfiConverterBool.read(from: &buf), 
+                backup: FfiConverterOptionString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ArkadeStartParams, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.dataDir, into: &buf)
+        FfiConverterString.write(value.mnemonic, into: &buf)
+        FfiConverterOptionString.write(value.passphrase, into: &buf)
+        FfiConverterTypeArkadeNetwork.write(value.network, into: &buf)
+        FfiConverterBool.write(value.restore, into: &buf)
+        FfiConverterOptionString.write(value.backup, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeStartParams_lift(_ buf: RustBuffer) throws -> ArkadeStartParams {
+    return try FfiConverterTypeArkadeStartParams.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeStartParams_lower(_ value: ArkadeStartParams) -> RustBuffer {
+    return FfiConverterTypeArkadeStartParams.lower(value)
+}
+
+
+/**
+ * A Lightning swap through Arkade Intents (the app's `ArkadeSwap`): `receive` pays into the wallet, `send` pays
+ * an invoice out of it.
+ */
+public struct ArkadeSwap {
+    public var id: String
+    /**
+     * `receive` or `send`.
+     */
+    public var direction: String
+    /**
+     * `accepted`, `open`, `funded`, `claimed`, `paid`, `refunded`, `lapsed`, `needs_recovery` or `failed`.
+     */
+    public var outcome: String
+    public var giveSat: UInt64
+    public var takeSat: UInt64
+    public var feeSat: UInt64
+    public var bolt11: String
+    public var paymentHash: String
+    /**
+     * Unix seconds.
+     */
+    public var createdAt: UInt64
+    public var updatedAt: UInt64
+    public var blockedReason: String?
+    /**
+     * Receive: the last moment the invoice can be paid. Send: when the quote lapses.
+     */
+    public var expiresAt: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, 
+        /**
+         * `receive` or `send`.
+         */direction: String, 
+        /**
+         * `accepted`, `open`, `funded`, `claimed`, `paid`, `refunded`, `lapsed`, `needs_recovery` or `failed`.
+         */outcome: String, giveSat: UInt64, takeSat: UInt64, feeSat: UInt64, bolt11: String, paymentHash: String, 
+        /**
+         * Unix seconds.
+         */createdAt: UInt64, updatedAt: UInt64, blockedReason: String?, 
+        /**
+         * Receive: the last moment the invoice can be paid. Send: when the quote lapses.
+         */expiresAt: UInt64) {
+        self.id = id
+        self.direction = direction
+        self.outcome = outcome
+        self.giveSat = giveSat
+        self.takeSat = takeSat
+        self.feeSat = feeSat
+        self.bolt11 = bolt11
+        self.paymentHash = paymentHash
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.blockedReason = blockedReason
+        self.expiresAt = expiresAt
+    }
+}
+
+#if compiler(>=6)
+extension ArkadeSwap: Sendable {}
+#endif
+
+
+extension ArkadeSwap: Equatable, Hashable {
+    public static func ==(lhs: ArkadeSwap, rhs: ArkadeSwap) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.direction != rhs.direction {
+            return false
+        }
+        if lhs.outcome != rhs.outcome {
+            return false
+        }
+        if lhs.giveSat != rhs.giveSat {
+            return false
+        }
+        if lhs.takeSat != rhs.takeSat {
+            return false
+        }
+        if lhs.feeSat != rhs.feeSat {
+            return false
+        }
+        if lhs.bolt11 != rhs.bolt11 {
+            return false
+        }
+        if lhs.paymentHash != rhs.paymentHash {
+            return false
+        }
+        if lhs.createdAt != rhs.createdAt {
+            return false
+        }
+        if lhs.updatedAt != rhs.updatedAt {
+            return false
+        }
+        if lhs.blockedReason != rhs.blockedReason {
+            return false
+        }
+        if lhs.expiresAt != rhs.expiresAt {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(direction)
+        hasher.combine(outcome)
+        hasher.combine(giveSat)
+        hasher.combine(takeSat)
+        hasher.combine(feeSat)
+        hasher.combine(bolt11)
+        hasher.combine(paymentHash)
+        hasher.combine(createdAt)
+        hasher.combine(updatedAt)
+        hasher.combine(blockedReason)
+        hasher.combine(expiresAt)
+    }
+}
+
+extension ArkadeSwap: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadeSwap: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadeSwap {
+        return
+            try ArkadeSwap(
+                id: FfiConverterString.read(from: &buf), 
+                direction: FfiConverterString.read(from: &buf), 
+                outcome: FfiConverterString.read(from: &buf), 
+                giveSat: FfiConverterUInt64.read(from: &buf), 
+                takeSat: FfiConverterUInt64.read(from: &buf), 
+                feeSat: FfiConverterUInt64.read(from: &buf), 
+                bolt11: FfiConverterString.read(from: &buf), 
+                paymentHash: FfiConverterString.read(from: &buf), 
+                createdAt: FfiConverterUInt64.read(from: &buf), 
+                updatedAt: FfiConverterUInt64.read(from: &buf), 
+                blockedReason: FfiConverterOptionString.read(from: &buf), 
+                expiresAt: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ArkadeSwap, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.direction, into: &buf)
+        FfiConverterString.write(value.outcome, into: &buf)
+        FfiConverterUInt64.write(value.giveSat, into: &buf)
+        FfiConverterUInt64.write(value.takeSat, into: &buf)
+        FfiConverterUInt64.write(value.feeSat, into: &buf)
+        FfiConverterString.write(value.bolt11, into: &buf)
+        FfiConverterString.write(value.paymentHash, into: &buf)
+        FfiConverterUInt64.write(value.createdAt, into: &buf)
+        FfiConverterUInt64.write(value.updatedAt, into: &buf)
+        FfiConverterOptionString.write(value.blockedReason, into: &buf)
+        FfiConverterUInt64.write(value.expiresAt, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeSwap_lift(_ buf: RustBuffer) throws -> ArkadeSwap {
+    return try FfiConverterTypeArkadeSwap.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeSwap_lower(_ value: ArkadeSwap) -> RustBuffer {
+    return FfiConverterTypeArkadeSwap.lower(value)
+}
+
+
+public struct ArkadeVtxo {
+    public var txid: String
+    public var vout: UInt32
+    public var value: UInt64
+    /**
+     * `preconfirmed`, `settled`, `swept` or `spent`.
+     */
+    public var state: String
+    /**
+     * Unix seconds after which the operator may sweep this output unless it is renewed.
+     */
+    public var batchExpiry: UInt64?
+    /**
+     * Unix milliseconds, as the bridge reports it.
+     */
+    public var createdAt: UInt64?
+    public var isPreconfirmed: Bool
+    public var isSwept: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(txid: String, vout: UInt32, value: UInt64, 
+        /**
+         * `preconfirmed`, `settled`, `swept` or `spent`.
+         */state: String, 
+        /**
+         * Unix seconds after which the operator may sweep this output unless it is renewed.
+         */batchExpiry: UInt64?, 
+        /**
+         * Unix milliseconds, as the bridge reports it.
+         */createdAt: UInt64?, isPreconfirmed: Bool, isSwept: Bool) {
+        self.txid = txid
+        self.vout = vout
+        self.value = value
+        self.state = state
+        self.batchExpiry = batchExpiry
+        self.createdAt = createdAt
+        self.isPreconfirmed = isPreconfirmed
+        self.isSwept = isSwept
+    }
+}
+
+#if compiler(>=6)
+extension ArkadeVtxo: Sendable {}
+#endif
+
+
+extension ArkadeVtxo: Equatable, Hashable {
+    public static func ==(lhs: ArkadeVtxo, rhs: ArkadeVtxo) -> Bool {
+        if lhs.txid != rhs.txid {
+            return false
+        }
+        if lhs.vout != rhs.vout {
+            return false
+        }
+        if lhs.value != rhs.value {
+            return false
+        }
+        if lhs.state != rhs.state {
+            return false
+        }
+        if lhs.batchExpiry != rhs.batchExpiry {
+            return false
+        }
+        if lhs.createdAt != rhs.createdAt {
+            return false
+        }
+        if lhs.isPreconfirmed != rhs.isPreconfirmed {
+            return false
+        }
+        if lhs.isSwept != rhs.isSwept {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(txid)
+        hasher.combine(vout)
+        hasher.combine(value)
+        hasher.combine(state)
+        hasher.combine(batchExpiry)
+        hasher.combine(createdAt)
+        hasher.combine(isPreconfirmed)
+        hasher.combine(isSwept)
+    }
+}
+
+extension ArkadeVtxo: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadeVtxo: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadeVtxo {
+        return
+            try ArkadeVtxo(
+                txid: FfiConverterString.read(from: &buf), 
+                vout: FfiConverterUInt32.read(from: &buf), 
+                value: FfiConverterUInt64.read(from: &buf), 
+                state: FfiConverterString.read(from: &buf), 
+                batchExpiry: FfiConverterOptionUInt64.read(from: &buf), 
+                createdAt: FfiConverterOptionUInt64.read(from: &buf), 
+                isPreconfirmed: FfiConverterBool.read(from: &buf), 
+                isSwept: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ArkadeVtxo, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.txid, into: &buf)
+        FfiConverterUInt32.write(value.vout, into: &buf)
+        FfiConverterUInt64.write(value.value, into: &buf)
+        FfiConverterString.write(value.state, into: &buf)
+        FfiConverterOptionUInt64.write(value.batchExpiry, into: &buf)
+        FfiConverterOptionUInt64.write(value.createdAt, into: &buf)
+        FfiConverterBool.write(value.isPreconfirmed, into: &buf)
+        FfiConverterBool.write(value.isSwept, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeVtxo_lift(_ buf: RustBuffer) throws -> ArkadeVtxo {
+    return try FfiConverterTypeArkadeVtxo.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeVtxo_lower(_ value: ArkadeVtxo) -> RustBuffer {
+    return FfiConverterTypeArkadeVtxo.lower(value)
 }
 
 
@@ -19396,6 +20884,244 @@ extension AddressType: Codable {}
 
 
 
+
+/**
+ * Errors surfaced by the Arkade module.
+ */
+public enum ArkadeError: Swift.Error {
+
+    
+    
+    case NotStarted
+    case InvalidInput(errorDetails: String
+    )
+    case ArkError(errorDetails: String
+    )
+    case LnurlError(errorDetails: String
+    )
+    case SwapError(errorDetails: String
+    )
+    case NetworkError(errorDetails: String
+    )
+    case DatabaseError(errorDetails: String
+    )
+    case InternalError(errorDetails: String
+    )
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadeError: FfiConverterRustBuffer {
+    typealias SwiftType = ArkadeError
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadeError {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+
+        
+
+        
+        case 1: return .NotStarted
+        case 2: return .InvalidInput(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 3: return .ArkError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 4: return .LnurlError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 5: return .SwapError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 6: return .NetworkError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 7: return .DatabaseError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+        case 8: return .InternalError(
+            errorDetails: try FfiConverterString.read(from: &buf)
+            )
+
+         default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: ArkadeError, into buf: inout [UInt8]) {
+        switch value {
+
+        
+
+        
+        
+        case .NotStarted:
+            writeInt(&buf, Int32(1))
+        
+        
+        case let .InvalidInput(errorDetails):
+            writeInt(&buf, Int32(2))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .ArkError(errorDetails):
+            writeInt(&buf, Int32(3))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .LnurlError(errorDetails):
+            writeInt(&buf, Int32(4))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .SwapError(errorDetails):
+            writeInt(&buf, Int32(5))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .NetworkError(errorDetails):
+            writeInt(&buf, Int32(6))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .DatabaseError(errorDetails):
+            writeInt(&buf, Int32(7))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        
+        case let .InternalError(errorDetails):
+            writeInt(&buf, Int32(8))
+            FfiConverterString.write(errorDetails, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeError_lift(_ buf: RustBuffer) throws -> ArkadeError {
+    return try FfiConverterTypeArkadeError.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeError_lower(_ value: ArkadeError) -> RustBuffer {
+    return FfiConverterTypeArkadeError.lower(value)
+}
+
+
+extension ArkadeError: Equatable, Hashable {}
+
+extension ArkadeError: Codable {}
+
+
+
+
+extension ArkadeError: Foundation.LocalizedError {
+    public var errorDescription: String? {
+        String(reflecting: self)
+    }
+}
+
+
+
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
+public enum ArkadeNetwork {
+    
+    /**
+     * Mainnet, against Ark Labs' operator.
+     */
+    case bitcoin
+    /**
+     * Arkade's signet, for dev builds.
+     */
+    case mutinynet
+    /**
+     * A local regtest stack (operator, esplora, solver, LNURL server), for dev builds and tests.
+     */
+    case regtest(endpoints: ArkadeRegtestEndpoints
+    )
+}
+
+
+#if compiler(>=6)
+extension ArkadeNetwork: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeArkadeNetwork: FfiConverterRustBuffer {
+    typealias SwiftType = ArkadeNetwork
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ArkadeNetwork {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .bitcoin
+        
+        case 2: return .mutinynet
+        
+        case 3: return .regtest(endpoints: try FfiConverterTypeArkadeRegtestEndpoints.read(from: &buf)
+        )
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: ArkadeNetwork, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .bitcoin:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .mutinynet:
+            writeInt(&buf, Int32(2))
+        
+        
+        case let .regtest(endpoints):
+            writeInt(&buf, Int32(3))
+            FfiConverterTypeArkadeRegtestEndpoints.write(endpoints, into: &buf)
+            
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeNetwork_lift(_ buf: RustBuffer) throws -> ArkadeNetwork {
+    return try FfiConverterTypeArkadeNetwork.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeArkadeNetwork_lower(_ value: ArkadeNetwork) -> RustBuffer {
+    return FfiConverterTypeArkadeNetwork.lower(value)
+}
+
+
+extension ArkadeNetwork: Equatable, Hashable {}
+
+extension ArkadeNetwork: Codable {}
+
+
+
+
+
+
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 
@@ -26337,6 +28063,30 @@ fileprivate struct FfiConverterOptionData: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeArkadeEventListener: FfiConverterRustBuffer {
+    typealias SwiftType = ArkadeEventListener?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeArkadeEventListener.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeArkadeEventListener.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypeBoltzSwap: FfiConverterRustBuffer {
     typealias SwiftType = BoltzSwap?
 
@@ -27710,6 +29460,81 @@ fileprivate struct FfiConverterSequenceTypeAddressInfo: FfiConverterRustBuffer {
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeArkadeHistoryEntry: FfiConverterRustBuffer {
+    typealias SwiftType = [ArkadeHistoryEntry]
+
+    public static func write(_ value: [ArkadeHistoryEntry], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeArkadeHistoryEntry.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ArkadeHistoryEntry] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ArkadeHistoryEntry]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeArkadeHistoryEntry.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeArkadeSwap: FfiConverterRustBuffer {
+    typealias SwiftType = [ArkadeSwap]
+
+    public static func write(_ value: [ArkadeSwap], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeArkadeSwap.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ArkadeSwap] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ArkadeSwap]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeArkadeSwap.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterSequenceTypeArkadeVtxo: FfiConverterRustBuffer {
+    typealias SwiftType = [ArkadeVtxo]
+
+    public static func write(_ value: [ArkadeVtxo], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeArkadeVtxo.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ArkadeVtxo] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ArkadeVtxo]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeArkadeVtxo.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeBoltzSwap: FfiConverterRustBuffer {
     typealias SwiftType = [BoltzSwap]
 
@@ -28917,6 +30742,338 @@ public func approvePubkyAuth(authUrl: String, secretKeyHex: String)async throws 
             freeFunc: ffi_bitkitcore_rust_future_free_void,
             liftFunc: { $0 },
             errorHandler: FfiConverterTypePubkyError_lift
+        )
+}
+public func arkadeBalance()async throws  -> ArkadeBalance  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_balance(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeArkadeBalance_lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * Whether a delegate renews the wallet's outputs while it is offline.
+ */
+public func arkadeDelegateInfo()async throws  -> Bool  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_delegate_info(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_i8,
+            completeFunc: ffi_bitkitcore_rust_future_complete_i8,
+            freeFunc: ffi_bitkitcore_rust_future_free_i8,
+            liftFunc: FfiConverterBool.lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * Everything the Arkade wallet keeps in `data_dir`, as one JSON document for the VSS backup.
+ */
+public func arkadeExportState(dataDir: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeArkadeError_lift) {
+    uniffi_bitkitcore_fn_func_arkade_export_state(
+        FfiConverterString.lower(dataDir),$0
+    )
+})
+}
+public func arkadeHistory()async throws  -> [ArkadeHistoryEntry]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_history(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeArkadeHistoryEntry.lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * Import an `arkade_export_state` dump into `data_dir`; the number of rows added. Import before
+ * `arkade_start`, or pass the dump as `ArkadeStartParams.backup`.
+ */
+public func arkadeImportState(dataDir: String, json: String)throws  -> UInt64  {
+    return try  FfiConverterUInt64.lift(try rustCallWithError(FfiConverterTypeArkadeError_lift) {
+    uniffi_bitkitcore_fn_func_arkade_import_state(
+        FfiConverterString.lower(dataDir),
+        FfiConverterString.lower(json),$0
+    )
+})
+}
+public func arkadeInfo()async throws  -> ArkadeInfo  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_info(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeArkadeInfo_lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * The wallet's Lightning address on Ark Labs' LNURL server, found again from the seed or claimed on first use.
+ */
+public func arkadeLightningAddress()async throws  -> ArkadeLightningAddress  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_lightning_address(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeArkadeLightningAddress_lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * Move `amount_sat`, or everything when `None`, to the on-chain `address` in the next batch, less the
+ * operator's exit fee; the commitment txid.
+ */
+public func arkadeOffboard(address: String, amountSat: UInt64?)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_offboard(FfiConverterString.lower(address),FfiConverterOptionUInt64.lower(amountSat)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * The operator's fee programs, which `arkade_offboard` pays.
+ */
+public func arkadeOffboardFee()async throws  -> ArkadeFees  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_offboard_fee(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeArkadeFees_lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * Pay `bolt11` through Arkade Intents, refusing a fee above `max_fee_sat`. Returns once the lockup is funded;
+ * the outcome arrives through the listener's `on_swap`.
+ */
+public func arkadePay(bolt11: String, maxFeeSat: UInt64?)async throws  -> ArkadeSwap  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_pay(FfiConverterString.lower(bolt11),FfiConverterOptionUInt64.lower(maxFeeSat)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeArkadeSwap_lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * What paying `bolt11` through Arkade Intents would cost.
+ */
+public func arkadeQuotePay(bolt11: String)async throws  -> ArkadePayQuote  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_quote_pay(FfiConverterString.lower(bolt11)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeArkadePayQuote_lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * An invoice for exactly `amount_sat` through Arkade Intents: the payer pays it, the wallet gets it less the
+ * solver's fee. The swap is stored first; the wallet claims it once the solver funds the lockup.
+ */
+public func arkadeReceive(amountSat: UInt64)async throws  -> ArkadeSwap  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_receive(FfiConverterUInt64.lower(amountSat)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeArkadeSwap_lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * Renew outputs within 3 days of their batch expiry, and recoverable ones; the commitment txid, if any.
+ */
+public func arkadeRenew()async throws  -> String?  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_renew(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionString.lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * Pay `amount_sat` to another Arkade address; the Arkade txid.
+ */
+public func arkadeSendArk(address: String, amountSat: UInt64)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_send_ark(FfiConverterString.lower(address),FfiConverterUInt64.lower(amountSat)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * Register the receiver of Arkade history events, or remove it with `None`.
+ */
+public func arkadeSetListener(listener: ArkadeEventListener?)  {try! rustCall() {
+    uniffi_bitkitcore_fn_func_arkade_set_listener(
+        FfiConverterOptionTypeArkadeEventListener.lower(listener),$0
+    )
+}
+}
+/**
+ * Board confirmed on-chain deposits now instead of on the next one-minute pass; the commitment txid, or `None`
+ * when there was nothing to board.
+ */
+public func arkadeSettle()async throws  -> String?  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_settle(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionString.lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * Start the Arkade wallet from the Bitkit seed (BIP86 account 1), or return its info when it already runs.
+ * `params.restore` scans the operator and the chain for a restored wallet's past outputs; `params.backup` is an
+ * `arkade_export_state` dump imported before the wallet opens its database.
+ */
+public func arkadeStart(params: ArkadeStartParams)async throws  -> ArkadeInfo  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_start(FfiConverterTypeArkadeStartParams_lower(params)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeArkadeInfo_lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * Stop the Arkade wallet and its background tasks; its database stays.
+ */
+public func arkadeStop()async   {
+    return
+        try!  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_stop(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: nil
+            
+        )
+}
+/**
+ * Every Arkade Intents Lightning swap, newest first.
+ */
+public func arkadeSwaps()async throws  -> [ArkadeSwap]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_swaps(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeArkadeSwap.lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+public func arkadeVtxos()async throws  -> [ArkadeVtxo]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_vtxos(
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeArkadeVtxo.lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * Stop the Arkade wallet and delete its database in `data_dir`.
+ */
+public func arkadeWipe(dataDir: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_wipe(FfiConverterString.lower(dataDir)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeArkadeError_lift
         )
 }
 public func blocktankRemoveAllCjitEntries()async throws   {
@@ -31569,6 +33726,69 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_approve_pubky_auth() != 22222) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_arkade_balance() != 23068) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_delegate_info() != 39830) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_export_state() != 43252) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_history() != 15370) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_import_state() != 6508) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_info() != 60547) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_lightning_address() != 5082) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_offboard() != 3856) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_offboard_fee() != 41350) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_pay() != 8253) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_quote_pay() != 10416) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_receive() != 20657) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_renew() != 12733) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_send_ark() != 16983) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_set_listener() != 27978) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_settle() != 39476) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_start() != 47973) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_stop() != 16403) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_swaps() != 3452) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_vtxos() != 6583) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_wipe() != 38999) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_blocktank_remove_all_cjit_entries() != 40127) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -32175,6 +34395,12 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_wipe_all_transaction_details() != 65339) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_method_arkadeeventlistener_on_history() != 64003) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_method_arkadeeventlistener_on_swap() != 44042) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_method_boltzeventlistener_on_event() != 11294) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -32320,6 +34546,7 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
 
+    uniffiCallbackInitArkadeEventListener()
     uniffiCallbackInitBoltzEventListener()
     uniffiCallbackInitEventListener()
     uniffiCallbackInitJadeTransportCallback()
