@@ -1319,7 +1319,7 @@ dependencies = [
 
 [[package]]
 name = "bitkitcore"
-version = "0.8.0-arkade.1"
+version = "0.8.0-arkade.2"
 dependencies = [
  "alloy-primitives",
  "alloy-rlp",
