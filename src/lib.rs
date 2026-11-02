@@ -3449,8 +3449,9 @@ pub async fn pubky_swaps_provider_edges(
 }
 
 /// Pick how to pay a Paykit contact. Returns `Direct` when a balance the wallet holds reaches
-/// one of the contact's endpoints, otherwise the cheapest firm quote from the trusted Pubky
-/// Swaps providers, or `None` with a reason. The user never picks the swap.
+/// one of the contact's endpoints, otherwise the cheaper of the request's service legs and the
+/// trusted Pubky Swaps providers' firm quotes, or `None` with a reason. The user never picks
+/// the route.
 #[uniffi::export]
 pub async fn pubky_swaps_route_paykit_payment(
     request: PaykitRouteRequest,

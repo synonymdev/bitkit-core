@@ -21,6 +21,24 @@ exactly the amount asked for (`exact_out`): the lock covers the wallet's own cla
 `pubky_swaps_route_paykit_payment` returns `Direct` when a balance reaches one of the contact's
 endpoints, so the app only swaps when it must.
 
+## Service routes
+
+Services the wallet holds a balance on can also deliver to the contact: an Arkade offboard or a
+Spark withdrawal pays an on-chain address from Spending without a Pubky Swaps provider. The app
+quotes each such leg with its own engine for the service (`arkade_offboard_fee`, Spark's fee
+quote) and passes it in `PaykitRouteRequest.service_legs`; the router never talks to Arkade or
+Spark.
+
+When no balance reaches the contact directly, the router keeps the cheapest service leg that
+delivers exactly the amount to an endpoint the contact published and has not expired, asks the
+providers for a swap quote, and returns whichever costs less in fees: `Service` with the leg, which
+the app runs, or `Swap`. A swap wins a tie, since a hash lock needs no one's trust; a service leg
+states who it trusts in `atomicity` (`operator` for Arkade, `trusted` for Spark).
+
+Lightning through Arkade or Spark needs no service leg: the app counts those balances as
+Lightning-spendable, and `Direct` covers it. One route has one leg: a service paying a provider's
+hold invoice is not routed yet.
+
 Before the invoice reaches the app, the module checks the quote against the request
 (`validate_quote`), the contract against the quote and the chain tip (`validate_accept`), rebuilds
 the HTLC from its own keys (`verify_contract`), and binds the hold invoice to the quote and the

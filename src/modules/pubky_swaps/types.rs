@@ -37,6 +37,28 @@ pub struct PaykitRouteRequest {
     pub providers: Vec<String>,
     /// Fee rate for the wallet's own claim transaction.
     pub fee_rate_sat_vb: u64,
+    /// Routes through services the wallet holds a balance on (Arkade, Spark), each already quoted
+    /// by the app's engine for that service. They compete with the Pubky Swaps providers on fee.
+    pub service_legs: Vec<ServiceRouteLeg>,
+}
+
+/// A one-leg route through a service the wallet holds a balance on, such as an Arkade offboard
+/// or a Spark withdrawal to the contact's on-chain address. The app quotes it and runs it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Record)]
+pub struct ServiceRouteLeg {
+    /// `arkade` or `spark`.
+    pub service: String,
+    /// The contact endpoint the service delivers to. It must be one the contact published.
+    pub endpoint: PaykitEndpoint,
+    /// What the contact receives.
+    pub delivered_sat: u64,
+    /// What the wallet's balance on the service is debited.
+    pub debit_sat: u64,
+    /// Who the wallet trusts to complete the leg: `operator` for an Arkade batch, `trusted` for
+    /// Spark's operators. Pubky Swaps legs are `hash`.
+    pub atomicity: String,
+    /// When the quote stops holding, or 0 when it does not expire.
+    pub valid_until_unix: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Record)]
@@ -52,6 +74,8 @@ pub enum PaykitRoute {
     Direct { endpoint: PaykitEndpoint },
     /// The wallet pays over Lightning and a Pubky Swaps provider delivers on-chain.
     Swap { quote: PubkySwapRouteQuote },
+    /// A service the wallet holds a balance on delivers to the contact. The app runs the leg.
+    Service { leg: ServiceRouteLeg },
     /// Nothing can pay this contact. `reason` says why, for the user.
     None { reason: String },
 }

@@ -178,22 +178,57 @@ pub async fn route_paykit_payment(
             });
         }
     }
-    let Some(onchain) = onchain else {
-        return Ok(PaykitRoute::None {
-            reason: "No balance can reach an endpoint this contact accepts.".into(),
-        });
+    let service = router::best_service_leg(&request.service_legs, endpoints, amount, now_unix());
+    let swap = match &onchain {
+        Some(onchain) if !request.providers.is_empty() => {
+            match best_swap_route(
+                &request,
+                onchain.clone(),
+                network,
+                &mnemonic,
+                bip39_passphrase.as_deref(),
+            )
+            .await
+            {
+                Ok(swap) => swap,
+                Err(e) if service.is_some() => {
+                    log::warn!("pubky swaps: no swap route, paying through a service: {e}");
+                    None
+                }
+                Err(e) => return Err(e),
+            }
+        }
+        _ => None,
     };
-    if request.providers.is_empty() {
-        return Ok(PaykitRoute::None {
-            reason: "No swap provider is set up.".into(),
-        });
-    }
+    Ok(
+        router::cheaper_route(service, swap).unwrap_or_else(|| PaykitRoute::None {
+            reason: if onchain.is_none() {
+                "No balance can reach an endpoint this contact accepts."
+            } else if request.providers.is_empty() {
+                "No swap provider is set up."
+            } else {
+                "No swap provider can route this payment right now."
+            }
+            .into(),
+        }),
+    )
+}
 
+/// The cheapest firm quote from the trusted Pubky Swaps providers for delivering the request's
+/// amount to `onchain`, cached for `commit_route`.
+async fn best_swap_route(
+    request: &PaykitRouteRequest,
+    onchain: PaykitEndpoint,
+    network: bitcoin::Network,
+    mnemonic: &str,
+    bip39_passphrase: Option<&str>,
+) -> Result<Option<PubkySwapRouteQuote>, PubkySwapError> {
+    let amount = request.amount_sat;
     let destination = parse_address(&onchain.value, network)?.script_pubkey();
     let claim_fee_sat = claim_fee(&destination, request.fee_rate_sat_vb)?;
     let lock_sat = amount + claim_fee_sat;
 
-    let secret = keys::identity_secret(&mnemonic, bip39_passphrase.as_deref())?;
+    let secret = keys::identity_secret(mnemonic, bip39_passphrase)?;
     let identity = identity_pubky(&secret);
     let client = DirectClient::bind(secret).await?;
 
@@ -254,9 +289,7 @@ pub async fn route_paykit_payment(
     client.close().await;
 
     let Some((quote, provider)) = best else {
-        return Ok(PaykitRoute::None {
-            reason: "No swap provider can route this payment right now.".into(),
-        });
+        return Ok(None);
     };
     let route = PubkySwapRouteQuote {
         provider_pubky: provider,
@@ -281,7 +314,7 @@ pub async fn route_paykit_payment(
             network,
         },
     );
-    Ok(PaykitRoute::Swap { quote: route })
+    Ok(Some(route))
 }
 
 fn decode_hold_invoice(invoice: &str) -> Result<DecodedHoldInvoice, PubkySwapError> {
@@ -532,6 +565,63 @@ pub async fn advance_swap(
 }
 
 #[cfg(test)]
+mod tests {
+    use super::*;
+
+    const MNEMONIC: &str =
+        "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+
+    fn onchain_contact() -> PaykitEndpoint {
+        PaykitEndpoint {
+            method_id: "btc-regtest-p2wpkh".into(),
+            value: "bcrt1qdp8zwu9xk08p3dvkz4qyavmfaadkr4lnvwfah2".into(),
+        }
+    }
+
+    fn request(service_legs: Vec<ServiceRouteLeg>) -> PaykitRouteRequest {
+        PaykitRouteRequest {
+            amount_sat: 20_000,
+            contact_endpoints: vec![onchain_contact()],
+            lightning_spendable_sat: 0,
+            onchain_spendable_sat: 0,
+            providers: vec![],
+            fee_rate_sat_vb: 2,
+            service_legs,
+        }
+    }
+
+    async fn route(request: PaykitRouteRequest) -> PaykitRoute {
+        route_paykit_payment(request, bitcoin::Network::Regtest, MNEMONIC.into(), None)
+            .await
+            .unwrap()
+    }
+
+    #[tokio::test]
+    async fn routes_an_onchain_contact_through_a_service_without_providers() {
+        let leg = ServiceRouteLeg {
+            service: "arkade".into(),
+            endpoint: onchain_contact(),
+            delivered_sat: 20_000,
+            debit_sat: 20_300,
+            atomicity: "operator".into(),
+            valid_until_unix: 0,
+        };
+        let PaykitRoute::Service { leg: picked } = route(request(vec![leg.clone()])).await else {
+            panic!("expected a service route");
+        };
+        assert_eq!(picked, leg);
+    }
+
+    #[tokio::test]
+    async fn explains_why_nothing_routes_without_providers_or_services() {
+        let PaykitRoute::None { reason } = route(request(vec![])).await else {
+            panic!("expected no route");
+        };
+        assert_eq!(reason, "No swap provider is set up.");
+    }
+}
+
+#[cfg(test)]
 mod live_tests {
     //! Against a running regtest provider:
     //! `PUBKY_SWAPS_PROVIDER=<z32>[,<contact z32>…] PUBKY_SWAPS_ELECTRUM=tcp://127.0.0.1:60001
@@ -567,6 +657,7 @@ mod live_tests {
             onchain_spendable_sat: 0,
             providers: std::mem::take(&mut providers),
             fee_rate_sat_vb: 2,
+            service_legs: vec![],
         };
         let route = route_paykit_payment(request, bitcoin::Network::Regtest, MNEMONIC.into(), None)
             .await

@@ -10,7 +10,9 @@
 use swap_common::messages::SwapOffer;
 use swap_common::SwapDirection;
 
-use super::types::{PaykitEndpoint, SwapRouteEdge};
+use super::types::{
+    PaykitEndpoint, PaykitRoute, PubkySwapRouteQuote, ServiceRouteLeg, SwapRouteEdge,
+};
 
 pub(crate) const LIGHTNING_BOLT11: &str = "btc-lightning-bolt11";
 pub(crate) const LIGHTNING_LNURL: &str = "btc-lightning-lnurl";
@@ -110,6 +112,38 @@ pub(crate) fn rank_reverse_edges(
     usable
 }
 
+/// The cheapest service leg that delivers exactly `amount_sat` to an endpoint the contact
+/// published and whose quote still holds at `now_unix`.
+pub(crate) fn best_service_leg(
+    legs: &[ServiceRouteLeg],
+    endpoints: &[PaykitEndpoint],
+    amount_sat: u64,
+    now_unix: u64,
+) -> Option<ServiceRouteLeg> {
+    legs.iter()
+        .filter(|leg| endpoints.contains(&leg.endpoint))
+        .filter(|leg| leg.delivered_sat == amount_sat && leg.debit_sat >= leg.delivered_sat)
+        .filter(|leg| leg.valid_until_unix == 0 || leg.valid_until_unix > now_unix)
+        .min_by_key(|leg| leg.debit_sat - leg.delivered_sat)
+        .cloned()
+}
+
+/// The route that costs the wallet less in fees. A hash-locked swap wins a tie: the wallet
+/// trusts no one to complete it.
+pub(crate) fn cheaper_route(
+    service: Option<ServiceRouteLeg>,
+    swap: Option<PubkySwapRouteQuote>,
+) -> Option<PaykitRoute> {
+    match (service, swap) {
+        (Some(leg), Some(quote)) if quote.total_fee_sat <= leg.debit_sat - leg.delivered_sat => {
+            Some(PaykitRoute::Swap { quote })
+        }
+        (Some(leg), _) => Some(PaykitRoute::Service { leg }),
+        (None, Some(quote)) => Some(PaykitRoute::Swap { quote }),
+        (None, None) => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -178,5 +212,82 @@ mod tests {
     fn indicative_fee_matches_the_offer_formula() {
         let e = edge("p", "reverse", 100, 0, u64::MAX);
         assert_eq!(indicative_fee(&e, 100_000), 100 + 250 + 500);
+    }
+
+    fn leg(
+        service: &str,
+        method_id: &str,
+        delivered: u64,
+        debit: u64,
+        until: u64,
+    ) -> ServiceRouteLeg {
+        ServiceRouteLeg {
+            service: service.into(),
+            endpoint: endpoint(method_id),
+            delivered_sat: delivered,
+            debit_sat: debit,
+            atomicity: "operator".into(),
+            valid_until_unix: until,
+        }
+    }
+
+    #[test]
+    fn picks_the_cheapest_service_leg_to_a_published_endpoint() {
+        let endpoints = vec![endpoint("btc-regtest-p2wpkh")];
+        let legs = vec![
+            leg("spark", "btc-regtest-p2wpkh", 20_000, 20_900, 0),
+            leg("arkade", "btc-regtest-p2wpkh", 20_000, 20_400, 0),
+            leg("unpublished", "btc-regtest-p2tr", 20_000, 20_001, 0),
+        ];
+        let picked = best_service_leg(&legs, &endpoints, 20_000, 100).unwrap();
+        assert_eq!(picked.service, "arkade");
+    }
+
+    #[test]
+    fn drops_service_legs_that_are_expired_or_deliver_another_amount() {
+        let endpoints = vec![endpoint("btc-regtest-p2wpkh")];
+        let legs = vec![
+            leg("expired", "btc-regtest-p2wpkh", 20_000, 20_100, 100),
+            leg("short", "btc-regtest-p2wpkh", 19_000, 19_100, 0),
+            leg("negative-fee", "btc-regtest-p2wpkh", 20_000, 19_999, 0),
+        ];
+        assert!(best_service_leg(&legs, &endpoints, 20_000, 100).is_none());
+        let live = leg("live", "btc-regtest-p2wpkh", 20_000, 20_100, 101);
+        assert_eq!(
+            best_service_leg(std::slice::from_ref(&live), &endpoints, 20_000, 100),
+            Some(live)
+        );
+    }
+
+    fn swap_quote(total_fee_sat: u64) -> PubkySwapRouteQuote {
+        PubkySwapRouteQuote {
+            provider_pubky: "p".into(),
+            quote_id: "q".into(),
+            endpoint: endpoint("btc-regtest-p2wpkh"),
+            delivered_sat: 20_000,
+            lock_sat: 20_200,
+            debit_sat: 20_000 + total_fee_sat,
+            service_fee_sat: 0,
+            provider_onchain_fee_sat: 0,
+            claim_fee_sat: 200,
+            total_fee_sat,
+            atomicity: "hash".into(),
+            valid_until_unix: 0,
+            providers_quoted: 1,
+        }
+    }
+
+    #[test]
+    fn picks_the_route_with_the_lower_fee_and_the_swap_on_a_tie() {
+        let service = leg("arkade", "btc-regtest-p2wpkh", 20_000, 20_500, 0);
+        let pick = |swap_fee| cheaper_route(Some(service.clone()), Some(swap_quote(swap_fee)));
+        assert!(matches!(pick(499), Some(PaykitRoute::Swap { .. })));
+        assert!(matches!(pick(500), Some(PaykitRoute::Swap { .. })));
+        assert!(matches!(pick(501), Some(PaykitRoute::Service { .. })));
+        assert!(matches!(
+            cheaper_route(Some(service), None),
+            Some(PaykitRoute::Service { .. })
+        ));
+        assert!(cheaper_route(None, None).is_none());
     }
 }
