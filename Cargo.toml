@@ -102,8 +102,12 @@ rust_decimal = "1.30"
 # TypeScript and Go SDKs build `<owner> CHECKSIGVERIFY <operator> CHECKSIG`, so the same key gets different
 # Arkade and boarding addresses (arkade-os/rust-sdk#132). The vendored copy flips the five call sites to the
 # TypeScript order and changes nothing else; drop it once upstream matches.
+# ark-client 0.12.0 makes a batch intent valid from the device's current second, and the operator refuses one
+# from a clock even a second ahead ("proof of ownership not yet valid"): the vendored copy makes it valid from
+# a minute earlier and changes nothing else.
 [patch.crates-io]
 ark-core = { path = "vendor/ark-core" }
+ark-client = { path = "vendor/ark-client" }
 
 [[bin]]
 name = "example"
