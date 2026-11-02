@@ -35,9 +35,12 @@ pub(crate) struct SwapRecord {
     /// The signed claim, kept so it can be broadcast again while it is unconfirmed.
     #[serde(default)]
     pub claim_tx_hex: Option<String>,
-    /// Whether the claim, and with it the preimage, ever reached the server or the chain.
+    /// Whether a broadcast of the claim was ever attempted, so its preimage may be public.
     #[serde(default)]
     pub claim_published: bool,
+    /// Whether the server accepted the claim or it showed up in the chain's history.
+    #[serde(default)]
+    pub claim_seen: bool,
     pub created_at_unix: u64,
 }
 

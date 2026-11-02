@@ -10,7 +10,7 @@ use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use bitcoin::{Address, ScriptBuf};
-use electrum_client::{Client as ElectrumClient, ElectrumApi};
+use electrum_client::{Client as ElectrumClient, ConfigBuilder, ElectrumApi};
 use once_cell::sync::Lazy;
 use swap_common::htlc::build_htlc_script;
 use swap_common::messages::{
@@ -39,6 +39,10 @@ const OFFER_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(20);
 /// Most candidates asked for an offer per payment: each is a connection and an address lookup
 /// through iroh's n0 discovery, which sees which keys the wallet looks up.
 const MAX_CANDIDATES: usize = 30;
+const ELECTRUM_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
+/// Longest wait for a free clock second before a swap request; past it the clock is behind the
+/// last swap's index, as after a backward clock correction.
+const INDEX_WAIT: std::time::Duration = std::time::Duration::from_secs(3);
 /// How long the wallet keeps asking about a swap request the provider is still admitting.
 const PENDING_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60);
 const PENDING_POLL: std::time::Duration = std::time::Duration::from_secs(2);
@@ -367,8 +371,14 @@ fn decode_hold_invoice(invoice: &str) -> Result<DecodedHoldInvoice, PubkySwapErr
     })
 }
 
+/// An Electrum client whose reads time out, so a connection that dies silently cannot hold a swap.
+fn electrum(url: &str) -> Result<ElectrumClient, PubkySwapError> {
+    let config = ConfigBuilder::new().timeout(Some(ELECTRUM_TIMEOUT)).build();
+    Ok(ElectrumClient::from_config(url, config)?)
+}
+
 fn chain_tip(electrum_url: &str) -> Result<u32, PubkySwapError> {
-    let client = ElectrumClient::new(electrum_url)?;
+    let client = electrum(electrum_url)?;
     Ok(client.block_headers_subscribe()?.height as u32)
 }
 
@@ -407,9 +417,15 @@ pub async fn commit_route(
     let passphrase = bip39_passphrase.as_deref();
     let secret = keys::identity_secret(&mnemonic, passphrase)?;
     // One swap per clock second keeps every index behind the clock (see `keys`).
+    let index_deadline = tokio::time::Instant::now() + INDEX_WAIT;
     let index = loop {
         if let Some(index) = store::reserve_index(now_unix())? {
             break index;
+        }
+        if tokio::time::Instant::now() >= index_deadline {
+            return Err(PubkySwapError::invalid(
+                "The device clock is behind the last swap. Check the date and time, then try again.",
+            ));
         }
         tokio::time::sleep(std::time::Duration::from_millis(250)).await;
     };
@@ -502,6 +518,7 @@ pub async fn commit_route(
         claim_txid: None,
         claim_tx_hex: None,
         claim_published: false,
+        claim_seen: false,
         created_at_unix: now_unix(),
     };
     store::save(&record)?;
@@ -557,7 +574,7 @@ fn advance_blocking(
             .effective_confirmations(record.quote.required_confirmations),
     };
 
-    let electrum = ElectrumClient::new(&record.electrum_url)?;
+    let electrum = electrum(&record.electrum_url)?;
     let tip = electrum.block_headers_subscribe()?.height as u32;
     let mut history = vec![];
     for item in electrum.script_get_history(&htlc_spk)? {
@@ -571,9 +588,10 @@ fn advance_blocking(
     let state = match claim::next_step(&contract, saved, tip, &history) {
         claim::Step::Report(state) => state,
         claim::Step::Claimed { txid, state } => {
-            if record.claim_txid.as_deref() != Some(txid.as_str()) || !record.claim_published {
+            if record.claim_txid.as_deref() != Some(txid.as_str()) || !record.claim_seen {
                 record.claim_txid = Some(txid);
                 record.claim_published = true;
+                record.claim_seen = true;
                 store::save(&record)?;
             }
             state
@@ -610,32 +628,51 @@ fn advance_blocking(
     Ok(status_of(&record, state))
 }
 
-/// Send a saved claim and record once the server took it, since its preimage is then public. A
-/// failure is only logged: the next call finds the claim missing from the history and sends it
-/// again, inside the safe window unless it was already published, so the app keeps polling.
+/// Send a saved claim. It is recorded as published before it goes out: once a broadcast was
+/// attempted its preimage may have left the wallet, even if the reply is lost. Only an explicit
+/// refusal from the server marks it private again, and a failure is only logged, so the app keeps
+/// polling and the next call sends it again.
 fn publish_claim(
     electrum: &ElectrumClient,
     record: &mut SwapRecord,
     claim: &str,
 ) -> Result<(), PubkySwapError> {
-    let sent = bitcoin::consensus::encode::deserialize_hex::<bitcoin::Transaction>(claim)
-        .map_err(PubkySwapError::storage)
-        .and_then(|claim| Ok(electrum.transaction_broadcast(&claim)?));
-    match sent {
-        Ok(_) if !record.claim_published => {
-            record.claim_published = true;
+    let claim = bitcoin::consensus::encode::deserialize_hex::<bitcoin::Transaction>(claim)
+        .map_err(PubkySwapError::storage)?;
+    if !record.claim_published {
+        record.claim_published = true;
+        store::save(record)?;
+    }
+    match electrum.transaction_broadcast(&claim) {
+        Ok(_) if !record.claim_seen => {
+            record.claim_seen = true;
             store::save(record)
         }
         Ok(_) => Ok(()),
         Err(e) => {
             log::warn!("pubky swaps: claim broadcast failed, retrying on the next advance: {e}");
+            if is_refusal(&e) && !record.claim_seen {
+                record.claim_published = false;
+                store::save(record)?;
+            }
             Ok(())
         }
     }
 }
 
-/// One advance at a time, so two overlapping calls cannot save a stale record over the claim.
-static ADVANCING: Mutex<()> = Mutex::new(());
+/// Whether the server answered and refused, rather than the reply being lost.
+fn is_refusal(error: &electrum_client::Error) -> bool {
+    match error {
+        electrum_client::Error::Protocol(_) => true,
+        electrum_client::Error::AllAttemptsErrored(errors) => errors.iter().all(is_refusal),
+        _ => false,
+    }
+}
+
+/// One advance at a time per swap, so two overlapping calls cannot save a stale record over the
+/// claim, while a slow call for one swap does not hold up the others.
+static ADVANCING: Lazy<Mutex<HashMap<String, std::sync::Arc<Mutex<()>>>>> =
+    Lazy::new(Default::default);
 
 pub async fn advance_swap(
     swap_id: String,
@@ -643,7 +680,13 @@ pub async fn advance_swap(
     bip39_passphrase: Option<String>,
 ) -> Result<PubkySwapRouteStatus, PubkySwapError> {
     tokio::task::spawn_blocking(move || {
-        let _advancing = ADVANCING.lock().unwrap();
+        let lock = ADVANCING
+            .lock()
+            .unwrap()
+            .entry(swap_id.clone())
+            .or_default()
+            .clone();
+        let _advancing = lock.lock().unwrap();
         let record = store::load(&swap_id)?;
         advance_blocking(record, &mnemonic, bip39_passphrase.as_deref())
     })
@@ -654,6 +697,23 @@ pub async fn advance_swap(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn only_an_answer_from_the_server_counts_as_a_refusal() {
+        use electrum_client::Error;
+        let refused = || Error::Protocol(serde_json::json!({"message": "min relay fee not met"}));
+        let lost = || Error::IOError(std::io::Error::from(std::io::ErrorKind::TimedOut));
+        assert!(is_refusal(&refused()));
+        assert!(!is_refusal(&lost()));
+        assert!(is_refusal(&Error::AllAttemptsErrored(vec![
+            refused(),
+            refused()
+        ])));
+        assert!(!is_refusal(&Error::AllAttemptsErrored(vec![
+            refused(),
+            lost()
+        ])));
+    }
 
     const MNEMONIC: &str =
         "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
