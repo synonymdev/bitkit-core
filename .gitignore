@@ -26,3 +26,4 @@ bindings/ios/BitkitCore.xcframework.zip
 !*.local.template*
 
 /tests/usdt-fork/node_modules/
+src/modules/arkade/intents/oracle/node_modules

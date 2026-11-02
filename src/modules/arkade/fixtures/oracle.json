@@ -1,0 +1,41 @@
+{
+  "mnemonic": "lottery chimney height exit laptop spend legend parent radio sign discover legal",
+  "network": "bitcoin",
+  "descriptor": "tr([67a24100/86'/0'/1']xpub6CvSLhajsoYFRHhiG8b2ipgusF37CjhNvUUgrqNV2vQ7BPYxGgpbrDDY1ZpQvGK49fW4ZNxZRvHzkrzWH6De5afguiJPYnRGD9MY4vtZ8zn/0/*)",
+  "xOnlyPublicKey": "5d3a1b1b05a3b9fcd56306bc0f690fb2d2c2330400f0ec25d6ac5c6d294548da",
+  "claimPublicKey": "035d3a1b1b05a3b9fcd56306bc0f690fb2d2c2330400f0ec25d6ac5c6d294548da",
+  "lnurlDomain": "lnurl.arkade.sh",
+  "token": "0c1d42570d56713327b318f8bde11df0f5e6e800d8422132caedb57110071046",
+  "lnurlOfHandle": "LNURL1DP68GURN8GHJ7MRWW4EXCTNPWF4KZER99EEKSTEWWAJKCMPDDDHX7AMW9AKXUATJD3CZ7AMFWDJJ6MREDEUQ7FP289",
+  "server": {
+    "signerPubkey": "038202bebddeb1f7442803897a85eaf3ce9254d07df0172fc3725ab5f0d097779c",
+    "network": "bitcoin",
+    "unilateralExitDelay": 605184,
+    "boardingExitDelay": 7776256,
+    "dust": 330
+  },
+  "delegatePubkey": "026d7d45360014bce9a8ad30a10c28dd1571a22a2e90c9682268404d37b5b114a6",
+  "info": {
+    "arkAddress": "ark1qzpq904am6clw3pgqwyh4p02708fy4xs0hcpwt7rwfdttuxsjamecfjcrgw33etd4mp508vypy9zg9ael8z92vqn0sx6d6vvuy679hts0h0e5c",
+    "boardingAddress": "bc1pgjnfz74jd8rs2hw0wnnq83hn960lya503q0ykzuy8tmvnz7f7ucsd7y9dg",
+    "network": "bitcoin",
+    "dust": 330,
+    "unilateralExitDelay": 605184,
+    "boardingExitDelay": 7776256,
+    "fees": {
+      "intentFee": {
+        "offchainInput": "inputType == 'vtxo' && now() - birth < 86400.0 ? amount * 0.002 : 0.0",
+        "offchainOutput": "",
+        "onchainInput": "",
+        "onchainOutput": "200.0"
+      },
+      "txFeeRate": "0"
+    },
+    "delegate": true
+  },
+  "lightningAddress": {
+    "handle": "wise-lynx",
+    "lightningAddress": "wise-lynx@lnurl.arkade.sh",
+    "lnurl": "LNURL1DP68GURN8GHJ7MRWW4EXCTNPWF4KZER99EEKSTEWWAJKCMPDDDHX7AMW9AKXUATJD3CZ7AMFWDJJ6MREDEUQ7FP289"
+  }
+}

@@ -1,0 +1,141 @@
+use bitcoin::relative;
+use bitcoin::Amount;
+use bitcoin::OutPoint;
+use bitcoin::ScriptBuf;
+use bitcoin::TxOut;
+use std::time::Duration;
+
+pub mod arknote;
+pub mod asset;
+pub mod batch;
+pub mod boarding_output;
+pub mod coin_select;
+pub mod contract;
+pub mod conversions;
+pub mod extension;
+pub mod history;
+pub mod intent;
+pub mod introspector;
+pub mod script;
+pub mod send;
+pub mod server;
+pub mod unilateral_exit;
+pub mod vhtlc;
+pub mod vtxo;
+
+mod ark_address;
+mod error;
+mod tree_tx_output_script;
+mod tx_graph;
+mod vtxo_list;
+
+pub use ark_address::ArkAddress;
+pub use arknote::ArkNote;
+pub use boarding_output::BoardingOutput;
+pub use error::Error;
+pub use error::ErrorContext;
+pub use script::extract_sequence_from_csv_sig_script;
+pub use server::Asset;
+pub use server::AssetInfo;
+pub use tx_graph::TxGraph;
+pub use tx_graph::TxGraphChunk;
+pub use unilateral_exit::build_anchor_tx;
+pub use unilateral_exit::build_unilateral_exit_tree_txids;
+pub use unilateral_exit::SelectedUtxo;
+pub use unilateral_exit::UtxoCoinSelection;
+pub use vtxo::Vtxo;
+pub use vtxo_list::VtxoList;
+
+pub const UNSPENDABLE_KEY: &str =
+    "0250929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0";
+
+pub const VTXO_INPUT_INDEX: usize = 0;
+
+/// The byte value corresponds to the string "taptree".
+pub const VTXO_TAPROOT_KEY: [u8; 7] = [116, 97, 112, 116, 114, 101, 101];
+
+/// The byte value corresponds to the string "condition".
+pub const VTXO_CONDITION_KEY: [u8; 9] = [99, 111, 110, 100, 105, 116, 105, 111, 110];
+
+/// The byte value corresponds to the string "expiry".
+pub const VTXO_TREE_EXPIRY_PSBT_KEY: [u8; 6] = [101, 120, 112, 105, 114, 121];
+
+/// The cosigner PKs that sign a VTXO TX input are included in the `unknown` key-value map field of
+/// that input in the VTXO PSBT. Since the `unknown` field can be used for any purpose, we know that
+/// a value is a cosigner PK if the corresponding key starts with this prefix.
+///
+/// The byte value corresponds to the string "cosigner".
+pub const VTXO_COSIGNER_PSBT_KEY: [u8; 8] = [99, 111, 115, 105, 103, 110, 101, 114];
+
+pub const DEFAULT_DERIVATION_PATH: &str = "m/83696968'/11811'/0";
+
+/// Mainnet's original unilateral-exit delay (~7 days, in seconds).
+///
+/// arkd currently advertises only the active exit delay in `/info`. Clients that need to discover
+/// historical scripts can probe this legacy mainnet delay alongside the advertised one.
+pub const MAINNET_LEGACY_UNILATERAL_EXIT_DELAY_SECS: u32 = 605_184;
+
+/// Candidate exit-delay set for discovery/watch.
+///
+/// Returns `current` plus, on mainnet only, the hardcoded legacy delay used by older outputs. The
+/// result is deduplicated, so if `current` already equals the legacy value it appears only once.
+pub fn candidate_exit_delays(
+    current: bitcoin::Sequence,
+    network: bitcoin::Network,
+) -> Result<Vec<bitcoin::Sequence>, Error> {
+    let mut delays = vec![current];
+
+    if network == bitcoin::Network::Bitcoin {
+        let legacy =
+            bitcoin::Sequence::from_seconds_ceil(MAINNET_LEGACY_UNILATERAL_EXIT_DELAY_SECS)
+                .map_err(Error::ad_hoc)?;
+        if !delays.contains(&legacy) {
+            delays.push(legacy);
+        }
+    }
+
+    Ok(delays)
+}
+
+const ANCHOR_SCRIPT_PUBKEY: [u8; 4] = [0x51, 0x02, 0x4e, 0x73];
+
+/// Information a UTXO that may be extracted from an on-chain explorer.
+#[derive(Clone, Copy, Debug)]
+pub struct ExplorerUtxo {
+    pub outpoint: OutPoint,
+    pub amount: Amount,
+    pub confirmation_blocktime: Option<u64>,
+    pub confirmations: u64,
+    pub is_spent: bool,
+}
+
+pub fn anchor_output() -> TxOut {
+    let script_pubkey = ScriptBuf::from_bytes(ANCHOR_SCRIPT_PUBKEY.to_vec());
+
+    TxOut {
+        value: Amount::ZERO,
+        script_pubkey,
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) enum ExitDelayKind {
+    Time(Duration),
+    Blocks(u64),
+}
+
+impl ExitDelayKind {
+    pub(crate) fn from_sequence(sequence: bitcoin::Sequence) -> Result<Self, Error> {
+        let kind = match sequence
+            .to_relative_lock_time()
+            .ok_or_else(|| Error::ad_hoc("exit delay is not a relative locktime"))?
+        {
+            relative::LockTime::Time(time) => {
+                Self::Time(Duration::from_secs(time.value() as u64 * 512))
+            }
+            relative::LockTime::Blocks(height) => Self::Blocks(height.value() as u64),
+        };
+
+        Ok(kind)
+    }
+}
