@@ -339,7 +339,14 @@ fn decode_hold_invoice(invoice: &str) -> Result<DecodedHoldInvoice, PubkySwapErr
 
 /// An Electrum client whose reads time out, so a connection that dies silently cannot hold a swap.
 fn electrum(url: &str) -> Result<ElectrumClient, PubkySwapError> {
-    let config = ConfigBuilder::new().timeout(Some(ELECTRUM_TIMEOUT)).build();
+    electrum_with_retries(url, 1)
+}
+
+fn electrum_with_retries(url: &str, retries: u8) -> Result<ElectrumClient, PubkySwapError> {
+    let config = ConfigBuilder::new()
+        .timeout(Some(ELECTRUM_TIMEOUT))
+        .retry(retries)
+        .build();
     Ok(ElectrumClient::from_config(url, config)?)
 }
 
@@ -565,7 +572,7 @@ fn advance_blocking(
         claim::Step::Rebroadcast => {
             let txid = record.claim_txid.clone().unwrap_or_default();
             match record.claim_tx_hex.clone() {
-                Some(claim) => publish_claim(&electrum, &mut record, &claim)?,
+                Some(claim) => publish_claim(&mut record, &claim)?,
                 None => log::warn!("pubky swaps: no saved claim to broadcast again for {txid}"),
             }
             PubkySwapRouteState::ClaimBroadcast { txid }
@@ -587,7 +594,7 @@ fn advance_blocking(
             record.claim_txid = Some(txid.clone());
             record.claim_tx_hex = Some(claim.clone());
             store::save(&record)?;
-            publish_claim(&electrum, &mut record, &claim)?;
+            publish_claim(&mut record, &claim)?;
             PubkySwapRouteState::ClaimBroadcast { txid }
         }
     };
@@ -598,13 +605,18 @@ fn advance_blocking(
 /// attempted its preimage may have left the wallet, even if the reply is lost. Only an explicit
 /// refusal of the first attempt marks it private again, and a failure is only logged, so the app
 /// keeps polling and the next call sends it again.
-fn publish_claim(
-    electrum: &ElectrumClient,
-    record: &mut SwapRecord,
-    claim: &str,
-) -> Result<(), PubkySwapError> {
+fn publish_claim(record: &mut SwapRecord, claim: &str) -> Result<(), PubkySwapError> {
     let claim = bitcoin::consensus::encode::deserialize_hex::<bitcoin::Transaction>(claim)
         .map_err(PubkySwapError::storage)?;
+    // No automatic resend: a refusal must answer the one attempt this call made, not a retry that
+    // hides an earlier attempt whose reply was lost.
+    let sender = match electrum_with_retries(&record.electrum_url, 0) {
+        Ok(sender) => sender,
+        Err(e) => {
+            log::warn!("pubky swaps: no Electrum connection for the claim, retrying: {e}");
+            return Ok(());
+        }
+    };
     // Only a refusal of the very first attempt proves the preimage never left: an earlier attempt
     // may have reached the server even if its reply was lost.
     let first_attempt = !record.claim_published;
@@ -612,7 +624,7 @@ fn publish_claim(
         record.claim_published = true;
         store::save(record)?;
     }
-    match electrum.transaction_broadcast(&claim) {
+    match sender.transaction_broadcast(&claim) {
         Ok(_) if !record.claim_seen => {
             record.claim_seen = true;
             store::save(record)
@@ -629,13 +641,10 @@ fn publish_claim(
     }
 }
 
-/// Whether the server answered and refused, rather than the reply being lost.
+/// Whether the server answered and refused, rather than the reply being lost. Only a bare server
+/// error counts, from a client that sends once.
 fn is_refusal(error: &electrum_client::Error) -> bool {
-    match error {
-        electrum_client::Error::Protocol(_) => true,
-        electrum_client::Error::AllAttemptsErrored(errors) => errors.iter().all(is_refusal),
-        _ => false,
-    }
+    matches!(error, electrum_client::Error::Protocol(_))
 }
 
 /// One advance at a time per swap, so two overlapping calls cannot save a stale record over the
@@ -674,13 +683,11 @@ mod tests {
         let lost = || Error::IOError(std::io::Error::from(std::io::ErrorKind::TimedOut));
         assert!(is_refusal(&refused()));
         assert!(!is_refusal(&lost()));
-        assert!(is_refusal(&Error::AllAttemptsErrored(vec![
-            refused(),
-            refused()
-        ])));
+        // A transport error after the single attempt, or retries that hid an earlier one.
+        assert!(!is_refusal(&Error::AllAttemptsErrored(vec![])));
         assert!(!is_refusal(&Error::AllAttemptsErrored(vec![
-            refused(),
-            lost()
+            lost(),
+            refused()
         ])));
     }
 }
