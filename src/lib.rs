@@ -3502,6 +3502,38 @@ pub async fn pubky_swaps_advance(
         .unwrap_or_else(|e| Err(pubky_swaps_runtime_err(e)))
 }
 
+/// Rebuild the swaps this wallet started, for a wallet restored from its seed. Each of
+/// `providers` lists the swaps it holds for the wallet's swap identity, and the wallet derives
+/// their keys from the seed and checks them against each contract. The contact's address is not in
+/// the listing, so a restored swap claims to `payout_address`, the wallet's own. Returns the
+/// restored swap ids; drive each with `pubky_swaps_advance`.
+#[uniffi::export]
+pub async fn pubky_swaps_restore(
+    providers: Vec<String>,
+    electrum_url: String,
+    payout_address: String,
+    fee_rate_sat_vb: u64,
+    network: Network,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+) -> Result<Vec<String>, PubkySwapError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        pubky_swaps::restore_swaps(
+            providers,
+            electrum_url,
+            payout_address,
+            fee_rate_sat_vb,
+            network.into(),
+            mnemonic,
+            bip39_passphrase,
+        )
+        .await
+    })
+    .await
+    .unwrap_or_else(|e| Err(pubky_swaps_runtime_err(e)))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

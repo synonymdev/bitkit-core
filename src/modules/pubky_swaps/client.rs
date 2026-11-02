@@ -14,8 +14,8 @@ use electrum_client::{Client as ElectrumClient, ConfigBuilder, ElectrumApi};
 use once_cell::sync::Lazy;
 use swap_common::htlc::build_htlc_script;
 use swap_common::messages::{
-    OfferRequest, Quote, QuoteRequest, Reject, SwapMessage, SwapOffer, SwapRequest, SwapScript,
-    SwapStatusRequest, PROTOCOL_VERSION,
+    OfferRequest, Quote, QuoteRequest, Reject, SwapListRequest, SwapMessage, SwapOffer,
+    SwapRequest, SwapScript, SwapStatusRequest, SwapStatusSnapshot, PROTOCOL_VERSION,
 };
 use swap_common::onchain::{build_claim_tx, estimate_spend_fee, spend_vsize};
 use swap_common::timelock::TimelockParams;
@@ -40,9 +40,6 @@ const OFFER_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(20);
 /// through iroh's n0 discovery, which sees which keys the wallet looks up.
 const MAX_CANDIDATES: usize = 30;
 const ELECTRUM_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
-/// Longest wait for a free clock second before a swap request; past it the clock is behind the
-/// last swap's index, as after a backward clock correction.
-const INDEX_WAIT: std::time::Duration = std::time::Duration::from_secs(3);
 /// How long the wallet keeps asking about a swap request the provider is still admitting.
 const PENDING_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60);
 const PENDING_POLL: std::time::Duration = std::time::Duration::from_secs(2);
@@ -96,7 +93,7 @@ fn claim_fee(destination: &ScriptBuf, fee_rate_sat_vb: u64) -> Result<u64, Pubky
     let key = keys::swap_keys(
         "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
         None,
-        0,
+        &[0; 32],
     )?;
     let script = build_htlc_script(&[0; 32], &key.claim_pubkey, &key.claim_pubkey, 1_000_000);
     Ok(estimate_spend_fee(
@@ -389,20 +386,8 @@ pub async fn commit_route(
     }
     let passphrase = bip39_passphrase.as_deref();
     let secret = keys::identity_secret(&mnemonic, passphrase)?;
-    // One swap per clock second keeps every index behind the clock (see `keys`).
-    let index_deadline = tokio::time::Instant::now() + INDEX_WAIT;
-    let index = loop {
-        if let Some(index) = store::reserve_index(now_unix())? {
-            break index;
-        }
-        if tokio::time::Instant::now() >= index_deadline {
-            return Err(PubkySwapError::invalid(
-                "The device clock is behind the last swap. Check the date and time, then try again.",
-            ));
-        }
-        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
-    };
-    let swap_keys = keys::swap_keys(&mnemonic, passphrase, index)?;
+    let index = keys::new_index();
+    let swap_keys = keys::swap_keys(&mnemonic, passphrase, &index)?;
     let request = SwapRequest {
         script_type: SwapScript::P2wsh,
         quote_id: quote.quote_id,
@@ -412,6 +397,7 @@ pub async fn commit_route(
         client_claim_pubkey_hex: Some(swap_keys.claim_pubkey.to_string()),
         client_refund_pubkey_hex: None,
         invoice: None,
+        owner_ref: Some(keys::owner_ref(&index)),
     };
 
     let client = DirectClient::bind(secret).await?;
@@ -479,11 +465,12 @@ pub async fn commit_route(
 
     let record = SwapRecord {
         swap_id: accept.swap_id.to_string(),
-        key_index: index,
+        key_index: hex::encode(index),
         provider_pubky: route.provider_pubky.clone(),
         network,
         electrum_url,
-        quote,
+        required_confirmations: quote.required_confirmations,
+        quote: Some(quote),
         accept: accept.clone(),
         destination_address: route.endpoint.value.clone(),
         delivered_sat: route.delivered_sat,
@@ -526,7 +513,11 @@ fn advance_blocking(
     mnemonic: &str,
     passphrase: Option<&str>,
 ) -> Result<PubkySwapRouteStatus, PubkySwapError> {
-    let keys = keys::swap_keys(mnemonic, passphrase, record.key_index)?;
+    let index: [u8; 32] = hex::decode(&record.key_index)
+        .ok()
+        .and_then(|index| index.try_into().ok())
+        .ok_or_else(|| PubkySwapError::storage("invalid key index"))?;
+    let keys = keys::swap_keys(mnemonic, passphrase, &index)?;
     let provider = record
         .accept
         .provider_pubkey_hex
@@ -544,7 +535,7 @@ fn advance_blocking(
         delivered_sat: record.delivered_sat,
         timeout,
         required_confirmations: policy(record.network)
-            .effective_confirmations(record.quote.required_confirmations),
+            .effective_confirmations(record.required_confirmations),
     };
 
     let electrum = electrum(&record.electrum_url)?;
@@ -652,6 +643,146 @@ fn is_refusal(error: &electrum_client::Error) -> bool {
 static ADVANCING: Lazy<Mutex<HashMap<String, std::sync::Arc<Mutex<()>>>>> =
     Lazy::new(Default::default);
 
+/// Rebuild the records of reverse swaps this wallet started, for a wallet restored from its seed:
+/// each provider lists the swaps it holds for the wallet's swap identity (`swap-list-v1`), the
+/// wallet derives each swap's keys from the index in its `owner_ref`, and checks them against the
+/// listed contract before writing a record. The contact's address is not in the listing, so a
+/// restored swap claims to `payout_address`, the wallet's own. Swaps already on record, other
+/// wallets' swaps and contracts that do not match are skipped. Returns the restored swap ids;
+/// `advance_swap` then drives each like any other.
+pub async fn restore_swaps(
+    providers: Vec<String>,
+    electrum_url: String,
+    payout_address: String,
+    fee_rate_sat_vb: u64,
+    network: bitcoin::Network,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+) -> Result<Vec<String>, PubkySwapError> {
+    let payout = parse_address(&payout_address, network)?.script_pubkey();
+    let claim_fee_sat = claim_fee(&payout, fee_rate_sat_vb)?;
+    let secret = keys::identity_secret(&mnemonic, bip39_passphrase.as_deref())?;
+    let client = DirectClient::bind(secret).await?;
+    let mut seen = std::collections::HashSet::new();
+    let mut restored = vec![];
+    for provider in providers.iter().map(|p| bare_pubky(p).to_string()) {
+        if !seen.insert(provider.clone()) {
+            continue;
+        }
+        let snapshots = match list_swaps(&client, &provider).await {
+            Ok(snapshots) => snapshots,
+            Err(e) => {
+                log::warn!("pubky swaps: no swap list from {provider}: {e}");
+                continue;
+            }
+        };
+        for snapshot in snapshots {
+            let swap_id = snapshot.accept.swap_id.to_string();
+            if store::load(&swap_id).is_ok() {
+                continue;
+            }
+            let record = match restored_record(
+                &snapshot,
+                &provider,
+                &electrum_url,
+                &payout_address,
+                claim_fee_sat,
+                network,
+                &mnemonic,
+                bip39_passphrase.as_deref(),
+            ) {
+                Some(record) => record,
+                None => continue,
+            };
+            store::save(&record)?;
+            restored.push(swap_id);
+        }
+    }
+    client.close().await;
+    Ok(restored)
+}
+
+/// Every swap a provider lists for this wallet's identity, page by page.
+async fn list_swaps(
+    client: &DirectClient,
+    provider: &str,
+) -> Result<Vec<SwapStatusSnapshot>, PubkySwapError> {
+    let mut snapshots = vec![];
+    let mut cursor = None;
+    loop {
+        let request = SwapMessage::SwapListRequest(SwapListRequest {
+            request_id: Some(Uuid::new_v4()),
+            cursor: cursor.take(),
+            limit: None,
+            active_only: false,
+        });
+        let page = match client.request(provider, &request).await? {
+            SwapMessage::SwapList(page) => page,
+            SwapMessage::Reject(reject) => return Err(refused(reject)),
+            other => return Err(unexpected("SwapList", &other)),
+        };
+        snapshots.extend(page.snapshots);
+        match page.next_cursor {
+            Some(next) => cursor = Some(next),
+            None => return Ok(snapshots),
+        }
+    }
+}
+
+/// The record for a listed reverse swap whose keys this wallet derives from its `owner_ref`, or
+/// `None` when the swap is not this wallet's or its contract does not match those keys.
+#[allow(clippy::too_many_arguments)]
+fn restored_record(
+    snapshot: &SwapStatusSnapshot,
+    provider: &str,
+    electrum_url: &str,
+    payout_address: &str,
+    claim_fee_sat: u64,
+    network: bitcoin::Network,
+    mnemonic: &str,
+    passphrase: Option<&str>,
+) -> Option<SwapRecord> {
+    let accept = &snapshot.accept;
+    if accept.direction != SwapDirection::Reverse || accept.script_type != SwapScript::P2wsh {
+        return None;
+    }
+    let index = keys::index_from_owner_ref(snapshot.owner_ref.as_deref()?)?;
+    let keys = keys::swap_keys(mnemonic, passphrase, &index).ok()?;
+    if hex::encode(keys.payment_hash) != snapshot.payment_hash_hex {
+        return None;
+    }
+    verify_contract(
+        accept,
+        SwapDirection::Reverse,
+        &keys.payment_hash,
+        &keys.claim_pubkey,
+        network,
+    )
+    .ok()?;
+    let delivered_sat = accept.onchain_amount_sat.checked_sub(claim_fee_sat)?;
+    // A claim the provider already saw went to the contact: keep it, rather than read it as a
+    // refund for not paying `payout_address`.
+    let claim_txid = snapshot.claim_observed_txid_hex.clone();
+    Some(SwapRecord {
+        swap_id: accept.swap_id.to_string(),
+        key_index: hex::encode(index),
+        provider_pubky: provider.to_string(),
+        network,
+        electrum_url: electrum_url.to_string(),
+        quote: None,
+        required_confirmations: snapshot.required_confirmations,
+        accept: accept.clone(),
+        destination_address: payout_address.to_string(),
+        delivered_sat,
+        claim_fee_sat,
+        claim_published: claim_txid.is_some(),
+        claim_seen: claim_txid.is_some(),
+        claim_txid,
+        claim_tx_hex: None,
+        created_at_unix: snapshot.created_at_unix,
+    })
+}
+
 pub async fn advance_swap(
     swap_id: String,
     mnemonic: String,
@@ -675,6 +806,94 @@ pub async fn advance_swap(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const SEED: &str =
+        "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+    const OTHER_SEED: &str =
+        "legal winner thank year wave sausage worth useful legal winner thank yellow";
+    const PAYOUT: &str = "bcrt1qdp8zwu9xk08p3dvkz4qyavmfaadkr4lnvwfah2";
+
+    fn listed_swap(mnemonic: &str, owner_ref: Option<String>) -> SwapStatusSnapshot {
+        let index = owner_ref
+            .as_deref()
+            .and_then(keys::index_from_owner_ref)
+            .unwrap_or([7; 32]);
+        let keys = keys::swap_keys(mnemonic, None, &index).unwrap();
+        let provider_secret = bitcoin::secp256k1::SecretKey::from_slice(&[9; 32]).unwrap();
+        let provider = bitcoin::PublicKey::new(
+            provider_secret.public_key(&bitcoin::secp256k1::Secp256k1::new()),
+        );
+        SwapStatusSnapshot {
+            request_id: None,
+            accept: swap_common::messages::SwapAccept {
+                script_type: SwapScript::P2wsh,
+                swap_tree: None,
+                quote_id: Uuid::new_v4(),
+                swap_id: Uuid::new_v4(),
+                direction: SwapDirection::Reverse,
+                htlc_script_hex: String::new(),
+                htlc_address: String::new(),
+                onchain_amount_sat: 20_300,
+                timeout_block_height: 1_144,
+                provider_pubkey_hex: provider.to_string(),
+                invoice: None,
+            },
+            network: swap_common::NetworkSpec::Regtest,
+            state: swap_common::SwapState::LockupConfirmed,
+            funding_txid_hex: None,
+            funding_vout: None,
+            spend_txid_hex: None,
+            claim_observed_txid_hex: None,
+            required_confirmations: 1,
+            updated_at_unix: 0,
+            observed_at_unix: 0,
+            created_at_unix: 1_000,
+            payment_hash_hex: hex::encode(keys.payment_hash),
+            owner_ref,
+        }
+    }
+
+    fn restore(snapshot: &SwapStatusSnapshot) -> Option<SwapRecord> {
+        restored_record(
+            snapshot,
+            "provider",
+            "tcp://127.0.0.1:60001",
+            PAYOUT,
+            300,
+            bitcoin::Network::Regtest,
+            SEED,
+            None,
+        )
+    }
+
+    #[test]
+    fn restores_a_listed_swap_from_the_index_in_its_owner_ref() {
+        let index = keys::new_index();
+        let snapshot = listed_swap(SEED, Some(keys::owner_ref(&index)));
+        let record = restore(&snapshot).expect("restored");
+        assert_eq!(record.key_index, hex::encode(index));
+        assert_eq!(record.destination_address, PAYOUT);
+        assert_eq!(record.delivered_sat, 20_000);
+        assert_eq!(record.required_confirmations, 1);
+        assert!(record.quote.is_none() && record.claim_txid.is_none());
+    }
+
+    #[test]
+    fn skips_swaps_this_wallet_cannot_rebuild() {
+        let other_wallets = listed_swap(OTHER_SEED, Some(keys::owner_ref(&keys::new_index())));
+        assert!(restore(&other_wallets).is_none());
+        assert!(restore(&listed_swap(SEED, None)).is_none());
+        assert!(restore(&listed_swap(SEED, Some("someone-else:1".into()))).is_none());
+    }
+
+    #[test]
+    fn keeps_a_claim_the_provider_already_saw() {
+        let mut snapshot = listed_swap(SEED, Some(keys::owner_ref(&keys::new_index())));
+        snapshot.claim_observed_txid_hex = Some("ab".repeat(32));
+        let record = restore(&snapshot).expect("restored");
+        assert_eq!(record.claim_txid, snapshot.claim_observed_txid_hex);
+        assert!(record.claim_published && record.claim_seen);
+    }
 
     #[test]
     fn only_an_answer_from_the_server_counts_as_a_refusal() {
