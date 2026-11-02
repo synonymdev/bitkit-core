@@ -11652,6 +11652,11 @@ public struct PaykitRouteRequest {
      * Fee rate for the wallet's own claim transaction.
      */
     public var feeRateSatVb: UInt64
+    /**
+     * Routes through services the wallet holds a balance on (Arkade, Spark), each already quoted
+     * by the app's engine for that service. They compete with the Pubky Swaps providers on fee.
+     */
+    public var serviceLegs: [ServiceRouteLeg]
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -11665,13 +11670,18 @@ public struct PaykitRouteRequest {
          */providers: [String], 
         /**
          * Fee rate for the wallet's own claim transaction.
-         */feeRateSatVb: UInt64) {
+         */feeRateSatVb: UInt64, 
+        /**
+         * Routes through services the wallet holds a balance on (Arkade, Spark), each already quoted
+         * by the app's engine for that service. They compete with the Pubky Swaps providers on fee.
+         */serviceLegs: [ServiceRouteLeg]) {
         self.amountSat = amountSat
         self.contactEndpoints = contactEndpoints
         self.lightningSpendableSat = lightningSpendableSat
         self.onchainSpendableSat = onchainSpendableSat
         self.providers = providers
         self.feeRateSatVb = feeRateSatVb
+        self.serviceLegs = serviceLegs
     }
 }
 
@@ -11700,6 +11710,9 @@ extension PaykitRouteRequest: Equatable, Hashable {
         if lhs.feeRateSatVb != rhs.feeRateSatVb {
             return false
         }
+        if lhs.serviceLegs != rhs.serviceLegs {
+            return false
+        }
         return true
     }
 
@@ -11710,6 +11723,7 @@ extension PaykitRouteRequest: Equatable, Hashable {
         hasher.combine(onchainSpendableSat)
         hasher.combine(providers)
         hasher.combine(feeRateSatVb)
+        hasher.combine(serviceLegs)
     }
 }
 
@@ -11729,7 +11743,8 @@ public struct FfiConverterTypePaykitRouteRequest: FfiConverterRustBuffer {
                 lightningSpendableSat: FfiConverterUInt64.read(from: &buf), 
                 onchainSpendableSat: FfiConverterUInt64.read(from: &buf), 
                 providers: FfiConverterSequenceString.read(from: &buf), 
-                feeRateSatVb: FfiConverterUInt64.read(from: &buf)
+                feeRateSatVb: FfiConverterUInt64.read(from: &buf), 
+                serviceLegs: FfiConverterSequenceTypeServiceRouteLeg.read(from: &buf)
         )
     }
 
@@ -11740,6 +11755,7 @@ public struct FfiConverterTypePaykitRouteRequest: FfiConverterRustBuffer {
         FfiConverterUInt64.write(value.onchainSpendableSat, into: &buf)
         FfiConverterSequenceString.write(value.providers, into: &buf)
         FfiConverterUInt64.write(value.feeRateSatVb, into: &buf)
+        FfiConverterSequenceTypeServiceRouteLeg.write(value.serviceLegs, into: &buf)
     }
 }
 
@@ -12797,6 +12813,152 @@ public func FfiConverterTypeReverseSwapResponse_lift(_ buf: RustBuffer) throws -
 #endif
 public func FfiConverterTypeReverseSwapResponse_lower(_ value: ReverseSwapResponse) -> RustBuffer {
     return FfiConverterTypeReverseSwapResponse.lower(value)
+}
+
+
+/**
+ * A one-leg route through a service the wallet holds a balance on, such as an Arkade offboard
+ * or a Spark withdrawal to the contact's on-chain address. The app quotes it and runs it.
+ */
+public struct ServiceRouteLeg {
+    /**
+     * `arkade` or `spark`.
+     */
+    public var service: String
+    /**
+     * The contact endpoint the service delivers to. It must be one the contact published.
+     */
+    public var endpoint: PaykitEndpoint
+    /**
+     * What the contact receives.
+     */
+    public var deliveredSat: UInt64
+    /**
+     * What the wallet's balance on the service is debited.
+     */
+    public var debitSat: UInt64
+    /**
+     * Who the wallet trusts to complete the leg: `operator` for an Arkade batch, `trusted` for
+     * Spark's operators. Pubky Swaps legs are `hash`.
+     */
+    public var atomicity: String
+    /**
+     * When the quote stops holding, or 0 when it does not expire.
+     */
+    public var validUntilUnix: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * `arkade` or `spark`.
+         */service: String, 
+        /**
+         * The contact endpoint the service delivers to. It must be one the contact published.
+         */endpoint: PaykitEndpoint, 
+        /**
+         * What the contact receives.
+         */deliveredSat: UInt64, 
+        /**
+         * What the wallet's balance on the service is debited.
+         */debitSat: UInt64, 
+        /**
+         * Who the wallet trusts to complete the leg: `operator` for an Arkade batch, `trusted` for
+         * Spark's operators. Pubky Swaps legs are `hash`.
+         */atomicity: String, 
+        /**
+         * When the quote stops holding, or 0 when it does not expire.
+         */validUntilUnix: UInt64) {
+        self.service = service
+        self.endpoint = endpoint
+        self.deliveredSat = deliveredSat
+        self.debitSat = debitSat
+        self.atomicity = atomicity
+        self.validUntilUnix = validUntilUnix
+    }
+}
+
+#if compiler(>=6)
+extension ServiceRouteLeg: Sendable {}
+#endif
+
+
+extension ServiceRouteLeg: Equatable, Hashable {
+    public static func ==(lhs: ServiceRouteLeg, rhs: ServiceRouteLeg) -> Bool {
+        if lhs.service != rhs.service {
+            return false
+        }
+        if lhs.endpoint != rhs.endpoint {
+            return false
+        }
+        if lhs.deliveredSat != rhs.deliveredSat {
+            return false
+        }
+        if lhs.debitSat != rhs.debitSat {
+            return false
+        }
+        if lhs.atomicity != rhs.atomicity {
+            return false
+        }
+        if lhs.validUntilUnix != rhs.validUntilUnix {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(service)
+        hasher.combine(endpoint)
+        hasher.combine(deliveredSat)
+        hasher.combine(debitSat)
+        hasher.combine(atomicity)
+        hasher.combine(validUntilUnix)
+    }
+}
+
+extension ServiceRouteLeg: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeServiceRouteLeg: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> ServiceRouteLeg {
+        return
+            try ServiceRouteLeg(
+                service: FfiConverterString.read(from: &buf), 
+                endpoint: FfiConverterTypePaykitEndpoint.read(from: &buf), 
+                deliveredSat: FfiConverterUInt64.read(from: &buf), 
+                debitSat: FfiConverterUInt64.read(from: &buf), 
+                atomicity: FfiConverterString.read(from: &buf), 
+                validUntilUnix: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: ServiceRouteLeg, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.service, into: &buf)
+        FfiConverterTypePaykitEndpoint.write(value.endpoint, into: &buf)
+        FfiConverterUInt64.write(value.deliveredSat, into: &buf)
+        FfiConverterUInt64.write(value.debitSat, into: &buf)
+        FfiConverterString.write(value.atomicity, into: &buf)
+        FfiConverterUInt64.write(value.validUntilUnix, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeServiceRouteLeg_lift(_ buf: RustBuffer) throws -> ServiceRouteLeg {
+    return try FfiConverterTypeServiceRouteLeg.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeServiceRouteLeg_lower(_ value: ServiceRouteLeg) -> RustBuffer {
+    return FfiConverterTypeServiceRouteLeg.lower(value)
 }
 
 
@@ -24070,6 +24232,11 @@ public enum PaykitRoute {
     case swap(quote: PubkySwapRouteQuote
     )
     /**
+     * A service the wallet holds a balance on delivers to the contact. The app runs the leg.
+     */
+    case service(leg: ServiceRouteLeg
+    )
+    /**
      * Nothing can pay this contact. `reason` says why, for the user.
      */
     case none(reason: String
@@ -24097,7 +24264,10 @@ public struct FfiConverterTypePaykitRoute: FfiConverterRustBuffer {
         case 2: return .swap(quote: try FfiConverterTypePubkySwapRouteQuote.read(from: &buf)
         )
         
-        case 3: return .none(reason: try FfiConverterString.read(from: &buf)
+        case 3: return .service(leg: try FfiConverterTypeServiceRouteLeg.read(from: &buf)
+        )
+        
+        case 4: return .none(reason: try FfiConverterString.read(from: &buf)
         )
         
         default: throw UniffiInternalError.unexpectedEnumCase
@@ -24118,8 +24288,13 @@ public struct FfiConverterTypePaykitRoute: FfiConverterRustBuffer {
             FfiConverterTypePubkySwapRouteQuote.write(quote, into: &buf)
             
         
-        case let .none(reason):
+        case let .service(leg):
             writeInt(&buf, Int32(3))
+            FfiConverterTypeServiceRouteLeg.write(leg, into: &buf)
+            
+        
+        case let .none(reason):
+            writeInt(&buf, Int32(4))
             FfiConverterString.write(reason, into: &buf)
             
         }
@@ -29336,6 +29511,31 @@ fileprivate struct FfiConverterSequenceTypePubkyProfileLink: FfiConverterRustBuf
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeServiceRouteLeg: FfiConverterRustBuffer {
+    typealias SwiftType = [ServiceRouteLeg]
+
+    public static func write(_ value: [ServiceRouteLeg], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeServiceRouteLeg.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [ServiceRouteLeg] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [ServiceRouteLeg]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeServiceRouteLeg.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeSupportedHardwareWallet: FfiConverterRustBuffer {
     typealias SwiftType = [SupportedHardwareWallet]
 
@@ -31929,8 +32129,9 @@ public func pubkySwapsProviderEdges(providerPubky: String, mnemonic: String, bip
 }
 /**
  * Pick how to pay a Paykit contact. Returns `Direct` when a balance the wallet holds reaches
- * one of the contact's endpoints, otherwise the cheapest firm quote from the trusted Pubky
- * Swaps providers, or `None` with a reason. The user never picks the swap.
+ * one of the contact's endpoints, otherwise the cheaper of the request's service legs and the
+ * trusted Pubky Swaps providers' firm quotes, or `None` with a reason. The user never picks
+ * the route.
  */
 public func pubkySwapsRoutePaykitPayment(request: PaykitRouteRequest, network: Network, mnemonic: String, bip39Passphrase: String?)async throws  -> PaykitRoute  {
     return
@@ -33254,7 +33455,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_pubky_swaps_provider_edges() != 4359) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_pubky_swaps_route_paykit_payment() != 7835) {
+    if (uniffi_bitkitcore_checksum_func_pubky_swaps_route_paykit_payment() != 36140) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_record_rbf_boost() != 15433) {
