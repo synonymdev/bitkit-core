@@ -2,6 +2,7 @@ use super::{
     history::HISTORY_REVISIT_BLOCKS, transaction::Plan, UsdtError, UsdtQuote, UsdtTransfer,
     UsdtTransferStatus,
 };
+use alloy_primitives::B256;
 use rusqlite::{params, Connection, OptionalExtension, Transaction};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
@@ -51,7 +52,7 @@ impl Store {
         Ok(Self(Mutex::new(connection)))
     }
 
-    fn connection(&self) -> Result<MutexGuard<'_, Connection>, UsdtError> {
+    pub(super) fn connection(&self) -> Result<MutexGuard<'_, Connection>, UsdtError> {
         self.0.lock().map_err(|_| UsdtError::Storage {
             reason: "USDT storage lock unavailable".into(),
         })
@@ -135,6 +136,33 @@ impl Store {
         Ok(())
     }
 
+    /// Returns false when the refund transaction already belongs to another payment.
+    pub fn update_delivery(
+        &self,
+        transfer: &UsdtTransfer,
+        refund_block: Option<(u64, B256)>,
+    ) -> Result<bool, UsdtError> {
+        let mut connection = self.connection()?;
+        let tx = connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+        if let Some(block) = refund_block {
+            let refund = transfer
+                .orchestra
+                .as_ref()
+                .and_then(|bridge| bridge.refund_tx.as_deref())
+                .ok_or(UsdtError::InvalidResponse)?;
+            if refund_claimed(&tx, &transfer.id, refund)? {
+                return Ok(false);
+            }
+            tx.execute(
+                "UPDATE usdt_transfers SET raw=json_set(raw, '$.refund_block', json(?1)) WHERE id=?2",
+                params![serde_json::to_string(&block)?, transfer.id],
+            )?;
+        }
+        write_transfer(&tx, transfer)?;
+        tx.commit()?;
+        Ok(true)
+    }
+
     pub fn settle_transfer(
         &self,
         transfer: &UsdtTransfer,
@@ -152,7 +180,7 @@ impl Store {
     pub fn settlement_blocks(&self, start: u64, end: u64) -> Result<Vec<u64>, UsdtError> {
         let connection = self.connection()?;
         let mut statement = connection.prepare(
-            "SELECT DISTINCT block_number FROM usdt_transfers WHERE block_number BETWEEN ?1 AND ?2 ORDER BY block_number",
+            "SELECT block_number FROM usdt_transfers WHERE block_number BETWEEN ?1 AND ?2 UNION SELECT json_extract(raw, '$.refund_block[0]') FROM usdt_transfers WHERE json_extract(raw, '$.refund_block[0]') BETWEEN ?1 AND ?2 ORDER BY 1",
         )?;
         let rows = statement.query_map(params![start, end], |row| row.get(0))?;
         Ok(rows.collect::<Result<_, _>>()?)
@@ -321,6 +349,36 @@ impl Store {
             let mut transfer = transfer.clone();
             if let Some(saved) = existing {
                 transfer.id = saved.id;
+                if saved
+                    .tx_hash
+                    .as_deref()
+                    .zip(transfer.tx_hash.as_deref())
+                    .is_some_and(|(a, b)| a.eq_ignore_ascii_case(b))
+                    && ((saved
+                        .bridge_guid
+                        .as_ref()
+                        .zip(transfer.bridge_guid.as_ref())
+                        .is_some_and(|(a, b)| a.eq_ignore_ascii_case(b)))
+                        || saved
+                            .orchestra
+                            .as_ref()
+                            .zip(transfer.orchestra.as_ref())
+                            .is_some_and(|(a, b)| {
+                                a.quote_id == b.quote_id && a.funding_address == b.funding_address
+                            }))
+                    && transfer.status == UsdtTransferStatus::Bridging
+                    && matches!(
+                        saved.status,
+                        UsdtTransferStatus::Confirmed
+                            | UsdtTransferStatus::BridgeNeedsAttention
+                            | UsdtTransferStatus::BridgeFailed
+                            | UsdtTransferStatus::BridgeRefunded
+                    )
+                {
+                    transfer.status = saved.status;
+                    transfer.received_amount = saved.received_amount;
+                    transfer.orchestra = saved.orchestra;
+                }
                 write_settlement(tx, &transfer, number, block_hash)?;
             } else {
                 tx.execute(
@@ -330,6 +388,15 @@ impl Store {
             }
         }
         Ok(())
+    }
+
+    pub fn awaiting_delivery(&self) -> Result<Vec<UsdtTransfer>, UsdtError> {
+        let connection = self.connection()?;
+        let mut statement = connection.prepare(
+            "SELECT data FROM usdt_transfers WHERE json_extract(data, '$.status') IN ('Bridging','BridgeNeedsAttention') AND (json_extract(data, '$.bridge_guid') IS NOT NULL OR json_extract(data, '$.orchestra') IS NOT NULL) ORDER BY json_extract(data, '$.timestamp') DESC, id",
+        )?;
+        let rows = statement.query_map([], |row| row.get::<_, String>(0))?;
+        rows.map(|row| decode(&row?)).collect()
     }
 
     pub fn pending_operations(&self) -> Result<Vec<(UsdtTransfer, Plan)>, UsdtError> {
@@ -350,6 +417,15 @@ impl Store {
         Ok(pending)
     }
 
+    pub fn orchestra_plan(&self, id: &str) -> Result<super::orchestra::OrchestraPlan, UsdtError> {
+        let raw: Option<String> = self.connection()?.query_row(
+            "SELECT json_extract(raw, '$.orchestra') FROM usdt_transfers WHERE id=?1",
+            [id],
+            |row| row.get(0),
+        )?;
+        decode(&raw.ok_or(UsdtError::InvalidResponse)?)
+    }
+
     pub fn pending_plan(&self, id: &str) -> Result<Option<Plan>, UsdtError> {
         let raw: Option<String> = self
             .connection()?
@@ -362,12 +438,32 @@ impl Store {
     }
 }
 
+pub(super) fn refund_claimed(
+    connection: &Connection,
+    id: &str,
+    refund: &str,
+) -> Result<bool, UsdtError> {
+    let refund = refund.to_ascii_lowercase();
+    let refund = refund.strip_prefix("0x").unwrap_or(&refund);
+    // Keep the claim in transfer history after its reorg evidence is pruned.
+    Ok(connection.query_row(
+        "SELECT EXISTS(SELECT 1 FROM usdt_transfers WHERE id!=?1 AND lower(json_extract(data, '$.orchestra.refund_tx')) IN (?2, '0x' || ?2))",
+        params![id, refund],
+        |row| row.get(0),
+    )?)
+}
+
 fn write_transfer(connection: &Connection, transfer: &UsdtTransfer) -> Result<(), UsdtError> {
     let settled = transfer.status != UsdtTransferStatus::Pending;
+    let keep_delivery = transfer.orchestra.is_some()
+        && matches!(
+            transfer.status,
+            UsdtTransferStatus::Bridging | UsdtTransferStatus::BridgeNeedsAttention
+        );
     // Chain-backed outcomes retain the signed operation until their reorg window passes.
     connection.execute(
-        "UPDATE usdt_transfers SET data=?1, raw=CASE WHEN ?2 AND block_number IS NULL THEN NULL ELSE raw END WHERE id=?3",
-        params![serde_json::to_string(transfer)?, settled, transfer.id],
+        "UPDATE usdt_transfers SET data=?1, raw=CASE WHEN ?2 AND block_number IS NULL AND json_extract(raw, '$.refund_block') IS NULL THEN NULL ELSE raw END WHERE id=?3",
+        params![serde_json::to_string(transfer)?, settled && !keep_delivery, transfer.id],
     )?;
     if settled {
         connection.execute(
@@ -393,19 +489,30 @@ fn write_settlement(
 
 fn reconcile_block(tx: &Transaction<'_>, number: u64, hash: &str) -> Result<(), UsdtError> {
     // Only a different canonical block proves disappearance; missing logs alone do not.
-    let mut statement = tx.prepare(
-        "SELECT data,raw IS NOT NULL FROM usdt_transfers WHERE block_number=?1 AND block_hash!=?2",
-    )?;
+    let mut statement =
+        tx.prepare("SELECT data,raw FROM usdt_transfers WHERE block_number=?1 AND block_hash!=?2")?;
     let rows = statement.query_map(params![number, hash], |row| {
-        Ok((row.get::<_, String>(0)?, row.get::<_, bool>(1)?))
+        Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?))
     })?;
     let orphaned = rows.collect::<Result<Vec<_>, _>>()?;
-    for (data, local) in orphaned {
+    for (data, raw) in orphaned {
         let mut transfer: UsdtTransfer = decode(&data)?;
-        if local {
+        if let Some(raw) = raw {
             transfer.status = UsdtTransferStatus::Pending;
             transfer.tx_hash = None;
-            transfer.received_amount = transfer.amount;
+            transfer.bridge_guid = None;
+            let mut plan: Plan = decode(&raw)?;
+            plan.refund_block = None;
+            tx.execute(
+                "UPDATE usdt_transfers SET raw=?1 WHERE id=?2",
+                params![serde_json::to_string(&plan)?, transfer.id],
+            )?;
+            transfer.orchestra = plan.orchestra.map(|plan| plan.transfer());
+            transfer.received_amount = if transfer.destination == super::UsdtDestination::Arbitrum {
+                transfer.amount
+            } else {
+                decode::<Plan>(&raw)?.bridge_received_amount()?
+            };
             transfer.fee = None;
             write_transfer(tx, &transfer)?;
             tx.execute(
@@ -416,6 +523,11 @@ fn reconcile_block(tx: &Transaction<'_>, number: u64, hash: &str) -> Result<(), 
             tx.execute("DELETE FROM usdt_transfers WHERE id=?1", [&transfer.id])?;
         }
     }
+    // A refund is a separate transaction: its reorg must not reopen the original funding send.
+    tx.execute(
+        "UPDATE usdt_transfers SET data=json_set(data, '$.status', 'Bridging', '$.orchestra.refund_tx', NULL, '$.orchestra.refund_amount', NULL, '$.received_amount', json_extract(raw, '$.orchestra.received_amount')),raw=json_remove(raw, '$.refund_block') WHERE json_extract(raw, '$.refund_block[0]')=?1 AND json_extract(raw, '$.refund_block[1]')!=?2",
+        params![number, hash],
+    )?;
     tx.execute(
         "DELETE FROM usdt_history_receipts WHERE block_number=?1 AND block_hash!=?2",
         params![number, hash],
@@ -429,7 +541,11 @@ fn reconcile_block(tx: &Transaction<'_>, number: u64, hash: &str) -> Result<(), 
 
 fn prune_settlement_proofs(connection: &Connection, before: u64) -> Result<(), UsdtError> {
     connection.execute(
-        "UPDATE usdt_transfers SET raw=NULL,block_number=NULL,block_hash=NULL WHERE block_number < ?1",
+        "UPDATE usdt_transfers SET block_number=NULL,block_hash=NULL WHERE block_number < ?1",
+        [before],
+    )?;
+    connection.execute(
+        "UPDATE usdt_transfers SET raw=NULL WHERE block_number IS NULL AND json_extract(data, '$.status')!='Pending' AND NOT (json_extract(data, '$.orchestra') IS NOT NULL AND json_extract(data, '$.status') IN ('Bridging','BridgeNeedsAttention')) AND COALESCE(json_extract(raw, '$.refund_block[0]'),0) < ?1",
         [before],
     )?;
     Ok(())

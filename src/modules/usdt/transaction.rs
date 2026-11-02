@@ -1,6 +1,6 @@
 use super::{user_operation::UserOperation, UsdtError};
 use alloy_primitives::{Bytes, B256};
-use alloy_sol_types::sol;
+use alloy_sol_types::{sol, SolCall};
 use bitcoin::secp256k1::SecretKey;
 use serde::{Deserialize, Serialize};
 
@@ -15,6 +15,47 @@ sol! {
         bytes32 gasFees;
         bytes paymasterAndData;
         bytes signature;
+    }
+    #[derive(Debug)]
+    struct SendParam {
+        uint32 dstEid;
+        bytes32 to;
+        uint256 amountLD;
+        uint256 minAmountLD;
+        bytes extraOptions;
+        bytes composeMsg;
+        bytes oftCmd;
+    }
+    #[derive(Debug)]
+    struct MessagingFee {
+        uint256 nativeFee;
+        uint256 lzTokenFee;
+    }
+    struct OFTLimit {
+        uint256 minAmountLD;
+        uint256 maxAmountLD;
+    }
+    struct OFTFeeDetail {
+        int256 feeAmountLD;
+        string description;
+    }
+    struct OFTReceipt {
+        uint256 amountSentLD;
+        uint256 amountReceivedLD;
+    }
+    interface Oft {
+        function token() external view returns (address);
+        function peers(uint32 eid) external view returns (bytes32);
+        function quoteOFT(SendParam param) external view returns (OFTLimit limit, OFTFeeDetail[] fees, OFTReceipt receipt);
+        function quoteSend(SendParam param, bool payInLzToken) external view returns (MessagingFee fee);
+        event OFTSent(bytes32 indexed guid, uint32 dstEid, address indexed fromAddress, uint256 amountSentLD, uint256 amountReceivedLD);
+    }
+    interface BridgeHelper {
+        function token() external view returns (address);
+        function maxGas() external view returns (uint256);
+        function quoteSend(SendParam param, MessagingFee fee) external view returns (uint256 totalAmount);
+        function send(address oft, SendParam param, MessagingFee fee) external payable;
+        event LogSend(address indexed sender, address indexed oft, uint256 amountLD, uint256 nativeFee, uint256 feeInToken, uint256 totalAmount);
     }
     interface EntryPoint {
         function getNonce(address sender, uint192 key) view returns (uint256);
@@ -70,12 +111,30 @@ pub(super) fn operation_logs(
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(super) struct Plan {
+    pub refund_block: Option<(u64, B256)>,
+    pub orchestra: Option<super::orchestra::OrchestraPlan>,
     pub operation: UserOperation,
     pub created_block: u64,
     pub expires_at: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub submission_deadline: Option<std::time::SystemTime>,
 }
 
 impl Plan {
+    pub fn bridge_received_amount(&self) -> Result<u64, UsdtError> {
+        if let Some(plan) = &self.orchestra {
+            return Ok(plan.received_amount);
+        }
+        let calls = super::history::decode_calls(&self.operation.call_data)?;
+        let (_, data) = calls
+            .iter()
+            .find(|(target, _)| *target == super::types::BRIDGE_HELPER)
+            .ok_or(UsdtError::InvalidResponse)?;
+        let call =
+            BridgeHelper::sendCall::abi_decode(data).map_err(|_| UsdtError::InvalidResponse)?;
+        super::amount::token_amount(call.param.minAmountLD)
+    }
+
     pub fn sign(&mut self, key: &SecretKey) -> Result<(B256, String), UsdtError> {
         let hash = self.operation.sign(key, super::types::CHAIN_ID)?;
         Ok((hash, serde_json::to_string(self)?))

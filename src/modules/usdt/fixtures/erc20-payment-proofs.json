@@ -1,0 +1,335 @@
+{
+  "chain_mismatch_cases": [
+    {
+      "domain_chain_id": "42161",
+      "endpoint_chain_id": "42161",
+      "payload_chain_id": "1",
+      "valid": false,
+      "vector": "one_time"
+    },
+    {
+      "domain_chain_id": "1",
+      "endpoint_chain_id": "42161",
+      "payload_chain_id": "42161",
+      "valid": false,
+      "vector": "one_time"
+    },
+    {
+      "domain_chain_id": "1",
+      "endpoint_chain_id": "1",
+      "payload_chain_id": "1",
+      "valid": true,
+      "vector": "ethereum_one_time"
+    }
+  ],
+  "fixture_key": "secp256k1 scalar 1; public test data only",
+  "profile": "erc20-transfer-eip712",
+  "vectors": [
+    {
+      "changed_reference": "another-invoice",
+      "changed_reference_digest": "0x00ac79f14189f04560dae56fe9975812bca4e6d1a13f6487f36bb86842079ad8",
+      "changed_reference_valid": false,
+      "digest": "0x5566888237f1f7eeecf6e70f8498c24b4164c36128b3294c57f11228f1920433",
+      "domain_separator": "0xc8cfc7bdc9a0662133f571459c83f060b7e7cdbfcdb4acdee999358269fd3668",
+      "name": "one_time",
+      "signature": "0xa5c3920571e689f4d40a965ff393fc7fa43decdb80558aee6611cb996b9b86d62ad58b4cab335161d93479796955d2f3b7d910c40b014a07bb6d8e9be0819ea51c",
+      "signer": "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
+      "struct_hash": "0xd87265794b629270c4f12c39968f2e202894fab80d6dfe2065272067c5356aac",
+      "typed_data": {
+        "domain": {
+          "chainId": 42161,
+          "name": "Paykit ERC20 Payment",
+          "version": "1"
+        },
+        "message": {
+          "receiptLogIndex": "2",
+          "request": {
+            "conversionQuoteId": "",
+            "payee": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+            "payer": "8jsf5bm1ck3r7sn6pfx4q9mgqq5xn8fi6sizw6pxgjc8zs1bt4io",
+            "paymentAppId": "example",
+            "paymentEndpointIdentifier": "usdt-arbitrum-address",
+            "paymentReference": "invoice-1",
+            "paymentRequestId": "b7f9c2a1-6d43-4b0e-a8d4-0fe2c712ab33",
+            "periodEndsAt": "",
+            "periodStartsAt": ""
+          },
+          "transactionHash": "0x1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "primaryType": "Erc20Payment",
+        "types": {
+          "EIP712Domain": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "version",
+              "type": "string"
+            },
+            {
+              "name": "chainId",
+              "type": "uint256"
+            }
+          ],
+          "Erc20Payment": [
+            {
+              "name": "transactionHash",
+              "type": "bytes32"
+            },
+            {
+              "name": "receiptLogIndex",
+              "type": "uint256"
+            },
+            {
+              "name": "request",
+              "type": "RequestBinding"
+            }
+          ],
+          "RequestBinding": [
+            {
+              "name": "payer",
+              "type": "string"
+            },
+            {
+              "name": "payee",
+              "type": "string"
+            },
+            {
+              "name": "paymentAppId",
+              "type": "string"
+            },
+            {
+              "name": "paymentRequestId",
+              "type": "string"
+            },
+            {
+              "name": "paymentReference",
+              "type": "string"
+            },
+            {
+              "name": "paymentEndpointIdentifier",
+              "type": "string"
+            },
+            {
+              "name": "periodStartsAt",
+              "type": "string"
+            },
+            {
+              "name": "periodEndsAt",
+              "type": "string"
+            },
+            {
+              "name": "conversionQuoteId",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "changed_reference": "another-invoice",
+      "changed_reference_digest": "0x7e53220e3fd8e818042c47979378417b3e5739b063d899f37f3e5a64f64de390",
+      "changed_reference_valid": false,
+      "digest": "0xd9fd7764d7e0548fa03721d4a29a8b6a690e9b02e6b7aabc4a2a5203d2e06e16",
+      "domain_separator": "0xc8cfc7bdc9a0662133f571459c83f060b7e7cdbfcdb4acdee999358269fd3668",
+      "name": "quoted_recurring",
+      "signature": "0x64a6aca70f781a48dcd753b8f821630be3073a8fb0084dcadcef86da5c3b7e570027119615da318de2ff77fde36d6cc80015a3e1794cccb230fe140504623bed1c",
+      "signer": "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
+      "struct_hash": "0x35f7123ce9ee9fa66f718e27dad21fbad067b826c8932fcb5893bd9bfb97d04d",
+      "typed_data": {
+        "domain": {
+          "chainId": 42161,
+          "name": "Paykit ERC20 Payment",
+          "version": "1"
+        },
+        "message": {
+          "receiptLogIndex": "2",
+          "request": {
+            "conversionQuoteId": "8a0d8b4c-913f-4e31-9f2c-2a6f5bb4d103",
+            "payee": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+            "payer": "8jsf5bm1ck3r7sn6pfx4q9mgqq5xn8fi6sizw6pxgjc8zs1bt4io",
+            "paymentAppId": "example",
+            "paymentEndpointIdentifier": "usdt-arbitrum-address",
+            "paymentReference": "invoice-1",
+            "paymentRequestId": "b7f9c2a1-6d43-4b0e-a8d4-0fe2c712ab33",
+            "periodEndsAt": "2026-11-01T00:00:00Z",
+            "periodStartsAt": "2026-10-01T00:00:00Z"
+          },
+          "transactionHash": "0x1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "primaryType": "Erc20Payment",
+        "types": {
+          "EIP712Domain": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "version",
+              "type": "string"
+            },
+            {
+              "name": "chainId",
+              "type": "uint256"
+            }
+          ],
+          "Erc20Payment": [
+            {
+              "name": "transactionHash",
+              "type": "bytes32"
+            },
+            {
+              "name": "receiptLogIndex",
+              "type": "uint256"
+            },
+            {
+              "name": "request",
+              "type": "RequestBinding"
+            }
+          ],
+          "RequestBinding": [
+            {
+              "name": "payer",
+              "type": "string"
+            },
+            {
+              "name": "payee",
+              "type": "string"
+            },
+            {
+              "name": "paymentAppId",
+              "type": "string"
+            },
+            {
+              "name": "paymentRequestId",
+              "type": "string"
+            },
+            {
+              "name": "paymentReference",
+              "type": "string"
+            },
+            {
+              "name": "paymentEndpointIdentifier",
+              "type": "string"
+            },
+            {
+              "name": "periodStartsAt",
+              "type": "string"
+            },
+            {
+              "name": "periodEndsAt",
+              "type": "string"
+            },
+            {
+              "name": "conversionQuoteId",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "changed_reference": "another-invoice",
+      "changed_reference_digest": "0x636c0cc7eb3700fec717a31897e2a5f194f0063fc640eb6302c1d3bc7fd92d56",
+      "changed_reference_valid": false,
+      "digest": "0x74edd62e3bb809d8f8b6da51c9523df68ebc891af05bcb6287894bd33f3bd414",
+      "domain_separator": "0x965075d3cd7ca15131a9ca8aea761b5d7ef7cdab64fcbdf9e6f8426af694abef",
+      "name": "ethereum_one_time",
+      "signature": "0x322fce239952a67b5c1c0466c0aca6b241818492ffb58726308a7eb3daecf50d0378abd7c1bf4d6d25f1969654dbee6f0368cf24dc1f54d675a514c2a700542a1b",
+      "signer": "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
+      "struct_hash": "0x01f2a3f522dc76bb5a24ba4114767b515a768cdcecdeb4d905908e704f734a8b",
+      "typed_data": {
+        "domain": {
+          "chainId": 1,
+          "name": "Paykit ERC20 Payment",
+          "version": "1"
+        },
+        "message": {
+          "receiptLogIndex": "2",
+          "request": {
+            "conversionQuoteId": "",
+            "payee": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+            "payer": "8jsf5bm1ck3r7sn6pfx4q9mgqq5xn8fi6sizw6pxgjc8zs1bt4io",
+            "paymentAppId": "example",
+            "paymentEndpointIdentifier": "usdt-ethereum-address",
+            "paymentReference": "invoice-1",
+            "paymentRequestId": "b7f9c2a1-6d43-4b0e-a8d4-0fe2c712ab33",
+            "periodEndsAt": "",
+            "periodStartsAt": ""
+          },
+          "transactionHash": "0x1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "primaryType": "Erc20Payment",
+        "types": {
+          "EIP712Domain": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "version",
+              "type": "string"
+            },
+            {
+              "name": "chainId",
+              "type": "uint256"
+            }
+          ],
+          "Erc20Payment": [
+            {
+              "name": "transactionHash",
+              "type": "bytes32"
+            },
+            {
+              "name": "receiptLogIndex",
+              "type": "uint256"
+            },
+            {
+              "name": "request",
+              "type": "RequestBinding"
+            }
+          ],
+          "RequestBinding": [
+            {
+              "name": "payer",
+              "type": "string"
+            },
+            {
+              "name": "payee",
+              "type": "string"
+            },
+            {
+              "name": "paymentAppId",
+              "type": "string"
+            },
+            {
+              "name": "paymentRequestId",
+              "type": "string"
+            },
+            {
+              "name": "paymentReference",
+              "type": "string"
+            },
+            {
+              "name": "paymentEndpointIdentifier",
+              "type": "string"
+            },
+            {
+              "name": "periodStartsAt",
+              "type": "string"
+            },
+            {
+              "name": "periodEndsAt",
+              "type": "string"
+            },
+            {
+              "name": "conversionQuoteId",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1200,6 +1200,113 @@ mod tests {
     }
 
     #[test]
+    fn normalized_trezor_keys_preserve_wallet_descriptors_and_addresses() {
+        use super::super::implementation::{create_wallet, resolve_wallet_setup};
+        use crate::modules::onchain::Network as OnchainNetwork;
+        use bitcoin::bip32::{DerivationPath, Xpriv};
+        use bitcoin::secp256k1::Secp256k1;
+
+        let secp = Secp256k1::new();
+        for (network, wallet_network, coin_type) in [
+            (Network::Bitcoin, OnchainNetwork::Bitcoin, 0),
+            (Network::Testnet, OnchainNetwork::Testnet, 1),
+            (Network::Regtest, OnchainNetwork::Regtest, 1),
+        ] {
+            let master = Xpriv::new_master(network, &[7; 32]).unwrap();
+            for (purpose, account_type, mainnet_version, testnet_version) in [
+                (44, AccountType::Legacy, 0x0488b21e_u32, 0x043587cf_u32),
+                (49, AccountType::WrappedSegwit, 0x049d7cb2, 0x044a5262),
+                (84, AccountType::NativeSegwit, 0x04b24746, 0x045f1cf6),
+                (86, AccountType::Taproot, 0x0488b21e, 0x043587cf),
+            ] {
+                let path = format!("m/{}'/{}'/2'", purpose, coin_type);
+                let account = master
+                    .derive_priv(&secp, &DerivationPath::from_str(&path).unwrap())
+                    .unwrap();
+                let normalized_key = Xpub::from_priv(&secp, &account).to_string();
+                let mut payload = bitcoin::base58::decode_check(&normalized_key).unwrap();
+                let version = if coin_type == 0 {
+                    mainnet_version
+                } else {
+                    testnet_version
+                };
+                payload[..4].copy_from_slice(&version.to_be_bytes());
+                let stored_key = bitcoin::base58::encode_check(&payload);
+                let stored_override = (purpose == 86).then_some(AccountType::Taproot);
+                let stored = resolve_wallet_setup(
+                    &stored_key,
+                    Some(wallet_network),
+                    stored_override,
+                    Some("73c5da0a"),
+                )
+                .unwrap();
+                let normalized = resolve_wallet_setup(
+                    &normalized_key,
+                    Some(wallet_network),
+                    Some(account_type),
+                    Some("73c5da0a"),
+                )
+                .unwrap();
+                assert_eq!(stored.external_desc, normalized.external_desc);
+                assert_eq!(stored.internal_desc, normalized.internal_desc);
+                assert_eq!(normalized.base_path, path);
+                assert_eq!(normalized.account_type, account_type);
+                let stored_wallet = create_wallet(&stored).unwrap();
+                let normalized_wallet = create_wallet(&normalized).unwrap();
+                for index in [0, 1] {
+                    assert_eq!(
+                        stored_wallet
+                            .get_address(BdkAddressIndex::Peek(index))
+                            .unwrap()
+                            .address,
+                        normalized_wallet
+                            .get_address(BdkAddressIndex::Peek(index))
+                            .unwrap()
+                            .address
+                    );
+                    assert_eq!(
+                        stored_wallet
+                            .get_internal_address(BdkAddressIndex::Peek(index))
+                            .unwrap()
+                            .address,
+                        normalized_wallet
+                            .get_internal_address(BdkAddressIndex::Peek(index))
+                            .unwrap()
+                            .address
+                    );
+                }
+                let child = account
+                    .derive_priv(&secp, &DerivationPath::from_str("m/0/0").unwrap())
+                    .unwrap();
+                let public_key = bitcoin::CompressedPublicKey::from_private_key(
+                    &secp,
+                    &bitcoin::PrivateKey::new(child.private_key, network),
+                )
+                .unwrap();
+                let expected = match account_type {
+                    AccountType::Legacy => bitcoin::Address::p2pkh(public_key, network),
+                    AccountType::WrappedSegwit => bitcoin::Address::p2shwpkh(&public_key, network),
+                    AccountType::NativeSegwit => bitcoin::Address::p2wpkh(&public_key, network),
+                    AccountType::Taproot => bitcoin::Address::p2tr(
+                        &secp,
+                        public_key.0.x_only_public_key().0,
+                        None,
+                        network,
+                    ),
+                };
+                assert_eq!(
+                    normalized_wallet
+                        .get_address(BdkAddressIndex::Peek(0))
+                        .unwrap()
+                        .address
+                        .to_string(),
+                    expected.to_string()
+                );
+            }
+        }
+    }
+
+    #[test]
     fn test_normalize_extended_key() {
         use crate::modules::onchain::normalize_extended_key;
 

@@ -189,21 +189,21 @@ pub trait TrezorTransportCallback: Send + Sync {
 /// to it via `#[uniffi::remote(Enum)]`. trezor-connect-rs intentionally does
 /// not depend on uniffi, so we add the bindings metadata externally here.
 /// The variant list below is parsed by the macro but not redefined as a type
-/// — `PassphraseResponse` in scope resolves to the upstream enum.
+/// `PassphraseResponse` in scope resolves to the upstream enum.
 ///
 /// NOTE: the variant list below must match `trezor_connect_rs::PassphraseResponse`
-/// exactly (currently trezor-connect-rs 0.3.x). If a future bump reshapes the
-/// upstream enum, update these variants in lockstep — the adapter tests in
+/// exactly (currently trezor-connect-rs 10.0.0). If a future bump reshapes the
+/// upstream enum, update these variants in lockstep. The adapter tests in
 /// `tests.rs` (`test_passphrase_adapter_*`) guard the variant-for-variant mapping.
 pub use trezor_connect_rs::PassphraseResponse;
 
 #[uniffi::remote(Enum)]
 pub enum PassphraseResponse {
-    /// User cancelled — aborts the pending operation.
+    /// User cancelled. Aborts the pending operation.
     Cancel,
-    /// Standard wallet — no passphrase, equivalent to `Some("")` on the device.
+    /// Standard wallet with no passphrase, equivalent to `Some("")` on the device.
     Standard,
-    /// Hidden wallet — derived from the passphrase entered on the host.
+    /// Hidden wallet derived from the passphrase entered on the host.
     Hidden { value: String },
     /// Enter the passphrase on the Trezor device itself instead of on the host.
     OnDevice,
@@ -224,7 +224,7 @@ pub trait TrezorUiCallback: Send + Sync {
     /// Called when the device requests a passphrase.
     ///
     /// If `on_device` is true, the device is asking for the passphrase to be
-    /// entered on the Trezor itself — return `PassphraseResponse::OnDevice`.
+    /// entered on the Trezor itself. Return `PassphraseResponse::OnDevice`.
     ///
     /// If `on_device` is false, show a passphrase input UI and return
     /// `Standard` (no passphrase), `Hidden { value }` (host-entered passphrase),
@@ -275,14 +275,14 @@ pub fn get_ui_callback() -> Option<&'static Arc<dyn TrezorUiCallback>> {
 
 /// Which wallet a connection should open.
 ///
-/// Passed to `trezor_connect` and consumed at connect time — the passphrase is
+/// Passed to `trezor_connect` and consumed at connect time. The passphrase is
 /// a one-shot input, not retained anywhere afterwards. On THP devices (Safe
 /// 5/7) it is bound to the session at `ThpCreateNewSession`; on legacy devices
 /// the mid-operation `PassphraseRequest` is answered from the UI callback
 /// instead (see [`TrezorUiCallback`]).
 #[derive(Debug, Clone, uniffi::Enum)]
 pub enum WalletSelection {
-    /// The standard wallet — no passphrase.
+    /// The standard wallet with no passphrase.
     Standard,
     /// A hidden wallet whose passphrase is entered on the host.
     Hidden { passphrase: String },
