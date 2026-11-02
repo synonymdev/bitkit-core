@@ -34,11 +34,22 @@ payloads over this carrier.
 
 ## Keys and storage
 
-- The wallet's identity towards providers, its claim keys and its preimages derive from the seed
-  with HMAC-SHA512 under their own domain strings. They never collide with the Boltz module's keys,
-  and the identity is not the user's Pubky identity.
-- `<base>/pubky_swaps/<swap_id>.json` holds the contract and the key index, never a secret. The
-  index is reserved on disk before the commit is sent.
+- The wallet's identity towards providers derives from the seed. Each swap's claim key and preimage
+  derive from the seed and a random nonce, with HMAC-SHA512 under their own domain strings: a
+  restored wallet or a second device on the same seed never repeats a preimage an earlier claim
+  published. They never collide with the Boltz module's keys, and the identity is not the user's
+  Pubky identity.
+- `<base>/pubky_swaps/<swap_id>.json` holds the contract, the nonce and the signed claim, never a
+  secret. It is synced to disk before the invoice reaches the app, and the claim before it is
+  broadcast.
+
+## Claim
+
+`pubky_swaps_advance` claims the lockup once it has its confirmations and while the timeout is more
+than 6 blocks away, then reports `ClaimBroadcast` until the claim confirms and `Claimed` after. Each
+call checks the HTLC's history: a claim that dropped out of the mempool is broadcast again, a refund
+by the provider or a lockup that never came before the timeout ends in `Failed`. The claim's fee is
+fixed when the route is quoted and is never bumped, so swap routes are refused on mainnet.
 
 ## What it does not do yet
 
