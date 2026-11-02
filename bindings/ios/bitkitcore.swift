@@ -29941,6 +29941,30 @@ fileprivate struct FfiConverterOptionTypePreActivityMetadata: FfiConverterRustBu
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterOptionTypeServiceRouteLeg: FfiConverterRustBuffer {
+    typealias SwiftType = ServiceRouteLeg?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeServiceRouteLeg.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeServiceRouteLeg.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterOptionTypeTransactionDetails: FfiConverterRustBuffer {
     typealias SwiftType = TransactionDetails?
 
@@ -32262,6 +32286,24 @@ public func arkadeOffboard(address: String, amountSat: UInt64?)async throws  -> 
         )
 }
 /**
+ * Run an Arkade leg the Paykit router picked: offboard exactly `amount_sat` to `address` in the next batch, the exit
+ * fee on top; the commitment txid.
+ */
+public func arkadeOffboardExact(address: String, amountSat: UInt64)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_offboard_exact(FfiConverterString.lower(address),FfiConverterUInt64.lower(amountSat)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
  * The operator's fee programs, which `arkade_offboard` pays.
  */
 public func arkadeOffboardFee()async throws  -> ArkadeFees  {
@@ -32293,6 +32335,25 @@ public func arkadePay(bolt11: String, maxFeeSat: UInt64?)async throws  -> Arkade
             completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeArkadeSwap_lift,
+            errorHandler: FfiConverterTypeArkadeError_lift
+        )
+}
+/**
+ * A Paykit route leg that offboards exactly `amount_sat` to the contact's on-chain `endpoint`, the exit fee on top,
+ * or `None` while the Arkade balance cannot cover both. Pass it to `pubky_swaps_route_paykit_payment` in
+ * `service_legs`.
+ */
+public func arkadePaykitRouteLeg(endpoint: PaykitEndpoint, amountSat: UInt64)async throws  -> ServiceRouteLeg?  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_arkade_paykit_route_leg(FfiConverterTypePaykitEndpoint_lower(endpoint),FfiConverterUInt64.lower(amountSat)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterOptionTypeServiceRouteLeg.lift,
             errorHandler: FfiConverterTypeArkadeError_lift
         )
 }
@@ -35225,10 +35286,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_arkade_offboard() != 3856) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_arkade_offboard_exact() != 26429) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_arkade_offboard_fee() != 41350) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_arkade_pay() != 8253) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_arkade_paykit_route_leg() != 9352) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_arkade_quote_pay() != 10416) {

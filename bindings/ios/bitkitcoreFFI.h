@@ -968,6 +968,11 @@ uint64_t uniffi_bitkitcore_fn_func_arkade_lightning_address(void
 uint64_t uniffi_bitkitcore_fn_func_arkade_offboard(RustBuffer address, RustBuffer amount_sat
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_OFFBOARD_EXACT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_OFFBOARD_EXACT
+uint64_t uniffi_bitkitcore_fn_func_arkade_offboard_exact(RustBuffer address, uint64_t amount_sat
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_OFFBOARD_FEE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_OFFBOARD_FEE
 uint64_t uniffi_bitkitcore_fn_func_arkade_offboard_fee(void
@@ -977,6 +982,11 @@ uint64_t uniffi_bitkitcore_fn_func_arkade_offboard_fee(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_PAY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_PAY
 uint64_t uniffi_bitkitcore_fn_func_arkade_pay(RustBuffer bolt11, RustBuffer max_fee_sat
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_PAYKIT_ROUTE_LEG
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_PAYKIT_ROUTE_LEG
+uint64_t uniffi_bitkitcore_fn_func_arkade_paykit_route_leg(RustBuffer endpoint, uint64_t amount_sat
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_ARKADE_QUOTE_PAY
@@ -2492,6 +2502,12 @@ uint16_t uniffi_bitkitcore_checksum_func_arkade_offboard(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_OFFBOARD_EXACT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_OFFBOARD_EXACT
+uint16_t uniffi_bitkitcore_checksum_func_arkade_offboard_exact(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_OFFBOARD_FEE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_OFFBOARD_FEE
 uint16_t uniffi_bitkitcore_checksum_func_arkade_offboard_fee(void
@@ -2501,6 +2517,12 @@ uint16_t uniffi_bitkitcore_checksum_func_arkade_offboard_fee(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_PAY
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_PAY
 uint16_t uniffi_bitkitcore_checksum_func_arkade_pay(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_PAYKIT_ROUTE_LEG
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_ARKADE_PAYKIT_ROUTE_LEG
+uint16_t uniffi_bitkitcore_checksum_func_arkade_paykit_route_leg(void
     
 );
 #endif
