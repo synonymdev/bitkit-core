@@ -1586,6 +1586,11 @@ uint64_t uniffi_bitkitcore_fn_func_pubky_swaps_commit_route(RustBuffer quote_id,
 uint64_t uniffi_bitkitcore_fn_func_pubky_swaps_provider_edges(RustBuffer provider_pubky, RustBuffer mnemonic, RustBuffer bip39_passphrase
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PUBKY_SWAPS_RESTORE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PUBKY_SWAPS_RESTORE
+uint64_t uniffi_bitkitcore_fn_func_pubky_swaps_restore(RustBuffer providers, RustBuffer electrum_url, RustBuffer payout_address, uint64_t fee_rate_sat_vb, RustBuffer network, RustBuffer mnemonic, RustBuffer bip39_passphrase
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PUBKY_SWAPS_ROUTE_PAYKIT_PAYMENT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PUBKY_SWAPS_ROUTE_PAYKIT_PAYMENT
 uint64_t uniffi_bitkitcore_fn_func_pubky_swaps_route_paykit_payment(RustBuffer request, RustBuffer network, RustBuffer mnemonic, RustBuffer bip39_passphrase
@@ -3099,6 +3104,12 @@ uint16_t uniffi_bitkitcore_checksum_func_pubky_swaps_commit_route(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SWAPS_PROVIDER_EDGES
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SWAPS_PROVIDER_EDGES
 uint16_t uniffi_bitkitcore_checksum_func_pubky_swaps_provider_edges(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SWAPS_RESTORE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SWAPS_RESTORE
+uint16_t uniffi_bitkitcore_checksum_func_pubky_swaps_restore(void
     
 );
 #endif
