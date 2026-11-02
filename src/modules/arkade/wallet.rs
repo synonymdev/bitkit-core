@@ -202,7 +202,11 @@ impl Wallet {
 
     pub async fn balance(&self) -> Result<ArkadeBalance, ArkadeError> {
         let offchain = self.client.offchain_balance().await?;
-        let boarding = self.boarding_utxos().await?;
+        // Boarding is read from the public explorers; when they fail, the operator's balance still stands.
+        let boarding = self.boarding_utxos().await.unwrap_or_else(|e| {
+            log::warn!("Arkade boarding read failed, balance shows no deposits: {e}");
+            Vec::new()
+        });
         let sum = |confirmed: bool| {
             boarding
                 .iter()
