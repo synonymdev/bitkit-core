@@ -18,7 +18,7 @@ use swap_common::messages::{
     SwapStatusRequest, PROTOCOL_VERSION,
 };
 use swap_common::onchain::{build_claim_tx, estimate_spend_fee, spend_vsize};
-use swap_common::timelock::TimelockParams;
+use swap_common::timelock::{claim_start_is_safe, TimelockParams};
 use swap_common::validate::{
     validate_accept, validate_hold_invoice, validate_quote, verify_contract, ClientPolicy,
     DecodedHoldInvoice,
@@ -35,6 +35,9 @@ use super::types::*;
 
 /// How long a candidate provider has to answer an offer request.
 const OFFER_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(20);
+/// How long the wallet keeps asking about a swap request the provider is still admitting.
+const PENDING_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60);
+const PENDING_POLL: std::time::Duration = std::time::Duration::from_secs(2);
 
 /// Quotes the router fetched, kept until the wallet commits to one of them.
 static QUOTES: Lazy<Mutex<HashMap<String, CachedQuote>>> = Lazy::new(Default::default);
@@ -284,6 +287,10 @@ pub async fn route_paykit_payment(
     Ok(PaykitRoute::Swap { quote: route })
 }
 
+fn is_pending(reply: &Result<SwapMessage, PubkySwapError>) -> bool {
+    matches!(reply, Ok(SwapMessage::Reject(reject)) if reject.code.as_deref() == Some("pending"))
+}
+
 fn decode_hold_invoice(invoice: &str) -> Result<DecodedHoldInvoice, PubkySwapError> {
     let invoice = lightning_invoice::Bolt11Invoice::from_str(invoice)
         .map_err(|e| PubkySwapError::validation(format!("hold invoice: {e}")))?;
@@ -348,21 +355,21 @@ pub async fn commit_route(
     };
 
     let client = DirectClient::bind(secret).await?;
-    let reply = client
+    let mut reply = client
         .request(&route.provider_pubky, &SwapMessage::SwapRequest(request))
         .await;
-    let reply = match reply {
-        // `pending` means the provider is still admitting it: ask again, never a decline.
-        Ok(SwapMessage::Reject(reject)) if reject.code.as_deref() == Some("pending") => {
-            let status = SwapMessage::SwapStatusRequest(SwapStatusRequest {
-                request_id: Some(Uuid::new_v4()),
-                swap_id: None,
-                quote_id: Some(quote.quote_id),
-            });
-            client.request(&route.provider_pubky, &status).await
-        }
-        other => other,
-    };
+    // `pending` means the provider is still admitting it, never a decline: keep asking until it
+    // accepts or refuses. Past the deadline the wallet gives up without paying anything.
+    let deadline = tokio::time::Instant::now() + PENDING_TIMEOUT;
+    while is_pending(&reply) && tokio::time::Instant::now() < deadline {
+        tokio::time::sleep(PENDING_POLL).await;
+        let status = SwapMessage::SwapStatusRequest(SwapStatusRequest {
+            request_id: Some(Uuid::new_v4()),
+            swap_id: None,
+            quote_id: Some(quote.quote_id),
+        });
+        reply = client.request(&route.provider_pubky, &status).await;
+    }
     client.close().await;
     let accept = match reply? {
         SwapMessage::SwapAccept(accept) => accept,
@@ -497,6 +504,19 @@ fn advance_blocking(
         let state = PubkySwapRouteState::AwaitingLockup {
             confirmations,
             required,
+        };
+        return Ok(status_of(&record, state));
+    }
+
+    // Claiming reveals the preimage. Too close to the timeout, the provider could settle the hold
+    // invoice and still refund its lock, so the wallet leaves it to the refund instead.
+    if !claim_start_is_safe(tip, record.accept.timeout_block_height) {
+        let state = PubkySwapRouteState::Failed {
+            reason: format!(
+                "The lockup times out at block {}, too close to claim safely at block {tip}. \
+                 The provider's refund returns the payment.",
+                record.accept.timeout_block_height
+            ),
         };
         return Ok(status_of(&record, state));
     }
