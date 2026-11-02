@@ -35,13 +35,14 @@ payloads over this carrier.
 ## Keys and storage
 
 - The wallet's identity towards providers derives from the seed. Each swap's claim key and preimage
-  derive from the seed and a random nonce, with HMAC-SHA512 under their own domain strings: a
-  restored wallet or a second device on the same seed never repeats a preimage an earlier claim
-  published. They never collide with the Boltz module's keys, and the identity is not the user's
-  Pubky identity.
-- `<base>/pubky_swaps/<swap_id>.json` holds the contract, the nonce and the signed claim, never a
-  secret. It is synced to disk before the invoice reaches the app, and the claim before it is
-  broadcast.
+  derive from the seed and a clock index, with HMAC-SHA512 under their own domain strings. The
+  index is the Unix time in seconds when the swap starts, or one past the previous index when that
+  is later, so a restored or reinstalled wallet never repeats a preimage an earlier claim published,
+  and a restore can find a listed swap's index by scanning a window around its creation time. They
+  never collide with the Boltz module's keys, and the identity is not the user's Pubky identity.
+- `<base>/pubky_swaps/last_index` is synced to disk before the swap request is sent.
+  `<base>/pubky_swaps/<swap_id>.json` holds the contract, the index and the signed claim, never a
+  secret; it is synced before the invoice reaches the app, and the claim before it is broadcast.
 
 ## Claim
 

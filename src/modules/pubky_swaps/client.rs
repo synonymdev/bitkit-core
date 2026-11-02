@@ -92,7 +92,7 @@ fn claim_fee(destination: &ScriptBuf, fee_rate_sat_vb: u64) -> Result<u64, Pubky
     let key = keys::swap_keys(
         "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
         None,
-        &[0; 32],
+        0,
     )?;
     let script = build_htlc_script(&[0; 32], &key.claim_pubkey, &key.claim_pubkey, 1_000_000);
     Ok(estimate_spend_fee(
@@ -372,8 +372,8 @@ pub async fn commit_route(
     }
     let passphrase = bip39_passphrase.as_deref();
     let secret = keys::identity_secret(&mnemonic, passphrase)?;
-    let nonce = keys::new_nonce();
-    let swap_keys = keys::swap_keys(&mnemonic, passphrase, &nonce)?;
+    let index = store::reserve_index(now_unix())?;
+    let swap_keys = keys::swap_keys(&mnemonic, passphrase, index)?;
     let request = SwapRequest {
         script_type: SwapScript::P2wsh,
         quote_id: quote.quote_id,
@@ -450,7 +450,7 @@ pub async fn commit_route(
 
     let record = SwapRecord {
         swap_id: accept.swap_id.to_string(),
-        key_nonce: hex::encode(nonce),
+        key_index: index,
         provider_pubky: route.provider_pubky.clone(),
         network,
         electrum_url,
@@ -495,11 +495,7 @@ fn advance_blocking(
     mnemonic: &str,
     passphrase: Option<&str>,
 ) -> Result<PubkySwapRouteStatus, PubkySwapError> {
-    let nonce: [u8; 32] = hex::decode(&record.key_nonce)
-        .ok()
-        .and_then(|n| n.try_into().ok())
-        .ok_or_else(|| PubkySwapError::storage("invalid key nonce"))?;
-    let keys = keys::swap_keys(mnemonic, passphrase, &nonce)?;
+    let keys = keys::swap_keys(mnemonic, passphrase, record.key_index)?;
     let provider = record
         .accept
         .provider_pubkey_hex
