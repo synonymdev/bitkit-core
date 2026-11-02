@@ -12400,6 +12400,10 @@ public func FfiConverterTypePubkySwapRoutePayment_lower(_ value: PubkySwapRouteP
  */
 public struct PubkySwapRouteQuote {
     public var providerPubky: String
+    /**
+     * The wallet's id for this route, which `pubky_swaps_commit_route` takes. The provider's own
+     * quote id stays inside bitkit-core.
+     */
     public var quoteId: String
     /**
      * The contact endpoint the swap delivers to.
@@ -12433,7 +12437,11 @@ public struct PubkySwapRouteQuote {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(providerPubky: String, quoteId: String, 
+    public init(providerPubky: String, 
+        /**
+         * The wallet's id for this route, which `pubky_swaps_commit_route` takes. The provider's own
+         * quote id stays inside bitkit-core.
+         */quoteId: String, 
         /**
          * The contact endpoint the swap delivers to.
          */endpoint: PaykitEndpoint, 
@@ -24984,8 +24992,13 @@ public enum PubkySwapRouteState {
     case awaitingLockup(confirmations: UInt32, required: UInt32
     )
     /**
-     * The claim to the contact's address is broadcast. The provider settles the invoice
-     * once it sees the preimage.
+     * The claim to the contact's address is broadcast but not confirmed yet. The provider settles
+     * the invoice once it sees the preimage; keep calling until the claim confirms.
+     */
+    case claimBroadcast(txid: String
+    )
+    /**
+     * The claim to the contact's address is confirmed.
      */
     case claimed(txid: String
     )
@@ -25013,10 +25026,13 @@ public struct FfiConverterTypePubkySwapRouteState: FfiConverterRustBuffer {
         case 2: return .awaitingLockup(confirmations: try FfiConverterUInt32.read(from: &buf), required: try FfiConverterUInt32.read(from: &buf)
         )
         
-        case 3: return .claimed(txid: try FfiConverterString.read(from: &buf)
+        case 3: return .claimBroadcast(txid: try FfiConverterString.read(from: &buf)
         )
         
-        case 4: return .failed(reason: try FfiConverterString.read(from: &buf)
+        case 4: return .claimed(txid: try FfiConverterString.read(from: &buf)
+        )
+        
+        case 5: return .failed(reason: try FfiConverterString.read(from: &buf)
         )
         
         default: throw UniffiInternalError.unexpectedEnumCase
@@ -25037,13 +25053,18 @@ public struct FfiConverterTypePubkySwapRouteState: FfiConverterRustBuffer {
             FfiConverterUInt32.write(required, into: &buf)
             
         
-        case let .claimed(txid):
+        case let .claimBroadcast(txid):
             writeInt(&buf, Int32(3))
             FfiConverterString.write(txid, into: &buf)
             
         
-        case let .failed(reason):
+        case let .claimed(txid):
             writeInt(&buf, Int32(4))
+            FfiConverterString.write(txid, into: &buf)
+            
+        
+        case let .failed(reason):
+            writeInt(&buf, Int32(5))
             FfiConverterString.write(reason, into: &buf)
             
         }

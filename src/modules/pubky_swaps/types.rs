@@ -84,6 +84,8 @@ pub enum PaykitRoute {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Record)]
 pub struct PubkySwapRouteQuote {
     pub provider_pubky: String,
+    /// The wallet's id for this route, which `pubky_swaps_commit_route` takes. The provider's own
+    /// quote id stays inside bitkit-core.
     pub quote_id: String,
     /// The contact endpoint the swap delivers to.
     pub endpoint: PaykitEndpoint,
@@ -125,8 +127,12 @@ pub enum PubkySwapRouteState {
         confirmations: u32,
         required: u32,
     },
-    /// The claim to the contact's address is broadcast. The provider settles the invoice
-    /// once it sees the preimage.
+    /// The claim to the contact's address is broadcast but not confirmed yet. The provider settles
+    /// the invoice once it sees the preimage; keep calling until the claim confirms.
+    ClaimBroadcast {
+        txid: String,
+    },
+    /// The claim to the contact's address is confirmed.
     Claimed {
         txid: String,
     },

@@ -2,6 +2,7 @@
 //! contact published, route the payment through a Pubky Swaps provider (`swap/1`).
 //! See README.md.
 
+mod claim;
 mod client;
 mod errors;
 mod keys;

@@ -9,7 +9,7 @@ use std::str::FromStr;
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use bitcoin::{Address, OutPoint, ScriptBuf};
+use bitcoin::{Address, ScriptBuf};
 use electrum_client::{Client as ElectrumClient, ElectrumApi};
 use once_cell::sync::Lazy;
 use swap_common::htlc::build_htlc_script;
@@ -26,6 +26,7 @@ use swap_common::validate::{
 use swap_common::SwapDirection;
 use uuid::Uuid;
 
+use super::claim;
 use super::errors::PubkySwapError;
 use super::keys;
 use super::router::{self, is_lightning};
@@ -35,6 +36,12 @@ use super::types::*;
 
 /// How long a candidate provider has to answer an offer request.
 const OFFER_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(20);
+/// Most candidates asked for an offer per payment: each is a connection and an address lookup
+/// through iroh's n0 discovery, which sees which keys the wallet looks up.
+const MAX_CANDIDATES: usize = 30;
+/// How long the wallet keeps asking about a swap request the provider is still admitting.
+const PENDING_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60);
+const PENDING_POLL: std::time::Duration = std::time::Duration::from_secs(2);
 
 /// Quotes the router fetched, kept until the wallet commits to one of them.
 static QUOTES: Lazy<Mutex<HashMap<String, CachedQuote>>> = Lazy::new(Default::default);
@@ -85,7 +92,7 @@ fn claim_fee(destination: &ScriptBuf, fee_rate_sat_vb: u64) -> Result<u64, Pubky
     let key = keys::swap_keys(
         "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
         None,
-        0,
+        &[0; 32],
     )?;
     let script = build_htlc_script(&[0; 32], &key.claim_pubkey, &key.claim_pubkey, 1_000_000);
     Ok(estimate_spend_fee(
@@ -206,6 +213,8 @@ pub async fn route_paykit_payment(
                 "No balance can reach an endpoint this contact accepts."
             } else if request.providers.is_empty() {
                 "No swap provider is set up."
+            } else if network == bitcoin::Network::Bitcoin {
+                "Swap routes are not available on mainnet yet."
             } else {
                 "No swap provider can route this payment right now."
             }
@@ -223,6 +232,12 @@ async fn best_swap_route(
     mnemonic: &str,
     bip39_passphrase: Option<&str>,
 ) -> Result<Option<PubkySwapRouteQuote>, PubkySwapError> {
+    // The claim is broadcast at one fee and only rebroadcast, never bumped: until it can be, a
+    // claim stuck below the market could lose the whole debit, so mainnet takes no swap route.
+    // Service legs still route there.
+    if network == bitcoin::Network::Bitcoin {
+        return Ok(None);
+    }
     let amount = request.amount_sat;
     let destination = parse_address(&onchain.value, network)?.script_pubkey();
     let claim_fee_sat = claim_fee(&destination, request.fee_rate_sat_vb)?;
@@ -237,13 +252,15 @@ async fn best_swap_route(
     // Candidates are usually the user's contacts, and most of them run no provider: ask them all at
     // once and give each a short window to answer.
     let mut probes = tokio::task::JoinSet::new();
-    let mut candidates: Vec<String> = request
+    // In the caller's order, so the cap keeps configured providers listed first.
+    let mut seen = std::collections::HashSet::new();
+    let candidates: Vec<String> = request
         .providers
         .iter()
         .map(|p| bare_pubky(p).to_string())
+        .filter(|p| seen.insert(p.clone()))
+        .take(MAX_CANDIDATES)
         .collect();
-    candidates.sort();
-    candidates.dedup();
     for provider in candidates {
         let client = client.clone();
         probes.spawn(async move {
@@ -256,6 +273,9 @@ async fn best_swap_route(
             continue;
         };
         match offer {
+            Ok(Ok(offer)) if bare_pubky(&offer.provider_pkarr) != provider => {
+                log::warn!("pubky swaps: {provider} answered with another provider's offer")
+            }
             Ok(Ok(offer)) if offer.network.to_bitcoin_network() == network => {
                 edges.extend(router::edges_from_offer(&offer));
                 offers.insert(offer.provider_pkarr.clone(), offer);
@@ -293,7 +313,8 @@ async fn best_swap_route(
     };
     let route = PubkySwapRouteQuote {
         provider_pubky: provider,
-        quote_id: quote.quote_id.to_string(),
+        // The wallet's own id for this route: two providers may pick the same quote id.
+        quote_id: Uuid::new_v4().to_string(),
         endpoint: onchain,
         delivered_sat: amount,
         lock_sat,
@@ -306,7 +327,10 @@ async fn best_swap_route(
         valid_until_unix: quote.valid_until_unix,
         providers_quoted: asked,
     };
-    QUOTES.lock().unwrap().insert(
+    let mut quotes = QUOTES.lock().unwrap();
+    let now = now_unix();
+    quotes.retain(|_, cached| !cached.quote.is_expired(now));
+    quotes.insert(
         route.quote_id.clone(),
         CachedQuote {
             route: route.clone(),
@@ -315,6 +339,10 @@ async fn best_swap_route(
         },
     );
     Ok(Some(route))
+}
+
+fn is_pending(reply: &Result<SwapMessage, PubkySwapError>) -> bool {
+    matches!(reply, Ok(SwapMessage::Reject(reject)) if reject.code.as_deref() == Some("pending"))
 }
 
 fn decode_hold_invoice(invoice: &str) -> Result<DecodedHoldInvoice, PubkySwapError> {
@@ -359,6 +387,11 @@ pub async fn commit_route(
         quote,
         network,
     } = cached;
+    if network == bitcoin::Network::Bitcoin {
+        return Err(PubkySwapError::invalid(
+            "Swap routes are not available on mainnet yet.",
+        ));
+    }
     if quote.is_expired(now_unix()) {
         return Err(PubkySwapError::Refused {
             code: "quote_expired".into(),
@@ -367,8 +400,8 @@ pub async fn commit_route(
     }
     let passphrase = bip39_passphrase.as_deref();
     let secret = keys::identity_secret(&mnemonic, passphrase)?;
-    let index = store::reserve_index()?;
-    let swap_keys = keys::swap_keys(&mnemonic, passphrase, index)?;
+    let nonce = keys::new_nonce();
+    let swap_keys = keys::swap_keys(&mnemonic, passphrase, &nonce)?;
     let request = SwapRequest {
         script_type: SwapScript::P2wsh,
         quote_id: quote.quote_id,
@@ -381,21 +414,21 @@ pub async fn commit_route(
     };
 
     let client = DirectClient::bind(secret).await?;
-    let reply = client
+    let mut reply = client
         .request(&route.provider_pubky, &SwapMessage::SwapRequest(request))
         .await;
-    let reply = match reply {
-        // `pending` means the provider is still admitting it: ask again, never a decline.
-        Ok(SwapMessage::Reject(reject)) if reject.code.as_deref() == Some("pending") => {
-            let status = SwapMessage::SwapStatusRequest(SwapStatusRequest {
-                request_id: Some(Uuid::new_v4()),
-                swap_id: None,
-                quote_id: Some(quote.quote_id),
-            });
-            client.request(&route.provider_pubky, &status).await
-        }
-        other => other,
-    };
+    // `pending` means the provider is still admitting it, never a decline: keep asking until it
+    // accepts or refuses. Past the deadline the wallet gives up without paying anything.
+    let deadline = tokio::time::Instant::now() + PENDING_TIMEOUT;
+    while is_pending(&reply) && tokio::time::Instant::now() < deadline {
+        tokio::time::sleep(PENDING_POLL).await;
+        let status = SwapMessage::SwapStatusRequest(SwapStatusRequest {
+            request_id: Some(Uuid::new_v4()),
+            swap_id: None,
+            quote_id: Some(quote.quote_id),
+        });
+        reply = client.request(&route.provider_pubky, &status).await;
+    }
     client.close().await;
     let accept = match reply? {
         SwapMessage::SwapAccept(accept) => accept,
@@ -403,6 +436,13 @@ pub async fn commit_route(
         SwapMessage::Reject(reject) => return Err(refused(reject)),
         other => return Err(unexpected("SwapAccept", &other)),
     };
+    // `advance` watches and spends only the P2WSH contract the request asked for.
+    if accept.script_type != SwapScript::P2wsh {
+        return Err(PubkySwapError::validation(format!(
+            "the provider answered with a {:?} contract, not P2WSH",
+            accept.script_type
+        )));
+    }
 
     let tip = {
         let url = electrum_url.clone();
@@ -438,7 +478,7 @@ pub async fn commit_route(
 
     let record = SwapRecord {
         swap_id: accept.swap_id.to_string(),
-        key_index: index,
+        key_nonce: hex::encode(nonce),
         provider_pubky: route.provider_pubky.clone(),
         network,
         electrum_url,
@@ -448,6 +488,7 @@ pub async fn commit_route(
         delivered_sat: route.delivered_sat,
         claim_fee_sat: route.claim_fee_sat,
         claim_txid: None,
+        claim_tx_hex: None,
         created_at_unix: now_unix(),
     };
     store::save(&record)?;
@@ -475,80 +516,94 @@ fn status_of(record: &SwapRecord, state: PubkySwapRouteState) -> PubkySwapRouteS
 }
 
 /// Find the provider's lockup and, once it has its confirmations, claim it straight to the
-/// contact's address. Call again until it reports `Claimed`.
+/// contact's address. Call again until it reports `Claimed`: until the claim confirms, each call
+/// checks it is still in the mempool and broadcasts it again if it dropped out.
 fn advance_blocking(
     mut record: SwapRecord,
     mnemonic: &str,
     passphrase: Option<&str>,
 ) -> Result<PubkySwapRouteStatus, PubkySwapError> {
-    if let Some(txid) = &record.claim_txid {
-        let state = PubkySwapRouteState::Claimed { txid: txid.clone() };
-        return Ok(status_of(&record, state));
-    }
-    let keys = keys::swap_keys(mnemonic, passphrase, record.key_index)?;
+    let nonce: [u8; 32] = hex::decode(&record.key_nonce)
+        .ok()
+        .and_then(|n| n.try_into().ok())
+        .ok_or_else(|| PubkySwapError::storage("invalid key nonce"))?;
+    let keys = keys::swap_keys(mnemonic, passphrase, &nonce)?;
     let provider = record
         .accept
         .provider_pubkey_hex
         .parse()
         .map_err(PubkySwapError::validation)?;
-    let redeem_script = build_htlc_script(
-        &keys.payment_hash,
-        &keys.claim_pubkey,
-        &provider,
-        record.accept.timeout_block_height,
-    );
+    let timeout = record.accept.timeout_block_height;
+    let redeem_script =
+        build_htlc_script(&keys.payment_hash, &keys.claim_pubkey, &provider, timeout);
     let htlc_spk = ScriptBuf::new_p2wsh(&redeem_script.wscript_hash());
-    let required =
-        policy(record.network).effective_confirmations(record.quote.required_confirmations);
+    let destination = parse_address(&record.destination_address, record.network)?.script_pubkey();
+    let contract = claim::Contract {
+        htlc_spk: &htlc_spk,
+        lock_sat: record.accept.onchain_amount_sat,
+        destination: &destination,
+        timeout,
+        required_confirmations: policy(record.network)
+            .effective_confirmations(record.quote.required_confirmations),
+    };
 
     let electrum = ElectrumClient::new(&record.electrum_url)?;
     let tip = electrum.block_headers_subscribe()?.height as u32;
-    let mut lockup: Option<(OutPoint, u32)> = None;
+    let mut history = vec![];
     for item in electrum.script_get_history(&htlc_spk)? {
-        let tx = electrum.transaction_get(&item.tx_hash)?;
-        let vout = tx.output.iter().position(|out| {
-            out.script_pubkey == htlc_spk && out.value.to_sat() == record.accept.onchain_amount_sat
-        });
-        if let Some(vout) = vout {
-            let confirmations = if item.height > 0 {
-                tip.saturating_sub(item.height as u32) + 1
-            } else {
-                0
-            };
-            lockup = Some((OutPoint::new(item.tx_hash, vout as u32), confirmations));
-            break;
-        }
-    }
-    let Some((outpoint, confirmations)) = lockup else {
-        let state = PubkySwapRouteState::AwaitingLockup {
-            confirmations: 0,
-            required,
-        };
-        return Ok(status_of(&record, state));
-    };
-    if confirmations < required {
-        let state = PubkySwapRouteState::AwaitingLockup {
-            confirmations,
-            required,
-        };
-        return Ok(status_of(&record, state));
+        history.push((item.height, electrum.transaction_get(&item.tx_hash)?));
     }
 
-    let destination = parse_address(&record.destination_address, record.network)?;
-    let claim = build_claim_tx(
-        outpoint,
-        record.accept.onchain_amount_sat,
-        &redeem_script,
-        destination.script_pubkey(),
-        record.claim_fee_sat,
-        keys.preimage,
-        &keys.claim_key,
-    )
-    .map_err(PubkySwapError::chain)?;
-    let txid = electrum.transaction_broadcast(&claim)?.to_string();
-    record.claim_txid = Some(txid.clone());
-    store::save(&record)?;
-    Ok(status_of(&record, PubkySwapRouteState::Claimed { txid }))
+    let state = match claim::next_step(&contract, record.claim_txid.as_deref(), tip, &history) {
+        claim::Step::Report(state) => state,
+        claim::Step::Claimed { txid, state } => {
+            if record.claim_txid.as_deref() != Some(txid.as_str()) {
+                record.claim_txid = Some(txid);
+                store::save(&record)?;
+            }
+            state
+        }
+        claim::Step::Rebroadcast => {
+            let txid = record.claim_txid.clone().unwrap_or_default();
+            match &record.claim_tx_hex {
+                Some(claim) => broadcast_claim(&electrum, claim),
+                None => log::warn!("pubky swaps: no saved claim to broadcast again for {txid}"),
+            }
+            PubkySwapRouteState::ClaimBroadcast { txid }
+        }
+        claim::Step::Claim(outpoint) => {
+            let claim = build_claim_tx(
+                outpoint,
+                record.accept.onchain_amount_sat,
+                &redeem_script,
+                destination.clone(),
+                record.claim_fee_sat,
+                keys.preimage,
+                &keys.claim_key,
+            )
+            .map_err(PubkySwapError::chain)?;
+            let txid = claim.compute_txid().to_string();
+            let claim = bitcoin::consensus::encode::serialize_hex(&claim);
+            // Saved before the broadcast, so a restart in between finds and sends the same claim.
+            record.claim_txid = Some(txid.clone());
+            record.claim_tx_hex = Some(claim.clone());
+            store::save(&record)?;
+            broadcast_claim(&electrum, &claim);
+            PubkySwapRouteState::ClaimBroadcast { txid }
+        }
+    };
+    Ok(status_of(&record, state))
+}
+
+/// Send a saved claim. A failure is only logged: the claim is saved, and the next call finds it
+/// missing from the history and sends it again, so the app keeps polling instead of stopping.
+fn broadcast_claim(electrum: &ElectrumClient, claim: &str) {
+    let sent = bitcoin::consensus::encode::deserialize_hex::<bitcoin::Transaction>(claim)
+        .map_err(PubkySwapError::storage)
+        .and_then(|claim| Ok(electrum.transaction_broadcast(&claim)?));
+    if let Err(e) = sent {
+        log::warn!("pubky swaps: claim broadcast failed, retrying on the next advance: {e}");
+    }
 }
 
 pub async fn advance_swap(
@@ -610,6 +665,23 @@ mod tests {
             panic!("expected a service route");
         };
         assert_eq!(picked, leg);
+    }
+
+    #[tokio::test]
+    async fn routes_through_a_service_on_mainnet_where_swaps_are_refused() {
+        let leg = ServiceRouteLeg {
+            service: "spark".into(),
+            endpoint: onchain_contact(),
+            delivered_sat: 20_000,
+            debit_sat: 20_300,
+            atomicity: "trusted".into(),
+            valid_until_unix: 0,
+        };
+        let mut request = request(vec![leg.clone()]);
+        request.providers = vec!["pubky-provider".into()];
+        let route =
+            route_paykit_payment(request, bitcoin::Network::Bitcoin, MNEMONIC.into(), None).await;
+        assert!(matches!(route, Ok(PaykitRoute::Service { leg: picked }) if picked == leg));
     }
 
     #[tokio::test]

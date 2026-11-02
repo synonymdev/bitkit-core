@@ -2,7 +2,7 @@
 name = "bitkitcore"
 version = "0.8.0-swaps.3"
 edition = "2021"
-rust-version = "1.90"
+rust-version = "1.91"
 
 [lib]
 crate-type = ["cdylib", "staticlib", "rlib"]
