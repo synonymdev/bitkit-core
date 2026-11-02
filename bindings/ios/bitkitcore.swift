@@ -18368,6 +18368,367 @@ public func FfiConverterTypeWakeEnvelope_lower(_ value: WakeEnvelope) -> RustBuf
 
 
 /**
+ * A grant just created: it lets whoever holds `token` wake `recipient` on
+ * `topics`, within the quotas, until `expires_at`.
+ */
+public struct WakeGrant {
+    /**
+     * The grant id (a uuid). Keep it with the peer it was given to, to
+     * revoke the grant.
+     */
+    public var id: String
+    /**
+     * `wkg_<grant id as 32 hex>_<43 base64url>`, the bearer token to hand
+     * to the peer. The gateway shows it only here and stores only its hash.
+     */
+    public var token: String
+    /**
+     * The identity of this device that the peer can wake.
+     */
+    public var recipient: String
+    /**
+     * The peer topics the grant covers, deduplicated and sorted.
+     */
+    public var topics: [String]
+    /**
+     * Peer requests the grant allows per hour.
+     */
+    public var perHour: UInt32
+    /**
+     * Peer requests the grant allows per day.
+     */
+    public var perDay: UInt32
+    /**
+     * Unix seconds.
+     */
+    public var createdAt: UInt64
+    /**
+     * Unix seconds.
+     */
+    public var expiresAt: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The grant id (a uuid). Keep it with the peer it was given to, to
+         * revoke the grant.
+         */id: String, 
+        /**
+         * `wkg_<grant id as 32 hex>_<43 base64url>`, the bearer token to hand
+         * to the peer. The gateway shows it only here and stores only its hash.
+         */token: String, 
+        /**
+         * The identity of this device that the peer can wake.
+         */recipient: String, 
+        /**
+         * The peer topics the grant covers, deduplicated and sorted.
+         */topics: [String], 
+        /**
+         * Peer requests the grant allows per hour.
+         */perHour: UInt32, 
+        /**
+         * Peer requests the grant allows per day.
+         */perDay: UInt32, 
+        /**
+         * Unix seconds.
+         */createdAt: UInt64, 
+        /**
+         * Unix seconds.
+         */expiresAt: UInt64) {
+        self.id = id
+        self.token = token
+        self.recipient = recipient
+        self.topics = topics
+        self.perHour = perHour
+        self.perDay = perDay
+        self.createdAt = createdAt
+        self.expiresAt = expiresAt
+    }
+}
+
+#if compiler(>=6)
+extension WakeGrant: Sendable {}
+#endif
+
+
+extension WakeGrant: Equatable, Hashable {
+    public static func ==(lhs: WakeGrant, rhs: WakeGrant) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.token != rhs.token {
+            return false
+        }
+        if lhs.recipient != rhs.recipient {
+            return false
+        }
+        if lhs.topics != rhs.topics {
+            return false
+        }
+        if lhs.perHour != rhs.perHour {
+            return false
+        }
+        if lhs.perDay != rhs.perDay {
+            return false
+        }
+        if lhs.createdAt != rhs.createdAt {
+            return false
+        }
+        if lhs.expiresAt != rhs.expiresAt {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(token)
+        hasher.combine(recipient)
+        hasher.combine(topics)
+        hasher.combine(perHour)
+        hasher.combine(perDay)
+        hasher.combine(createdAt)
+        hasher.combine(expiresAt)
+    }
+}
+
+extension WakeGrant: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeWakeGrant: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> WakeGrant {
+        return
+            try WakeGrant(
+                id: FfiConverterString.read(from: &buf), 
+                token: FfiConverterString.read(from: &buf), 
+                recipient: FfiConverterString.read(from: &buf), 
+                topics: FfiConverterSequenceString.read(from: &buf), 
+                perHour: FfiConverterUInt32.read(from: &buf), 
+                perDay: FfiConverterUInt32.read(from: &buf), 
+                createdAt: FfiConverterUInt64.read(from: &buf), 
+                expiresAt: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: WakeGrant, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.token, into: &buf)
+        FfiConverterString.write(value.recipient, into: &buf)
+        FfiConverterSequenceString.write(value.topics, into: &buf)
+        FfiConverterUInt32.write(value.perHour, into: &buf)
+        FfiConverterUInt32.write(value.perDay, into: &buf)
+        FfiConverterUInt64.write(value.createdAt, into: &buf)
+        FfiConverterUInt64.write(value.expiresAt, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWakeGrant_lift(_ buf: RustBuffer) throws -> WakeGrant {
+    return try FfiConverterTypeWakeGrant.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWakeGrant_lower(_ value: WakeGrant) -> RustBuffer {
+    return FfiConverterTypeWakeGrant.lower(value)
+}
+
+
+/**
+ * A grant as `wake_list_grants` reports it. It never carries the token.
+ */
+public struct WakeGrantSummary {
+    public var id: String
+    public var recipient: String
+    public var topics: [String]
+    public var perHour: UInt32
+    public var perDay: UInt32
+    /**
+     * Unix seconds.
+     */
+    public var createdAt: UInt64
+    /**
+     * Unix seconds.
+     */
+    public var expiresAt: UInt64
+    /**
+     * Unix seconds, once revoked.
+     */
+    public var revokedAt: UInt64?
+    /**
+     * Unix seconds of the last peer request the grant was accepted for.
+     */
+    public var lastUsedAt: UInt64?
+    /**
+     * Peer requests accepted with the grant in the last hour, whatever became
+     * of them: what the hourly quota counts.
+     */
+    public var sent1h: UInt32
+    /**
+     * The same over the last 24 hours.
+     */
+    public var sent24h: UInt32
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(id: String, recipient: String, topics: [String], perHour: UInt32, perDay: UInt32, 
+        /**
+         * Unix seconds.
+         */createdAt: UInt64, 
+        /**
+         * Unix seconds.
+         */expiresAt: UInt64, 
+        /**
+         * Unix seconds, once revoked.
+         */revokedAt: UInt64?, 
+        /**
+         * Unix seconds of the last peer request the grant was accepted for.
+         */lastUsedAt: UInt64?, 
+        /**
+         * Peer requests accepted with the grant in the last hour, whatever became
+         * of them: what the hourly quota counts.
+         */sent1h: UInt32, 
+        /**
+         * The same over the last 24 hours.
+         */sent24h: UInt32) {
+        self.id = id
+        self.recipient = recipient
+        self.topics = topics
+        self.perHour = perHour
+        self.perDay = perDay
+        self.createdAt = createdAt
+        self.expiresAt = expiresAt
+        self.revokedAt = revokedAt
+        self.lastUsedAt = lastUsedAt
+        self.sent1h = sent1h
+        self.sent24h = sent24h
+    }
+}
+
+#if compiler(>=6)
+extension WakeGrantSummary: Sendable {}
+#endif
+
+
+extension WakeGrantSummary: Equatable, Hashable {
+    public static func ==(lhs: WakeGrantSummary, rhs: WakeGrantSummary) -> Bool {
+        if lhs.id != rhs.id {
+            return false
+        }
+        if lhs.recipient != rhs.recipient {
+            return false
+        }
+        if lhs.topics != rhs.topics {
+            return false
+        }
+        if lhs.perHour != rhs.perHour {
+            return false
+        }
+        if lhs.perDay != rhs.perDay {
+            return false
+        }
+        if lhs.createdAt != rhs.createdAt {
+            return false
+        }
+        if lhs.expiresAt != rhs.expiresAt {
+            return false
+        }
+        if lhs.revokedAt != rhs.revokedAt {
+            return false
+        }
+        if lhs.lastUsedAt != rhs.lastUsedAt {
+            return false
+        }
+        if lhs.sent1h != rhs.sent1h {
+            return false
+        }
+        if lhs.sent24h != rhs.sent24h {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(recipient)
+        hasher.combine(topics)
+        hasher.combine(perHour)
+        hasher.combine(perDay)
+        hasher.combine(createdAt)
+        hasher.combine(expiresAt)
+        hasher.combine(revokedAt)
+        hasher.combine(lastUsedAt)
+        hasher.combine(sent1h)
+        hasher.combine(sent24h)
+    }
+}
+
+extension WakeGrantSummary: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeWakeGrantSummary: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> WakeGrantSummary {
+        return
+            try WakeGrantSummary(
+                id: FfiConverterString.read(from: &buf), 
+                recipient: FfiConverterString.read(from: &buf), 
+                topics: FfiConverterSequenceString.read(from: &buf), 
+                perHour: FfiConverterUInt32.read(from: &buf), 
+                perDay: FfiConverterUInt32.read(from: &buf), 
+                createdAt: FfiConverterUInt64.read(from: &buf), 
+                expiresAt: FfiConverterUInt64.read(from: &buf), 
+                revokedAt: FfiConverterOptionUInt64.read(from: &buf), 
+                lastUsedAt: FfiConverterOptionUInt64.read(from: &buf), 
+                sent1h: FfiConverterUInt32.read(from: &buf), 
+                sent24h: FfiConverterUInt32.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: WakeGrantSummary, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.id, into: &buf)
+        FfiConverterString.write(value.recipient, into: &buf)
+        FfiConverterSequenceString.write(value.topics, into: &buf)
+        FfiConverterUInt32.write(value.perHour, into: &buf)
+        FfiConverterUInt32.write(value.perDay, into: &buf)
+        FfiConverterUInt64.write(value.createdAt, into: &buf)
+        FfiConverterUInt64.write(value.expiresAt, into: &buf)
+        FfiConverterOptionUInt64.write(value.revokedAt, into: &buf)
+        FfiConverterOptionUInt64.write(value.lastUsedAt, into: &buf)
+        FfiConverterUInt32.write(value.sent1h, into: &buf)
+        FfiConverterUInt32.write(value.sent24h, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWakeGrantSummary_lift(_ buf: RustBuffer) throws -> WakeGrantSummary {
+    return try FfiConverterTypeWakeGrantSummary.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWakeGrantSummary_lower(_ value: WakeGrantSummary) -> RustBuffer {
+    return FfiConverterTypeWakeGrantSummary.lower(value)
+}
+
+
+/**
  * One identity's signature over `WakeRegistrationRequest.message`.
  */
 public struct WakeIdentityProof {
@@ -29896,6 +30257,31 @@ fileprivate struct FfiConverterSequenceTypeUsdtTransfer: FfiConverterRustBuffer 
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeWakeGrantSummary: FfiConverterRustBuffer {
+    typealias SwiftType = [WakeGrantSummary]
+
+    public static func write(_ value: [WakeGrantSummary], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeWakeGrantSummary.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [WakeGrantSummary] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [WakeGrantSummary]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeWakeGrantSummary.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeWakeIdentityProof: FfiConverterRustBuffer {
     typealias SwiftType = [WakeIdentityProof]
 
@@ -32973,6 +33359,27 @@ public func wakeClearPresence(gatewayUrl: String, deviceSecret: String)async thr
         )
 }
 /**
+ * Let peers wake `recipient`, an identity this device registered, on the peer
+ * `topics` (1 to 16 names). Returns the grant with its `wkg_` token, which the
+ * gateway shows only once: hand the token to the peer and keep the grant id to
+ * revoke it. `per_hour`, `per_day` and `expires_in_days` default to the
+ * gateway's peer settings and are capped at its maximums.
+ */
+public func wakeCreateGrant(gatewayUrl: String, deviceSecret: String, recipient: String, topics: [String], perHour: UInt32?, perDay: UInt32?, expiresInDays: UInt32?)async throws  -> WakeGrant  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_wake_create_grant(FfiConverterString.lower(gatewayUrl),FfiConverterString.lower(deviceSecret),FfiConverterString.lower(recipient),FfiConverterSequenceString.lower(topics),FfiConverterOptionUInt32.lower(perHour),FfiConverterOptionUInt32.lower(perDay),FfiConverterOptionUInt32.lower(expiresInDays)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeWakeGrant_lift,
+            errorHandler: FfiConverterTypeWakeError_lift
+        )
+}
+/**
  * Find and decrypt the wake in a delivered push (the APNs payload or the FCM data map as JSON).
  */
 public func wakeDecryptPush(secretKeyHex: String, pushJson: String)throws  -> WakeEnvelope  {
@@ -33036,6 +33443,24 @@ public func wakeGenerateKeypair()throws  -> WakeKeyPair  {
 })
 }
 /**
+ * List the grants of this device's identities, live, revoked and expired,
+ * oldest first. Never returns tokens.
+ */
+public func wakeListGrants(gatewayUrl: String, deviceSecret: String)async throws  -> [WakeGrantSummary]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_wake_list_grants(FfiConverterString.lower(gatewayUrl),FfiConverterString.lower(deviceSecret)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceTypeWakeGrantSummary.lift,
+            errorHandler: FfiConverterTypeWakeError_lift
+        )
+}
+/**
  * List the topics devices can subscribe to.
  */
 public func wakeListTopics(gatewayUrl: String)async throws  -> [WakeTopic]  {
@@ -33087,6 +33512,44 @@ public func wakeRegister(gatewayUrl: String, request: WakeRegistrationRequest, p
             completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
             liftFunc: FfiConverterTypeWakeRegistration_lift,
+            errorHandler: FfiConverterTypeWakeError_lift
+        )
+}
+/**
+ * Revoke a grant by id. Takes effect at once, and repeating it is harmless.
+ */
+public func wakeRevokeGrant(gatewayUrl: String, deviceSecret: String, grantId: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_wake_revoke_grant(FfiConverterString.lower(gatewayUrl),FfiConverterString.lower(deviceSecret),FfiConverterString.lower(grantId)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
+            errorHandler: FfiConverterTypeWakeError_lift
+        )
+}
+/**
+ * Wake the recipient of a grant a peer handed this app, on a topic the grant
+ * covers. The wake is content-free, and every request within the grant's quota
+ * gets the same answer whatever became of it. A rejection with code
+ * `grant_invalid` means the grant was revoked or expired; `rate_limited` means
+ * its quota is used up for now.
+ */
+public func wakeSendPeerWake(gatewayUrl: String, grantToken: String, topic: String)async throws   {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_wake_send_peer_wake(FfiConverterString.lower(gatewayUrl),FfiConverterString.lower(grantToken),FfiConverterString.lower(topic)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_void,
+            completeFunc: ffi_bitkitcore_rust_future_complete_void,
+            freeFunc: ffi_bitkitcore_rust_future_free_void,
+            liftFunc: { $0 },
             errorHandler: FfiConverterTypeWakeError_lift
         )
 }
@@ -33839,6 +34302,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_wake_clear_presence() != 38792) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_wake_create_grant() != 51786) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_wake_decrypt_push() != 65285) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -33857,6 +34323,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_wake_generate_keypair() != 41918) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_wake_list_grants() != 39553) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_wake_list_topics() != 5582) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -33864,6 +34333,12 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_wake_register() != 32128) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_wake_revoke_grant() != 8135) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_wake_send_peer_wake() != 31826) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_wake_server_info() != 21220) {

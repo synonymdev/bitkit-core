@@ -1918,6 +1918,11 @@ uint64_t uniffi_bitkitcore_fn_func_wake_ack(RustBuffer gateway_url, RustBuffer d
 uint64_t uniffi_bitkitcore_fn_func_wake_clear_presence(RustBuffer gateway_url, RustBuffer device_secret
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_CREATE_GRANT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_CREATE_GRANT
+uint64_t uniffi_bitkitcore_fn_func_wake_create_grant(RustBuffer gateway_url, RustBuffer device_secret, RustBuffer recipient, RustBuffer topics, RustBuffer per_hour, RustBuffer per_day, RustBuffer expires_in_days
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_DECRYPT_PUSH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_DECRYPT_PUSH
 RustBuffer uniffi_bitkitcore_fn_func_wake_decrypt_push(RustBuffer secret_key_hex, RustBuffer push_json, RustCallStatus *_Nonnull out_status
@@ -1951,6 +1956,11 @@ RustBuffer uniffi_bitkitcore_fn_func_wake_generate_keypair(RustCallStatus *_Nonn
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_LIST_GRANTS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_LIST_GRANTS
+uint64_t uniffi_bitkitcore_fn_func_wake_list_grants(RustBuffer gateway_url, RustBuffer device_secret
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_LIST_TOPICS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_LIST_TOPICS
 uint64_t uniffi_bitkitcore_fn_func_wake_list_topics(RustBuffer gateway_url
@@ -1964,6 +1974,16 @@ RustBuffer uniffi_bitkitcore_fn_func_wake_prepare_registration(RustBuffer audien
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_REGISTER
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_REGISTER
 uint64_t uniffi_bitkitcore_fn_func_wake_register(RustBuffer gateway_url, RustBuffer request, RustBuffer proofs
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_REVOKE_GRANT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_REVOKE_GRANT
+uint64_t uniffi_bitkitcore_fn_func_wake_revoke_grant(RustBuffer gateway_url, RustBuffer device_secret, RustBuffer grant_id
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_SEND_PEER_WAKE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_SEND_PEER_WAKE
+uint64_t uniffi_bitkitcore_fn_func_wake_send_peer_wake(RustBuffer gateway_url, RustBuffer grant_token, RustBuffer topic
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_WAKE_SERVER_INFO
@@ -3549,6 +3569,12 @@ uint16_t uniffi_bitkitcore_checksum_func_wake_clear_presence(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_CREATE_GRANT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_CREATE_GRANT
+uint16_t uniffi_bitkitcore_checksum_func_wake_create_grant(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_DECRYPT_PUSH
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_DECRYPT_PUSH
 uint16_t uniffi_bitkitcore_checksum_func_wake_decrypt_push(void
@@ -3585,6 +3611,12 @@ uint16_t uniffi_bitkitcore_checksum_func_wake_generate_keypair(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_LIST_GRANTS
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_LIST_GRANTS
+uint16_t uniffi_bitkitcore_checksum_func_wake_list_grants(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_LIST_TOPICS
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_LIST_TOPICS
 uint16_t uniffi_bitkitcore_checksum_func_wake_list_topics(void
@@ -3600,6 +3632,18 @@ uint16_t uniffi_bitkitcore_checksum_func_wake_prepare_registration(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_REGISTER
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_REGISTER
 uint16_t uniffi_bitkitcore_checksum_func_wake_register(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_REVOKE_GRANT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_REVOKE_GRANT
+uint16_t uniffi_bitkitcore_checksum_func_wake_revoke_grant(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_SEND_PEER_WAKE
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_WAKE_SEND_PEER_WAKE
+uint16_t uniffi_bitkitcore_checksum_func_wake_send_peer_wake(void
     
 );
 #endif
