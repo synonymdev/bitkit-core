@@ -32153,6 +32153,11 @@ public func pubkySwapsProviderEdges(providerPubky: String, mnemonic: String, bip
  * one of the contact's endpoints, otherwise the cheaper of the request's service legs and the
  * trusted Pubky Swaps providers' firm quotes, or `None` with a reason. The user never picks
  * the route.
+ *
+ * Each candidate in `request.providers`, at most 30, is asked for its offer over iroh. iroh finds
+ * a candidate's address through n0's discovery servers, so n0 sees the keys looked up from the
+ * wallet's swap identity and IP: pass candidates the user expects to route through, not every
+ * contact, where that matters.
  */
 public func pubkySwapsRoutePaykitPayment(request: PaykitRouteRequest, network: Network, mnemonic: String, bip39Passphrase: String?)async throws  -> PaykitRoute  {
     return
@@ -33476,7 +33481,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_pubky_swaps_provider_edges() != 4359) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_pubky_swaps_route_paykit_payment() != 36140) {
+    if (uniffi_bitkitcore_checksum_func_pubky_swaps_route_paykit_payment() != 45030) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_record_rbf_boost() != 15433) {

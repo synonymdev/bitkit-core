@@ -406,7 +406,13 @@ pub async fn commit_route(
     }
     let passphrase = bip39_passphrase.as_deref();
     let secret = keys::identity_secret(&mnemonic, passphrase)?;
-    let index = store::reserve_index(now_unix())?;
+    // One swap per clock second keeps every index behind the clock (see `keys`).
+    let index = loop {
+        if let Some(index) = store::reserve_index(now_unix())? {
+            break index;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+    };
     let swap_keys = keys::swap_keys(&mnemonic, passphrase, index)?;
     let request = SwapRequest {
         script_type: SwapScript::P2wsh,
@@ -495,6 +501,7 @@ pub async fn commit_route(
         claim_fee_sat: route.claim_fee_sat,
         claim_txid: None,
         claim_tx_hex: None,
+        claim_published: false,
         created_at_unix: now_unix(),
     };
     store::save(&record)?;
@@ -544,6 +551,7 @@ fn advance_blocking(
         htlc_spk: &htlc_spk,
         lock_sat: record.accept.onchain_amount_sat,
         destination: &destination,
+        delivered_sat: record.delivered_sat,
         timeout,
         required_confirmations: policy(record.network)
             .effective_confirmations(record.quote.required_confirmations),
@@ -556,19 +564,24 @@ fn advance_blocking(
         history.push((item.height, electrum.transaction_get(&item.tx_hash)?));
     }
 
-    let state = match claim::next_step(&contract, record.claim_txid.as_deref(), tip, &history) {
+    let saved = record.claim_txid.as_deref().map(|txid| claim::SavedClaim {
+        txid,
+        published: record.claim_published,
+    });
+    let state = match claim::next_step(&contract, saved, tip, &history) {
         claim::Step::Report(state) => state,
         claim::Step::Claimed { txid, state } => {
-            if record.claim_txid.as_deref() != Some(txid.as_str()) {
+            if record.claim_txid.as_deref() != Some(txid.as_str()) || !record.claim_published {
                 record.claim_txid = Some(txid);
+                record.claim_published = true;
                 store::save(&record)?;
             }
             state
         }
         claim::Step::Rebroadcast => {
             let txid = record.claim_txid.clone().unwrap_or_default();
-            match &record.claim_tx_hex {
-                Some(claim) => broadcast_claim(&electrum, claim),
+            match record.claim_tx_hex.clone() {
+                Some(claim) => publish_claim(&electrum, &mut record, &claim)?,
                 None => log::warn!("pubky swaps: no saved claim to broadcast again for {txid}"),
             }
             PubkySwapRouteState::ClaimBroadcast { txid }
@@ -590,31 +603,48 @@ fn advance_blocking(
             record.claim_txid = Some(txid.clone());
             record.claim_tx_hex = Some(claim.clone());
             store::save(&record)?;
-            broadcast_claim(&electrum, &claim);
+            publish_claim(&electrum, &mut record, &claim)?;
             PubkySwapRouteState::ClaimBroadcast { txid }
         }
     };
     Ok(status_of(&record, state))
 }
 
-/// Send a saved claim. A failure is only logged: the claim is saved, and the next call finds it
-/// missing from the history and sends it again, so the app keeps polling instead of stopping.
-fn broadcast_claim(electrum: &ElectrumClient, claim: &str) {
+/// Send a saved claim and record once the server took it, since its preimage is then public. A
+/// failure is only logged: the next call finds the claim missing from the history and sends it
+/// again, inside the safe window unless it was already published, so the app keeps polling.
+fn publish_claim(
+    electrum: &ElectrumClient,
+    record: &mut SwapRecord,
+    claim: &str,
+) -> Result<(), PubkySwapError> {
     let sent = bitcoin::consensus::encode::deserialize_hex::<bitcoin::Transaction>(claim)
         .map_err(PubkySwapError::storage)
         .and_then(|claim| Ok(electrum.transaction_broadcast(&claim)?));
-    if let Err(e) = sent {
-        log::warn!("pubky swaps: claim broadcast failed, retrying on the next advance: {e}");
+    match sent {
+        Ok(_) if !record.claim_published => {
+            record.claim_published = true;
+            store::save(record)
+        }
+        Ok(_) => Ok(()),
+        Err(e) => {
+            log::warn!("pubky swaps: claim broadcast failed, retrying on the next advance: {e}");
+            Ok(())
+        }
     }
 }
+
+/// One advance at a time, so two overlapping calls cannot save a stale record over the claim.
+static ADVANCING: Mutex<()> = Mutex::new(());
 
 pub async fn advance_swap(
     swap_id: String,
     mnemonic: String,
     bip39_passphrase: Option<String>,
 ) -> Result<PubkySwapRouteStatus, PubkySwapError> {
-    let record = store::load(&swap_id)?;
     tokio::task::spawn_blocking(move || {
+        let _advancing = ADVANCING.lock().unwrap();
+        let record = store::load(&swap_id)?;
         advance_blocking(record, &mnemonic, bip39_passphrase.as_deref())
     })
     .await

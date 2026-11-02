@@ -5,10 +5,12 @@
 //! HMAC-SHA512(seed, domain || index), truncated to 32 bytes, under its own domain string, so
 //! nothing here can collide with the Boltz module's BIP85 keys or with each other.
 //!
-//! The index is the Unix time in seconds when the swap starts, or one past the previous index when
-//! that is later. A restored or reinstalled wallet starts from its clock, past every index it
-//! used, so it never derives a preimage an earlier claim published. A restore finds each listed
-//! swap's index by scanning a window around its creation time for the swap's payment hash.
+//! The index is the Unix time in seconds when the swap starts, and a wallet starts at most one swap
+//! per second, so an index is never ahead of the clock. A restored or reinstalled wallet starts
+//! after every index it used, so it never derives a preimage an earlier claim published. A restore
+//! finds each listed swap's index by scanning a window around its creation time for the swap's
+//! payment hash. Two devices on one seed still derive the same keys if both start a swap in the
+//! same second.
 
 use bitcoin::hashes::{hmac, sha256, sha512, Hash, HashEngine};
 use bitcoin::secp256k1::{Secp256k1, SecretKey};
@@ -51,9 +53,9 @@ pub(crate) fn identity_secret(
     Ok(derive(&seed(mnemonic, passphrase)?, IDENTITY_DOMAIN, &[]))
 }
 
-/// The index a new swap takes: the clock, or one past the last index when that is later.
-pub(crate) fn next_index(last: Option<u64>, now_unix: u64) -> u64 {
-    last.map_or(now_unix, |last| now_unix.max(last + 1))
+/// The index a new swap takes at `now_unix`, or `None` while this second already has a swap.
+pub(crate) fn next_index(last: Option<u64>, now_unix: u64) -> Option<u64> {
+    last.is_none_or(|last| now_unix > last).then_some(now_unix)
 }
 
 pub(crate) fn swap_keys(
@@ -106,11 +108,11 @@ mod tests {
     }
 
     #[test]
-    fn indexes_follow_the_clock_and_never_repeat() {
-        assert_eq!(next_index(None, 1_000), 1_000);
-        assert_eq!(next_index(Some(900), 1_000), 1_000);
-        // Several swaps in one second step past the clock.
-        assert_eq!(next_index(Some(1_000), 1_000), 1_001);
-        assert_eq!(next_index(Some(1_001), 1_000), 1_002);
+    fn indexes_follow_the_clock_and_never_run_ahead_of_it() {
+        assert_eq!(next_index(None, 1_000), Some(1_000));
+        assert_eq!(next_index(Some(900), 1_000), Some(1_000));
+        // A second swap in the same second waits for the next one.
+        assert_eq!(next_index(Some(1_000), 1_000), None);
+        assert_eq!(next_index(Some(1_000), 1_001), Some(1_001));
     }
 }

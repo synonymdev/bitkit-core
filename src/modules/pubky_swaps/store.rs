@@ -35,6 +35,9 @@ pub(crate) struct SwapRecord {
     /// The signed claim, kept so it can be broadcast again while it is unconfirmed.
     #[serde(default)]
     pub claim_tx_hex: Option<String>,
+    /// Whether the claim, and with it the preimage, ever reached the server or the chain.
+    #[serde(default)]
+    pub claim_published: bool,
     pub created_at_unix: u64,
 }
 
@@ -64,9 +67,10 @@ fn write_atomic(path: &Path, bytes: &[u8]) -> Result<(), PubkySwapError> {
     Ok(())
 }
 
-/// Take the index for a new swap at `now_unix` and sync it to disk before it is used. Without a
-/// stored index, as after a restore, the clock alone is past every index used before.
-pub(crate) fn reserve_index(now_unix: u64) -> Result<u64, PubkySwapError> {
+/// Take the index for a new swap at `now_unix` and sync it to disk before it is used, or `None`
+/// while this second already has a swap. Without a stored index, as after a restore, the clock
+/// alone is past every index used before.
+pub(crate) fn reserve_index(now_unix: u64) -> Result<Option<u64>, PubkySwapError> {
     let _guard = LOCK.lock().unwrap();
     let path = dir()?.join("last_index");
     let last = match fs::read_to_string(&path) {
@@ -74,9 +78,11 @@ pub(crate) fn reserve_index(now_unix: u64) -> Result<u64, PubkySwapError> {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
         Err(e) => return Err(e.into()),
     };
-    let index = super::keys::next_index(last, now_unix);
+    let Some(index) = super::keys::next_index(last, now_unix) else {
+        return Ok(None);
+    };
     write_atomic(&path, index.to_string().as_bytes())?;
-    Ok(index)
+    Ok(Some(index))
 }
 
 pub(crate) fn save(record: &SwapRecord) -> Result<(), PubkySwapError> {
@@ -104,13 +110,13 @@ mod tests {
     fn reserves_increasing_indexes_and_never_repeats_after_a_wipe() {
         let base = std::env::temp_dir().join(format!("pubky-swaps-index-{}", uuid::Uuid::new_v4()));
         init(base.to_str().unwrap()).unwrap();
-        let first = reserve_index(1_000).unwrap();
-        let second = reserve_index(1_000).unwrap();
-        assert_eq!((first, second), (1_000, 1_001));
-        // A restore starts without the stored index, at a later time.
+        assert_eq!(reserve_index(1_000).unwrap(), Some(1_000));
+        assert_eq!(reserve_index(1_000).unwrap(), None);
+        assert_eq!(reserve_index(1_001).unwrap(), Some(1_001));
+        // A restore starts without the stored index, in a later second.
         fs::remove_dir_all(&base).unwrap();
         init(base.to_str().unwrap()).unwrap();
-        assert!(reserve_index(2_000).unwrap() > second);
+        assert_eq!(reserve_index(1_002).unwrap(), Some(1_002));
         fs::remove_dir_all(&base).ok();
     }
 }
