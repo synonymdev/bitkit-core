@@ -348,6 +348,25 @@ where
         Ok(Some(commitment_txid))
     }
 
+    /// The operator's input fee for the VTXOs among `inputs` (boarding inputs are not VTXOs).
+    async fn vtxo_input_fees(
+        &self,
+        server_info: &server::Info,
+        inputs: &[intent::Input],
+    ) -> Result<Amount, Error> {
+        let spent: HashSet<OutPoint> = inputs.iter().map(|input| input.outpoint()).collect();
+        let list = self
+            .list_vtxos_with_server_info(server_info, Some(GetVtxosRequestFilter::Renewable))
+            .await
+            .context("failed to get VTXO list")?;
+        self.eval_offchain_input_fees(
+            list.all_unspent()
+                .map(|entry| entry.vtxo())
+                .filter(|vtxo| spent.contains(&vtxo.outpoint)),
+            server_info.dust,
+        )
+    }
+
     /// Settle _some_ prior VTXOs and boarding outputs into the next batch, generating UTXOs as
     /// outputs to a new commitment transaction.
     pub async fn collaborative_redeem<R>(
@@ -367,10 +386,11 @@ where
             .fetch_commitment_transaction_inputs(&server_info, crate::utils::unix_now()?)
             .await?;
 
+        // The operator charges the on-chain output and each VTXO spent.
         let onchain_fee = self.eval_onchain_output_fee(ark_fees::Output {
             amount: to_amount.to_sat(),
             script: to_address.script_pubkey().to_string(),
-        })?;
+        })? + self.vtxo_input_fees(&server_info, &vtxo_inputs).await?;
 
         // Fee comes out of change, not the send amount.
         let change_amount = total_amount
@@ -453,10 +473,11 @@ where
             .iter()
             .fold(Amount::ZERO, |acc, vtxo| acc + vtxo.amount());
 
+        // The operator charges the on-chain output and each VTXO spent.
         let onchain_fee = self.eval_onchain_output_fee(ark_fees::Output {
             amount: to_amount.to_sat(),
             script: to_address.script_pubkey().to_string(),
-        })?;
+        })? + self.vtxo_input_fees(&server_info, &vtxo_inputs).await?;
 
         // Fee comes out of change, not the send amount.
         let change_amount = total_input_amount

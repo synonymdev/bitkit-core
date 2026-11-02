@@ -409,11 +409,18 @@ impl Wallet {
                     .client
                     .list_vtxos_filtered(GetVtxosRequestFilter::Renewable)
                     .await?;
-                let inputs: Vec<(OutPoint, u64)> = list
-                    .batch_settleable_at(&info, now)
-                    .map(|e| (e.vtxo().outpoint, e.vtxo().amount.to_sat()))
-                    .collect();
-                let total: u64 = inputs.iter().map(|(_, sats)| sats).sum();
+                let mut input_fees = 0;
+                let mut inputs = Vec::new();
+                for e in list.batch_settleable_at(&info, now) {
+                    input_fees += input_fee(&estimator, e.vtxo(), info.dust)?;
+                    inputs.push((e.vtxo().outpoint, e.vtxo().amount.to_sat()));
+                }
+                // The operator charges each VTXO spent as well as the output.
+                let total = inputs
+                    .iter()
+                    .map(|(_, sats)| sats)
+                    .sum::<u64>()
+                    .saturating_sub(input_fees);
                 // A fee program may price the output on its own amount: settle on the largest output whose
                 // amount plus fee fits the inputs.
                 let mut send = total.saturating_sub(output_fee(total)?);
@@ -536,6 +543,29 @@ fn fees_of(info: &Info) -> ArkadeFees {
     }
 }
 
+/// The operator's `offchainInput` fee for spending `vtxo`, rounded up as the operator does.
+fn input_fee(
+    estimator: &ark_fees::Estimator,
+    vtxo: &VirtualTxOutPoint,
+    dust: Amount,
+) -> Result<u64, ArkadeError> {
+    let input_type = if vtxo.is_recoverable(dust) {
+        ark_fees::VtxoType::Recoverable
+    } else {
+        ark_fees::VtxoType::Vtxo
+    };
+    Ok(estimator
+        .eval_offchain_input(ark_fees::OffchainInput {
+            amount: vtxo.amount.to_sat(),
+            expiry: Some(vtxo.expires_at),
+            birth: Some(vtxo.created_at),
+            input_type,
+            ..Default::default()
+        })
+        .map_err(ArkadeError::ark)?
+        .to_satoshis())
+}
+
 /// ark-client builds the same estimator internally but keeps it private.
 fn fee_estimator(info: &Info) -> Result<ark_fees::Estimator, ArkadeError> {
     let fees = fees_of(info);
@@ -637,4 +667,56 @@ impl ArkWallet for Wallet {
 
 fn wallet_error(e: impl std::fmt::Display) -> WalletError {
     WalletError(format!("{e:#}"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn vtxo(amount: u64, expires_in: i64) -> VirtualTxOutPoint {
+        let now = now_secs() as i64;
+        VirtualTxOutPoint {
+            outpoint: OutPoint::null(),
+            created_at: now,
+            expires_at: now + expires_in,
+            amount: Amount::from_sat(amount),
+            script: Default::default(),
+            is_preconfirmed: false,
+            is_swept: false,
+            is_unrolled: false,
+            is_spent: false,
+            spent_by: None,
+            commitment_txids: Vec::new(),
+            settled_by: None,
+            ark_txid: None,
+            assets: Vec::new(),
+            depth: 0,
+        }
+    }
+
+    #[test]
+    fn input_fee_follows_the_operator_program() {
+        // arkade.computer's programs on 2 Nov 2026: a VTXO with over 29 days left pays 0.2%.
+        let estimator = ark_fees::Estimator::new(ark_fees::Config {
+            intent_offchain_input_program:
+                "inputType == 'vtxo' && expiry - now() > 2505216.0 ? amount * 0.002 : 0.0".into(),
+            intent_onchain_output_program: "200.0".into(),
+            ..Default::default()
+        })
+        .unwrap();
+        let dust = Amount::from_sat(330);
+        let day = 24 * 60 * 60;
+        assert_eq!(
+            input_fee(&estimator, &vtxo(11_500, 30 * day), dust).unwrap(),
+            23
+        );
+        assert_eq!(
+            input_fee(&estimator, &vtxo(11_501, 30 * day), dust).unwrap(),
+            24
+        );
+        assert_eq!(
+            input_fee(&estimator, &vtxo(11_500, 10 * day), dust).unwrap(),
+            0
+        );
+    }
 }

@@ -1039,6 +1039,35 @@ where
             .map_err(Error::ad_hoc)
     }
 
+    /// The operator's `offchainInput` fee for spending these VTXOs, rounded up per input as the operator does.
+    pub(crate) fn eval_offchain_input_fees<'a>(
+        &self,
+        vtxos: impl IntoIterator<Item = &'a VirtualTxOutPoint>,
+        dust: Amount,
+    ) -> Result<Amount, Error> {
+        self.with_server_state(|state| {
+            vtxos.into_iter().try_fold(0, |sum, vtxo| {
+                let input_type = if vtxo.is_recoverable(dust) {
+                    ark_fees::VtxoType::Recoverable
+                } else {
+                    ark_fees::VtxoType::Vtxo
+                };
+                state
+                    .fee_estimator
+                    .eval_offchain_input(ark_fees::OffchainInput {
+                        amount: vtxo.amount.to_sat(),
+                        expiry: Some(vtxo.expires_at),
+                        birth: Some(vtxo.created_at),
+                        input_type,
+                        ..Default::default()
+                    })
+                    .map(|fee| sum + fee.to_satoshis())
+            })
+        })?
+        .map(Amount::from_sat)
+        .map_err(Error::ad_hoc)
+    }
+
     /// Force-fetch the latest Ark server `/info` and replace the cached server state.
     ///
     /// This bypasses the TTL used by [`Self::server_info`]. Concurrent refreshes are serialized
