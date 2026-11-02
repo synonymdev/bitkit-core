@@ -40,12 +40,13 @@ payloads over this carrier.
 
 - The wallet's identity towards providers derives from the seed. Each swap's claim key and preimage
   derive from the seed and a clock index, with HMAC-SHA512 under their own domain strings. The
-  index is the Unix time in seconds when the swap starts, or one past the previous index when that
-  is later, so a restored or reinstalled wallet never repeats a preimage an earlier claim published,
-  and a restore can find a listed swap's index by scanning a window around its creation time. They
-  never collide with the Boltz module's keys, and the identity is not the user's Pubky identity.
-- A wallet starts at most one swap per second, so an index is never ahead of the clock.
-  `<base>/pubky_swaps/last_index` is synced to disk before the swap request is sent.
+  index is the Unix time in seconds when the swap starts, and a wallet starts at most one swap per
+  second, so an index is never ahead of the clock. A restored or reinstalled wallet therefore never
+  repeats a preimage an earlier claim published, and a restore can find a listed swap's index by
+  scanning a window around its creation time. When the clock is behind the last index, as after a
+  backward clock correction, the commit fails after 3 s instead of waiting. The keys never collide
+  with the Boltz module's keys, and the identity is not the user's Pubky identity.
+- `<base>/pubky_swaps/last_index` is synced to disk before the swap request is sent.
   `<base>/pubky_swaps/<swap_id>.json` holds the contract, the index and the signed claim, never a
   secret; it is synced before the invoice reaches the app, and the claim before it is broadcast.
 

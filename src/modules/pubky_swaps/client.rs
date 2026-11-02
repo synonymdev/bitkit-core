@@ -596,8 +596,8 @@ fn advance_blocking(
 
 /// Send a saved claim. It is recorded as published before it goes out: once a broadcast was
 /// attempted its preimage may have left the wallet, even if the reply is lost. Only an explicit
-/// refusal from the server marks it private again, and a failure is only logged, so the app keeps
-/// polling and the next call sends it again.
+/// refusal of the first attempt marks it private again, and a failure is only logged, so the app
+/// keeps polling and the next call sends it again.
 fn publish_claim(
     electrum: &ElectrumClient,
     record: &mut SwapRecord,
@@ -605,7 +605,10 @@ fn publish_claim(
 ) -> Result<(), PubkySwapError> {
     let claim = bitcoin::consensus::encode::deserialize_hex::<bitcoin::Transaction>(claim)
         .map_err(PubkySwapError::storage)?;
-    if !record.claim_published {
+    // Only a refusal of the very first attempt proves the preimage never left: an earlier attempt
+    // may have reached the server even if its reply was lost.
+    let first_attempt = !record.claim_published;
+    if first_attempt {
         record.claim_published = true;
         store::save(record)?;
     }
@@ -617,7 +620,7 @@ fn publish_claim(
         Ok(_) => Ok(()),
         Err(e) => {
             log::warn!("pubky swaps: claim broadcast failed, retrying on the next advance: {e}");
-            if is_refusal(&e) && !record.claim_seen {
+            if first_attempt && is_refusal(&e) {
                 record.claim_published = false;
                 store::save(record)?;
             }
