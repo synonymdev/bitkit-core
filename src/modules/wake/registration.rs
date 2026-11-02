@@ -36,6 +36,7 @@ use super::types::{WakeDeviceSecret, WakeEnvironment, WakePlatform, WakeRegistra
 pub(crate) const PREIMAGE_TAG: &str = "wake-register-v1";
 
 const DEVICE_SECRET_PREFIX: &str = "wkd_";
+const GRANT_TOKEN_PREFIX: &str = "wkg_";
 const MAX_TOPICS: usize = 32;
 const MAX_TOPIC_LEN: usize = 64;
 
@@ -206,7 +207,7 @@ fn parse_public_key_hex(s: &str) -> Result<PublicKey, WakeError> {
 /// - `ln:` + 66 lowercase hex, a compressed secp256k1 key on the curve;
 /// - `pk:` + 52 canonical z-base-32 characters, a canonical, non-weak
 ///   Ed25519 point.
-fn identity_scheme(identity: &str) -> Result<&'static str, WakeError> {
+pub(crate) fn identity_scheme(identity: &str) -> Result<&'static str, WakeError> {
     let invalid = || WakeError::invalid_input("identities must be canonical ln: or pk: identities");
     if let Some(key) = identity.strip_prefix("ln:") {
         parse_public_key_hex(key).map_err(|_| invalid())?;
@@ -239,6 +240,12 @@ fn is_valid_topic_filter(s: &str) -> bool {
     }
 }
 
+/// `^[a-z][a-z0-9_-]*(\.[A-Za-z][A-Za-z0-9_-]*)+$` names only, at most 64
+/// characters: what grants and peer wakes take, where a pattern is refused.
+pub(crate) fn is_valid_topic_name(s: &str) -> bool {
+    s.len() <= MAX_TOPIC_LEN && is_namespace(s) && s.contains('.')
+}
+
 /// `^[a-z][a-z0-9_-]*(\.[A-Za-z][A-Za-z0-9_-]*)*$`
 fn is_namespace(s: &str) -> bool {
     let mut segments = s.split('.');
@@ -269,6 +276,25 @@ pub(crate) fn is_valid_device_secret(token: &str) -> bool {
         .filter(|body| body.len() == 43)
         .and_then(|body| URL_SAFE_NO_PAD.decode(body).ok())
         .is_some_and(|bytes| bytes.len() == 32)
+}
+
+/// The grant id, as a hyphenated lowercase uuid, of a grant token:
+/// `wkg_` + the id's 32 lowercase hex characters + `_` + 43 canonical
+/// base64url characters (32 bytes). `None` for anything else.
+pub(crate) fn grant_token_id(token: &str) -> Option<String> {
+    let (id_hex, secret) = token.strip_prefix(GRANT_TOKEN_PREFIX)?.split_once('_')?;
+    let id_is_lower_hex = id_hex.len() == 32
+        && id_hex
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b));
+    let secret_is_32_bytes = secret.len() == 43
+        && URL_SAFE_NO_PAD
+            .decode(secret)
+            .is_ok_and(|bytes| bytes.len() == 32);
+    if !(id_is_lower_hex && secret_is_32_bytes) {
+        return None;
+    }
+    uuid::Uuid::parse_str(id_hex).ok().map(|id| id.to_string())
 }
 
 /// A fresh install id: 16 random bytes as 22 base64url characters.

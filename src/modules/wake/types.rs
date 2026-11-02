@@ -185,3 +185,65 @@ pub struct WakeTopic {
     /// Peers (not services) send this topic, through grants.
     pub peer: bool,
 }
+
+/// A grant just created: it lets whoever holds `token` wake `recipient` on
+/// `topics`, within the quotas, until `expires_at`.
+#[derive(uniffi::Record, Clone, PartialEq, Eq)]
+pub struct WakeGrant {
+    /// The grant id (a uuid). Keep it with the peer it was given to, to
+    /// revoke the grant.
+    pub id: String,
+    /// `wkg_<grant id as 32 hex>_<43 base64url>`, the bearer token to hand
+    /// to the peer. The gateway shows it only here and stores only its hash.
+    pub token: String,
+    /// The identity of this device that the peer can wake.
+    pub recipient: String,
+    /// The peer topics the grant covers, deduplicated and sorted.
+    pub topics: Vec<String>,
+    /// Peer requests the grant allows per hour.
+    pub per_hour: u32,
+    /// Peer requests the grant allows per day.
+    pub per_day: u32,
+    /// Unix seconds.
+    pub created_at: u64,
+    /// Unix seconds.
+    pub expires_at: u64,
+}
+
+impl fmt::Debug for WakeGrant {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WakeGrant")
+            .field("id", &self.id)
+            .field("token", &"wkg_<redacted>")
+            .field("recipient", &self.recipient)
+            .field("topics", &self.topics)
+            .field("per_hour", &self.per_hour)
+            .field("per_day", &self.per_day)
+            .field("created_at", &self.created_at)
+            .field("expires_at", &self.expires_at)
+            .finish()
+    }
+}
+
+/// A grant as `wake_list_grants` reports it. It never carries the token.
+#[derive(uniffi::Record, Debug, Clone, PartialEq, Eq)]
+pub struct WakeGrantSummary {
+    pub id: String,
+    pub recipient: String,
+    pub topics: Vec<String>,
+    pub per_hour: u32,
+    pub per_day: u32,
+    /// Unix seconds.
+    pub created_at: u64,
+    /// Unix seconds.
+    pub expires_at: u64,
+    /// Unix seconds, once revoked.
+    pub revoked_at: Option<u64>,
+    /// Unix seconds of the last peer request the grant was accepted for.
+    pub last_used_at: Option<u64>,
+    /// Peer requests accepted with the grant in the last hour, whatever became
+    /// of them: what the hourly quota counts.
+    pub sent_1h: u32,
+    /// The same over the last 24 hours.
+    pub sent_24h: u32,
+}

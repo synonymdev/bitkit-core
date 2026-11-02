@@ -15,17 +15,31 @@ use url::Url;
 
 use super::crypto::parse_wake_id;
 use super::errors::{json_error, WakeError};
-use super::registration::{is_valid_device_secret, RegistrationFields};
+use super::registration::{
+    grant_token_id, identity_scheme, is_valid_device_secret, is_valid_topic_name,
+    RegistrationFields,
+};
 use super::types::{
-    WakeAckOutcome, WakeIdentityProof, WakeRegistration, WakeRegistrationRequest, WakeServerInfo,
-    WakeTopic,
+    WakeAckOutcome, WakeGrant, WakeGrantSummary, WakeIdentityProof, WakeRegistration,
+    WakeRegistrationRequest, WakeServerInfo, WakeTopic,
 };
 
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 
-/// A request to the gateway. `bearer` is a device secret, so this type has
-/// no `Debug`.
+/// The most topics one grant can list.
+const MAX_GRANT_TOPICS: usize = 16;
+
+/// The credential a route takes.
+enum Bearer<'a> {
+    /// `wkd_...`: the device routes, grants among them.
+    Device(&'a str),
+    /// `wkg_...`: `POST /v1/peer/wakes`.
+    Grant(&'a str),
+}
+
+/// A request to the gateway. `bearer` is a device secret or a grant token,
+/// so this type has no `Debug`.
 pub(crate) struct HttpRequest {
     pub(crate) method: Method,
     pub(crate) url: Url,
@@ -85,6 +99,23 @@ struct TopicsBody<'a> {
     topics: &'a [String],
 }
 
+#[derive(Serialize)]
+struct CreateGrantBody<'a> {
+    recipient: &'a str,
+    topics: &'a [String],
+    #[serde(skip_serializing_if = "Option::is_none")]
+    per_hour: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    per_day: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    expires_in_days: Option<u32>,
+}
+
+#[derive(Serialize)]
+struct PeerWakeBody<'a> {
+    topic: &'a str,
+}
+
 #[derive(Deserialize)]
 struct ErrorBody {
     error: String,
@@ -139,6 +170,43 @@ struct DisplayWire {
     body: String,
 }
 
+#[derive(Deserialize)]
+struct CreateGrantResponse {
+    id: String,
+    token: String,
+    recipient: String,
+    topics: Vec<String>,
+    per_hour: u32,
+    per_day: u32,
+    created_at: u64,
+    expires_at: u64,
+}
+
+#[derive(Deserialize)]
+struct ListGrantsResponse {
+    grants: Vec<GrantSummaryWire>,
+}
+
+#[derive(Deserialize)]
+struct GrantSummaryWire {
+    id: String,
+    recipient: String,
+    topics: Vec<String>,
+    per_hour: u32,
+    per_day: u32,
+    created_at: u64,
+    expires_at: u64,
+    revoked_at: Option<u64>,
+    last_used_at: Option<u64>,
+    sent_1h: u32,
+    sent_24h: u32,
+}
+
+#[derive(Deserialize)]
+struct PeerWakeResponse {
+    status: String,
+}
+
 // ----- Builders -----
 
 /// `gateway_url` with the path ending in `/`, so relative routes append to
@@ -164,17 +232,21 @@ fn request(
     method: Method,
     gateway_url: &str,
     route: &str,
-    bearer: Option<&str>,
+    bearer: Option<Bearer<'_>>,
     body: Option<String>,
 ) -> Result<HttpRequest, WakeError> {
     let url = base_url(gateway_url)?
         .join(route)
         .map_err(|_| WakeError::invalid_input("gateway url cannot be joined"))?;
     let bearer = match bearer {
-        Some(token) if !is_valid_device_secret(token) => {
+        Some(Bearer::Device(token)) if !is_valid_device_secret(token) => {
             return Err(WakeError::invalid_input("malformed device secret"))
         }
-        other => other.map(str::to_string),
+        Some(Bearer::Grant(token)) if grant_token_id(token).is_none() => {
+            return Err(WakeError::invalid_input("malformed grant token"))
+        }
+        Some(Bearer::Device(token) | Bearer::Grant(token)) => Some(token.to_string()),
+        None => None,
     };
     Ok(HttpRequest {
         method,
@@ -269,7 +341,7 @@ pub(crate) fn build_ack(
         Method::POST,
         gateway_url,
         "v1/acks",
-        Some(device_secret),
+        Some(Bearer::Device(device_secret)),
         Some(to_json(&body)),
     )
 }
@@ -284,7 +356,7 @@ pub(crate) fn build_set_presence(
         Method::PUT,
         gateway_url,
         "v1/presence",
-        Some(device_secret),
+        Some(Bearer::Device(device_secret)),
         Some(to_json(&PresenceBody { ttl_secs })),
     )
 }
@@ -298,7 +370,7 @@ pub(crate) fn build_clear_presence(
         Method::DELETE,
         gateway_url,
         "v1/presence",
-        Some(device_secret),
+        Some(Bearer::Device(device_secret)),
         None,
     )
 }
@@ -313,7 +385,7 @@ pub(crate) fn build_set_topics(
         Method::PUT,
         gateway_url,
         "v1/devices/self/topics",
-        Some(device_secret),
+        Some(Bearer::Device(device_secret)),
         Some(to_json(&TopicsBody { topics })),
     )
 }
@@ -327,8 +399,110 @@ pub(crate) fn build_unregister(
         Method::DELETE,
         gateway_url,
         "v1/devices/self",
-        Some(device_secret),
+        Some(Bearer::Device(device_secret)),
         None,
+    )
+}
+
+/// `POST /v1/grants`. Checks what the gateway checks without its config: a
+/// canonical recipient, 1 to 16 topic names (patterns are refused), and no
+/// zero quota or lifetime. Whether each topic is a peer topic, whether the
+/// recipient is bound to this device, and `per_day` being at least
+/// `per_hour` are left to the gateway: it applies its defaults and caps
+/// first, so only it can tell.
+pub(crate) fn build_create_grant(
+    gateway_url: &str,
+    device_secret: &str,
+    recipient: &str,
+    topics: &[String],
+    per_hour: Option<u32>,
+    per_day: Option<u32>,
+    expires_in_days: Option<u32>,
+) -> Result<HttpRequest, WakeError> {
+    identity_scheme(recipient).map_err(|_| {
+        WakeError::invalid_input("recipient is not a canonical ln: or pk: identity")
+    })?;
+    if !(1..=MAX_GRANT_TOPICS).contains(&topics.len()) {
+        return Err(WakeError::invalid_input("a grant lists 1 to 16 topics"));
+    }
+    if !topics.iter().all(|topic| is_valid_topic_name(topic)) {
+        return Err(WakeError::invalid_input(
+            "every grant topic must be a topic name, not a pattern",
+        ));
+    }
+    for (value, reason) in [
+        (per_hour, "per_hour must be at least 1"),
+        (per_day, "per_day must be at least 1"),
+        (expires_in_days, "expires_in_days must be at least 1"),
+    ] {
+        if value == Some(0) {
+            return Err(WakeError::invalid_input(reason));
+        }
+    }
+    let body = CreateGrantBody {
+        recipient,
+        topics,
+        per_hour,
+        per_day,
+        expires_in_days,
+    };
+    request(
+        Method::POST,
+        gateway_url,
+        "v1/grants",
+        Some(Bearer::Device(device_secret)),
+        Some(to_json(&body)),
+    )
+}
+
+/// `GET /v1/grants`
+pub(crate) fn build_list_grants(
+    gateway_url: &str,
+    device_secret: &str,
+) -> Result<HttpRequest, WakeError> {
+    request(
+        Method::GET,
+        gateway_url,
+        "v1/grants",
+        Some(Bearer::Device(device_secret)),
+        None,
+    )
+}
+
+/// `DELETE /v1/grants/{id}`, with the id in any uuid spelling.
+pub(crate) fn build_revoke_grant(
+    gateway_url: &str,
+    device_secret: &str,
+    grant_id: &str,
+) -> Result<HttpRequest, WakeError> {
+    let id = uuid::Uuid::parse_str(grant_id)
+        .map_err(|_| WakeError::invalid_input("grant id is not a uuid"))?;
+    request(
+        Method::DELETE,
+        gateway_url,
+        &format!("v1/grants/{id}"),
+        Some(Bearer::Device(device_secret)),
+        None,
+    )
+}
+
+/// `POST /v1/peer/wakes`, authenticated by the grant token a peer handed us.
+pub(crate) fn build_send_peer_wake(
+    gateway_url: &str,
+    grant_token: &str,
+    topic: &str,
+) -> Result<HttpRequest, WakeError> {
+    if !is_valid_topic_name(topic) {
+        return Err(WakeError::invalid_input(
+            "the topic must be a topic name, not a pattern",
+        ));
+    }
+    request(
+        Method::POST,
+        gateway_url,
+        "v1/peer/wakes",
+        Some(Bearer::Grant(grant_token)),
+        Some(to_json(&PeerWakeBody { topic })),
     )
 }
 
@@ -424,6 +598,65 @@ pub(crate) fn parse_set_topics(response: &HttpResponse) -> Result<Vec<String>, W
     Ok(topics.topics)
 }
 
+/// The new grant. Its token must be well formed and name the grant's own
+/// id, since it is about to be handed to a peer.
+pub(crate) fn parse_create_grant(response: &HttpResponse) -> Result<WakeGrant, WakeError> {
+    let grant: CreateGrantResponse = success_json(response)?;
+    let id = uuid::Uuid::parse_str(&grant.id)
+        .map_err(|_| WakeError::invalid_response("the grant id is not a uuid"))?
+        .to_string();
+    if grant_token_id(&grant.token).as_deref() != Some(id.as_str()) {
+        return Err(WakeError::invalid_response(
+            "the grant token is malformed or names another grant",
+        ));
+    }
+    Ok(WakeGrant {
+        id,
+        token: grant.token,
+        recipient: grant.recipient,
+        topics: grant.topics,
+        per_hour: grant.per_hour,
+        per_day: grant.per_day,
+        created_at: grant.created_at,
+        expires_at: grant.expires_at,
+    })
+}
+
+pub(crate) fn parse_list_grants(
+    response: &HttpResponse,
+) -> Result<Vec<WakeGrantSummary>, WakeError> {
+    let listed: ListGrantsResponse = success_json(response)?;
+    Ok(listed
+        .grants
+        .into_iter()
+        .map(|grant| WakeGrantSummary {
+            id: grant.id,
+            recipient: grant.recipient,
+            topics: grant.topics,
+            per_hour: grant.per_hour,
+            per_day: grant.per_day,
+            created_at: grant.created_at,
+            expires_at: grant.expires_at,
+            revoked_at: grant.revoked_at,
+            last_used_at: grant.last_used_at,
+            sent_1h: grant.sent_1h,
+            sent_24h: grant.sent_24h,
+        })
+        .collect())
+}
+
+/// `{"status":"accepted"}`, the one success answer of a peer wake.
+pub(crate) fn parse_send_peer_wake(response: &HttpResponse) -> Result<(), WakeError> {
+    let answer: PeerWakeResponse = success_json(response)?;
+    if answer.status == "accepted" {
+        Ok(())
+    } else {
+        Err(WakeError::invalid_response(
+            "the peer wake answer is not accepted",
+        ))
+    }
+}
+
 // ----- Executor -----
 
 async fn send(request: HttpRequest) -> Result<HttpResponse, WakeError> {
@@ -513,4 +746,55 @@ pub async fn wake_unregister(gateway_url: String, device_secret: String) -> Resu
 /// Lists the topics devices can subscribe to.
 pub async fn wake_list_topics(gateway_url: String) -> Result<Vec<WakeTopic>, WakeError> {
     parse_list_topics(&send(build_list_topics(&gateway_url)?).await?)
+}
+
+/// Lets peers wake `recipient`, an identity of this device, on `topics`.
+/// Returns the grant with its token, which is shown only once.
+pub async fn wake_create_grant(
+    gateway_url: String,
+    device_secret: String,
+    recipient: String,
+    topics: Vec<String>,
+    per_hour: Option<u32>,
+    per_day: Option<u32>,
+    expires_in_days: Option<u32>,
+) -> Result<WakeGrant, WakeError> {
+    let request = build_create_grant(
+        &gateway_url,
+        &device_secret,
+        &recipient,
+        &topics,
+        per_hour,
+        per_day,
+        expires_in_days,
+    )?;
+    parse_create_grant(&send(request).await?)
+}
+
+/// Lists the grants of this device's identities, without their tokens.
+pub async fn wake_list_grants(
+    gateway_url: String,
+    device_secret: String,
+) -> Result<Vec<WakeGrantSummary>, WakeError> {
+    parse_list_grants(&send(build_list_grants(&gateway_url, &device_secret)?).await?)
+}
+
+/// Revokes a grant. Idempotent.
+pub async fn wake_revoke_grant(
+    gateway_url: String,
+    device_secret: String,
+    grant_id: String,
+) -> Result<(), WakeError> {
+    let request = build_revoke_grant(&gateway_url, &device_secret, &grant_id)?;
+    parse_no_content(&send(request).await?)
+}
+
+/// Wakes the recipient of a grant a peer handed us, on a topic it covers.
+pub async fn wake_send_peer_wake(
+    gateway_url: String,
+    grant_token: String,
+    topic: String,
+) -> Result<(), WakeError> {
+    let request = build_send_peer_wake(&gateway_url, &grant_token, &topic)?;
+    parse_send_peer_wake(&send(request).await?)
 }

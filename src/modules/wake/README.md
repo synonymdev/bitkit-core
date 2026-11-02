@@ -2,8 +2,9 @@
 
 Device side of the wake push gateway: generating the device's keys and
 credentials, preparing and sending a signed registration, decrypting the
-wakes that arrive in pushes, and the device routes of the gateway's v1 API
-(acks, presence, topics, unregister).
+wakes that arrive in pushes, the device routes of the gateway's v1 API
+(acks, presence, topics, unregister), grants that let a peer wake this
+device, and the peer wake a holder of someone else's grant sends.
 
 > The v1 wire format is experimental until the Bitkit apps adopt it. The
 > legacy (v0) envelope is the one deployed apps already decrypt, and is
@@ -31,8 +32,10 @@ the device secret and the install id.
 | `wakeUnregister` | `DELETE /v1/devices/self` |
 | `wakeServerInfo` | `GET /v1/info` (the audience to register with) |
 | `wakeListTopics` | `GET /v1/topics` |
-
-Grants and peer sends are not exposed yet.
+| `wakeCreateGrant` | `POST /v1/grants`: lets peers wake one of this device's identities |
+| `wakeListGrants` | `GET /v1/grants`, never with tokens |
+| `wakeRevokeGrant` | `DELETE /v1/grants/{id}` |
+| `wakeSendPeerWake` | `POST /v1/peer/wakes` with a grant token a peer handed us |
 
 ## Registering
 
@@ -102,6 +105,45 @@ legacy flat FCM data (`cipher`, `iv`, `tag`, `publicKey`), a v1 `wake` object
 Acknowledging `.handled` cancels the fallback alert. `.noHandler` and
 `.failed` are recorded, and the fallback still fires.
 
+## Grants and peer wakes
+
+A peer can wake this device only with a grant the device issued. Grants cover
+peer topics only (`paykit.sync` today; `wakeListTopics` marks them `peer`),
+for an identity the device registered. The gateway's anti-spam document
+explains the quotas, the per-recipient cap and why a peer wake carries no
+content.
+
+```swift
+// Recipient: let a linked peer wake this device.
+let grant = try await wakeCreateGrant(
+    gatewayUrl: gateway,
+    deviceSecret: secret.token,
+    recipient: "pk:\(pubkyZ32)",
+    topics: ["paykit.sync"],
+    perHour: nil, perDay: nil, expiresInDays: nil   // the gateway's defaults and caps
+)
+// Send grant.token to that peer over an authenticated channel; the gateway
+// never shows it again. Keep grant.id with the peer, and when the peer is
+// blocked or unlinked:
+try await wakeRevokeGrant(gatewayUrl: gateway, deviceSecret: secret.token, grantId: grant.id)
+
+// Sender: after writing something for a peer that handed us its token.
+do {
+    try await wakeSendPeerWake(gatewayUrl: peerGateway, grantToken: peerToken, topic: "paykit.sync")
+} catch WakeError.GatewayRejected(_, let code, _) where code == "grant_invalid" {
+    // Revoked or expired: drop the token and wait for a new one.
+} catch WakeError.GatewayRejected(_, let code, _) where code == "rate_limited" {
+    // The grant's quota is used up for now: skip this wake.
+}
+```
+
+A peer wake reaches the recipient's devices as a background push whose
+decrypted `payloadJson` is `nil`. Every request within the grant's quota gets
+the same answer, whether a push went out, was coalesced into an open wake, or
+was suppressed because the recipient had the app open, so the sender learns
+nothing about the recipient. Make the wake best effort: what the sender wrote
+must never depend on it.
+
 ## Crypto and wire compatibility
 
 - `S33 = compressed(d * P)` from `bitcoin::secp256k1::ecdh::shared_secret_point`,
@@ -138,9 +180,20 @@ above and run `cargo test wake`.
 
 ```bash
 cargo test wake
-WAKE_GATEWAY_URL=http://127.0.0.1:9010 cargo test wake -- --ignored   # against a running gateway
+# against a running gateway, such as the wake repository's docker stack
+WAKE_GATEWAY_URL=http://127.0.0.1:9010 WAKE_FAKE_PUSH_URL=http://127.0.0.1:9100 \
+    cargo test wake -- --ignored
 ```
 
-The ignored test registers with an `ln:` proof (signed by a local stand-in for
-ldk-node `signMessage`) and a `pk:` proof, then sets and clears presence,
-lists and sets topics, and unregisters.
+CI runs `cargo test --lib modules::wake` (`.github/workflows/wake-tests.yml`).
+The two ignored tests need a gateway:
+
+- `live_gateway_round_trip` registers with an `ln:` proof (signed by a local
+  stand-in for ldk-node `signMessage`) and a `pk:` proof, then sets and clears
+  presence, lists and sets topics, and unregisters.
+- `live_gateway_grant_round_trip` registers a `pk:` device and creates a grant.
+  It checks that a non-peer topic and a foreign identity are refused, sends a
+  peer wake with the grant, and checks the grant's counters. It then revokes
+  the grant twice and checks that the token stops working. With
+  `WAKE_FAKE_PUSH_URL` set, it also decrypts the push the fake APNs recorded
+  and acks it.

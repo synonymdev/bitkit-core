@@ -1575,6 +1575,411 @@ fn malformed_success_bodies_are_invalid_responses() {
     }
 }
 
+// ----- Client: grants and peer wakes -----
+
+const GRANT_ID: &str = "01a0c450-6c00-7000-8000-0000000000bb";
+const GRANT_SECRET: &str = "d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3c";
+const GRANT_TOKEN: &str =
+    "wkg_01a0c4506c00700080000000000000bb_d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3c";
+
+fn pk_identity(seed: u8) -> String {
+    format!(
+        "pk:{}",
+        pubky::Keypair::from_secret(&[seed; 32]).public_key().z32()
+    )
+}
+
+fn topics(names: &[&str]) -> Vec<String> {
+    names.iter().map(|name| name.to_string()).collect()
+}
+
+#[test]
+fn grant_builders() {
+    let recipient = pk_identity(7);
+    let sync = topics(&["paykit.sync"]);
+
+    let create =
+        build_create_grant(GATEWAY, DEVICE_SECRET, &recipient, &sync, None, None, None).unwrap();
+    assert_eq!(create.method, Method::POST);
+    assert_eq!(create.url.as_str(), format!("{GATEWAY}/v1/grants"));
+    assert_eq!(create.bearer.as_deref(), Some(DEVICE_SECRET));
+    // Unset quotas and lifetime are left out, so the gateway's defaults apply.
+    assert_eq!(
+        body_json(&create),
+        json!({"recipient": recipient, "topics": ["paykit.sync"]})
+    );
+    let bounded = build_create_grant(
+        GATEWAY,
+        DEVICE_SECRET,
+        &recipient,
+        &sync,
+        Some(2),
+        Some(10),
+        Some(3),
+    )
+    .unwrap();
+    assert_eq!(
+        body_json(&bounded),
+        json!({"recipient": recipient, "topics": ["paykit.sync"],
+               "per_hour": 2, "per_day": 10, "expires_in_days": 3})
+    );
+    // The gateway caps both quotas before comparing them, so a per_day under
+    // an uncapped per_hour is its call, not ours.
+    assert!(build_create_grant(
+        GATEWAY,
+        DEVICE_SECRET,
+        &recipient,
+        &sync,
+        Some(50),
+        Some(35),
+        None
+    )
+    .is_ok());
+    let ln = format!(
+        "ln:{}",
+        public_hex(&SecretKey::from_slice(&[0x11; 32]).unwrap())
+    );
+    assert!(build_create_grant(GATEWAY, DEVICE_SECRET, &ln, &sync, None, None, None).is_ok());
+
+    let list = build_list_grants(GATEWAY, DEVICE_SECRET).unwrap();
+    assert_eq!(list.method, Method::GET);
+    assert_eq!(list.url.as_str(), format!("{GATEWAY}/v1/grants"));
+    assert_eq!(list.bearer.as_deref(), Some(DEVICE_SECRET));
+    assert!(list.body.is_none());
+
+    // Any uuid spelling is sent hyphenated and lowercase.
+    for spelling in [
+        GRANT_ID.to_string(),
+        GRANT_ID.to_uppercase(),
+        GRANT_ID.replace('-', ""),
+    ] {
+        let revoke = build_revoke_grant(GATEWAY, DEVICE_SECRET, &spelling).unwrap();
+        assert_eq!(revoke.method, Method::DELETE);
+        assert_eq!(
+            revoke.url.as_str(),
+            format!("{GATEWAY}/v1/grants/{GRANT_ID}")
+        );
+        assert_eq!(revoke.bearer.as_deref(), Some(DEVICE_SECRET));
+        assert!(revoke.body.is_none());
+    }
+
+    let wake = build_send_peer_wake(GATEWAY, GRANT_TOKEN, "paykit.sync").unwrap();
+    assert_eq!(wake.method, Method::POST);
+    assert_eq!(wake.url.as_str(), format!("{GATEWAY}/v1/peer/wakes"));
+    assert_eq!(wake.bearer.as_deref(), Some(GRANT_TOKEN));
+    assert_eq!(body_json(&wake), json!({"topic": "paykit.sync"}));
+}
+
+#[test]
+fn grant_builders_refuse_what_the_gateway_would() {
+    let recipient = pk_identity(7);
+    let sync = topics(&["paykit.sync"]);
+    let create = |recipient: &str, topics: &[String], per_hour, per_day, days| {
+        build_create_grant(
+            GATEWAY,
+            DEVICE_SECRET,
+            recipient,
+            topics,
+            per_hour,
+            per_day,
+            days,
+        )
+        .err()
+    };
+
+    let not_canonical = invalid_input("recipient is not a canonical ln: or pk: identity");
+    for bad in [
+        "",
+        "pk:nope",
+        "ln:02",
+        &recipient[3..],
+        &recipient.to_uppercase(),
+    ] {
+        assert_eq!(
+            create(bad, &sync, None, None, None),
+            Some(not_canonical.clone()),
+            "{bad}"
+        );
+    }
+
+    let count = invalid_input("a grant lists 1 to 16 topics");
+    assert_eq!(
+        create(&recipient, &[], None, None, None),
+        Some(count.clone())
+    );
+    assert_eq!(
+        create(
+            &recipient,
+            &vec!["paykit.sync".to_string(); 17],
+            None,
+            None,
+            None
+        ),
+        Some(count)
+    );
+    assert_eq!(
+        create(
+            &recipient,
+            &vec!["paykit.sync".to_string(); 16],
+            None,
+            None,
+            None
+        ),
+        None
+    );
+
+    let names = invalid_input("every grant topic must be a topic name, not a pattern");
+    let longest = format!("paykit.{}", "a".repeat(57));
+    let too_long = format!("paykit.{}", "a".repeat(58));
+    assert_eq!(
+        create(&recipient, &[longest], None, None, None),
+        None,
+        "64 characters"
+    );
+    for bad in [
+        "paykit.*",
+        "paykit",
+        "Paykit.sync",
+        "paykit.",
+        "",
+        &too_long,
+    ] {
+        assert_eq!(
+            create(&recipient, &topics(&["paykit.sync", bad]), None, None, None),
+            Some(names.clone()),
+            "{bad}"
+        );
+    }
+
+    for (per_hour, per_day, days, reason) in [
+        (Some(0), None, None, "per_hour must be at least 1"),
+        (None, Some(0), None, "per_day must be at least 1"),
+        (None, None, Some(0), "expires_in_days must be at least 1"),
+    ] {
+        assert_eq!(
+            create(&recipient, &sync, per_hour, per_day, days),
+            Some(invalid_input(reason))
+        );
+    }
+
+    // Grants are managed with the device secret, never a grant token.
+    let device = invalid_input("malformed device secret");
+    assert_eq!(
+        build_create_grant(GATEWAY, GRANT_TOKEN, &recipient, &sync, None, None, None).err(),
+        Some(device.clone())
+    );
+    assert_eq!(
+        build_list_grants(GATEWAY, GRANT_TOKEN).err(),
+        Some(device.clone())
+    );
+    assert_eq!(
+        build_revoke_grant(GATEWAY, GRANT_TOKEN, GRANT_ID).err(),
+        Some(device)
+    );
+    assert_eq!(
+        build_revoke_grant(GATEWAY, DEVICE_SECRET, "nope").err(),
+        Some(invalid_input("grant id is not a uuid"))
+    );
+
+    // A peer wake takes a grant token, never the device secret, and one name.
+    let malformed = invalid_input("malformed grant token");
+    let id_hex = GRANT_ID.replace('-', "");
+    for bad in [
+        String::new(),
+        "wkg_".to_string(),
+        DEVICE_SECRET.to_string(),
+        format!("wkg_{}_{GRANT_SECRET}", id_hex.to_uppercase()),
+        format!("wkg_{}_{GRANT_SECRET}", &id_hex[1..]),
+        format!("wkg_{GRANT_ID}_{GRANT_SECRET}"),
+        format!("wkg_{id_hex}{GRANT_SECRET}"),
+        format!("wkg_{id_hex}_{}", &GRANT_SECRET[1..]),
+        // Non-zero trailing bits: not the canonical encoding of 32 bytes.
+        format!("wkg_{id_hex}_{}d", &GRANT_SECRET[..42]),
+        format!("{GRANT_TOKEN}\r\nX: y"),
+    ] {
+        assert_eq!(
+            build_send_peer_wake(GATEWAY, &bad, "paykit.sync").err(),
+            Some(malformed.clone()),
+            "{bad}"
+        );
+    }
+    let pattern = invalid_input("the topic must be a topic name, not a pattern");
+    for bad in ["paykit.*", "paykit", ""] {
+        assert_eq!(
+            build_send_peer_wake(GATEWAY, GRANT_TOKEN, bad).err(),
+            Some(pattern.clone()),
+            "{bad}"
+        );
+    }
+}
+
+#[test]
+fn grant_tokens_name_their_grant() {
+    assert_eq!(grant_token_id(GRANT_TOKEN).as_deref(), Some(GRANT_ID));
+    // The secret may hold `_` itself: the id ends at the first one.
+    let secret = format!("{}A", "_-".repeat(21));
+    let token = format!("wkg_{}_{secret}", GRANT_ID.replace('-', ""));
+    assert_eq!(grant_token_id(&token).as_deref(), Some(GRANT_ID));
+    assert_eq!(grant_token_id(DEVICE_SECRET), None);
+}
+
+#[test]
+fn grant_parsers() {
+    let recipient = pk_identity(7);
+    let created = format!(
+        r#"{{"id":"{}","token":"{GRANT_TOKEN}","recipient":"{recipient}","topics":["paykit.sync"],
+            "per_hour":6,"per_day":24,"created_at":1790000000,"expires_at":1797776000}}"#,
+        GRANT_ID.to_uppercase()
+    );
+    assert_eq!(
+        parse_create_grant(&response(201, &created)).unwrap(),
+        WakeGrant {
+            id: GRANT_ID.to_string(),
+            token: GRANT_TOKEN.to_string(),
+            recipient: recipient.clone(),
+            topics: topics(&["paykit.sync"]),
+            per_hour: 6,
+            per_day: 24,
+            created_at: 1790000000,
+            expires_at: 1797776000,
+        }
+    );
+    // A token that names another grant, or is malformed, is never handed on,
+    // and the error does not quote it.
+    let other_grant = GRANT_TOKEN.replacen("bb_", "bc_", 1);
+    for token in [other_grant.as_str(), "wkg_x", DEVICE_SECRET] {
+        let err =
+            parse_create_grant(&response(201, &created.replace(GRANT_TOKEN, token))).unwrap_err();
+        assert_eq!(
+            err,
+            WakeError::invalid_response("the grant token is malformed or names another grant")
+        );
+        assert!(!err.to_string().contains(GRANT_SECRET), "{err}");
+    }
+    assert_eq!(
+        parse_create_grant(&response(
+            201,
+            &created.replace(&GRANT_ID.to_uppercase(), "nope")
+        )),
+        Err(WakeError::invalid_response("the grant id is not a uuid"))
+    );
+
+    let listed = format!(
+        r#"{{"grants":[
+            {{"id":"{GRANT_ID}","recipient":"{recipient}","topics":["paykit.sync"],"per_hour":6,
+              "per_day":24,"created_at":1790000000,"expires_at":1797776000,"revoked_at":null,
+              "last_used_at":null,"sent_1h":0,"sent_24h":0}},
+            {{"id":"01a0c450-6c00-7000-8000-0000000000cc","recipient":"{recipient}",
+              "topics":["paykit.sync"],"per_hour":2,"per_day":2,"created_at":1790000100,
+              "expires_at":1790086500,"revoked_at":1790000300,"last_used_at":1790000200,
+              "sent_1h":1,"sent_24h":2}}]}}"#
+    );
+    assert_eq!(
+        parse_list_grants(&response(200, &listed)).unwrap(),
+        vec![
+            WakeGrantSummary {
+                id: GRANT_ID.to_string(),
+                recipient: recipient.clone(),
+                topics: topics(&["paykit.sync"]),
+                per_hour: 6,
+                per_day: 24,
+                created_at: 1790000000,
+                expires_at: 1797776000,
+                revoked_at: None,
+                last_used_at: None,
+                sent_1h: 0,
+                sent_24h: 0,
+            },
+            WakeGrantSummary {
+                id: "01a0c450-6c00-7000-8000-0000000000cc".to_string(),
+                recipient,
+                topics: topics(&["paykit.sync"]),
+                per_hour: 2,
+                per_day: 2,
+                created_at: 1790000100,
+                expires_at: 1790086500,
+                revoked_at: Some(1790000300),
+                last_used_at: Some(1790000200),
+                sent_1h: 1,
+                sent_24h: 2,
+            },
+        ]
+    );
+    assert_eq!(
+        parse_list_grants(&response(200, r#"{"grants":[]}"#)).unwrap(),
+        vec![]
+    );
+
+    assert_eq!(
+        parse_send_peer_wake(&response(202, r#"{"status":"accepted"}"#)),
+        Ok(())
+    );
+    assert_eq!(
+        parse_send_peer_wake(&response(202, r#"{"status":"queued"}"#)),
+        Err(WakeError::invalid_response(
+            "the peer wake answer is not accepted"
+        ))
+    );
+    assert!(matches!(
+        parse_send_peer_wake(&response(202, "")),
+        Err(WakeError::InvalidResponse { .. })
+    ));
+}
+
+#[test]
+fn grant_refusals_map_to_gateway_rejected() {
+    let refusal = |status: u16, code: &str| {
+        response(status, &format!(r#"{{"error":"{code}","message":"m"}}"#))
+    };
+    for (status, code) in [
+        (403, "topic_not_peer"),
+        (403, "identity_not_bound"),
+        (409, "too_many_grants"),
+        (400, "invalid_request"),
+        (401, "unauthorized"),
+    ] {
+        assert_eq!(
+            parse_create_grant(&refusal(status, code)),
+            Err(rejected(status, code, "m"))
+        );
+    }
+    assert_eq!(
+        parse_list_grants(&refusal(401, "unauthorized")),
+        Err(rejected(401, "unauthorized", "m"))
+    );
+    assert_eq!(
+        parse_no_content(&refusal(404, "not_found")),
+        Err(rejected(404, "not_found", "m"))
+    );
+    for (status, code) in [
+        (403, "grant_invalid"),
+        (429, "rate_limited"),
+        (401, "unauthorized"),
+    ] {
+        assert_eq!(
+            parse_send_peer_wake(&refusal(status, code)),
+            Err(rejected(status, code, "m"))
+        );
+    }
+}
+
+#[test]
+fn grant_debug_hides_the_token() {
+    let grant = WakeGrant {
+        id: GRANT_ID.to_string(),
+        token: GRANT_TOKEN.to_string(),
+        recipient: pk_identity(7),
+        topics: topics(&["paykit.sync"]),
+        per_hour: 6,
+        per_day: 24,
+        created_at: 1,
+        expires_at: 2,
+    };
+    let printed = format!("{grant:?}");
+    assert!(!printed.contains(GRANT_SECRET), "{printed}");
+    assert!(printed.contains(GRANT_ID), "{printed}");
+}
+
 // ----- Client: executor, against a local server -----
 
 /// Serves one canned response on 127.0.0.1 and returns what it received.
@@ -1695,6 +2100,72 @@ async fn executor_maps_statuses_and_network_failures() {
     );
 }
 
+#[tokio::test]
+async fn executor_sends_grants_and_peer_wakes() {
+    let recipient = pk_identity(7);
+    let (url, server) = serve_once(
+        201,
+        r#"{"id":"01a0c450-6c00-7000-8000-0000000000bb","token":"wkg_01a0c4506c00700080000000000000bb_d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3c","recipient":"pk:r","topics":["paykit.sync"],"per_hour":2,"per_day":24,"created_at":1,"expires_at":2}"#,
+    )
+    .await;
+    let grant = wake_create_grant(
+        url,
+        DEVICE_SECRET.to_string(),
+        recipient.clone(),
+        topics(&["paykit.sync"]),
+        Some(2),
+        None,
+        None,
+    )
+    .await
+    .unwrap();
+    assert_eq!(grant.token, GRANT_TOKEN);
+    let received = server.await.unwrap();
+    assert!(
+        received.starts_with("POST /prefix/v1/grants HTTP/1.1\r\n"),
+        "{received}"
+    );
+    assert!(received.to_ascii_lowercase().contains(&format!(
+        "authorization: bearer {}",
+        DEVICE_SECRET.to_ascii_lowercase()
+    )));
+    assert!(
+        received.ends_with(&format!(
+            "\r\n\r\n{{\"recipient\":\"{recipient}\",\"topics\":[\"paykit.sync\"],\"per_hour\":2}}"
+        )),
+        "{received}"
+    );
+
+    let (url, server) = serve_once(204, "").await;
+    assert_eq!(
+        wake_revoke_grant(url, DEVICE_SECRET.to_string(), GRANT_ID.to_uppercase()).await,
+        Ok(())
+    );
+    assert!(server
+        .await
+        .unwrap()
+        .starts_with(&format!("DELETE /prefix/v1/grants/{GRANT_ID} HTTP/1.1\r\n")));
+
+    let (url, server) = serve_once(202, r#"{"status":"accepted"}"#).await;
+    assert_eq!(
+        wake_send_peer_wake(url, GRANT_TOKEN.to_string(), "paykit.sync".to_string()).await,
+        Ok(())
+    );
+    let received = server.await.unwrap();
+    assert!(
+        received.starts_with("POST /prefix/v1/peer/wakes HTTP/1.1\r\n"),
+        "{received}"
+    );
+    assert!(received.to_ascii_lowercase().contains(&format!(
+        "authorization: bearer {}",
+        GRANT_TOKEN.to_ascii_lowercase()
+    )));
+    assert!(
+        received.ends_with("\r\n\r\n{\"topic\":\"paykit.sync\"}"),
+        "{received}"
+    );
+}
+
 // ----- Live gateway -----
 
 /// Registers against a running gateway with both proofs, then exercises
@@ -1776,4 +2247,186 @@ async fn live_gateway_round_trip() {
         wake_set_presence(url, token, 60).await,
         Err(WakeError::GatewayRejected { status: 401, .. })
     ));
+}
+
+/// The status and code of a gateway rejection.
+fn rejection_code<T: std::fmt::Debug>(result: Result<T, WakeError>) -> (u16, String) {
+    match result {
+        Err(WakeError::GatewayRejected { status, code, .. }) => (status, code),
+        other => panic!("expected a gateway rejection, got {other:?}"),
+    }
+}
+
+/// The push the fake providers recorded for `push_token`, decrypted. A peer
+/// wake is dispatched in the background, so this polls for up to 45 s.
+async fn recorded_push(fake_url: &str, push_token: &str, secret_key_hex: &str) -> WakeEnvelope {
+    let http = reqwest::Client::new();
+    for _ in 0..90 {
+        let text = http
+            .get(format!("{fake_url}/_recorded"))
+            .send()
+            .await
+            .unwrap()
+            .text()
+            .await
+            .unwrap();
+        let recorded: Vec<Value> = serde_json::from_str(&text).unwrap();
+        if let Some(push) = recorded.iter().find(|push| push["token"] == push_token) {
+            return wake_decrypt_push(secret_key_hex.to_string(), s(push, "raw_body").to_string())
+                .unwrap();
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    }
+    panic!("no push for this device reached the fake providers");
+}
+
+/// Grants a peer the right to wake a registered device, wakes it with the
+/// grant's token, and revokes the grant. Run with
+/// `WAKE_GATEWAY_URL=http://127.0.0.1:9010 cargo test wake -- --ignored`.
+/// With `WAKE_FAKE_PUSH_URL=http://127.0.0.1:9100`, the fake providers of the
+/// gateway's docker stack, it also decrypts and acks the push the wake sent.
+#[tokio::test]
+#[ignore]
+async fn live_gateway_grant_round_trip() {
+    let url = std::env::var("WAKE_GATEWAY_URL").expect("WAKE_GATEWAY_URL is not set");
+    let fake_url = std::env::var("WAKE_FAKE_PUSH_URL").ok();
+    let info = wake_server_info(url.clone()).await.unwrap();
+
+    let encryption = wake_generate_keypair().unwrap();
+    let device_secret = wake_generate_device_secret().unwrap();
+    let pk_secret_hex = wake_generate_keypair().unwrap().secret_key_hex;
+    let pk_seed: [u8; 32] = hex::decode(&pk_secret_hex).unwrap().try_into().unwrap();
+    let pk_identity = format!(
+        "pk:{}",
+        pubky::Keypair::from_secret(&pk_seed).public_key().z32()
+    );
+    let mut push_token = [0u8; 32];
+    os_random(&mut push_token).unwrap();
+    let push_token = hex::encode(push_token);
+
+    let request = wake_prepare_registration(
+        info.audience.clone(),
+        "bitkit".to_string(),
+        wake_generate_install_id(),
+        WakePlatform::Apns,
+        WakeEnvironment::Sandbox,
+        push_token.clone(),
+        encryption.public_key_hex.clone(),
+        device_secret.sha256_hex.clone(),
+        vec![pk_identity.clone()],
+        vec!["paykit.sync".to_string()],
+        None,
+    )
+    .unwrap();
+    let proofs = vec![WakeIdentityProof {
+        identity: pk_identity.clone(),
+        signature: wake_sign_pubky_proof(pk_secret_hex, request.message.clone()).unwrap(),
+    }];
+    wake_register(url.clone(), request, proofs).await.unwrap();
+    let token = device_secret.token.clone();
+    let sync = vec!["paykit.sync".to_string()];
+
+    // Only peer topics, and only this device's own identities, are granted.
+    assert_eq!(
+        rejection_code(
+            wake_create_grant(
+                url.clone(),
+                token.clone(),
+                pk_identity.clone(),
+                vec!["blocktank.incomingHtlc".to_string()],
+                None,
+                None,
+                None,
+            )
+            .await
+        ),
+        (403, "topic_not_peer".to_string())
+    );
+    let stranger_seed: [u8; 32] = hex::decode(wake_generate_keypair().unwrap().secret_key_hex)
+        .unwrap()
+        .try_into()
+        .unwrap();
+    let stranger = format!(
+        "pk:{}",
+        pubky::Keypair::from_secret(&stranger_seed)
+            .public_key()
+            .z32()
+    );
+    assert_eq!(
+        rejection_code(
+            wake_create_grant(
+                url.clone(),
+                token.clone(),
+                stranger,
+                sync.clone(),
+                None,
+                None,
+                None
+            )
+            .await
+        ),
+        (403, "identity_not_bound".to_string())
+    );
+
+    let grant = wake_create_grant(
+        url.clone(),
+        token.clone(),
+        pk_identity.clone(),
+        sync.clone(),
+        Some(2),
+        None,
+        Some(1),
+    )
+    .await
+    .unwrap();
+    assert_eq!(grant.recipient, pk_identity);
+    assert_eq!(grant.topics, sync);
+    assert_eq!(grant.per_hour, 2);
+    assert!(grant.per_day >= grant.per_hour);
+    assert!(grant.expires_at > grant.created_at);
+    let listed = wake_list_grants(url.clone(), token.clone()).await.unwrap();
+    let fresh = listed.iter().find(|g| g.id == grant.id).unwrap();
+    assert_eq!((fresh.revoked_at, fresh.sent_1h), (None, 0));
+
+    wake_send_peer_wake(url.clone(), grant.token.clone(), "paykit.sync".to_string())
+        .await
+        .unwrap();
+    if let Some(fake_url) = fake_url {
+        let envelope = recorded_push(&fake_url, &push_token, &encryption.secret_key_hex).await;
+        assert_eq!(envelope.version, 1);
+        assert_eq!(envelope.topic, "paykit.sync");
+        assert_eq!(envelope.payload_json, None, "peer wakes carry no payload");
+        assert!(!envelope.fallback);
+        let wake_id = envelope.id.expect("a v1 wake has an id");
+        wake_ack(url.clone(), token.clone(), wake_id, WakeAckOutcome::Handled)
+            .await
+            .unwrap();
+    }
+    let used = wake_list_grants(url.clone(), token.clone()).await.unwrap();
+    let used = used.iter().find(|g| g.id == grant.id).unwrap();
+    assert_eq!(used.sent_1h, 1);
+    assert!(used.last_used_at.is_some());
+
+    // Revoking takes effect at once, and repeating it is harmless.
+    wake_revoke_grant(url.clone(), token.clone(), grant.id.clone())
+        .await
+        .unwrap();
+    wake_revoke_grant(url.clone(), token.clone(), grant.id.clone())
+        .await
+        .unwrap();
+    assert_eq!(
+        rejection_code(
+            wake_send_peer_wake(url.clone(), grant.token.clone(), "paykit.sync".to_string()).await
+        ),
+        (403, "grant_invalid".to_string())
+    );
+    let revoked = wake_list_grants(url.clone(), token.clone()).await.unwrap();
+    assert!(revoked
+        .iter()
+        .find(|g| g.id == grant.id)
+        .unwrap()
+        .revoked_at
+        .is_some());
+
+    wake_unregister(url, token).await.unwrap();
 }

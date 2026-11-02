@@ -72,9 +72,9 @@ pub use crate::modules::ur::{
     UrDecoder, UrDecoderStatus, UrError, UrPayload,
 };
 use crate::modules::wake::{
-    WakeAckOutcome, WakeDeviceSecret, WakeEnvelope, WakeEnvironment, WakeError, WakeIdentityProof,
-    WakeKeyPair, WakePlatform, WakeRegistration, WakeRegistrationRequest, WakeServerInfo,
-    WakeTopic,
+    WakeAckOutcome, WakeDeviceSecret, WakeEnvelope, WakeEnvironment, WakeError, WakeGrant,
+    WakeGrantSummary, WakeIdentityProof, WakeKeyPair, WakePlatform, WakeRegistration,
+    WakeRegistrationRequest, WakeServerInfo, WakeTopic,
 };
 pub use crate::onchain::WordCount;
 use crate::onchain::{
@@ -2566,6 +2566,103 @@ pub async fn wake_list_topics(gateway_url: String) -> Result<Vec<WakeTopic>, Wak
                 reason: format!("Runtime error: {}", e),
             })
         })
+}
+
+/// Let peers wake `recipient`, an identity this device registered, on the peer
+/// `topics` (1 to 16 names). Returns the grant with its `wkg_` token, which the
+/// gateway shows only once: hand the token to the peer and keep the grant id to
+/// revoke it. `per_hour`, `per_day` and `expires_in_days` default to the
+/// gateway's peer settings and are capped at its maximums.
+#[uniffi::export]
+pub async fn wake_create_grant(
+    gateway_url: String,
+    device_secret: String,
+    recipient: String,
+    topics: Vec<String>,
+    per_hour: Option<u32>,
+    per_day: Option<u32>,
+    expires_in_days: Option<u32>,
+) -> Result<WakeGrant, WakeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::wake::wake_create_grant(
+            gateway_url,
+            device_secret,
+            recipient,
+            topics,
+            per_hour,
+            per_day,
+            expires_in_days,
+        )
+        .await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(WakeError::RequestFailed {
+            reason: format!("Runtime error: {}", e),
+        })
+    })
+}
+
+/// List the grants of this device's identities, live, revoked and expired,
+/// oldest first. Never returns tokens.
+#[uniffi::export]
+pub async fn wake_list_grants(
+    gateway_url: String,
+    device_secret: String,
+) -> Result<Vec<WakeGrantSummary>, WakeError> {
+    let rt = ensure_runtime();
+    rt.spawn(
+        async move { crate::modules::wake::wake_list_grants(gateway_url, device_secret).await },
+    )
+    .await
+    .unwrap_or_else(|e| {
+        Err(WakeError::RequestFailed {
+            reason: format!("Runtime error: {}", e),
+        })
+    })
+}
+
+/// Revoke a grant by id. Takes effect at once, and repeating it is harmless.
+#[uniffi::export]
+pub async fn wake_revoke_grant(
+    gateway_url: String,
+    device_secret: String,
+    grant_id: String,
+) -> Result<(), WakeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::wake::wake_revoke_grant(gateway_url, device_secret, grant_id).await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(WakeError::RequestFailed {
+            reason: format!("Runtime error: {}", e),
+        })
+    })
+}
+
+/// Wake the recipient of a grant a peer handed this app, on a topic the grant
+/// covers. The wake is content-free, and every request within the grant's quota
+/// gets the same answer whatever became of it. A rejection with code
+/// `grant_invalid` means the grant was revoked or expired; `rate_limited` means
+/// its quota is used up for now.
+#[uniffi::export]
+pub async fn wake_send_peer_wake(
+    gateway_url: String,
+    grant_token: String,
+    topic: String,
+) -> Result<(), WakeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        crate::modules::wake::wake_send_peer_wake(gateway_url, grant_token, topic).await
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(WakeError::RequestFailed {
+            reason: format!("Runtime error: {}", e),
+        })
+    })
 }
 
 // ============================================================================
