@@ -185,6 +185,8 @@ pub struct NetworkConfig {
     pub ark_server_url: String,
     pub delegate_url: Option<String>,
     pub esplora_url: String,
+    /// Read when `esplora_url` doesn't answer.
+    pub esplora_fallback_urls: Vec<String>,
     pub lnurl_url: Option<String>,
     /// Who serves Lightning swaps; `None` where no solver does.
     pub solver: Option<SolverCard>,
@@ -199,6 +201,7 @@ impl ArkadeNetwork {
                 ark_server_url: "https://arkade.computer".into(),
                 delegate_url: Some("https://delegate.arkade.money".into()),
                 esplora_url: "https://mempool.space/api".into(),
+                esplora_fallback_urls: vec!["https://blockstream.info/api".into()],
                 lnurl_url: Some("https://lnurl.arkade.sh".into()),
                 solver: Some(SolverCard::beta_solver()),
             },
@@ -208,6 +211,7 @@ impl ArkadeNetwork {
                 ark_server_url: "https://mutinynet.arkade.sh".into(),
                 delegate_url: Some("https://delegator.mutinynet.arkade.sh".into()),
                 esplora_url: "https://mutinynet.com/api".into(),
+                esplora_fallback_urls: vec![],
                 lnurl_url: None,
                 solver: None,
             },
@@ -217,6 +221,7 @@ impl ArkadeNetwork {
                 ark_server_url: endpoints.ark_server_url.clone(),
                 delegate_url: endpoints.delegate_url.clone(),
                 esplora_url: endpoints.esplora_url.clone(),
+                esplora_fallback_urls: vec![],
                 lnurl_url: endpoints.lnurl_url.clone(),
                 solver: endpoints
                     .solver_pubkey

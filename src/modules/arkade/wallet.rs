@@ -85,7 +85,10 @@ impl Wallet {
             None => None,
         };
 
-        let esplora = Arc::new(Esplora::new(&config.esplora_url)?);
+        let esplora_urls: Vec<String> = std::iter::once(config.esplora_url.clone())
+            .chain(config.esplora_fallback_urls.iter().cloned())
+            .collect();
+        let esplora = Arc::new(Esplora::new(&esplora_urls)?);
         let onchain = ark_bdk_wallet::Wallet::new_from_xpriv(
             keys.account_xpriv()?,
             config.network,
