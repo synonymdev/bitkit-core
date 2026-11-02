@@ -38,7 +38,7 @@ uuid = { version = "1.16.0", features = ["v4"] }
 hex = "0.4.3"
 bip39 = { version = "2.0", features = ["zeroize"] }
 bdk = { version = "0.30.2", features = ["all-keys"] }
-pubky-swap-boltz = { git = "https://github.com/coreyphillips/pubky-swap-boltz", rev = "d65ccf6881d7df7635b00e00f73a771e79f79918", default-features = false, features = ["mobile"] }
+pubky-swap-boltz = { git = "https://github.com/coreyphillips/pubky-swap-boltz", rev = "0a20ba952c3a63dacc095196426be3a1122f99d7", default-features = false, features = ["mobile"] }
 boltz-client = { version = "=0.4.1", default-features = false, features = ["electrum", "ws"] }
 base64 = "0.22"
 minicbor = { version = "2", features = ["alloc"] }
@@ -90,6 +90,3 @@ rust_decimal = "1.30"
 [[bin]]
 name = "example"
 path = "example/main.rs"
-
-[patch."https://github.com/coreyphillips/pubky-swap-boltz"]
-pubky-swap-boltz = { path = "../../testing/pubky-swap-boltz" }

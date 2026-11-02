@@ -5974,6 +5974,7 @@ dependencies = [
 [[package]]
 name = "pubky-swap-boltz"
 version = "0.1.0"
+source = "git+https://github.com/coreyphillips/pubky-swap-boltz?rev=0a20ba952c3a63dacc095196426be3a1122f99d7#0a20ba952c3a63dacc095196426be3a1122f99d7"
 dependencies = [
  "async-trait",
  "bitcoin 0.32.8",
