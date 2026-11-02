@@ -1,0 +1,18 @@
+{
+  "description": "wake v1 envelope: S33 = compressed(ephemeral * device), key = SHA256(SHA256(S33 || \"wake-v1\")), AES-256-GCM with a 12-byte IV and no AAD.",
+  "scheme": "v1",
+  "label": "wake-v1",
+  "ephemeral_secret_key": "6666666666666666666666666666666666666666666666666666666666666666",
+  "ephemeral_public_key": "035ab4689e400a4a160cf01cd44730845a54768df8547dcdf073d964f109f18c30",
+  "device_secret_key": "5555555555555555555555555555555555555555555555555555555555555555",
+  "device_public_key": "029ac20335eb38768d2052be1dbbc3c8f6178407458e51e6b4ad22f1d91758895b",
+  "shared_point": "02c88d18b3ab2342f968f14ba920a9f47aeb8437a3ac494f4d263a79dd29b75353",
+  "key": "71ab2d520b559d67a72bbab49dd521fa10a9a6416a55d9dca42b007eca7c5e2e",
+  "iv": "000102030405060708090a0b",
+  "plaintext": "{\"v\":1,\"id\":\"01a0c450-6c00-7000-8000-000000000001\",\"topic\":\"blocktank.incomingHtlc\",\"urgency\":\"background\",\"deadline\":1790000060,\"payload\":{\"lspId\":\"blocktank-lsp\",\"paymentHash\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}}",
+  "plaintext_len": 246,
+  "cipher": "bXIadw8XhVApCI59oieKY3P/h33PZz6NSdVFABqcg9CSgNhH5L+odPp6fRlxsbx/A37B0ZTxkuZgONflwXB4AyprdoQGEuDEbM8NSRT1j9uAzrfBR098QxyA5eA4nsKbginEF+oPHY97X0yzHZwxV7qd69X4SKve9PaXn4li383A1ZTqlcXJhtAWA7U5YHiFFrbiHAoQgUr7D01/z0vPKtHvryG+GD0rtFnrIzNwrwt6MH9hGO8gYHp1xPRO0bs432EnkOUO7rRv0JwD6q1VQ+GJrtEp/n8p5tW3QzOd8cexBUGoQM+Q6HlNHFRROjBM1fTIsaZj",
+  "tag": "4521e07642272d9b8aed5157c331ad7a",
+  "container": "{\"v\":1,\"cipher\":\"bXIadw8XhVApCI59oieKY3P/h33PZz6NSdVFABqcg9CSgNhH5L+odPp6fRlxsbx/A37B0ZTxkuZgONflwXB4AyprdoQGEuDEbM8NSRT1j9uAzrfBR098QxyA5eA4nsKbginEF+oPHY97X0yzHZwxV7qd69X4SKve9PaXn4li383A1ZTqlcXJhtAWA7U5YHiFFrbiHAoQgUr7D01/z0vPKtHvryG+GD0rtFnrIzNwrwt6MH9hGO8gYHp1xPRO0bs432EnkOUO7rRv0JwD6q1VQ+GJrtEp/n8p5tW3QzOd8cexBUGoQM+Q6HlNHFRROjBM1fTIsaZj\",\"iv\":\"000102030405060708090a0b\",\"tag\":\"4521e07642272d9b8aed5157c331ad7a\",\"publicKey\":\"035ab4689e400a4a160cf01cd44730845a54768df8547dcdf073d964f109f18c30\"}",
+  "container_len": 501
+}
