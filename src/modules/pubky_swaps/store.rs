@@ -1,7 +1,8 @@
 //! One JSON file per swap under `<base>/pubky_swaps/`.
 //!
-//! A record holds only public data and the swap's key nonce; the keys come from the seed and the
-//! nonce. The contract is written, and synced to disk, before the invoice is handed to the app.
+//! A record holds only public data and the swap's key index; the keys come from the seed and the
+//! index. The index is synced to disk before the swap request is sent, and the contract before the
+//! invoice is handed to the app.
 
 use std::fs;
 use std::io::Write;
@@ -20,8 +21,8 @@ static LOCK: Mutex<()> = Mutex::new(());
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct SwapRecord {
     pub swap_id: String,
-    /// Hex of the random nonce the swap's claim key and preimage derive from.
-    pub key_nonce: String,
+    /// The clock index the swap's claim key and preimage derive from (see `keys`).
+    pub key_index: u64,
     pub provider_pubky: String,
     pub network: bitcoin::Network,
     pub electrum_url: String,
@@ -63,6 +64,21 @@ fn write_atomic(path: &Path, bytes: &[u8]) -> Result<(), PubkySwapError> {
     Ok(())
 }
 
+/// Take the index for a new swap at `now_unix` and sync it to disk before it is used. Without a
+/// stored index, as after a restore, the clock alone is past every index used before.
+pub(crate) fn reserve_index(now_unix: u64) -> Result<u64, PubkySwapError> {
+    let _guard = LOCK.lock().unwrap();
+    let path = dir()?.join("last_index");
+    let last = match fs::read_to_string(&path) {
+        Ok(s) => Some(s.trim().parse().map_err(PubkySwapError::storage)?),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+        Err(e) => return Err(e.into()),
+    };
+    let index = super::keys::next_index(last, now_unix);
+    write_atomic(&path, index.to_string().as_bytes())?;
+    Ok(index)
+}
+
 pub(crate) fn save(record: &SwapRecord) -> Result<(), PubkySwapError> {
     let _guard = LOCK.lock().unwrap();
     let path = dir()?.join(format!("{}.json", record.swap_id));
@@ -77,5 +93,24 @@ pub(crate) fn load(swap_id: &str) -> Result<SwapRecord, PubkySwapError> {
             error_details: swap_id.to_string(),
         }),
         Err(e) => Err(e.into()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reserves_increasing_indexes_and_never_repeats_after_a_wipe() {
+        let base = std::env::temp_dir().join(format!("pubky-swaps-index-{}", uuid::Uuid::new_v4()));
+        init(base.to_str().unwrap()).unwrap();
+        let first = reserve_index(1_000).unwrap();
+        let second = reserve_index(1_000).unwrap();
+        assert_eq!((first, second), (1_000, 1_001));
+        // A restore starts without the stored index, at a later time.
+        fs::remove_dir_all(&base).unwrap();
+        init(base.to_str().unwrap()).unwrap();
+        assert!(reserve_index(2_000).unwrap() > second);
+        fs::remove_dir_all(&base).ok();
     }
 }
