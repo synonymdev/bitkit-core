@@ -57,16 +57,24 @@ payloads over this carrier.
 ## Keys and storage
 
 - The wallet's identity towards providers derives from the seed. Each swap's claim key and preimage
-  derive from the seed and a clock index, with HMAC-SHA512 under their own domain strings. The
-  index is the Unix time in seconds when the swap starts, and a wallet starts at most one swap per
-  second, so an index is never ahead of the clock. A restored or reinstalled wallet therefore never
-  repeats a preimage an earlier claim published, and a restore can find a listed swap's index by
-  scanning a window around its creation time. When the clock is behind the last index, as after a
-  backward clock correction, the commit fails after 3 s instead of waiting. The keys never collide
-  with the Boltz module's keys, and the identity is not the user's Pubky identity.
-- `<base>/pubky_swaps/last_index` is synced to disk before the swap request is sent.
-  `<base>/pubky_swaps/<swap_id>.json` holds the contract, the index and the signed claim, never a
+  derive from the seed and a random 32-byte index, with HMAC-SHA512 under their own domain strings,
+  so a restored wallet or a second device on the same seed never repeats a preimage an earlier
+  claim published. The keys never collide with the Boltz module's keys, and the identity is not the
+  user's Pubky identity.
+- The index is not secret: the swap request carries it as `owner_ref`, which the provider keeps and
+  lists back (`swap-list-v1`).
+- `<base>/pubky_swaps/<swap_id>.json` holds the contract, the index and the signed claim, never a
   secret; it is synced before the invoice reaches the app, and the claim before it is broadcast.
+
+## Restore
+
+`pubky_swaps_restore` rebuilds the swaps a wallet started when it has only its seed. Each provider
+lists the swaps it holds for the wallet's swap identity; the wallet derives each swap's keys from
+the index in its `owner_ref` and checks the payment hash and the contract against them before it
+writes a record. The listing does not carry the contact's address, so a restored swap claims to a
+payout address the app passes, the wallet's own; a claim the provider already saw is kept as it
+is. Other wallets' swaps, swaps without this wallet's `owner_ref` and records the wallet already
+has are skipped. `pubky_swaps_advance` then drives each restored swap.
 
 ## Claim
 
@@ -87,5 +95,5 @@ fixed when the route is quoted and is never bumped, so swap routes are refused o
 - **Submarine routes** (savings to a Lightning-only contact) and USDT. Pubky Swaps is Bitcoin and
   Lightning only.
 - **Refunds and recovery:** a reverse swap needs no wallet refund (the provider cancels its hold
-  invoice), but there is no scan to rebuild swaps from the seed alone, and swap records are not in
-  the wallet backup.
+  invoice). A restore rebuilds swaps from providers' listings, within their retention window, and
+  claims them to the wallet's own address; swap records are not in the wallet backup.

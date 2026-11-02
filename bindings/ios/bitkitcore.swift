@@ -32149,6 +32149,27 @@ public func pubkySwapsProviderEdges(providerPubky: String, mnemonic: String, bip
         )
 }
 /**
+ * Rebuild the swaps this wallet started, for a wallet restored from its seed. Each of
+ * `providers` lists the swaps it holds for the wallet's swap identity, and the wallet derives
+ * their keys from the seed and checks them against each contract. The contact's address is not in
+ * the listing, so a restored swap claims to `payout_address`, the wallet's own. Returns the
+ * restored swap ids; drive each with `pubky_swaps_advance`.
+ */
+public func pubkySwapsRestore(providers: [String], electrumUrl: String, payoutAddress: String, feeRateSatVb: UInt64, network: Network, mnemonic: String, bip39Passphrase: String?)async throws  -> [String]  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_pubky_swaps_restore(FfiConverterSequenceString.lower(providers),FfiConverterString.lower(electrumUrl),FfiConverterString.lower(payoutAddress),FfiConverterUInt64.lower(feeRateSatVb),FfiConverterTypeNetwork_lower(network),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(bip39Passphrase)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterSequenceString.lift,
+            errorHandler: FfiConverterTypePubkySwapError_lift
+        )
+}
+/**
  * Pick how to pay a Paykit contact. Returns `Direct` when a balance the wallet holds reaches
  * one of the contact's endpoints, otherwise the cheaper of the request's service legs and the
  * trusted Pubky Swaps providers' firm quotes, or `None` with a reason. The user never picks
@@ -33479,6 +33500,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_pubky_swaps_provider_edges() != 4359) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_pubky_swaps_restore() != 21980) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_pubky_swaps_route_paykit_payment() != 45030) {

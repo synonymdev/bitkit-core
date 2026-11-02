@@ -1,16 +1,14 @@
-//! Swap keys derived from the wallet seed and a clock index, so a swap can be rebuilt from the
-//! seed alone.
+//! Swap keys derived from the wallet seed and a random per-swap index, so a swap can be rebuilt
+//! from the seed and the index.
 //!
 //! The provider sees only public keys and the payment hash. Each key is
 //! HMAC-SHA512(seed, domain || index), truncated to 32 bytes, under its own domain string, so
 //! nothing here can collide with the Boltz module's BIP85 keys or with each other.
 //!
-//! The index is the Unix time in seconds when the swap starts, and a wallet starts at most one swap
-//! per second, so an index is never ahead of the clock. A restored or reinstalled wallet starts
-//! after every index it used, so it never derives a preimage an earlier claim published. A restore
-//! finds each listed swap's index by scanning a window around its creation time for the swap's
-//! payment hash. Two devices on one seed still derive the same keys if both start a swap in the
-//! same second.
+//! The index is 32 random bytes, so a restored wallet or a second device on the same seed never
+//! repeats a preimage an earlier claim published. It is not secret: the wallet sends it to the
+//! provider as the swap's `owner_ref`, which the provider keeps and lists back (`swap-list-v1`), so
+//! a wallet restored from its seed reads the index and derives the keys again.
 
 use bitcoin::hashes::{hmac, sha256, sha512, Hash, HashEngine};
 use bitcoin::secp256k1::{Secp256k1, SecretKey};
@@ -18,8 +16,10 @@ use bitcoin::secp256k1::{Secp256k1, SecretKey};
 use super::errors::PubkySwapError;
 
 const IDENTITY_DOMAIN: &[u8] = b"bitkit/pubky-swaps/identity/v1";
-const CLAIM_DOMAIN: &[u8] = b"bitkit/pubky-swaps/claim/v3/";
-const PREIMAGE_DOMAIN: &[u8] = b"bitkit/pubky-swaps/preimage/v3/";
+const CLAIM_DOMAIN: &[u8] = b"bitkit/pubky-swaps/claim/v4/";
+const PREIMAGE_DOMAIN: &[u8] = b"bitkit/pubky-swaps/preimage/v4/";
+/// Marks an `owner_ref` this wallet wrote: the version of the key scheme, then the index in hex.
+const OWNER_REF_PREFIX: &str = "bitkit-swap-v4:";
 
 pub(crate) struct SwapKeys {
     pub claim_key: SecretKey,
@@ -53,21 +53,34 @@ pub(crate) fn identity_secret(
     Ok(derive(&seed(mnemonic, passphrase)?, IDENTITY_DOMAIN, &[]))
 }
 
-/// The index a new swap takes at `now_unix`, or `None` while this second already has a swap.
-pub(crate) fn next_index(last: Option<u64>, now_unix: u64) -> Option<u64> {
-    last.is_none_or(|last| now_unix > last).then_some(now_unix)
+/// A fresh random index for a new swap's keys.
+pub(crate) fn new_index() -> [u8; 32] {
+    rand::random()
+}
+
+/// The `owner_ref` that carries `index` to the provider.
+pub(crate) fn owner_ref(index: &[u8; 32]) -> String {
+    format!("{OWNER_REF_PREFIX}{}", hex::encode(index))
+}
+
+/// The index in an `owner_ref` this wallet wrote, or `None` for anything else.
+pub(crate) fn index_from_owner_ref(owner_ref: &str) -> Option<[u8; 32]> {
+    hex::decode(owner_ref.strip_prefix(OWNER_REF_PREFIX)?)
+        .ok()?
+        .try_into()
+        .ok()
 }
 
 pub(crate) fn swap_keys(
     mnemonic: &str,
     passphrase: Option<&str>,
-    index: u64,
+    index: &[u8; 32],
 ) -> Result<SwapKeys, PubkySwapError> {
     let seed = seed(mnemonic, passphrase)?;
-    let claim_key = SecretKey::from_slice(&derive(&seed, CLAIM_DOMAIN, &index.to_be_bytes()))
+    let claim_key = SecretKey::from_slice(&derive(&seed, CLAIM_DOMAIN, index))
         .map_err(|e| PubkySwapError::invalid(format!("claim key: {e}")))?;
     let claim_pubkey = bitcoin::PublicKey::new(claim_key.public_key(&Secp256k1::new()));
-    let preimage = derive(&seed, PREIMAGE_DOMAIN, &index.to_be_bytes());
+    let preimage = derive(&seed, PREIMAGE_DOMAIN, index);
     let payment_hash = sha256::Hash::hash(&preimage).to_byte_array();
     Ok(SwapKeys {
         claim_key,
@@ -86,9 +99,9 @@ mod tests {
 
     #[test]
     fn keys_are_deterministic_and_distinct_per_index() {
-        let a = swap_keys(MNEMONIC, None, 1_793_600_000).unwrap();
-        let again = swap_keys(MNEMONIC, None, 1_793_600_000).unwrap();
-        let b = swap_keys(MNEMONIC, None, 1_793_600_001).unwrap();
+        let a = swap_keys(MNEMONIC, None, &[0; 32]).unwrap();
+        let again = swap_keys(MNEMONIC, None, &[0; 32]).unwrap();
+        let b = swap_keys(MNEMONIC, None, &[1; 32]).unwrap();
         assert_eq!(a.claim_key, again.claim_key);
         assert_eq!(a.preimage, again.preimage);
         assert_ne!(a.claim_key, b.claim_key);
@@ -98,8 +111,8 @@ mod tests {
 
     #[test]
     fn passphrase_changes_every_key() {
-        let plain = swap_keys(MNEMONIC, None, 0).unwrap();
-        let with = swap_keys(MNEMONIC, Some("x"), 0).unwrap();
+        let plain = swap_keys(MNEMONIC, None, &[0; 32]).unwrap();
+        let with = swap_keys(MNEMONIC, Some("x"), &[0; 32]).unwrap();
         assert_ne!(plain.claim_key, with.claim_key);
         assert_ne!(
             identity_secret(MNEMONIC, None).unwrap(),
@@ -108,11 +121,19 @@ mod tests {
     }
 
     #[test]
-    fn indexes_follow_the_clock_and_never_run_ahead_of_it() {
-        assert_eq!(next_index(None, 1_000), Some(1_000));
-        assert_eq!(next_index(Some(900), 1_000), Some(1_000));
-        // A second swap in the same second waits for the next one.
-        assert_eq!(next_index(Some(1_000), 1_000), None);
-        assert_eq!(next_index(Some(1_000), 1_001), Some(1_001));
+    fn fresh_indexes_never_repeat_a_preimage() {
+        let a = swap_keys(MNEMONIC, None, &new_index()).unwrap();
+        let b = swap_keys(MNEMONIC, None, &new_index()).unwrap();
+        assert_ne!(a.payment_hash, b.payment_hash);
+    }
+
+    #[test]
+    fn the_index_round_trips_through_an_owner_ref_the_provider_keeps() {
+        let index = new_index();
+        let owner_ref = owner_ref(&index);
+        assert!(swap_common::messages::owner_ref_is_valid(&owner_ref));
+        assert_eq!(index_from_owner_ref(&owner_ref), Some(index));
+        assert_eq!(index_from_owner_ref("someone-else:00"), None);
+        assert_eq!(index_from_owner_ref("bitkit-swap-v4:zz"), None);
     }
 }
