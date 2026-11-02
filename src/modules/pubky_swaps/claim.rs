@@ -11,6 +11,8 @@ pub(crate) struct Contract<'a> {
     pub htlc_spk: &'a ScriptBuf,
     pub lock_sat: u64,
     pub destination: &'a ScriptBuf,
+    /// What the claim pays the contact: the lock less the claim fee.
+    pub delivered_sat: u64,
     pub timeout: u32,
     pub required_confirmations: u32,
 }
@@ -24,16 +26,22 @@ pub(crate) enum Step {
         txid: String,
         state: PubkySwapRouteState,
     },
-    /// The saved claim is not in the history: broadcast it again. Its preimage is already public,
-    /// so it goes out whatever the window.
+    /// The saved claim is not in the history: broadcast it again. Once it was published its
+    /// preimage is public, so it goes out whatever the window; before that, only inside it.
     Rebroadcast,
     /// Build, save and broadcast the claim of this lockup.
     Claim(OutPoint),
 }
 
+/// The claim a record holds, and whether its preimage ever left the wallet.
+pub(crate) struct SavedClaim<'a> {
+    pub txid: &'a str,
+    pub published: bool,
+}
+
 pub(crate) fn next_step(
     contract: &Contract,
-    saved_claim: Option<&str>,
+    saved_claim: Option<SavedClaim>,
     tip: u32,
     history: &[(i32, Transaction)],
 ) -> Step {
@@ -74,16 +82,19 @@ pub(crate) fn next_step(
             .any(|input| input.previous_output == outpoint)
     });
     if let Some((height, tx)) = spend {
-        if !tx
-            .output
-            .iter()
-            .any(|out| out.script_pubkey == *contract.destination)
-        {
+        // Ours only if it is the saved claim, or pays the contact exactly what the claim would: a
+        // refund with a dust output to the contact is not a payment.
+        let txid = tx.compute_txid().to_string();
+        let is_saved = saved_claim.as_ref().is_some_and(|claim| claim.txid == txid);
+        let pays_contact = tx.output.iter().any(|out| {
+            out.script_pubkey == *contract.destination
+                && out.value.to_sat() == contract.delivered_sat
+        });
+        if !is_saved && !pays_contact {
             return Step::Report(PubkySwapRouteState::Failed {
                 reason: "The provider refunded its lockup instead of the claim.".into(),
             });
         }
-        let txid = tx.compute_txid().to_string();
         let state = if confirmations_at(*height) > 0 {
             PubkySwapRouteState::Claimed { txid: txid.clone() }
         } else {
@@ -92,24 +103,25 @@ pub(crate) fn next_step(
         return Step::Claimed { txid, state };
     }
 
-    if saved_claim.is_some() {
-        return Step::Rebroadcast;
+    let safe_to_reveal = claim_start_is_safe(tip, contract.timeout);
+    if let Some(claim) = saved_claim {
+        if claim.published || safe_to_reveal {
+            return Step::Rebroadcast;
+        }
     }
-    if confirmations < contract.required_confirmations {
-        return Step::Report(PubkySwapRouteState::AwaitingLockup {
-            confirmations,
-            required: contract.required_confirmations,
-        });
-    }
-    // Claiming reveals the preimage. Too close to the timeout, the provider could settle the hold
-    // invoice and still refund its lock, so the wallet leaves it to the refund instead.
-    if !claim_start_is_safe(tip, contract.timeout) {
+    if !safe_to_reveal {
         return Step::Report(PubkySwapRouteState::Failed {
             reason: format!(
                 "The lockup times out at block {}, too close to claim safely at block {tip}. \
                  The provider's refund returns the payment.",
                 contract.timeout
             ),
+        });
+    }
+    if confirmations < contract.required_confirmations {
+        return Step::Report(PubkySwapRouteState::AwaitingLockup {
+            confirmations,
+            required: contract.required_confirmations,
         });
     }
     Step::Claim(outpoint)
@@ -178,6 +190,7 @@ mod tests {
                 htlc_spk: &self.htlc,
                 lock_sat: LOCK,
                 destination: &self.destination,
+                delivered_sat: 20_000,
                 timeout: TIMEOUT,
                 required_confirmations: 1,
             }
@@ -198,8 +211,21 @@ mod tests {
             tx(vec![self.outpoint()], vec![(spk(3), 20_000)])
         }
 
+        /// A saved claim that already reached the server.
         fn step(&self, saved: Option<&str>, tip: u32, history: &[(i32, Transaction)]) -> Step {
+            let saved = saved.map(|txid| SavedClaim {
+                txid,
+                published: true,
+            });
             next_step(&self.contract(), saved, tip, history)
+        }
+
+        fn step_unpublished(&self, saved: &str, tip: u32, history: &[(i32, Transaction)]) -> Step {
+            let saved = SavedClaim {
+                txid: saved,
+                published: false,
+            };
+            next_step(&self.contract(), Some(saved), tip, history)
         }
     }
 
@@ -307,5 +333,46 @@ mod tests {
                 state: PubkySwapRouteState::ClaimBroadcast { txid }
             }
         );
+    }
+
+    #[test]
+    fn keeps_an_unpublished_claim_private_once_the_window_closed() {
+        let f = Fixture::new();
+        let saved = f.claim().compute_txid().to_string();
+        let history = [(1_000, f.lockup.clone())];
+        assert_eq!(
+            f.step_unpublished(&saved, TIMEOUT - 7, &history),
+            Step::Rebroadcast
+        );
+        assert!(matches!(
+            f.step_unpublished(&saved, TIMEOUT + 5, &history),
+            Step::Report(PubkySwapRouteState::Failed { .. })
+        ));
+    }
+
+    #[test]
+    fn reports_a_refund_with_dust_to_the_contact_as_failed() {
+        let f = Fixture::new();
+        let refund = tx(
+            vec![f.outpoint()],
+            vec![(spk(3), 19_000), (f.destination.clone(), 546)],
+        );
+        assert!(matches!(
+            f.step(
+                None,
+                TIMEOUT + 5,
+                &[(1_000, f.lockup.clone()), (TIMEOUT as i32 + 1, refund)]
+            ),
+            Step::Report(PubkySwapRouteState::Failed { .. })
+        ));
+    }
+
+    #[test]
+    fn fails_an_unconfirmed_lockup_past_the_timeout() {
+        let f = Fixture::new();
+        assert!(matches!(
+            f.step(None, 2_000, &[(0, f.lockup.clone())]),
+            Step::Report(PubkySwapRouteState::Failed { .. })
+        ));
     }
 }

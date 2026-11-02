@@ -3451,6 +3451,11 @@ pub async fn pubky_swaps_provider_edges(
 /// Pick how to pay a Paykit contact. Returns `Direct` when a balance the wallet holds reaches
 /// one of the contact's endpoints, otherwise the cheapest firm quote from the trusted Pubky
 /// Swaps providers, or `None` with a reason. The user never picks the swap.
+///
+/// Each candidate in `request.providers`, at most 30, is asked for its offer over iroh. iroh finds
+/// a candidate's address through n0's discovery servers, so n0 sees the keys looked up from the
+/// wallet's swap identity and IP: pass candidates the user expects to route through, not every
+/// contact, where that matters.
 #[uniffi::export]
 pub async fn pubky_swaps_route_paykit_payment(
     request: PaykitRouteRequest,

@@ -29,7 +29,11 @@ payment hash (`validate_hold_invoice`). These checks are pubky-swap's own `swap-
 ## Transport
 
 Requests travel over iroh `pubky-swap/direct/1`. The provider authenticates the request by the
-connection's key, so neither side needs a homeserver. Paykit Capabilities §13.1 allows the same
+connection's key, so neither side needs a homeserver. iroh does need n0's infrastructure: it finds
+each candidate's address through n0's discovery servers and publishes the wallet's own there, so
+for each payment that needs a swap, n0 sees up to 30 candidate keys looked up from one swap identity
+and IP. The caller's candidate list sets that exposure. Published Capability Descriptors
+(coreyphillips/pubky-swap#104) would let the router ask only providers, not every contact. Paykit Capabilities §13.1 allows the same
 payloads over this carrier.
 
 ## Keys and storage
@@ -40,7 +44,8 @@ payloads over this carrier.
   is later, so a restored or reinstalled wallet never repeats a preimage an earlier claim published,
   and a restore can find a listed swap's index by scanning a window around its creation time. They
   never collide with the Boltz module's keys, and the identity is not the user's Pubky identity.
-- `<base>/pubky_swaps/last_index` is synced to disk before the swap request is sent.
+- A wallet starts at most one swap per second, so an index is never ahead of the clock.
+  `<base>/pubky_swaps/last_index` is synced to disk before the swap request is sent.
   `<base>/pubky_swaps/<swap_id>.json` holds the contract, the index and the signed claim, never a
   secret; it is synced before the invoice reaches the app, and the claim before it is broadcast.
 
