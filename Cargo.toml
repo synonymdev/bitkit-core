@@ -47,7 +47,7 @@ pubky = "0.6.0"
 pubky-app-specs = "0.4"
 # Pubky Swaps client: wire types, contract checks and HTLC spends from pubky-swap,
 # requests over its iroh `pubky-swap/direct/1` protocol, lockups read over Electrum.
-swap-common = { git = "https://github.com/coreyphillips/pubky-swap", rev = "8c828c7004de22410d628a83c73c8e9c2a417ca4" }
+swap-common = { git = "https://github.com/coreyphillips/pubky-swap", rev = "1801c8080d44591877f5c5ebe70ab87fe57b8ee0" }
 iroh = "=1.2.0"
 electrum-client = { version = "0.25", default-features = false, features = ["proxy", "use-rustls-ring"] }
 
