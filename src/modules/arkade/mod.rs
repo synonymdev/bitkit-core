@@ -25,6 +25,9 @@ pub use listener::{set_listener, ArkadeEventListener};
 pub use lnurl::ArkadeLightningAddress;
 pub use types::*;
 
+/// The `service` of an Arkade leg in a Paykit route.
+pub const ROUTE_SERVICE: &str = "arkade";
+
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
@@ -183,6 +186,37 @@ pub async fn offboard_fee() -> Result<ArkadeFees, ArkadeError> {
 
 pub async fn offboard(address: String, amount_sat: Option<u64>) -> Result<String, ArkadeError> {
     wallet().await?.offboard(&address, amount_sat).await
+}
+
+/// A Paykit route that offboards exactly `amount_sat` to the contact's on-chain `endpoint`, the operator's exit fee
+/// on top, or `None` while the available balance cannot cover both. The Paykit router weighs it against the Pubky
+/// Swaps providers.
+pub async fn paykit_route_leg(
+    endpoint: crate::modules::pubky_swaps::PaykitEndpoint,
+    amount_sat: u64,
+) -> Result<Option<crate::modules::pubky_swaps::ServiceRouteLeg>, ArkadeError> {
+    let wallet = wallet().await?;
+    let fee = wallet
+        .offboard_exact_fee(&endpoint.value, amount_sat)
+        .await?;
+    let debit_sat = amount_sat + fee;
+    if wallet.balance().await?.available < debit_sat {
+        return Ok(None);
+    }
+    Ok(Some(crate::modules::pubky_swaps::ServiceRouteLeg {
+        service: ROUTE_SERVICE.into(),
+        endpoint,
+        delivered_sat: amount_sat,
+        debit_sat,
+        // The operator co-signs the batch that pays the contact.
+        atomicity: "operator".into(),
+        valid_until_unix: 0,
+    }))
+}
+
+/// Run an Arkade leg the Paykit router picked: offboard exactly `amount_sat` to `address`; the commitment txid.
+pub async fn offboard_exact(address: String, amount_sat: u64) -> Result<String, ArkadeError> {
+    wallet().await?.offboard_exact(&address, amount_sat).await
 }
 
 pub async fn send_ark(address: String, amount_sat: u64) -> Result<String, ArkadeError> {

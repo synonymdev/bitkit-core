@@ -55,8 +55,8 @@ pub use crate::modules::jade::{
 };
 use crate::modules::pubky::{PubkyAuthDetails, PubkyAuthKind, PubkyError, PubkyProfile};
 use crate::modules::pubky_swaps::{
-    self as pubky_swaps, PaykitRoute, PaykitRouteRequest, PubkySwapError, PubkySwapRoutePayment,
-    PubkySwapRouteStatus, SwapRouteEdge,
+    self as pubky_swaps, PaykitEndpoint, PaykitRoute, PaykitRouteRequest, PubkySwapError,
+    PubkySwapRoutePayment, PubkySwapRouteStatus, ServiceRouteLeg, SwapRouteEdge,
 };
 use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
@@ -3593,6 +3593,27 @@ pub async fn arkade_offboard(
     amount_sat: Option<u64>,
 ) -> Result<String, ArkadeError> {
     on_arkade_runtime(arkade::offboard(address, amount_sat)).await
+}
+
+/// A Paykit route leg that offboards exactly `amount_sat` to the contact's on-chain `endpoint`, the exit fee on top,
+/// or `None` while the Arkade balance cannot cover both. Pass it to `pubky_swaps_route_paykit_payment` in
+/// `service_legs`.
+#[uniffi::export]
+pub async fn arkade_paykit_route_leg(
+    endpoint: PaykitEndpoint,
+    amount_sat: u64,
+) -> Result<Option<ServiceRouteLeg>, ArkadeError> {
+    on_arkade_runtime(arkade::paykit_route_leg(endpoint, amount_sat)).await
+}
+
+/// Run an Arkade leg the Paykit router picked: offboard exactly `amount_sat` to `address` in the next batch, the exit
+/// fee on top; the commitment txid.
+#[uniffi::export]
+pub async fn arkade_offboard_exact(
+    address: String,
+    amount_sat: u64,
+) -> Result<String, ArkadeError> {
+    on_arkade_runtime(arkade::offboard_exact(address, amount_sat)).await
 }
 
 /// Pay `amount_sat` to another Arkade address; the Arkade txid.

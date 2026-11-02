@@ -434,6 +434,37 @@ impl Wallet {
         Ok(txid.to_string())
     }
 
+    /// The operator's exit fee for an offboard that delivers exactly `amount` to `address`.
+    pub async fn offboard_exact_fee(&self, address: &str, amount: u64) -> Result<u64, ArkadeError> {
+        let info = self.client.server_info().await?;
+        let address = Address::from_str(address)
+            .and_then(|a| a.require_network(info.network))
+            .map_err(|e| ArkadeError::invalid(format!("invalid address: {e}")))?;
+        let output = ark_fees::Output {
+            amount,
+            script: address.script_pubkey().to_string(),
+        };
+        Ok(fee_estimator(&info)?
+            .eval_onchain_output(output)
+            .map_err(ArkadeError::ark)?
+            .to_satoshis())
+    }
+
+    /// Move exactly `amount` to the on-chain `address` in the next batch, the exit fee on top; the commitment txid.
+    pub async fn offboard_exact(&self, address: &str, amount: u64) -> Result<String, ArkadeError> {
+        let info = self.client.server_info().await?;
+        let address = Address::from_str(address)
+            .and_then(|a| a.require_network(info.network))
+            .map_err(|e| ArkadeError::invalid(format!("invalid address: {e}")))?;
+        let mut rng = rng();
+        let _batch = self.batch.lock().await;
+        let txid = self
+            .client
+            .collaborative_redeem(&mut rng, address, Amount::from_sat(amount))
+            .await?;
+        Ok(txid.to_string())
+    }
+
     pub async fn send_ark(&self, address: &str, amount: u64) -> Result<String, ArkadeError> {
         let address = ArkAddress::decode(address)
             .map_err(|e| ArkadeError::invalid(format!("invalid Arkade address: {e}")))?;
