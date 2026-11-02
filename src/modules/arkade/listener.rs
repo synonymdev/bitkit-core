@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 /// How often history is read for the listener, as the TypeScript bridge polls it.
-const HISTORY_EVERY: Duration = Duration::from_secs(15);
+const HISTORY_EVERY: Duration = Duration::from_secs(30);
 
 /// Callback interface for Arkade wallet events.
 ///

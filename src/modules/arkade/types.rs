@@ -201,7 +201,10 @@ impl ArkadeNetwork {
                 ark_server_url: "https://arkade.computer".into(),
                 delegate_url: Some("https://delegate.arkade.money".into()),
                 esplora_url: "https://mempool.space/api".into(),
-                esplora_fallback_urls: vec!["https://blockstream.info/api".into()],
+                esplora_fallback_urls: vec![
+                    "https://blockstream.info/api".into(),
+                    "https://mempool.emzy.de/api".into(),
+                ],
                 lnurl_url: Some("https://lnurl.arkade.sh".into()),
                 solver: Some(SolverCard::beta_solver()),
             },

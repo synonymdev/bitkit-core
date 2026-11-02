@@ -9,9 +9,9 @@ use std::future::Future;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-/// Public esplora servers drop kept-alive connections now and then (`IncompleteMessage`) and rate-limit
-/// bursts; reads retry. A server that times out or refuses the connection isn't retried: the read moves to
-/// the next server instead.
+/// Public esplora servers drop kept-alive connections now and then (`IncompleteMessage`); reads retry. A
+/// server that times out, refuses the connection or rate-limits isn't retried: the read moves to the next
+/// server instead.
 async fn retry<T, F, Fut>(f: F) -> Result<T, esplora_client::Error>
 where
     F: Fn() -> Fut,
@@ -23,10 +23,7 @@ where
             Err(esplora_client::Error::Reqwest(e)) if e.is_timeout() || e.is_connect() => {
                 return Err(esplora_client::Error::Reqwest(e))
             }
-            Err(
-                e @ (esplora_client::Error::Reqwest(_)
-                | esplora_client::Error::HttpResponse { status: 429, .. }),
-            ) if attempt < 3 => {
+            Err(e @ esplora_client::Error::Reqwest(_)) if attempt < 3 => {
                 attempt += 1;
                 log::debug!("esplora read failed, retrying: {e}");
                 tokio::time::sleep(Duration::from_millis(250 * attempt)).await;
@@ -50,10 +47,11 @@ fn server_failed(e: &esplora_client::Error) -> bool {
 
 /// A request that gets no answer fails after this long instead of hanging the wallet.
 const TIMEOUT_SECS: u64 = 10;
-/// How long a read address history stays good.
-const HISTORY_TTL: Duration = Duration::from_secs(10);
+/// How long a read address history stays good. Public explorers allow a few hundred reads an hour per IP
+/// (blockstream.info: 700), and the history watch and chores read the same boarding addresses each pass.
+const HISTORY_TTL: Duration = Duration::from_secs(60);
 /// How long a read chain tip stays good: a scan reads it once per address otherwise.
-const TIP_TTL: Duration = Duration::from_secs(30);
+const TIP_TTL: Duration = Duration::from_secs(60);
 
 pub struct Esplora {
     /// The servers in order of preference, with their URLs for the log.
@@ -65,6 +63,9 @@ pub struct Esplora {
     /// Recent address histories: balance, history and the chores read the same few boarding addresses within
     /// seconds of each other, and mempool.space throttles an address's bursts by refusing connections.
     histories: std::sync::Mutex<HashMap<ScriptBuf, (Vec<EsploraTx>, Instant)>>,
+    /// Outputs found spent, and transactions found confirmed: final, so never read again.
+    spent: std::sync::Mutex<HashMap<OutPoint, Txid>>,
+    confirmed: std::sync::Mutex<HashMap<Txid, i64>>,
 }
 
 impl Esplora {
@@ -87,6 +88,8 @@ impl Esplora {
             current: AtomicUsize::new(0),
             tip: std::sync::Mutex::new(None),
             histories: std::sync::Mutex::new(HashMap::new()),
+            spent: std::sync::Mutex::new(HashMap::new()),
+            confirmed: std::sync::Mutex::new(HashMap::new()),
         })
     }
 
@@ -216,23 +219,48 @@ impl Blockchain for Esplora {
     }
 
     async fn get_tx_status(&self, txid: &Txid) -> Result<TxStatus, Error> {
+        if let Some(at) = self
+            .confirmed
+            .lock()
+            .ok()
+            .and_then(|c| c.get(txid).copied())
+        {
+            return Ok(TxStatus {
+                confirmed_at: Some(at),
+            });
+        }
         let info = self
             .read(|c| c.get_tx_info(txid))
             .await
             .map_err(Error::consumer)?;
-        Ok(TxStatus {
-            confirmed_at: info.and_then(|s| s.status.block_time.map(|t| t as i64)),
-        })
+        let confirmed_at = info.and_then(|s| s.status.block_time.map(|t| t as i64));
+        if let (Some(at), Ok(mut confirmed)) = (confirmed_at, self.confirmed.lock()) {
+            confirmed.insert(*txid, at);
+        }
+        Ok(TxStatus { confirmed_at })
     }
 
     async fn get_output_status(&self, txid: &Txid, vout: u32) -> Result<SpendStatus, Error> {
+        let outpoint = OutPoint { txid: *txid, vout };
+        if let Some(spend) = self
+            .spent
+            .lock()
+            .ok()
+            .and_then(|s| s.get(&outpoint).copied())
+        {
+            return Ok(SpendStatus {
+                spend_txid: Some(spend),
+            });
+        }
         let status = self
             .read(|c| c.get_output_status(txid, vout as u64))
             .await
             .map_err(Error::consumer)?;
-        Ok(SpendStatus {
-            spend_txid: status.and_then(|s| s.txid),
-        })
+        let spend_txid = status.and_then(|s| s.txid);
+        if let (Some(spend), Ok(mut spent)) = (spend_txid, self.spent.lock()) {
+            spent.insert(outpoint, spend);
+        }
+        Ok(SpendStatus { spend_txid })
     }
 
     async fn broadcast(&self, tx: &Transaction) -> Result<(), Error> {
