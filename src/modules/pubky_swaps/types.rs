@@ -10,7 +10,7 @@ pub struct SwapRouteEdge {
     pub direction: String,
     /// Payment Endpoint Identifier the owner pays with, such as `btc-lightning-bolt11`.
     pub from_endpoint: String,
-    /// Payment Endpoint Identifier family the route delivers to, such as `btc-regtest-*`.
+    /// Payment Endpoint Identifier the route delivers to, such as `btc-regtest-p2wpkh`.
     pub to_endpoint: String,
     /// The minimum the provider enforces, not its configured floor.
     pub min_sat: u64,

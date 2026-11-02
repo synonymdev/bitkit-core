@@ -13378,7 +13378,7 @@ public struct SwapRouteEdge {
      */
     public var fromEndpoint: String
     /**
-     * Payment Endpoint Identifier family the route delivers to, such as `btc-regtest-*`.
+     * Payment Endpoint Identifier the route delivers to, such as `btc-regtest-p2wpkh`.
      */
     public var toEndpoint: String
     /**
@@ -13405,7 +13405,7 @@ public struct SwapRouteEdge {
          * Payment Endpoint Identifier the owner pays with, such as `btc-lightning-bolt11`.
          */fromEndpoint: String, 
         /**
-         * Payment Endpoint Identifier family the route delivers to, such as `btc-regtest-*`.
+         * Payment Endpoint Identifier the route delivers to, such as `btc-regtest-p2wpkh`.
          */toEndpoint: String, 
         /**
          * The minimum the provider enforces, not its configured floor.

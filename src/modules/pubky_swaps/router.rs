@@ -49,26 +49,20 @@ pub(crate) fn onchain_endpoint(
     })
 }
 
-/// The `swap/1` edges an offer advertises (Paykit Capabilities §13.1). The fee, minimum and
-/// `fund_within_secs` are offer-wide, so both directions carry the same numbers.
+/// The `swap/1` edges an offer advertises (Paykit Capabilities §13.1), one per on-chain Payment
+/// Endpoint Identifier the provider pays or accepts. The fee, minimum and `fund_within_secs` are
+/// offer-wide, so every edge carries the same numbers.
 pub(crate) fn edges_from_offer(offer: &SwapOffer) -> Vec<SwapRouteEdge> {
-    let onchain = format!(
-        "btc-{}-*",
-        network_label(offer.network.to_bitcoin_network())
-    );
-    offer
-        .directions
-        .iter()
-        .map(|direction| {
+    let network = network_label(offer.network.to_bitcoin_network());
+    let mut edges = vec![];
+    for direction in &offer.directions {
+        for kind in ONCHAIN_PREFERENCE {
+            let onchain = format!("btc-{network}-{kind}");
             let (dir, from, to) = match direction {
-                SwapDirection::Reverse => {
-                    ("reverse", LIGHTNING_BOLT11.to_string(), onchain.clone())
-                }
-                SwapDirection::Submarine => {
-                    ("submarine", onchain.clone(), LIGHTNING_BOLT11.to_string())
-                }
+                SwapDirection::Reverse => ("reverse", LIGHTNING_BOLT11.to_string(), onchain),
+                SwapDirection::Submarine => ("submarine", onchain, LIGHTNING_BOLT11.to_string()),
             };
-            SwapRouteEdge {
+            edges.push(SwapRouteEdge {
                 provider_pubky: offer.provider_pkarr.clone(),
                 offer_id: offer.offer_id.to_string(),
                 direction: dir.to_string(),
@@ -81,9 +75,10 @@ pub(crate) fn edges_from_offer(offer: &SwapOffer) -> Vec<SwapRouteEdge> {
                 onchain_fee_sat: offer.onchain_fee_sat,
                 atomicity: "hash".to_string(),
                 fund_within_secs: offer.fund_within_secs,
-            }
-        })
-        .collect()
+            });
+        }
+    }
+    edges
 }
 
 /// Indicative fee of an edge for `amount_sat`: base + ppm + on-chain (§6.2).
@@ -94,17 +89,22 @@ pub(crate) fn indicative_fee(edge: &SwapRouteEdge, amount_sat: u64) -> u64 {
         .saturating_add(edge.onchain_fee_sat)
 }
 
-/// Reverse edges that can lock `lock_sat` and that the wallet can afford over Lightning,
+/// Reverse edges that deliver to `endpoint`, can lock `lock_sat`, stay within the client's fee
+/// cap (swap-common refuses a quote above it) and that the wallet can afford over Lightning,
 /// cheapest first, at most [`FANOUT_BUDGET`].
 pub(crate) fn rank_reverse_edges(
     edges: Vec<SwapRouteEdge>,
+    endpoint: &str,
     lock_sat: u64,
     lightning_spendable_sat: u64,
+    max_fee_bps: u16,
 ) -> Vec<SwapRouteEdge> {
+    let max_fee = (u128::from(lock_sat) * u128::from(max_fee_bps) / 10_000) as u64;
     let mut usable: Vec<_> = edges
         .into_iter()
-        .filter(|e| e.direction == "reverse")
+        .filter(|e| e.direction == "reverse" && e.to_endpoint == endpoint)
         .filter(|e| lock_sat >= e.min_sat && lock_sat <= e.max_sat)
+        .filter(|e| indicative_fee(e, lock_sat) <= max_fee)
         .filter(|e| lock_sat.saturating_add(indicative_fee(e, lock_sat)) <= lightning_spendable_sat)
         .collect();
     usable.sort_by_key(|e| indicative_fee(e, lock_sat));
@@ -154,7 +154,7 @@ mod tests {
             offer_id: "o".into(),
             direction: direction.into(),
             from_endpoint: LIGHTNING_BOLT11.into(),
-            to_endpoint: "btc-regtest-*".into(),
+            to_endpoint: "btc-regtest-p2wpkh".into(),
             min_sat: min,
             max_sat: max,
             base_fee_sat: base,
@@ -195,7 +195,7 @@ mod tests {
             edge("too-small", "reverse", 0, 10_000, 15_000),
             edge("min-too-high", "reverse", 0, 50_000, 1_000_000),
         ];
-        let ranked = rank_reverse_edges(edges, 20_000, 1_000_000);
+        let ranked = rank_reverse_edges(edges, "btc-regtest-p2wpkh", 20_000, 1_000_000, 10_000);
         let names: Vec<_> = ranked.iter().map(|e| e.provider_pubky.as_str()).collect();
         assert_eq!(names, ["cheap", "expensive"]);
     }
@@ -204,8 +204,11 @@ mod tests {
     fn drops_edges_the_wallet_cannot_afford() {
         let edges = vec![edge("p", "reverse", 100, 10_000, 1_000_000)];
         // 20,000 locked + 100 + 50 + 500 fee = 20,650.
-        assert!(rank_reverse_edges(edges.clone(), 20_000, 20_649).is_empty());
-        assert_eq!(rank_reverse_edges(edges, 20_000, 20_650).len(), 1);
+        let rank = |spendable| {
+            rank_reverse_edges(edges.clone(), "btc-regtest-p2wpkh", 20_000, spendable, 500)
+        };
+        assert!(rank(20_649).is_empty());
+        assert_eq!(rank(20_650).len(), 1);
     }
 
     #[test]
@@ -289,5 +292,20 @@ mod tests {
             Some(PaykitRoute::Service { .. })
         ));
         assert!(cheaper_route(None, None).is_none());
+    }
+
+    #[test]
+    fn drops_edges_above_the_client_fee_cap_and_other_endpoints() {
+        // 100 + 50 + 500 = 650 sats on 20,000 is 3.25%: under the 5% cap, over a 3% one.
+        let edges = vec![edge("p", "reverse", 100, 10_000, 1_000_000)];
+        assert_eq!(
+            rank_reverse_edges(edges.clone(), "btc-regtest-p2wpkh", 20_000, 1_000_000, 500).len(),
+            1
+        );
+        assert!(
+            rank_reverse_edges(edges.clone(), "btc-regtest-p2wpkh", 20_000, 1_000_000, 300)
+                .is_empty()
+        );
+        assert!(rank_reverse_edges(edges, "btc-regtest-p2tr", 20_000, 1_000_000, 500).is_empty());
     }
 }

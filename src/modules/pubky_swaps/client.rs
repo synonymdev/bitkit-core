@@ -285,7 +285,13 @@ async fn best_swap_route(
             Err(_) => log::debug!("pubky swaps: {provider} did not answer in time"),
         }
     }
-    let ranked = router::rank_reverse_edges(edges, lock_sat, request.lightning_spendable_sat);
+    let ranked = router::rank_reverse_edges(
+        edges,
+        &onchain.method_id,
+        lock_sat,
+        request.lightning_spendable_sat,
+        policy(network).max_fee_bps,
+    );
     let asked = ranked.len() as u32;
 
     let mut best: Option<(Quote, String)> = None;
