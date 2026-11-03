@@ -11653,8 +11653,8 @@ public struct PaykitRouteRequest {
      */
     public var feeRateSatVb: UInt64
     /**
-     * Routes through services the wallet holds a balance on (Arkade, Spark), each already quoted
-     * by the app's engine for that service. They compete with the Pubky Swaps providers on fee.
+     * Routes through services the wallet holds a balance on (Spark), each already quoted by the
+     * app's engine for that service. They compete with the Pubky Swaps providers on fee.
      */
     public var serviceLegs: [ServiceRouteLeg]
 
@@ -11672,8 +11672,8 @@ public struct PaykitRouteRequest {
          * Fee rate for the wallet's own claim transaction.
          */feeRateSatVb: UInt64, 
         /**
-         * Routes through services the wallet holds a balance on (Arkade, Spark), each already quoted
-         * by the app's engine for that service. They compete with the Pubky Swaps providers on fee.
+         * Routes through services the wallet holds a balance on (Spark), each already quoted by the
+         * app's engine for that service. They compete with the Pubky Swaps providers on fee.
          */serviceLegs: [ServiceRouteLeg]) {
         self.amountSat = amountSat
         self.contactEndpoints = contactEndpoints
@@ -12825,12 +12825,12 @@ public func FfiConverterTypeReverseSwapResponse_lower(_ value: ReverseSwapRespon
 
 
 /**
- * A one-leg route through a service the wallet holds a balance on, such as an Arkade offboard
- * or a Spark withdrawal to the contact's on-chain address. The app quotes it and runs it.
+ * A one-leg route through a service the wallet holds a balance on, such as a Spark withdrawal
+ * to the contact's on-chain address. The app quotes it and runs it.
  */
 public struct ServiceRouteLeg {
     /**
-     * `arkade` or `spark`.
+     * The service, such as `spark`.
      */
     public var service: String
     /**
@@ -12846,8 +12846,8 @@ public struct ServiceRouteLeg {
      */
     public var debitSat: UInt64
     /**
-     * Who the wallet trusts to complete the leg: `operator` for an Arkade batch, `trusted` for
-     * Spark's operators. Pubky Swaps legs are `hash`.
+     * Who the wallet trusts to complete the leg: `trusted` for Spark's operators. Pubky Swaps
+     * legs are `hash`.
      */
     public var atomicity: String
     /**
@@ -12859,7 +12859,7 @@ public struct ServiceRouteLeg {
     // declare one manually.
     public init(
         /**
-         * `arkade` or `spark`.
+         * The service, such as `spark`.
          */service: String, 
         /**
          * The contact endpoint the service delivers to. It must be one the contact published.
@@ -12871,8 +12871,8 @@ public struct ServiceRouteLeg {
          * What the wallet's balance on the service is debited.
          */debitSat: UInt64, 
         /**
-         * Who the wallet trusts to complete the leg: `operator` for an Arkade batch, `trusted` for
-         * Spark's operators. Pubky Swaps legs are `hash`.
+         * Who the wallet trusts to complete the leg: `trusted` for Spark's operators. Pubky Swaps
+         * legs are `hash`.
          */atomicity: String, 
         /**
          * When the quote stops holding, or 0 when it does not expire.

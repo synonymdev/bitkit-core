@@ -23,19 +23,18 @@ endpoints, so the app only swaps when it must.
 
 ## Service routes
 
-Services the wallet holds a balance on can also deliver to the contact: an Arkade offboard or a
-Spark withdrawal pays an on-chain address from Spending without a Pubky Swaps provider. The app
-quotes each such leg with its own engine for the service (`arkade_offboard_fee`, Spark's fee
-quote) and passes it in `PaykitRouteRequest.service_legs`; the router never talks to Arkade or
-Spark.
+Services the wallet holds a balance on can also deliver to the contact: a Spark withdrawal pays an
+on-chain address from Spending without a Pubky Swaps provider. The app quotes each such leg with
+its own engine for the service (Spark's fee quote) and passes it in
+`PaykitRouteRequest.service_legs`; the router never talks to Spark.
 
 When no balance reaches the contact directly, the router keeps the cheapest service leg that
 delivers exactly the amount to an endpoint the contact published and has not expired, asks the
 providers for a swap quote, and returns whichever costs less in fees: `Service` with the leg, which
 the app runs, or `Swap`. A swap wins a tie, since a hash lock needs no one's trust; a service leg
-states who it trusts in `atomicity` (`operator` for Arkade, `trusted` for Spark).
+states who it trusts in `atomicity` (`trusted` for Spark).
 
-Lightning through Arkade or Spark needs no service leg: the app counts those balances as
+Lightning through Spark needs no service leg: the app counts that balance as
 Lightning-spendable, and `Direct` covers it. One route has one leg: a service paying a provider's
 hold invoice is not routed yet.
 

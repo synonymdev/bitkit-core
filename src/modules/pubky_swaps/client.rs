@@ -1004,11 +1004,11 @@ mod tests {
     #[tokio::test]
     async fn routes_an_onchain_contact_through_a_service_without_providers() {
         let leg = ServiceRouteLeg {
-            service: "arkade".into(),
+            service: "spark".into(),
             endpoint: onchain_contact(),
             delivered_sat: 20_000,
             debit_sat: 20_300,
-            atomicity: "operator".into(),
+            atomicity: "trusted".into(),
             valid_until_unix: 0,
         };
         let PaykitRoute::Service { leg: picked } = route(request(vec![leg.clone()])).await else {

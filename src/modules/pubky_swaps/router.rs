@@ -229,7 +229,7 @@ mod tests {
             endpoint: endpoint(method_id),
             delivered_sat: delivered,
             debit_sat: debit,
-            atomicity: "operator".into(),
+            atomicity: "trusted".into(),
             valid_until_unix: until,
         }
     }
@@ -239,11 +239,11 @@ mod tests {
         let endpoints = vec![endpoint("btc-regtest-p2wpkh")];
         let legs = vec![
             leg("spark", "btc-regtest-p2wpkh", 20_000, 20_900, 0),
-            leg("arkade", "btc-regtest-p2wpkh", 20_000, 20_400, 0),
+            leg("spark", "btc-regtest-p2wpkh", 20_000, 20_400, 0),
             leg("unpublished", "btc-regtest-p2tr", 20_000, 20_001, 0),
         ];
         let picked = best_service_leg(&legs, &endpoints, 20_000, 100).unwrap();
-        assert_eq!(picked.service, "arkade");
+        assert_eq!(picked.debit_sat, 20_400);
     }
 
     #[test]
@@ -282,7 +282,7 @@ mod tests {
 
     #[test]
     fn picks_the_route_with_the_lower_fee_and_the_swap_on_a_tie() {
-        let service = leg("arkade", "btc-regtest-p2wpkh", 20_000, 20_500, 0);
+        let service = leg("spark", "btc-regtest-p2wpkh", 20_000, 20_500, 0);
         let pick = |swap_fee| cheaper_route(Some(service.clone()), Some(swap_quote(swap_fee)));
         assert!(matches!(pick(499), Some(PaykitRoute::Swap { .. })));
         assert!(matches!(pick(500), Some(PaykitRoute::Swap { .. })));
