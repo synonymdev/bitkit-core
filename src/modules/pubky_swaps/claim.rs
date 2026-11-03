@@ -26,9 +26,11 @@ pub(crate) enum Step {
         txid: String,
         state: PubkySwapRouteState,
     },
-    /// The saved claim is not in the history: broadcast it again. Once it was published its
-    /// preimage is public, so it goes out whatever the window; before that, only inside it.
-    Rebroadcast,
+    /// The saved claim is not in the history: broadcast it again, or a new claim of this lockup
+    /// when the record holds none (a restored swap whose claim the provider saw). Once a claim was
+    /// published its preimage is public, so it goes out whatever the window; before that, only
+    /// inside it.
+    Rebroadcast(OutPoint),
     /// Build, save and broadcast the claim of this lockup.
     Claim(OutPoint),
 }
@@ -106,7 +108,7 @@ pub(crate) fn next_step(
     let safe_to_reveal = claim_start_is_safe(tip, contract.timeout);
     if let Some(claim) = saved_claim {
         if claim.published || safe_to_reveal {
-            return Step::Rebroadcast;
+            return Step::Rebroadcast(outpoint);
         }
     }
     if !safe_to_reveal {
@@ -317,7 +319,22 @@ mod tests {
         // Also past the claim window: the preimage is public, so the claim must go out.
         assert_eq!(
             f.step(Some(&saved), TIMEOUT - 1, &[(1_000, f.lockup.clone())]),
-            Step::Rebroadcast
+            Step::Rebroadcast(f.outpoint())
+        );
+    }
+
+    #[test]
+    fn claims_again_when_a_claim_the_provider_saw_left_the_mempool() {
+        let f = Fixture::new();
+        // A restored swap holds only the txid the provider observed, published, and no claim to
+        // resend: the client builds a new one from this outpoint, past the window too.
+        assert_eq!(
+            f.step(
+                Some("observed-by-the-provider"),
+                TIMEOUT + 5,
+                &[(1_000, f.lockup.clone())]
+            ),
+            Step::Rebroadcast(f.outpoint())
         );
     }
 
@@ -342,7 +359,7 @@ mod tests {
         let history = [(1_000, f.lockup.clone())];
         assert_eq!(
             f.step_unpublished(&saved, TIMEOUT - 7, &history),
-            Step::Rebroadcast
+            Step::Rebroadcast(f.outpoint())
         );
         assert!(matches!(
             f.step_unpublished(&saved, TIMEOUT + 5, &history),

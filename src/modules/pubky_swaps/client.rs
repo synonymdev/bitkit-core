@@ -9,7 +9,7 @@ use std::str::FromStr;
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use bitcoin::{Address, ScriptBuf};
+use bitcoin::{Address, OutPoint, ScriptBuf};
 use electrum_client::{Client as ElectrumClient, ConfigBuilder, ElectrumApi};
 use once_cell::sync::Lazy;
 use swap_common::htlc::build_htlc_script;
@@ -43,6 +43,8 @@ const ELECTRUM_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30)
 /// How long the wallet keeps asking about a swap request the provider is still admitting.
 const PENDING_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60);
 const PENDING_POLL: std::time::Duration = std::time::Duration::from_secs(2);
+/// Most pages read from one provider's swap list on restore.
+const MAX_LIST_PAGES: usize = 100;
 
 /// Quotes the router fetched, kept until the wallet commits to one of them.
 static QUOTES: Lazy<Mutex<HashMap<String, CachedQuote>>> = Lazy::new(Default::default);
@@ -594,36 +596,50 @@ fn advance_blocking(
             }
             state
         }
-        claim::Step::Rebroadcast => {
-            let txid = record.claim_txid.clone().unwrap_or_default();
-            match record.claim_tx_hex.clone() {
-                Some(claim) => publish_claim(&mut record, &claim)?,
-                None => log::warn!("pubky swaps: no saved claim to broadcast again for {txid}"),
+        claim::Step::Rebroadcast(outpoint) => match record.claim_tx_hex.clone() {
+            Some(claim) => {
+                publish_claim(&mut record, &claim)?;
+                PubkySwapRouteState::ClaimBroadcast {
+                    txid: record.claim_txid.clone().unwrap_or_default(),
+                }
             }
-            PubkySwapRouteState::ClaimBroadcast { txid }
-        }
+            // A restored swap knows only the txid of the claim the provider saw. Its preimage is
+            // public, so a claim of our own goes out whatever the window.
+            None => claim_lockup(&mut record, outpoint, &redeem_script, &destination, &keys)?,
+        },
         claim::Step::Claim(outpoint) => {
-            let claim = build_claim_tx(
-                outpoint,
-                record.accept.onchain_amount_sat,
-                &redeem_script,
-                destination.clone(),
-                record.claim_fee_sat,
-                keys.preimage,
-                &keys.claim_key,
-            )
-            .map_err(PubkySwapError::chain)?;
-            let txid = claim.compute_txid().to_string();
-            let claim = bitcoin::consensus::encode::serialize_hex(&claim);
-            // Saved before the broadcast, so a restart in between finds and sends the same claim.
-            record.claim_txid = Some(txid.clone());
-            record.claim_tx_hex = Some(claim.clone());
-            store::save(&record)?;
-            publish_claim(&mut record, &claim)?;
-            PubkySwapRouteState::ClaimBroadcast { txid }
+            claim_lockup(&mut record, outpoint, &redeem_script, &destination, &keys)?
         }
     };
     Ok(status_of(&record, state))
+}
+
+/// Build the claim of `outpoint` to the contact, save it, then broadcast it.
+fn claim_lockup(
+    record: &mut SwapRecord,
+    outpoint: OutPoint,
+    redeem_script: &ScriptBuf,
+    destination: &ScriptBuf,
+    keys: &keys::SwapKeys,
+) -> Result<PubkySwapRouteState, PubkySwapError> {
+    let claim = build_claim_tx(
+        outpoint,
+        record.accept.onchain_amount_sat,
+        redeem_script,
+        destination.clone(),
+        record.claim_fee_sat,
+        keys.preimage,
+        &keys.claim_key,
+    )
+    .map_err(PubkySwapError::chain)?;
+    let txid = claim.compute_txid().to_string();
+    let claim = bitcoin::consensus::encode::serialize_hex(&claim);
+    // Saved before the broadcast, so a restart in between finds and sends the same claim.
+    record.claim_txid = Some(txid.clone());
+    record.claim_tx_hex = Some(claim.clone());
+    store::save(record)?;
+    publish_claim(record, &claim)?;
+    Ok(PubkySwapRouteState::ClaimBroadcast { txid })
 }
 
 /// Send a saved claim. It is recorded as published before it goes out: once a broadcast was
@@ -728,7 +744,11 @@ pub async fn restore_swaps(
                 Some(record) => record,
                 None => continue,
             };
-            store::save(&record)?;
+            // One swap that cannot be saved must not cost the user the others.
+            if let Err(e) = store::save(&record) {
+                log::warn!("pubky swaps: could not save restored swap {swap_id}: {e}");
+                continue;
+            }
             restored.push(swap_id);
         }
     }
@@ -736,14 +756,17 @@ pub async fn restore_swaps(
     Ok(restored)
 }
 
-/// Every swap a provider lists for this wallet's identity, page by page.
+/// Every swap a provider lists for this wallet's identity, page by page. A provider that keeps
+/// sending cursors stops at [`MAX_LIST_PAGES`] or at a cursor it sent before, so it cannot hold up
+/// the restore of the providers after it.
 async fn list_swaps(
     client: &DirectClient,
     provider: &str,
 ) -> Result<Vec<SwapStatusSnapshot>, PubkySwapError> {
     let mut snapshots = vec![];
     let mut cursor = None;
-    loop {
+    let mut cursors_seen = std::collections::HashSet::new();
+    for _ in 0..MAX_LIST_PAGES {
         let request = SwapMessage::SwapListRequest(SwapListRequest {
             request_id: Some(Uuid::new_v4()),
             cursor: cursor.take(),
@@ -757,10 +780,16 @@ async fn list_swaps(
         };
         snapshots.extend(page.snapshots);
         match page.next_cursor {
-            Some(next) => cursor = Some(next),
+            Some(next) if cursors_seen.insert(next.clone()) => cursor = Some(next),
+            Some(next) => {
+                log::warn!("pubky swaps: {provider} sent cursor {next} again; ending its list");
+                return Ok(snapshots);
+            }
             None => return Ok(snapshots),
         }
     }
+    log::warn!("pubky swaps: {provider} listed more than {MAX_LIST_PAGES} pages; ending its list");
+    Ok(snapshots)
 }
 
 /// The record for a listed reverse swap whose keys this wallet derives from its `owner_ref`, or
