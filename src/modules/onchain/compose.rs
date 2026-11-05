@@ -14,17 +14,17 @@ use bdk::wallet::Wallet;
 use bdk::FeeRate;
 
 use super::errors::AccountInfoError;
-use super::implementation::{
-    connect_electrum, create_and_sync_wallet, resolve_wallet_setup, run_account_info_blocking,
-};
+use super::implementation::{resolve_wallet_setup, run_account_info_blocking, WalletSetup};
 use super::types::{CoinSelection, ComposeOutput, ComposeParams, ComposeResult};
+use super::wallet_cache::synced_database_snapshot;
 
 /// Compose transactions for multiple fee rates, returning one PSBT per rate.
 ///
-/// Creates a BDK wallet from the extended key, syncs via Electrum, then
-/// builds a PSBT for each requested fee rate. The PSBTs include BIP32
-/// derivation paths (when `fingerprint` is provided) and are ready for
-/// signing by any PSBT-aware signer without additional network calls.
+/// Syncs a cached BDK wallet for the extended key via Electrum (a full sync
+/// on first use, incremental afterwards), then builds a PSBT for each
+/// requested fee rate. The PSBTs include BIP32 derivation paths (when
+/// `fingerprint` is provided) and are ready for signing by any PSBT-aware
+/// signer without additional network calls.
 pub async fn compose_transaction(params: ComposeParams) -> Vec<ComposeResult> {
     let num_rates = params.fee_rates.len();
     if num_rates == 0 {
@@ -49,6 +49,15 @@ async fn compose_inner(params: ComposeParams) -> Result<Vec<ComposeResult>, Acco
         params.wallet.fingerprint.as_deref(),
     )?;
 
+    // The cached wallet is keyed without the fingerprint, so composes with and
+    // without one (fee estimates vs. signing) share one synced wallet.
+    let sync_setup = resolve_wallet_setup(
+        &params.wallet.extended_key,
+        params.wallet.network,
+        params.wallet.account_type,
+        None,
+    )?;
+
     validate_outputs(&params.outputs, setup.network)
         .map_err(|e| AccountInfoError::WalletError { error_details: e })?;
 
@@ -66,8 +75,8 @@ async fn compose_inner(params: ComposeParams) -> Result<Vec<ComposeResult>, Acco
     let coin_selection = params.coin_selection;
 
     run_account_info_blocking("compose transaction", move || {
-        let client = connect_electrum(&electrum_url)?;
-        let mut wallet = create_and_sync_wallet(&setup, client)?;
+        let database = synced_database_snapshot(&sync_setup, &electrum_url)?;
+        let mut wallet = wallet_from_database(&setup, database)?;
 
         let mut results = Vec::with_capacity(fee_rates.len());
         for rate in &fee_rates {
@@ -88,7 +97,25 @@ async fn compose_inner(params: ComposeParams) -> Result<Vec<ComposeResult>, Acco
     .await
 }
 
-fn build_psbt(
+/// Build a wallet over a synced database copy, using the descriptors that
+/// carry the key origin (when a fingerprint was given) so the PSBTs include
+/// BIP32 derivations.
+pub(crate) fn wallet_from_database(
+    setup: &WalletSetup,
+    database: MemoryDatabase,
+) -> Result<Wallet<MemoryDatabase>, AccountInfoError> {
+    Wallet::new(
+        &setup.external_desc,
+        Some(&setup.internal_desc),
+        setup.network,
+        database,
+    )
+    .map_err(|e| AccountInfoError::WalletError {
+        error_details: format!("Failed to create wallet: {}", e),
+    })
+}
+
+pub(crate) fn build_psbt(
     wallet: &mut Wallet<MemoryDatabase>,
     outputs: &[ComposeOutput],
     fee_rate: f32,
