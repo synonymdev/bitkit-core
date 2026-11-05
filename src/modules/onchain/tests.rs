@@ -2857,7 +2857,7 @@ mod tests {
         use crate::modules::onchain::implementation::{create_wallet, resolve_wallet_setup};
         use crate::modules::onchain::wallet_cache::{
             cached_wallet_count, contains_key, copy_database, insert_empty_for_test,
-            WalletCacheKey, MAX_CACHED_WALLETS,
+            synced_database_snapshot_with_timeout, WalletCacheKey, MAX_CACHED_WALLETS,
         };
         use crate::modules::onchain::{
             compose_transaction, AccountType, ComposeOutput, ComposeParams, ComposeResult, Network,
@@ -2870,6 +2870,40 @@ mod tests {
         use bdk::database::{BatchOperations, Database, MemoryDatabase, SyncTime};
         use bdk::wallet::AddressIndex;
         use bdk::{BlockTime, KeychainKind, LocalUtxo, TransactionDetails};
+
+        /// A server that accepts connections and never answers. Each call must
+        /// fail within the socket timeout and release the wallet's lock, so a
+        /// second call on the same wallet is not blocked behind the first.
+        #[test]
+        fn stalled_server_fails_within_timeout_and_releases_wallet() {
+            let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+            let url = format!("tcp://{}", listener.local_addr().unwrap());
+            std::thread::spawn(move || {
+                let mut open = Vec::new();
+                for stream in listener.incoming() {
+                    open.push(stream);
+                }
+            });
+            let sync_setup = setup(None);
+
+            let first = {
+                let url = url.clone();
+                std::thread::spawn(move || {
+                    synced_database_snapshot_with_timeout(&setup(None), &url, 1).map(|_| ())
+                })
+            };
+            std::thread::sleep(std::time::Duration::from_millis(200));
+            let started = std::time::Instant::now();
+            let second = synced_database_snapshot_with_timeout(&sync_setup, &url, 1);
+
+            assert!(first.join().unwrap().is_err());
+            assert!(second.is_err());
+            assert!(
+                started.elapsed() < std::time::Duration::from_secs(10),
+                "second call waited {:?}",
+                started.elapsed()
+            );
+        }
 
         /// Trezor emulator `all all ... all` seed, m/84'/1'/0'.
         const TREZOR_ALL_TPUB: &str = "tpubDCZB6sR48s4T5Cr8qHUYSZEFCQMMHRg8AoVKVmvcAP5bRw7ArDKeoNwKAJujV3xCPkBvXH5ejSgbgyN6kREmF7sMd41NdbuHa8n1DZNxSMg";

@@ -10,6 +10,8 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex as StdMutex, MutexGuard};
 use std::time::Instant;
 
+use bdk::electrum_client::{self, ConfigBuilder};
+
 use bdk::bitcoin::Network as BdkNetwork;
 use bdk::blockchain::ElectrumBlockchain;
 use bdk::database::{BatchOperations, Database, MemoryDatabase};
@@ -18,7 +20,13 @@ use bdk::KeychainKind;
 use once_cell::sync::OnceCell;
 
 use super::errors::AccountInfoError;
-use super::implementation::{connect_electrum, create_wallet, sync_wallet, WalletSetup};
+use super::implementation::{create_wallet, sync_wallet, WalletSetup};
+
+/// Socket read and write timeout for compose connections. The per-wallet lock
+/// is held while syncing, so a server that stops answering must fail the call
+/// and release the lock instead of blocking every later compose for the wallet.
+/// Generous enough for a slow server answering a large batch.
+pub(crate) const COMPOSE_SOCKET_TIMEOUT_SECS: u8 = 30;
 
 /// Maximum number of wallets kept. The least recently used one is dropped
 /// when a new key would exceed it.
@@ -106,10 +114,19 @@ fn slot_for(key: &WalletCacheKey) -> Slot {
 /// advances the change index, and the cached wallet must keep the index the
 /// server reports. A failed sync drops the cached wallet so the next call
 /// starts cold. A new Electrum connection is opened per call, as before;
-/// only the wallet data is reused.
+/// only the wallet data is reused. The connection has a socket timeout, so a
+/// server that stops answering fails the call and releases the lock.
 pub(crate) fn synced_database_snapshot(
     sync_setup: &WalletSetup,
     electrum_url: &str,
+) -> Result<MemoryDatabase, AccountInfoError> {
+    synced_database_snapshot_with_timeout(sync_setup, electrum_url, COMPOSE_SOCKET_TIMEOUT_SECS)
+}
+
+pub(crate) fn synced_database_snapshot_with_timeout(
+    sync_setup: &WalletSetup,
+    electrum_url: &str,
+    socket_timeout_secs: u8,
 ) -> Result<MemoryDatabase, AccountInfoError> {
     let key = WalletCacheKey::new(sync_setup, electrum_url);
     let slot = slot_for(&key);
@@ -121,7 +138,10 @@ pub(crate) fn synced_database_snapshot(
     });
 
     // Connect before taking the wallet so a connection failure keeps it.
-    let blockchain = ElectrumBlockchain::from(connect_electrum(electrum_url)?);
+    let blockchain = ElectrumBlockchain::from(connect_electrum_with_timeout(
+        electrum_url,
+        socket_timeout_secs,
+    )?);
     let wallet = match guard.take() {
         Some(wallet) => wallet,
         None => create_wallet(sync_setup)?,
@@ -131,6 +151,20 @@ pub(crate) fn synced_database_snapshot(
     let snapshot = copy_database(&wallet.database())?;
     *guard = Some(wallet);
     Ok(snapshot)
+}
+
+fn connect_electrum_with_timeout(
+    electrum_url: &str,
+    socket_timeout_secs: u8,
+) -> Result<electrum_client::Client, AccountInfoError> {
+    let config = ConfigBuilder::new()
+        .timeout(Some(socket_timeout_secs))
+        .build();
+    electrum_client::Client::from_config(electrum_url, config).map_err(|e| {
+        AccountInfoError::ElectrumError {
+            error_details: format!("Failed to connect to Electrum: {}", e),
+        }
+    })
 }
 
 /// Copy everything a [`Wallet`] needs to build and sign transactions:
