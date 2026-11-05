@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add a `wake` module for the wake push gateway: device key, secret and install id generation, a signed registration (`wake_prepare_registration`, `wake_sign_pubky_proof`, `wake_register`), decryption of legacy (v0) and v1 envelopes from any delivered push (`wake_decrypt_push`), and the device routes for acks, presence, topics and unregistering. Grants let a peer wake the device (`wake_create_grant`, `wake_list_grants`, `wake_revoke_grant`), and `wake_send_peer_wake` sends a peer wake with a grant token another device handed over. The v1 wire format is experimental until the apps adopt it. `register_device` and `test_notification` are unchanged.
+- Remove the Boltz swap module, since the Boltz service has shut down. All `boltz*` functions and the Boltz types (`BoltzNetwork`, `BoltzSwapType`, `BoltzSwapStatus`, `BoltzPairInfo`, `SubmarineSwapResponse`, `ReverseSwapResponse`, `BoltzSwap`, `BoltzSwapEvent`, `BoltzError`, `BoltzEventListener`) are gone, along with the `boltz-client` dependency. `init_db` no longer creates or opens `boltz.db`, and leaves an existing one on disk untouched. Note that removing the `DbError.DbBoltzError` case changes exhaustive Kotlin `when` and Swift `switch` statements over `DbError`, which is source breaking for consumers.
 
 ## 0.5.16 - 2026-09-14
 
