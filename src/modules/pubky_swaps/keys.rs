@@ -10,6 +10,8 @@
 //! provider as the swap's `owner_ref`, which the provider keeps and lists back (`swap-list-v1`), so
 //! a wallet restored from its seed reads the index and derives the keys again.
 
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use base64::Engine;
 use bitcoin::hashes::{hmac, sha256, sha512, Hash, HashEngine};
 use bitcoin::secp256k1::{Secp256k1, SecretKey};
 
@@ -18,7 +20,8 @@ use super::errors::PubkySwapError;
 const IDENTITY_DOMAIN: &[u8] = b"bitkit/pubky-swaps/identity/v1";
 const CLAIM_DOMAIN: &[u8] = b"bitkit/pubky-swaps/claim/v4/";
 const PREIMAGE_DOMAIN: &[u8] = b"bitkit/pubky-swaps/preimage/v4/";
-/// Marks an `owner_ref` this wallet wrote: the version of the key scheme, then the index in hex.
+/// Marks an `owner_ref` this wallet wrote: the version of the key scheme, then the index in
+/// unpadded base64url, 58 characters in all.
 const OWNER_REF_PREFIX: &str = "bitkit-swap-v4:";
 
 pub(crate) struct SwapKeys {
@@ -60,12 +63,13 @@ pub(crate) fn new_index() -> [u8; 32] {
 
 /// The `owner_ref` that carries `index` to the provider.
 pub(crate) fn owner_ref(index: &[u8; 32]) -> String {
-    format!("{OWNER_REF_PREFIX}{}", hex::encode(index))
+    format!("{OWNER_REF_PREFIX}{}", URL_SAFE_NO_PAD.encode(index))
 }
 
 /// The index in an `owner_ref` this wallet wrote, or `None` for anything else.
 pub(crate) fn index_from_owner_ref(owner_ref: &str) -> Option<[u8; 32]> {
-    hex::decode(owner_ref.strip_prefix(OWNER_REF_PREFIX)?)
+    URL_SAFE_NO_PAD
+        .decode(owner_ref.strip_prefix(OWNER_REF_PREFIX)?)
         .ok()?
         .try_into()
         .ok()
@@ -133,6 +137,7 @@ mod tests {
         let owner_ref = owner_ref(&index);
         assert!(swap_common::messages::owner_ref_is_valid(&owner_ref));
         assert_eq!(index_from_owner_ref(&owner_ref), Some(index));
+        assert_eq!(owner_ref.len(), 58);
         assert_eq!(index_from_owner_ref("someone-else:00"), None);
         assert_eq!(index_from_owner_ref("bitkit-swap-v4:zz"), None);
     }
