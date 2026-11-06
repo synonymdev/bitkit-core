@@ -11658,7 +11658,8 @@ public func FfiConverterTypePaykitEndpoint_lower(_ value: PaykitEndpoint) -> Rus
 public struct PaykitRouteRequest {
     public var amountSat: UInt64
     /**
-     * The contact's current Payment Endpoints, as Paykit resolved them.
+     * All of the contact's current Payment Endpoints, as Paykit resolved them. Pass the full list:
+     * the router picks the endpoint, checking BOLT11 invoices for network, expiry and amount.
      */
     public var contactEndpoints: [PaykitEndpoint]
     /**
@@ -11689,7 +11690,8 @@ public struct PaykitRouteRequest {
     // declare one manually.
     public init(amountSat: UInt64, 
         /**
-         * The contact's current Payment Endpoints, as Paykit resolved them.
+         * All of the contact's current Payment Endpoints, as Paykit resolved them. Pass the full list:
+         * the router picks the endpoint, checking BOLT11 invoices for network, expiry and amount.
          */contactEndpoints: [PaykitEndpoint], 
         /**
          * What the wallet can pay over Lightning, its Spark balance included, net of the fees a
@@ -25621,7 +25623,8 @@ public enum PaykitRoute {
     case swap(quote: PubkySwapRouteQuote
     )
     /**
-     * Nothing can pay this contact. `reason` says why, for the user.
+     * Nothing can pay this contact. `reason` is English detail for logs; the app shows its own
+     * localized text.
      */
     case none(reason: String
     )

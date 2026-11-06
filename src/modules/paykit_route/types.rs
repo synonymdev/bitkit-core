@@ -15,7 +15,8 @@ pub struct PaykitEndpoint {
 #[derive(Debug, Clone, uniffi::Record)]
 pub struct PaykitRouteRequest {
     pub amount_sat: u64,
-    /// The contact's current Payment Endpoints, as Paykit resolved them.
+    /// All of the contact's current Payment Endpoints, as Paykit resolved them. Pass the full list:
+    /// the router picks the endpoint, checking BOLT11 invoices for network, expiry and amount.
     pub contact_endpoints: Vec<PaykitEndpoint>,
     /// What the wallet can pay over Lightning, its Spark balance included, net of the fees a
     /// payment of `amount_sat` costs.
@@ -59,6 +60,7 @@ pub enum PaykitRoute {
     Service { leg: ServiceRouteLeg },
     /// The wallet pays over Lightning and a Pubky Swaps provider delivers on-chain.
     Swap { quote: PubkySwapRouteQuote },
-    /// Nothing can pay this contact. `reason` says why, for the user.
+    /// Nothing can pay this contact. `reason` is English detail for logs; the app shows its own
+    /// localized text.
     None { reason: String },
 }

@@ -4,6 +4,9 @@
 
 use super::errors::PaykitRouteError;
 use super::types::{PaykitEndpoint, PaykitRoute, PaykitRouteRequest, ServiceRouteLeg};
+use lightning_invoice::{Bolt11Invoice, Currency};
+use std::str::FromStr;
+use std::time::Duration;
 
 /// Lightning Payment Endpoint Identifiers in the order Bitkit prefers to pay them.
 const LIGHTNING_PREFERENCE: [&str; 2] = ["btc-lightning-bolt11", "btc-lightning-lnurl"];
@@ -11,14 +14,28 @@ const LIGHTNING_PREFERENCE: [&str; 2] = ["btc-lightning-bolt11", "btc-lightning-
 /// On-chain address types in the order Bitkit prefers to pay them.
 const ONCHAIN_PREFERENCE: [&str; 4] = ["p2tr", "p2wpkh", "p2sh", "p2pkh"];
 
-/// The rail segment of an on-chain Payment Endpoint Identifier, as the apps publish it.
-pub(crate) fn network_label(network: bitcoin::Network) -> &'static str {
+/// The rail segment of an on-chain Payment Endpoint Identifier, as the apps publish it. The
+/// spec has no Testnet4 rail, so a Testnet4 wallet routes nothing on chain.
+pub(crate) fn network_label(network: bitcoin::Network) -> Option<&'static str> {
     match network {
-        bitcoin::Network::Bitcoin => "bitcoin",
-        bitcoin::Network::Regtest => "regtest",
-        bitcoin::Network::Signet => "signet",
-        _ => "testnet",
+        bitcoin::Network::Bitcoin => Some("bitcoin"),
+        bitcoin::Network::Regtest => Some("regtest"),
+        bitcoin::Network::Signet => Some("signet"),
+        bitcoin::Network::Testnet => Some("testnet"),
+        _ => None,
     }
+}
+
+/// The wallet's on-chain Payment Endpoint Identifiers, in the order Bitkit prefers to pay them.
+fn onchain_method_ids(network: bitcoin::Network) -> Vec<String> {
+    network_label(network)
+        .map(|rail| {
+            ONCHAIN_PREFERENCE
+                .iter()
+                .map(|kind| format!("btc-{rail}-{kind}"))
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 fn preferred(
@@ -30,19 +47,46 @@ fn preferred(
         .find_map(|id| endpoints.iter().find(|e| e.method_id == id))
 }
 
-fn lightning_endpoint(endpoints: &[PaykitEndpoint]) -> Option<&PaykitEndpoint> {
-    preferred(endpoints, LIGHTNING_PREFERENCE.map(String::from))
+/// Whether a Lightning endpoint's value can pay `amount_sat` now. A BOLT11 invoice must be for
+/// the wallet's network, unexpired at `now_unix` and amountless or for exactly the amount. An
+/// LNURL is only checked for a value, since checking it needs a network call.
+fn lightning_payable(
+    endpoint: &PaykitEndpoint,
+    amount_sat: u64,
+    network: bitcoin::Network,
+    now_unix: u64,
+) -> bool {
+    if endpoint.method_id != "btc-lightning-bolt11" {
+        return !endpoint.value.trim().is_empty();
+    }
+    let Ok(invoice) = Bolt11Invoice::from_str(endpoint.value.trim()) else {
+        return false;
+    };
+    invoice.currency() == Currency::from(network)
+        && !invoice.would_expire(Duration::from_secs(now_unix))
+        && invoice
+            .amount_milli_satoshis()
+            .is_none_or(|msat| msat == amount_sat.saturating_mul(1000))
+}
+
+fn lightning_endpoint(
+    endpoints: &[PaykitEndpoint],
+    amount_sat: u64,
+    network: bitcoin::Network,
+    now_unix: u64,
+) -> Option<&PaykitEndpoint> {
+    LIGHTNING_PREFERENCE.iter().find_map(|id| {
+        endpoints
+            .iter()
+            .find(|e| e.method_id == *id && lightning_payable(e, amount_sat, network, now_unix))
+    })
 }
 
 pub(crate) fn onchain_endpoint(
     endpoints: &[PaykitEndpoint],
     network: bitcoin::Network,
 ) -> Option<&PaykitEndpoint> {
-    let rail = network_label(network);
-    preferred(
-        endpoints,
-        ONCHAIN_PREFERENCE.map(|kind| format!("btc-{rail}-{kind}")),
-    )
+    preferred(endpoints, onchain_method_ids(network))
 }
 
 /// The cheapest service leg that delivers exactly `amount_sat` to an on-chain endpoint for
@@ -54,14 +98,10 @@ fn best_service_leg(
     network: bitcoin::Network,
     now_unix: u64,
 ) -> Option<ServiceRouteLeg> {
-    let rail = network_label(network);
+    let onchain = onchain_method_ids(network);
     legs.iter()
         .filter(|leg| endpoints.contains(&leg.endpoint))
-        .filter(|leg| {
-            ONCHAIN_PREFERENCE
-                .iter()
-                .any(|kind| leg.endpoint.method_id == format!("btc-{rail}-{kind}"))
-        })
+        .filter(|leg| onchain.contains(&leg.endpoint.method_id))
         .filter(|leg| leg.delivered_sat == amount_sat && leg.debit_sat >= leg.delivered_sat)
         .filter(|leg| leg.valid_until_unix == 0 || leg.valid_until_unix > now_unix)
         .min_by_key(|leg| leg.debit_sat - leg.delivered_sat)
@@ -83,7 +123,7 @@ pub fn route_payment(
     let endpoints = &request.contact_endpoints;
     let direct = [
         (
-            lightning_endpoint(endpoints),
+            lightning_endpoint(endpoints, amount, network, now_unix),
             request.lightning_spendable_sat,
         ),
         (
@@ -112,13 +152,41 @@ pub fn route_payment(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bitcoin::hashes::{sha256, Hash as _};
+    use bitcoin::secp256k1::{Secp256k1, SecretKey};
+    use lightning_invoice::{InvoiceBuilder, PaymentSecret};
 
     const NOW: u64 = 1_000;
 
+    /// A signed invoice created at `NOW - 10` that expires `expiry_secs` later.
+    fn bolt11(currency: Currency, amount_msat: Option<u64>, expiry_secs: u64) -> String {
+        let secp = Secp256k1::new();
+        let key = SecretKey::from_slice(&[0xab; 32]).unwrap();
+        let mut builder = InvoiceBuilder::new(currency)
+            .payment_hash(sha256::Hash::from_byte_array([1u8; 32]))
+            .payment_secret(PaymentSecret([2u8; 32]))
+            .duration_since_epoch(Duration::from_secs(NOW - 10))
+            .expiry_time(Duration::from_secs(expiry_secs))
+            .min_final_cltv_expiry_delta(144)
+            .description("paykit".into());
+        if let Some(msat) = amount_msat {
+            builder = builder.amount_milli_satoshis(msat);
+        }
+        builder
+            .build_signed(|hash| secp.sign_ecdsa_recoverable(hash, &key))
+            .unwrap()
+            .to_string()
+    }
+
+    /// An endpoint the contact published; a BOLT11 endpoint holds a payable regtest invoice.
     fn endpoint(method_id: &str) -> PaykitEndpoint {
+        let value = match method_id {
+            "btc-lightning-bolt11" => bolt11(Currency::Regtest, Some(20_000_000), 3_600),
+            _ => "v".into(),
+        };
         PaykitEndpoint {
             method_id: method_id.into(),
-            value: "v".into(),
+            value,
         }
     }
 
@@ -218,6 +286,67 @@ mod tests {
         let published = ["btc-bitcoin-p2tr", "btc-lightning-bolt11"];
         assert!(matches!(
             route(request(&published, 0, 0, legs)),
+            PaykitRoute::None { .. }
+        ));
+    }
+
+    #[test]
+    fn skips_bolt11_invoices_it_cannot_pay_now() {
+        let unpayable = [
+            bolt11(Currency::Bitcoin, Some(20_000_000), 3_600),
+            bolt11(Currency::Regtest, Some(20_000_000), 5),
+            bolt11(Currency::Regtest, Some(19_000_000), 3_600),
+            "not an invoice".into(),
+        ];
+        for value in unpayable {
+            let mut request = request(&["btc-regtest-p2wpkh"], 20_000, 20_000, vec![]);
+            request.contact_endpoints.push(PaykitEndpoint {
+                method_id: "btc-lightning-bolt11".into(),
+                value,
+            });
+            assert_eq!(route(request), direct("btc-regtest-p2wpkh"));
+        }
+        let mut amountless = request(&[], 20_000, 0, vec![]);
+        amountless.contact_endpoints.push(PaykitEndpoint {
+            method_id: "btc-lightning-bolt11".into(),
+            value: bolt11(Currency::Regtest, None, 3_600),
+        });
+        assert!(matches!(route(amountless), PaykitRoute::Direct { .. }));
+        let mut empty_lnurl = request(&[], 20_000, 0, vec![]);
+        empty_lnurl.contact_endpoints.push(PaykitEndpoint {
+            method_id: "btc-lightning-lnurl".into(),
+            value: " ".into(),
+        });
+        assert!(matches!(route(empty_lnurl), PaykitRoute::None { .. }));
+    }
+
+    #[test]
+    fn ignores_legs_to_an_address_the_contact_did_not_publish() {
+        let mut other = leg("btc-regtest-p2wpkh", 20_000, 20_001, 0);
+        other.endpoint.value = "other".into();
+        assert!(matches!(
+            route(request(&["btc-regtest-p2wpkh"], 0, 0, vec![other])),
+            PaykitRoute::None { .. }
+        ));
+    }
+
+    #[test]
+    fn pays_on_chain_endpoints_of_each_network_rail() {
+        let rails = [
+            (bitcoin::Network::Bitcoin, "btc-bitcoin-p2tr"),
+            (bitcoin::Network::Testnet, "btc-testnet-p2tr"),
+            (bitcoin::Network::Signet, "btc-signet-p2tr"),
+            (bitcoin::Network::Regtest, "btc-regtest-p2tr"),
+        ];
+        let published: Vec<&str> = rails.iter().map(|(_, id)| *id).collect();
+        for (network, id) in rails {
+            let request = request(&published, 0, 20_000, vec![]);
+            assert_eq!(route_payment(&request, network, NOW).unwrap(), direct(id));
+        }
+        let legs = vec![leg("btc-testnet-p2tr", 20_000, 20_001, 0)];
+        let request = request(&published, 0, 20_000, legs);
+        assert!(matches!(
+            route_payment(&request, bitcoin::Network::Testnet4, NOW).unwrap(),
             PaykitRoute::None { .. }
         ));
     }

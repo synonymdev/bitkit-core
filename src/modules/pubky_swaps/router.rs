@@ -25,7 +25,9 @@ const ONCHAIN_PREFERENCE: [&str; 4] = ["p2tr", "p2wpkh", "p2sh", "p2pkh"];
 /// Endpoint Identifier the provider pays or accepts. The fee, minimum and `fund_within_secs` are
 /// offer-wide, so every edge carries the same numbers.
 pub(crate) fn edges_from_offer(offer: &SwapOffer) -> Vec<SwapRouteEdge> {
-    let network = network_label(offer.network.to_bitcoin_network());
+    let Some(network) = network_label(offer.network.to_bitcoin_network()) else {
+        return vec![];
+    };
     let mut edges = vec![];
     for direction in &offer.directions {
         for kind in ONCHAIN_PREFERENCE {
