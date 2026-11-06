@@ -2851,4 +2851,289 @@ mod tests {
         assert_eq!(DEFAULT_GAP_LIMIT, 20);
         assert_eq!(crate::get_default_gap_limit(), DEFAULT_GAP_LIMIT);
     }
+
+    mod compose_wallet_cache {
+        use crate::modules::onchain::compose::{build_psbt, wallet_from_database};
+        use crate::modules::onchain::implementation::{create_wallet, resolve_wallet_setup};
+        use crate::modules::onchain::wallet_cache::{
+            cached_wallet_count, contains_key, copy_database, insert_empty_for_test,
+            synced_database_snapshot_with_timeout, WalletCacheKey, MAX_CACHED_WALLETS,
+        };
+        use crate::modules::onchain::{
+            compose_transaction, AccountType, ComposeOutput, ComposeParams, ComposeResult, Network,
+            WalletParams,
+        };
+        use base64::{engine::general_purpose, Engine as _};
+        use bdk::bitcoin::absolute::LockTime;
+        use bdk::bitcoin::psbt::PartiallySignedTransaction;
+        use bdk::bitcoin::{OutPoint, Sequence, Transaction, TxIn, TxOut, Witness};
+        use bdk::database::{BatchOperations, Database, MemoryDatabase, SyncTime};
+        use bdk::wallet::AddressIndex;
+        use bdk::{BlockTime, KeychainKind, LocalUtxo, TransactionDetails};
+
+        /// A server that accepts connections and never answers. Each call must
+        /// fail within the socket timeout and release the wallet's lock, so a
+        /// second call on the same wallet is not blocked behind the first.
+        #[test]
+        fn stalled_server_fails_within_timeout_and_releases_wallet() {
+            let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+            let url = format!("tcp://{}", listener.local_addr().unwrap());
+            std::thread::spawn(move || {
+                let mut open = Vec::new();
+                for stream in listener.incoming() {
+                    open.push(stream);
+                }
+            });
+            let sync_setup = setup(None);
+
+            let first = {
+                let url = url.clone();
+                std::thread::spawn(move || {
+                    synced_database_snapshot_with_timeout(&setup(None), &url, 1).map(|_| ())
+                })
+            };
+            std::thread::sleep(std::time::Duration::from_millis(200));
+            let started = std::time::Instant::now();
+            let second = synced_database_snapshot_with_timeout(&sync_setup, &url, 1);
+
+            assert!(first.join().unwrap().is_err());
+            assert!(second.is_err());
+            assert!(
+                started.elapsed() < std::time::Duration::from_secs(10),
+                "second call waited {:?}",
+                started.elapsed()
+            );
+        }
+
+        /// Trezor emulator `all all ... all` seed, m/84'/1'/0'.
+        const TREZOR_ALL_TPUB: &str = "tpubDCZB6sR48s4T5Cr8qHUYSZEFCQMMHRg8AoVKVmvcAP5bRw7ArDKeoNwKAJujV3xCPkBvXH5ejSgbgyN6kREmF7sMd41NdbuHa8n1DZNxSMg";
+        const TREZOR_ALL_FINGERPRINT: &str = "5c9e228d";
+        const REGTEST_ADDR: &str = "bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt080";
+
+        fn setup(
+            fingerprint: Option<&str>,
+        ) -> crate::modules::onchain::implementation::WalletSetup {
+            resolve_wallet_setup(
+                TREZOR_ALL_TPUB,
+                Some(Network::Regtest),
+                Some(AccountType::NativeSegwit),
+                fingerprint,
+            )
+            .unwrap()
+        }
+
+        /// A database funded with one confirmed 100k sat UTXO at external index 0,
+        /// with the internal last index at 3.
+        fn funded_database() -> MemoryDatabase {
+            let deriver = create_wallet(&setup(None)).unwrap();
+            let mut db = MemoryDatabase::new();
+            for i in 0..10 {
+                let ext = deriver.get_address(AddressIndex::Peek(i)).unwrap().address;
+                db.set_script_pubkey(&ext.script_pubkey(), KeychainKind::External, i)
+                    .unwrap();
+                let int = deriver
+                    .get_internal_address(AddressIndex::Peek(i))
+                    .unwrap()
+                    .address;
+                db.set_script_pubkey(&int.script_pubkey(), KeychainKind::Internal, i)
+                    .unwrap();
+            }
+            let receive = deriver.get_address(AddressIndex::Peek(0)).unwrap().address;
+            let tx = Transaction {
+                version: 2,
+                lock_time: LockTime::ZERO,
+                input: vec![TxIn {
+                    // Not a coinbase, so the output is spendable right away.
+                    previous_output: OutPoint {
+                        txid: "1111111111111111111111111111111111111111111111111111111111111111"
+                            .parse()
+                            .unwrap(),
+                        vout: 0,
+                    },
+                    script_sig: Default::default(),
+                    sequence: Sequence::MAX,
+                    witness: Witness::new(),
+                }],
+                output: vec![TxOut {
+                    value: 100_000,
+                    script_pubkey: receive.script_pubkey(),
+                }],
+            };
+            let block_time = BlockTime {
+                height: 100,
+                timestamp: 1_700_000_000,
+            };
+            db.set_tx(&TransactionDetails {
+                transaction: Some(tx.clone()),
+                txid: tx.txid(),
+                received: 100_000,
+                sent: 0,
+                fee: None,
+                confirmation_time: Some(block_time.clone()),
+            })
+            .unwrap();
+            db.set_utxo(&LocalUtxo {
+                outpoint: OutPoint {
+                    txid: tx.txid(),
+                    vout: 0,
+                },
+                txout: tx.output[0].clone(),
+                keychain: KeychainKind::External,
+                is_spent: false,
+            })
+            .unwrap();
+            db.set_last_index(KeychainKind::External, 0).unwrap();
+            db.set_last_index(KeychainKind::Internal, 3).unwrap();
+            db.set_sync_time(SyncTime { block_time }).unwrap();
+            db
+        }
+
+        #[test]
+        fn copy_database_keeps_wallet_state() {
+            let src = funded_database();
+            let copy = copy_database(&src).unwrap();
+
+            assert_eq!(
+                copy.iter_script_pubkeys(None).unwrap().len(),
+                src.iter_script_pubkeys(None).unwrap().len()
+            );
+            assert_eq!(copy.iter_utxos().unwrap(), src.iter_utxos().unwrap());
+            assert_eq!(copy.iter_txs(true).unwrap(), src.iter_txs(true).unwrap());
+            for keychain in [KeychainKind::External, KeychainKind::Internal] {
+                assert_eq!(
+                    copy.get_last_index(keychain).unwrap(),
+                    src.get_last_index(keychain).unwrap()
+                );
+            }
+            assert_eq!(copy.get_sync_time().unwrap(), src.get_sync_time().unwrap());
+        }
+
+        #[test]
+        fn psbt_from_copy_has_key_origin_and_leaves_source_index() {
+            // The cached wallet syncs with origin-less descriptors; signing needs
+            // PSBTs built with the fingerprinted ones over a copy of its data.
+            let src = funded_database();
+            let mut wallet = wallet_from_database(
+                &setup(Some(TREZOR_ALL_FINGERPRINT)),
+                copy_database(&src).unwrap(),
+            )
+            .unwrap();
+            let outputs = vec![ComposeOutput::Payment {
+                address: REGTEST_ADDR.to_string(),
+                amount_sats: 10_000,
+            }];
+
+            let result = build_psbt(
+                &mut wallet,
+                &outputs,
+                2.0,
+                bdk::bitcoin::Network::Regtest,
+                None,
+            )
+            .unwrap();
+            let ComposeResult::Success { psbt, fee, .. } = result else {
+                panic!("compose failed: {:?}", result);
+            };
+            assert!(fee > 0);
+
+            let bytes = general_purpose::STANDARD.decode(psbt).unwrap();
+            let psbt = PartiallySignedTransaction::deserialize(&bytes).unwrap();
+            let origin = psbt.inputs[0]
+                .bip32_derivation
+                .values()
+                .next()
+                .expect("input carries a BIP32 derivation");
+            assert_eq!(origin.0.to_string(), TREZOR_ALL_FINGERPRINT);
+            assert_eq!(origin.1.to_string(), "m/84'/1'/0'/0/0");
+
+            // Change goes to the next internal index and is marked as ours.
+            let change_paths: Vec<String> = psbt
+                .outputs
+                .iter()
+                .flat_map(|o| o.bip32_derivation.values())
+                .map(|(_, path)| path.to_string())
+                .collect();
+            assert_eq!(change_paths, vec!["m/84'/1'/0'/1/4".to_string()]);
+
+            // Building advanced the copy's change index, not the source's.
+            assert_eq!(src.get_last_index(KeychainKind::Internal).unwrap(), Some(3));
+        }
+
+        #[test]
+        fn cache_key_ignores_fingerprint_but_not_server() {
+            let url = "tcp://127.0.0.1:60001";
+            let without = WalletCacheKey::new(&setup(None), url);
+            assert_eq!(without, WalletCacheKey::new(&setup(None), url));
+            assert_ne!(
+                without,
+                WalletCacheKey::new(&setup(None), "tcp://127.0.0.1:60002")
+            );
+            let other_type = resolve_wallet_setup(
+                TREZOR_ALL_TPUB,
+                Some(Network::Regtest),
+                Some(AccountType::Taproot),
+                None,
+            )
+            .unwrap();
+            assert_ne!(without, WalletCacheKey::new(&other_type, url));
+        }
+
+        #[test]
+        fn cache_evicts_least_recently_used() {
+            let keys: Vec<WalletCacheKey> = (0..=MAX_CACHED_WALLETS)
+                .map(|i| WalletCacheKey::new(&setup(None), &format!("tcp://evict-test:{}", i)))
+                .collect();
+            for key in &keys {
+                insert_empty_for_test(key);
+                std::thread::sleep(std::time::Duration::from_millis(2));
+            }
+            assert!(cached_wallet_count() <= MAX_CACHED_WALLETS);
+            assert!(!contains_key(&keys[0]), "oldest entry should be evicted");
+            assert!(contains_key(&keys[MAX_CACHED_WALLETS]));
+        }
+
+        /// Composes twice against a live regtest Electrum and prints both
+        /// timings. Set `COMPOSE_CACHE_ELECTRUM_URL` to use another server.
+        #[tokio::test]
+        #[ignore]
+        async fn compose_reuses_synced_wallet() {
+            let url = std::env::var("COMPOSE_CACHE_ELECTRUM_URL")
+                .unwrap_or_else(|_| "ssl://electrs.bitkit.stag0.blocktank.to:9999".to_string());
+            let params = |fingerprint: Option<String>| ComposeParams {
+                wallet: WalletParams {
+                    extended_key: TREZOR_ALL_TPUB.to_string(),
+                    electrum_url: url.clone(),
+                    fingerprint,
+                    network: Some(Network::Regtest),
+                    account_type: Some(AccountType::NativeSegwit),
+                },
+                outputs: vec![ComposeOutput::Payment {
+                    address: REGTEST_ADDR.to_string(),
+                    amount_sats: 10_000,
+                }],
+                fee_rates: vec![2.0],
+                coin_selection: None,
+            };
+
+            let mut fees = vec![];
+            for (label, fingerprint) in [
+                ("cold, no fingerprint", None),
+                ("warm, no fingerprint", None),
+                (
+                    "warm, fingerprint",
+                    Some(TREZOR_ALL_FINGERPRINT.to_string()),
+                ),
+            ] {
+                let start = std::time::Instant::now();
+                let results = compose_transaction(params(fingerprint)).await;
+                println!("compose {}: {:?}", label, start.elapsed());
+                match &results[0] {
+                    ComposeResult::Success { fee, .. } => fees.push(*fee),
+                    ComposeResult::Error { error } => panic!("compose failed: {}", error),
+                }
+            }
+            assert!(fees.windows(2).all(|w| w[0] == w[1]), "fees: {:?}", fees);
+            assert!(contains_key(&WalletCacheKey::new(&setup(None), &url)));
+        }
+    }
 }

@@ -10,42 +10,16 @@
 use swap_common::messages::SwapOffer;
 use swap_common::SwapDirection;
 
-use super::types::{PaykitEndpoint, SwapRouteEdge};
+use crate::modules::paykit_route::network_label;
+
+use super::types::{PaykitRoute, PubkySwapRouteQuote, ServiceRouteLeg, SwapRouteEdge};
 
 pub(crate) const LIGHTNING_BOLT11: &str = "btc-lightning-bolt11";
-pub(crate) const LIGHTNING_LNURL: &str = "btc-lightning-lnurl";
 /// Providers asked for a firm quote per payment (§9.1 `fanout_budget`).
 pub(crate) const FANOUT_BUDGET: usize = 3;
 
 /// On-chain address types in the order Bitkit prefers to pay them.
 const ONCHAIN_PREFERENCE: [&str; 4] = ["p2tr", "p2wpkh", "p2sh", "p2pkh"];
-
-pub(crate) fn network_label(network: bitcoin::Network) -> &'static str {
-    match network {
-        bitcoin::Network::Bitcoin => "bitcoin",
-        bitcoin::Network::Regtest => "regtest",
-        bitcoin::Network::Signet => "signet",
-        _ => "testnet",
-    }
-}
-
-pub(crate) fn is_lightning(method_id: &str) -> bool {
-    method_id == LIGHTNING_BOLT11 || method_id == LIGHTNING_LNURL
-}
-
-/// The contact's on-chain endpoint for `network`, preferring the cheapest address type.
-pub(crate) fn onchain_endpoint(
-    endpoints: &[PaykitEndpoint],
-    network: bitcoin::Network,
-) -> Option<PaykitEndpoint> {
-    let prefix = format!("btc-{}-", network_label(network));
-    ONCHAIN_PREFERENCE.iter().find_map(|kind| {
-        endpoints
-            .iter()
-            .find(|e| e.method_id == format!("{prefix}{kind}"))
-            .cloned()
-    })
-}
 
 /// The `swap/1` edges an offer advertises (Paykit Capabilities §13.1), one per on-chain Payment
 /// Endpoint Identifier the provider pays or accepts. The fee, minimum and `fund_within_secs` are
@@ -110,9 +84,26 @@ pub(crate) fn rank_reverse_edges(
     usable
 }
 
+/// The route that costs the wallet less in fees. A hash-locked swap wins a tie: the wallet
+/// trusts no one to complete it.
+pub(crate) fn cheaper_route(
+    service: Option<ServiceRouteLeg>,
+    swap: Option<PubkySwapRouteQuote>,
+) -> Option<PaykitRoute> {
+    match (service, swap) {
+        (Some(leg), Some(quote)) if quote.total_fee_sat <= leg.debit_sat - leg.delivered_sat => {
+            Some(PaykitRoute::Swap { quote })
+        }
+        (Some(leg), _) => Some(PaykitRoute::Service { leg }),
+        (None, Some(quote)) => Some(PaykitRoute::Swap { quote }),
+        (None, None) => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::modules::paykit_route::PaykitEndpoint;
 
     fn edge(provider: &str, direction: &str, base: u64, min: u64, max: u64) -> SwapRouteEdge {
         SwapRouteEdge {
@@ -136,20 +127,6 @@ mod tests {
             method_id: method_id.into(),
             value: "v".into(),
         }
-    }
-
-    #[test]
-    fn picks_preferred_onchain_endpoint_for_the_network() {
-        let endpoints = vec![
-            endpoint("btc-regtest-p2pkh"),
-            endpoint("btc-bitcoin-p2tr"),
-            endpoint("btc-regtest-p2wpkh"),
-        ];
-        let picked = onchain_endpoint(&endpoints, bitcoin::Network::Regtest).unwrap();
-        assert_eq!(picked.method_id, "btc-regtest-p2wpkh");
-        assert!(
-            onchain_endpoint(&[endpoint(LIGHTNING_BOLT11)], bitcoin::Network::Regtest).is_none()
-        );
     }
 
     #[test]
@@ -181,6 +158,55 @@ mod tests {
     fn indicative_fee_matches_the_offer_formula() {
         let e = edge("p", "reverse", 100, 0, u64::MAX);
         assert_eq!(indicative_fee(&e, 100_000), 100 + 250 + 500);
+    }
+
+    fn leg(
+        service: &str,
+        method_id: &str,
+        delivered: u64,
+        debit: u64,
+        until: u64,
+    ) -> ServiceRouteLeg {
+        ServiceRouteLeg {
+            service: service.into(),
+            endpoint: endpoint(method_id),
+            delivered_sat: delivered,
+            debit_sat: debit,
+            atomicity: "trusted".into(),
+            valid_until_unix: until,
+        }
+    }
+
+    fn swap_quote(total_fee_sat: u64) -> PubkySwapRouteQuote {
+        PubkySwapRouteQuote {
+            provider_pubky: "p".into(),
+            quote_id: "q".into(),
+            endpoint: endpoint("btc-regtest-p2wpkh"),
+            delivered_sat: 20_000,
+            lock_sat: 20_200,
+            debit_sat: 20_000 + total_fee_sat,
+            service_fee_sat: 0,
+            provider_onchain_fee_sat: 0,
+            claim_fee_sat: 200,
+            total_fee_sat,
+            atomicity: "hash".into(),
+            valid_until_unix: 0,
+            providers_quoted: 1,
+        }
+    }
+
+    #[test]
+    fn picks_the_route_with_the_lower_fee_and_the_swap_on_a_tie() {
+        let service = leg("spark", "btc-regtest-p2wpkh", 20_000, 20_500, 0);
+        let pick = |swap_fee| cheaper_route(Some(service.clone()), Some(swap_quote(swap_fee)));
+        assert!(matches!(pick(499), Some(PaykitRoute::Swap { .. })));
+        assert!(matches!(pick(500), Some(PaykitRoute::Swap { .. })));
+        assert!(matches!(pick(501), Some(PaykitRoute::Service { .. })));
+        assert!(matches!(
+            cheaper_route(Some(service), None),
+            Some(PaykitRoute::Service { .. })
+        ));
+        assert!(cheaper_route(None, None).is_none());
     }
 
     #[test]

@@ -5,6 +5,7 @@ mod implementation;
 mod listener;
 mod psbt;
 mod types;
+mod wallet_cache;
 
 pub use compose::compose_transaction;
 pub use errors::{

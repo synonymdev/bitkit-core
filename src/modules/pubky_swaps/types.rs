@@ -1,5 +1,9 @@
 use serde::{Deserialize, Serialize};
 
+pub use crate::modules::paykit_route::{
+    PaykitEndpoint, PaykitRoute, PaykitRouteRequest, ServiceRouteLeg,
+};
+
 /// A `swap/1` edge from a provider's offer, in Paykit Capabilities terms: the payment endpoint
 /// the owner pays from, the endpoint the route delivers to, its bounds and its indicative fee.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Record)]
@@ -21,39 +25,6 @@ pub struct SwapRouteEdge {
     /// Atomicity class of the edge. Pubky Swaps legs are always `hash`.
     pub atomicity: String,
     pub fund_within_secs: u64,
-}
-
-/// What the wallet knows when it pays a Paykit contact: the amount, the endpoints the contact
-/// published and what the wallet can spend on each rail.
-#[derive(Debug, Clone, uniffi::Record)]
-pub struct PaykitRouteRequest {
-    pub amount_sat: u64,
-    /// Payment Endpoint Identifiers paired with their values, as Paykit resolved them.
-    pub contact_endpoints: Vec<PaykitEndpoint>,
-    pub lightning_spendable_sat: u64,
-    pub onchain_spendable_sat: u64,
-    /// Candidate swap providers as pubkys, usually the user's contacts. Each is asked for its
-    /// offer; those that run no provider are skipped.
-    pub providers: Vec<String>,
-    /// Fee rate for the wallet's own claim transaction.
-    pub fee_rate_sat_vb: u64,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Record)]
-pub struct PaykitEndpoint {
-    pub method_id: String,
-    pub value: String,
-}
-
-/// The route the router picked. A direct route means no swap is needed.
-#[derive(Debug, Clone, uniffi::Enum)]
-pub enum PaykitRoute {
-    /// The wallet can pay this endpoint from its own balance.
-    Direct { endpoint: PaykitEndpoint },
-    /// The wallet pays over Lightning and a Pubky Swaps provider delivers on-chain.
-    Swap { quote: PubkySwapRouteQuote },
-    /// Nothing can pay this contact. `reason` says why, for the user.
-    None { reason: String },
 }
 
 /// A firm `swap/1` quote for one route, with everything the review screen shows.

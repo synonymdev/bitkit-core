@@ -21,6 +21,14 @@ exactly the amount asked for (`exact_out`): the lock covers the wallet's own cla
 `pubky_swaps_route_paykit_payment` returns `Direct` when a balance reaches one of the contact's
 endpoints, so the app only swaps when it must.
 
+## Service routes
+
+The direct-pay check and the service legs live in the `paykit_route` module
+(`paykit_route_payment`). `pubky_swaps_route_paykit_payment` runs the same check first; when no
+balance reaches the contact, it asks the providers for a swap quote and returns whichever of the
+cheapest live service leg and the swap costs less in fees. A swap wins a tie, since a hash lock
+needs no one's trust.
+
 Before the invoice reaches the app, the module checks the quote against the request
 (`validate_quote`), the contract against the quote and the chain tip (`validate_accept`), rebuilds
 the HTLC from its own keys (`verify_contract`), and binds the hold invoice to the quote and the
