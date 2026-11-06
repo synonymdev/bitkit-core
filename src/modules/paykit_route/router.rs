@@ -77,7 +77,7 @@ pub fn route_payment(
     let amount = request.amount_sat;
     if amount == 0 {
         return Err(PaykitRouteError::InvalidRequest {
-            message: "amount must be positive".into(),
+            error_details: "amount must be positive".into(),
         });
     }
     let endpoints = &request.contact_endpoints;
