@@ -986,7 +986,7 @@ dependencies = [
 
 [[package]]
 name = "bitkitcore"
-version = "0.8.0-spark.1"
+version = "0.8.0-spark.2"
 dependencies = [
  "aes-gcm",
  "alloy-primitives",
