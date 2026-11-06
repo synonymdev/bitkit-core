@@ -16,7 +16,7 @@ const ONCHAIN_PREFERENCE: [&str; 4] = ["p2tr", "p2wpkh", "p2sh", "p2pkh"];
 
 /// The rail segment of an on-chain Payment Endpoint Identifier, as the apps publish it. The
 /// spec has no Testnet4 rail, so a Testnet4 wallet routes nothing on chain.
-fn network_label(network: bitcoin::Network) -> Option<&'static str> {
+pub(crate) fn network_label(network: bitcoin::Network) -> Option<&'static str> {
     match network {
         bitcoin::Network::Bitcoin => Some("bitcoin"),
         bitcoin::Network::Regtest => Some("regtest"),
@@ -82,7 +82,7 @@ fn lightning_endpoint(
     })
 }
 
-fn onchain_endpoint(
+pub(crate) fn onchain_endpoint(
     endpoints: &[PaykitEndpoint],
     network: bitcoin::Network,
 ) -> Option<&PaykitEndpoint> {
@@ -213,6 +213,8 @@ mod tests {
             lightning_spendable_sat: lightning,
             onchain_spendable_sat: onchain,
             service_legs: legs,
+            providers: vec![],
+            fee_rate_sat_vb: 2,
         }
     }
 
