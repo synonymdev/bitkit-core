@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add `paykit_route_payment`, which picks how to pay a Paykit contact: directly when a held balance reaches one of the contact's endpoints, otherwise through the cheapest quoted service leg, such as a Spark withdrawal to the contact's on-chain address.
 - `onchain_compose_transaction` keeps the synced watch-only wallet per extended key, script type, network and Electrum URL, so later composes for the same account run an incremental sync that reuses stored transactions instead of a full sync. Every compose still syncs before building PSBTs. Composes with and without a fingerprint share one wallet. Against the staging regtest Electrum with the Trezor emulator account, a compose drops from about 7.5 s to about 3.4 s after the first one.
 - Add a `wake` module for the wake push gateway: device key, secret and install id generation, a signed registration (`wake_prepare_registration`, `wake_sign_pubky_proof`, `wake_register`), decryption of legacy (v0) and v1 envelopes from any delivered push (`wake_decrypt_push`), and the device routes for acks, presence, topics and unregistering. Grants let a peer wake the device (`wake_create_grant`, `wake_list_grants`, `wake_revoke_grant`), and `wake_send_peer_wake` sends a peer wake with a grant token another device handed over. The v1 wire format is experimental until the apps adopt it. `register_device` and `test_notification` are unchanged.
 
