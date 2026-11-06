@@ -1007,15 +1007,20 @@ mod tests {
 
     #[tokio::test]
     async fn routes_through_a_service_on_mainnet_where_swaps_are_refused() {
+        let mainnet_contact = PaykitEndpoint {
+            method_id: "btc-bitcoin-p2wpkh".into(),
+            value: "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu".into(),
+        };
         let leg = ServiceRouteLeg {
             service: "spark".into(),
-            endpoint: onchain_contact(),
+            endpoint: mainnet_contact.clone(),
             delivered_sat: 20_000,
             debit_sat: 20_300,
             atomicity: "trusted".into(),
             valid_until_unix: 0,
         };
         let mut request = request(vec![leg.clone()]);
+        request.contact_endpoints = vec![mainnet_contact];
         request.providers = vec!["pubky-provider".into()];
         let route =
             route_paykit_payment(request, bitcoin::Network::Bitcoin, MNEMONIC.into(), None).await;
