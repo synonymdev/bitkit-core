@@ -25715,7 +25715,7 @@ public enum PaykitRouteError: Swift.Error {
 
     
     
-    case InvalidRequest(message: String
+    case InvalidRequest(errorDetails: String
     )
 }
 
@@ -25734,7 +25734,7 @@ public struct FfiConverterTypePaykitRouteError: FfiConverterRustBuffer {
 
         
         case 1: return .InvalidRequest(
-            message: try FfiConverterString.read(from: &buf)
+            errorDetails: try FfiConverterString.read(from: &buf)
             )
 
          default: throw UniffiInternalError.unexpectedEnumCase
@@ -25748,9 +25748,9 @@ public struct FfiConverterTypePaykitRouteError: FfiConverterRustBuffer {
 
         
         
-        case let .InvalidRequest(message):
+        case let .InvalidRequest(errorDetails):
             writeInt(&buf, Int32(1))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(errorDetails, into: &buf)
             
         }
     }
