@@ -45,16 +45,23 @@ pub(crate) fn onchain_endpoint(
     )
 }
 
-/// The cheapest service leg that delivers exactly `amount_sat` to an endpoint the contact
-/// published and whose quote still holds at `now_unix`.
+/// The cheapest service leg that delivers exactly `amount_sat` to an on-chain endpoint for
+/// `network` the contact published and whose quote still holds at `now_unix`.
 fn best_service_leg(
     legs: &[ServiceRouteLeg],
     endpoints: &[PaykitEndpoint],
     amount_sat: u64,
+    network: bitcoin::Network,
     now_unix: u64,
 ) -> Option<ServiceRouteLeg> {
+    let rail = network_label(network);
     legs.iter()
         .filter(|leg| endpoints.contains(&leg.endpoint))
+        .filter(|leg| {
+            ONCHAIN_PREFERENCE
+                .iter()
+                .any(|kind| leg.endpoint.method_id == format!("btc-{rail}-{kind}"))
+        })
         .filter(|leg| leg.delivered_sat == amount_sat && leg.debit_sat >= leg.delivered_sat)
         .filter(|leg| leg.valid_until_unix == 0 || leg.valid_until_unix > now_unix)
         .min_by_key(|leg| leg.debit_sat - leg.delivered_sat)
@@ -93,7 +100,7 @@ pub fn route_payment(
         });
     }
     Ok(
-        match best_service_leg(&request.service_legs, endpoints, amount, now_unix) {
+        match best_service_leg(&request.service_legs, endpoints, amount, network, now_unix) {
             Some(leg) => PaykitRoute::Service { leg },
             None => PaykitRoute::None {
                 reason: "No balance can reach an endpoint this contact accepts.".into(),
@@ -200,6 +207,19 @@ mod tests {
             panic!("expected a service route");
         };
         assert_eq!(leg.debit_sat, 20_400);
+    }
+
+    #[test]
+    fn ignores_legs_to_endpoints_off_this_network_or_off_chain() {
+        let legs = vec![
+            leg("btc-bitcoin-p2tr", 20_000, 20_001, 0),
+            leg("btc-lightning-bolt11", 20_000, 20_001, 0),
+        ];
+        let published = ["btc-bitcoin-p2tr", "btc-lightning-bolt11"];
+        assert!(matches!(
+            route(request(&published, 0, 0, legs)),
+            PaykitRoute::None { .. }
+        ));
     }
 
     #[test]

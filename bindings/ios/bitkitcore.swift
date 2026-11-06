@@ -11662,9 +11662,13 @@ public struct PaykitRouteRequest {
      */
     public var contactEndpoints: [PaykitEndpoint]
     /**
-     * What the wallet can pay over Lightning, its Spark balance included.
+     * What the wallet can pay over Lightning, its Spark balance included, net of the fees a
+     * payment of `amount_sat` costs.
      */
     public var lightningSpendableSat: UInt64
+    /**
+     * What the wallet can pay on chain, net of the miner fee a payment of `amount_sat` costs.
+     */
     public var onchainSpendableSat: UInt64
     /**
      * Legs through services the wallet holds a balance on, such as a Spark withdrawal to the
@@ -11688,8 +11692,12 @@ public struct PaykitRouteRequest {
          * The contact's current Payment Endpoints, as Paykit resolved them.
          */contactEndpoints: [PaykitEndpoint], 
         /**
-         * What the wallet can pay over Lightning, its Spark balance included.
-         */lightningSpendableSat: UInt64, onchainSpendableSat: UInt64, 
+         * What the wallet can pay over Lightning, its Spark balance included, net of the fees a
+         * payment of `amount_sat` costs.
+         */lightningSpendableSat: UInt64, 
+        /**
+         * What the wallet can pay on chain, net of the miner fee a payment of `amount_sat` costs.
+         */onchainSpendableSat: UInt64, 
         /**
          * Legs through services the wallet holds a balance on, such as a Spark withdrawal to the
          * contact's on-chain address, each already quoted by the app's engine for that service.

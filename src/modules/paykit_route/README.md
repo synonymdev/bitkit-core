@@ -10,10 +10,11 @@ screen shows it.
    wallet pays it directly: over Lightning first (`btc-lightning-bolt11`, then
    `btc-lightning-lnurl`) when `lightning_spendable_sat` covers the amount, else on chain
    (`btc-{network}-p2tr`, `p2wpkh`, `p2sh`, `p2pkh`, in that order) when `onchain_spendable_sat`
-   does. Spark's balance counts as Lightning-spendable, so paying a Lightning endpoint from Spark
+   does. Both amounts are net of the fees the payment costs. Spark's balance counts as Lightning-spendable, so paying a Lightning endpoint from Spark
    needs no leg.
 2. **Service leg.** Otherwise the router keeps the cheapest of `service_legs` that delivers exactly
-   the amount to an endpoint the contact published and whose quote has not expired. A leg is a
+   the amount to an on-chain endpoint for the wallet's network the contact published and whose quote
+   has not expired. A leg is a
    one-step route through a service the wallet holds a balance on, such as a Spark withdrawal to
    the contact's on-chain address. The app quotes each leg with that service's engine and runs the
    one the router returns; the router never talks to the service. `atomicity` states who the leg

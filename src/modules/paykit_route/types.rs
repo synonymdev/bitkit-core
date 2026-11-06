@@ -17,8 +17,10 @@ pub struct PaykitRouteRequest {
     pub amount_sat: u64,
     /// The contact's current Payment Endpoints, as Paykit resolved them.
     pub contact_endpoints: Vec<PaykitEndpoint>,
-    /// What the wallet can pay over Lightning, its Spark balance included.
+    /// What the wallet can pay over Lightning, its Spark balance included, net of the fees a
+    /// payment of `amount_sat` costs.
     pub lightning_spendable_sat: u64,
+    /// What the wallet can pay on chain, net of the miner fee a payment of `amount_sat` costs.
     pub onchain_spendable_sat: u64,
     /// Legs through services the wallet holds a balance on, such as a Spark withdrawal to the
     /// contact's on-chain address, each already quoted by the app's engine for that service.
