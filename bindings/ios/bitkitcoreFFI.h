@@ -1516,6 +1516,11 @@ RustBuffer uniffi_bitkitcore_fn_func_parse_pubky_auth_url(RustBuffer auth_url, R
 RustBuffer uniffi_bitkitcore_fn_func_passport_parse_account_export(RustBuffer data, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PAYKIT_ROUTE_PAYMENT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PAYKIT_ROUTE_PAYMENT
+RustBuffer uniffi_bitkitcore_fn_func_paykit_route_payment(RustBuffer request, RustBuffer network, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PRE_ACTIVITY_METADATA_FROM_JSON
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PRE_ACTIVITY_METADATA_FROM_JSON
 RustBuffer uniffi_bitkitcore_fn_func_pre_activity_metadata_from_json(RustBuffer json, RustCallStatus *_Nonnull out_status
@@ -3098,6 +3103,12 @@ uint16_t uniffi_bitkitcore_checksum_func_parse_pubky_auth_url(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PASSPORT_PARSE_ACCOUNT_EXPORT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PASSPORT_PARSE_ACCOUNT_EXPORT
 uint16_t uniffi_bitkitcore_checksum_func_passport_parse_account_export(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PAYKIT_ROUTE_PAYMENT
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PAYKIT_ROUTE_PAYMENT
+uint16_t uniffi_bitkitcore_checksum_func_paykit_route_payment(void
     
 );
 #endif
