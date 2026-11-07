@@ -1090,7 +1090,7 @@ impl ActivityDB {
                     confirmed = excluded.confirmed,
                     value = excluded.value,
                     fee = excluded.fee,
-                    fee_rate = CASE WHEN ?16 THEN onchain_activity.fee_rate ELSE excluded.fee_rate END,
+                    fee_rate = CASE WHEN ?16 AND onchain_activity.fee_rate > 0 THEN onchain_activity.fee_rate ELSE excluded.fee_rate END,
                     is_boosted = excluded.is_boosted,
                     boost_tx_ids = excluded.boost_tx_ids,
                     is_transfer = excluded.is_transfer,
