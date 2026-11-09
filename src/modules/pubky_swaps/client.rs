@@ -16,6 +16,7 @@ use swap_common::htlc::build_htlc_script;
 use swap_common::messages::{
     OfferRequest, Quote, QuoteRequest, Reject, SwapListRequest, SwapMessage, SwapOffer,
     SwapRequest, SwapScript, SwapStatusRequest, SwapStatusSnapshot, PROTOCOL_VERSION,
+    SWAP_LIST_FEATURE,
 };
 use swap_common::onchain::{build_claim_tx, estimate_spend_fee, spend_vsize};
 use swap_common::timelock::TimelockParams;
@@ -503,6 +504,7 @@ pub async fn commit_route(
         claim_tx_hex: None,
         claim_published: false,
         claim_seen: false,
+        claim_listed: false,
         created_at_unix: now_unix(),
     };
     store::save(&record)?;
@@ -555,8 +557,7 @@ fn advance_blocking(
     let contract = claim::Contract {
         htlc_spk: &htlc_spk,
         lock_sat: record.accept.onchain_amount_sat,
-        destination: &destination,
-        delivered_sat: record.delivered_sat,
+        payment_hash: &keys.payment_hash,
         timeout,
         required_confirmations: policy(record.network)
             .effective_confirmations(record.required_confirmations),
@@ -569,11 +570,11 @@ fn advance_blocking(
         history.push((item.height, electrum.transaction_get(&item.tx_hash)?));
     }
 
-    let saved = record.claim_txid.as_deref().map(|txid| claim::SavedClaim {
-        txid,
+    let saved = record.claim_txid.as_ref().map(|_| claim::SavedClaim {
         published: record.claim_published,
     });
-    let state = match claim::next_step(&contract, saved, tip, &history) {
+    let required = contract.required_confirmations;
+    let state = match claim::next_step(&contract, saved, record.claim_listed, tip, &history) {
         claim::Step::Report(state) => state,
         claim::Step::Claimed { txid, state } => {
             if record.claim_txid.as_deref() != Some(txid.as_str()) || !record.claim_seen {
@@ -584,22 +585,38 @@ fn advance_blocking(
             }
             state
         }
-        claim::Step::Rebroadcast(outpoint) => match record.claim_tx_hex.clone() {
-            Some(claim) => {
-                publish_claim(&mut record, &claim)?;
-                PubkySwapRouteState::ClaimBroadcast {
-                    txid: record.claim_txid.clone().unwrap_or_default(),
-                }
+        claim::Step::Rebroadcast {
+            outpoint,
+            confirmations,
+        } => {
+            match record.claim_tx_hex.clone() {
+                Some(claim) => publish_claim(&mut record, &claim)?,
+                // A restored swap whose claim the provider listed holds no claim of its own. Its
+                // preimage may be public, so a claim of our own goes out whatever the window.
+                None => claim_lockup(&mut record, outpoint, &redeem_script, &destination, &keys)?,
             }
-            // A restored swap knows only the txid of the claim the provider saw. Its preimage is
-            // public, so a claim of our own goes out whatever the window.
-            None => claim_lockup(&mut record, outpoint, &redeem_script, &destination, &keys)?,
-        },
-        claim::Step::Claim(outpoint) => {
-            claim_lockup(&mut record, outpoint, &redeem_script, &destination, &keys)?
+            claim_state(&record, confirmations, required)
+        }
+        claim::Step::Claim {
+            outpoint,
+            confirmations,
+        } => {
+            claim_lockup(&mut record, outpoint, &redeem_script, &destination, &keys)?;
+            claim_state(&record, confirmations, required)
         }
     };
     Ok(status_of(&record, state))
+}
+
+/// `ClaimBroadcast` once a server took the claim; until then the lockup is still waiting on it.
+fn claim_state(record: &SwapRecord, confirmations: u32, required: u32) -> PubkySwapRouteState {
+    match (&record.claim_txid, record.claim_seen) {
+        (Some(txid), true) => PubkySwapRouteState::ClaimBroadcast { txid: txid.clone() },
+        _ => PubkySwapRouteState::AwaitingLockup {
+            confirmations,
+            required,
+        },
+    }
 }
 
 /// Build the claim of `outpoint` to the contact, save it, then broadcast it.
@@ -609,7 +626,7 @@ fn claim_lockup(
     redeem_script: &ScriptBuf,
     destination: &ScriptBuf,
     keys: &keys::SwapKeys,
-) -> Result<PubkySwapRouteState, PubkySwapError> {
+) -> Result<(), PubkySwapError> {
     let claim = build_claim_tx(
         outpoint,
         record.accept.onchain_amount_sat,
@@ -623,11 +640,10 @@ fn claim_lockup(
     let txid = claim.compute_txid().to_string();
     let claim = bitcoin::consensus::encode::serialize_hex(&claim);
     // Saved before the broadcast, so a restart in between finds and sends the same claim.
-    record.claim_txid = Some(txid.clone());
+    record.claim_txid = Some(txid);
     record.claim_tx_hex = Some(claim.clone());
     store::save(record)?;
-    publish_claim(record, &claim)?;
-    Ok(PubkySwapRouteState::ClaimBroadcast { txid })
+    publish_claim(record, &claim)
 }
 
 /// Send a saved claim. It is recorded as published before it goes out: once a broadcast was
@@ -682,75 +698,171 @@ static ADVANCING: Lazy<Mutex<HashMap<String, std::sync::Arc<Mutex<()>>>>> =
     Lazy::new(Default::default);
 
 /// Rebuild the records of reverse swaps this wallet started, for a wallet restored from its seed:
-/// each provider lists the swaps it holds for the wallet's swap identity (`swap-list-v1`), the
-/// wallet derives each swap's keys from the index in its `owner_ref`, and checks them against the
-/// listed contract before writing a record. The contact's address is not in the listing, so a
-/// restored swap claims to `payout_address`, the wallet's own. Swaps already on record, other
-/// wallets' swaps and contracts that do not match are skipped. Returns the restored swap ids;
-/// `advance_swap` then drives each like any other.
+/// each provider that advertises `swap-list-v1` lists the swaps it holds for the wallet's swap
+/// identity, the wallet derives each swap's keys from the index in its `owner_ref`, and checks
+/// them against the listed contract before writing a record.
+///
+/// The listing is the provider's word, so a record is written only for a swap whose hash the
+/// wallet's own Lightning node paid (`sent_payments`), whose lockup is no smaller than that payment
+/// less the policy's most fees, and whose hash no other record holds. Finished swaps, other
+/// wallets' swaps and contracts that do not match get no record. The contact's address is not in
+/// the listing, so a restored swap claims to `payout_address`, the wallet's own.
+#[allow(clippy::too_many_arguments)]
 pub async fn restore_swaps(
     providers: Vec<String>,
+    sent_payments: Vec<PubkySwapSentPayment>,
     electrum_url: String,
     payout_address: String,
     fee_rate_sat_vb: u64,
     network: bitcoin::Network,
     mnemonic: String,
     bip39_passphrase: Option<String>,
-) -> Result<Vec<String>, PubkySwapError> {
+) -> Result<PubkySwapRestoreReport, PubkySwapError> {
     let payout = parse_address(&payout_address, network)?.script_pubkey();
     let claim_fee_sat = claim_fee(&payout, fee_rate_sat_vb)?;
     let secret = keys::identity_secret(&mnemonic, bip39_passphrase.as_deref())?;
     let client = DirectClient::bind(secret).await?;
+
+    // Providers are asked at once, as an older one never answers a list request and each costs a
+    // request timeout.
     let mut seen = std::collections::HashSet::new();
-    let mut restored = vec![];
-    for provider in providers.iter().map(|p| bare_pubky(p).to_string()) {
-        if !seen.insert(provider.clone()) {
+    let mut lists = tokio::task::JoinSet::new();
+    for provider in providers
+        .iter()
+        .map(|p| bare_pubky(p).to_string())
+        .filter(|p| seen.insert(p.clone()))
+        .take(MAX_CANDIDATES)
+    {
+        let client = client.clone();
+        lists.spawn(async move {
+            let listing = provider_swaps(&client, &provider).await;
+            (provider, listing)
+        });
+    }
+    let mut report = PubkySwapRestoreReport::default();
+    let mut listings = vec![];
+    while let Some(list) = lists.join_next().await {
+        let Ok((provider, listing)) = list else {
             continue;
-        }
-        let snapshots = match list_swaps(&client, &provider).await {
-            Ok(snapshots) => snapshots,
-            Err(e) => {
-                log::warn!("pubky swaps: no swap list from {provider}: {e}");
-                continue;
-            }
         };
+        if !listing.complete {
+            report.incomplete_providers.push(provider.clone());
+        }
+        listings.push((provider, listing.snapshots));
+    }
+    client.close().await;
+
+    let paid: HashMap<String, u64> = sent_payments
+        .into_iter()
+        .map(|p| (p.payment_hash_hex.to_lowercase(), p.amount_sat))
+        .collect();
+    // One record per hash: a second listing of the same swap under a new id gets none.
+    let mut hashes = std::collections::HashSet::new();
+    for record in store::list()? {
+        if let Ok(hash) = record_payment_hash(&record, &mnemonic, bip39_passphrase.as_deref()) {
+            hashes.insert(hash);
+        }
+    }
+    let wallet = Restoring {
+        electrum_url: &electrum_url,
+        payout_address: &payout_address,
+        claim_fee_sat,
+        network,
+        mnemonic: &mnemonic,
+        passphrase: bip39_passphrase.as_deref(),
+        paid: &paid,
+    };
+    for (provider, snapshots) in listings {
         for snapshot in snapshots {
             let swap_id = snapshot.accept.swap_id.to_string();
-            if store::load(&swap_id).is_ok() {
+            match store::load(&swap_id) {
+                Ok(_) => {
+                    report.known.push(swap_id);
+                    continue;
+                }
+                Err(PubkySwapError::NotFound { .. }) => {}
+                Err(e) => {
+                    log::warn!("pubky swaps: could not read swap {swap_id}, not restoring it: {e}");
+                    continue;
+                }
+            }
+            if snapshot.state.is_terminal() {
+                report.finished.push(swap_id);
                 continue;
             }
-            let record = match restored_record(
-                &snapshot,
-                &provider,
-                &electrum_url,
-                &payout_address,
-                claim_fee_sat,
-                network,
-                &mnemonic,
-                bip39_passphrase.as_deref(),
-            ) {
-                Some(record) => record,
-                None => continue,
+            let Some(record) = restored_record(&snapshot, &provider, &wallet) else {
+                continue;
             };
+            if !hashes.insert(snapshot.payment_hash_hex.to_lowercase()) {
+                log::warn!("pubky swaps: {provider} listed hash of swap {swap_id} twice");
+                continue;
+            }
             // One swap that cannot be saved must not cost the user the others.
             if let Err(e) = store::save(&record) {
                 log::warn!("pubky swaps: could not save restored swap {swap_id}: {e}");
                 continue;
             }
-            restored.push(swap_id);
+            report.restored.push(swap_id);
         }
     }
-    client.close().await;
-    Ok(restored)
+    Ok(report)
+}
+
+fn record_payment_hash(
+    record: &SwapRecord,
+    mnemonic: &str,
+    passphrase: Option<&str>,
+) -> Result<String, PubkySwapError> {
+    let index: [u8; 32] = hex::decode(&record.key_index)
+        .ok()
+        .and_then(|index| index.try_into().ok())
+        .ok_or_else(|| PubkySwapError::storage("invalid key index"))?;
+    Ok(hex::encode(
+        keys::swap_keys(mnemonic, passphrase, &index)?.payment_hash,
+    ))
+}
+
+/// A provider's list of this wallet's swaps, and whether it was read to the end.
+struct Listing {
+    snapshots: Vec<SwapStatusSnapshot>,
+    complete: bool,
+}
+
+/// The swaps a provider that advertises `swap-list-v1` lists for this wallet's identity.
+async fn provider_swaps(client: &DirectClient, provider: &str) -> Listing {
+    let offer = tokio::time::timeout(OFFER_TIMEOUT, fetch_offer(client, provider)).await;
+    match offer {
+        Ok(Ok(offer)) if offer.features.iter().any(|f| f == SWAP_LIST_FEATURE) => {
+            list_swaps(client, provider).await
+        }
+        Ok(Ok(_)) => {
+            log::debug!("pubky swaps: {provider} cannot list swaps");
+            Listing {
+                snapshots: vec![],
+                complete: true,
+            }
+        }
+        Ok(Err(e)) => {
+            log::warn!("pubky swaps: no offer from {provider}: {e}");
+            Listing {
+                snapshots: vec![],
+                complete: false,
+            }
+        }
+        Err(_) => {
+            log::warn!("pubky swaps: {provider} did not answer in time");
+            Listing {
+                snapshots: vec![],
+                complete: false,
+            }
+        }
+    }
 }
 
 /// Every swap a provider lists for this wallet's identity, page by page. A provider that keeps
 /// sending cursors stops at [`MAX_LIST_PAGES`] or at a cursor it sent before, so it cannot hold up
-/// the restore of the providers after it.
-async fn list_swaps(
-    client: &DirectClient,
-    provider: &str,
-) -> Result<Vec<SwapStatusSnapshot>, PubkySwapError> {
+/// the restore of the other providers. A page that fails keeps the pages read before it.
+async fn list_swaps(client: &DirectClient, provider: &str) -> Listing {
     let mut snapshots = vec![];
     let mut cursor = None;
     let mut cursors_seen = std::collections::HashSet::new();
@@ -761,45 +873,78 @@ async fn list_swaps(
             limit: None,
             active_only: false,
         });
-        let page = match client.request(provider, &request).await? {
-            SwapMessage::SwapList(page) => page,
-            SwapMessage::Reject(reject) => return Err(refused(reject)),
-            other => return Err(unexpected("SwapList", &other)),
+        let page = match client.request(provider, &request).await {
+            Ok(SwapMessage::SwapList(page)) => page,
+            reply => {
+                let error = match reply {
+                    Ok(SwapMessage::Reject(reject)) => refused(reject),
+                    Ok(other) => unexpected("SwapList", &other),
+                    Err(e) => e,
+                };
+                log::warn!("pubky swaps: swap list from {provider} stopped: {error}");
+                return Listing {
+                    snapshots,
+                    complete: false,
+                };
+            }
         };
         snapshots.extend(page.snapshots);
         match page.next_cursor {
             Some(next) if cursors_seen.insert(next.clone()) => cursor = Some(next),
             Some(next) => {
                 log::warn!("pubky swaps: {provider} sent cursor {next} again; ending its list");
-                return Ok(snapshots);
+                return Listing {
+                    snapshots,
+                    complete: false,
+                };
             }
-            None => return Ok(snapshots),
+            None => {
+                return Listing {
+                    snapshots,
+                    complete: true,
+                }
+            }
         }
     }
     log::warn!("pubky swaps: {provider} listed more than {MAX_LIST_PAGES} pages; ending its list");
-    Ok(snapshots)
+    Listing {
+        snapshots,
+        complete: false,
+    }
 }
 
-/// The record for a listed reverse swap whose keys this wallet derives from its `owner_ref`, or
-/// `None` when the swap is not this wallet's or its contract does not match those keys.
-#[allow(clippy::too_many_arguments)]
+/// What a restore checks listed swaps against: the wallet's seed, network and payments.
+struct Restoring<'a> {
+    electrum_url: &'a str,
+    payout_address: &'a str,
+    claim_fee_sat: u64,
+    network: bitcoin::Network,
+    mnemonic: &'a str,
+    passphrase: Option<&'a str>,
+    /// What the wallet's Lightning node paid, by payment hash in lowercase hex.
+    paid: &'a HashMap<String, u64>,
+}
+
+/// The record for a listed reverse swap on the wallet's network whose keys this wallet derives
+/// from its `owner_ref` and whose hash its node paid for at least the lockup plus the most fees
+/// the policy allows, or `None`.
 fn restored_record(
     snapshot: &SwapStatusSnapshot,
     provider: &str,
-    electrum_url: &str,
-    payout_address: &str,
-    claim_fee_sat: u64,
-    network: bitcoin::Network,
-    mnemonic: &str,
-    passphrase: Option<&str>,
+    wallet: &Restoring,
 ) -> Option<SwapRecord> {
     let accept = &snapshot.accept;
-    if accept.direction != SwapDirection::Reverse || accept.script_type != SwapScript::P2wsh {
+    let swap_id = accept.swap_id;
+    if accept.direction != SwapDirection::Reverse
+        || accept.script_type != SwapScript::P2wsh
+        || snapshot.network.to_bitcoin_network() != wallet.network
+    {
         return None;
     }
     let index = keys::index_from_owner_ref(snapshot.owner_ref.as_deref()?)?;
-    let keys = keys::swap_keys(mnemonic, passphrase, &index).ok()?;
-    if hex::encode(keys.payment_hash) != snapshot.payment_hash_hex {
+    let keys = keys::swap_keys(wallet.mnemonic, wallet.passphrase, &index).ok()?;
+    let hash = hex::encode(keys.payment_hash);
+    if hash != snapshot.payment_hash_hex.to_lowercase() {
         return None;
     }
     verify_contract(
@@ -807,29 +952,46 @@ fn restored_record(
         SwapDirection::Reverse,
         &keys.payment_hash,
         &keys.claim_pubkey,
-        network,
+        wallet.network,
     )
     .ok()?;
-    let delivered_sat = accept.onchain_amount_sat.checked_sub(claim_fee_sat)?;
-    // A claim the provider already saw went to the contact: keep it, rather than read it as a
-    // refund for not paying `payout_address`.
-    let claim_txid = snapshot.claim_observed_txid_hex.clone();
+    // The listing names the lockup amount, so it is checked against the payment the wallet's own
+    // node sent: a smaller lockup would let the provider keep the difference.
+    let Some(&paid_sat) = wallet.paid.get(&hash) else {
+        log::warn!("pubky swaps: no payment for swap {swap_id} from {provider}; not restoring it");
+        return None;
+    };
+    let max_fee_sat = paid_sat.saturating_mul(policy(wallet.network).max_fee_bps as u64) / 10_000;
+    if accept.onchain_amount_sat.saturating_add(max_fee_sat) < paid_sat {
+        log::warn!(
+            "pubky swaps: swap {swap_id} from {provider} locks {} sat for a {paid_sat} sat \
+             payment; not restoring it",
+            accept.onchain_amount_sat
+        );
+        return None;
+    }
+    let delivered_sat = accept
+        .onchain_amount_sat
+        .checked_sub(wallet.claim_fee_sat)?;
     Some(SwapRecord {
-        swap_id: accept.swap_id.to_string(),
+        swap_id: swap_id.to_string(),
         key_index: hex::encode(index),
         provider_pubky: provider.to_string(),
-        network,
-        electrum_url: electrum_url.to_string(),
+        network: wallet.network,
+        electrum_url: wallet.electrum_url.to_string(),
         quote: None,
         required_confirmations: snapshot.required_confirmations,
         accept: accept.clone(),
-        destination_address: payout_address.to_string(),
+        destination_address: wallet.payout_address.to_string(),
         delivered_sat,
-        claim_fee_sat,
-        claim_published: claim_txid.is_some(),
-        claim_seen: claim_txid.is_some(),
-        claim_txid,
+        claim_fee_sat: wallet.claim_fee_sat,
+        // The provider's word that a claim went out is no proof: `advance` finds it in the chain's
+        // history by its preimage, or claims again once the lockup has its confirmations.
+        claim_txid: None,
         claim_tx_hex: None,
+        claim_published: false,
+        claim_seen: false,
+        claim_listed: snapshot.claim_observed_txid_hex.is_some(),
         created_at_unix: snapshot.created_at_unix,
     })
 }
@@ -904,17 +1066,23 @@ mod tests {
         }
     }
 
+    /// Restore as a wallet whose node paid `paid_sat` for the snapshot's hash.
+    fn restore_paid(snapshot: &SwapStatusSnapshot, paid_sat: u64) -> Option<SwapRecord> {
+        let paid = HashMap::from([(snapshot.payment_hash_hex.clone(), paid_sat)]);
+        let wallet = Restoring {
+            electrum_url: "tcp://127.0.0.1:60001",
+            payout_address: PAYOUT,
+            claim_fee_sat: 300,
+            network: bitcoin::Network::Regtest,
+            mnemonic: SEED,
+            passphrase: None,
+            paid: &paid,
+        };
+        restored_record(snapshot, "provider", &wallet)
+    }
+
     fn restore(snapshot: &SwapStatusSnapshot) -> Option<SwapRecord> {
-        restored_record(
-            snapshot,
-            "provider",
-            "tcp://127.0.0.1:60001",
-            PAYOUT,
-            300,
-            bitcoin::Network::Regtest,
-            SEED,
-            None,
-        )
+        restore_paid(snapshot, 20_500)
     }
 
     #[test]
@@ -935,15 +1103,37 @@ mod tests {
         assert!(restore(&other_wallets).is_none());
         assert!(restore(&listed_swap(SEED, None)).is_none());
         assert!(restore(&listed_swap(SEED, Some("someone-else:1".into()))).is_none());
+        let mut other_network = listed_swap(SEED, Some(keys::owner_ref(&keys::new_index())));
+        other_network.network = swap_common::NetworkSpec::Signet;
+        assert!(restore(&other_network).is_none());
     }
 
     #[test]
-    fn keeps_a_claim_the_provider_already_saw() {
+    fn restores_only_a_lockup_the_wallet_paid_for() {
+        let snapshot = listed_swap(SEED, Some(keys::owner_ref(&keys::new_index())));
+        // Locks 20,300 sat; the policy allows 5% of the payment in fees.
+        assert!(restore_paid(&snapshot, 21_368).is_some());
+        assert!(restore_paid(&snapshot, 21_369).is_none());
+        let paid = HashMap::new();
+        let wallet = Restoring {
+            electrum_url: "",
+            payout_address: PAYOUT,
+            claim_fee_sat: 300,
+            network: bitcoin::Network::Regtest,
+            mnemonic: SEED,
+            passphrase: None,
+            paid: &paid,
+        };
+        assert!(restored_record(&snapshot, "provider", &wallet).is_none());
+    }
+
+    #[test]
+    fn does_not_take_a_listed_claim_as_published() {
         let mut snapshot = listed_swap(SEED, Some(keys::owner_ref(&keys::new_index())));
         snapshot.claim_observed_txid_hex = Some("ab".repeat(32));
         let record = restore(&snapshot).expect("restored");
-        assert_eq!(record.claim_txid, snapshot.claim_observed_txid_hex);
-        assert!(record.claim_published && record.claim_seen);
+        assert!(record.claim_listed);
+        assert!(record.claim_txid.is_none() && !record.claim_published && !record.claim_seen);
     }
 
     #[test]

@@ -88,6 +88,28 @@ pub enum PubkySwapRouteState {
     },
 }
 
+/// A Lightning payment the wallet's node sent, which `pubky_swaps_restore` matches to a listed
+/// swap by its hash.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct PubkySwapSentPayment {
+    pub payment_hash_hex: String,
+    /// What the payment paid the provider, routing fees excluded.
+    pub amount_sat: u64,
+}
+
+/// What `pubky_swaps_restore` found, by swap id.
+#[derive(Debug, Clone, Default, uniffi::Record)]
+pub struct PubkySwapRestoreReport {
+    /// Swaps rebuilt now; drive each with `pubky_swaps_advance`.
+    pub restored: Vec<String>,
+    /// Swaps already on record, listed again; drive the unfinished ones with `pubky_swaps_advance`.
+    pub known: Vec<String>,
+    /// Swaps the provider lists as finished, which get no record.
+    pub finished: Vec<String>,
+    /// Providers whose list was not read in full; restore again later to finish it.
+    pub incomplete_providers: Vec<String>,
+}
+
 #[derive(Debug, Clone, uniffi::Record)]
 pub struct PubkySwapRouteStatus {
     pub swap_id: String,

@@ -53,25 +53,35 @@ payloads over this carrier.
   user's Pubky identity.
 - The index is not secret: the swap request carries it as `owner_ref`, which the provider keeps and
   lists back (`swap-list-v1`).
-- `<base>/pubky_swaps/<swap_id>.json` holds the contract, the index and the signed claim, never a
-  secret; it is synced before the invoice reaches the app, and the claim before it is broadcast.
+- `<base>/pubky_swaps/<swap_id>.json` holds the contract, the index and the signed claim, whose
+  witness carries the preimage before the claim is broadcast; it is synced before the invoice
+  reaches the app, and the claim before it is broadcast.
 
 ## Restore
 
-`pubky_swaps_restore` rebuilds the swaps a wallet started when it has only its seed. Each provider
-lists the swaps it holds for the wallet's swap identity; the wallet derives each swap's keys from
-the index in its `owner_ref` and checks the payment hash and the contract against them before it
-writes a record. The listing does not carry the contact's address, so a restored swap claims to a
-payout address the app passes, the wallet's own; a claim the provider already saw is kept as it
-is. Other wallets' swaps, swaps without this wallet's `owner_ref` and records the wallet already
-has are skipped. `pubky_swaps_advance` then drives each restored swap.
+`pubky_swaps_restore` rebuilds the swaps a wallet started when it has only its seed. The providers
+that advertise `swap-list-v1`, asked at once, list the swaps they hold for the wallet's swap
+identity; the wallet derives each swap's keys from the index in its `owner_ref` and checks the
+network, the payment hash and the contract against them. The listing is the provider's word, so the
+amount is checked against what the wallet holds: a swap gets a record only when the app's
+`sent_payments` holds its hash, for no more than the lockup plus the most fees the wallet accepts,
+and no other record holds that hash.
+
+The listing does not carry the contact's address, so a restored swap claims to a payout address the
+app passes, the wallet's own. A claim the provider says it saw counts only once the chain shows it
+with the preimage in its witness; until then the wallet claims again, but only once the lockup has
+its confirmations. Finished swaps, other wallets' swaps and swaps without this wallet's `owner_ref`
+get no record. The report names the swaps restored, those already on record, those finished, and
+the providers whose list was not read in full, for a later restore. `pubky_swaps_advance` then
+drives each restored and known swap.
 
 ## Claim
 
 `pubky_swaps_advance` claims the lockup once it has its confirmations and while the timeout is more
-than 6 blocks away, then reports `ClaimBroadcast` until the claim confirms and `Claimed` after. Each
-call checks the HTLC's history: a claim that dropped out of the mempool is broadcast again, a refund
-by the provider or a lockup that never came before the timeout ends in `Failed`. The claim's fee is
+than 6 blocks away, then reports `ClaimBroadcast` once a server took the claim, until it confirms,
+and `Claimed` after. Each call checks the HTLC's history: a claim that dropped out of the mempool is
+broadcast again, and a spend without the preimage in its witness (the provider's refund) or a
+lockup that never came before the timeout ends in `Failed`. The claim's fee is
 fixed when the route is quoted and is never bumped, so swap routes are refused on mainnet.
 
 ## What it does not do yet

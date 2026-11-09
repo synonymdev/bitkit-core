@@ -55,7 +55,8 @@ pub use crate::modules::jade::{
 };
 use crate::modules::pubky::{PubkyAuthDetails, PubkyAuthKind, PubkyError, PubkyProfile};
 use crate::modules::pubky_swaps::{
-    self as pubky_swaps, PubkySwapError, PubkySwapRoutePayment, PubkySwapRouteStatus, SwapRouteEdge,
+    self as pubky_swaps, PubkySwapError, PubkySwapRestoreReport, PubkySwapRoutePayment,
+    PubkySwapRouteStatus, PubkySwapSentPayment, SwapRouteEdge,
 };
 use crate::modules::trezor::account_type_to_script_type;
 pub use crate::modules::trezor::{
@@ -3830,24 +3831,29 @@ pub async fn pubky_swaps_advance(
 }
 
 /// Rebuild the swaps this wallet started, for a wallet restored from its seed. Each of
-/// `providers` lists the swaps it holds for the wallet's swap identity, and the wallet derives
-/// their keys from the seed and checks them against each contract. The contact's address is not in
-/// the listing, so a restored swap claims to `payout_address`, the wallet's own. Returns the
-/// restored swap ids; drive each with `pubky_swaps_advance`.
+/// `providers` that supports it lists the swaps it holds for the wallet's swap identity, and the
+/// wallet derives their keys from the seed and checks them against each contract. A swap gets a
+/// record only when `sent_payments`, the Lightning payments the wallet's node sent, holds its hash
+/// for no more than its lockup plus the most fees the wallet accepts. The contact's address is not
+/// in the listing, so a restored swap claims to `payout_address`, the wallet's own. Drive each
+/// restored and known swap with `pubky_swaps_advance`; restore again for an incomplete provider.
 #[uniffi::export]
+#[allow(clippy::too_many_arguments)]
 pub async fn pubky_swaps_restore(
     providers: Vec<String>,
+    sent_payments: Vec<PubkySwapSentPayment>,
     electrum_url: String,
     payout_address: String,
     fee_rate_sat_vb: u64,
     network: Network,
     mnemonic: String,
     bip39_passphrase: Option<String>,
-) -> Result<Vec<String>, PubkySwapError> {
+) -> Result<PubkySwapRestoreReport, PubkySwapError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         pubky_swaps::restore_swaps(
             providers,
+            sent_payments,
             electrum_url,
             payout_address,
             fee_rate_sat_vb,

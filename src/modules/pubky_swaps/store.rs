@@ -1,7 +1,8 @@
 //! One JSON file per swap under `<base>/pubky_swaps/`.
 //!
-//! A record holds only public data and the swap's key index; the keys come from the seed and the
-//! index. The contract is synced to disk before the invoice is handed to the app.
+//! A record holds the swap's key index, not its keys, which come from the seed and the index. Its
+//! saved claim does carry the preimage, before the claim is broadcast too. The contract is synced
+//! to disk before the invoice is handed to the app.
 
 use std::fs;
 use std::io::Write;
@@ -44,6 +45,10 @@ pub(crate) struct SwapRecord {
     /// Whether the server accepted the claim or it showed up in the chain's history.
     #[serde(default)]
     pub claim_seen: bool,
+    /// A restored swap whose provider listed a claim it saw, which the chain has not shown. Its
+    /// preimage may be public, so the wallet claims once the lockup has its confirmations.
+    #[serde(default)]
+    pub claim_listed: bool,
     pub created_at_unix: u64,
 }
 
@@ -77,6 +82,24 @@ pub(crate) fn save(record: &SwapRecord) -> Result<(), PubkySwapError> {
     let _guard = LOCK.lock().unwrap();
     let path = dir()?.join(format!("{}.json", record.swap_id));
     write_atomic(&path, &serde_json::to_vec_pretty(record)?)
+}
+
+/// Every record on file. A file that cannot be read is skipped with a warning.
+pub(crate) fn list() -> Result<Vec<SwapRecord>, PubkySwapError> {
+    let mut records = vec![];
+    for entry in fs::read_dir(dir()?)? {
+        let path = entry?.path();
+        if path.extension().is_some_and(|ext| ext == "json") {
+            match fs::read(&path)
+                .map_err(PubkySwapError::from)
+                .and_then(|bytes| Ok(serde_json::from_slice(&bytes)?))
+            {
+                Ok(record) => records.push(record),
+                Err(e) => log::warn!("pubky swaps: skipping {}: {e}", path.display()),
+            }
+        }
+    }
+    Ok(records)
 }
 
 pub(crate) fn load(swap_id: &str) -> Result<SwapRecord, PubkySwapError> {
