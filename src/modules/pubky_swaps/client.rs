@@ -668,7 +668,14 @@ fn advance_blocking(
             confirmations,
         } => {
             match record.claim_tx_hex.clone() {
-                Some(claim) => publish_claim(&mut record, &claim)?,
+                // The saved claim spends the lockup found now. A lockup the provider replaced
+                // after a reorganization has another outpoint, so the claim is built again.
+                Some(claim) if claim_spends(&claim, outpoint) => {
+                    publish_claim(&mut record, &claim)?
+                }
+                Some(_) => {
+                    claim_lockup(&mut record, outpoint, &redeem_script, &destination, &keys)?
+                }
                 // A restored swap whose claim the provider listed holds no claim of its own. Its
                 // preimage may be public, so a claim of our own goes out whatever the window.
                 None => claim_lockup(&mut record, outpoint, &redeem_script, &destination, &keys)?,
@@ -684,6 +691,18 @@ fn advance_blocking(
         }
     };
     Ok(status_of(&record, state))
+}
+
+/// Whether the saved claim spends `outpoint`. An unreadable one does not.
+fn claim_spends(claim_hex: &str, outpoint: OutPoint) -> bool {
+    bitcoin::consensus::encode::deserialize_hex::<bitcoin::Transaction>(claim_hex).is_ok_and(
+        |claim| {
+            claim
+                .input
+                .iter()
+                .any(|input| input.previous_output == outpoint)
+        },
+    )
 }
 
 /// `ClaimBroadcast` once a server took the claim; until then the lockup is still waiting on it.
@@ -1254,6 +1273,25 @@ mod tests {
         let mut snapshot = listed_swap(SEED, Some(keys::owner_ref(&keys::new_index())));
         snapshot.claim_observed_txid_hex = Some("ab".repeat(32));
         assert!(!restore(&snapshot).expect("restored").claim_listed);
+    }
+
+    #[test]
+    fn rebuilds_a_saved_claim_of_a_replaced_lockup() {
+        let spent = OutPoint::new("11".repeat(32).parse().unwrap(), 0);
+        let replaced = OutPoint::new("22".repeat(32).parse().unwrap(), 0);
+        let claim = bitcoin::Transaction {
+            version: bitcoin::transaction::Version::TWO,
+            lock_time: bitcoin::absolute::LockTime::ZERO,
+            input: vec![bitcoin::TxIn {
+                previous_output: spent,
+                ..Default::default()
+            }],
+            output: vec![],
+        };
+        let claim = bitcoin::consensus::encode::serialize_hex(&claim);
+        assert!(claim_spends(&claim, spent));
+        assert!(!claim_spends(&claim, replaced));
+        assert!(!claim_spends("not a transaction", spent));
     }
 
     #[test]

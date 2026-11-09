@@ -111,7 +111,9 @@ pub(crate) fn next_step(
 
     let safe_to_reveal = claim_start_is_safe(tip, contract.timeout);
     if let Some(claim) = saved_claim {
-        if claim.published || safe_to_reveal {
+        // A claim never sent still keeps its preimage: like a new one, it waits for the lockup's
+        // confirmations, which a reorganization can take back after the claim was saved.
+        if claim.published || (safe_to_reveal && confirmations >= contract.required_confirmations) {
             return Step::Rebroadcast {
                 outpoint,
                 confirmations,
@@ -421,6 +423,14 @@ mod tests {
             f.rebroadcast(138)
         );
         assert!(is_failed(f.step_unpublished(TIMEOUT + 5, &history)));
+        // A reorganization left the lockup unconfirmed: the unsent claim waits for it again.
+        assert_eq!(
+            f.step_unpublished(1_000, &[(0, f.lockup.clone())]),
+            Step::Report(PubkySwapRouteState::AwaitingLockup {
+                confirmations: 0,
+                required: 1
+            })
+        );
     }
 
     #[test]
