@@ -26,4 +26,5 @@ screen shows it.
 
 The rail segment of an on-chain Payment Endpoint Identifier names the network the apps publish for
 (`bitcoin`, `testnet`, `signet`, `regtest`), so a contact's endpoint for another network is never
-paid. The spec has no Testnet4 rail, so a Testnet4 wallet routes nothing on chain.
+paid. The spec has no Testnet4 rail and BOLT11 has no Testnet4 currency, so a Testnet4 wallet
+routes nothing: no Lightning endpoint, on-chain endpoint or service leg.
