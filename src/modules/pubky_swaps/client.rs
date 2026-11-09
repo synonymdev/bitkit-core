@@ -1406,7 +1406,7 @@ mod live_tests {
             status.state,
             PubkySwapRouteState::AwaitingLockup { .. }
         ));
-        println!("quote {quote:?}\npayment {payment:?}");
+        log::info!("quote {quote:?}\npayment {payment:?}");
 
         // The rest of the journey, with `PUBKY_SWAPS_PAY_CMD` paying the hold invoice it is given
         // from a Lightning-only node, and `PUBKY_SWAPS_MINE_CMD` mining a block.
@@ -1431,7 +1431,7 @@ mod live_tests {
             let status = advance_swap(payment.swap_id.clone(), MNEMONIC.into(), None)
                 .await
                 .unwrap();
-            println!("{:?}", status.state);
+            log::info!("{:?}", status.state);
             match status.state {
                 PubkySwapRouteState::Claimed { txid } => break txid,
                 PubkySwapRouteState::Failed { reason } => panic!("{reason}"),
@@ -1453,6 +1453,6 @@ mod live_tests {
             .output
             .iter()
             .any(|out| out.script_pubkey == contact && out.value.to_sat() == 20_000));
-        println!("claimed {txid}: 20000 sat to {destination}");
+        log::info!("claimed {txid}: 20000 sat to {destination}");
     }
 }
