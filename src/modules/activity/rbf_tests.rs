@@ -431,3 +431,40 @@ fn sync_id_collision_cannot_overwrite_another_transaction() {
         .unwrap()
         .is_none());
 }
+
+#[test]
+fn preserving_sync_fills_unknown_stored_fee_rate() {
+    let (mut db, _directory) = setup();
+
+    let mut initial = original();
+    initial.id = "unknown-rate-act".into();
+    initial.tx_id = "unknown-rate-tx".into();
+    initial.fee_rate = 0;
+    initial.fee = 100;
+    initial.confirmed = false;
+    db.upsert_onchain_activity_preserving_fee_rate(&initial)
+        .unwrap();
+
+    let stored = db
+        .get_activity_by_tx_id(DEFAULT_WALLET_ID, "unknown-rate-tx")
+        .unwrap()
+        .unwrap();
+    assert_eq!(stored.fee_rate, 0);
+
+    let mut confirmed = stored;
+    confirmed.confirmed = true;
+    confirmed.fee_rate = 12;
+    confirmed.fee = 120;
+    confirmed.confirm_timestamp = Some(200);
+    db.upsert_onchain_activity_preserving_fee_rate(&confirmed)
+        .unwrap();
+
+    let updated = db
+        .get_activity_by_tx_id(DEFAULT_WALLET_ID, "unknown-rate-tx")
+        .unwrap()
+        .unwrap();
+    assert!(updated.confirmed);
+    assert_eq!(updated.confirm_timestamp, Some(200));
+    assert_eq!(updated.fee, 120);
+    assert_eq!(updated.fee_rate, 12);
+}
