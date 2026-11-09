@@ -794,6 +794,44 @@ fn is_refusal(error: &electrum_client::Error) -> bool {
 static ADVANCING: Lazy<Mutex<HashMap<String, std::sync::Arc<Mutex<()>>>>> =
     Lazy::new(Default::default);
 
+fn advancing_lock(swap_id: &str) -> std::sync::Arc<Mutex<()>> {
+    ADVANCING
+        .lock()
+        .unwrap()
+        .entry(swap_id.to_string())
+        .or_default()
+        .clone()
+}
+
+/// A swap on record whose claim the provider lists, and whose payment the wallet's node now
+/// shows settled, has a public preimage: mark it so `advance` claims past the window too. A
+/// restore that ran while the payment was in flight wrote the record without it.
+fn promote_listed_claim(
+    snapshot: &SwapStatusSnapshot,
+    wallet: &Restoring,
+) -> Result<(), PubkySwapError> {
+    let hash = snapshot.payment_hash_hex.to_lowercase();
+    let settled = wallet
+        .paid
+        .get(&hash)
+        .is_some_and(|payment| payment.settled);
+    if snapshot.claim_observed_txid_hex.is_none() || !settled {
+        return Ok(());
+    }
+    let swap_id = snapshot.accept.swap_id.to_string();
+    let lock = advancing_lock(&swap_id);
+    let _advancing = lock.lock().unwrap();
+    let mut record = store::load(&swap_id)?;
+    // The listed hash must be the record's own, derived from the wallet's keys.
+    if record.claim_listed
+        || record_payment_hash(&record, wallet.mnemonic, wallet.passphrase)? != hash
+    {
+        return Ok(());
+    }
+    record.claim_listed = true;
+    store::save(&record)
+}
+
 /// Rebuild the records of reverse swaps this wallet started, for a wallet restored from its seed:
 /// each provider that advertises `swap-list-v1` lists the swaps it holds for the wallet's swap
 /// identity, the wallet derives each swap's keys from the index in its `owner_ref`, and checks
@@ -883,6 +921,9 @@ pub async fn restore_swaps(
             let swap_id = snapshot.accept.swap_id.to_string();
             match store::load(&swap_id) {
                 Ok(_) => {
+                    if let Err(e) = promote_listed_claim(&snapshot, &wallet) {
+                        log::warn!("pubky swaps: could not update swap {swap_id}: {e}");
+                    }
                     report.known.push(swap_id);
                     continue;
                 }
@@ -1116,12 +1157,7 @@ pub async fn advance_swap(
     bip39_passphrase: Option<String>,
 ) -> Result<PubkySwapRouteStatus, PubkySwapError> {
     tokio::task::spawn_blocking(move || {
-        let lock = ADVANCING
-            .lock()
-            .unwrap()
-            .entry(swap_id.clone())
-            .or_default()
-            .clone();
+        let lock = advancing_lock(&swap_id);
         let _advancing = lock.lock().unwrap();
         let record = store::load(&swap_id)?;
         advance_blocking(record, &mnemonic, bip39_passphrase.as_deref())
@@ -1264,6 +1300,43 @@ mod tests {
         let record = restore_payment(&snapshot, 20_500, true).expect("restored");
         assert!(record.claim_listed);
         assert!(record.claim_txid.is_none() && !record.claim_published && !record.claim_seen);
+    }
+
+    #[test]
+    fn marks_a_known_swap_once_its_payment_settles() {
+        let dir = std::env::temp_dir().join(format!("pubky-swaps-{}", Uuid::new_v4()));
+        store::init(dir.to_str().unwrap()).unwrap();
+        let mut snapshot = listed_swap(SEED, Some(keys::owner_ref(&keys::new_index())));
+        snapshot.claim_observed_txid_hex = Some("ab".repeat(32));
+        // Restored while the payment was in flight.
+        let record = restore(&snapshot).expect("restored");
+        assert!(!record.claim_listed);
+        store::save(&record).unwrap();
+        let wallet = |settled| {
+            HashMap::from([(
+                snapshot.payment_hash_hex.clone(),
+                PubkySwapSentPayment {
+                    payment_hash_hex: snapshot.payment_hash_hex.clone(),
+                    amount_sat: 20_500,
+                    settled,
+                },
+            )])
+        };
+        let restoring = |paid| Restoring {
+            electrum_url: "",
+            payout_address: PAYOUT,
+            claim_fee_sat: 300,
+            network: bitcoin::Network::Regtest,
+            mnemonic: SEED,
+            passphrase: None,
+            paid,
+        };
+        let pending = wallet(false);
+        promote_listed_claim(&snapshot, &restoring(&pending)).unwrap();
+        assert!(!store::load(&record.swap_id).unwrap().claim_listed);
+        let settled = wallet(true);
+        promote_listed_claim(&snapshot, &restoring(&settled)).unwrap();
+        assert!(store::load(&record.swap_id).unwrap().claim_listed);
     }
 
     #[test]
