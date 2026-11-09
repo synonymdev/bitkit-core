@@ -95,6 +95,9 @@ pub struct PubkySwapSentPayment {
     pub payment_hash_hex: String,
     /// What the payment paid the provider, routing fees excluded.
     pub amount_sat: u64,
+    /// Whether the payment settled, so the provider holds the preimage. A pending payment is
+    /// still in flight.
+    pub settled: bool,
 }
 
 /// What `pubky_swaps_restore` found, by swap id.

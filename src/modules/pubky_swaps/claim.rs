@@ -47,8 +47,8 @@ pub(crate) struct SavedClaim {
     pub published: bool,
 }
 
-/// `listed_claim`: the provider listed a claim of this swap that the history does not show, so it
-/// cannot be proven and its preimage may or may not be public.
+/// `listed_claim`: the provider listed a claim of this swap that the history does not show, and the
+/// wallet's node shows the payment settled, so the preimage is public.
 pub(crate) fn next_step(
     contract: &Contract,
     saved_claim: Option<SavedClaim>,
@@ -118,9 +118,10 @@ pub(crate) fn next_step(
             };
         }
     }
-    // An unproven listed claim gets no early reveal: a provider could list any txid, read the
-    // preimage from a claim of an unconfirmed lockup and replace the lockup. Once the lockup has
-    // its confirmations, the claim goes out whatever the window, as its preimage may be public.
+    // A listed claim whose payment settled gets no early reveal either: the lockup could still be
+    // replaced. Once it has its confirmations, the claim goes out whatever the window, as the
+    // settled payment shows the preimage is public. A listing with the payment pending counts for
+    // nothing, since past the window a claim would hand the provider the preimage and its refund.
     if listed_claim {
         if confirmations < contract.required_confirmations {
             return Step::Report(PubkySwapRouteState::AwaitingLockup {

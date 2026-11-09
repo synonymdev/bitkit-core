@@ -69,8 +69,9 @@ and no other record holds that hash.
 
 The listing does not carry the contact's address, so a restored swap claims to a payout address the
 app passes, the wallet's own. A claim the provider says it saw counts only once the chain shows it
-with the preimage in its witness; until then the wallet claims again, but only once the lockup has
-its confirmations. Finished swaps, other wallets' swaps and swaps without this wallet's `owner_ref`
+with the preimage in its witness. Until then it counts only when the app's payment for it is
+`settled`, so the preimage is public: the wallet then claims again once the lockup has its
+confirmations, past the window too. With the payment pending, the listing counts for nothing. Finished swaps, other wallets' swaps and swaps without this wallet's `owner_ref`
 get no record. The report names the swaps restored, those already on record, those finished, and
 the providers whose list was not read in full, for a later restore. `pubky_swaps_advance` then
 drives each restored and known swap.

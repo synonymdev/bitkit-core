@@ -3833,8 +3833,8 @@ pub async fn pubky_swaps_advance(
 /// Rebuild the swaps this wallet started, for a wallet restored from its seed. Each of
 /// `providers` that supports it lists the swaps it holds for the wallet's swap identity, and the
 /// wallet derives their keys from the seed and checks them against each contract. A swap gets a
-/// record only when `sent_payments`, the Lightning payments the wallet's node sent, holds its hash
-/// for no more than its lockup plus the most fees the wallet accepts. The contact's address is not
+/// record only when `sent_payments`, the Lightning payments the wallet's node sent and whether
+/// each settled, holds its hash for no more than its lockup plus the most fees the wallet accepts. The contact's address is not
 /// in the listing, so a restored swap claims to `payout_address`, the wallet's own. Drive each
 /// restored and known swap with `pubky_swaps_advance`; restore again for an incomplete provider.
 #[uniffi::export]

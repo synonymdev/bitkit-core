@@ -725,36 +725,45 @@ pub async fn restore_swaps(
 
     // Providers are asked at once, as an older one never answers a list request and each costs a
     // request timeout.
+    // Providers past the cap, and any whose list task fails, are reported incomplete so the app
+    // restores them in a later call.
     let mut seen = std::collections::HashSet::new();
-    let mut lists = tokio::task::JoinSet::new();
-    for provider in providers
+    let unique: Vec<String> = providers
         .iter()
         .map(|p| bare_pubky(p).to_string())
         .filter(|p| seen.insert(p.clone()))
-        .take(MAX_CANDIDATES)
-    {
+        .collect();
+    let mut report = PubkySwapRestoreReport::default();
+    let mut pending: std::collections::HashSet<String> =
+        unique.iter().take(MAX_CANDIDATES).cloned().collect();
+    report
+        .incomplete_providers
+        .extend(unique.iter().skip(MAX_CANDIDATES).cloned());
+    let mut lists = tokio::task::JoinSet::new();
+    for provider in pending.iter().cloned() {
         let client = client.clone();
         lists.spawn(async move {
             let listing = provider_swaps(&client, &provider).await;
             (provider, listing)
         });
     }
-    let mut report = PubkySwapRestoreReport::default();
     let mut listings = vec![];
     while let Some(list) = lists.join_next().await {
         let Ok((provider, listing)) = list else {
             continue;
         };
+        pending.remove(&provider);
         if !listing.complete {
             report.incomplete_providers.push(provider.clone());
         }
         listings.push((provider, listing.snapshots));
     }
+    report.incomplete_providers.extend(pending);
     client.close().await;
 
-    let paid: HashMap<String, u64> = sent_payments
+    let paid: HashMap<String, PubkySwapSentPayment> = sent_payments
         .into_iter()
-        .map(|p| (p.payment_hash_hex.to_lowercase(), p.amount_sat))
+        .map(|p| (p.payment_hash_hex.to_lowercase(), p))
         .collect();
     // One record per hash: a second listing of the same swap under a new id gets none.
     let mut hashes = std::collections::HashSet::new();
@@ -922,7 +931,7 @@ struct Restoring<'a> {
     mnemonic: &'a str,
     passphrase: Option<&'a str>,
     /// What the wallet's Lightning node paid, by payment hash in lowercase hex.
-    paid: &'a HashMap<String, u64>,
+    paid: &'a HashMap<String, PubkySwapSentPayment>,
 }
 
 /// The record for a listed reverse swap on the wallet's network whose keys this wallet derives
@@ -957,10 +966,11 @@ fn restored_record(
     .ok()?;
     // The listing names the lockup amount, so it is checked against the payment the wallet's own
     // node sent: a smaller lockup would let the provider keep the difference.
-    let Some(&paid_sat) = wallet.paid.get(&hash) else {
+    let Some(payment) = wallet.paid.get(&hash) else {
         log::warn!("pubky swaps: no payment for swap {swap_id} from {provider}; not restoring it");
         return None;
     };
+    let paid_sat = payment.amount_sat;
     // The bound `validate_quote` holds a fresh quote to: its fee, the payment less the lockup, is
     // at most `max_fee_bps` of the lockup.
     let lock_sat = accept.onchain_amount_sat;
@@ -995,7 +1005,9 @@ fn restored_record(
         claim_tx_hex: None,
         claim_published: false,
         claim_seen: false,
-        claim_listed: snapshot.claim_observed_txid_hex.is_some(),
+        // A listed claim counts only once the payment settled: until then the provider has shown
+        // nothing, and a claim past the window would hand it the preimage and its refund.
+        claim_listed: snapshot.claim_observed_txid_hex.is_some() && payment.settled,
         created_at_unix: snapshot.created_at_unix,
     })
 }
@@ -1070,9 +1082,24 @@ mod tests {
         }
     }
 
-    /// Restore as a wallet whose node paid `paid_sat` for the snapshot's hash.
+    /// Restore as a wallet whose node paid `paid_sat` for the snapshot's hash, still pending.
     fn restore_paid(snapshot: &SwapStatusSnapshot, paid_sat: u64) -> Option<SwapRecord> {
-        let paid = HashMap::from([(snapshot.payment_hash_hex.clone(), paid_sat)]);
+        restore_payment(snapshot, paid_sat, false)
+    }
+
+    fn restore_payment(
+        snapshot: &SwapStatusSnapshot,
+        paid_sat: u64,
+        settled: bool,
+    ) -> Option<SwapRecord> {
+        let paid = HashMap::from([(
+            snapshot.payment_hash_hex.clone(),
+            PubkySwapSentPayment {
+                payment_hash_hex: snapshot.payment_hash_hex.clone(),
+                amount_sat: paid_sat,
+                settled,
+            },
+        )]);
         let wallet = Restoring {
             electrum_url: "tcp://127.0.0.1:60001",
             payout_address: PAYOUT,
@@ -1135,9 +1162,18 @@ mod tests {
     fn does_not_take_a_listed_claim_as_published() {
         let mut snapshot = listed_swap(SEED, Some(keys::owner_ref(&keys::new_index())));
         snapshot.claim_observed_txid_hex = Some("ab".repeat(32));
-        let record = restore(&snapshot).expect("restored");
+        let record = restore_payment(&snapshot, 20_500, true).expect("restored");
         assert!(record.claim_listed);
         assert!(record.claim_txid.is_none() && !record.claim_published && !record.claim_seen);
+    }
+
+    #[test]
+    fn ignores_a_listed_claim_while_the_payment_is_pending() {
+        // Past the window, claiming on a bare listing would hand the provider the preimage and
+        // its refund: only a settled payment shows the preimage is public.
+        let mut snapshot = listed_swap(SEED, Some(keys::owner_ref(&keys::new_index())));
+        snapshot.claim_observed_txid_hex = Some("ab".repeat(32));
+        assert!(!restore(&snapshot).expect("restored").claim_listed);
     }
 
     #[test]

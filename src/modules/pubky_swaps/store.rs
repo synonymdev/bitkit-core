@@ -45,8 +45,9 @@ pub(crate) struct SwapRecord {
     /// Whether the server accepted the claim or it showed up in the chain's history.
     #[serde(default)]
     pub claim_seen: bool,
-    /// A restored swap whose provider listed a claim it saw, which the chain has not shown. Its
-    /// preimage may be public, so the wallet claims once the lockup has its confirmations.
+    /// A restored swap whose provider listed a claim it saw, which the chain has not shown, and
+    /// whose payment the wallet's node shows settled. Its preimage is public, so the wallet claims
+    /// once the lockup has its confirmations, whatever the window.
     #[serde(default)]
     pub claim_listed: bool,
     pub created_at_unix: u64,
