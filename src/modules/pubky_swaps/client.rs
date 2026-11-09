@@ -1406,6 +1406,53 @@ mod live_tests {
             status.state,
             PubkySwapRouteState::AwaitingLockup { .. }
         ));
-        log::info!("{quote:?} {payment:?}");
+        println!("quote {quote:?}\npayment {payment:?}");
+
+        // The rest of the journey, with `PUBKY_SWAPS_PAY_CMD` paying the hold invoice it is given
+        // from a Lightning-only node, and `PUBKY_SWAPS_MINE_CMD` mining a block.
+        let (Ok(pay), Ok(mine)) = (
+            std::env::var("PUBKY_SWAPS_PAY_CMD"),
+            std::env::var("PUBKY_SWAPS_MINE_CMD"),
+        ) else {
+            return;
+        };
+        let sh = |cmd: &str| {
+            std::process::Command::new("sh")
+                .arg("-c")
+                .arg(cmd)
+                .spawn()
+                .unwrap()
+        };
+        // The payment settles only once the claim reveals the preimage, so it runs alongside.
+        let mut paying = sh(&format!("{pay} {}", payment.invoice));
+        let txid = loop {
+            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            assert!(sh(&mine).wait().unwrap().success());
+            let status = advance_swap(payment.swap_id.clone(), MNEMONIC.into(), None)
+                .await
+                .unwrap();
+            println!("{:?}", status.state);
+            match status.state {
+                PubkySwapRouteState::Claimed { txid } => break txid,
+                PubkySwapRouteState::Failed { reason } => panic!("{reason}"),
+                _ => {}
+            }
+        };
+        assert!(
+            paying.wait().unwrap().success(),
+            "the payment did not settle"
+        );
+        let claim = electrum_with_retries(&std::env::var("PUBKY_SWAPS_ELECTRUM").unwrap(), 3)
+            .unwrap()
+            .transaction_get(&txid.parse().unwrap())
+            .unwrap();
+        let contact = parse_address(&destination, bitcoin::Network::Regtest)
+            .unwrap()
+            .script_pubkey();
+        assert!(claim
+            .output
+            .iter()
+            .any(|out| out.script_pubkey == contact && out.value.to_sat() == 20_000));
+        println!("claimed {txid}: 20000 sat to {destination}");
     }
 }

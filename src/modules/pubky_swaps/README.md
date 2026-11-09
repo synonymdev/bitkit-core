@@ -13,8 +13,8 @@ exactly the amount asked for (`exact_out`): the lock covers the wallet's own cla
 | Step | Paykit Capabilities | pubky-swap message | Owner |
 |------|---------------------|--------------------|-------|
 | Pick a route | router (§9.1) | `OfferRequest` → `Offer` | `pubky_swaps_route_paykit_payment` |
-| Ask for a price | `rfq` → `quote` | `QuoteRequest` → `Quote` | same call, up to 3 providers |
-| Commit | `commit` → `contract` | `SwapRequest` → `SwapAccept` | `pubky_swaps_commit_route` |
+| Ask for a price | `rfq` → `quote` | `paykit-cap.rfq` → signed `paykit-cap.quote` | same call, up to 3 providers |
+| Commit | `commit` → `contract` | `paykit-cap.commit` → signed `paykit-cap.contract` | `pubky_swaps_commit_route` |
 | Fund | funding is the acceptance | hold invoice | **App** pays the invoice from spending |
 | Claim | evidence from the rail | claim with the preimage | `pubky_swaps_advance` |
 
@@ -28,6 +28,23 @@ The direct-pay check and the service legs live in the `paykit_route` module
 balance reaches the contact, it asks the providers for a swap quote and returns whichever of the
 cheapest live service leg and the swap costs less in fees. A swap wins a tie, since a hash lock
 needs no one's trust.
+
+## Signed terms
+
+Only providers whose offer lists `paykit-cap-v1` and `direct-rpc-v1` are quoted. Quotes and
+contracts are signed (Paykit Capabilities §10), and swap-common's `CapClient` checks each one: the
+quote's `terms_hash` binds this wallet, the provider, the request and the quote; the contract's
+`commit_hash` binds it to this wallet's commit; and the invoice arrives sealed under a hash the
+contract signs. A reply must be signed by the provider's own key or by the capability signing key
+its published records delegate to (§5): the identity-signed Noise Key Authorization, then the
+routing key's delegation for the same generation. Any other signer, and any unsigned reply to a
+signed request, is refused. The commit carries the signed quote, so a provider that forgot it can
+still honour it, and a provider that holds the swap without its signed contract gets the commit
+again. The contract is kept in the swap record.
+
+The offer itself is unsigned, so it only says who to ask; the signed quote is what the route is
+priced on. A restore reads providers' plain listings and checks them against the wallet's own
+keys and payments instead.
 
 Before the invoice reaches the app, the module checks the quote against the request
 (`validate_quote`), the contract against the quote and the chain tip (`validate_accept`), rebuilds
@@ -91,8 +108,9 @@ fixed when the route is quoted and is never bumped, so swap routes are refused o
   its live offer over iroh; nothing reads published Capability Descriptors yet (§6, §7).
 - **Paykit transport:** no `paykit-cap.*` messages over Encrypted Links. paykit-rs has no API to
   send extension kinds yet (§17).
-- **Signed terms:** pubky-swap signs nothing at `main`, so quotes and contracts are not
-  attributable to the provider yet.
+- **Signed offers and restores:** offers and restore listings are unsigned; nothing reads the
+  signed `swap/1` descriptor yet. Messages carry no `key_generation` until the §8.1 envelope lands,
+  so a delegated signer is checked against the generation published now.
 - **Submarine routes** (savings to a Lightning-only contact) and USDT. Pubky Swaps is Bitcoin and
   Lightning only.
 - **Refunds and recovery:** a reverse swap needs no wallet refund (the provider cancels its hold
