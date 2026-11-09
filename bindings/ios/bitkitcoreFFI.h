@@ -1593,7 +1593,7 @@ uint64_t uniffi_bitkitcore_fn_func_pubky_swaps_provider_edges(RustBuffer provide
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PUBKY_SWAPS_RESTORE
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PUBKY_SWAPS_RESTORE
-uint64_t uniffi_bitkitcore_fn_func_pubky_swaps_restore(RustBuffer providers, RustBuffer electrum_url, RustBuffer payout_address, uint64_t fee_rate_sat_vb, RustBuffer network, RustBuffer mnemonic, RustBuffer bip39_passphrase
+uint64_t uniffi_bitkitcore_fn_func_pubky_swaps_restore(RustBuffer providers, RustBuffer sent_payments, RustBuffer electrum_url, RustBuffer payout_address, uint64_t fee_rate_sat_vb, RustBuffer network, RustBuffer mnemonic, RustBuffer bip39_passphrase
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PUBKY_SWAPS_ROUTE_PAYKIT_PAYMENT

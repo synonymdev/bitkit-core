@@ -4,8 +4,8 @@
 import PackageDescription
 import Foundation
 
-let tag = "v0.8.0-swaps.2"
-let checksum = "69c085c480bab97cff77dbc4a654762a469d72598107937dcc0c59c73e6c4680"
+let tag = "v0.8.0-swaps.3"
+let checksum = "4f5f141a571a9242d9e9858a214085bad0ff3393f0e552c72b4f58b709cdf4e7"
 let url = "https://github.com/synonymdev/bitkit-core/releases/download/\(tag)/BitkitCore.xcframework.zip"
 
 let localBinary = ProcessInfo.processInfo.environment["BITKIT_CORE_LOCAL"] == "1"

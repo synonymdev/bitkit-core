@@ -12317,6 +12317,121 @@ public func FfiConverterTypePubkyProfileLink_lower(_ value: PubkyProfileLink) ->
 
 
 /**
+ * What `pubky_swaps_restore` found, by swap id.
+ */
+public struct PubkySwapRestoreReport {
+    /**
+     * Swaps rebuilt now; drive each with `pubky_swaps_advance`.
+     */
+    public var restored: [String]
+    /**
+     * Swaps already on record, listed again; drive the unfinished ones with `pubky_swaps_advance`.
+     */
+    public var known: [String]
+    /**
+     * Swaps the provider lists as finished, which get no record.
+     */
+    public var finished: [String]
+    /**
+     * Providers whose list was not read in full; restore again later to finish it.
+     */
+    public var incompleteProviders: [String]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Swaps rebuilt now; drive each with `pubky_swaps_advance`.
+         */restored: [String], 
+        /**
+         * Swaps already on record, listed again; drive the unfinished ones with `pubky_swaps_advance`.
+         */known: [String], 
+        /**
+         * Swaps the provider lists as finished, which get no record.
+         */finished: [String], 
+        /**
+         * Providers whose list was not read in full; restore again later to finish it.
+         */incompleteProviders: [String]) {
+        self.restored = restored
+        self.known = known
+        self.finished = finished
+        self.incompleteProviders = incompleteProviders
+    }
+}
+
+#if compiler(>=6)
+extension PubkySwapRestoreReport: Sendable {}
+#endif
+
+
+extension PubkySwapRestoreReport: Equatable, Hashable {
+    public static func ==(lhs: PubkySwapRestoreReport, rhs: PubkySwapRestoreReport) -> Bool {
+        if lhs.restored != rhs.restored {
+            return false
+        }
+        if lhs.known != rhs.known {
+            return false
+        }
+        if lhs.finished != rhs.finished {
+            return false
+        }
+        if lhs.incompleteProviders != rhs.incompleteProviders {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(restored)
+        hasher.combine(known)
+        hasher.combine(finished)
+        hasher.combine(incompleteProviders)
+    }
+}
+
+extension PubkySwapRestoreReport: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePubkySwapRestoreReport: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PubkySwapRestoreReport {
+        return
+            try PubkySwapRestoreReport(
+                restored: FfiConverterSequenceString.read(from: &buf), 
+                known: FfiConverterSequenceString.read(from: &buf), 
+                finished: FfiConverterSequenceString.read(from: &buf), 
+                incompleteProviders: FfiConverterSequenceString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PubkySwapRestoreReport, into buf: inout [UInt8]) {
+        FfiConverterSequenceString.write(value.restored, into: &buf)
+        FfiConverterSequenceString.write(value.known, into: &buf)
+        FfiConverterSequenceString.write(value.finished, into: &buf)
+        FfiConverterSequenceString.write(value.incompleteProviders, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkySwapRestoreReport_lift(_ buf: RustBuffer) throws -> PubkySwapRestoreReport {
+    return try FfiConverterTypePubkySwapRestoreReport.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkySwapRestoreReport_lower(_ value: PubkySwapRestoreReport) -> RustBuffer {
+    return FfiConverterTypePubkySwapRestoreReport.lower(value)
+}
+
+
+/**
  * A committed swap: the hold invoice the wallet pays to start it.
  */
 public struct PubkySwapRoutePayment {
@@ -12731,6 +12846,88 @@ public func FfiConverterTypePubkySwapRouteStatus_lift(_ buf: RustBuffer) throws 
 #endif
 public func FfiConverterTypePubkySwapRouteStatus_lower(_ value: PubkySwapRouteStatus) -> RustBuffer {
     return FfiConverterTypePubkySwapRouteStatus.lower(value)
+}
+
+
+/**
+ * A Lightning payment the wallet's node sent, which `pubky_swaps_restore` matches to a listed
+ * swap by its hash.
+ */
+public struct PubkySwapSentPayment {
+    public var paymentHashHex: String
+    /**
+     * What the payment paid the provider, routing fees excluded.
+     */
+    public var amountSat: UInt64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(paymentHashHex: String, 
+        /**
+         * What the payment paid the provider, routing fees excluded.
+         */amountSat: UInt64) {
+        self.paymentHashHex = paymentHashHex
+        self.amountSat = amountSat
+    }
+}
+
+#if compiler(>=6)
+extension PubkySwapSentPayment: Sendable {}
+#endif
+
+
+extension PubkySwapSentPayment: Equatable, Hashable {
+    public static func ==(lhs: PubkySwapSentPayment, rhs: PubkySwapSentPayment) -> Bool {
+        if lhs.paymentHashHex != rhs.paymentHashHex {
+            return false
+        }
+        if lhs.amountSat != rhs.amountSat {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(paymentHashHex)
+        hasher.combine(amountSat)
+    }
+}
+
+extension PubkySwapSentPayment: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypePubkySwapSentPayment: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> PubkySwapSentPayment {
+        return
+            try PubkySwapSentPayment(
+                paymentHashHex: FfiConverterString.read(from: &buf), 
+                amountSat: FfiConverterUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: PubkySwapSentPayment, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.paymentHashHex, into: &buf)
+        FfiConverterUInt64.write(value.amountSat, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkySwapSentPayment_lift(_ buf: RustBuffer) throws -> PubkySwapSentPayment {
+    return try FfiConverterTypePubkySwapSentPayment.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypePubkySwapSentPayment_lower(_ value: PubkySwapSentPayment) -> RustBuffer {
+    return FfiConverterTypePubkySwapSentPayment.lower(value)
 }
 
 
@@ -31376,6 +31573,31 @@ fileprivate struct FfiConverterSequenceTypePubkyProfileLink: FfiConverterRustBuf
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypePubkySwapSentPayment: FfiConverterRustBuffer {
+    typealias SwiftType = [PubkySwapSentPayment]
+
+    public static func write(_ value: [PubkySwapSentPayment], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypePubkySwapSentPayment.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [PubkySwapSentPayment] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [PubkySwapSentPayment]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypePubkySwapSentPayment.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeServiceRouteLeg: FfiConverterRustBuffer {
     typealias SwiftType = [ServiceRouteLeg]
 
@@ -34082,22 +34304,24 @@ public func pubkySwapsProviderEdges(providerPubky: String, mnemonic: String, bip
 }
 /**
  * Rebuild the swaps this wallet started, for a wallet restored from its seed. Each of
- * `providers` lists the swaps it holds for the wallet's swap identity, and the wallet derives
- * their keys from the seed and checks them against each contract. The contact's address is not in
- * the listing, so a restored swap claims to `payout_address`, the wallet's own. Returns the
- * restored swap ids; drive each with `pubky_swaps_advance`.
+ * `providers` that supports it lists the swaps it holds for the wallet's swap identity, and the
+ * wallet derives their keys from the seed and checks them against each contract. A swap gets a
+ * record only when `sent_payments`, the Lightning payments the wallet's node sent, holds its hash
+ * for no more than its lockup plus the most fees the wallet accepts. The contact's address is not
+ * in the listing, so a restored swap claims to `payout_address`, the wallet's own. Drive each
+ * restored and known swap with `pubky_swaps_advance`; restore again for an incomplete provider.
  */
-public func pubkySwapsRestore(providers: [String], electrumUrl: String, payoutAddress: String, feeRateSatVb: UInt64, network: Network, mnemonic: String, bip39Passphrase: String?)async throws  -> [String]  {
+public func pubkySwapsRestore(providers: [String], sentPayments: [PubkySwapSentPayment], electrumUrl: String, payoutAddress: String, feeRateSatVb: UInt64, network: Network, mnemonic: String, bip39Passphrase: String?)async throws  -> PubkySwapRestoreReport  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_pubky_swaps_restore(FfiConverterSequenceString.lower(providers),FfiConverterString.lower(electrumUrl),FfiConverterString.lower(payoutAddress),FfiConverterUInt64.lower(feeRateSatVb),FfiConverterTypeNetwork_lower(network),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(bip39Passphrase)
+                uniffi_bitkitcore_fn_func_pubky_swaps_restore(FfiConverterSequenceString.lower(providers),FfiConverterSequenceTypePubkySwapSentPayment.lower(sentPayments),FfiConverterString.lower(electrumUrl),FfiConverterString.lower(payoutAddress),FfiConverterUInt64.lower(feeRateSatVb),FfiConverterTypeNetwork_lower(network),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(bip39Passphrase)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
             completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterSequenceString.lift,
+            liftFunc: FfiConverterTypePubkySwapRestoreReport_lift,
             errorHandler: FfiConverterTypePubkySwapError_lift
         )
 }
@@ -35745,7 +35969,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_pubky_swaps_provider_edges() != 4359) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_pubky_swaps_restore() != 21980) {
+    if (uniffi_bitkitcore_checksum_func_pubky_swaps_restore() != 59878) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_pubky_swaps_route_paykit_payment() != 45030) {
