@@ -49,19 +49,20 @@ fn preferred(
 
 /// Whether a Lightning endpoint's value can pay `amount_sat` now. A BOLT11 invoice must be for
 /// the wallet's network, unexpired at `now_unix` and amountless or for exactly the amount. An
-/// LNURL is only checked for a value, since checking it needs a network call.
+/// LNURL is only checked for a value, since checking it needs a network call. A network with no
+/// invoice currency pays neither.
 fn lightning_payable(
     endpoint: &PaykitEndpoint,
     amount_sat: u64,
     network: bitcoin::Network,
     now_unix: u64,
 ) -> bool {
-    if endpoint.method_id != "btc-lightning-bolt11" {
-        return !endpoint.value.trim().is_empty();
-    }
     let Some(currency) = invoice_currency(network) else {
         return false;
     };
+    if endpoint.method_id != "btc-lightning-bolt11" {
+        return !endpoint.value.trim().is_empty();
+    }
     let Ok(invoice) = Bolt11Invoice::from_str(endpoint.value.trim()) else {
         return false;
     };
@@ -359,6 +360,8 @@ mod tests {
         }
         // Testnet4 has no rail: no on-chain endpoint, leg or invoice of any other network is paid.
         let legs = vec![leg("btc-testnet-p2tr", 20_000, 20_001, 0)];
+        let mut published = published;
+        published.push("btc-lightning-lnurl");
         let mut request = request(&published, 20_000, 20_000, legs);
         for currency in [Currency::Regtest, Currency::BitcoinTestnet] {
             request.contact_endpoints.push(PaykitEndpoint {
