@@ -18456,6 +18456,133 @@ public func FfiConverterTypeValidationResult_lower(_ value: ValidationResult) ->
 
 
 /**
+ * `GET /v1/devices/self`: the device as the gateway stores it.
+ */
+public struct WakeDevice {
+    public var deviceId: String
+    public var app: String
+    public var platform: WakePlatform
+    public var environment: WakeEnvironment
+    public var identities: [String]
+    /**
+     * Stored topics: the known names and every pattern.
+     */
+    public var topics: [String]
+    /**
+     * Unix seconds, while the device has live presence.
+     */
+    public var presenceExpiresAt: UInt64?
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(deviceId: String, app: String, platform: WakePlatform, environment: WakeEnvironment, identities: [String], 
+        /**
+         * Stored topics: the known names and every pattern.
+         */topics: [String], 
+        /**
+         * Unix seconds, while the device has live presence.
+         */presenceExpiresAt: UInt64?) {
+        self.deviceId = deviceId
+        self.app = app
+        self.platform = platform
+        self.environment = environment
+        self.identities = identities
+        self.topics = topics
+        self.presenceExpiresAt = presenceExpiresAt
+    }
+}
+
+#if compiler(>=6)
+extension WakeDevice: Sendable {}
+#endif
+
+
+extension WakeDevice: Equatable, Hashable {
+    public static func ==(lhs: WakeDevice, rhs: WakeDevice) -> Bool {
+        if lhs.deviceId != rhs.deviceId {
+            return false
+        }
+        if lhs.app != rhs.app {
+            return false
+        }
+        if lhs.platform != rhs.platform {
+            return false
+        }
+        if lhs.environment != rhs.environment {
+            return false
+        }
+        if lhs.identities != rhs.identities {
+            return false
+        }
+        if lhs.topics != rhs.topics {
+            return false
+        }
+        if lhs.presenceExpiresAt != rhs.presenceExpiresAt {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(deviceId)
+        hasher.combine(app)
+        hasher.combine(platform)
+        hasher.combine(environment)
+        hasher.combine(identities)
+        hasher.combine(topics)
+        hasher.combine(presenceExpiresAt)
+    }
+}
+
+extension WakeDevice: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeWakeDevice: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> WakeDevice {
+        return
+            try WakeDevice(
+                deviceId: FfiConverterString.read(from: &buf), 
+                app: FfiConverterString.read(from: &buf), 
+                platform: FfiConverterTypeWakePlatform.read(from: &buf), 
+                environment: FfiConverterTypeWakeEnvironment.read(from: &buf), 
+                identities: FfiConverterSequenceString.read(from: &buf), 
+                topics: FfiConverterSequenceString.read(from: &buf), 
+                presenceExpiresAt: FfiConverterOptionUInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: WakeDevice, into buf: inout [UInt8]) {
+        FfiConverterString.write(value.deviceId, into: &buf)
+        FfiConverterString.write(value.app, into: &buf)
+        FfiConverterTypeWakePlatform.write(value.platform, into: &buf)
+        FfiConverterTypeWakeEnvironment.write(value.environment, into: &buf)
+        FfiConverterSequenceString.write(value.identities, into: &buf)
+        FfiConverterSequenceString.write(value.topics, into: &buf)
+        FfiConverterOptionUInt64.write(value.presenceExpiresAt, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWakeDevice_lift(_ buf: RustBuffer) throws -> WakeDevice {
+    return try FfiConverterTypeWakeDevice.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWakeDevice_lower(_ value: WakeDevice) -> RustBuffer {
+    return FfiConverterTypeWakeDevice.lower(value)
+}
+
+
+/**
  * The bearer credential of the device routes, generated on the device.
  */
 public struct WakeDeviceSecret {
@@ -19643,6 +19770,93 @@ public func FfiConverterTypeWakeServerInfo_lift(_ buf: RustBuffer) throws -> Wak
 #endif
 public func FfiConverterTypeWakeServerInfo_lower(_ value: WakeServerInfo) -> RustBuffer {
     return FfiConverterTypeWakeServerInfo.lower(value)
+}
+
+
+/**
+ * `PUT /v1/devices/self/topics`: what the gateway stored.
+ */
+public struct WakeSubscription {
+    /**
+     * Stored topics: the known names and every pattern.
+     */
+    public var topics: [String]
+    /**
+     * Exact names the gateway does not know. They are not stored.
+     */
+    public var unknownTopics: [String]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Stored topics: the known names and every pattern.
+         */topics: [String], 
+        /**
+         * Exact names the gateway does not know. They are not stored.
+         */unknownTopics: [String]) {
+        self.topics = topics
+        self.unknownTopics = unknownTopics
+    }
+}
+
+#if compiler(>=6)
+extension WakeSubscription: Sendable {}
+#endif
+
+
+extension WakeSubscription: Equatable, Hashable {
+    public static func ==(lhs: WakeSubscription, rhs: WakeSubscription) -> Bool {
+        if lhs.topics != rhs.topics {
+            return false
+        }
+        if lhs.unknownTopics != rhs.unknownTopics {
+            return false
+        }
+        return true
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(topics)
+        hasher.combine(unknownTopics)
+    }
+}
+
+extension WakeSubscription: Codable {}
+
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeWakeSubscription: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> WakeSubscription {
+        return
+            try WakeSubscription(
+                topics: FfiConverterSequenceString.read(from: &buf), 
+                unknownTopics: FfiConverterSequenceString.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: WakeSubscription, into buf: inout [UInt8]) {
+        FfiConverterSequenceString.write(value.topics, into: &buf)
+        FfiConverterSequenceString.write(value.unknownTopics, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWakeSubscription_lift(_ buf: RustBuffer) throws -> WakeSubscription {
+    return try FfiConverterTypeWakeSubscription.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeWakeSubscription_lower(_ value: WakeSubscription) -> RustBuffer {
+    return FfiConverterTypeWakeSubscription.lower(value)
 }
 
 
@@ -27908,7 +28122,14 @@ public enum WakeError: Swift.Error {
     )
     case RequestFailed(reason: String
     )
-    case GatewayRejected(status: UInt16, code: String, detail: String
+    case GatewayRejected(status: UInt16, code: String, detail: String, 
+        /**
+         * The gateway's clock, unix seconds, on a 401 `stale_timestamp`.
+         * Prepare the registration again with it as `timestamp`.
+         */serverTime: UInt64?, 
+        /**
+         * `Retry-After` in seconds, on a 429.
+         */retryAfterSecs: UInt64?
     )
     case InvalidResponse(reason: String
     )
@@ -27946,7 +28167,9 @@ public struct FfiConverterTypeWakeError: FfiConverterRustBuffer {
         case 6: return .GatewayRejected(
             status: try FfiConverterUInt16.read(from: &buf), 
             code: try FfiConverterString.read(from: &buf), 
-            detail: try FfiConverterString.read(from: &buf)
+            detail: try FfiConverterString.read(from: &buf), 
+            serverTime: try FfiConverterOptionUInt64.read(from: &buf), 
+            retryAfterSecs: try FfiConverterOptionUInt64.read(from: &buf)
             )
         case 7: return .InvalidResponse(
             reason: try FfiConverterString.read(from: &buf)
@@ -27988,11 +28211,13 @@ public struct FfiConverterTypeWakeError: FfiConverterRustBuffer {
             FfiConverterString.write(reason, into: &buf)
             
         
-        case let .GatewayRejected(status,code,detail):
+        case let .GatewayRejected(status,code,detail,serverTime,retryAfterSecs):
             writeInt(&buf, Int32(6))
             FfiConverterUInt16.write(status, into: &buf)
             FfiConverterString.write(code, into: &buf)
             FfiConverterString.write(detail, into: &buf)
+            FfiConverterOptionUInt64.write(serverTime, into: &buf)
+            FfiConverterOptionUInt64.write(retryAfterSecs, into: &buf)
             
         
         case let .InvalidResponse(reason):
@@ -34035,6 +34260,23 @@ public func wakeGenerateKeypair()throws  -> WakeKeyPair  {
 })
 }
 /**
+ * Read the device as the gateway stores it.
+ */
+public func wakeGetDevice(gatewayUrl: String, deviceSecret: String)async throws  -> WakeDevice  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_wake_get_device(FfiConverterString.lower(gatewayUrl),FfiConverterString.lower(deviceSecret)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterTypeWakeDevice_lift,
+            errorHandler: FfiConverterTypeWakeError_lift
+        )
+}
+/**
  * List the grants of this device's identities, live, revoked and expired,
  * oldest first. Never returns tokens.
  */
@@ -34071,7 +34313,7 @@ public func wakeListTopics(gatewayUrl: String)async throws  -> [WakeTopic]  {
 }
 /**
  * Validate a registration and build the message every identity signs.
- * `timestamp` defaults to now.
+ * `timestamp` defaults to now, or one past the last default in this process when that is later.
  */
 public func wakePrepareRegistration(audience: String, app: String, installId: String, platform: WakePlatform, environment: WakeEnvironment, pushToken: String, encryptionPublicKey: String, secretSha256: String, identities: [String], topics: [String], timestamp: UInt64?)throws  -> WakeRegistrationRequest  {
     return try  FfiConverterTypeWakeRegistrationRequest_lift(try rustCallWithError(FfiConverterTypeWakeError_lift) {
@@ -34146,6 +34388,23 @@ public func wakeSendPeerWake(gatewayUrl: String, grantToken: String, topic: Stri
         )
 }
 /**
+ * Send the gateway's built-in `wake.test` to this device alone. Returns the queued wake's id.
+ */
+public func wakeSendTest(gatewayUrl: String, deviceSecret: String)async throws  -> String  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_wake_send_test(FfiConverterString.lower(gatewayUrl),FfiConverterString.lower(deviceSecret)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
+            completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
+            freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
+            liftFunc: FfiConverterString.lift,
+            errorHandler: FfiConverterTypeWakeError_lift
+        )
+}
+/**
  * Read the gateway's audience, clock and version.
  */
 public func wakeServerInfo(gatewayUrl: String)async throws  -> WakeServerInfo  {
@@ -34180,9 +34439,9 @@ public func wakeSetPresence(gatewayUrl: String, deviceSecret: String, ttlSecs: U
         )
 }
 /**
- * Replace the device's topics. Returns the stored topics; unknown names are dropped.
+ * Replace the device's topics. Returns the stored topics and the exact names the gateway does not know.
  */
-public func wakeSetTopics(gatewayUrl: String, deviceSecret: String, topics: [String])async throws  -> [String]  {
+public func wakeSetTopics(gatewayUrl: String, deviceSecret: String, topics: [String])async throws  -> WakeSubscription  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
@@ -34192,7 +34451,7 @@ public func wakeSetTopics(gatewayUrl: String, deviceSecret: String, topics: [Str
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
             completeFunc: ffi_bitkitcore_rust_future_complete_rust_buffer,
             freeFunc: ffi_bitkitcore_rust_future_free_rust_buffer,
-            liftFunc: FfiConverterSequenceString.lift,
+            liftFunc: FfiConverterTypeWakeSubscription_lift,
             errorHandler: FfiConverterTypeWakeError_lift
         )
 }
@@ -34918,13 +35177,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_wake_generate_keypair() != 41918) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_wake_get_device() != 20332) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_wake_list_grants() != 39553) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_wake_list_topics() != 5582) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_wake_prepare_registration() != 32376) {
+    if (uniffi_bitkitcore_checksum_func_wake_prepare_registration() != 33893) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_wake_register() != 32128) {
@@ -34936,13 +35198,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_wake_send_peer_wake() != 31826) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_bitkitcore_checksum_func_wake_send_test() != 54369) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_bitkitcore_checksum_func_wake_server_info() != 21220) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_wake_set_presence() != 25525) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_wake_set_topics() != 27232) {
+    if (uniffi_bitkitcore_checksum_func_wake_set_topics() != 13504) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_wake_sign_pubky_proof() != 15089) {

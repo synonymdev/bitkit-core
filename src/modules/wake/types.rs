@@ -147,6 +147,29 @@ pub struct WakeServerInfo {
     pub version: String,
 }
 
+/// `PUT /v1/devices/self/topics`: what the gateway stored.
+#[derive(uniffi::Record, Debug, Clone, PartialEq, Eq)]
+pub struct WakeSubscription {
+    /// Stored topics: the known names and every pattern.
+    pub topics: Vec<String>,
+    /// Exact names the gateway does not know. They are not stored.
+    pub unknown_topics: Vec<String>,
+}
+
+/// `GET /v1/devices/self`: the device as the gateway stores it.
+#[derive(uniffi::Record, Debug, Clone, PartialEq, Eq)]
+pub struct WakeDevice {
+    pub device_id: String,
+    pub app: String,
+    pub platform: WakePlatform,
+    pub environment: WakeEnvironment,
+    pub identities: Vec<String>,
+    /// Stored topics: the known names and every pattern.
+    pub topics: Vec<String>,
+    /// Unix seconds, while the device has live presence.
+    pub presence_expires_at: Option<u64>,
+}
+
 /// A wake found in a push.
 #[derive(uniffi::Record, Debug, Clone, PartialEq, Eq)]
 pub struct WakeEnvelope {
