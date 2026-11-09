@@ -93,6 +93,9 @@ pub use modules::activity;
 pub use modules::boltz as boltz_swaps;
 pub use modules::lnurl;
 pub use modules::onchain;
+pub use modules::paykit_route::{
+    PaykitEndpoint, PaykitRoute, PaykitRouteError, PaykitRouteRequest, ServiceRouteLeg,
+};
 pub use modules::scanner::{DecodingError, LnurlPayData, Scanner};
 pub use modules::seedqr::{decode_compact_seed_qr, decode_standard_seed_qr, SeedQrError};
 pub use modules::usdt::{
@@ -3737,6 +3740,20 @@ pub async fn boltz_stop_swap_updates() {
     let _ = rt
         .spawn(async move { boltz::stop_swap_updates().await })
         .await;
+}
+
+/// Pick how to pay a Paykit contact: `Direct` when a balance the wallet holds reaches one of the
+/// contact's endpoints, otherwise the cheapest of the request's service legs, or `None` with a
+/// reason. The user never picks the route.
+#[uniffi::export]
+pub fn paykit_route_payment(
+    request: PaykitRouteRequest,
+    network: Network,
+) -> Result<PaykitRoute, PaykitRouteError> {
+    let now_unix = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs());
+    modules::paykit_route::route_payment(&request, network.into(), now_unix)
 }
 
 #[cfg(test)]
