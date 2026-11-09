@@ -59,14 +59,30 @@ fn lightning_payable(
     if endpoint.method_id != "btc-lightning-bolt11" {
         return !endpoint.value.trim().is_empty();
     }
+    let Some(currency) = invoice_currency(network) else {
+        return false;
+    };
     let Ok(invoice) = Bolt11Invoice::from_str(endpoint.value.trim()) else {
         return false;
     };
-    invoice.currency() == Currency::from(network)
+    invoice.currency() == currency
         && !invoice.would_expire(Duration::from_secs(now_unix))
         && invoice
             .amount_milli_satoshis()
             .is_none_or(|msat| msat == amount_sat.saturating_mul(1000))
+}
+
+/// The invoice currency of the wallet's network, spelled out: `Currency::from` has no Testnet4
+/// arm, so it panics in debug builds and reads Testnet4 as Regtest in release. Like on chain,
+/// Testnet4 has no rail, so it routes no Lightning.
+fn invoice_currency(network: bitcoin::Network) -> Option<Currency> {
+    match network {
+        bitcoin::Network::Bitcoin => Some(Currency::Bitcoin),
+        bitcoin::Network::Testnet => Some(Currency::BitcoinTestnet),
+        bitcoin::Network::Signet => Some(Currency::Signet),
+        bitcoin::Network::Regtest => Some(Currency::Regtest),
+        _ => None,
+    }
 }
 
 fn lightning_endpoint(
@@ -341,8 +357,15 @@ mod tests {
             let request = request(&published, 0, 20_000, vec![]);
             assert_eq!(route_payment(&request, network, NOW).unwrap(), direct(id));
         }
+        // Testnet4 has no rail: no on-chain endpoint, leg or invoice of any other network is paid.
         let legs = vec![leg("btc-testnet-p2tr", 20_000, 20_001, 0)];
-        let request = request(&published, 0, 20_000, legs);
+        let mut request = request(&published, 20_000, 20_000, legs);
+        for currency in [Currency::Regtest, Currency::BitcoinTestnet] {
+            request.contact_endpoints.push(PaykitEndpoint {
+                method_id: "btc-lightning-bolt11".into(),
+                value: bolt11(currency, None, 3_600),
+            });
+        }
         assert!(matches!(
             route_payment(&request, bitcoin::Network::Testnet4, NOW).unwrap(),
             PaykitRoute::None { .. }
