@@ -961,8 +961,12 @@ fn restored_record(
         log::warn!("pubky swaps: no payment for swap {swap_id} from {provider}; not restoring it");
         return None;
     };
-    let max_fee_sat = paid_sat.saturating_mul(policy(wallet.network).max_fee_bps as u64) / 10_000;
-    if accept.onchain_amount_sat.saturating_add(max_fee_sat) < paid_sat {
+    // The bound `validate_quote` holds a fresh quote to: its fee, the payment less the lockup, is
+    // at most `max_fee_bps` of the lockup.
+    let lock_sat = accept.onchain_amount_sat;
+    let max_fee_sat =
+        (u128::from(lock_sat) * u128::from(policy(wallet.network).max_fee_bps) / 10_000) as u64;
+    if paid_sat.saturating_sub(lock_sat) > max_fee_sat {
         log::warn!(
             "pubky swaps: swap {swap_id} from {provider} locks {} sat for a {paid_sat} sat \
              payment; not restoring it",
@@ -1111,9 +1115,9 @@ mod tests {
     #[test]
     fn restores_only_a_lockup_the_wallet_paid_for() {
         let snapshot = listed_swap(SEED, Some(keys::owner_ref(&keys::new_index())));
-        // Locks 20,300 sat; the policy allows 5% of the payment in fees.
-        assert!(restore_paid(&snapshot, 21_368).is_some());
-        assert!(restore_paid(&snapshot, 21_369).is_none());
+        // Locks 20,300 sat; a quote may charge 5% of the lockup in fees.
+        assert!(restore_paid(&snapshot, 21_315).is_some());
+        assert!(restore_paid(&snapshot, 21_316).is_none());
         let paid = HashMap::new();
         let wallet = Restoring {
             electrum_url: "",
