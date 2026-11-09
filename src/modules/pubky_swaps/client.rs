@@ -14,19 +14,21 @@ use electrum_client::{Client as ElectrumClient, ConfigBuilder, ElectrumApi};
 use once_cell::sync::Lazy;
 use swap_common::htlc::build_htlc_script;
 use swap_common::messages::{
-    OfferRequest, Quote, QuoteRequest, Reject, SwapListRequest, SwapMessage, SwapOffer,
-    SwapRequest, SwapScript, SwapStatusRequest, SwapStatusSnapshot, PROTOCOL_VERSION,
-    SWAP_LIST_FEATURE,
+    OfferRequest, Quote, QuoteRequest, Reject, SwapAccept, SwapListRequest, SwapMessage, SwapOffer,
+    SwapRequest, SwapScript, SwapStatusRequest, SwapStatusSnapshot, PAYKIT_CAP_FEATURE,
+    PROTOCOL_VERSION, SWAP_LIST_FEATURE,
 };
 use swap_common::onchain::{build_claim_tx, estimate_spend_fee, spend_vsize};
+use swap_common::paykit_cap::{CapMessage, ContractReply, SignedQuote};
 use swap_common::timelock::TimelockParams;
 use swap_common::validate::{
-    validate_accept, validate_hold_invoice, validate_quote, verify_contract, ClientPolicy,
-    DecodedHoldInvoice,
+    min_reverse_lockup_sat, validate_accept, validate_hold_invoice, validate_quote,
+    verify_contract, ClientPolicy, DecodedHoldInvoice,
 };
 use swap_common::SwapDirection;
 use uuid::Uuid;
 
+use super::cap::CapSession;
 use super::claim;
 use super::errors::PubkySwapError;
 use super::keys;
@@ -36,6 +38,9 @@ use super::transport::{bare_pubky, DirectClient};
 use super::types::*;
 use crate::modules::paykit_route;
 
+/// The offer feature for requests over `direct/1`, which signed negotiation needs beside
+/// `paykit-cap-v1`. swap-common names no constant for it.
+const DIRECT_RPC_FEATURE: &str = "direct-rpc-v1";
 /// How long a candidate provider has to answer an offer request.
 const OFFER_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(20);
 /// Most candidates asked for an offer per payment: each is a connection and an address lookup
@@ -56,6 +61,20 @@ struct CachedQuote {
     route: PubkySwapRouteQuote,
     quote: Quote,
     network: bitcoin::Network,
+    /// The signed quote and the request it answered, which the commit carries and is checked
+    /// against.
+    request: QuoteRequest,
+    signed: SignedQuote,
+    /// The delegated key the quote was signed by, if not the provider's own.
+    delegated_signer: Option<String>,
+}
+
+/// A quote whose signature checked out, with what committing to it needs.
+struct SignedRoute {
+    quote: Quote,
+    request: QuoteRequest,
+    signed: SignedQuote,
+    delegated_signer: Option<String>,
 }
 
 fn now_unix() -> u64 {
@@ -130,13 +149,16 @@ pub async fn provider_edges(
     Ok(router::edges_from_offer(&offer?))
 }
 
+/// A signed quote for `lock_sat` from `offer`'s provider (`paykit-cap.rfq`), refused unless it
+/// is signed by the provider's key or the key it delegates to, and binds this wallet, the
+/// provider and the request.
 async fn quote_edge(
     client: &DirectClient,
     identity: &str,
     offer: &SwapOffer,
     lock_sat: u64,
     network: bitcoin::Network,
-) -> Result<Quote, PubkySwapError> {
+) -> Result<SignedRoute, PubkySwapError> {
     let request = QuoteRequest {
         request_id: Some(Uuid::new_v4()),
         offer_id: offer.offer_id,
@@ -146,20 +168,31 @@ async fn quote_edge(
         protocol_version: PROTOCOL_VERSION,
         features: vec![],
     };
-    let reply = client
-        .request(
-            &offer.provider_pkarr,
-            &SwapMessage::QuoteRequest(request.clone()),
-        )
+    let mut session = CapSession::new(client, identity, &offer.provider_pkarr)?;
+    let (reply, signed) = session
+        .ask(&SwapMessage::QuoteRequest(request.clone()))
         .await?;
-    let quote = match reply {
-        SwapMessage::Quote(quote) => quote,
-        SwapMessage::Reject(reject) => return Err(refused(reject)),
-        other => return Err(unexpected("Quote", &other)),
+    let (quote, signed) = match (reply, signed) {
+        (SwapMessage::Quote(quote), CapMessage::Quote(signed)) => (quote, signed),
+        (SwapMessage::Reject(reject), _) => return Err(refused(reject)),
+        (other, _) => return Err(unexpected("Quote", &other)),
     };
     validate_quote(&quote, &request, now_unix(), &policy(network))
         .map_err(PubkySwapError::validation)?;
-    Ok(quote)
+    Ok(SignedRoute {
+        quote,
+        request,
+        signed,
+        delegated_signer: session.delegated_signer(),
+    })
+}
+
+/// Whether an offer takes signed negotiation over `direct/1`. Others are skipped: their quotes
+/// and contracts would be unsigned.
+fn negotiates_signed(offer: &SwapOffer) -> bool {
+    [PAYKIT_CAP_FEATURE, DIRECT_RPC_FEATURE]
+        .iter()
+        .all(|feature| offer.features.iter().any(|f| f == feature))
 }
 
 /// Pick the route for a Paykit payment. The user never picks a swap: one is used only when no
@@ -268,6 +301,9 @@ async fn best_swap_route(
             Ok(Ok(offer)) if bare_pubky(&offer.provider_pkarr) != provider => {
                 log::warn!("pubky swaps: {provider} answered with another provider's offer")
             }
+            Ok(Ok(offer)) if !negotiates_signed(&offer) => {
+                log::warn!("pubky swaps: {provider} does not sign its quotes; skipping it")
+            }
             Ok(Ok(offer)) if offer.network.to_bitcoin_network() == network => {
                 edges.extend(router::edges_from_offer(&offer));
                 offers.insert(offer.provider_pkarr.clone(), offer);
@@ -286,18 +322,18 @@ async fn best_swap_route(
     );
     let asked = ranked.len() as u32;
 
-    let mut best: Option<(Quote, String)> = None;
+    let mut best: Option<(SignedRoute, String)> = None;
     for edge in &ranked {
         let Some(offer) = offers.get(&edge.provider_pubky) else {
             continue;
         };
         match quote_edge(&client, &identity, offer, lock_sat, network).await {
-            Ok(quote) if quote.total_sat <= request.lightning_spendable_sat => {
+            Ok(signed) if signed.quote.total_sat <= request.lightning_spendable_sat => {
                 if best
                     .as_ref()
-                    .is_none_or(|(b, _)| quote.total_sat < b.total_sat)
+                    .is_none_or(|(b, _)| signed.quote.total_sat < b.quote.total_sat)
                 {
-                    best = Some((quote, edge.provider_pubky.clone()));
+                    best = Some((signed, edge.provider_pubky.clone()));
                 }
             }
             Ok(_) => {}
@@ -306,9 +342,10 @@ async fn best_swap_route(
     }
     client.close().await;
 
-    let Some((quote, provider)) = best else {
+    let Some((signed, provider)) = best else {
         return Ok(None);
     };
+    let quote = signed.quote.clone();
     let route = PubkySwapRouteQuote {
         provider_pubky: provider,
         // The wallet's own id for this route: two providers may pick the same quote id.
@@ -334,13 +371,60 @@ async fn best_swap_route(
             route: route.clone(),
             quote,
             network,
+            request: signed.request,
+            signed: signed.signed,
+            delegated_signer: signed.delegated_signer,
         },
     );
     Ok(Some(route))
 }
 
-fn is_pending(reply: &Result<SwapMessage, PubkySwapError>) -> bool {
-    matches!(reply, Ok(SwapMessage::Reject(reject)) if reject.code.as_deref() == Some("pending"))
+fn is_pending(reply: &Result<(SwapMessage, CapMessage), PubkySwapError>) -> bool {
+    matches!(reply, Ok((SwapMessage::Reject(reject), _)) if reject.code.as_deref() == Some("pending"))
+}
+
+/// Commit to a signed quote (`paykit-cap.commit`) and return the acceptance from the signed
+/// contract, with that contract. The quote is checked again first, and the contract must be
+/// signed by the same keys, over this commit.
+#[allow(clippy::too_many_arguments)]
+async fn signed_commit(
+    client: &DirectClient,
+    identity: &str,
+    provider: &str,
+    quote_request: &QuoteRequest,
+    signed: SignedQuote,
+    delegated_signer: Option<String>,
+    request: SwapRequest,
+) -> Result<(SwapAccept, ContractReply), PubkySwapError> {
+    let quote_id = request.quote_id;
+    let mut session = CapSession::new(client, identity, provider)?;
+    session.allow_delegated_signer(delegated_signer);
+    session.remember_quote(quote_request, signed)?;
+    let mut reply = session.ask(&SwapMessage::SwapRequest(request)).await;
+    // `pending` means the provider is still admitting it, never a decline: keep asking until it
+    // accepts or refuses. Past the deadline the wallet gives up without paying anything.
+    let deadline = tokio::time::Instant::now() + PENDING_TIMEOUT;
+    while is_pending(&reply) && tokio::time::Instant::now() < deadline {
+        tokio::time::sleep(PENDING_POLL).await;
+        let status = SwapMessage::SwapStatusRequest(SwapStatusRequest {
+            request_id: Some(Uuid::new_v4()),
+            swap_id: None,
+            quote_id: Some(quote_id),
+        });
+        reply = session.ask(&status).await;
+    }
+    match reply? {
+        (SwapMessage::SwapAccept(accept), CapMessage::Contract(contract)) => Ok((accept, contract)),
+        (SwapMessage::SwapStatusSnapshot(snapshot), CapMessage::Status(status)) => {
+            // A status the session checked carries the contract signed over this commit.
+            let contract = status
+                .contract
+                .ok_or_else(|| PubkySwapError::validation("status without a signed contract"))?;
+            Ok((snapshot.accept, contract))
+        }
+        (SwapMessage::Reject(reject), _) => Err(refused(reject)),
+        (other, _) => Err(unexpected("SwapAccept", &other)),
+    }
 }
 
 fn decode_hold_invoice(invoice: &str) -> Result<DecodedHoldInvoice, PubkySwapError> {
@@ -397,6 +481,9 @@ pub async fn commit_route(
         route,
         quote,
         network,
+        request: quote_request,
+        signed,
+        delegated_signer,
     } = cached;
     if network == bitcoin::Network::Bitcoin {
         return Err(PubkySwapError::invalid(
@@ -426,28 +513,18 @@ pub async fn commit_route(
     };
 
     let client = DirectClient::bind(secret).await?;
-    let mut reply = client
-        .request(&route.provider_pubky, &SwapMessage::SwapRequest(request))
-        .await;
-    // `pending` means the provider is still admitting it, never a decline: keep asking until it
-    // accepts or refuses. Past the deadline the wallet gives up without paying anything.
-    let deadline = tokio::time::Instant::now() + PENDING_TIMEOUT;
-    while is_pending(&reply) && tokio::time::Instant::now() < deadline {
-        tokio::time::sleep(PENDING_POLL).await;
-        let status = SwapMessage::SwapStatusRequest(SwapStatusRequest {
-            request_id: Some(Uuid::new_v4()),
-            swap_id: None,
-            quote_id: Some(quote.quote_id),
-        });
-        reply = client.request(&route.provider_pubky, &status).await;
-    }
+    let committed = signed_commit(
+        &client,
+        &identity_pubky(&secret),
+        &route.provider_pubky,
+        &quote_request,
+        signed,
+        delegated_signer,
+        request,
+    )
+    .await;
     client.close().await;
-    let accept = match reply? {
-        SwapMessage::SwapAccept(accept) => accept,
-        SwapMessage::SwapStatusSnapshot(snapshot) => snapshot.accept,
-        SwapMessage::Reject(reject) => return Err(refused(reject)),
-        other => return Err(unexpected("SwapAccept", &other)),
-    };
+    let (accept, contract) = committed?;
     // `advance` watches and spends only the P2WSH contract the request asked for.
     if accept.script_type != SwapScript::P2wsh {
         return Err(PubkySwapError::validation(format!(
@@ -505,6 +582,7 @@ pub async fn commit_route(
         claim_published: false,
         claim_seen: false,
         claim_listed: false,
+        contract: Some(contract),
         created_at_unix: now_unix(),
     };
     store::save(&record)?;
@@ -971,12 +1049,12 @@ fn restored_record(
         return None;
     };
     let paid_sat = payment.amount_sat;
-    // The bound `validate_quote` holds a fresh quote to: its fee, the payment less the lockup, is
-    // at most `max_fee_bps` of the lockup.
-    let lock_sat = accept.onchain_amount_sat;
-    let max_fee_sat =
-        (u128::from(lock_sat) * u128::from(policy(wallet.network).max_fee_bps) / 10_000) as u64;
-    if paid_sat.saturating_sub(lock_sat) > max_fee_sat {
+    // The least a quote within the fee bound could lock for this payment.
+    let min_lock_sat = min_reverse_lockup_sat(
+        paid_sat.saturating_mul(1_000),
+        policy(wallet.network).max_fee_bps,
+    );
+    if accept.onchain_amount_sat < min_lock_sat {
         log::warn!(
             "pubky swaps: swap {swap_id} from {provider} locks {} sat for a {paid_sat} sat \
              payment; not restoring it",
@@ -1008,6 +1086,7 @@ fn restored_record(
         // A listed claim counts only once the payment settled: until then the provider has shown
         // nothing, and a claim past the window would hand it the preimage and its refund.
         claim_listed: snapshot.claim_observed_txid_hex.is_some() && payment.settled,
+        contract: None,
         created_at_unix: snapshot.created_at_unix,
     })
 }
@@ -1079,6 +1158,7 @@ mod tests {
             created_at_unix: 1_000,
             payment_hash_hex: hex::encode(keys.payment_hash),
             owner_ref,
+            claimable: false,
         }
     }
 

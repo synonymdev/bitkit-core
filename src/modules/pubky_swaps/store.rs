@@ -11,6 +11,7 @@ use std::sync::{Mutex, RwLock};
 
 use serde::{Deserialize, Serialize};
 use swap_common::messages::{Quote, SwapAccept};
+use swap_common::paykit_cap::ContractReply;
 
 use super::errors::PubkySwapError;
 
@@ -50,6 +51,10 @@ pub(crate) struct SwapRecord {
     /// once the lockup has its confirmations, whatever the window.
     #[serde(default)]
     pub claim_listed: bool,
+    /// The contract the provider signed over this wallet's commit; absent for a swap rebuilt
+    /// from a provider's listing.
+    #[serde(default)]
+    pub contract: Option<ContractReply>,
     pub created_at_unix: u64,
 }
 

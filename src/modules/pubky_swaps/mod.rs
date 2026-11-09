@@ -2,8 +2,10 @@
 //! contact published, route the payment through a Pubky Swaps provider (`swap/1`).
 //! See README.md.
 
+mod cap;
 mod claim;
 mod client;
+mod delegation;
 mod errors;
 mod keys;
 mod router;

@@ -2,14 +2,16 @@
 //!
 //! The provider authenticates the request by the connection's key, so this needs no
 //! homeserver on either side. Each request opens a stream, writes `{"message": …}`, and reads
-//! the provider's reply, which is one `SwapMessage`.
+//! the provider's reply: one `SwapMessage`, or one signed `paykit-cap.*` message.
 
 use std::time::Duration;
 
 use iroh::endpoint::presets;
 use iroh::{Endpoint, PublicKey as EndpointId, SecretKey};
+use serde::Serialize;
 use serde_json::json;
 use swap_common::messages::SwapMessage;
+use swap_common::paykit_cap::{is_cap_message, CapMessage};
 
 use super::errors::PubkySwapError;
 
@@ -42,12 +44,32 @@ impl DirectClient {
         Ok(Self { endpoint })
     }
 
-    /// Send one request to `provider_pubky` and return its reply.
+    /// Send one plain request to `provider_pubky` and return its reply.
     pub(crate) async fn request(
         &self,
         provider_pubky: &str,
         message: &SwapMessage,
     ) -> Result<SwapMessage, PubkySwapError> {
+        let reply = self.round_trip(provider_pubky, message).await?;
+        serde_json::from_slice(&reply)
+            .map_err(|e| PubkySwapError::transport(format!("unreadable reply: {e}")))
+    }
+
+    /// Send one `paykit-cap.*` request. Any reply that is not a `paykit-cap.*` message is refused,
+    /// so a provider cannot answer a signed request with an unsigned one.
+    pub(crate) async fn request_cap(
+        &self,
+        provider_pubky: &str,
+        message: &CapMessage,
+    ) -> Result<CapMessage, PubkySwapError> {
+        cap_reply(&self.round_trip(provider_pubky, message).await?)
+    }
+
+    async fn round_trip(
+        &self,
+        provider_pubky: &str,
+        message: &impl Serialize,
+    ) -> Result<Vec<u8>, PubkySwapError> {
         let provider = provider_endpoint_id(provider_pubky)?;
         let body = serde_json::to_vec(&json!({ "message": message }))?;
         let conn = tokio::time::timeout(
@@ -70,8 +92,7 @@ impl DirectClient {
         .await
         .map_err(|_| PubkySwapError::transport("timed out waiting for the provider"))??;
         conn.close(0u32.into(), b"done");
-        serde_json::from_slice(&reply)
-            .map_err(|e| PubkySwapError::transport(format!("unreadable reply: {e}")))
+        Ok(reply)
     }
 
     pub(crate) async fn close(self) {
@@ -79,8 +100,21 @@ impl DirectClient {
     }
 }
 
+/// A reply to a `paykit-cap.*` request, refused unless it is one too.
+fn cap_reply(reply: &[u8]) -> Result<CapMessage, PubkySwapError> {
+    let value: serde_json::Value = serde_json::from_slice(reply)
+        .map_err(|e| PubkySwapError::transport(format!("unreadable reply: {e}")))?;
+    if !is_cap_message(&value) {
+        return Err(PubkySwapError::validation(
+            "the provider answered a signed request with an unsigned reply",
+        ));
+    }
+    serde_json::from_value(value)
+        .map_err(|e| PubkySwapError::transport(format!("unreadable reply: {e}")))
+}
+
 /// A pubky and an iroh endpoint id are the same Ed25519 key.
-fn provider_endpoint_id(provider_pubky: &str) -> Result<EndpointId, PubkySwapError> {
+pub(crate) fn provider_endpoint_id(provider_pubky: &str) -> Result<EndpointId, PubkySwapError> {
     let bare = bare_pubky(provider_pubky);
     let key = pubky::PublicKey::try_from_z32(bare)
         .map_err(|e| PubkySwapError::invalid(format!("provider pubky: {e}")))?;
@@ -95,5 +129,22 @@ pub(crate) fn bare_pubky(pubky: &str) -> &str {
     match pubky.strip_prefix("pubky") {
         Some(rest) if rest.len() == 52 => rest,
         _ => pubky,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn refuses_an_unsigned_reply_to_a_signed_request() {
+        let plain = br#"{"type":"swap_accept","quote_id":"00000000-0000-0000-0000-000000000000"}"#;
+        assert!(matches!(
+            cap_reply(plain),
+            Err(PubkySwapError::Validation { .. })
+        ));
+        let refusal =
+            br#"{"kind":"paykit-cap.refusal","body":{"code":"offer_stale","reason":"r"}}"#;
+        assert!(matches!(cap_reply(refusal), Ok(CapMessage::Refusal(_))));
     }
 }
