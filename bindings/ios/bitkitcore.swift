@@ -12859,15 +12859,25 @@ public struct PubkySwapSentPayment {
      * What the payment paid the provider, routing fees excluded.
      */
     public var amountSat: UInt64
+    /**
+     * Whether the payment settled, so the provider holds the preimage. A pending payment is
+     * still in flight.
+     */
+    public var settled: Bool
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
     public init(paymentHashHex: String, 
         /**
          * What the payment paid the provider, routing fees excluded.
-         */amountSat: UInt64) {
+         */amountSat: UInt64, 
+        /**
+         * Whether the payment settled, so the provider holds the preimage. A pending payment is
+         * still in flight.
+         */settled: Bool) {
         self.paymentHashHex = paymentHashHex
         self.amountSat = amountSat
+        self.settled = settled
     }
 }
 
@@ -12884,12 +12894,16 @@ extension PubkySwapSentPayment: Equatable, Hashable {
         if lhs.amountSat != rhs.amountSat {
             return false
         }
+        if lhs.settled != rhs.settled {
+            return false
+        }
         return true
     }
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(paymentHashHex)
         hasher.combine(amountSat)
+        hasher.combine(settled)
     }
 }
 
@@ -12905,13 +12919,15 @@ public struct FfiConverterTypePubkySwapSentPayment: FfiConverterRustBuffer {
         return
             try PubkySwapSentPayment(
                 paymentHashHex: FfiConverterString.read(from: &buf), 
-                amountSat: FfiConverterUInt64.read(from: &buf)
+                amountSat: FfiConverterUInt64.read(from: &buf), 
+                settled: FfiConverterBool.read(from: &buf)
         )
     }
 
     public static func write(_ value: PubkySwapSentPayment, into buf: inout [UInt8]) {
         FfiConverterString.write(value.paymentHashHex, into: &buf)
         FfiConverterUInt64.write(value.amountSat, into: &buf)
+        FfiConverterBool.write(value.settled, into: &buf)
     }
 }
 
@@ -34306,8 +34322,8 @@ public func pubkySwapsProviderEdges(providerPubky: String, mnemonic: String, bip
  * Rebuild the swaps this wallet started, for a wallet restored from its seed. Each of
  * `providers` that supports it lists the swaps it holds for the wallet's swap identity, and the
  * wallet derives their keys from the seed and checks them against each contract. A swap gets a
- * record only when `sent_payments`, the Lightning payments the wallet's node sent, holds its hash
- * for no more than its lockup plus the most fees the wallet accepts. The contact's address is not
+ * record only when `sent_payments`, the Lightning payments the wallet's node sent and whether
+ * each settled, holds its hash for no more than its lockup plus the most fees the wallet accepts. The contact's address is not
  * in the listing, so a restored swap claims to `payout_address`, the wallet's own. Drive each
  * restored and known swap with `pubky_swaps_advance`; restore again for an incomplete provider.
  */
@@ -35969,7 +35985,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_pubky_swaps_provider_edges() != 4359) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_pubky_swaps_restore() != 59878) {
+    if (uniffi_bitkitcore_checksum_func_pubky_swaps_restore() != 44531) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_pubky_swaps_route_paykit_payment() != 45030) {
