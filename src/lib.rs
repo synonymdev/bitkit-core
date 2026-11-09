@@ -72,9 +72,9 @@ pub use crate::modules::ur::{
     UrDecoder, UrDecoderStatus, UrError, UrPayload,
 };
 use crate::modules::wake::{
-    WakeAckOutcome, WakeDeviceSecret, WakeEnvelope, WakeEnvironment, WakeError, WakeGrant,
-    WakeGrantSummary, WakeIdentityProof, WakeKeyPair, WakePlatform, WakeRegistration,
-    WakeRegistrationRequest, WakeServerInfo, WakeTopic,
+    WakeAckOutcome, WakeDevice, WakeDeviceSecret, WakeEnvelope, WakeEnvironment, WakeError,
+    WakeGrant, WakeGrantSummary, WakeIdentityProof, WakeKeyPair, WakePlatform, WakeRegistration,
+    WakeRegistrationRequest, WakeServerInfo, WakeSubscription, WakeTopic,
 };
 pub use crate::onchain::WordCount;
 use crate::onchain::{
@@ -2372,7 +2372,7 @@ pub fn wake_generate_install_id() -> String {
 }
 
 /// Validate a registration and build the message every identity signs.
-/// `timestamp` defaults to now.
+/// `timestamp` defaults to now, or one past the last default in this process when that is later.
 #[uniffi::export]
 #[allow(clippy::too_many_arguments)]
 pub fn wake_prepare_registration(
@@ -2526,13 +2526,13 @@ pub async fn wake_clear_presence(
     })
 }
 
-/// Replace the device's topics. Returns the stored topics; unknown names are dropped.
+/// Replace the device's topics. Returns the stored topics and the exact names the gateway does not know.
 #[uniffi::export]
 pub async fn wake_set_topics(
     gateway_url: String,
     device_secret: String,
     topics: Vec<String>,
-) -> Result<Vec<String>, WakeError> {
+) -> Result<WakeSubscription, WakeError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         crate::modules::wake::wake_set_topics(gateway_url, device_secret, topics).await
@@ -2543,6 +2543,38 @@ pub async fn wake_set_topics(
             reason: format!("Runtime error: {}", e),
         })
     })
+}
+
+/// Read the device as the gateway stores it.
+#[uniffi::export]
+pub async fn wake_get_device(
+    gateway_url: String,
+    device_secret: String,
+) -> Result<WakeDevice, WakeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { crate::modules::wake::wake_get_device(gateway_url, device_secret).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(WakeError::RequestFailed {
+                reason: format!("Runtime error: {}", e),
+            })
+        })
+}
+
+/// Send the gateway's built-in `wake.test` to this device alone. Returns the queued wake's id.
+#[uniffi::export]
+pub async fn wake_send_test(
+    gateway_url: String,
+    device_secret: String,
+) -> Result<String, WakeError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move { crate::modules::wake::wake_send_test(gateway_url, device_secret).await })
+        .await
+        .unwrap_or_else(|e| {
+            Err(WakeError::RequestFailed {
+                reason: format!("Runtime error: {}", e),
+            })
+        })
 }
 
 /// Unregister the device and revoke its secret.

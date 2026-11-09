@@ -23,6 +23,11 @@ pub enum WakeError {
         status: u16,
         code: String,
         detail: String,
+        /// The gateway's clock, unix seconds, on a 401 `stale_timestamp`.
+        /// Prepare the registration again with it as `timestamp`.
+        server_time: Option<u64>,
+        /// `Retry-After` in seconds, on a 429.
+        retry_after_secs: Option<u64>,
     },
 
     #[error("Invalid response: {reason}")]

@@ -28,7 +28,9 @@ the device secret and the install id.
 | `wakeDecryptV0`, `wakeDecryptV1` | decrypt one envelope directly |
 | `wakeAck` | `POST /v1/acks` |
 | `wakeSetPresence`, `wakeClearPresence` | `PUT` / `DELETE /v1/presence` |
-| `wakeSetTopics` | `PUT /v1/devices/self/topics` |
+| `wakeSetTopics` | `PUT /v1/devices/self/topics`, with the names the gateway does not know |
+| `wakeGetDevice` | `GET /v1/devices/self` |
+| `wakeSendTest` | `POST /v1/devices/self/test`: the built-in `wake.test`, to this device only |
 | `wakeUnregister` | `DELETE /v1/devices/self` |
 | `wakeServerInfo` | `GET /v1/info` (the audience to register with) |
 | `wakeListTopics` | `GET /v1/topics` |
@@ -80,7 +82,12 @@ func registerForWakes(node: Node, installId: String, pubkySecretHex: String, pub
 }
 ```
 
-The request must reach the gateway within 600 seconds of `timestamp`.
+The request must reach the gateway within 600 seconds of `timestamp`. With
+`timestamp: nil`, registrations prepared in one process get increasing
+timestamps, because the gateway refuses a second one at the same timestamp
+with other content (409 `stale_registration`). On 401 `stale_timestamp`, the
+error's `serverTime` is the gateway's clock: prepare again with it as
+`timestamp` and sign again. On 429, `retryAfterSecs` says when to retry.
 
 ## Handling a push
 
@@ -130,9 +137,9 @@ try await wakeRevokeGrant(gatewayUrl: gateway, deviceSecret: secret.token, grant
 // Sender: after writing something for a peer that handed us its token.
 do {
     try await wakeSendPeerWake(gatewayUrl: peerGateway, grantToken: peerToken, topic: "paykit.sync")
-} catch WakeError.GatewayRejected(_, let code, _) where code == "grant_invalid" {
+} catch WakeError.GatewayRejected(_, let code, _, _, _) where code == "grant_invalid" {
     // Revoked or expired: drop the token and wait for a new one.
-} catch WakeError.GatewayRejected(_, let code, _) where code == "rate_limited" {
+} catch WakeError.GatewayRejected(_, let code, _, _, _) where code == "rate_limited" {
     // The grant's quota is used up for now: skip this wake.
 }
 ```

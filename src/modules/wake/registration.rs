@@ -19,6 +19,7 @@
 //! ts:<unix seconds, decimal>
 //! ```
 
+use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
@@ -316,9 +317,20 @@ pub fn wake_generate_install_id() -> String {
     install_id_from_bytes(&bytes)
 }
 
+/// The last `ts` this process chose for a registration.
+static LAST_TIMESTAMP: Mutex<u64> = Mutex::new(0);
+
+/// `now`, or one past `last` when that is later. The gateway answers 409
+/// `stale_registration` to a second registration at the same `ts` with other
+/// content, such as one on launch and one from the token callback.
+pub(crate) fn next_timestamp(now: u64, last: u64) -> u64 {
+    now.max(last.saturating_add(1))
+}
+
 /// Validates a registration and builds the message every identity signs.
-/// `timestamp` defaults to now and must be within the gateway's skew window
-/// (600 s) when the request is sent.
+/// `timestamp` defaults to now, or one past the last default in this process
+/// when that is later. It must be within the gateway's skew window (600 s)
+/// when the request is sent.
 #[allow(clippy::too_many_arguments)]
 pub fn wake_prepare_registration(
     audience: String,
@@ -335,10 +347,17 @@ pub fn wake_prepare_registration(
 ) -> Result<WakeRegistrationRequest, WakeError> {
     let timestamp = match timestamp {
         Some(ts) => ts,
-        None => SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map_err(|_| WakeError::invalid_input("the system clock is before 1970"))?
-            .as_secs(),
+        None => {
+            let now = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map_err(|_| WakeError::invalid_input("the system clock is before 1970"))?
+                .as_secs();
+            let mut last = LAST_TIMESTAMP
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            *last = next_timestamp(now, *last);
+            *last
+        }
     };
     let fields = RegistrationFields {
         audience: &audience,
