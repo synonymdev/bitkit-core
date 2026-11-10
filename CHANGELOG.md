@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `regtest_mine`, `regtest_deposit`, `regtest_pay`, `regtest_get_payment` and `regtest_close_channel` take an optional `auth` (`user:password`), sent as basic auth to Blocktank servers that protect the regtest routes; a 401 returns a clear error.
 - Wake: a default registration `timestamp` is one past the last in this process when needed, so two quick registrations no longer get 409 `stale_registration`. `WakeError::GatewayRejected` gains `server_time` and `retry_after_secs`. Add `wake_get_device` and `wake_send_test`. `wake_set_topics` now returns `WakeSubscription` with `unknown_topics` (breaking).
 - Add `paykit_route_payment`, which picks how to pay a Paykit contact: directly when a held balance reaches one of the contact's endpoints, otherwise through the cheapest quoted service leg, such as a Spark withdrawal to the contact's on-chain address.
 - Upgrade `trezor-connect-rs` to 10.0.1. The THP handshake now accepts a paired state only with a verified stored credential. A paired state without one, or an unknown state, returns `TrezorError::ConnectionError` instead of continuing to session creation. A malformed completion frame is now an error too, and the callback transport retries it like other temporary failures. A stored credential with a low-order device key no longer verifies, so the device pairs again.

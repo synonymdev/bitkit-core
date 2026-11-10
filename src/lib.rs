@@ -1694,8 +1694,9 @@ pub async fn get_payment(payment_id: String) -> Result<IBtBolt11Invoice, Blockta
     })
 }
 
-#[uniffi::export]
-pub async fn regtest_mine(count: Option<u32>) -> Result<(), BlocktankError> {
+/// `auth` is the `user:password` basic auth for Blocktank servers that protect the regtest routes.
+#[uniffi::export(default(auth = None))]
+pub async fn regtest_mine(count: Option<u32>, auth: Option<String>) -> Result<(), BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
@@ -1709,7 +1710,7 @@ pub async fn regtest_mine(count: Option<u32>) -> Result<(), BlocktankError> {
                 error_details: "Database not initialized. Call init_db first.".to_string(),
             })?;
 
-        db.regtest_mine(count).await
+        db.regtest_mine(count, auth.as_deref()).await
     })
     .await
     .unwrap_or_else(|e| {
@@ -1719,10 +1720,12 @@ pub async fn regtest_mine(count: Option<u32>) -> Result<(), BlocktankError> {
     })
 }
 
-#[uniffi::export]
+/// `auth` is the `user:password` basic auth for Blocktank servers that protect the regtest routes.
+#[uniffi::export(default(auth = None))]
 pub async fn regtest_deposit(
     address: String,
     amount_sat: Option<u64>,
+    auth: Option<String>,
 ) -> Result<String, BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
@@ -1737,7 +1740,7 @@ pub async fn regtest_deposit(
                 error_details: "Database not initialized. Call init_db first.".to_string(),
             })?;
 
-        db.regtest_deposit(&address, amount_sat).await
+        db.regtest_deposit(&address, amount_sat, auth.as_deref()).await
     })
     .await
     .unwrap_or_else(|e| {
@@ -1747,10 +1750,12 @@ pub async fn regtest_deposit(
     })
 }
 
-#[uniffi::export]
+/// `auth` is the `user:password` basic auth for Blocktank servers that protect the regtest routes.
+#[uniffi::export(default(auth = None))]
 pub async fn regtest_pay(
     invoice: String,
     amount_sat: Option<u64>,
+    auth: Option<String>,
 ) -> Result<String, BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
@@ -1765,7 +1770,7 @@ pub async fn regtest_pay(
                 error_details: "Database not initialized. Call init_db first.".to_string(),
             })?;
 
-        db.regtest_pay(&invoice, amount_sat).await
+        db.regtest_pay(&invoice, amount_sat, auth.as_deref()).await
     })
     .await
     .unwrap_or_else(|e| {
@@ -1775,8 +1780,12 @@ pub async fn regtest_pay(
     })
 }
 
-#[uniffi::export]
-pub async fn regtest_get_payment(payment_id: String) -> Result<IBtBolt11Invoice, BlocktankError> {
+/// `auth` is the `user:password` basic auth for Blocktank servers that protect the regtest routes.
+#[uniffi::export(default(auth = None))]
+pub async fn regtest_get_payment(
+    payment_id: String,
+    auth: Option<String>,
+) -> Result<IBtBolt11Invoice, BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
         let cell = ASYNC_DB.get().ok_or(BlocktankError::ConnectionError {
@@ -1790,7 +1799,7 @@ pub async fn regtest_get_payment(payment_id: String) -> Result<IBtBolt11Invoice,
                 error_details: "Database not initialized. Call init_db first.".to_string(),
             })?;
 
-        db.regtest_get_payment(&payment_id)
+        db.regtest_get_payment(&payment_id, auth.as_deref())
             .await
             .map(|invoice| invoice.into())
     })
@@ -1802,11 +1811,13 @@ pub async fn regtest_get_payment(payment_id: String) -> Result<IBtBolt11Invoice,
     })
 }
 
-#[uniffi::export]
+/// `auth` is the `user:password` basic auth for Blocktank servers that protect the regtest routes.
+#[uniffi::export(default(auth = None))]
 pub async fn regtest_close_channel(
     funding_tx_id: String,
     vout: u32,
     force_close_after_s: Option<u64>,
+    auth: Option<String>,
 ) -> Result<String, BlocktankError> {
     let rt = ensure_runtime();
     rt.spawn(async move {
@@ -1821,7 +1832,7 @@ pub async fn regtest_close_channel(
                 error_details: "Database not initialized. Call init_db first.".to_string(),
             })?;
 
-        db.regtest_close_channel(&funding_tx_id, vout, force_close_after_s)
+        db.regtest_close_channel(&funding_tx_id, vout, force_close_after_s, auth.as_deref())
             .await
     })
     .await

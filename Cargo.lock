@@ -6233,9 +6233,8 @@ dependencies = [
 
 [[package]]
 name = "rust-blocktank-client"
-version = "0.0.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "011a0e743459d488c261488a5900f9efce5adb022812aad9c7a09117fea7bef5"
+version = "0.0.17"
+source = "git+https://github.com/ovitrif/rust-blocktank-client?rev=712d2e2ecc457be99f6d906505696b461efde9ef#712d2e2ecc457be99f6d906505696b461efde9ef"
 dependencies = [
  "chrono",
  "reqwest 0.12.28",

@@ -1,6 +1,6 @@
 //const STAGING_SERVER: &str = "https://api1.blocktank.to/api";
 //const STAGING_SERVER: &str = "https://api.stag.blocktank.to/api";
-const STAGING_SERVER: &str = "https://api.stag.blocktank.to/blocktank/api/v2";
+const STAGING_SERVER: &str = "https://api.stag0.blocktank.to/blocktank/api/v2";
 
 #[cfg(test)]
 mod tests {
@@ -1989,19 +1989,24 @@ mod tests {
             .await
             .unwrap();
         // Test mining 1 block
-        let result = db.regtest_mine(Some(1)).await;
+        let auth = std::env::var("BLOCKTANK_REGTEST_AUTH").ok();
+        let result = db.regtest_mine(Some(1), auth.as_deref()).await;
         assert!(result.is_ok(), "Failed to mine 1 block: {:?}", result.err());
     }
 
     #[tokio::test]
     async fn test_regtest_deposit() {
-        let client =
-            BlocktankClient::new(Some(STAGING_SERVER)).expect("Failed to create BlocktankClient");
+        let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
+            .await
+            .unwrap();
+        let auth = std::env::var("BLOCKTANK_REGTEST_AUTH").ok();
 
         let test_address = "bcrt1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu";
 
         // Test deposit with specific amount
-        let result = client.regtest_deposit(test_address, Some(50000)).await;
+        let result = db
+            .regtest_deposit(test_address, Some(50000), auth.as_deref())
+            .await;
 
         match result {
             Ok(txid) => {

@@ -34652,11 +34652,14 @@ public func registerDevice(deviceToken: String, publicKey: String, features: [St
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
-public func regtestCloseChannel(fundingTxId: String, vout: UInt32, forceCloseAfterS: UInt64?)async throws  -> String  {
+/**
+ * `auth` is the `user:password` basic auth for Blocktank servers that protect the regtest routes.
+ */
+public func regtestCloseChannel(fundingTxId: String, vout: UInt32, forceCloseAfterS: UInt64?, auth: String? = nil)async throws  -> String  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_regtest_close_channel(FfiConverterString.lower(fundingTxId),FfiConverterUInt32.lower(vout),FfiConverterOptionUInt64.lower(forceCloseAfterS)
+                uniffi_bitkitcore_fn_func_regtest_close_channel(FfiConverterString.lower(fundingTxId),FfiConverterUInt32.lower(vout),FfiConverterOptionUInt64.lower(forceCloseAfterS),FfiConverterOptionString.lower(auth)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
@@ -34666,11 +34669,14 @@ public func regtestCloseChannel(fundingTxId: String, vout: UInt32, forceCloseAft
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
-public func regtestDeposit(address: String, amountSat: UInt64?)async throws  -> String  {
+/**
+ * `auth` is the `user:password` basic auth for Blocktank servers that protect the regtest routes.
+ */
+public func regtestDeposit(address: String, amountSat: UInt64?, auth: String? = nil)async throws  -> String  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_regtest_deposit(FfiConverterString.lower(address),FfiConverterOptionUInt64.lower(amountSat)
+                uniffi_bitkitcore_fn_func_regtest_deposit(FfiConverterString.lower(address),FfiConverterOptionUInt64.lower(amountSat),FfiConverterOptionString.lower(auth)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
@@ -34680,11 +34686,14 @@ public func regtestDeposit(address: String, amountSat: UInt64?)async throws  -> 
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
-public func regtestGetPayment(paymentId: String)async throws  -> IBtBolt11Invoice  {
+/**
+ * `auth` is the `user:password` basic auth for Blocktank servers that protect the regtest routes.
+ */
+public func regtestGetPayment(paymentId: String, auth: String? = nil)async throws  -> IBtBolt11Invoice  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_regtest_get_payment(FfiConverterString.lower(paymentId)
+                uniffi_bitkitcore_fn_func_regtest_get_payment(FfiConverterString.lower(paymentId),FfiConverterOptionString.lower(auth)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
@@ -34694,11 +34703,14 @@ public func regtestGetPayment(paymentId: String)async throws  -> IBtBolt11Invoic
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
-public func regtestMine(count: UInt32?)async throws   {
+/**
+ * `auth` is the `user:password` basic auth for Blocktank servers that protect the regtest routes.
+ */
+public func regtestMine(count: UInt32?, auth: String? = nil)async throws   {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_regtest_mine(FfiConverterOptionUInt32.lower(count)
+                uniffi_bitkitcore_fn_func_regtest_mine(FfiConverterOptionUInt32.lower(count),FfiConverterOptionString.lower(auth)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_void,
@@ -34708,11 +34720,14 @@ public func regtestMine(count: UInt32?)async throws   {
             errorHandler: FfiConverterTypeBlocktankError_lift
         )
 }
-public func regtestPay(invoice: String, amountSat: UInt64?)async throws  -> String  {
+/**
+ * `auth` is the `user:password` basic auth for Blocktank servers that protect the regtest routes.
+ */
+public func regtestPay(invoice: String, amountSat: UInt64?, auth: String? = nil)async throws  -> String  {
     return
         try  await uniffiRustCallAsync(
             rustFutureFunc: {
-                uniffi_bitkitcore_fn_func_regtest_pay(FfiConverterString.lower(invoice),FfiConverterOptionUInt64.lower(amountSat)
+                uniffi_bitkitcore_fn_func_regtest_pay(FfiConverterString.lower(invoice),FfiConverterOptionUInt64.lower(amountSat),FfiConverterOptionString.lower(auth)
                 )
             },
             pollFunc: ffi_bitkitcore_rust_future_poll_rust_buffer,
@@ -36262,19 +36277,19 @@ private let initializationResult: InitializationResult = {
     if (uniffi_bitkitcore_checksum_func_register_device() != 14576) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_regtest_close_channel() != 48652) {
+    if (uniffi_bitkitcore_checksum_func_regtest_close_channel() != 42948) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_regtest_deposit() != 30356) {
+    if (uniffi_bitkitcore_checksum_func_regtest_deposit() != 51209) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_regtest_get_payment() != 56623) {
+    if (uniffi_bitkitcore_checksum_func_regtest_get_payment() != 14511) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_regtest_mine() != 58685) {
+    if (uniffi_bitkitcore_checksum_func_regtest_mine() != 28435) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_bitkitcore_checksum_func_regtest_pay() != 48342) {
+    if (uniffi_bitkitcore_checksum_func_regtest_pay() != 21171) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_remove_closed_channel_by_id() != 17150) {

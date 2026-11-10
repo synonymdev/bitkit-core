@@ -211,9 +211,18 @@ impl BlocktankDB {
         Ok(refreshed_entries)
     }
 
+    /// The Blocktank client with basic auth for the `regtest/*` routes, from a `user:password` string.
+    fn regtest_client(&self, auth: Option<&str>) -> rust_blocktank_client::BlocktankClient {
+        self.client.clone().with_regtest_auth(auth)
+    }
+
     /// Mines blocks on the regtest network
-    pub async fn regtest_mine(&self, count: Option<u32>) -> Result<(), BlocktankError> {
-        self.client
+    pub async fn regtest_mine(
+        &self,
+        count: Option<u32>,
+        auth: Option<&str>,
+    ) -> Result<(), BlocktankError> {
+        self.regtest_client(auth)
             .regtest_mine(count)
             .await
             .map_err(|e| BlocktankError::DataError {
@@ -226,8 +235,9 @@ impl BlocktankDB {
         &self,
         address: &str,
         amount_sat: Option<u64>,
+        auth: Option<&str>,
     ) -> Result<String, BlocktankError> {
-        self.client
+        self.regtest_client(auth)
             .regtest_deposit(address, amount_sat)
             .await
             .map_err(|e| BlocktankError::DataError {
@@ -240,8 +250,9 @@ impl BlocktankDB {
         &self,
         invoice: &str,
         amount_sat: Option<u64>,
+        auth: Option<&str>,
     ) -> Result<String, BlocktankError> {
-        self.client
+        self.regtest_client(auth)
             .regtest_pay(invoice, amount_sat)
             .await
             .map_err(|e| BlocktankError::DataError {
@@ -253,8 +264,9 @@ impl BlocktankDB {
     pub async fn regtest_get_payment(
         &self,
         payment_id: &str,
+        auth: Option<&str>,
     ) -> Result<IBtBolt11Invoice, BlocktankError> {
-        self.client
+        self.regtest_client(auth)
             .regtest_get_payment(payment_id)
             .await
             .map_err(|e| BlocktankError::DataError {
@@ -268,8 +280,9 @@ impl BlocktankDB {
         funding_tx_id: &str,
         vout: u32,
         force_close_after_s: Option<u64>,
+        auth: Option<&str>,
     ) -> Result<String, BlocktankError> {
-        self.client
+        self.regtest_client(auth)
             .regtest_close_channel(funding_tx_id, vout, force_close_after_s)
             .await
             .map_err(|e| BlocktankError::DataError {
