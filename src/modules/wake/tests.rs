@@ -1328,6 +1328,20 @@ fn builders_for_every_route() {
             true,
             None,
         ),
+        (
+            build_get_device(GATEWAY, DEVICE_SECRET).unwrap(),
+            Method::GET,
+            "v1/devices/self",
+            true,
+            None,
+        ),
+        (
+            build_send_test(GATEWAY, DEVICE_SECRET).unwrap(),
+            Method::POST,
+            "v1/devices/self/test",
+            true,
+            Some(json!({})),
+        ),
     ];
     for (request, method, route, authenticated, body) in routes {
         assert_eq!(request.method, method, "{route}");
@@ -1409,6 +1423,7 @@ fn response(status: u16, body: &str) -> HttpResponse {
     HttpResponse {
         status,
         body: body.to_string(),
+        retry_after_secs: None,
     }
 }
 
@@ -1417,6 +1432,8 @@ fn rejected(status: u16, code: &str, detail: &str) -> WakeError {
         status,
         code: code.to_string(),
         detail: detail.to_string(),
+        server_time: None,
+        retry_after_secs: None,
     }
 }
 
@@ -1457,9 +1474,52 @@ fn parsers_for_every_route() {
             r#"{"topics":["blocktank.*"],"unknown_topics":["x.y"]}"#
         ))
         .unwrap(),
-        vec!["blocktank.*".to_string()]
+        WakeSubscription {
+            topics: vec!["blocktank.*".to_string()],
+            unknown_topics: vec!["x.y".to_string()],
+        }
     );
     assert_eq!(parse_no_content(&response(204, "")), Ok(()));
+    let device = r#"{"device_id":"01a0c450-6c00-7000-8000-0000000000aa","app":"bitkit","platform":"apns","environment":"sandbox","identities":["ln:02"],"topics":["paykit.sync"],"presence_expires_at":null}"#;
+    assert_eq!(
+        parse_get_device(&response(200, device)).unwrap(),
+        WakeDevice {
+            device_id: "01a0c450-6c00-7000-8000-0000000000aa".to_string(),
+            app: "bitkit".to_string(),
+            platform: WakePlatform::Apns,
+            environment: WakeEnvironment::Sandbox,
+            identities: vec!["ln:02".to_string()],
+            topics: vec!["paykit.sync".to_string()],
+            presence_expires_at: None,
+        }
+    );
+    let device = device
+        .replace(
+            r#""apns","environment":"sandbox""#,
+            r#""fcm","environment":"production""#,
+        )
+        .replace("null", "1790000060");
+    let parsed = parse_get_device(&response(200, &device)).unwrap();
+    assert_eq!(
+        (
+            parsed.platform,
+            parsed.environment,
+            parsed.presence_expires_at
+        ),
+        (
+            WakePlatform::Fcm,
+            WakeEnvironment::Production,
+            Some(1790000060)
+        )
+    );
+    assert_eq!(
+        parse_send_test(&response(
+            202,
+            r#"{"id":"01A0C450-6C00-7000-8000-000000000001"}"#
+        ))
+        .unwrap(),
+        WAKE_ID
+    );
 
     let topics = r#"{"topics":[
         {"name":"blocktank.incomingHtlc","description":"An LSP holds an HTLC","owner":"blocktank",
@@ -1526,8 +1586,38 @@ fn error_statuses_map_to_gateway_rejected() {
     );
     assert_eq!(
         parse_register(&stale_ts),
-        Err(rejected(401, "stale_timestamp", "skew"))
+        Err(WakeError::GatewayRejected {
+            status: 401,
+            code: "stale_timestamp".to_string(),
+            detail: "skew".to_string(),
+            server_time: Some(1790000000),
+            retry_after_secs: None,
+        })
     );
+    let limited = HttpResponse {
+        retry_after_secs: Some(30),
+        ..response(429, r#"{"error":"rate_limited","message":"slow down"}"#)
+    };
+    assert_eq!(
+        parse_register(&limited),
+        Err(WakeError::GatewayRejected {
+            status: 429,
+            code: "rate_limited".to_string(),
+            detail: "slow down".to_string(),
+            server_time: None,
+            retry_after_secs: Some(30),
+        })
+    );
+    // A proxy's 429 without a wake body still carries its Retry-After.
+    let proxy = HttpResponse {
+        retry_after_secs: Some(5),
+        ..response(429, "<html>Too Many Requests</html>")
+    };
+    assert!(matches!(
+        parse_no_content(&proxy),
+        Err(WakeError::GatewayRejected { status: 429, retry_after_secs: Some(5), ref code, .. })
+            if code == "unknown"
+    ));
     assert_eq!(
         parse_set_presence(&unauthorized),
         Err(rejected(401, "unauthorized", "bad secret"))
@@ -1573,6 +1663,42 @@ fn malformed_success_bodies_are_invalid_responses() {
         assert!(matches!(err, WakeError::InvalidResponse { .. }));
         assert!(!err.to_string().contains("soon"), "{err}");
     }
+    let device = |platform: &str, environment: &str| {
+        format!(
+            r#"{{"device_id":"d","app":"bitkit","platform":"{platform}","environment":"{environment}","identities":[],"topics":[],"presence_expires_at":null}}"#
+        )
+    };
+    for body in [device("webpush", "production"), device("apns", "staging")] {
+        assert!(matches!(
+            parse_get_device(&response(200, &body)),
+            Err(WakeError::InvalidResponse { .. })
+        ));
+    }
+    for body in [r#"{"id":"not-a-uuid"}"#, r#"{}"#] {
+        assert!(matches!(
+            parse_send_test(&response(202, body)),
+            Err(WakeError::InvalidResponse { .. })
+        ));
+    }
+}
+
+#[test]
+fn default_timestamps_increase_within_a_process() {
+    assert_eq!(next_timestamp(100, 0), 100);
+    assert_eq!(next_timestamp(100, 99), 100);
+    assert_eq!(next_timestamp(100, 100), 101);
+    assert_eq!(next_timestamp(100, 105), 106);
+    assert_eq!(next_timestamp(0, u64::MAX), u64::MAX);
+
+    let prepare = || {
+        let v = load(REGISTRATION_V1);
+        let mut request = v["request"].clone();
+        request["ts"] = Value::Null;
+        vector_registration(&json!({"audience": v["audience"], "request": request})).timestamp
+    };
+    let first = prepare();
+    let second = prepare();
+    assert!(second > first, "{first} then {second}");
 }
 
 // ----- Client: grants and peer wakes -----
@@ -1984,6 +2110,15 @@ fn grant_debug_hides_the_token() {
 
 /// Serves one canned response on 127.0.0.1 and returns what it received.
 async fn serve_once(status: u16, body: &'static str) -> (String, tokio::task::JoinHandle<String>) {
+    serve_once_with(status, "", body).await
+}
+
+/// `serve_once` with extra header lines, each ending in `\r\n`.
+async fn serve_once_with(
+    status: u16,
+    headers: &'static str,
+    body: &'static str,
+) -> (String, tokio::task::JoinHandle<String>) {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let url = format!("http://{}/prefix", listener.local_addr().unwrap());
@@ -2015,7 +2150,7 @@ async fn serve_once(status: u16, body: &'static str) -> (String, tokio::task::Jo
             ""
         };
         let reply = format!(
-            "HTTP/1.1 {status} X\r\n{location}Content-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+            "HTTP/1.1 {status} X\r\n{location}{headers}Content-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
             body.len()
         );
         socket.write_all(reply.as_bytes()).await.unwrap();
@@ -2047,6 +2182,52 @@ async fn executor_sends_the_built_request() {
         received.ends_with("\r\n\r\n{\"ttl_secs\":90}"),
         "{received}"
     );
+}
+
+#[tokio::test]
+async fn executor_reads_retry_after_and_the_device_routes() {
+    let (url, server) = serve_once_with(
+        429,
+        "Retry-After: 17\r\n",
+        r#"{"error":"rate_limited","message":"m"}"#,
+    )
+    .await;
+    assert_eq!(
+        wake_send_test(url, DEVICE_SECRET.to_string()).await,
+        Err(WakeError::GatewayRejected {
+            status: 429,
+            code: "rate_limited".to_string(),
+            detail: "m".to_string(),
+            server_time: None,
+            retry_after_secs: Some(17),
+        })
+    );
+    let received = server.await.unwrap();
+    assert!(
+        received.starts_with("POST /prefix/v1/devices/self/test HTTP/1.1\r\n"),
+        "{received}"
+    );
+    assert!(received.ends_with("\r\n\r\n{}"), "{received}");
+
+    // The HTTP-date form is not a number of seconds, so it is left out.
+    let (url, server) = serve_once_with(
+        429,
+        "Retry-After: Wed, 21 Oct 2026 07:28:00 GMT\r\n",
+        r#"{"error":"rate_limited","message":"m"}"#,
+    )
+    .await;
+    assert!(matches!(
+        wake_get_device(url, DEVICE_SECRET.to_string()).await,
+        Err(WakeError::GatewayRejected {
+            status: 429,
+            retry_after_secs: None,
+            ..
+        })
+    ));
+    assert!(server
+        .await
+        .unwrap()
+        .starts_with("GET /prefix/v1/devices/self HTTP/1.1\r\n"));
 }
 
 #[tokio::test]
@@ -2190,39 +2371,57 @@ async fn live_gateway_round_trip() {
     let mut push_token = [0u8; 32];
     os_random(&mut push_token).unwrap();
 
-    let request = wake_prepare_registration(
-        info.audience.clone(),
-        "bitkit".to_string(),
-        wake_generate_install_id(),
-        WakePlatform::Apns,
-        WakeEnvironment::Sandbox,
-        hex::encode(push_token),
-        encryption.public_key_hex.clone(),
-        device_secret.sha256_hex.clone(),
-        vec![ln_identity.clone(), pk_identity.clone()],
-        vec!["blocktank.*".to_string()],
-        None,
-    )
-    .unwrap();
-    let proofs = vec![
-        WakeIdentityProof {
-            identity: ln_identity.clone(),
-            signature: lightning_sign(&ln_secret, request.message.as_bytes()),
-        },
-        WakeIdentityProof {
-            identity: pk_identity.clone(),
-            signature: wake_sign_pubky_proof(pk_secret_hex, request.message.clone()).unwrap(),
-        },
-    ];
-    let registration = wake_register(url.clone(), request, proofs).await.unwrap();
+    let install_id = wake_generate_install_id();
+    let register = |topics: Vec<String>| {
+        let request = wake_prepare_registration(
+            info.audience.clone(),
+            "bitkit".to_string(),
+            install_id.clone(),
+            WakePlatform::Apns,
+            WakeEnvironment::Sandbox,
+            hex::encode(push_token),
+            encryption.public_key_hex.clone(),
+            device_secret.sha256_hex.clone(),
+            vec![ln_identity.clone(), pk_identity.clone()],
+            topics,
+            None,
+        )
+        .unwrap();
+        let proofs = vec![
+            WakeIdentityProof {
+                identity: ln_identity.clone(),
+                signature: lightning_sign(&ln_secret, request.message.as_bytes()),
+            },
+            WakeIdentityProof {
+                identity: pk_identity.clone(),
+                signature: wake_sign_pubky_proof(pk_secret_hex.clone(), request.message.clone())
+                    .unwrap(),
+            },
+        ];
+        wake_register(url.clone(), request, proofs)
+    };
+    let registration = register(vec!["blocktank.*".to_string()]).await.unwrap();
     let mut identities = registration.identities.clone();
     identities.sort();
-    let mut expected = vec![ln_identity, pk_identity];
+    let mut expected = vec![ln_identity.clone(), pk_identity.clone()];
     expected.sort();
     assert_eq!(identities, expected);
     assert_eq!(registration.topics, vec!["blocktank.*".to_string()]);
+    // A second registration with other content, prepared at once (as on
+    // launch and from the token callback), gets a later ts and is stored.
+    let again = register(vec!["paykit.sync".to_string()]).await.unwrap();
+    assert_eq!(again.topics, vec!["paykit.sync".to_string()]);
 
     let token = device_secret.token.clone();
+    let device = wake_get_device(url.clone(), token.clone()).await.unwrap();
+    assert_eq!(device.device_id, registration.device_id);
+    assert_eq!(
+        (device.platform, device.environment),
+        (WakePlatform::Apns, WakeEnvironment::Sandbox)
+    );
+    assert_eq!(device.topics, vec!["paykit.sync".to_string()]);
+    let test_wake = wake_send_test(url.clone(), token.clone()).await.unwrap();
+    assert!(uuid::Uuid::parse_str(&test_wake).is_ok(), "{test_wake}");
     let expires_at = wake_set_presence(url.clone(), token.clone(), 60)
         .await
         .unwrap();
@@ -2240,7 +2439,8 @@ async fn live_gateway_round_trip() {
     )
     .await
     .unwrap();
-    assert_eq!(stored, vec!["blocktank.*".to_string()]);
+    assert_eq!(stored.topics, vec!["blocktank.*".to_string()]);
+    assert_eq!(stored.unknown_topics, vec!["unknown.topicName".to_string()]);
 
     wake_unregister(url.clone(), token.clone()).await.unwrap();
     assert!(matches!(

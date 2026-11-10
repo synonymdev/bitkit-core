@@ -7,7 +7,7 @@
 
 use std::time::Duration;
 
-use reqwest::header::{ACCEPT, CONTENT_TYPE};
+use reqwest::header::{ACCEPT, CONTENT_TYPE, RETRY_AFTER};
 use reqwest::Method;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -20,8 +20,9 @@ use super::registration::{
     RegistrationFields,
 };
 use super::types::{
-    WakeAckOutcome, WakeGrant, WakeGrantSummary, WakeIdentityProof, WakeRegistration,
-    WakeRegistrationRequest, WakeServerInfo, WakeTopic,
+    WakeAckOutcome, WakeDevice, WakeEnvironment, WakeGrant, WakeGrantSummary, WakeIdentityProof,
+    WakePlatform, WakeRegistration, WakeRegistrationRequest, WakeServerInfo, WakeSubscription,
+    WakeTopic,
 };
 
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
@@ -52,6 +53,8 @@ pub(crate) struct HttpRequest {
 pub(crate) struct HttpResponse {
     pub(crate) status: u16,
     pub(crate) body: String,
+    /// `Retry-After` in whole seconds; the HTTP-date form is ignored.
+    pub(crate) retry_after_secs: Option<u64>,
 }
 
 impl HttpResponse {
@@ -120,6 +123,8 @@ struct PeerWakeBody<'a> {
 struct ErrorBody {
     error: String,
     message: String,
+    #[serde(default)]
+    server_time: Option<u64>,
 }
 
 #[derive(Deserialize)]
@@ -146,6 +151,23 @@ struct PresenceResponse {
 #[derive(Deserialize)]
 struct SetTopicsResponse {
     topics: Vec<String>,
+    unknown_topics: Vec<String>,
+}
+
+#[derive(Deserialize)]
+struct DeviceResponse {
+    device_id: String,
+    app: String,
+    platform: String,
+    environment: String,
+    identities: Vec<String>,
+    topics: Vec<String>,
+    presence_expires_at: Option<u64>,
+}
+
+#[derive(Deserialize)]
+struct TestResponse {
+    id: String,
 }
 
 #[derive(Deserialize)]
@@ -390,6 +412,34 @@ pub(crate) fn build_set_topics(
     )
 }
 
+/// `GET /v1/devices/self`
+pub(crate) fn build_get_device(
+    gateway_url: &str,
+    device_secret: &str,
+) -> Result<HttpRequest, WakeError> {
+    request(
+        Method::GET,
+        gateway_url,
+        "v1/devices/self",
+        Some(Bearer::Device(device_secret)),
+        None,
+    )
+}
+
+/// `POST /v1/devices/self/test`, with the empty object it takes.
+pub(crate) fn build_send_test(
+    gateway_url: &str,
+    device_secret: &str,
+) -> Result<HttpRequest, WakeError> {
+    request(
+        Method::POST,
+        gateway_url,
+        "v1/devices/self/test",
+        Some(Bearer::Device(device_secret)),
+        Some("{}".to_string()),
+    )
+}
+
 /// `DELETE /v1/devices/self`
 pub(crate) fn build_unregister(
     gateway_url: &str,
@@ -512,16 +562,21 @@ pub(crate) fn build_send_peer_wake(
 /// `{"error":"<code>","message":"..."}`, or code `unknown` for any other
 /// body (a proxy error page, say).
 fn rejection(response: &HttpResponse) -> WakeError {
+    let retry_after_secs = response.retry_after_secs;
     match serde_json::from_str::<ErrorBody>(&response.body) {
         Ok(body) => WakeError::GatewayRejected {
             status: response.status,
             code: body.error,
             detail: body.message,
+            server_time: body.server_time,
+            retry_after_secs,
         },
         Err(_) => WakeError::GatewayRejected {
             status: response.status,
             code: "unknown".to_string(),
             detail: "the response carries no wake error body".to_string(),
+            server_time: None,
+            retry_after_secs,
         },
     }
 }
@@ -592,10 +647,42 @@ pub(crate) fn parse_set_presence(response: &HttpResponse) -> Result<u64, WakeErr
     Ok(presence.expires_at)
 }
 
-/// The stored topics; unknown exact names are dropped by the gateway.
-pub(crate) fn parse_set_topics(response: &HttpResponse) -> Result<Vec<String>, WakeError> {
+/// The stored topics, and the exact names the gateway dropped as unknown.
+pub(crate) fn parse_set_topics(response: &HttpResponse) -> Result<WakeSubscription, WakeError> {
     let topics: SetTopicsResponse = success_json(response)?;
-    Ok(topics.topics)
+    Ok(WakeSubscription {
+        topics: topics.topics,
+        unknown_topics: topics.unknown_topics,
+    })
+}
+
+pub(crate) fn parse_get_device(response: &HttpResponse) -> Result<WakeDevice, WakeError> {
+    let device: DeviceResponse = success_json(response)?;
+    let platform = match device.platform.as_str() {
+        "apns" => WakePlatform::Apns,
+        "fcm" => WakePlatform::Fcm,
+        _ => return Err(WakeError::invalid_response("unknown platform")),
+    };
+    let environment = match device.environment.as_str() {
+        "production" => WakeEnvironment::Production,
+        "sandbox" => WakeEnvironment::Sandbox,
+        _ => return Err(WakeError::invalid_response("unknown environment")),
+    };
+    Ok(WakeDevice {
+        device_id: device.device_id,
+        app: device.app,
+        platform,
+        environment,
+        identities: device.identities,
+        topics: device.topics,
+        presence_expires_at: device.presence_expires_at,
+    })
+}
+
+/// The id of the queued test wake, to match against the push and ack.
+pub(crate) fn parse_send_test(response: &HttpResponse) -> Result<String, WakeError> {
+    let queued: TestResponse = success_json(response)?;
+    parse_wake_id(&queued.id).map_err(|_| WakeError::invalid_response("the wake id is not a uuid"))
 }
 
 /// The new grant. Its token must be well formed and name the grant's own
@@ -681,8 +768,17 @@ async fn send(request: HttpRequest) -> Result<HttpResponse, WakeError> {
     }
     let response = builder.send().await.map_err(failed)?;
     let status = response.status().as_u16();
+    let retry_after_secs = response
+        .headers()
+        .get(RETRY_AFTER)
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.trim().parse().ok());
     let body = response.text().await.map_err(failed)?;
-    Ok(HttpResponse { status, body })
+    Ok(HttpResponse {
+        status,
+        body,
+        retry_after_secs,
+    })
 }
 
 /// Reads the gateway's audience and clock.
@@ -728,14 +824,32 @@ pub async fn wake_clear_presence(
     parse_no_content(&send(build_clear_presence(&gateway_url, &device_secret)?).await?)
 }
 
-/// Replaces the device's topics and returns the stored ones.
+/// Replaces the device's topics. Returns the stored ones and the exact names
+/// the gateway does not know.
 pub async fn wake_set_topics(
     gateway_url: String,
     device_secret: String,
     topics: Vec<String>,
-) -> Result<Vec<String>, WakeError> {
+) -> Result<WakeSubscription, WakeError> {
     let request = build_set_topics(&gateway_url, &device_secret, &topics)?;
     parse_set_topics(&send(request).await?)
+}
+
+/// Reads the device as the gateway stores it.
+pub async fn wake_get_device(
+    gateway_url: String,
+    device_secret: String,
+) -> Result<WakeDevice, WakeError> {
+    parse_get_device(&send(build_get_device(&gateway_url, &device_secret)?).await?)
+}
+
+/// Sends the gateway's built-in `wake.test` to this device alone and returns
+/// the queued wake's id. The gateway limits how often a device may do this.
+pub async fn wake_send_test(
+    gateway_url: String,
+    device_secret: String,
+) -> Result<String, WakeError> {
+    parse_send_test(&send(build_send_test(&gateway_url, &device_secret)?).await?)
 }
 
 /// Unregisters the device and revokes its secret.
