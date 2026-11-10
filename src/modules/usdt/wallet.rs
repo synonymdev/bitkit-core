@@ -63,8 +63,8 @@ impl UsdtWallet {
         storage_path: String,
         rpc_url: String,
         bundler_url: String,
-        bridge_url: Option<String>,
         backup: Arc<dyn super::UsdtBackup>,
+        bridge_url: Option<String>,
     ) -> Result<Arc<Self>, UsdtError> {
         if rpc_url.is_empty() || bundler_url.is_empty() {
             return Err(UsdtError::NotConfigured);
