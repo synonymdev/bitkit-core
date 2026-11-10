@@ -154,7 +154,8 @@ pub(crate) fn wipe_all() -> Result<(), PubkySwapError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use swap_common::messages::{SwapDirection, SwapScript};
+    use swap_common::messages::SwapScript;
+    use swap_common::SwapDirection;
     use uuid::Uuid;
 
     fn sample_record(swap_id: &str) -> SwapRecord {
