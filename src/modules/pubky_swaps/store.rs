@@ -90,6 +90,20 @@ pub(crate) fn save(record: &SwapRecord) -> Result<(), PubkySwapError> {
     write_atomic(&path, &serde_json::to_vec_pretty(record)?)
 }
 
+/// Saves a new swap, refusing an id already on file: the provider names the id, so an acceptance
+/// that reused an earlier swap's would otherwise replace its contract, key index and saved claim.
+pub(crate) fn create(record: &SwapRecord) -> Result<(), PubkySwapError> {
+    let _guard = LOCK.lock().unwrap();
+    let path = dir()?.join(format!("{}.json", record.swap_id));
+    if path.try_exists()? {
+        return Err(PubkySwapError::storage(format!(
+            "swap {} is already on file",
+            record.swap_id
+        )));
+    }
+    write_atomic(&path, &serde_json::to_vec_pretty(record)?)
+}
+
 /// Every record on file. A file that cannot be read is skipped with a warning.
 pub(crate) fn list() -> Result<Vec<SwapRecord>, PubkySwapError> {
     let mut records = vec![];

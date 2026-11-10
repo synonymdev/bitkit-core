@@ -585,7 +585,7 @@ pub async fn commit_route(
         contract: Some(contract),
         created_at_unix: now_unix(),
     };
-    store::save(&record)?;
+    store::create(&record)?;
     QUOTES.lock().unwrap().remove(&quote_id);
 
     Ok(PubkySwapRoutePayment {
@@ -945,7 +945,7 @@ pub async fn restore_swaps(
                 continue;
             }
             // One swap that cannot be saved must not cost the user the others.
-            if let Err(e) = store::save(&record) {
+            if let Err(e) = store::create(&record) {
                 log::warn!("pubky swaps: could not save restored swap {swap_id}: {e}");
                 continue;
             }
@@ -1300,6 +1300,25 @@ mod tests {
         let record = restore_payment(&snapshot, 20_500, true).expect("restored");
         assert!(record.claim_listed);
         assert!(record.claim_txid.is_none() && !record.claim_published && !record.claim_seen);
+    }
+
+    #[test]
+    fn refuses_a_new_swap_that_reuses_a_saved_swap_id() {
+        let dir = std::env::temp_dir().join(format!("pubky-swaps-{}", Uuid::new_v4()));
+        store::init(dir.to_str().unwrap()).unwrap();
+        let snapshot = listed_swap(SEED, Some(keys::owner_ref(&keys::new_index())));
+        let first = restore(&snapshot).expect("restored");
+        store::create(&first).unwrap();
+        // A provider's acceptance names the swap id, so a later one may reuse an earlier swap's.
+        let mut second = first.clone();
+        second.key_index = hex::encode(keys::new_index());
+        second.destination_address = PAYOUT.to_string();
+
+        assert!(store::create(&second).is_err());
+        assert_eq!(
+            store::load(&first.swap_id).unwrap().key_index,
+            first.key_index
+        );
     }
 
     #[test]
