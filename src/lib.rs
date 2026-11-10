@@ -2120,6 +2120,11 @@ pub async fn wipe_all_databases() -> Result<String, DbError> {
     .await
     .unwrap()?;
 
+    // Wipe pubky swaps records
+    modules::pubky_swaps::wipe_all().map_err(|e| DbError::InitializationError {
+        error_details: format!("Failed to wipe pubky swaps records: {}", e),
+    })?;
+
     Ok("All databases wiped successfully".to_string())
 }
 
@@ -4046,6 +4051,27 @@ mod tests {
                 .unwrap()
                 .is_empty()
         );
+
+        std::fs::remove_dir_all(&base_path).ok();
+    }
+
+    #[tokio::test]
+    async fn test_wipe_all_databases_removes_swap_records() {
+        let base_path = std::env::temp_dir().join(format!(
+            "bitkitcore_wipe_all_test_{}",
+            rand::random::<u64>()
+        ));
+        std::fs::create_dir_all(&base_path).unwrap();
+        init_db(base_path.to_string_lossy().into_owned()).unwrap();
+
+        let swap_dir = base_path.join("pubky_swaps");
+        let test_swap_file = swap_dir.join("test_swap_123.json");
+        std::fs::write(&test_swap_file, b"{\"swap_id\":\"test_swap_123\"}").unwrap();
+        assert!(test_swap_file.exists());
+
+        let result = wipe_all_databases().await;
+        assert!(result.is_ok());
+        assert!(!test_swap_file.exists());
 
         std::fs::remove_dir_all(&base_path).ok();
     }

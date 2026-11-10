@@ -132,3 +132,98 @@ pub(crate) fn load(swap_id: &str) -> Result<SwapRecord, PubkySwapError> {
         Err(e) => Err(e.into()),
     }
 }
+
+/// Removes every swap record from disk.
+pub(crate) fn wipe_all() -> Result<(), PubkySwapError> {
+    let _guard = LOCK.lock().unwrap();
+    let dir = dir()?;
+    if dir.exists() {
+        for entry in fs::read_dir(&dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_file() {
+                fs::remove_file(&path)?;
+            } else if path.is_dir() {
+                fs::remove_dir_all(&path)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use swap_common::messages::{SwapDirection, SwapScript};
+    use uuid::Uuid;
+
+    fn sample_record(swap_id: &str) -> SwapRecord {
+        let provider_secret = bitcoin::secp256k1::SecretKey::from_slice(&[9; 32]).unwrap();
+        let provider = bitcoin::PublicKey::new(
+            provider_secret.public_key(&bitcoin::secp256k1::Secp256k1::new()),
+        );
+        SwapRecord {
+            swap_id: swap_id.to_string(),
+            key_index: hex::encode([7; 32]),
+            provider_pubky: "pk:test_provider".to_string(),
+            network: bitcoin::Network::Regtest,
+            electrum_url: "tcp://127.0.0.1:60001".to_string(),
+            quote: None,
+            required_confirmations: 1,
+            accept: SwapAccept {
+                script_type: SwapScript::P2wsh,
+                swap_tree: None,
+                quote_id: Uuid::new_v4(),
+                swap_id: Uuid::new_v4(),
+                direction: SwapDirection::Reverse,
+                htlc_script_hex: String::new(),
+                htlc_address: String::new(),
+                onchain_amount_sat: 20_000,
+                timeout_block_height: 1_200,
+                provider_pubkey_hex: provider.to_string(),
+                invoice: None,
+            },
+            destination_address: "bcrt1qtest".to_string(),
+            delivered_sat: 20_000,
+            claim_fee_sat: 200,
+            claim_txid: None,
+            claim_tx_hex: None,
+            claim_published: false,
+            claim_seen: false,
+            claim_listed: false,
+            contract: None,
+            created_at_unix: 1_700_000_000,
+        }
+    }
+
+    #[test]
+    fn test_store_wipe_all() {
+        let temp_dir =
+            std::env::temp_dir().join(format!("pubky_swaps_store_test_{}", rand::random::<u64>()));
+        std::fs::create_dir_all(&temp_dir).unwrap();
+        init(temp_dir.to_str().unwrap()).unwrap();
+
+        let rec1 = sample_record("swap-1");
+        let rec2 = sample_record("swap-2");
+        create(&rec1).unwrap();
+        create(&rec2).unwrap();
+
+        let listed = list().unwrap();
+        assert_eq!(listed.len(), 2);
+        assert!(load("swap-1").is_ok());
+        assert!(load("swap-2").is_ok());
+
+        wipe_all().unwrap();
+
+        let listed_after = list().unwrap();
+        assert_eq!(listed_after.len(), 0);
+        assert!(load("swap-1").is_err());
+        assert!(load("swap-2").is_err());
+
+        // Can create again after wipe
+        create(&rec1).unwrap();
+        assert_eq!(list().unwrap().len(), 1);
+
+        let _ = std::fs::remove_dir_all(&temp_dir);
+    }
+}
