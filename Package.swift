@@ -4,8 +4,8 @@
 import PackageDescription
 import Foundation
 
-let tag = "v0.8.0-rc13"
-let checksum = "228ce302b86d6c05a06e84033e8a681ff28b48af47d94d1df3c518ce8c7715b8"
+let tag = "v0.8.0-swaps.11"
+let checksum = "4b1b516058db0fdd1cb456233d1e62db1e57110d134b0eedc35fa475c93d5d00"
 let url = "https://github.com/synonymdev/bitkit-core/releases/download/\(tag)/BitkitCore.xcframework.zip"
 
 let localBinary = ProcessInfo.processInfo.environment["BITKIT_CORE_LOCAL"] == "1"
@@ -27,7 +27,9 @@ let package = Package(
             name: "BitkitCore",
             dependencies: ["BitkitCoreFFI"],
             path: "./bindings/ios",
-            sources: ["bitkitcore.swift"]
+            sources: ["bitkitcore.swift"],
+            // iroh reads network interfaces through Network.framework.
+            linkerSettings: [.linkedFramework("Network")]
         ),
         localBinary
             ? .binaryTarget(

@@ -1,8 +1,8 @@
 [package]
 name = "bitkitcore"
-version = "0.8.0-rc13"
+version = "0.8.0-swaps.11"
 edition = "2021"
-rust-version = "1.90"
+rust-version = "1.91"
 
 [lib]
 crate-type = ["cdylib", "staticlib", "rlib"]
@@ -40,12 +40,19 @@ bip39 = { version = "2.0", features = ["zeroize"] }
 bdk = { version = "0.30.2", features = ["all-keys"] }
 boltz-client = { version = "0.4.1", default-features = false, features = ["electrum", "ws"] }
 base64 = "0.22"
+# Paykit Capabilities §5 signatures on providers' delegations (already in the lockfile).
+ed25519-dalek = "2"
 aes-gcm = "0.10.3"
 minicbor = { version = "2", features = ["alloc"] }
 ur = "0.5.2"
 log = "0.4"
 pubky = "0.6.0"
 pubky-app-specs = "0.4"
+# Pubky Swaps client: wire types, contract checks and HTLC spends from pubky-swap,
+# requests over its iroh `pubky-swap/direct/1` protocol, lockups read over Electrum.
+swap-common = { git = "https://github.com/coreyphillips/pubky-swap", rev = "f45e204ee7646dc91983d90e4782d40760b6c72b" }
+iroh = "=1.2.0"
+electrum-client = { version = "0.25", default-features = false, features = ["proxy", "use-rustls-ring"] }
 
 # Bluetooth (for Android JNI initialization)
 # btleplug is also pulled in transitively by trezor-connect-rs

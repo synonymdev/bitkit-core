@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::modules::pubky_swaps::PubkySwapRouteQuote;
+
 /// A Payment Endpoint the contact published: its Payment Endpoint Identifier, such as
 /// `btc-lightning-bolt11` or `btc-bitcoin-p2tr`, and the value a payer pays to.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, uniffi::Record)]
@@ -24,6 +26,11 @@ pub struct PaykitRouteRequest {
     /// Legs through services the wallet holds a balance on, such as a Spark withdrawal to the
     /// contact's on-chain address, each already quoted by the app's engine for that service.
     pub service_legs: Vec<ServiceRouteLeg>,
+    /// Candidate Pubky Swaps providers as pubkys, usually the user's contacts. Only
+    /// `pubky_swaps_route_paykit_payment` asks them; a contact that runs no provider is skipped.
+    pub providers: Vec<String>,
+    /// Fee rate for the wallet's own claim transaction on a swap route.
+    pub fee_rate_sat_vb: u64,
 }
 
 /// A one-leg route through a service the wallet holds a balance on, such as a Spark withdrawal
@@ -51,6 +58,8 @@ pub enum PaykitRoute {
     Direct { endpoint: PaykitEndpoint },
     /// A service the wallet holds a balance on delivers to the contact. The app runs the leg.
     Service { leg: ServiceRouteLeg },
+    /// The wallet pays over Lightning and a Pubky Swaps provider delivers on-chain.
+    Swap { quote: PubkySwapRouteQuote },
     /// Nothing can pay this contact. `reason` is English detail for logs; the app shows its own
     /// localized text.
     None { reason: String },
