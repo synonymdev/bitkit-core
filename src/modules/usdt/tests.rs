@@ -105,8 +105,8 @@ fn wallet_requires_both_provider_endpoints() {
                 path.to_string_lossy().into(),
                 rpc.into(),
                 bundler.into(),
-                std::sync::Arc::new(TestBackup),
                 None,
+                std::sync::Arc::new(TestBackup),
             ),
             Err(UsdtError::NotConfigured)
         ));
@@ -136,8 +136,8 @@ fn payment_request_round_trips_receive_uri_and_rejects_wrong_asset_or_network() 
         dir.path().join("usdt.sqlite").to_string_lossy().into(),
         "https://provider.example".into(),
         "https://bundler.example".into(),
-        std::sync::Arc::new(TestBackup),
         None,
+        std::sync::Arc::new(TestBackup),
     )
     .unwrap();
     let request = usdt_parse_payment_request(wallet.receive_uri()).unwrap();
@@ -249,8 +249,8 @@ async fn payment_proof_binds_execution_to_request_and_receiver() {
             .into(),
         format!("{}/chain", chain.url),
         format!("{}/bundler", chain.url),
-        std::sync::Arc::new(TestBackup),
         None,
+        std::sync::Arc::new(TestBackup),
     )
     .unwrap();
     let binding = UsdtPaymentProofBinding {
@@ -705,8 +705,8 @@ impl MockChain {
             dir.path().join("usdt.sqlite").to_string_lossy().into(),
             format!("{}/chain", self.url),
             format!("{}/bundler", self.url),
-            std::sync::Arc::new(TestBackup),
             enabled.then(|| format!("{}/bridges", self.url)),
+            std::sync::Arc::new(TestBackup),
         )
         .unwrap()
     }
@@ -1664,8 +1664,8 @@ async fn deployed_contracts_collect_usdt_fees_and_revert_failed_bridges_atomical
         dir.path().join("usdt.sqlite").to_string_lossy().into(),
         std::env::var("USDT_FORK_RPC_URL").unwrap_or_else(|_| "http://127.0.0.1:18546".into()),
         std::env::var("USDT_FORK_BUNDLER_URL").unwrap_or_else(|_| "http://127.0.0.1:18546".into()),
-        std::sync::Arc::new(TestBackup),
         None,
+        std::sync::Arc::new(TestBackup),
     )
     .unwrap();
     assert_eq!(rpc.balance(wallet.address).await.unwrap(), U256::ZERO);
@@ -5000,8 +5000,8 @@ async fn maximum_bridge_quote_includes_source_fees_and_compares_complete_route_b
         dir.path().join("usdt.sqlite").to_string_lossy().into(),
         chain.url.clone(),
         chain.url.clone(),
-        std::sync::Arc::new(TestBackup),
         Some(chain.url.clone()),
+        std::sync::Arc::new(TestBackup),
     )
     .unwrap();
     let quote = wallet

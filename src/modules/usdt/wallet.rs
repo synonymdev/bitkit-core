@@ -57,14 +57,14 @@ pub struct UsdtWallet {
 #[uniffi::export(async_runtime = "tokio")]
 impl UsdtWallet {
     /// Creates the sole owner of this wallet's database; reuse it for all calls until it is dropped.
-    #[uniffi::constructor(default(bridge_url = None))]
+    #[uniffi::constructor]
     pub fn new(
         address: String,
         storage_path: String,
         rpc_url: String,
         bundler_url: String,
-        backup: Arc<dyn super::UsdtBackup>,
         bridge_url: Option<String>,
+        backup: Arc<dyn super::UsdtBackup>,
     ) -> Result<Arc<Self>, UsdtError> {
         if rpc_url.is_empty() || bundler_url.is_empty() {
             return Err(UsdtError::NotConfigured);

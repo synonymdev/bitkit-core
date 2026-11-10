@@ -255,8 +255,8 @@ fn backed_up_wallet(
         dir.path().join("usdt.sqlite").to_string_lossy().into(),
         format!("{}/chain", chain.url),
         format!("{}/bundler", chain.url),
-        backup,
         None,
+        backup,
     )
     .unwrap()
 }
