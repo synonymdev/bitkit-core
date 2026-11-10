@@ -1041,7 +1041,7 @@ dependencies = [
 
 [[package]]
 name = "bitkitcore"
-version = "0.8.0-swaps.9"
+version = "0.8.0-swaps.10"
 dependencies = [
  "aes-gcm",
  "alloy-primitives",
