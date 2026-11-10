@@ -1,4 +1,10 @@
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IGift};
+use serde_json::json;
+use std::time::Duration;
+
+const REGTEST_TIMEOUT_SECS: u64 = 30;
+const ERR_REGTEST_UNAUTHORIZED: &str =
+    "Blocktank regtest API returned 401 Unauthorized: regtest auth is missing or was rejected";
 use rust_blocktank_client::{
     CreateCjitOptions, CreateOrderOptions, IBt0ConfMinTxFeeWindow, IBtBolt11Invoice,
     IBtEstimateFeeResponse, IBtEstimateFeeResponse2, IBtInfo, IBtOrder, ICJitEntry,
@@ -211,9 +217,51 @@ impl BlocktankDB {
         Ok(refreshed_entries)
     }
 
-    /// The Blocktank client with basic auth for the `regtest/*` routes, from a `user:password` string.
-    fn regtest_client(&self, auth: Option<&str>) -> rust_blocktank_client::BlocktankClient {
-        self.client.clone().with_regtest_auth(auth)
+    /// Sends a request to Blocktank's `regtest/*` routes, with basic auth from a `user:password`
+    /// string when given, and returns the response body.
+    ///
+    /// Temporary: `rust-blocktank-client` 0.0.16 can't send auth on these routes. Move back to it
+    /// once a release that can is out (synonymdev/rust-blocktank-client#14).
+    async fn regtest_request(
+        &self,
+        method: reqwest::Method,
+        path: &str,
+        body: Option<serde_json::Value>,
+        auth: Option<&str>,
+    ) -> Result<String, String> {
+        let url = format!(
+            "{}/regtest/{}",
+            self.blocktank_url.trim_end_matches('/'),
+            path
+        );
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(REGTEST_TIMEOUT_SECS))
+            .build()
+            .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+        let mut request = client.request(method, &url);
+        if let Some(auth) = auth.filter(|a| !a.is_empty()) {
+            let (username, password) = auth.split_once(':').unwrap_or((auth, ""));
+            request = request.basic_auth(username, Some(password));
+        }
+        if let Some(body) = body {
+            request = request.json(&body);
+        }
+        let response = request
+            .send()
+            .await
+            .map_err(|e| format!("Request to {} failed: {}", url, e.without_url()))?;
+        let status = response.status();
+        let text = response
+            .text()
+            .await
+            .map_err(|e| format!("Failed to read response from {}: {}", url, e.without_url()))?;
+        if status == reqwest::StatusCode::UNAUTHORIZED {
+            return Err(ERR_REGTEST_UNAUTHORIZED.to_string());
+        }
+        if !status.is_success() {
+            return Err(format!("HTTP status {} from {}: {}", status, url, text));
+        }
+        Ok(text)
     }
 
     /// Mines blocks on the regtest network
@@ -222,9 +270,10 @@ impl BlocktankDB {
         count: Option<u32>,
         auth: Option<&str>,
     ) -> Result<(), BlocktankError> {
-        self.regtest_client(auth)
-            .regtest_mine(count)
+        let body = json!({ "count": count.unwrap_or(1) });
+        self.regtest_request(reqwest::Method::POST, "chain/mine", Some(body), auth)
             .await
+            .map(|_| ())
             .map_err(|e| BlocktankError::DataError {
                 error_details: format!("Failed to mine blocks: {}", e),
             })
@@ -237,8 +286,11 @@ impl BlocktankDB {
         amount_sat: Option<u64>,
         auth: Option<&str>,
     ) -> Result<String, BlocktankError> {
-        self.regtest_client(auth)
-            .regtest_deposit(address, amount_sat)
+        let mut body = json!({ "address": address });
+        if let Some(amount_sat) = amount_sat {
+            body["amountSat"] = json!(amount_sat);
+        }
+        self.regtest_request(reqwest::Method::POST, "chain/deposit", Some(body), auth)
             .await
             .map_err(|e| BlocktankError::DataError {
                 error_details: format!("Failed to deposit to address: {}", e),
@@ -252,8 +304,8 @@ impl BlocktankDB {
         amount_sat: Option<u64>,
         auth: Option<&str>,
     ) -> Result<String, BlocktankError> {
-        self.regtest_client(auth)
-            .regtest_pay(invoice, amount_sat)
+        let body = json!({ "invoice": invoice, "amountSat": amount_sat });
+        self.regtest_request(reqwest::Method::POST, "channel/pay", Some(body), auth)
             .await
             .map_err(|e| BlocktankError::DataError {
                 error_details: format!("Failed to pay invoice: {}", e),
@@ -266,9 +318,13 @@ impl BlocktankDB {
         payment_id: &str,
         auth: Option<&str>,
     ) -> Result<IBtBolt11Invoice, BlocktankError> {
-        self.regtest_client(auth)
-            .regtest_get_payment(payment_id)
+        let path = format!("channel/pay/{}", payment_id);
+        self.regtest_request(reqwest::Method::GET, &path, None, auth)
             .await
+            .and_then(|text| {
+                serde_json::from_str(&text)
+                    .map_err(|e| format!("Failed to parse payment: {}. Response: {}", e, text))
+            })
             .map_err(|e| BlocktankError::DataError {
                 error_details: format!("Failed to get payment: {}", e),
             })
@@ -282,8 +338,11 @@ impl BlocktankDB {
         force_close_after_s: Option<u64>,
         auth: Option<&str>,
     ) -> Result<String, BlocktankError> {
-        self.regtest_client(auth)
-            .regtest_close_channel(funding_tx_id, vout, force_close_after_s)
+        let mut body = json!({ "fundingTxId": funding_tx_id, "vout": vout });
+        if let Some(force_close_after_s) = force_close_after_s {
+            body["forceCloseAfterSec"] = json!(force_close_after_s);
+        }
+        self.regtest_request(reqwest::Method::POST, "channel/close", Some(body), auth)
             .await
             .map_err(|e| BlocktankError::DataError {
                 error_details: format!("Failed to close channel: {}", e),

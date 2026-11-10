@@ -1740,7 +1740,8 @@ pub async fn regtest_deposit(
                 error_details: "Database not initialized. Call init_db first.".to_string(),
             })?;
 
-        db.regtest_deposit(&address, amount_sat, auth.as_deref()).await
+        db.regtest_deposit(&address, amount_sat, auth.as_deref())
+            .await
     })
     .await
     .unwrap_or_else(|e| {
