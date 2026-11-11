@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Update `lightning` to 0.2.8.
+
 ## 0.5.16 - 2026-09-14
 
 - Serialize Jade discovery, connection setup, and teardown. A disconnect now cancels connection attempts that are in progress or queued, and a transport opened by a cancelled attempt is closed instead of leaked. A scan started while another lifecycle operation is running returns `DeviceBusy`.

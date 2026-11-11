@@ -986,7 +986,7 @@ dependencies = [
 
 [[package]]
 name = "bitkitcore"
-version = "0.8.0-rc11"
+version = "0.8.0-rc11.1"
 dependencies = [
  "alloy-primitives",
  "alloy-rlp",
@@ -1158,7 +1158,7 @@ dependencies = [
  "hex",
  "js-sys",
  "lightning",
- "lightning-invoice 0.34.1",
+ "lightning-invoice 0.34.2",
  "log",
  "reqwest",
  "secp256k1 0.32.0-beta.2",
@@ -3480,18 +3480,18 @@ dependencies = [
 
 [[package]]
 name = "lightning"
-version = "0.2.3"
+version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45c421e68d603b989c8f59a95a1860f1f5de90a6305ed5bcb6d9b35a3a11f450"
+checksum = "1cb355abfb61d8ffe201cd5ce6b3e4304c9a897b05988ceed71987f9514fb642"
 dependencies = [
  "bech32 0.11.1",
  "bitcoin 0.32.8",
  "dnssec-prover",
  "hashbrown 0.13.2",
  "libm",
- "lightning-invoice 0.34.1",
+ "lightning-invoice 0.34.2",
  "lightning-macros",
- "lightning-types 0.3.2",
+ "lightning-types 0.3.5",
  "possiblyrandom",
 ]
 
@@ -3508,13 +3508,13 @@ dependencies = [
 
 [[package]]
 name = "lightning-invoice"
-version = "0.34.1"
+version = "0.34.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47d83bd798e04ab9eecc8bbef1fa17d3808859bcdc0406bd16c55d51c8834444"
+checksum = "5e874476e461bcca94ae30335bc5263f126f9219fdbd7bde6e02b530dbaa6567"
 dependencies = [
  "bech32 0.11.1",
  "bitcoin 0.32.8",
- "lightning-types 0.3.2",
+ "lightning-types 0.3.5",
 ]
 
 [[package]]
@@ -3541,9 +3541,9 @@ dependencies = [
 
 [[package]]
 name = "lightning-types"
-version = "0.3.2"
+version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c211dfcff95ca308247da8b1e0e81604bc9e568239967cd2c34572558511e869"
+checksum = "c77c676d4a34cceb2ae3756916e446b4d17f9430a24107e099981f0f9aec77e6"
 dependencies = [
  "bitcoin 0.32.8",
 ]
