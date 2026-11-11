@@ -386,7 +386,12 @@ impl Scanner {
 fn contains_embedded_bip21_uri(query: &str) -> bool {
     let scheme = "bitcoin:";
     let mut parts = query.split('?').peekable();
+    let mut saw_addressless_uri = false;
     while let Some(part) = parts.next() {
+        // A '?' in an unknown value does not end the query's '&'-separated parameters.
+        if saw_addressless_uri && part.split('&').skip(1).any(is_bip21_payment_parameter) {
+            return true;
+        }
         let Some(embedded_query) = parts.peek() else {
             break;
         };
@@ -397,15 +402,12 @@ fn contains_embedded_bip21_uri(query: &str) -> bool {
         };
         let address = &part[start + scheme.len()..];
         if address.is_empty() {
-            let key = embedded_query
+            saw_addressless_uri = true;
+            if embedded_query
                 .split('&')
                 .next()
-                .and_then(|param| param.split_once('='))
-                .map(|(key, _)| key.to_ascii_lowercase());
-            if matches!(
-                key.as_deref(),
-                Some("amount" | "lightning" | "label" | "message" | "pop" | "req-pop")
-            ) {
+                .is_some_and(is_bip21_payment_parameter)
+            {
                 return true;
             }
             continue;
@@ -417,6 +419,15 @@ fn contains_embedded_bip21_uri(query: &str) -> bool {
         }
     }
     false
+}
+
+fn is_bip21_payment_parameter(param: &str) -> bool {
+    param.split_once('=').is_some_and(|(key, _)| {
+        matches!(
+            key.to_ascii_lowercase().as_str(),
+            "amount" | "lightning" | "label" | "message" | "pop" | "req-pop"
+        )
+    })
 }
 
 #[async_trait]

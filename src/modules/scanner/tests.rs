@@ -321,6 +321,46 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_embedded_addressless_bip21_unknown_parameter_order_is_rejected() {
+        let address = "bcrt1qr289x0fhg62672e8urudfnxnsr8tcax64xk2vk";
+        for second_query in [
+            "custom=x&amount=0.00005&lightning=LNB",
+            "custom=x&LIGHTNING=LNB",
+            "custom=x&label=merchant",
+            "custom=x&message=merchant",
+            "custom=x&pop=callback",
+            "custom=x&req-pop=callback",
+            "custom=x&other=y&&AMOUNT=0.00005",
+            "custom=Why?&amount=0.00005&lightning=LNB",
+        ] {
+            let uri = format!("bitcoin:{address}?lightning=LNAbitcoin:?{second_query}");
+            assert!(
+                matches!(
+                    Scanner::decode(uri.clone()).await,
+                    Err(DecodingError::InvalidFormat)
+                ),
+                "must not combine the outer recipient with embedded payment fields: {uri}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_addressless_bitcoin_text_with_only_unknown_parameters_is_preserved() {
+        let address = "bcrt1qr289x0fhg62672e8urudfnxnsr8tcax64xk2vk";
+        let uri = format!("bitcoin:{address}?amount=0.000035&message=bitcoin:?help=1&custom=x");
+        let Scanner::OnChain { invoice } = Scanner::decode(uri).await.unwrap() else {
+            panic!("expected on-chain invoice");
+        };
+        assert_eq!(invoice.address, address);
+        assert_eq!(invoice.amount_satoshis, 3500);
+        assert_eq!(invoice.message.as_deref(), Some("bitcoin:?help=1"));
+        assert_eq!(
+            invoice.params.unwrap().get("custom").map(String::as_str),
+            Some("x")
+        );
+    }
+
+    #[tokio::test]
     async fn test_multiple_benign_bitcoin_mentions_are_preserved() {
         let address = "bcrt1qr289x0fhg62672e8urudfnxnsr8tcax64xk2vk";
         for message in [
