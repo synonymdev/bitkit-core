@@ -329,6 +329,10 @@ impl Scanner {
         let mut seen_singletons = std::collections::HashSet::new();
 
         if let Some(query) = query_part {
+            // A second receive URI can be glued into either a query key or value.
+            if contains_embedded_bip21_uri(query) {
+                return Err(DecodingError::InvalidFormat);
+            }
             for param in query.split('&') {
                 if param.is_empty() {
                     continue;
@@ -337,13 +341,6 @@ impl Scanner {
                     Some((key, val)) => (key, val),
                     None => (param, ""),
                 };
-
-                // A doubled receive URI is glued onto the previous value, so the
-                // second payment URI never becomes its own parameter.
-                // `message=bitcoin:<address>` has no following query.
-                if value_embeds_bip21_uri(v) {
-                    return Err(DecodingError::InvalidFormat);
-                }
 
                 let lower_k = k.to_ascii_lowercase();
                 let singleton_key = match lower_k.as_str() {
@@ -386,24 +383,40 @@ impl Scanner {
     }
 }
 
-fn value_embeds_bip21_uri(value: &str) -> bool {
-    let lower = value.to_ascii_lowercase();
+fn contains_embedded_bip21_uri(query: &str) -> bool {
     let scheme = "bitcoin:";
-    let Some(start) = lower.find(scheme) else {
-        return false;
-    };
-    // The embedded URI is only a real second URI when its address is valid.
-    // Ordinary query text (`bitcoin:donation?`, `?help`) is not a URI and
-    // must not be rejected.
-    let Some((address, _)) = value[start + scheme.len()..].split_once('?') else {
-        return false;
-    };
-    if address.is_empty() {
-        return false;
-    }
+    let mut parts = query.split('?').peekable();
+    while let Some(part) = parts.next() {
+        let Some(embedded_query) = parts.peek() else {
+            break;
+        };
+        // Earlier schemes in this part cannot form valid addresses: they contain
+        // another `bitcoin:`. Check the last one before every '?' in one pass.
+        let Some(start) = part.to_ascii_lowercase().rfind(scheme) else {
+            continue;
+        };
+        let address = &part[start + scheme.len()..];
+        if address.is_empty() {
+            let key = embedded_query
+                .split('&')
+                .next()
+                .and_then(|param| param.split_once('='))
+                .map(|(key, _)| key.to_ascii_lowercase());
+            if matches!(
+                key.as_deref(),
+                Some("amount" | "lightning" | "label" | "message" | "pop" | "req-pop")
+            ) {
+                return true;
+            }
+            continue;
+        }
 
-    let normalized = Scanner::normalize_address_for_validation(address);
-    BitcoinAddressValidator::validate_address(&normalized).is_ok()
+        let normalized = Scanner::normalize_address_for_validation(address);
+        if BitcoinAddressValidator::validate_address(&normalized).is_ok() {
+            return true;
+        }
+    }
+    false
 }
 
 #[async_trait]

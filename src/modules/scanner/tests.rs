@@ -244,6 +244,104 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_embedded_bip21_after_benign_bitcoin_text_is_rejected() {
+        let address = "bcrt1qr289x0fhg62672e8urudfnxnsr8tcax64xk2vk";
+        let other = "bcrt1q6rhpng9evdsfnn833a4f4vej0asu6dk5srld6x";
+        for key in ["message", "label", "custom"] {
+            for prefix in [
+                "bitcoin:donation",
+                "BITCOIN:donation",
+                "Thanks ☕ bitcoin:donation?",
+            ] {
+                let uri = format!(
+                    "bitcoin:{address}?{key}={prefix}bitcoin:{other}?label=merchant&amount=0.00005"
+                );
+                assert!(
+                    matches!(
+                        Scanner::decode(uri.clone()).await,
+                        Err(DecodingError::InvalidFormat)
+                    ),
+                    "must not combine the first recipient with the second amount: {uri}"
+                );
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_embedded_bip21_in_query_key_is_rejected() {
+        let uri = "bitcoin:bcrt1qr289x0fhg62672e8urudfnxnsr8tcax64xk2vk?bitcoin:donationbitcoin:bcrt1q6rhpng9evdsfnn833a4f4vej0asu6dk5srld6x?label=merchant&amount=0.00005";
+        assert!(matches!(
+            Scanner::decode(uri.to_string()).await,
+            Err(DecodingError::InvalidFormat)
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_embedded_bip21_preserves_address_case_for_validation() {
+        let address = "bcrt1qr289x0fhg62672e8urudfnxnsr8tcax64xk2vk";
+        for other in [
+            "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+            "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",
+            "BCRT1Q6RHPNG9EVDSFNN833A4F4VEJ0ASU6DK5SRLD6X",
+        ] {
+            let uri = format!(
+                "bitcoin:{address}?message=☕ bitcoin:donationBiTcOiN:{other}?amount=0.00005"
+            );
+            assert!(
+                matches!(
+                    Scanner::decode(uri.clone()).await,
+                    Err(DecodingError::InvalidFormat)
+                ),
+                "{uri}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_embedded_bip21_without_address_is_rejected() {
+        let address = "bcrt1qr289x0fhg62672e8urudfnxnsr8tcax64xk2vk";
+        for second_query in [
+            "amount=0.00005&lightning=LNB",
+            "LIGHTNING=LNB",
+            "label=merchant&amount=0.00005",
+            "message=merchant&amount=0.00005",
+            "pop=callback&amount=0.00005",
+            "req-pop=callback&amount=0.00005",
+        ] {
+            let uri =
+                format!("bitcoin:{address}?amount=0.001&lightning=LNAbitcoin:?{second_query}");
+            assert!(
+                matches!(
+                    Scanner::decode(uri.clone()).await,
+                    Err(DecodingError::InvalidFormat)
+                ),
+                "{uri}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_multiple_benign_bitcoin_mentions_are_preserved() {
+        let address = "bcrt1qr289x0fhg62672e8urudfnxnsr8tcax64xk2vk";
+        for message in [
+            "bitcoin:donation bitcoin:coffee?",
+            "Thanks ☕ bitcoin:donation bitcoin:bcrt1q6rhpng9evdsfnn833a4f4vej0asu6dk5srld6x",
+            "bitcoin:?help",
+            "bitcoin:?help=1",
+            "bitcoin:donation?amount=0.00005",
+            "bitcoin%3Abcrt1q6rhpng9evdsfnn833a4f4vej0asu6dk5srld6x%3Famount%3D0.00005",
+        ] {
+            let uri = format!("bitcoin:{address}?amount=0.000035&message={message}");
+            let Scanner::OnChain { invoice } = Scanner::decode(uri).await.unwrap() else {
+                panic!("expected on-chain invoice");
+            };
+            assert_eq!(invoice.address, address);
+            assert_eq!(invoice.amount_satoshis, 3500);
+            assert_eq!(invoice.message.as_deref(), Some(message));
+        }
+    }
+
+    #[tokio::test]
     async fn test_issue_63_concatenated_bip21_uris_fails() {
         // Exact regression test payload from https://github.com/synonymdev/bitkit-core/issues/63
         let invoice = "bitcoin:bcrt1qr289x0fhg62672e8urudfnxnsr8tcax64xk2vk?amount=0.0000002&message=Bitkitbitcoin:bcrt1qr289x0fhg62672e8urudfnxnsr8tcax64xk2vk?amount=0.0000003&message=Bitkit".to_string();
