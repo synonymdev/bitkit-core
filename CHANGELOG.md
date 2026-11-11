@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Update `lightning` to 0.2.8.
 - `regtest_mine`, `regtest_deposit`, `regtest_pay`, `regtest_get_payment` and `regtest_close_channel` take an optional `auth` (`user:password`), sent as basic auth to Blocktank servers that protect the regtest routes; a 401 returns a clear error.
 - Wake: a default registration `timestamp` is one past the last in this process when needed, so two quick registrations no longer get 409 `stale_registration`. `WakeError::GatewayRejected` gains `server_time` and `retry_after_secs`. Add `wake_get_device` and `wake_send_test`. `wake_set_topics` now returns `WakeSubscription` with `unknown_topics` (breaking).
 - Add `paykit_route_payment`, which picks how to pay a Paykit contact: directly when a held balance reaches one of the contact's endpoints, otherwise through the cheapest quoted service leg, such as a Spark withdrawal to the contact's on-chain address.
