@@ -1227,7 +1227,7 @@ dependencies = [
  "hex",
  "js-sys",
  "lightning",
- "lightning-invoice 0.34.1",
+ "lightning-invoice 0.34.2",
  "log",
  "reqwest 0.12.28",
  "secp256k1 0.32.0-beta.2",
@@ -4009,7 +4009,7 @@ dependencies = [
  "dnssec-prover",
  "hashbrown 0.13.2",
  "libm",
- "lightning-invoice 0.34.1",
+ "lightning-invoice 0.34.2",
  "lightning-macros",
  "lightning-types 0.3.5",
  "possiblyrandom",
@@ -4028,9 +4028,9 @@ dependencies = [
 
 [[package]]
 name = "lightning-invoice"
-version = "0.34.1"
+version = "0.34.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47d83bd798e04ab9eecc8bbef1fa17d3808859bcdc0406bd16c55d51c8834444"
+checksum = "5e874476e461bcca94ae30335bc5263f126f9219fdbd7bde6e02b530dbaa6567"
 dependencies = [
  "bech32 0.11.1",
  "bitcoin 0.32.8",
