@@ -96,28 +96,34 @@ async fn test_notification(
     custom_url: Option<String>
 ) -> Result<String, BlocktankError>
 // Mine blocks in regtest mode
-async fn regtest_mine(count: Option<u32>) -> Result<(), BlocktankError>
+async fn regtest_mine(count: Option<u32>, auth: Option<String>) -> Result<(), BlocktankError>
 
 // Deposit funds to an address in regtest mode
 async fn regtest_deposit(
     address: String,
     amount_sat: Option<u64>,
+    auth: Option<String>,
 ) -> Result<String, BlocktankError>
 
 // Pay an invoice in regtest mode
 async fn regtest_pay(
     invoice: String,
     amount_sat: Option<u64>,
+    auth: Option<String>,
 ) -> Result<String, BlocktankError>
 
 // Get payment information in regtest mode
-async fn regtest_get_payment(payment_id: String) -> Result<IBtBolt11Invoice, BlocktankError>
+async fn regtest_get_payment(
+    payment_id: String,
+    auth: Option<String>,
+) -> Result<IBtBolt11Invoice, BlocktankError>
 
 // Close a channel in regtest mode
 async fn regtest_close_channel(
     funding_tx_id: String,
     vout: u32,
     force_close_after_s: Option<u64>,
+    auth: Option<String>,
 ) -> Result<String, BlocktankError>
 
 // Pay a gift invoice
@@ -137,6 +143,8 @@ async fn blocktank_remove_all_orders() -> Result<(), BlocktankError>
 async fn blocktank_remove_all_cjit_entries() -> Result<(), BlocktankError>
 async fn blocktank_wipe_all() -> Result<(), BlocktankError>
 ```
+
+The regtest functions take an optional `auth` (`user:password`), sent as HTTP basic auth to the regtest routes only. Staging Blocktank requires it there and returns 401 without it.
 
 ## Usage Examples
 

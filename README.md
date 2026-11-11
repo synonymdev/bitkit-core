@@ -351,15 +351,17 @@
           custom_url: Option<String>
         ) -> Result<String, BlocktankError>
         ```
+    - The regtest functions take an optional `auth` (`user:password`), sent as basic auth to the regtest routes; staging Blocktank requires it.
     - [regtest_mine](src/modules/blocktank/README.md#usage-examples): Mine blocks in regtest mode
         ```rust
-        async fn regtest_mine(count: Option<u32>) -> Result<(), BlocktankError>
+        async fn regtest_mine(count: Option<u32>, auth: Option<String>) -> Result<(), BlocktankError>
         ```
     - [regtest_deposit](src/modules/blocktank/README.md#usage-examples): Deposit funds to an address in regtest mode
         ```rust
         async fn regtest_deposit(
           address: String,
           amount_sat: Option<u64>,
+          auth: Option<String>,
         ) -> Result<String, BlocktankError>
         ```
     - [regtest_pay](src/modules/blocktank/README.md#usage-examples): Pay an invoice in regtest mode
@@ -367,11 +369,15 @@
         async fn regtest_pay(
           invoice: String,
           amount_sat: Option<u64>,
+          auth: Option<String>,
         ) -> Result<String, BlocktankError>
         ```
     - [regtest_get_payment](src/modules/blocktank/README.md#usage-examples): Get payment information in regtest mode
         ```rust
-        async fn regtest_get_payment(payment_id: String) -> Result<IBtBolt11Invoice, BlocktankError>
+        async fn regtest_get_payment(
+          payment_id: String,
+          auth: Option<String>,
+        ) -> Result<IBtBolt11Invoice, BlocktankError>
         ```
     - [regtest_close_channel](src/modules/blocktank/README.md#usage-examples): Close a channel in regtest mode
         ```rust
@@ -379,6 +385,7 @@
           funding_tx_id: String,
           vout: u32,
           force_close_after_s: Option<u64>,
+          auth: Option<String>,
         ) -> Result<String, BlocktankError>        
         ```
 - Trezor:
