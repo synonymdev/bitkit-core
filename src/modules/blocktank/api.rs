@@ -229,16 +229,13 @@ impl BlocktankDB {
         body: Option<serde_json::Value>,
         auth: Option<&str>,
     ) -> Result<String, String> {
-        let url = format!(
-            "{}/regtest/{}",
-            self.blocktank_url.trim_end_matches('/'),
-            path
-        );
+        let url = regtest_url(&self.blocktank_url, path)?;
+        let shown_url = redacted(&url);
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(REGTEST_TIMEOUT_SECS))
             .build()
             .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
-        let mut request = client.request(method, &url);
+        let mut request = client.request(method, url);
         if let Some(auth) = auth.filter(|a| !a.is_empty()) {
             let (username, password) = auth.split_once(':').unwrap_or((auth, ""));
             request = request.basic_auth(username, Some(password));
@@ -249,17 +246,23 @@ impl BlocktankDB {
         let response = request
             .send()
             .await
-            .map_err(|e| format!("Request to {} failed: {}", url, e.without_url()))?;
+            .map_err(|e| format!("Request to {} failed: {}", shown_url, e.without_url()))?;
         let status = response.status();
-        let text = response
-            .text()
-            .await
-            .map_err(|e| format!("Failed to read response from {}: {}", url, e.without_url()))?;
+        let text = response.text().await.map_err(|e| {
+            format!(
+                "Failed to read response from {}: {}",
+                shown_url,
+                e.without_url()
+            )
+        })?;
         if status == reqwest::StatusCode::UNAUTHORIZED {
             return Err(ERR_REGTEST_UNAUTHORIZED.to_string());
         }
         if !status.is_success() {
-            return Err(format!("HTTP status {} from {}: {}", status, url, text));
+            return Err(format!(
+                "HTTP status {} from {}: {}",
+                status, shown_url, text
+            ));
         }
         Ok(text)
     }
@@ -439,5 +442,62 @@ impl BlocktankDB {
             .map_err(|e| BlocktankError::DataError {
                 error_details: format!("Failed to get payment: {}", e),
             })
+    }
+}
+
+/// Joins `regtest/<path>` onto the Blocktank base URL the way the Blocktank client does, so a
+/// query string on the base URL is dropped instead of swallowing the path.
+fn regtest_url(base_url: &str, path: &str) -> Result<url::Url, String> {
+    let base = if base_url.ends_with('/') {
+        base_url.to_string()
+    } else {
+        format!("{}/", base_url)
+    };
+    url::Url::parse(&base)
+        .and_then(|base| base.join(&format!("regtest/{}", path)))
+        .map_err(|e| format!("Invalid Blocktank URL: {}", e))
+}
+
+/// The URL without any credentials, for error messages.
+fn redacted(url: &url::Url) -> String {
+    let mut url = url.clone();
+    let _ = url.set_username("");
+    let _ = url.set_password(None);
+    url.to_string()
+}
+
+#[cfg(test)]
+mod regtest_url_tests {
+    use super::*;
+
+    #[test]
+    fn joins_regtest_path_and_drops_base_query() {
+        let url = regtest_url("https://host/api/?x=1", "chain/mine").unwrap();
+        assert_eq!(url.as_str(), "https://host/api/regtest/chain/mine");
+        let url = regtest_url("https://host/blocktank/api/v2", "chain/deposit").unwrap();
+        assert_eq!(
+            url.as_str(),
+            "https://host/blocktank/api/v2/regtest/chain/deposit"
+        );
+    }
+
+    #[test]
+    fn redacts_credentials_in_base_url() {
+        let url = regtest_url("http://user:secret@127.0.0.1:1/api", "chain/mine").unwrap();
+        let shown = redacted(&url);
+        assert!(
+            !shown.contains("secret") && !shown.contains("user"),
+            "{}",
+            shown
+        );
+    }
+
+    #[tokio::test]
+    async fn regtest_error_hides_base_url_password() {
+        let db = BlocktankDB::new(":memory:", Some("http://user:secret@127.0.0.1:1/api"))
+            .await
+            .unwrap();
+        let err = db.regtest_mine(None, None).await.unwrap_err().to_string();
+        assert!(!err.contains("secret"), "{}", err);
     }
 }
