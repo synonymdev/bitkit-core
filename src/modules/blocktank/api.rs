@@ -1,14 +1,14 @@
 use crate::modules::blocktank::{BlocktankDB, BlocktankError, IGift};
+use rust_blocktank_client::{
+    CreateCjitOptions, CreateOrderOptions, IBt0ConfMinTxFeeWindow, IBtBolt11Invoice,
+    IBtEstimateFeeResponse, IBtEstimateFeeResponse2, IBtInfo, IBtOrder, ICJitEntry,
+};
 use serde_json::json;
 use std::time::Duration;
 
 const REGTEST_TIMEOUT_SECS: u64 = 30;
 const ERR_REGTEST_UNAUTHORIZED: &str =
     "Blocktank regtest API returned 401 Unauthorized: regtest auth is missing or was rejected";
-use rust_blocktank_client::{
-    CreateCjitOptions, CreateOrderOptions, IBt0ConfMinTxFeeWindow, IBtBolt11Invoice,
-    IBtEstimateFeeResponse, IBtEstimateFeeResponse2, IBtInfo, IBtOrder, ICJitEntry,
-};
 
 impl BlocktankDB {
     /// Fetches service information from Blocktank and stores it in the database.
@@ -235,11 +235,7 @@ impl BlocktankDB {
             .timeout(Duration::from_secs(REGTEST_TIMEOUT_SECS))
             .build()
             .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
-        let mut request = client.request(method, url);
-        if let Some(auth) = auth.filter(|a| !a.is_empty()) {
-            let (username, password) = auth.split_once(':').unwrap_or((auth, ""));
-            request = request.basic_auth(username, Some(password));
-        }
+        let mut request = regtest_request_builder(&client, method, url, auth);
         if let Some(body) = body {
             request = request.json(&body);
         }
@@ -458,12 +454,36 @@ fn regtest_url(base_url: &str, path: &str) -> Result<url::Url, String> {
         .map_err(|e| format!("Invalid Blocktank URL: {}", e))
 }
 
-/// The URL without any credentials, for error messages.
-fn redacted(url: &url::Url) -> String {
+/// The URL without any credentials.
+fn without_credentials(url: &url::Url) -> url::Url {
     let mut url = url.clone();
     let _ = url.set_username("");
     let _ = url.set_password(None);
-    url.to_string()
+    url
+}
+
+/// The URL without any credentials, for error messages.
+fn redacted(url: &url::Url) -> String {
+    without_credentials(url).to_string()
+}
+
+/// Builds a regtest request. With `auth`, credentials in the base URL are dropped first, so the
+/// request carries a single `Authorization` header with `auth`.
+fn regtest_request_builder(
+    client: &reqwest::Client,
+    method: reqwest::Method,
+    url: url::Url,
+    auth: Option<&str>,
+) -> reqwest::RequestBuilder {
+    match auth.filter(|a| !a.is_empty()) {
+        Some(auth) => {
+            let (username, password) = auth.split_once(':').unwrap_or((auth, ""));
+            client
+                .request(method, without_credentials(&url))
+                .basic_auth(username, Some(password))
+        }
+        None => client.request(method, url),
+    }
 }
 
 #[cfg(test)]
@@ -490,6 +510,26 @@ mod regtest_url_tests {
             "{}",
             shown
         );
+    }
+
+    #[test]
+    fn auth_replaces_base_url_credentials() {
+        let url = regtest_url("http://urluser:urlpass@127.0.0.1:1/api", "chain/mine").unwrap();
+        let request = regtest_request_builder(
+            &reqwest::Client::new(),
+            reqwest::Method::POST,
+            url,
+            Some("paramuser:parampass"),
+        )
+        .build()
+        .unwrap();
+        let headers: Vec<_> = request
+            .headers()
+            .get_all(reqwest::header::AUTHORIZATION)
+            .iter()
+            .collect();
+        // base64("paramuser:parampass")
+        assert_eq!(headers, vec!["Basic cGFyYW11c2VyOnBhcmFtcGFzcw=="]);
     }
 
     #[tokio::test]
