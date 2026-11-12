@@ -5,10 +5,14 @@ updates:
   # version comments current. Minor and patch bumps share one PR; each major
   # bump gets its own. Bumps to actions used by gradle-publish.yml are not
   # exercised by pull request CI, so check them manually before merging.
+  # dtolnay/rust-toolchain only has a floating v1 tag, so Dependabot may not
+  # bump it; its pin may need a manual refresh.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     commit-message:
       prefix: ci
