@@ -2,7 +2,9 @@ version: 2
 
 updates:
   # Workflows pin actions to commit SHAs; this keeps those pins and their
-  # version comments current, grouped so bumps land as one PR per update type.
+  # version comments current. Minor and patch bumps share one PR; each major
+  # bump gets its own. Bumps to actions used by gradle-publish.yml are not
+  # exercised by pull request CI, so check them manually before merging.
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -17,8 +19,3 @@ updates:
         update-types:
           - minor
           - patch
-      github-actions-major:
-        patterns:
-          - "*"
-        update-types:
-          - major
