@@ -23,6 +23,7 @@ jobs:
     - uses: actions/checkout@v7
       with:
         ref: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.event.release.tag_name }}
+        persist-credentials: false
     - name: Set up JDK 17
       uses: actions/setup-java@v5
       with:
@@ -50,9 +51,10 @@ jobs:
         add-to-path: true
 
     - name: Export Android NDK
+      env:
+        NDK_PATH: ${{ steps.setup-ndk.outputs.ndk-path }}
       shell: bash
       run: |
-        NDK_PATH="${{ steps.setup-ndk.outputs.ndk-path }}"
         echo "ANDROID_NDK_HOME=$NDK_PATH" >> "$GITHUB_ENV"
         echo "ANDROID_NDK_ROOT=$NDK_PATH" >> "$GITHUB_ENV"
         cat "$NDK_PATH/source.properties"
@@ -60,9 +62,11 @@ jobs:
 
     - name: Extract version from input or tag
       id: version
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
       shell: bash
       run: |
-        VERSION="${{ inputs.version }}"
+        VERSION="$INPUT_VERSION"
         if [[ -z "$VERSION" ]]; then
           VERSION="$GITHUB_REF_NAME"
         fi
@@ -73,7 +77,9 @@ jobs:
 
     - name: Build with Gradle
       working-directory: bindings/android
-      run: ./gradlew build -Pversion=${{ steps.version.outputs.version }}
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+      run: ./gradlew build -Pversion="$VERSION"
 
     - name: Upload native debug symbols artifact
       uses: actions/upload-artifact@v7
@@ -117,4 +123,5 @@ jobs:
         GITHUB_ACTOR: ${{ github.actor }}
         GITHUB_TOKEN: ${{ github.token }}
         GITHUB_REPO: ${{ github.repository }}
-      run: ./gradlew publish -Pversion=${{ steps.version.outputs.version }}
+        VERSION: ${{ steps.version.outputs.version }}
+      run: ./gradlew publish -Pversion="$VERSION"
