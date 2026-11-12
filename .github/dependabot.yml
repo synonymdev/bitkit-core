@@ -1,0 +1,24 @@
+version: 2
+
+updates:
+  # Workflows pin actions to commit SHAs; this keeps those pins and their
+  # version comments current, grouped so bumps land as one PR per update type.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+    groups:
+      github-actions-minor:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+      github-actions-major:
+        patterns:
+          - "*"
+        update-types:
+          - major
