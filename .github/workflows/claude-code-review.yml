@@ -30,9 +30,10 @@ jobs:
       - name: Minimize old Claude comments
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ inputs.pr_number }}
         run: |
-          REPO="${{ github.repository }}"
-          PR_NUMBER="${{ inputs.pr_number }}"
+          REPO="$GITHUB_REPOSITORY"
+          if [[ ! "$PR_NUMBER" =~ ^[0-9]+$ ]]; then echo "Invalid PR number: $PR_NUMBER" >&2; exit 1; fi
 
           # Minimize issue comments from claude[bot]
           gh api "repos/$REPO/issues/$PR_NUMBER/comments" --jq '.[] | select(.user.login == "claude[bot]") | .node_id' | while read -r node_id; do
