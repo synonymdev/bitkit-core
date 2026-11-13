@@ -175,6 +175,10 @@ pub trait TrezorTransportCallback: Send + Sync {
     /// debug UI (e.g., TrezorDebugLog on Android) so they are visible
     /// alongside the Kotlin-level logs.
     ///
+    /// Both arguments arrive redacted and length-capped: anything resembling
+    /// key material is already `<redacted>`, so consumers need no scrubbing
+    /// pass of their own. See `log_sanitizer` for the policy.
+    ///
     /// # Arguments
     /// * `tag` - Short tag identifying the subsystem (e.g., "HANDSHAKE", "THP")
     /// * `message` - Human-readable debug message
