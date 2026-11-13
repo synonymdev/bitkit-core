@@ -23,13 +23,28 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         ref: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.event.release.tag_name }}
+        persist-credentials: false
+    - name: Extract version from input or tag
+      id: version
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+      shell: bash
+      run: |
+        VERSION="$INPUT_VERSION"
+        if [[ -z "$VERSION" ]]; then
+          VERSION="$GITHUB_REF_NAME"
+        fi
+        if [[ ! "$VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+          echo "Invalid version: $VERSION" >&2
+          exit 1
+        fi
+        echo "version=${VERSION#v}" >> "$GITHUB_OUTPUT"
+
     - name: Set up JDK 17
       uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
       with:
         java-version: '17'
         distribution: 'temurin'
-        server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
-        settings-path: ${{ github.workspace }} # location for the settings.xml file
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
@@ -50,30 +65,23 @@ jobs:
         add-to-path: true
 
     - name: Export Android NDK
+      env:
+        NDK_PATH: ${{ steps.setup-ndk.outputs.ndk-path }}
       shell: bash
       run: |
-        NDK_PATH="${{ steps.setup-ndk.outputs.ndk-path }}"
         echo "ANDROID_NDK_HOME=$NDK_PATH" >> "$GITHUB_ENV"
         echo "ANDROID_NDK_ROOT=$NDK_PATH" >> "$GITHUB_ENV"
         cat "$NDK_PATH/source.properties"
         grep -Fx "Pkg.Revision = 28.2.13676358" "$NDK_PATH/source.properties"
-
-    - name: Extract version from input or tag
-      id: version
-      shell: bash
-      run: |
-        VERSION="${{ inputs.version }}"
-        if [[ -z "$VERSION" ]]; then
-          VERSION="$GITHUB_REF_NAME"
-        fi
-        echo "version=${VERSION#v}" >> "$GITHUB_OUTPUT"
 
     - name: Generate Android bindings
       run: ./build_android.sh
 
     - name: Build with Gradle
       working-directory: bindings/android
-      run: ./gradlew build -Pversion=${{ steps.version.outputs.version }}
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+      run: ./gradlew build -Pversion="$VERSION"
 
     - name: Upload native debug symbols artifact
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -117,4 +125,5 @@ jobs:
         GITHUB_ACTOR: ${{ github.actor }}
         GITHUB_TOKEN: ${{ github.token }}
         GITHUB_REPO: ${{ github.repository }}
-      run: ./gradlew publish -Pversion=${{ steps.version.outputs.version }}
+        VERSION: ${{ steps.version.outputs.version }}
+      run: ./gradlew publish -Pversion="$VERSION"
