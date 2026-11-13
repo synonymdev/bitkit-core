@@ -1,0 +1,26 @@
+version: 2
+
+updates:
+  # Workflows pin actions to commit SHAs; this keeps those pins and their
+  # version comments current. Minor and patch bumps share one PR; each major
+  # bump gets its own. Actions used only by release or dispatched workflows
+  # (gradle-publish.yml, claude.yml, claude-code-review.yml) are not run by
+  # pull request CI, so check bumps to them manually before merging.
+  # dtolnay/rust-toolchain only has a floating v1 tag, so Dependabot may not
+  # bump it; its pin may need a manual refresh.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: ci
+    groups:
+      github-actions-minor:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
