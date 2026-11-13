@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Remove the `pubky` module (breaking). Pubky auth goes through Paykit grant links. Removed exports: the legacy Pubky Ring auth `parse_pubky_auth_url` and `approve_pubky_auth`, plus the unused `resolve_pubky_url`, `fetch_pubky_file`, `fetch_pubky_file_string`, `start_pubky_auth`, `cancel_pubky_auth`, `complete_pubky_auth`, `fetch_pubky_profile`, `fetch_pubky_contacts`, `derive_pubky_secret_key`, `pubky_public_key_from_secret`, `pubky_sign_up`, `pubky_sign_in`, `pubky_session_put`, `pubky_session_delete`, `pubky_session_list` and `pubky_put_with_secret_key`. Removed types: the `PubkyProfile` and `PubkyProfileLink` records, `PubkyAuthDetails`, `PubkyAuthKind` and `PubkyError` (`PubkyException` on Android). Drop the `pubky-app-specs` dependency. Pubky Swaps reads a provider's published signing key records as before.
 - Update `lightning` to 0.2.8.
 - `regtest_mine`, `regtest_deposit`, `regtest_pay`, `regtest_get_payment` and `regtest_close_channel` take an optional `auth` (`user:password`), sent as basic auth to Blocktank servers that protect the regtest routes; a 401 returns a clear error.
 - Wake: a default registration `timestamp` is one past the last in this process when needed, so two quick registrations no longer get 409 `stale_registration`. `WakeError::GatewayRejected` gains `server_time` and `retry_after_secs`. Add `wake_get_device` and `wake_send_test`. `wake_set_topics` now returns `WakeSubscription` with `unknown_topics` (breaking).

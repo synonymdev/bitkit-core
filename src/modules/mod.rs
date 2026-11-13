@@ -6,7 +6,6 @@ pub mod jade;
 pub mod lnurl;
 pub mod onchain;
 pub mod paykit_route;
-pub mod pubky;
 pub mod pubky_swaps;
 pub mod scanner;
 pub mod seedqr;
