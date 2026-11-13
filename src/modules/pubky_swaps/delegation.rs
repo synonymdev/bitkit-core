@@ -13,7 +13,7 @@ use ed25519_dalek::{Signature, VerifyingKey};
 use serde::{Deserialize, Serialize};
 
 use super::errors::PubkySwapError;
-use crate::modules::pubky::fetch_public_file_if_any;
+use super::homeserver::fetch_public_file_if_any;
 
 const AUTHORIZATION_PATH: &str = "/pub/paykit-authority/v0/current-key.json";
 const AUTHORIZATION_KIND: &str = "paykit.noise_key_authorization";
@@ -141,11 +141,7 @@ pub(crate) fn verify_chain(
 pub(crate) async fn resolve(provider: &str) -> Result<Option<String>, PubkySwapError> {
     let fetch = |path: &str| {
         let addr = format!("{provider}{path}");
-        async move {
-            fetch_public_file_if_any(&addr)
-                .await
-                .map_err(PubkySwapError::transport)
-        }
+        async move { fetch_public_file_if_any(&addr).await }
     };
     let Some(authorization) = fetch(AUTHORIZATION_PATH).await? else {
         return Ok(None);
