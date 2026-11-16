@@ -445,8 +445,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_duplicate_singleton_pop_req_pop_mixed_fails() {
-        // BIP 321 invalid URI: Multiple proof of payment URIs must not appear, even if prefixed with req-
+    async fn test_pop_with_req_pop_fails() {
+        // BIP 321 invalid URI: Multiple proof of payment URIs must not appear, even if prefixed with req-.
+        // Bitkit rejects it at `req-pop`, before the duplicate check; test_duplicate_singleton_pop_fails covers that.
         let invoice =
             "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?pop=callback%3a&req-pop=callback%3a"
                 .to_string();
@@ -457,7 +458,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_duplicate_singleton_req_pop_then_pop_fails() {
+    async fn test_req_pop_then_pop_fails() {
         let invoice =
             "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?req-pop=callback1&pop=callback2"
                 .to_string();
@@ -468,7 +469,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_duplicate_singleton_req_pop_fails() {
+    async fn test_repeated_req_pop_fails() {
         let invoice = "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?req-pop=cb1&REQ-POP=cb2"
             .to_string();
         assert!(matches!(

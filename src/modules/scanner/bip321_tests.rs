@@ -243,13 +243,20 @@ async fn amount_must_not_appear_twice() {
 
 #[tokio::test]
 async fn pop_must_not_appear_twice() {
-    assert!(matches!(
-        decode(&format!(
-            "bitcoin:{ADDRESS}?pop=callback%3a&req-pop=callback%3a"
-        ))
-        .await,
-        Err(DecodingError::InvalidFormat)
-    ));
+    // The BIP's vector pairs `pop` with `req-pop`, which Bitkit already rejects as an unhandled required parameter,
+    // so `pop=…&pop=…` is what reaches the duplicate check.
+    for query in [
+        "pop=callback%3a&req-pop=callback%3a",
+        "pop=callback%3a&pop=callback%3a",
+    ] {
+        assert!(
+            matches!(
+                decode(&format!("bitcoin:{ADDRESS}?{query}")).await,
+                Err(DecodingError::InvalidFormat)
+            ),
+            "{query}"
+        );
+    }
 }
 
 #[tokio::test]
