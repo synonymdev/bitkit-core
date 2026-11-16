@@ -17,6 +17,13 @@ use url::Url;
 
 use crate::modules::onchain::BitcoinAddressValidator;
 
+const BITCOIN_SCHEME: &str = "bitcoin:";
+const REQUIRED_PARAM_PREFIX: &str = "req-";
+/// BIP 321 parameters holding a segwit address, named after the address's human-readable part.
+const SEGWIT_ADDRESS_KEYS: [&str; 3] = ["bc", "tb", "bcrt"];
+/// BIP 321 payment instructions Bitkit cannot pay yet: BOLT12 offers, silent payments, BIP 351 private payments.
+const UNSUPPORTED_INSTRUCTION_KEYS: [&str; 3] = ["lno", "sp", "pay"];
+
 impl LightningInvoice {
     pub fn get_timestamp(&self) -> DateTime<Utc> {
         DateTime::<Utc>::from_timestamp(self.timestamp_seconds as i64, 0).unwrap_or_default()
@@ -106,25 +113,7 @@ impl Scanner {
                 .unwrap_or(&invoice_lower);
             Self::decode_lightning(invoice)
         } else if invoice_str.to_lowercase().starts_with("bitcoin:") {
-            // Extract address and query params (preserve original case for query params)
-            let (address_part, query_part) = invoice_str[8..]
-                .split_once('?')
-                .map(|(addr, query)| (addr, Some(query)))
-                .unwrap_or((&invoice_str[8..], None));
-
-            // Normalize address (only lowercase bech32, preserve legacy case)
-            let address_normalized = Self::normalize_address_for_validation(address_part);
-
-            if BitcoinAddressValidator::validate_address(&address_normalized).is_ok() {
-                let normalized = if let Some(query) = query_part {
-                    format!("bitcoin:{}?{}", address_normalized, query)
-                } else {
-                    format!("bitcoin:{}", address_normalized)
-                };
-                Self::decode_onchain(&normalized)
-            } else {
-                Err(DecodingError::InvalidAddress)
-            }
+            Self::decode_bitcoin_uri(invoice_str).await
         } else if invoice_str.to_lowercase().starts_with("pubkyauth:") {
             Ok(Scanner::PubkyAuth {
                 data: invoice_str.to_string(),
@@ -143,6 +132,78 @@ impl Scanner {
                 Err(DecodingError::InvalidAddress)
             }
         }
+    }
+
+    /// Decodes a BIP 321 `bitcoin:` URI.
+    ///
+    /// With an address, the result is on-chain and any payment instructions (such as `lightning`) stay in
+    /// `params`. Without one, the URI must carry a payment instruction in its query:
+    /// - a segwit address in the parameter named after its human-readable part (`bc`, `tb`, `bcrt`), decoded
+    ///   as on-chain with that address,
+    /// - otherwise a `lightning` BOLT11 invoice (or LNURL), decoded as Lightning.
+    ///
+    /// Instructions Bitkit cannot pay (`lno`, `sp`, `pay`) give `UnsupportedType`, and no instruction at all
+    /// gives `InvalidAddress`.
+    async fn decode_bitcoin_uri(uri: &str) -> Result<Self, DecodingError> {
+        let rest = &uri[BITCOIN_SCHEME.len()..];
+        let (address_part, query) = rest.split_once('?').unwrap_or((rest, ""));
+
+        if !address_part.is_empty() {
+            // Normalize address (only lowercase bech32, preserve legacy case)
+            let address = Self::normalize_address_for_validation(address_part);
+            if BitcoinAddressValidator::validate_address(&address).is_err() {
+                return Err(DecodingError::InvalidAddress);
+            }
+            return if query.is_empty() {
+                Self::decode_onchain(&format!("{BITCOIN_SCHEME}{address}"))
+            } else {
+                Self::decode_onchain(&format!("{BITCOIN_SCHEME}{address}?{query}"))
+            };
+        }
+
+        // Rejects embedded URIs, repeated singletons and required parameters before reading instructions.
+        Self::decode_onchain(uri)?;
+        let instructions: Vec<(String, &str)> = query
+            .split('&')
+            .filter_map(|param| param.split_once('='))
+            .filter(|(_, value)| !value.is_empty())
+            .map(|(key, value)| (key.to_ascii_lowercase(), value))
+            .collect();
+
+        let mut fallback_address = None;
+        for (key, value) in &instructions {
+            if !SEGWIT_ADDRESS_KEYS.contains(&key.as_str()) {
+                continue;
+            }
+            // A segwit address goes in the parameter named after its human-readable part, so `bc=tb1…` is invalid.
+            let address = value.to_lowercase();
+            if !address.starts_with(&format!("{key}1"))
+                || BitcoinAddressValidator::validate_address(&address).is_err()
+            {
+                return Err(DecodingError::InvalidAddress);
+            }
+            fallback_address.get_or_insert(address);
+        }
+        if let Some(address) = fallback_address {
+            return Self::decode_onchain(&format!("{BITCOIN_SCHEME}{address}?{query}"));
+        }
+
+        if let Some((_, value)) = instructions.iter().find(|(key, _)| key == "lightning") {
+            let request = value.to_lowercase();
+            return if request.starts_with("lnurl") {
+                Self::decode_lnurl(&request).await
+            } else {
+                Self::decode_lightning(&request)
+            };
+        }
+
+        if instructions
+            .iter()
+            .any(|(key, _)| UNSUPPORTED_INSTRUCTION_KEYS.contains(&key.as_str()))
+        {
+            return Err(DecodingError::UnsupportedType);
+        }
+        Err(DecodingError::InvalidAddress)
     }
 
     pub fn find_lnurl(text: &str) -> Option<String> {
@@ -329,6 +390,10 @@ impl Scanner {
         let mut seen_singletons = std::collections::HashSet::new();
 
         if let Some(query) = query_part {
+            // A second receive URI can be glued into either a query key or value.
+            if contains_embedded_bip21_uri(query) {
+                return Err(DecodingError::InvalidFormat);
+            }
             for param in query.split('&') {
                 if param.is_empty() {
                     continue;
@@ -338,20 +403,17 @@ impl Scanner {
                     None => (param, ""),
                 };
 
-                // A doubled receive URI is glued onto the previous value, so the
-                // second payment URI never becomes its own parameter.
-                // `message=bitcoin:<address>` has no following query.
-                if value_embeds_bip21_uri(v) {
+                let lower_k = k.to_ascii_lowercase();
+                // BIP 321: a required parameter the wallet does not handle makes the whole URI invalid.
+                // Bitkit handles none, `req-pop` included, since it never opens proof-of-payment callbacks.
+                if lower_k.starts_with(REQUIRED_PARAM_PREFIX) {
                     return Err(DecodingError::InvalidFormat);
                 }
-
-                let lower_k = k.to_ascii_lowercase();
                 let singleton_key = match lower_k.as_str() {
                     "amount" => Some("amount"),
                     "label" => Some("label"),
                     "message" => Some("message"),
-                    // BIP321 explicitly aliases pop/req-pop; general required-parameter handling is separate.
-                    "pop" | "req-pop" => Some("pop"),
+                    "pop" => Some("pop"),
                     _ => None,
                 };
 
@@ -386,24 +448,62 @@ impl Scanner {
     }
 }
 
-fn value_embeds_bip21_uri(value: &str) -> bool {
-    let lower = value.to_ascii_lowercase();
+fn contains_embedded_bip21_uri(query: &str) -> bool {
     let scheme = "bitcoin:";
-    let Some(start) = lower.find(scheme) else {
-        return false;
-    };
-    // The embedded URI is only a real second URI when its address is valid.
-    // Ordinary query text (`bitcoin:donation?`, `?help`) is not a URI and
-    // must not be rejected.
-    let Some((address, _)) = value[start + scheme.len()..].split_once('?') else {
-        return false;
-    };
-    if address.is_empty() {
-        return false;
-    }
+    let mut parts = query.split('?').peekable();
+    let mut saw_addressless_uri = false;
+    while let Some(part) = parts.next() {
+        // A '?' in an unknown value does not end the query's '&'-separated parameters.
+        if saw_addressless_uri && part.split('&').skip(1).any(is_bip21_payment_parameter) {
+            return true;
+        }
+        let Some(embedded_query) = parts.peek() else {
+            break;
+        };
+        // Earlier schemes in this part cannot form valid addresses: they contain
+        // another `bitcoin:`. Check the last one before every '?' in one pass.
+        let Some(start) = part.to_ascii_lowercase().rfind(scheme) else {
+            continue;
+        };
+        let address = &part[start + scheme.len()..];
+        if address.is_empty() {
+            saw_addressless_uri = true;
+            if embedded_query
+                .split('&')
+                .next()
+                .is_some_and(is_bip21_payment_parameter)
+            {
+                return true;
+            }
+            continue;
+        }
 
-    let normalized = Scanner::normalize_address_for_validation(address);
-    BitcoinAddressValidator::validate_address(&normalized).is_ok()
+        let normalized = Scanner::normalize_address_for_validation(address);
+        if BitcoinAddressValidator::validate_address(&normalized).is_ok() {
+            return true;
+        }
+    }
+    false
+}
+
+fn is_bip21_payment_parameter(param: &str) -> bool {
+    param.split_once('=').is_some_and(|(key, _)| {
+        matches!(
+            key.to_ascii_lowercase().as_str(),
+            "amount"
+                | "lightning"
+                | "lno"
+                | "sp"
+                | "pay"
+                | "bc"
+                | "tb"
+                | "bcrt"
+                | "label"
+                | "message"
+                | "pop"
+                | "req-pop"
+        )
+    })
 }
 
 #[async_trait]
