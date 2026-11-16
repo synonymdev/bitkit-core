@@ -331,6 +331,26 @@ async fn bc_parameter_keeps_the_lightning_instruction() {
     assert_eq!(param(&invoice, "lightning"), Some(POS_INVOICE));
 }
 
+/// LNURL-auth decodes without a network call, so it covers the LNURL branch offline.
+#[tokio::test]
+async fn lightning_instruction_with_lnurl() {
+    let k1 = "11".repeat(32);
+    let url = format!("https://auth.example.com/login?tag=login&k1={k1}&action=login");
+    let lnurl = lnurl::lnurl::LnUrl::from_url(url).to_string();
+    for uri in [
+        format!("bitcoin:?lightning={lnurl}"),
+        format!("BITCOIN:?LIGHTNING={}", lnurl.to_uppercase()),
+    ] {
+        match decode(&uri).await {
+            Ok(Scanner::LnurlAuth { data }) => {
+                assert_eq!(data.domain, "auth.example.com", "{uri}");
+                assert_eq!(data.k1, k1, "{uri}");
+            }
+            other => panic!("{uri}: expected LnurlAuth, got {other:?}"),
+        }
+    }
+}
+
 // Edge cases
 
 #[tokio::test]
