@@ -15,5 +15,5 @@ mod types;
 
 pub use client::{advance_swap, commit_route, provider_edges, restore_swaps, route_paykit_payment};
 pub use errors::PubkySwapError;
-pub(crate) use store::init;
+pub(crate) use store::{init, wipe_all};
 pub use types::*;
