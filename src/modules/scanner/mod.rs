@@ -1,3 +1,5 @@
+#[cfg(test)]
+mod bip321_tests;
 mod errors;
 mod implementation;
 #[cfg(test)]
