@@ -3652,6 +3652,38 @@ pub async fn pubky_swaps_advance(
         .unwrap_or_else(|e| Err(pubky_swaps_runtime_err(e)))
 }
 
+/// Hand a committed swap's provider a wake grant, so it wakes this device once the swap can be
+/// claimed. Only for a swap whose commit reported `provider_takes_wake`. Create the grant with
+/// `wake_create_grant` on `swap.claimable`, expiring after the claim window, and revoke it when
+/// the swap ends. Sending the same grant again is accepted; a different one for the same swap is
+/// refused. Returns whether the provider already sees the swap as claimable: then no wake comes,
+/// so advance it now. That is a hint only: `pubky_swaps_advance` checks the lockup itself. The
+/// token never appears in the swap record, logs or errors.
+#[uniffi::export]
+pub async fn pubky_swaps_send_wake_capability(
+    swap_id: String,
+    gateway_url: String,
+    token: String,
+    expires_at: u64,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+) -> Result<bool, PubkySwapError> {
+    let rt = ensure_runtime();
+    rt.spawn(async move {
+        pubky_swaps::send_wake_capability(
+            swap_id,
+            gateway_url,
+            token,
+            expires_at,
+            mnemonic,
+            bip39_passphrase,
+        )
+        .await
+    })
+    .await
+    .unwrap_or_else(|e| Err(pubky_swaps_runtime_err(e)))
+}
+
 /// Rebuild the swaps this wallet started, for a wallet restored from its seed. Each of
 /// `providers` that supports it lists the swaps it holds for the wallet's swap identity, and the
 /// wallet derives their keys from the seed and checks them against each contract. A swap gets a

@@ -63,6 +63,9 @@ pub struct PubkySwapRoutePayment {
     pub destination_address: String,
     pub htlc_address: String,
     pub timeout_block_height: u32,
+    /// Whether the provider can wake this device once the swap can be claimed. Only then create a
+    /// `swap.claimable` grant and hand it over with `pubky_swaps_send_wake_capability`.
+    pub provider_takes_wake: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, uniffi::Enum)]

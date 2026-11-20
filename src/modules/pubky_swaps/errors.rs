@@ -57,6 +57,39 @@ impl PubkySwapError {
             error_details: details.to_string(),
         }
     }
+
+    /// This error with every copy of `secret` replaced, so a bearer token never reaches the app
+    /// or a log, even when a provider echoes it.
+    pub(crate) fn redact(self, secret: &str) -> Self {
+        if secret.is_empty() {
+            return self;
+        }
+        let hide = |text: String| text.replace(secret, "<redacted>");
+        match self {
+            Self::InvalidInput { error_details } => Self::InvalidInput {
+                error_details: hide(error_details),
+            },
+            Self::Transport { error_details } => Self::Transport {
+                error_details: hide(error_details),
+            },
+            Self::Refused { code, reason } => Self::Refused {
+                code: hide(code),
+                reason: hide(reason),
+            },
+            Self::Validation { error_details } => Self::Validation {
+                error_details: hide(error_details),
+            },
+            Self::Chain { error_details } => Self::Chain {
+                error_details: hide(error_details),
+            },
+            Self::Storage { error_details } => Self::Storage {
+                error_details: hide(error_details),
+            },
+            Self::NotFound { error_details } => Self::NotFound {
+                error_details: hide(error_details),
+            },
+        }
+    }
 }
 
 impl From<serde_json::Error> for PubkySwapError {

@@ -12145,10 +12145,19 @@ public struct PubkySwapRoutePayment {
     public var destinationAddress: String
     public var htlcAddress: String
     public var timeoutBlockHeight: UInt32
+    /**
+     * Whether the provider can wake this device once the swap can be claimed. Only then create a
+     * `swap.claimable` grant and hand it over with `pubky_swaps_send_wake_capability`.
+     */
+    public var providerTakesWake: Bool
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(swapId: String, invoice: String, debitSat: UInt64, deliveredSat: UInt64, destinationAddress: String, htlcAddress: String, timeoutBlockHeight: UInt32) {
+    public init(swapId: String, invoice: String, debitSat: UInt64, deliveredSat: UInt64, destinationAddress: String, htlcAddress: String, timeoutBlockHeight: UInt32, 
+        /**
+         * Whether the provider can wake this device once the swap can be claimed. Only then create a
+         * `swap.claimable` grant and hand it over with `pubky_swaps_send_wake_capability`.
+         */providerTakesWake: Bool) {
         self.swapId = swapId
         self.invoice = invoice
         self.debitSat = debitSat
@@ -12156,6 +12165,7 @@ public struct PubkySwapRoutePayment {
         self.destinationAddress = destinationAddress
         self.htlcAddress = htlcAddress
         self.timeoutBlockHeight = timeoutBlockHeight
+        self.providerTakesWake = providerTakesWake
     }
 }
 
@@ -12187,6 +12197,9 @@ extension PubkySwapRoutePayment: Equatable, Hashable {
         if lhs.timeoutBlockHeight != rhs.timeoutBlockHeight {
             return false
         }
+        if lhs.providerTakesWake != rhs.providerTakesWake {
+            return false
+        }
         return true
     }
 
@@ -12198,6 +12211,7 @@ extension PubkySwapRoutePayment: Equatable, Hashable {
         hasher.combine(destinationAddress)
         hasher.combine(htlcAddress)
         hasher.combine(timeoutBlockHeight)
+        hasher.combine(providerTakesWake)
     }
 }
 
@@ -12218,7 +12232,8 @@ public struct FfiConverterTypePubkySwapRoutePayment: FfiConverterRustBuffer {
                 deliveredSat: FfiConverterUInt64.read(from: &buf), 
                 destinationAddress: FfiConverterString.read(from: &buf), 
                 htlcAddress: FfiConverterString.read(from: &buf), 
-                timeoutBlockHeight: FfiConverterUInt32.read(from: &buf)
+                timeoutBlockHeight: FfiConverterUInt32.read(from: &buf), 
+                providerTakesWake: FfiConverterBool.read(from: &buf)
         )
     }
 
@@ -12230,6 +12245,7 @@ public struct FfiConverterTypePubkySwapRoutePayment: FfiConverterRustBuffer {
         FfiConverterString.write(value.destinationAddress, into: &buf)
         FfiConverterString.write(value.htlcAddress, into: &buf)
         FfiConverterUInt32.write(value.timeoutBlockHeight, into: &buf)
+        FfiConverterBool.write(value.providerTakesWake, into: &buf)
     }
 }
 
@@ -33818,6 +33834,29 @@ public func pubkySwapsRoutePaykitPayment(request: PaykitRouteRequest, network: N
         )
 }
 /**
+ * Hand a committed swap's provider a wake grant, so it wakes this device once the swap can be
+ * claimed. Only for a swap whose commit reported `provider_takes_wake`. Create the grant with
+ * `wake_create_grant` on `swap.claimable`, expiring after the claim window, and revoke it when
+ * the swap ends. Sending the same grant again is accepted; a different one for the same swap is
+ * refused. Returns whether the provider already sees the swap as claimable: then no wake comes,
+ * so advance it now. That is a hint only: `pubky_swaps_advance` checks the lockup itself. The
+ * token never appears in the swap record, logs or errors.
+ */
+public func pubkySwapsSendWakeCapability(swapId: String, gatewayUrl: String, token: String, expiresAt: UInt64, mnemonic: String, bip39Passphrase: String?)async throws  -> Bool  {
+    return
+        try  await uniffiRustCallAsync(
+            rustFutureFunc: {
+                uniffi_bitkitcore_fn_func_pubky_swaps_send_wake_capability(FfiConverterString.lower(swapId),FfiConverterString.lower(gatewayUrl),FfiConverterString.lower(token),FfiConverterUInt64.lower(expiresAt),FfiConverterString.lower(mnemonic),FfiConverterOptionString.lower(bip39Passphrase)
+                )
+            },
+            pollFunc: ffi_bitkitcore_rust_future_poll_i8,
+            completeFunc: ffi_bitkitcore_rust_future_complete_i8,
+            freeFunc: ffi_bitkitcore_rust_future_free_i8,
+            liftFunc: FfiConverterBool.lift,
+            errorHandler: FfiConverterTypePubkySwapError_lift
+        )
+}
+/**
  * Persist a successful outgoing RBF result, including its replacement fee rate, in one transaction.
  * Call after the node has returned the replacement txid; this function does not broadcast anything.
  */
@@ -35420,6 +35459,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_pubky_swaps_route_paykit_payment() != 45030) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_bitkitcore_checksum_func_pubky_swaps_send_wake_capability() != 19534) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_bitkitcore_checksum_func_record_rbf_boost() != 15433) {

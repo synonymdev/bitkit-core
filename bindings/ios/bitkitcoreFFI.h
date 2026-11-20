@@ -1519,6 +1519,11 @@ uint64_t uniffi_bitkitcore_fn_func_pubky_swaps_restore(RustBuffer providers, Rus
 uint64_t uniffi_bitkitcore_fn_func_pubky_swaps_route_paykit_payment(RustBuffer request, RustBuffer network, RustBuffer mnemonic, RustBuffer bip39_passphrase
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PUBKY_SWAPS_SEND_WAKE_CAPABILITY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_PUBKY_SWAPS_SEND_WAKE_CAPABILITY
+uint64_t uniffi_bitkitcore_fn_func_pubky_swaps_send_wake_capability(RustBuffer swap_id, RustBuffer gateway_url, RustBuffer token, uint64_t expires_at, RustBuffer mnemonic, RustBuffer bip39_passphrase
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_RECORD_RBF_BOOST
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_FN_FUNC_RECORD_RBF_BOOST
 void uniffi_bitkitcore_fn_func_record_rbf_boost(RustBuffer wallet_id, RustBuffer original_activity_id, RustBuffer replacement_tx_id, uint64_t fee_rate, RustCallStatus *_Nonnull out_status
@@ -3052,6 +3057,12 @@ uint16_t uniffi_bitkitcore_checksum_func_pubky_swaps_restore(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SWAPS_ROUTE_PAYKIT_PAYMENT
 #define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SWAPS_ROUTE_PAYKIT_PAYMENT
 uint16_t uniffi_bitkitcore_checksum_func_pubky_swaps_route_paykit_payment(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SWAPS_SEND_WAKE_CAPABILITY
+#define UNIFFI_FFIDEF_UNIFFI_BITKITCORE_CHECKSUM_FUNC_PUBKY_SWAPS_SEND_WAKE_CAPABILITY
+uint16_t uniffi_bitkitcore_checksum_func_pubky_swaps_send_wake_capability(void
     
 );
 #endif
