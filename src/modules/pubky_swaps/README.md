@@ -102,6 +102,20 @@ broadcast again, and a spend without the preimage in its witness (the provider's
 lockup that never came before the timeout ends in `Failed`. The claim's fee is
 fixed when the route is quoted and is never bumped, so swap routes are refused on mainnet.
 
+## Wakes
+
+The claim needs the wallet running once the lockup has its confirmations. A reverse quote asks for
+`claimable-hint-v1` when the provider's offer lists it, and `pubky_swaps_commit_route` reports
+`provider_takes_wake` when the offer also lists `swap-wake-v1`. The app then creates a wake grant
+for `swap.claimable` (`wake_create_grant`) and hands it over with
+`pubky_swaps_send_wake_capability`. The provider wakes the device once, through the gateway, when
+the lockup reaches depth. The app revokes the grant when the swap ends.
+
+The provider answers with the swap's snapshot, and the call returns its `claimable` flag: a swap
+already claimable gets no wake, so the app advances it now. The flag is a hint only;
+`pubky_swaps_advance` checks the lockup on the wallet's own chain view. The grant token is a bearer
+secret, so it stays out of the swap record, logs and errors, including a provider's refusal.
+
 ## What it does not do yet
 
 - **Discovery:** candidates come from the caller, usually the user's contacts. Each is asked for
