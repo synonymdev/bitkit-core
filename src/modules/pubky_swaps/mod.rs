@@ -13,7 +13,10 @@ mod store;
 mod transport;
 mod types;
 
-pub use client::{advance_swap, commit_route, provider_edges, restore_swaps, route_paykit_payment};
+pub use client::{
+    advance_swap, commit_route, provider_edges, restore_swaps, route_paykit_payment,
+    send_wake_capability,
+};
 pub use errors::PubkySwapError;
 pub(crate) use store::init;
 pub use types::*;

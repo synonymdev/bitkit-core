@@ -55,6 +55,10 @@ pub(crate) struct SwapRecord {
     /// from a provider's listing.
     #[serde(default)]
     pub contract: Option<ContractReply>,
+    /// Whether the provider takes a wake capability for this swap: it advertised `swap-wake-v1`
+    /// and the swap was quoted with the claimable hint. False for a swap rebuilt from a listing.
+    #[serde(default)]
+    pub takes_wake: bool,
     pub created_at_unix: u64,
 }
 
