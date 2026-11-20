@@ -1,6 +1,6 @@
 [package]
 name = "bitkitcore"
-version = "0.8.0-rc15"
+version = "0.8.0-swaps.12"
 edition = "2021"
 rust-version = "1.91"
 
