@@ -1,6 +1,5 @@
 pub mod activity;
 pub mod blocktank;
-pub mod boltz;
 pub mod hardware_wallet;
 pub mod jade;
 pub mod lnurl;
