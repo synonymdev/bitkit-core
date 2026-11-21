@@ -1,0 +1,13 @@
+{
+  "name": "bitkit-native-recovery-fixture",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "ethers": "6.17.0"
+  },
+  "scripts": {
+    "start": "node provider.mjs",
+    "check": "node --check provider.mjs && node --check control.mjs && node --check provider.test.mjs",
+    "test": "node --test provider.test.mjs"
+  }
+}
