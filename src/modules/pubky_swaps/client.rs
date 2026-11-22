@@ -15,8 +15,9 @@ use once_cell::sync::Lazy;
 use swap_common::htlc::build_htlc_script;
 use swap_common::messages::{
     OfferRequest, Quote, QuoteRequest, Reject, SwapAccept, SwapListRequest, SwapMessage, SwapOffer,
-    SwapRequest, SwapScript, SwapStatusRequest, SwapStatusSnapshot, PAYKIT_CAP_FEATURE,
-    PROTOCOL_VERSION, SWAP_LIST_FEATURE,
+    SwapRequest, SwapScript, SwapStatusRequest, SwapStatusSnapshot, SwapWakeCapability,
+    WakeCapability, CLAIMABLE_HINT_FEATURE, PAYKIT_CAP_FEATURE, PROTOCOL_VERSION,
+    SWAP_LIST_FEATURE, SWAP_WAKE_FEATURE, SWAP_WAKE_TOPIC, WAKE_TOKEN_MAX_LEN,
 };
 use swap_common::onchain::{build_claim_tx, estimate_spend_fee, spend_vsize};
 use swap_common::paykit_cap::{CapMessage, ContractReply, SignedQuote};
@@ -52,6 +53,8 @@ const PENDING_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60);
 const PENDING_POLL: std::time::Duration = std::time::Duration::from_secs(2);
 /// Most pages read from one provider's swap list on restore.
 const MAX_LIST_PAGES: usize = 100;
+/// The `WakeCapability` version providers take.
+const WAKE_CAPABILITY_VERSION: u16 = 1;
 
 /// Quotes the router fetched, kept until the wallet commits to one of them.
 static QUOTES: Lazy<Mutex<HashMap<String, CachedQuote>>> = Lazy::new(Default::default);
@@ -67,6 +70,7 @@ struct CachedQuote {
     signed: SignedQuote,
     /// The delegated key the quote was signed by, if not the provider's own.
     delegated_signer: Option<String>,
+    takes_wake: bool,
 }
 
 /// A quote whose signature checked out, with what committing to it needs.
@@ -75,6 +79,8 @@ struct SignedRoute {
     request: QuoteRequest,
     signed: SignedQuote,
     delegated_signer: Option<String>,
+    /// Whether the provider takes a wake capability for the swap this quote starts.
+    takes_wake: bool,
 }
 
 fn now_unix() -> u64 {
@@ -166,7 +172,7 @@ async fn quote_edge(
         direction: SwapDirection::Reverse,
         amount_sat: lock_sat,
         protocol_version: PROTOCOL_VERSION,
-        features: vec![],
+        features: quote_features(offer),
     };
     let mut session = CapSession::new(client, identity, &offer.provider_pkarr)?;
     let (reply, signed) = session
@@ -184,7 +190,26 @@ async fn quote_edge(
         request,
         signed,
         delegated_signer: session.delegated_signer(),
+        takes_wake: takes_wake(offer),
     })
+}
+
+fn offers(offer: &SwapOffer, feature: &str) -> bool {
+    offer.features.iter().any(|f| f == feature)
+}
+
+/// What a reverse quote request asks for: the claimable hint, from a provider that sends it.
+fn quote_features(offer: &SwapOffer) -> Vec<String> {
+    if offers(offer, CLAIMABLE_HINT_FEATURE) {
+        vec![CLAIMABLE_HINT_FEATURE.to_string()]
+    } else {
+        vec![]
+    }
+}
+
+/// Whether the provider takes a wake capability for a swap quoted with the claimable hint.
+fn takes_wake(offer: &SwapOffer) -> bool {
+    offers(offer, SWAP_WAKE_FEATURE) && offers(offer, CLAIMABLE_HINT_FEATURE)
 }
 
 /// Whether an offer takes signed negotiation over `direct/1`. Others are skipped: their quotes
@@ -374,6 +399,7 @@ async fn best_swap_route(
             request: signed.request,
             signed: signed.signed,
             delegated_signer: signed.delegated_signer,
+            takes_wake: signed.takes_wake,
         },
     );
     Ok(Some(route))
@@ -484,6 +510,7 @@ pub async fn commit_route(
         request: quote_request,
         signed,
         delegated_signer,
+        takes_wake,
     } = cached;
     if network == bitcoin::Network::Bitcoin {
         return Err(PubkySwapError::invalid(
@@ -583,6 +610,7 @@ pub async fn commit_route(
         claim_seen: false,
         claim_listed: false,
         contract: Some(contract),
+        takes_wake,
         created_at_unix: now_unix(),
     };
     store::create(&record)?;
@@ -596,7 +624,92 @@ pub async fn commit_route(
         destination_address: route.endpoint.value,
         htlc_address,
         timeout_block_height: accept.timeout_block_height,
+        provider_takes_wake: takes_wake,
     })
+}
+
+/// The `SwapWakeCapability` for `swap_id`, refused here when the provider would refuse it. Its
+/// errors never contain the token.
+fn wake_capability(
+    swap_id: Uuid,
+    gateway_url: String,
+    token: String,
+    expires_at: u64,
+    now: u64,
+) -> Result<SwapMessage, PubkySwapError> {
+    if gateway_url.trim().is_empty() {
+        return Err(PubkySwapError::invalid("the gateway url is empty"));
+    }
+    if !token.starts_with("wkg_")
+        || token.len() > WAKE_TOKEN_MAX_LEN
+        || !token
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+    {
+        return Err(PubkySwapError::invalid("not a wake grant token"));
+    }
+    if expires_at <= now {
+        return Err(PubkySwapError::invalid("the wake grant has expired"));
+    }
+    Ok(SwapMessage::SwapWakeCapability(SwapWakeCapability {
+        request_id: Some(Uuid::new_v4()),
+        swap_id,
+        capability: WakeCapability {
+            v: WAKE_CAPABILITY_VERSION,
+            gateway: gateway_url,
+            topics: vec![SWAP_WAKE_TOPIC.to_string()],
+            token,
+            expires_at,
+        },
+    }))
+}
+
+/// Hand the provider of one of this wallet's swaps a wake grant, so it wakes the wallet through
+/// the gateway when the lockup can be claimed. Returns whether the provider already sees the swap
+/// as claimable: then no wake comes. The token is kept out of the record, logs and errors.
+pub async fn send_wake_capability(
+    swap_id: String,
+    gateway_url: String,
+    token: String,
+    expires_at: u64,
+    mnemonic: String,
+    bip39_passphrase: Option<String>,
+) -> Result<bool, PubkySwapError> {
+    let record = store::load(&swap_id)?;
+    // A provider without `swap-wake-v1` cannot parse the message and never answers.
+    if !record.takes_wake {
+        return Err(PubkySwapError::invalid(
+            "this swap's provider does not take a wake capability",
+        ));
+    }
+    let swap_id = record.accept.swap_id;
+    let sent = async {
+        let message = wake_capability(swap_id, gateway_url, token.clone(), expires_at, now_unix())?;
+        let secret = keys::identity_secret(&mnemonic, bip39_passphrase.as_deref())?;
+        let client = DirectClient::bind(secret).await?;
+        let reply = client.request(&record.provider_pubky, &message).await;
+        client.close().await;
+        snapshot_claimable(reply?, swap_id)
+    };
+    sent.await.map_err(|e| e.redact(&token))
+}
+
+/// The provider's answer to a wake capability: the swap's snapshot, whose `claimable` is a hint
+/// only. `advance` still checks the lockup on the wallet's own chain view.
+fn snapshot_claimable(reply: SwapMessage, swap_id: Uuid) -> Result<bool, PubkySwapError> {
+    match reply {
+        SwapMessage::SwapStatusSnapshot(snapshot) if snapshot.accept.swap_id == swap_id => {
+            Ok(snapshot.claimable)
+        }
+        SwapMessage::SwapStatusSnapshot(_) => Err(PubkySwapError::validation(
+            "the provider answered with another swap's status",
+        )),
+        SwapMessage::Reject(reject) => Err(refused(reject)),
+        // Not `unexpected`: a reply's contents could echo the token.
+        _ => Err(PubkySwapError::transport(
+            "expected the swap's status for its wake capability",
+        )),
+    }
 }
 
 fn status_of(record: &SwapRecord, state: PubkySwapRouteState) -> PubkySwapRouteStatus {
@@ -1147,6 +1260,8 @@ fn restored_record(
         // nothing, and a claim past the window would hand it the preimage and its refund.
         claim_listed: snapshot.claim_observed_txid_hex.is_some() && payment.settled,
         contract: None,
+        // The listing does not say whether the swap was quoted with the claimable hint.
+        takes_wake: false,
         created_at_unix: snapshot.created_at_unix,
     })
 }
@@ -1473,6 +1588,134 @@ mod tests {
             panic!("expected no route");
         };
         assert_eq!(reason, "No swap provider is set up.");
+    }
+
+    fn offer_with(features: &[&str]) -> SwapOffer {
+        SwapOffer {
+            request_id: None,
+            offer_id: Uuid::nil(),
+            provider_pkarr: "provider".into(),
+            network: swap_common::NetworkSpec::Regtest,
+            directions: vec![SwapDirection::Reverse],
+            min_amount_sat: 10_000,
+            max_amount_sat: 1_000_000,
+            base_fee_sat: 100,
+            fee_ppm: 2_500,
+            required_confirmations: 1,
+            htlc_timeout_blocks: 144,
+            lightning_node_id: None,
+            valid_until_unix: 0,
+            fund_within_secs: 60,
+            onchain_fee_sat: 500,
+            fee_rate_sat_vb: 2,
+            protocol_version: PROTOCOL_VERSION,
+            features: features.iter().map(|f| f.to_string()).collect(),
+        }
+    }
+
+    #[test]
+    fn asks_for_the_claimable_hint_only_from_a_provider_that_sends_it() {
+        let signed = [PAYKIT_CAP_FEATURE, DIRECT_RPC_FEATURE];
+        assert!(quote_features(&offer_with(&signed)).is_empty());
+        let hinting = offer_with(&[
+            PAYKIT_CAP_FEATURE,
+            DIRECT_RPC_FEATURE,
+            CLAIMABLE_HINT_FEATURE,
+        ]);
+        assert_eq!(quote_features(&hinting), [CLAIMABLE_HINT_FEATURE]);
+    }
+
+    #[test]
+    fn takes_a_wake_only_from_a_provider_that_sends_the_hint_and_wakes() {
+        assert!(!takes_wake(&offer_with(&[])));
+        assert!(!takes_wake(&offer_with(&[CLAIMABLE_HINT_FEATURE])));
+        assert!(!takes_wake(&offer_with(&[SWAP_WAKE_FEATURE])));
+        assert!(takes_wake(&offer_with(&[
+            CLAIMABLE_HINT_FEATURE,
+            SWAP_WAKE_FEATURE
+        ])));
+    }
+
+    const TOKEN: &str =
+        "wkg_0123456789abcdef0123456789abcdef_abcdefghijklmnopqrstuvwxyz0123456789-_ABCDEFG";
+    const GATEWAY: &str = "https://wake.bitkit.to";
+
+    #[test]
+    fn builds_the_wake_capability_providers_take() {
+        let swap_id = Uuid::new_v4();
+        let message = wake_capability(swap_id, GATEWAY.into(), TOKEN.into(), 2_000, 1_000).unwrap();
+        let wire = serde_json::to_value(&message).unwrap();
+        assert_eq!(wire["type"], "SwapWakeCapability");
+        assert_eq!(wire["swap_id"], swap_id.to_string());
+        assert_eq!(
+            wire["capability"],
+            serde_json::json!({
+                "v": 1,
+                "gateway": GATEWAY,
+                "topics": ["swap.claimable"],
+                "token": TOKEN,
+                "expires_at": 2_000,
+            })
+        );
+        assert!(!format!("{message:?}").contains(TOKEN));
+    }
+
+    #[test]
+    fn refuses_a_wake_capability_without_naming_its_token() {
+        let long = format!("wkg_{}", "a".repeat(WAKE_TOKEN_MAX_LEN));
+        let refused = [
+            (GATEWAY, "wks_not_a_grant", 2_000),
+            (GATEWAY, long.as_str(), 2_000),
+            (GATEWAY, "wkg_has space", 2_000),
+            (GATEWAY, TOKEN, 1_000),
+            (" ", TOKEN, 2_000),
+        ];
+        for (gateway, token, expires_at) in refused {
+            let error =
+                wake_capability(Uuid::nil(), gateway.into(), token.into(), expires_at, 1_000)
+                    .unwrap_err();
+            assert!(matches!(error, PubkySwapError::InvalidInput { .. }));
+            assert!(!error.to_string().contains(token), "{error}");
+        }
+    }
+
+    #[test]
+    fn reads_the_providers_answer_without_naming_the_token() {
+        let snapshot = listed_swap(SEED, None);
+        let swap_id = snapshot.accept.swap_id;
+        let mut claimable = snapshot.clone();
+        claimable.claimable = true;
+        let answer = |reply| snapshot_claimable(reply, swap_id).map_err(|e| e.redact(TOKEN));
+
+        assert!(!answer(SwapMessage::SwapStatusSnapshot(snapshot.clone())).unwrap());
+        assert!(answer(SwapMessage::SwapStatusSnapshot(claimable)).unwrap());
+        assert!(matches!(
+            snapshot_claimable(SwapMessage::SwapStatusSnapshot(snapshot), Uuid::nil()),
+            Err(PubkySwapError::Validation { .. })
+        ));
+        let refusal = Reject {
+            code: Some("invalid_request".into()),
+            request_id: None,
+            swap_id: Some(swap_id),
+            quote_id: None,
+            reason: format!("grant {TOKEN} is not on the allowlist"),
+        };
+        let error = answer(SwapMessage::Reject(refusal)).unwrap_err();
+        assert!(matches!(error, PubkySwapError::Refused { .. }));
+        assert!(!error.to_string().contains(TOKEN), "{error}");
+    }
+
+    #[test]
+    fn a_record_saved_before_wakes_takes_none() {
+        let record = restore(&listed_swap(
+            SEED,
+            Some(keys::owner_ref(&keys::new_index())),
+        ))
+        .expect("restored");
+        let mut saved = serde_json::to_value(&record).unwrap();
+        saved.as_object_mut().unwrap().remove("takes_wake");
+        let loaded: SwapRecord = serde_json::from_value(saved).unwrap();
+        assert!(!loaded.takes_wake);
     }
 }
 
