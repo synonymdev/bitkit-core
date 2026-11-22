@@ -111,6 +111,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "calls live Blocktank staging"]
     async fn test_fetch_and_store_info() {
         // Initialize in-memory database
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
@@ -534,6 +535,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "calls live Blocktank staging"]
     async fn test_create_and_store_order() {
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
             .await
@@ -560,6 +562,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "calls live Blocktank staging"]
     async fn test_refresh_orders() {
         // Initialize in-memory database
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
@@ -957,6 +960,20 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_refresh_active_with_empty_db() {
+        let db = BlocktankDB::new(":memory:", Some("http://invalid-url"))
+            .await
+            .unwrap();
+
+        let orders = db.refresh_active_orders().await.unwrap();
+        assert!(orders.is_empty());
+
+        let entries = db.refresh_active_cjit_entries().await.unwrap();
+        assert!(entries.is_empty());
+    }
+
+    #[tokio::test]
+    #[ignore = "calls live Blocktank staging"]
     async fn test_refresh_active_orders() {
         // Initialize in-memory database
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
@@ -1081,6 +1098,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "calls live Blocktank staging"]
     async fn test_get_min_zero_conf_tx_fee() {
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
             .await
@@ -1135,6 +1153,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "calls live Blocktank staging"]
     async fn test_estimate_order_fee() {
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
             .await
@@ -1183,6 +1202,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "calls live Blocktank staging"]
     async fn test_estimate_order_fee_full() {
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
             .await
@@ -1590,6 +1610,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "calls live Blocktank staging"]
     async fn test_cjit_entry_integration() {
         // Initialize database with staging server
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
@@ -1690,6 +1711,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "calls live Blocktank staging"]
     async fn test_cjit_entry_invalid_params() {
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
             .await
@@ -1873,6 +1895,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "calls live Blocktank staging"]
     async fn test_refresh_active_cjit_entries() {
         // Initialize database with staging server
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
@@ -1985,27 +2008,33 @@ mod tests {
 
     #[tokio::test]
     async fn test_regtest_mine() {
+        // Staging's regtest routes need this key; skip without it.
+        let Ok(auth) = std::env::var("BLOCKTANK_REGTEST_AUTH") else {
+            return;
+        };
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
             .await
             .unwrap();
         // Test mining 1 block
-        let auth = std::env::var("BLOCKTANK_REGTEST_AUTH").ok();
-        let result = db.regtest_mine(Some(1), auth.as_deref()).await;
+        let result = db.regtest_mine(Some(1), Some(auth.as_str())).await;
         assert!(result.is_ok(), "Failed to mine 1 block: {:?}", result.err());
     }
 
     #[tokio::test]
     async fn test_regtest_deposit() {
+        // Staging's regtest routes need this key; skip without it.
+        let Ok(auth) = std::env::var("BLOCKTANK_REGTEST_AUTH") else {
+            return;
+        };
         let db = BlocktankDB::new(":memory:", Some(STAGING_SERVER))
             .await
             .unwrap();
-        let auth = std::env::var("BLOCKTANK_REGTEST_AUTH").ok();
 
         let test_address = "bcrt1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu";
 
         // Test deposit with specific amount
         let result = db
-            .regtest_deposit(test_address, Some(50000), auth.as_deref())
+            .regtest_deposit(test_address, Some(50000), Some(auth.as_str()))
             .await;
 
         match result {
