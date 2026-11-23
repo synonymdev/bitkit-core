@@ -196,13 +196,13 @@ impl Scanner {
             }
             let decoded = Self::decode_lightning(&request)?;
             // The result carries only the invoice, so a URI amount it does not match would be lost.
+            // Compare with the signed amount, since the decoded one is rounded up to whole sats.
             if let Some((_, amount)) = instructions.iter().find(|(key, _)| key == "amount") {
-                let Scanner::Lightning { invoice } = &decoded else {
-                    unreachable!("decode_lightning returns Lightning");
-                };
-                if invoice.amount_satoshis == 0
-                    || parse_amount_as_satoshis(amount)? != invoice.amount_satoshis
-                {
+                let invoice_msat = Bolt11Invoice::from_str(&request)
+                    .ok()
+                    .and_then(|invoice| invoice.amount_milli_satoshis());
+                let uri_msat = parse_amount_as_satoshis(amount)?.checked_mul(1000);
+                if invoice_msat.is_none() || uri_msat != invoice_msat {
                     return Err(DecodingError::InvalidAmount);
                 }
             }

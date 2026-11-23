@@ -449,6 +449,15 @@ async fn uri_without_address_rejects_an_amount_its_invoice_does_not_state() {
         format!("bitcoin:?amount=0.00042BTC&lightning={}", bip_invoice()),
         format!("bitcoin:?amount=0.00042,50&lightning={}", bip_invoice()),
         format!("bitcoin:?AMOUNT=0.00043&lightning={}", bip_invoice()),
+        // 42,000.5 sats decodes as 42,001, but the invoice asks for neither amount.
+        format!(
+            "bitcoin:?amount=0.00042001&lightning={}",
+            invoice_for(Some(42_000_500))
+        ),
+        format!(
+            "bitcoin:?amount=0.00042&lightning={}",
+            invoice_for(Some(42_000_500))
+        ),
     ] {
         assert!(
             matches!(decode(&uri).await, Err(DecodingError::InvalidAmount)),
