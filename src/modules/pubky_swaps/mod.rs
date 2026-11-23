@@ -7,7 +7,6 @@ mod claim;
 mod client;
 mod delegation;
 mod errors;
-mod homeserver;
 mod keys;
 mod router;
 mod store;
