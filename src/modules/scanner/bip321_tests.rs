@@ -33,14 +33,23 @@ const POS_INVOICE: &str = concat!(
 
 /// Stands in for the BIP's `lnbc420bogusinvoice`: a signed mainnet invoice for 42,000 sats.
 fn bip_invoice() -> String {
+    invoice_for(Some(42_000_000))
+}
+
+/// A signed mainnet invoice for `amount_msat`, or without an amount.
+fn invoice_for(amount_msat: Option<u64>) -> String {
     use bitcoin::hashes::Hash;
     use bitcoin::secp256k1::{Secp256k1, SecretKey};
     use lightning_invoice::{Currency, InvoiceBuilder};
 
     let secp = Secp256k1::new();
     let secret_key = SecretKey::from_slice(&[0x21; 32]).unwrap();
-    InvoiceBuilder::new(Currency::Bitcoin)
-        .amount_milli_satoshis(42_000_000)
+    let builder = InvoiceBuilder::new(Currency::Bitcoin);
+    let builder = match amount_msat {
+        Some(amount_msat) => builder.amount_milli_satoshis(amount_msat),
+        None => builder,
+    };
+    builder
         .description("BIP 321".to_string())
         .payment_hash(bitcoin::hashes::sha256::Hash::from_byte_array([1; 32]))
         .payment_secret(lightning_invoice::PaymentSecret([2; 32]))
@@ -421,6 +430,38 @@ async fn invalid_segwit_instruction_is_invalid() {
             "{uri}"
         );
     }
+}
+
+#[tokio::test]
+async fn uri_without_address_keeps_an_amount_its_invoice_states() {
+    for amount in ["0.00042", "0.000420", ".00042"] {
+        let uri = format!("bitcoin:?amount={amount}&lightning={}", bip_invoice());
+        let (_, sats, _) = lightning_bolt11(&uri).await;
+        assert_eq!(sats, 42_000, "{uri}");
+    }
+}
+
+#[tokio::test]
+async fn uri_without_address_rejects_an_amount_its_invoice_does_not_state() {
+    for uri in [
+        format!("bitcoin:?amount=0.00043&lightning={}", bip_invoice()),
+        format!("bitcoin:?amount=0.001&lightning={}", invoice_for(None)),
+        format!("bitcoin:?amount=0.00042BTC&lightning={}", bip_invoice()),
+        format!("bitcoin:?amount=0.00042,50&lightning={}", bip_invoice()),
+        format!("bitcoin:?AMOUNT=0.00043&lightning={}", bip_invoice()),
+    ] {
+        assert!(
+            matches!(decode(&uri).await, Err(DecodingError::InvalidAmount)),
+            "{uri}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn uri_without_address_allows_repeated_unknown_parameters() {
+    let uri = format!("bitcoin:?lightning={}&custom=a&custom=b", bip_invoice());
+    let (_, sats, _) = lightning_bolt11(&uri).await;
+    assert_eq!(sats, 42_000);
 }
 
 #[tokio::test]

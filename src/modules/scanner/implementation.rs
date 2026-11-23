@@ -140,7 +140,8 @@ impl Scanner {
     /// `params`. Without one, the URI must carry a payment instruction in its query:
     /// - a segwit address in the parameter named after its human-readable part (`bc`, `tb`, `bcrt`), decoded
     ///   as on-chain with that address,
-    /// - otherwise a `lightning` BOLT11 invoice (or LNURL), decoded as Lightning.
+    /// - otherwise a `lightning` BOLT11 invoice (or LNURL), decoded as Lightning. A BOLT11 invoice must state
+    ///   the URI's `amount`, if it has one.
     ///
     /// Instructions Bitkit cannot pay (`lno`, `sp`, `pay`) give `UnsupportedType`, and no instruction at all
     /// gives `InvalidAddress`.
@@ -190,11 +191,22 @@ impl Scanner {
 
         if let Some((_, value)) = instructions.iter().find(|(key, _)| key == "lightning") {
             let request = value.to_lowercase();
-            return if request.starts_with("lnurl") {
-                Self::decode_lnurl(&request).await
-            } else {
-                Self::decode_lightning(&request)
-            };
+            if request.starts_with("lnurl") {
+                return Self::decode_lnurl(&request).await;
+            }
+            let decoded = Self::decode_lightning(&request)?;
+            // The result carries only the invoice, so a URI amount it does not match would be lost.
+            if let Some((_, amount)) = instructions.iter().find(|(key, _)| key == "amount") {
+                let Scanner::Lightning { invoice } = &decoded else {
+                    unreachable!("decode_lightning returns Lightning");
+                };
+                if invoice.amount_satoshis == 0
+                    || parse_amount_as_satoshis(amount)? != invoice.amount_satoshis
+                {
+                    return Err(DecodingError::InvalidAmount);
+                }
+            }
+            return Ok(decoded);
         }
 
         if instructions
