@@ -57,6 +57,54 @@ mod tests {
         }
     }
 
+    /// Writes `sats` as decimal BTC, with all eight fraction digits or with trailing zeros trimmed.
+    fn btc(sats: u64, trim: bool) -> String {
+        let fraction = format!("{:08}", sats % 100_000_000);
+        let fraction = if trim {
+            fraction.trim_end_matches('0')
+        } else {
+            &fraction
+        };
+        match fraction {
+            "" => (sats / 100_000_000).to_string(),
+            fraction => format!("{}.{fraction}", sats / 100_000_000),
+        }
+    }
+
+    #[test]
+    fn every_satoshi_amount_round_trips() {
+        let mut sats_values = vec![
+            0,
+            1,
+            99_999_999,
+            100_000_000,
+            100_000_001,
+            u64::MAX - 1,
+            u64::MAX,
+        ];
+        // A fixed linear congruential sequence spreads samples over the whole u64 range.
+        let mut state: u64 = 0x2545_f491_4f6c_dd1d;
+        for _ in 0..20_000 {
+            state = state
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            sats_values.push(state >> (state % 64));
+        }
+        for sats in sats_values {
+            for trim in [false, true] {
+                let amount = btc(sats, trim);
+                assert_eq!(
+                    parse_amount_as_satoshis(&amount).ok(),
+                    Some(sats),
+                    "{amount}"
+                );
+            }
+        }
+        assert_eq!(btc(u64::MAX, false), "184467440737.09551615");
+        assert!(parse_amount_as_satoshis("184467440737.09551616").is_err());
+        assert!(parse_amount_as_satoshis("184467440738").is_err());
+    }
+
     #[test]
     fn amounts_outside_the_bip321_grammar_are_invalid() {
         for amount in [
