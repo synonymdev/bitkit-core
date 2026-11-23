@@ -422,3 +422,11 @@ async fn invalid_segwit_instruction_is_invalid() {
         );
     }
 }
+
+#[tokio::test]
+async fn invalid_onchain_amount_is_not_read_as_another_amount() {
+    for amount in ["1e3", "inf", "0.001BTC"] {
+        let invoice = onchain(&format!("bitcoin:{ADDRESS}?amount={amount}")).await;
+        assert_eq!(invoice.amount_satoshis, 0, "{amount}");
+    }
+}
