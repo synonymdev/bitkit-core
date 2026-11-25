@@ -18,6 +18,7 @@ use url::Url;
 use crate::modules::onchain::BitcoinAddressValidator;
 
 const BITCOIN_SCHEME: &str = "bitcoin:";
+const LIGHTNING_SCHEME: &str = "lightning:";
 const REQUIRED_PARAM_PREFIX: &str = "req-";
 /// BIP 321 parameters holding a segwit address, named after the address's human-readable part.
 const SEGWIT_ADDRESS_KEYS: [&str; 3] = ["bc", "tb", "bcrt"];
@@ -63,9 +64,12 @@ impl Scanner {
 
     pub async fn decode(invoice_str: String) -> Result<Self, DecodingError> {
         let invoice_str = invoice_str.trim();
-        let invoice_str = invoice_str
-            .strip_prefix("lightning:")
-            .unwrap_or(invoice_str);
+        let invoice_str = match invoice_str.get(..LIGHTNING_SCHEME.len()) {
+            Some(prefix) if prefix.eq_ignore_ascii_case(LIGHTNING_SCHEME) => {
+                &invoice_str[LIGHTNING_SCHEME.len()..]
+            }
+            _ => invoice_str,
+        };
 
         // Handle Bitkit deep links
         if invoice_str.starts_with("bitkit://") {

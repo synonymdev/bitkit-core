@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- `decode` sends input to Lightning only when it starts with `lightning:` (any case) or is a bare `lnbc`/`lntb` invoice. A `bitcoin:` URI with `lightning:` inside a parameter value such as `label` or `message` now decodes as that URI instead of failing.
+- `decode` sends input to Lightning only when it starts with `lightning:` or is a bare `lnbc`/`lntb` invoice. A `bitcoin:` URI with `lightning:` inside a parameter value such as `label` or `message` now decodes as that URI instead of failing. The `lightning:` scheme is matched in any case, so `LIGHTNING:` followed by an LNURL, a node id (`pubkey@host:port`) or a Lightning address now decodes instead of returning `InvalidFormat`.
 - Decode BIP 321 `bitcoin:` URIs without an address. `bitcoin:?lightning=<BOLT11>` (served over NFC by Numo point-of-sale terminals, and planned by Square, which serves `lightning:<BOLT11>` today) returns `Scanner::Lightning`, and a segwit address in the `bc`, `tb` or `bcrt` parameter returns `Scanner::OnChain` with that address, keeping other instructions such as `lightning` in `params`. An address in the wrong parameter (`bc=tb1…`) returns `InvalidAddress`. `lno`, `sp` or `pay` alone returns `UnsupportedType`, and no payment instruction returns `InvalidAddress` as before. Any `req-` parameter, `req-pop` included, now returns `InvalidFormat`, because Bitkit handles none of them and BIP 321 forbids paying such a URI (breaking for callers that paid `req-pop` URIs).
 - Update `lightning` to 0.2.8.
 - `regtest_mine`, `regtest_deposit`, `regtest_pay`, `regtest_get_payment` and `regtest_close_channel` take an optional `auth` (`user:password`), sent as basic auth to Blocktank servers that protect the regtest routes; a 401 returns a clear error.

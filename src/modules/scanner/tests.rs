@@ -801,6 +801,49 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_uppercase_bitcoin_uri_label_containing_lightning_scheme() {
+        let address = SCHEME_TEST_ADDRESS.to_uppercase();
+        let invoice = decode_onchain_uri(format!("BITCOIN:{address}?LABEL=LIGHTNING:X")).await;
+        assert_eq!(invoice.address, SCHEME_TEST_ADDRESS);
+        assert_eq!(
+            invoice
+                .params
+                .as_ref()
+                .and_then(|params| params.get("label"))
+                .map(String::as_str),
+            Some("LIGHTNING:X")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_uppercase_lightning_prefix_with_lnurl_auth() {
+        // LNURL-auth for https://example.com/login?tag=login&k1=ab..ab&action=login, decoded without a request.
+        let lnurl = "lnurl1dp68gurn8ghj7etcv9khqmr99e3k7mf0d3hkw6tw8a6xzeead3hkw6twye4nz0tpvfskyctzv93xzcnpvfskyctzv93xzcnpvfskyctzv93xzcnpvfskyctzv93xzcnpvfskyctzv93xzcnpvfskyctzv93xzcnpvfskyfnpvd6xjmmw84kx7emfdclcrgla";
+        for input in [
+            format!("LIGHTNING:{}", lnurl.to_uppercase()),
+            format!("Lightning:{lnurl}"),
+        ] {
+            match Scanner::decode(input).await.unwrap() {
+                Scanner::LnurlAuth { data } => {
+                    assert_eq!(data.domain, "example.com");
+                    assert_eq!(data.k1, "ab".repeat(32));
+                }
+                other => panic!("Should be LNURL-auth, got {other:?}"),
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_uppercase_lightning_prefix_with_node_id() {
+        let node =
+            "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f@3.33.236.230:9735";
+        match Scanner::decode(format!("LIGHTNING:{node}")).await.unwrap() {
+            Scanner::NodeId { url, .. } => assert_eq!(url, node),
+            other => panic!("Should be a NodeId, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
     async fn test_uppercase_bitcoin_uri() {
         // Test uppercase BITCOIN: prefix with uppercase address (common in QR codes)
         let invoice =
