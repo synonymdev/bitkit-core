@@ -718,6 +718,88 @@ mod tests {
         }
     }
 
+    const SCHEME_TEST_ADDRESS: &str = "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq";
+
+    async fn decode_onchain_uri(uri: String) -> crate::modules::scanner::OnChainInvoice {
+        match Scanner::decode(uri).await.unwrap() {
+            Scanner::OnChain { invoice } => invoice,
+            other => panic!("Should be an OnChain invoice, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_bitcoin_uri_label_containing_lightning_scheme() {
+        for label in ["pay%20lightning:x", "pay lightning:x", "LIGHTNING:x"] {
+            let invoice =
+                decode_onchain_uri(format!("bitcoin:{SCHEME_TEST_ADDRESS}?label={label}")).await;
+            assert_eq!(invoice.address, SCHEME_TEST_ADDRESS);
+            assert_eq!(invoice.label.as_deref(), Some(label));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_bitcoin_uri_message_containing_lightning_scheme() {
+        for message in ["see%20lightning:lnbc1", "see lightning:lnbc1"] {
+            let invoice = decode_onchain_uri(format!(
+                "bitcoin:{SCHEME_TEST_ADDRESS}?amount=0.0001&message={message}"
+            ))
+            .await;
+            assert_eq!(invoice.address, SCHEME_TEST_ADDRESS);
+            assert_eq!(invoice.amount_satoshis, 10_000);
+            assert_eq!(invoice.message.as_deref(), Some(message));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_uppercase_lightning_prefix_with_lowercase_invoice() {
+        let bolt11 = create_test_invoice_with_msat(21_000);
+        match Scanner::decode(format!("LIGHTNING:{bolt11}"))
+            .await
+            .unwrap()
+        {
+            Scanner::Lightning { invoice } => {
+                assert_eq!(invoice.bolt11, bolt11);
+                assert_eq!(invoice.amount_satoshis, 21);
+            }
+            other => panic!("Should be a Lightning invoice, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_addressless_bitcoin_uri_with_lightning_param() {
+        let bolt11 = create_test_invoice_with_msat(42_000);
+        match Scanner::decode(format!("bitcoin:?lightning={bolt11}"))
+            .await
+            .unwrap()
+        {
+            Scanner::Lightning { invoice } => {
+                assert_eq!(invoice.bolt11, bolt11);
+                assert_eq!(invoice.amount_satoshis, 42);
+            }
+            other => panic!("Should be a Lightning invoice, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_bitcoin_uri_with_address_and_lightning_param() {
+        let bolt11 = create_test_invoice_with_msat(42_000);
+        let invoice = decode_onchain_uri(format!(
+            "bitcoin:{SCHEME_TEST_ADDRESS}?amount=0.00000042&label=pay%20lightning:x&lightning={bolt11}"
+        ))
+        .await;
+        assert_eq!(invoice.address, SCHEME_TEST_ADDRESS);
+        assert_eq!(invoice.amount_satoshis, 42);
+        assert_eq!(invoice.label.as_deref(), Some("pay%20lightning:x"));
+        assert_eq!(
+            invoice
+                .params
+                .as_ref()
+                .and_then(|params| params.get("lightning"))
+                .map(String::as_str),
+            Some(bolt11.as_str())
+        );
+    }
+
     #[tokio::test]
     async fn test_uppercase_bitcoin_uri() {
         // Test uppercase BITCOIN: prefix with uppercase address (common in QR codes)

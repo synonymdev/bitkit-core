@@ -103,18 +103,21 @@ impl Scanner {
             }
         }
 
-        if invoice_str.to_lowercase().contains("lightning:")
-            || invoice_str.to_lowercase().starts_with("lntb")
-            || invoice_str.to_lowercase().starts_with("lnbc")
+        let invoice_lower = invoice_str.to_lowercase();
+        // Match the scheme only at the start: a `bitcoin:` URI can carry `lightning:` inside a
+        // parameter value such as `label` or `message`, and its `lightning` parameter is read by
+        // `decode_bitcoin_uri`.
+        if invoice_lower.starts_with("lightning:")
+            || invoice_lower.starts_with("lntb")
+            || invoice_lower.starts_with("lnbc")
         {
-            let invoice_lower = invoice_str.to_lowercase();
             let invoice = invoice_lower
                 .strip_prefix("lightning:")
                 .unwrap_or(&invoice_lower);
             Self::decode_lightning(invoice)
-        } else if invoice_str.to_lowercase().starts_with("bitcoin:") {
+        } else if invoice_lower.starts_with("bitcoin:") {
             Self::decode_bitcoin_uri(invoice_str).await
-        } else if invoice_str.to_lowercase().starts_with("pubkyauth:") {
+        } else if invoice_lower.starts_with("pubkyauth:") {
             Ok(Scanner::PubkyAuth {
                 data: invoice_str.to_string(),
             })
