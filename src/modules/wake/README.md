@@ -68,7 +68,7 @@ func registerForWakes(node: Node, installId: String, pubkySecretHex: String, pub
         encryptionPublicKey: keys.publicKeyHex,
         secretSha256: secret.sha256Hex,
         identities: ["ln:\(nodeId)", "pk:\(pubkyZ32)"],
-        topics: ["blocktank.*"],
+        topics: ["paykit.*", "swap.*"],
         timestamp: nil
     )
     let proofs = [
@@ -115,7 +115,8 @@ Acknowledging `.handled` cancels the fallback alert. `.noHandler` and
 ## Grants and peer wakes
 
 A peer can wake this device only with a grant the device issued. Grants cover
-peer topics only (`paykit.sync` today; `wakeListTopics` marks them `peer`),
+peer topics only (`paykit.sync` and `swap.claimable` today; `wakeListTopics`
+marks them `peer`),
 for an identity the device registered. The gateway's anti-spam document
 explains the quotas, the per-recipient cap and why a peer wake carries no
 content.
