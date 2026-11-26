@@ -57,7 +57,7 @@ pub struct UsdtWallet {
 #[uniffi::export(async_runtime = "tokio")]
 impl UsdtWallet {
     /// Creates the sole owner of this wallet's database; reuse it for all calls until it is dropped.
-    #[uniffi::constructor(default(bridge_url = None))]
+    #[uniffi::constructor]
     pub fn new(
         address: String,
         storage_path: String,
